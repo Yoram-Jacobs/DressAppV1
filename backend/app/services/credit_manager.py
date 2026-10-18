@@ -273,6 +273,152 @@ async def migrate_legacy_credits_if_needed(user_record: dict, db: Any) -> dict:
     return user_record
 
 
+ONPREM_DAILY_GRANT = 10
+ONPREM_CYCLE_DAYS = 30
+ONPREM_MAX_CREDITS = ONPREM_DAILY_GRANT * ONPREM_CYCLE_DAYS  # 300
+
+
+def compute_onprem_credit_state(user_record: dict) -> Dict[str, Any]:
+    """Compute the cumulative 30-day On-Premises AI credit state for Free users.
+
+    Free users receive 10 daily on-premises AI credits that accumulate over up to
+    a 30-day period (up to 300 AI credits), then reset for a fresh 30-day cycle.
+    """
+    today_dt = datetime.now(timezone.utc).date()
+    ai_config = (user_record or {}).get("ai_configuration") or {}
+
+    raw_start = ai_config.get("onprem_cycle_start") or (user_record or {}).get("created_at")
+    cycle_start_date = today_dt
+    if isinstance(raw_start, str) and raw_start.strip():
+        try:
+            clean_str = raw_start.strip().replace("Z", "+00:00")
+            if "T" in clean_str or " " in clean_str:
+                cycle_start_date = datetime.fromisoformat(clean_str).astimezone(timezone.utc).date()
+            else:
+                cycle_start_date = datetime.fromisoformat(clean_str).date()
+        except Exception:
+            cycle_start_date = today_dt
+
+    days_elapsed = (today_dt - cycle_start_date).days
+    needs_cycle_reset = False
+    if days_elapsed >= ONPREM_CYCLE_DAYS or days_elapsed < 0:
+        cycle_start_date = today_dt
+        days_elapsed = 0
+        needs_cycle_reset = True
+        used_in_cycle = 0
+    else:
+        if isinstance(ai_config.get("onprem_credits_used"), (int, float)):
+            used_in_cycle = max(0, int(ai_config["onprem_credits_used"]))
+        else:
+            # Migrate today's daily_request_count if present
+            last_date = ai_config.get("daily_request_date")
+            used_in_cycle = (
+                max(0, int(ai_config.get("daily_request_count", 0)))
+                if last_date == today_dt.isoformat()
+                else 0
+            )
+
+    days_in_cycle = min(ONPREM_CYCLE_DAYS, max(1, days_elapsed + 1))
+    accrued_credits = min(ONPREM_MAX_CREDITS, days_in_cycle * ONPREM_DAILY_GRANT)
+    available_credits = max(0, accrued_credits - used_in_cycle)
+    days_until_reset = max(1, ONPREM_CYCLE_DAYS - days_elapsed)
+
+    return {
+        "onprem_credits_balance": available_credits,
+        "onprem_credits_accrued": accrued_credits,
+        "onprem_credits_used": used_in_cycle,
+        "onprem_daily_grant": ONPREM_DAILY_GRANT,
+        "onprem_max_credits": ONPREM_MAX_CREDITS,
+        "onprem_cycle_days": ONPREM_CYCLE_DAYS,
+        "onprem_days_in_cycle": days_in_cycle,
+        "onprem_days_until_reset": days_until_reset,
+        "onprem_cycle_start": cycle_start_date.isoformat(),
+        "needs_cycle_reset": needs_cycle_reset,
+    }
+
+
+NANO_BANANA_MONTHLY_LIMIT = 100
+NANO_BANANA_CYCLE_DAYS = 30
+
+
+def compute_nano_banana_monthly_state(user_record: dict) -> Dict[str, Any]:
+    """Compute the 30-day Nano Banana execution cap state (max 100/month per user)."""
+    today_dt = datetime.now(timezone.utc).date()
+    ai_config = (user_record or {}).get("ai_configuration") or {}
+
+    raw_start = ai_config.get("nano_banana_cycle_start") or (user_record or {}).get("created_at")
+    cycle_start_date = today_dt
+    if isinstance(raw_start, str) and raw_start.strip():
+        try:
+            clean_str = raw_start.strip().replace("Z", "+00:00")
+            if "T" in clean_str or " " in clean_str:
+                cycle_start_date = datetime.fromisoformat(clean_str).astimezone(timezone.utc).date()
+            else:
+                cycle_start_date = datetime.fromisoformat(clean_str).date()
+        except Exception:
+            cycle_start_date = today_dt
+
+    days_elapsed = (today_dt - cycle_start_date).days
+    needs_cycle_reset = False
+    if days_elapsed >= NANO_BANANA_CYCLE_DAYS or days_elapsed < 0:
+        cycle_start_date = today_dt
+        days_elapsed = 0
+        needs_cycle_reset = True
+        used_in_cycle = 0
+    else:
+        raw_used = ai_config.get("nano_banana_monthly_used", 0)
+        used_in_cycle = max(0, int(raw_used)) if isinstance(raw_used, (int, float)) else 0
+
+    remaining = max(0, NANO_BANANA_MONTHLY_LIMIT - used_in_cycle)
+    days_until_reset = max(1, NANO_BANANA_CYCLE_DAYS - days_elapsed)
+
+    return {
+        "nano_banana_monthly_limit": NANO_BANANA_MONTHLY_LIMIT,
+        "nano_banana_monthly_used": used_in_cycle,
+        "nano_banana_monthly_remaining": remaining,
+        "nano_banana_cycle_start": cycle_start_date.isoformat(),
+        "nano_banana_days_until_reset": days_until_reset,
+        "needs_cycle_reset": needs_cycle_reset,
+    }
+
+
+async def check_and_increment_nano_banana_monthly(
+    db: Any, user_id: str, cost: int = 1
+) -> bool:
+    """Enforce the strict 100/month per-user Nano Banana execution limit across all tiers."""
+    user_record = await db.users.find_one({"id": user_id})
+    if not user_record:
+        return False
+
+    req_cost = max(1, int(cost))
+    state = compute_nano_banana_monthly_state(user_record)
+    if state["nano_banana_monthly_remaining"] < req_cost:
+        logger.info(
+            "User %s reached monthly Nano Banana limit (%d/%d used, requested=%d).",
+            user_id,
+            state["nano_banana_monthly_used"],
+            state["nano_banana_monthly_limit"],
+            req_cost,
+        )
+        return False
+
+    new_used = state["nano_banana_monthly_used"] + req_cost
+    new_remaining = max(0, NANO_BANANA_MONTHLY_LIMIT - new_used)
+    await db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                "ai_configuration.nano_banana_cycle_start": state["nano_banana_cycle_start"],
+                "ai_configuration.nano_banana_monthly_used": new_used,
+                "ai_configuration.nano_banana_monthly_remaining": new_remaining,
+                "ai_configuration.nano_banana_monthly_limit": NANO_BANANA_MONTHLY_LIMIT,
+            }
+        },
+    )
+    return True
+
+
+
 async def check_operation_quota(user_id: str, required_credits: int = 1, operation: str = "ai_operation") -> Tuple[bool, CreditQuotaStatus, str]:
     try:
         db = get_db()
@@ -284,16 +430,14 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
         if user_tier != "free":
             return True, CreditQuotaStatus.OK, "All set"
             
-        today = datetime.now(timezone.utc).date().isoformat()
-        ai_config = user_record.get("ai_configuration") or {}
-        last_date = ai_config.get("daily_request_date")
-        count = ai_config.get("daily_request_count", 0)
-        
-        if last_date != today:
-            count = 0
-            
-        if count >= 10:
-            return False, CreditQuotaStatus.EXHAUSTED, "Daily AI operation limit of 10 requests reached. Please upgrade to continue."
+        req_cost = max(1, int(required_credits))
+        state = compute_onprem_credit_state(user_record)
+        if state["onprem_credits_balance"] < req_cost:
+            return (
+                False,
+                CreditQuotaStatus.EXHAUSTED,
+                f"Insufficient On-Premises AI credits ({state['onprem_credits_balance']} available, {req_cost} required). Credits accumulate at +10/day (up to 300 over 30 days) or upgrade your plan.",
+            )
             
         return True, CreditQuotaStatus.OK, "All set"
     except Exception as e:
@@ -435,7 +579,7 @@ def estimate_token_cost(
 # BILLING OPERATIONS & TRIAL MANAGEMENT
 # ============================================================================
 
-async def check_and_increment_daily_request(db: Any, user_id: str) -> bool:
+async def check_and_increment_daily_request(db: Any, user_id: str, cost: int = 1) -> bool:
     user_record = await db.users.find_one({"id": user_id})
     if not user_record:
         return False
@@ -444,27 +588,35 @@ async def check_and_increment_daily_request(db: Any, user_id: str) -> bool:
     if user_tier != "free":
         return True
         
+    req_cost = max(1, int(cost))
     today = datetime.now(timezone.utc).date().isoformat()
     ai_config = user_record.get("ai_configuration") or {}
+    state = compute_onprem_credit_state(user_record)
     
-    last_date = ai_config.get("daily_request_date")
-    count = ai_config.get("daily_request_count", 0)
-    
-    if last_date != today:
-        count = 0
-        last_date = today
-        
-    if count >= 10:
-        logger.info(f"User {user_id} on FREE plan has reached the daily limit of 10 requests.")
+    if state["onprem_credits_balance"] < req_cost:
+        logger.info(
+            "User %s on FREE plan has insufficient cumulative On-Premises AI credits (available=%d, required=%d).",
+            user_id,
+            state["onprem_credits_balance"],
+            req_cost,
+        )
         return False
         
-    count += 1
+    new_used = state["onprem_credits_used"] + req_cost
+    new_balance = max(0, state["onprem_credits_accrued"] - new_used)
+    last_date = ai_config.get("daily_request_date")
+    daily_count = ai_config.get("daily_request_count", 0) if last_date == today else 0
+    daily_count += req_cost
+
     await db.users.update_one(
         {"id": user_id},
         {
             "$set": {
-                "ai_configuration.daily_request_date": last_date,
-                "ai_configuration.daily_request_count": count
+                "ai_configuration.onprem_cycle_start": state["onprem_cycle_start"],
+                "ai_configuration.onprem_credits_used": new_used,
+                "ai_configuration.onprem_credits_balance": new_balance,
+                "ai_configuration.daily_request_date": today,
+                "ai_configuration.daily_request_count": daily_count,
             }
         }
     )
@@ -590,33 +742,57 @@ async def deduct_user_credits(
         user_tier = get_user_tier(user_record)
         req_int = max(1, int(round(cost)))
 
-        # 1. Professional and Manager tiers have zero AI action restrictions.
+        is_generative = operation in (
+            "mass_reconstruct",
+            "polish_crop",
+            "chat_image_edit",
+            "repair_item_crop",
+            "edit_item_image",
+            "reconstruct",
+            "generative_inpainting",
+        ) or (
+            bool(operation)
+            and any(
+                k in operation
+                for k in (
+                    "image_edit",
+                    "reconstruct",
+                    "repair_item",
+                    "inpainting",
+                    "polish_crop",
+                    "mass_reconstruct",
+                )
+            )
+        )
+
+        # 1. Professional and Manager tiers:
+        #    - Analytical / non-generative operations: unlimited.
+        #    - Generative Nano Banana operations: capped at 100 executions per month per user.
         if user_tier in ["manager", "professional"]:
+            if is_generative:
+                monthly_ok = await check_and_increment_nano_banana_monthly(db, user_id, req_int)
+                if not monthly_ok:
+                    return False
             try:
                 meter = TokenMeter(user_id, operation or "ai_operation")
                 meter.input_tokens = 0
                 meter.output_tokens = 0
                 meter.credits_consumed = req_int
-                meter.credit_type_used = "subscription"
+                meter.credit_type_used = "nano_banana_monthly" if is_generative else "subscription"
                 await meter._save_token_usage(0, 0)
             except Exception:
                 pass
             return True
 
         # 2. Free tier users:
-        is_generative = operation in (
-            "chat_image_edit",
-            "repair_item_crop",
-            "edit_item_image",
-            "reconstruct",
-            "generative_inpainting",
-        ) or (bool(operation) and any(k in operation for k in ("image_edit", "reconstruct", "repair_item", "inpainting")))
-
-        # --- A. Non-generative analytical operations (1-click re-analyse, outfit proposals, stylist advice) ---
-        # Calculated strictly against the 10 daily AI actions quota.
+        # --- A. Non-generative analytical operations (on-premises model requests: garment analysis, stylist, suitcase) ---
+        # Calculated strictly against the cumulative 10 daily On-Premises AI credits (up to 300 over 30 days).
         # NEVER drains the user's Nano Banana generative credits!
         if not is_generative:
-            daily_ok = await check_and_increment_daily_request(db, user_id)
+            if req_int == 1:
+                daily_ok = await check_and_increment_daily_request(db, user_id)
+            else:
+                daily_ok = await check_and_increment_daily_request(db, user_id, req_int)
             if daily_ok:
                 try:
                     meter = TokenMeter(user_id, operation or "ai_operation")
@@ -628,13 +804,21 @@ async def deduct_user_credits(
                 except Exception:
                     pass
                 return True
-            logger.info("User %s on Free plan has exhausted their 10 daily AI actions quota.", user_id)
+            logger.info("User %s on Free plan has exhausted their cumulative On-Premises AI credits.", user_id)
             return False
 
         # --- B. Generative image editing & reconstruction operations (Nano Banana) ---
-        # Calculated strictly and separately from daily AI credits.
-        # Can ONLY be spent from credit buckets (5 onboarding credits or purchased credit packs).
-        # Can be refilled ONLY with a purchased AI credit pack or when upgrading the plan.
+        # Calculated strictly and separately from daily AI credits, and subject to the 100/month cap.
+        nb_state = compute_nano_banana_monthly_state(user_record)
+        if nb_state["nano_banana_monthly_remaining"] < req_int:
+            logger.info(
+                "User %s on Free plan reached monthly Nano Banana cap (%d/%d).",
+                user_id,
+                nb_state["nano_banana_monthly_used"],
+                nb_state["nano_banana_monthly_limit"],
+            )
+            return False
+
         user_record = await migrate_legacy_credits_if_needed(user_record, db)
         u_model = User.parse_obj(user_record)
         available_credits = u_model.total_credits
@@ -647,6 +831,7 @@ async def deduct_user_credits(
                     {"id": user_id},
                     {"$set": {"credit_buckets": clean_buckets}}
                 )
+                await check_and_increment_nano_banana_monthly(db, user_id, req_int)
                 try:
                     meter = TokenMeter(user_id, operation or "ai_operation")
                     meter.input_tokens = 0
@@ -665,17 +850,6 @@ async def deduct_user_credits(
             available_credits,
         )
         return False
-
-        try:
-            meter = TokenMeter(user_id, operation or "ai_operation")
-            meter.input_tokens = 0
-            meter.output_tokens = 0
-            meter.credits_consumed = req_int
-            meter.credit_type_used = "free"
-            await meter._save_token_usage(0, 0)
-        except Exception:
-            pass
-        return True
     except Exception as e:
         logger.error(f"Error checking/deducting user credits: {str(e)}")
         return False
@@ -721,18 +895,47 @@ async def refund_user_credits(
         user_record = await db_connection.users.find_one({"id": user_id})
         if not user_record:
             return False
-        
-        u_model = User.parse_obj(user_record)
-        u_model.add_credit_bucket(
-            amount=amount,
-            credit_type=credit_type,
-            days_until_expiry=30 if credit_type == "free" else None
-        )
-        
-        await db_connection.users.update_one(
-            {"id": user_id},
-            {"$set": {"credit_buckets": [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]}}
-        )
+
+        if credit_type == "free_daily_quota":
+            state = compute_onprem_credit_state(user_record)
+            new_used = max(0, state["onprem_credits_used"] - max(0, int(amount)))
+            new_balance = max(0, state["onprem_credits_accrued"] - new_used)
+            await db_connection.users.update_one(
+                {"id": user_id},
+                {
+                    "$set": {
+                        "ai_configuration.onprem_cycle_start": state["onprem_cycle_start"],
+                        "ai_configuration.onprem_credits_used": new_used,
+                        "ai_configuration.onprem_credits_balance": new_balance,
+                    }
+                },
+            )
+        elif credit_type == "nano_banana_monthly":
+            nb_state = compute_nano_banana_monthly_state(user_record)
+            new_used = max(0, nb_state["nano_banana_monthly_used"] - max(0, int(amount)))
+            new_remaining = max(0, NANO_BANANA_MONTHLY_LIMIT - new_used)
+            await db_connection.users.update_one(
+                {"id": user_id},
+                {
+                    "$set": {
+                        "ai_configuration.nano_banana_cycle_start": nb_state["nano_banana_cycle_start"],
+                        "ai_configuration.nano_banana_monthly_used": new_used,
+                        "ai_configuration.nano_banana_monthly_remaining": new_remaining,
+                        "ai_configuration.nano_banana_monthly_limit": NANO_BANANA_MONTHLY_LIMIT,
+                    }
+                },
+            )
+        else:
+            u_model = User.parse_obj(user_record)
+            u_model.add_credit_bucket(
+                amount=amount,
+                credit_type=credit_type,
+                days_until_expiry=30 if credit_type == "free" else None
+            )
+            await db_connection.users.update_one(
+                {"id": user_id},
+                {"$set": {"credit_buckets": [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]}}
+            )
         
         # Log the refund transaction
         doc = {

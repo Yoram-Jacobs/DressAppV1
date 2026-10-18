@@ -1,7 +1,31 @@
 from __future__ import annotations
-from __future__ import annotations
-from .llm import EYES_JSON_SCHEMA, _GARMENT_OBJECT_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts, GROUP_ANALYZE_SYSTEM_PROMPT, _LANG_NAMES, call_gemma_space_stream_attributes
-from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card, _apply_fast_matte, _create_batch_collage
+from .llm import (
+    EYES_JSON_SCHEMA,
+    MASS_CATALOG_JSON_SCHEMA,
+    _GARMENT_OBJECT_SCHEMA,
+    _call_gemma_space,
+    _build_system_prompt,
+    _language_directive,
+    _user_prompt,
+    _extract_json,
+    DETECT_SYSTEM_PROMPT,
+    _scan_complete_json_objects,
+    _build_batch_prompts,
+    _build_mass_catalog_prompts,
+    GROUP_ANALYZE_SYSTEM_PROMPT,
+    _LANG_NAMES,
+    call_gemma_space_stream_attributes,
+)
+from .image import (
+    _shrink_for_vision,
+    _crop_to_bbox,
+    _PHANTOM_DROP_PCT,
+    _solid_alpha_coverage,
+    _fit_crop_to_card,
+    ensure_transparent_vertical_card,
+    _apply_fast_matte,
+    _create_batch_collage,
+)
 from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped, _iou_norm, _containment, _detect_human_presence
 from .validation import (
     _coerce_single_garment,
@@ -2761,34 +2785,52 @@ class GarmentVisionService:
         language: str | None = None,
         cutout_only: bool = False,
         user_gender: str | None = None,
+        mode: str | None = None,
+        max_reconstructions: int = 100,
+        user: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> "AsyncIterator[dict[str, Any]]":
         """Streaming end-to-end variant that accepts multiple photos.
         
-        Runs detection and cropping on each photo concurrently, flattening all valid
-        crops into a single batched Gemini call for maximum throughput.
-        
-        Yields the same NDJSON frame structure as ``analyze_outfit_stream``, but each
-        crop in ``items_meta`` and each ``item`` frame includes an ``image_index`` field
-        so the frontend can route the analysis back to the correct original photo.
+        Supports 3 pipeline modes:
+        - ``"single"``: Single garment flat-lay / hanger analysis (1 garment per photo).
+        - ``"multi"``: Multi-garment worn outfit segmentation & analysis (default).
+        - ``"mass"``: Hanging closet rack / floor or bed pile catalog (Gemini 3.5 Flash)
+          + studio flat-lay reconstruction (Nano Banana) on a transparent 900x1200 card.
         """
         if not images_bytes_list:
             yield {"type": "done", "count": 0}
             return
 
+        eff_mode = (mode or "multi").strip().lower()
+        eff_gender = resolve_garment_gender(user_gender) or self.user_gender
+
+        if eff_mode == "mass" and not cutout_only:
+            async for frame in self.analyze_mass_stream(
+                images_bytes_list,
+                language=language,
+                user_gender=eff_gender,
+                max_reconstructions=max_reconstructions,
+                user=user,
+            ):
+                yield frame
+            return
+
         logger.info(
-            "analyze_outfits_stream: starting stream for %d photo(s), provider=%s",
+            "analyze_outfits_stream: starting stream for %d photo(s), provider=%s, mode=%s",
             len(images_bytes_list),
             self.provider,
+            eff_mode,
         )
 
-        eff_gender = resolve_garment_gender(user_gender) or self.user_gender
-        cap = max_items if max_items is not None else self.max_items
+        cap = 1 if eff_mode == "single" else (max_items if max_items is not None else self.max_items)
 
         # 1. Detect on all photos sequentially
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
-            count = None
+            count = 1 if eff_mode == "single" else None
             photo_model_gender = None
+            if eff_mode == "single":
+                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True, "_photo_model_gender": None}, img_bytes, "image/jpeg")]
             try:
                 detections = await self.detect_items(img_bytes)
                 if not detections:
@@ -3974,6 +4016,351 @@ class GarmentVisionService:
         )
         return items
 
+    async def analyze_mass_catalog(
+        self,
+        image_bytes: bytes,
+        *,
+        language: str | None = None,
+        user_gender: str | None = None,
+        max_items: int = 12,
+    ) -> list[dict[str, Any]]:
+        """Stage 1 of the Mass Closet & Pile Pipeline:
+        Uses Gemini 3.5 Flash (`gemini-3.5-flash`, fallback `gemini-3.5-flash-lite`) with
+        `MASS_CATALOG_JSON_SCHEMA` to catalog every distinct garment hanging on a closet
+        rod/shelf or lying in a pile on the floor/bed.
+
+        Locks ground-truth `state`, `condition`, `quality`, and `repair_advice` strictly
+        from the uploaded mass photograph so they are never overwritten by Nano Banana's
+        reconstructed studio images.
+        """
+        eff_gender = resolve_garment_gender(user_gender) or self.user_gender
+        shrunk = _shrink_for_vision(image_bytes, max_side=1280, q=85)
+        mass_sys, mass_user = _build_mass_catalog_prompts(
+            language=language,
+            user_gender=eff_gender,
+            max_items=max_items,
+        )
+
+        gem = self._get_gemini()
+        t0 = time.perf_counter()
+        raw: str | None = None
+        used_model = "gemini-3.5-flash"
+        for candidate_model in ("gemini-3.5-flash", "gemini-3.5-flash-lite"):
+            try:
+                raw = await gem.vision(
+                    system=mass_sys,
+                    user_parts=[mass_user, shrunk],
+                    model=candidate_model,
+                    temperature=0.1,
+                    max_tokens=4096,
+                    response_mime_type="application/json",
+                    response_schema=MASS_CATALOG_JSON_SCHEMA,
+                )
+                used_model = candidate_model
+                if raw:
+                    break
+            except Exception as exc:
+                logger.warning(
+                    "analyze_mass_catalog: model=%s failed (%s), trying fallback if available",
+                    candidate_model,
+                    repr(exc)[:200],
+                )
+                if candidate_model == "gemini-3.5-flash-lite":
+                    raise
+
+        parsed_root = _extract_json(raw or "")
+        if isinstance(parsed_root, dict):
+            raw_items = parsed_root.get("items") or []
+            scene_type = parsed_root.get("scene_type") or "hanging_closet"
+        elif isinstance(parsed_root, list):
+            raw_items = parsed_root
+            scene_type = "hanging_closet"
+        else:
+            raw_items = []
+            scene_type = "hanging_closet"
+
+        catalog_entries: list[dict[str, Any]] = []
+        for idx, raw_item in enumerate(raw_items[:max_items]):
+            if not isinstance(raw_item, dict):
+                continue
+            if raw_item.get("is_clothing") is False:
+                continue
+
+            # Preserve ground-truth condition/quality/state from the original mass photo
+            orig_state = str(raw_item.get("state") or "used").strip().lower()
+            if orig_state not in ("new", "used"):
+                orig_state = "used"
+            orig_condition = str(raw_item.get("condition") or "good").strip().lower()
+            if orig_condition not in ("bad", "fair", "good", "excellent"):
+                orig_condition = "good"
+            orig_quality = str(raw_item.get("quality") or "mid").strip().lower()
+            if orig_quality not in ("budget", "mid", "premium", "luxury"):
+                orig_quality = "mid"
+            orig_repair_advice = raw_item.get("repair_advice")
+            orig_recon_prompt = raw_item.get("reconstruction_prompt")
+
+            coerced = _coerce_single_garment(
+                dict(raw_item),
+                user_gender=eff_gender,
+                language=language,
+            )
+            coerced = _coerce_enums(coerced, user_gender=eff_gender)
+
+            # Re-lock ground-truth physical fields from the original uploaded mass photo
+            coerced["state"] = orig_state
+            coerced["condition"] = orig_condition
+            coerced["quality"] = orig_quality
+            coerced["repair_advice"] = orig_repair_advice
+            coerced["reconstruction_prompt"] = orig_recon_prompt
+            coerced["is_mass_pipeline"] = True
+            coerced["mass_scene_type"] = scene_type
+            coerced["provider_used"] = "gemini"
+            coerced["model_used"] = used_model
+            if not coerced.get("title") and coerced.get("name"):
+                coerced["title"] = coerced["name"]
+            if not coerced.get("name") and coerced.get("title"):
+                coerced["name"] = coerced["title"]
+
+            raw_bbox = raw_item.get("bbox")
+            if (
+                isinstance(raw_bbox, list)
+                and len(raw_bbox) == 4
+                and all(isinstance(v, (int, float)) for v in raw_bbox)
+            ):
+                bbox = [max(0, min(1000, int(v))) for v in raw_bbox]
+                if bbox[2] <= bbox[0] or bbox[3] <= bbox[1]:
+                    bbox = [0, 0, 1000, 1000]
+            else:
+                bbox = [0, 0, 1000, 1000]
+
+            ref_crop_bytes = image_bytes
+            if bbox != [0, 0, 1000, 1000]:
+                cropped = _crop_to_bbox(
+                    image_bytes,
+                    bbox,
+                    category=coerced.get("category"),
+                    is_single_item=False,
+                )
+                if cropped:
+                    ref_crop_bytes = cropped[0]
+
+            label = (
+                coerced.get("title")
+                or coerced.get("name")
+                or coerced.get("item_type")
+                or coerced.get("sub_category")
+                or f"Garment {idx + 1}"
+            )
+            catalog_entries.append({
+                "slot_index": idx,
+                "label": label,
+                "kind": "garment",
+                "bbox": bbox,
+                "ref_crop_bytes": ref_crop_bytes,
+                "analysis": coerced,
+            })
+
+        logger.info(
+            "analyze_mass_catalog OK model=%s scene=%s items=%d elapsed_ms=%d",
+            used_model,
+            scene_type,
+            len(catalog_entries),
+            int((time.perf_counter() - t0) * 1000),
+        )
+        return catalog_entries
+
+    async def analyze_mass_stream(
+        self,
+        images_bytes_list: list[bytes],
+        *,
+        language: str | None = None,
+        user_gender: str | None = None,
+        max_reconstructions: int = 100,
+        user: dict[str, Any] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Two-stage streaming Mass Closet & Pile pipeline:
+        Stage 1: Gemini 3.5 Flash catalogs all hanging/piled garments with DressApp's structured
+                 17-field JSON schema and ground-truth `state`, `condition`, `quality`.
+        Stage 2: Nano Banana (`gemini-3.1-flash-lite-image`) reconstructs each cataloged garment
+                 into a vertical, unfolded, front-facing studio image with a 100% clear
+                 (transparent RGBA) background fitted to the 900x1200 closet card canvas.
+        """
+        from app.services.reconstruction import reconstruct
+
+        t_start = time.perf_counter()
+        n_images = len(images_bytes_list)
+        yield {
+            "type": "progress",
+            "elapsed_s": 0.1,
+            "stage": "mass_cataloging",
+            "completed": 0,
+            "total": max(1, n_images),
+            "mode": "mass",
+        }
+
+        all_catalog_items: list[dict[str, Any]] = []
+        remaining_budget = max(1, int(max_reconstructions))
+
+        for img_idx, img_bytes in enumerate(images_bytes_list):
+            if remaining_budget <= 0:
+                break
+            per_image_cap = min(15, remaining_budget)
+            entries = await self.analyze_mass_catalog(
+                img_bytes,
+                language=language,
+                user_gender=user_gender,
+                max_items=per_image_cap,
+            )
+            for entry in entries:
+                slot_idx = len(all_catalog_items)
+                ref_fitted_bytes, ref_fitted_mime = ensure_transparent_vertical_card(
+                    entry["ref_crop_bytes"],
+                    category=entry["analysis"].get("category"),
+                )
+                entry["global_index"] = slot_idx
+                entry["image_index"] = img_idx
+                entry["initial_crop_b64"] = base64.b64encode(ref_fitted_bytes).decode("ascii")
+                entry["initial_crop_mime"] = ref_fitted_mime
+                all_catalog_items.append(entry)
+                remaining_budget -= 1
+                if remaining_budget <= 0:
+                    break
+
+        total_items = len(all_catalog_items)
+        items_meta = [
+            {
+                "index": item["global_index"],
+                "image_index": item["image_index"],
+                "label": item["label"],
+                "kind": item["kind"],
+                "bbox": item["bbox"],
+                "crop_base64": item["initial_crop_b64"],
+                "crop_mime": item["initial_crop_mime"],
+            }
+            for item in all_catalog_items
+        ]
+        yield {
+            "type": "detect",
+            "count": total_items,
+            "items_meta": items_meta,
+            "mode": "mass",
+        }
+
+        if total_items == 0:
+            yield {
+                "type": "done",
+                "count": 0,
+                "reconstructed_count": 0,
+                "mode": "mass",
+            }
+            return
+
+        yield {
+            "type": "progress",
+            "elapsed_s": round(time.perf_counter() - t_start, 1),
+            "stage": "mass_reconstructing",
+            "completed": 0,
+            "total": total_items,
+            "mode": "mass",
+        }
+
+        sem = asyncio.Semaphore(3)
+        result_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+
+        async def _reconstruct_worker(entry: dict[str, Any]) -> None:
+            slot_idx = entry["global_index"]
+            img_idx = entry["image_index"]
+            analysis = dict(entry["analysis"])
+            final_b64 = entry["initial_crop_b64"]
+            final_mime = "image/png"
+            did_reconstruct = False
+
+            async with sem:
+                try:
+                    recon = await reconstruct(
+                        entry["ref_crop_bytes"],
+                        analysis,
+                        reasons=["mass_pipeline"],
+                        validate=False,
+                        preserve_catalog_metadata=True,
+                        api_key=self.api_key,
+                        user=user,
+                    )
+                    if recon and (recon.get("clean_image_b64") or recon.get("image_b64")):
+                        final_b64 = recon.get("clean_image_b64") or recon["image_b64"]
+                        final_mime = recon.get("mime_type") or "image/png"
+                        did_reconstruct = True
+                        analysis["reconstructed"] = True
+                        analysis["reconstruction_model"] = recon.get("model")
+                except Exception as exc:
+                    logger.warning(
+                        "analyze_mass_stream: Nano Banana reconstruction failed for slot %d (%s); keeping transparent reference card",
+                        slot_idx,
+                        repr(exc)[:200],
+                    )
+
+            await result_queue.put({
+                "slot_idx": slot_idx,
+                "image_index": img_idx,
+                "label": entry["label"],
+                "kind": entry["kind"],
+                "bbox": entry["bbox"],
+                "crop_base64": final_b64,
+                "crop_mime": final_mime,
+                "analysis": analysis,
+                "reconstructed": did_reconstruct,
+            })
+
+        workers = [
+            asyncio.create_task(_reconstruct_worker(entry))
+            for entry in all_catalog_items
+        ]
+
+        completed_count = 0
+        reconstructed_count = 0
+        while completed_count < total_items:
+            res = await result_queue.get()
+            completed_count += 1
+            if res["reconstructed"]:
+                reconstructed_count += 1
+
+            yield {
+                "type": "matte",
+                "index": res["slot_idx"],
+                "image_index": res["image_index"],
+                "crop_base64": res["crop_base64"],
+                "crop_mime": res["crop_mime"],
+            }
+            yield {
+                "type": "item",
+                "index": res["slot_idx"],
+                "image_index": res["image_index"],
+                "label": res["label"],
+                "kind": res["kind"],
+                "bbox": res["bbox"],
+                "crop_base64": res["crop_base64"],
+                "crop_mime": res["crop_mime"],
+                "analysis": res["analysis"],
+                "reconstructed": res["reconstructed"],
+            }
+            yield {
+                "type": "progress",
+                "elapsed_s": round(time.perf_counter() - t_start, 1),
+                "stage": "mass_reconstructing",
+                "completed": completed_count,
+                "total": total_items,
+                "mode": "mass",
+            }
+
+        await asyncio.gather(*workers, return_exceptions=True)
+
+        yield {
+            "type": "done",
+            "count": completed_count,
+            "reconstructed_count": reconstructed_count,
+            "mode": "mass",
+        }
+
 
 def _should_advise_reconstruction(
     analysis: dict[str, Any], *, is_full_frame: bool,
@@ -4062,61 +4449,61 @@ def get_garment_vision_service(
     user_gender = resolve_garment_gender(user) if user and isinstance(user, dict) else None
 
     if user and isinstance(user, dict):
-        provider = resolve_user_ai_provider(user)
-        model = resolve_user_ai_model(user)
+        if is_tester_user(user):
+            provider = resolve_user_ai_provider(user)
+            model = resolve_user_ai_model(user)
 
-        # 1) If user has selected Google Gemini explicitly
-        if provider in ("google_ai", "gemini"):
-            user_gemini_key = api_key or resolve_user_custom_gemini_api_key(user)
-            gemini_model = resolve_user_gemini_model(user)
-            if user_gemini_key:
-                try:
-                    return GarmentVisionService(api_key=user_gemini_key, model=gemini_model, provider="gemini", user_gender=user_gender)
-                except Exception as exc:
-                    logger.warning("Failed to build user-scoped Gemini GarmentVisionService: %s", exc)
-            elif is_tester_user(user):
-                # Tester evaluating Gemini via server key
+            # 1) Tester selected Google Gemini explicitly
+            if provider in ("google_ai", "gemini"):
+                user_gemini_key = api_key or resolve_user_custom_gemini_api_key(user)
+                gemini_model = resolve_user_gemini_model(user)
+                if user_gemini_key:
+                    try:
+                        return GarmentVisionService(api_key=user_gemini_key, model=gemini_model, provider="gemini", user_gender=user_gender)
+                    except Exception as exc:
+                        logger.warning("Failed to build tester custom-key Gemini GarmentVisionService: %s", exc)
                 try:
                     return GarmentVisionService(model=gemini_model or "gemini-3.5-flash-lite", provider="gemini", user_gender=user_gender)
                 except Exception as exc:
                     logger.warning("Failed to build tester Gemini GarmentVisionService: %s", exc)
 
-        # 2) If user selected another supplier and entered a custom API key
-        elif provider not in ("dressapp", "gemma", "eyes"):
-            custom_key = api_key or resolve_user_custom_key(user, provider)
-            if custom_key:
+            # 2) Tester selected another supplier and entered a custom API key
+            elif provider not in ("dressapp", "gemma", "eyes"):
+                custom_key = api_key or resolve_user_custom_key(user, provider)
+                if custom_key:
+                    try:
+                        return GarmentVisionService(api_key=custom_key, model=model, provider=provider, user_gender=user_gender)
+                    except Exception as exc:
+                        logger.warning("Failed to build tester %s GarmentVisionService: %s", provider, exc)
+
+            # 3) Tester explicitly selected Gemma / DressApp Eyes
+            if provider in ("gemma", "eyes"):
                 try:
-                    return GarmentVisionService(api_key=custom_key, model=model, provider=provider, user_gender=user_gender)
+                    return GarmentVisionService(provider="gemma", model=model or "Eyes v1", user_gender=user_gender)
                 except Exception as exc:
-                    logger.warning("Failed to build user-scoped %s GarmentVisionService: %s", provider, exc)
+                    logger.warning("Failed to build DressApp Eyes GarmentVisionService: %s", exc)
 
-        # 3) If user explicitly selected Gemma (local/self-hosted)
-        if provider in ("gemma", "eyes"):
-            try:
-                return GarmentVisionService(provider="gemma", model=model or "Eyes v1", user_gender=user_gender)
-            except Exception as exc:
-                logger.warning("Failed to build DressApp Eyes GarmentVisionService: %s", exc)
-
-        # 4) If provider is dressapp:
-        # Check if the user is a tester who has configured an effective provider switch
+        # 4) Effective provider resolution:
+        # - Tester with DressApp Eyes -> "gemma"
+        # - Free user -> "gemma" (on-premises Eyes)
+        # - Manager / Professional user -> "gemini" (cloud Eyes)
         eff_provider = resolve_effective_provider(user)
         if eff_provider == "gemma":
             try:
-                return GarmentVisionService(provider="gemma", model=model or "Eyes v1", user_gender=user_gender)
+                return GarmentVisionService(provider="gemma", model="Eyes v1", user_gender=user_gender)
             except Exception as exc:
-                logger.warning("Failed to build tester DressApp Eyes Gemma GarmentVisionService: %s", exc)
+                logger.warning("Failed to build DressApp Eyes Gemma GarmentVisionService: %s", exc)
         elif eff_provider == "gemini":
             try:
-                return GarmentVisionService(provider="gemini", model=model or "gemini-3.5-flash-lite", user_gender=user_gender)
+                return GarmentVisionService(provider="gemini", model="gemini-3.5-flash-lite", user_gender=user_gender)
             except Exception as exc:
-                logger.warning("Failed to build tester Gemini GarmentVisionService: %s", exc)
+                logger.warning("Failed to build Gemini GarmentVisionService: %s", exc)
 
-        # 5) Platform default:
-        # Resolve against the authoritative DB runtime override from eyes_override
+        # 5) Platform default fallback (e.g., tester user with no explicit ai_configuration):
         active_server_provider = eyes_override.get_cached_active_provider()
         try:
             default_m = "gemini-3.5-flash-lite" if active_server_provider == "gemini" else "Eyes v1"
-            return GarmentVisionService(provider=active_server_provider, model=model or default_m, user_gender=user_gender)
+            return GarmentVisionService(provider=active_server_provider, model=default_m, user_gender=user_gender)
         except Exception as exc:
             logger.warning("Failed to build DressApp platform GarmentVisionService: %s", exc)
 

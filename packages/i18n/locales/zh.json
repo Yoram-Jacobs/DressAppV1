@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "自己的",
     "gender": "性别",
     "eyesSlowNotice": "标准引擎（约30秒）",
-    "skipWaitCta": "⚡ 解锁极速 Turbo"
+    "skipWaitCta": "⚡ 解锁极速 Turbo",
+    "pipeline": {
+      "selectorLabel": "拍摄与识别模式",
+      "singleTitle": "单件衣物",
+      "singleDesc": "平铺或挂在衣架上的单件衣物，实现精准抠图。",
+      "multiTitle": "多件穿搭造型",
+      "multiDesc": "全身穿搭照片 — 自动拆分并分析所穿的每一件单品。",
+      "massTitle": "衣橱挂架与衣物堆批量识别",
+      "massDesc": "衣架挂放或成堆衣物 — 自动编目每件单品并重建透明背景影棚卡片。",
+      "massBadgePro": "专业版 / 管理版",
+      "massQuotaBadge": "本月剩余影棚重建次数：{{remaining}} / {{limit}}",
+      "massUpgradeRequired": "衣橱与衣物堆批量上传功能仅在管理版和专业版方案中提供。",
+      "massMonthlyLimitReached": "已达到每月影棚重建上限（{{limit}}次/月），将在下一个计费周期重置。",
+      "stageCataloging": "正在编目照片中的衣物…",
+      "stageReconstructing": "正在重建影棚卡片 ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2074,7 +2089,7 @@
     "colorsToAvoid": "应避免的颜色",
     "addColorPlaceholder": "例如霓虹黄、橙色",
     "currentMembership": "当前计划",
-    "credits": "学分",
+    "credits": "积分",
     "proBenefits": "您可以完全访问无限的造型、数字产品通行证和市场货币化。",
     "managerBenefits": "您拥有无限的衣柜物品、趋势侦察权限和每日自动早晨造型。",
     "freeBenefits": "升级到 DressApp Club 可解锁无限物品、VIP 造型师和每日日程安排。",
@@ -2134,7 +2149,17 @@
     "enableOccupation": "根据职业搭配",
     "enableOccupationDesc": "根据您的工作需求定制穿搭建议（例如：律师定制西装，建筑工人耐穿工装）。",
     "noOccupationSet": "个人资料中未设置职业",
-    "currentOccupation": "当前"
+    "currentOccupation": "当前",
+    "onPremCreditsTooltip": "每日赠送 +10 本地部署 AI 积分，30 天内最高累计 300 积分",
+    "onPremAiCreditsCounter": "本地部署 AI 积分：{{count}}",
+    "reconstructionCreditsTooltip": "Nano Banana 重建 AI 积分",
+    "aiCreditsCounter": "重建积分：{{count}}",
+    "onPremAiCreditsLabel": "本地部署 AI 积分",
+    "onPremCreditsProgress": "可用 {{count}} / {{max}}",
+    "onPremCreditsNote": "每日 +10 积分 • 30 天内最高累计 300 积分（每件衣物、每次造型师提问或每件行李箱单品消耗 1 积分）",
+    "aiCreditsBalanceLabel": "重建积分 (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} 可用",
+    "topUpCredits": "充值"
   },
   "admin": {
     "title": "管理",
@@ -5047,5 +5072,57 @@
     "profile": "侧面",
     "utility": "实用",
     "multi_pocket": "多口袋"
+  },
+  "wardrobeStats": {
+    "tabOverview": "概览",
+    "tabSustainability": "可持续影响",
+    "sustainability": {
+      "utilisationTitle": "衣橱利用率",
+      "carbonTitle": "已追踪碳足迹",
+      "intakeManual": "手动添加",
+      "intakeReceipt": "来自收据",
+      "cpwTrendTitle": "单次穿着成本 (CPW) 趋势",
+      "cpwTrendDesc": "过去 6 个月的衣橱价值效率。",
+      "smartSuggestionTitle": "智能建议",
+      "smartSuggestionDesc": "您有 {{count}} 件衣物已超过 90 天未穿着。建议将它们上架到闲置市场或进行捐赠，让您的衣橱保持可持续循环。",
+      "listMarketplace": "上架到市场",
+      "markDonate": "标记为捐赠",
+      "selectToSell": "选择要出售的衣物",
+      "selectToDonate": "选择要捐赠的衣物",
+      "noUnwornItems": "没有找到未穿着的衣物。"
+    },
+    "onboarding": {
+      "pillDigitize": "添加与迁移",
+      "pillInvite": "免费扩容 (+10)",
+      "pillUpgrade": "Manager 计划",
+      "pillCircular": "循环护理",
+      "phase1Badge": "第 1–7 天 • 启航与初步价值",
+      "phase2Badge": "第 8–30 天 • 快速数字化",
+      "phase3Badge": "第 31–60 天 • 穿搭习惯养成",
+      "phase4Badge": "第 61–90 天 • 价值与可持续循环",
+      "emptyTitle": "开启您的数字衣橱",
+      "emptyDesc": "您的衣橱目前有 0 件单品。添加您的第一批衣物或从其他应用迁移衣橱，即可解锁 AI 穿搭造型师与可持续数据分析。",
+      "growingTitle": "继续充实您的数字衣橱（已有 {{count}} 件）",
+      "growingDesc": "达到 20 件以上单品后，您的 AI 造型师即可为您搭配适合天气的完整穿搭，并精准追踪单次穿着成本趋势。",
+      "tipTitle": "快速高效录入衣橱小贴士",
+      "tip1": "全身穿搭一键拆分：上传一张全身镜自拍或穿搭照——DressApp 会自动分割并标记每一件单品。",
+      "tip2": "电子收据与 Chrome 插件：导入网购电子收据，或在浏览网店时直接一键抓取单品。",
+      "tip3": "一键跨应用迁移：从其他衣橱应用搬家？几秒钟即可批量导入您的衣橱截图。",
+      "addFirstItemsBtn": "添加衣物",
+      "migrateWardrobeBtn": "迁移衣橱",
+      "inviteTitle": "免费扩大您的衣橱容量",
+      "inviteDesc": "通过专属链接邀请好友！每位注册的好友都会为您增加 +10 个免费衣橱席位（最高可达 150 件），双方还能获得额外 AI 积分奖励。",
+      "capacityProgress": "免费衣橱容量：{{used}} / {{capacity}} 个席位（已解锁 +{{bonus}} 个奖励席位）",
+      "inviteBtn": "邀请好友 (+10 席位)",
+      "upgradeTitle": "升级 Manager 计划，解锁 DressApp 全部潜能",
+      "upgradeDesc": "升级至 Manager 计划，畅享无限衣橱容量、一键衣橱迁移、每日无限次 AI 造型师咨询以及每日 Trend-Scout 时尚简报。",
+      "upgradeBenefit1": "无限衣橱容量席位与一键衣橱迁移",
+      "upgradeBenefit2": "优先享用 Gemini 3.5 Flash AI 造型师与旅行行李助手",
+      "upgradeBenefit3": "每日自动穿搭推荐与 Trend-Scout 潮流资讯",
+      "upgradeBtn": "升级至 Manager 计划",
+      "activeManagerBadge": "您已开通 {{tier}} 计划 —— 全部高级潜能已解锁！",
+      "allWornTitle": "100% 活跃衣橱利用率！",
+      "allWornDesc": "您衣橱中的每一件衣物都已物尽其用！继续与 AI 造型师记录日常穿搭，进一步降低平均单次穿着成本。"
+    }
   }
 }

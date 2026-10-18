@@ -53,6 +53,21 @@ export default function Profile() {
     );
   }, [user, form, i18n.language]);
 
+  const isTester = Boolean(
+    user?.subscription?.is_tester ||
+    user?.subscription?.plan_type === 'tester' ||
+    user?.roles?.includes('tester')
+  );
+
+  useEffect(() => {
+    api.getMe().then((freshUser) => {
+      if (freshUser) {
+        updateUserLocal(freshUser);
+      }
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const items = [];
     if (searchParams.get('open') === 'scheduler' || location.hash === '#scheduler-settings-section' || location.state?.scrollTo === 'scheduler-settings-section') {
@@ -61,7 +76,7 @@ export default function Profile() {
         document.getElementById('scheduler-settings-section')?.scrollIntoView({ behavior: 'smooth' });
       }, 150);
     }
-    if (searchParams.get('open') === 'ai-config' || searchParams.get('tab') === 'ai-config' || location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section') {
+    if (isTester && (searchParams.get('open') === 'ai-config' || searchParams.get('tab') === 'ai-config' || location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section')) {
       items.push('ai-config');
       setTimeout(() => {
         document.getElementById('ai-configuration-section')?.scrollIntoView({ behavior: 'smooth' });
@@ -70,7 +85,7 @@ export default function Profile() {
     if (items.length > 0) {
       setExpandedItems(items);
     }
-  }, [searchParams, location]);
+  }, [searchParams, location, isTester]);
 
   useEffect(() => {
     if (user?.preferred_language) {
@@ -288,7 +303,7 @@ export default function Profile() {
                   onValueChange={setExpandedItems}
                   className="w-full space-y-4"
                 >
-                  <AIConfiguration />
+                  {isTester && <AIConfiguration />}
                   <SubscriptionSettings />
                   <SchedulerSettings />
                   <CalendarConnect />

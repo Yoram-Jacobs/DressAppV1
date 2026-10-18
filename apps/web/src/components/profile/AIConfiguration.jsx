@@ -30,6 +30,11 @@ export function AIConfiguration() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
   const isRtl = i18n.dir() === 'rtl';
+  const isTester = Boolean(
+    user?.subscription?.is_tester ||
+    user?.subscription?.plan_type === 'tester' ||
+    user?.roles?.includes('tester')
+  );
   
   const [providerMode, setProviderMode] = useState('custom_keys');
   const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'dressapp');
@@ -43,13 +48,18 @@ export function AIConfiguration() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (!isTester) return;
     api.getMe().then((freshUser) => {
       if (freshUser) {
         updateUserLocal(freshUser);
       }
     }).catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isTester]);
+
+  if (!isTester) {
+    return null;
+  }
   
   const currentCredits = user?.ai_configuration?.current_credits ?? 1000;
   const creditsUsed = user?.ai_configuration?.credits_used_this_month ?? 0;

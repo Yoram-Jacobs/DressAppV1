@@ -876,7 +876,22 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "own",
     "eyesSlowNotice": "Standard Engine (~30s)",
-    "skipWaitCta": "⚡ Unlock Instant Turbo"
+    "skipWaitCta": "⚡ Unlock Instant Turbo",
+    "pipeline": {
+      "selectorLabel": "Capture Pipeline",
+      "singleTitle": "Single Garment",
+      "singleDesc": "One item laid flat or on a hanger for precision cutout.",
+      "multiTitle": "Multi-Garment Outfit",
+      "multiDesc": "Full outfit photo — splits and analyzes each worn piece.",
+      "massTitle": "Mass Closet & Pile",
+      "massDesc": "Closet rack or garment pile — catalogs every piece and rebuilds clear studio cards.",
+      "massBadgePro": "PRO / MANAGER",
+      "massQuotaBadge": "{{remaining}} / {{limit}} studio rebuilds left this month",
+      "massUpgradeRequired": "Mass Closet & Pile upload is available on Manager and Professional plans.",
+      "massMonthlyLimitReached": "Monthly studio reconstruction limit ({{limit}}/month) reached. Resets on your next billing cycle.",
+      "stageCataloging": "Cataloging garments in photo…",
+      "stageReconstructing": "Rebuilding studio cards ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2136,7 +2151,17 @@
     "enableOccupation": "Match to Occupation",
     "enableOccupationDesc": "Tailor outfit recommendations to your job's demands (e.g., tailored suits for lawyers, rugged workwear for construction builders).",
     "noOccupationSet": "No occupation set in profile",
-    "currentOccupation": "Current"
+    "currentOccupation": "Current",
+    "onPremCreditsTooltip": "+10 daily On-Premises AI credits, cumulative up to 300 over 30 days",
+    "onPremAiCreditsCounter": "On-Premises AI Credits: {{count}}",
+    "reconstructionCreditsTooltip": "Nano Banana Reconstruction AI credits",
+    "aiCreditsCounter": "Reconstruction Credits: {{count}}",
+    "onPremAiCreditsLabel": "On-Premises AI Credits",
+    "onPremCreditsProgress": "{{count}} / {{max}} available",
+    "onPremCreditsNote": "+10 daily credits • Cumulative up to 300 over 30 days (1 credit per garment, stylist prompt, or suitcase item)",
+    "aiCreditsBalanceLabel": "Reconstruction Credits (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} available",
+    "topUpCredits": "Top Up"
   },
   "admin": {
     "title": "Admin",
@@ -5032,5 +5057,57 @@
     "front": "Front",
     "back": "Back",
     "profile": "Profile"
+  },
+  "wardrobeStats": {
+    "tabOverview": "Overview",
+    "tabSustainability": "Sustainability Impact",
+    "sustainability": {
+      "utilisationTitle": "Wardrobe Utilisation",
+      "carbonTitle": "Carbon Tracked",
+      "intakeManual": "Manual Adds",
+      "intakeReceipt": "From Receipts",
+      "cpwTrendTitle": "Cost-per-wear Trend",
+      "cpwTrendDesc": "Your 6-month closet value efficiency.",
+      "smartSuggestionTitle": "Smart Suggestion",
+      "smartSuggestionDesc": "You have {{count}} items that haven't been worn in 90 days. Consider listing them on the Marketplace or donating them to keep your closet sustainable.",
+      "listMarketplace": "List on Marketplace",
+      "markDonate": "Mark to Donate",
+      "selectToSell": "Select items to sell",
+      "selectToDonate": "Select items to donate",
+      "noUnwornItems": "No unworn items found."
+    },
+    "onboarding": {
+      "pillDigitize": "Add & Migrate",
+      "pillInvite": "Free Slots (+10)",
+      "pillUpgrade": "Manager Plan",
+      "pillCircular": "Circular Care",
+      "phase1Badge": "Days 1–7 • Kickoff & First Value",
+      "phase2Badge": "Days 8–30 • Rapid Digitizing",
+      "phase3Badge": "Days 31–60 • Style Adoption",
+      "phase4Badge": "Days 61–90 • Value & Circularity",
+      "emptyTitle": "Kickstart Your Digital Closet",
+      "emptyDesc": "Your closet has 0 items right now. Add your first garments or migrate your wardrobe from another app to unlock AI outfit styling and sustainability insights.",
+      "growingTitle": "Keep Building Your Digital Closet ({{count}} items)",
+      "growingDesc": "Reach 20+ items so your AI Stylist can assemble complete, weather-ready outfits and track accurate Cost-per-Wear trends.",
+      "tipTitle": "Fast Digitizing Tips",
+      "tip1": "Full-Outfit Snap: Upload one mirror or outfit photo—DressApp automatically splits and tags each garment in a single pass.",
+      "tip2": "Receipts & Chrome Extension: Import digital shopping receipts or clip items directly from online stores.",
+      "tip3": "1-Click App Migration: Moving from another wardrobe app? Batch-import your screenshots in seconds.",
+      "addFirstItemsBtn": "Add Items",
+      "migrateWardrobeBtn": "Migrate Wardrobe",
+      "inviteTitle": "Enlarge Your Closet Capacity for Free",
+      "inviteDesc": "Invite friends with your personal link! Every friend who joins gives you +10 free closet slots (up to 150 items) plus bonus AI credits for both of you.",
+      "capacityProgress": "Free Closet Capacity: {{used}} / {{capacity}} slots (+{{bonus}} bonus slots)",
+      "inviteBtn": "Invite Friends (+10 Slots)",
+      "upgradeTitle": "Unlock DressApp's Full Power with Manager",
+      "upgradeDesc": "Upgrade to the Manager plan for unlimited closet capacity, 1-click Wardrobe Migration, unlimited daily AI Stylist requests, and automated Daily Trend-Scout.",
+      "upgradeBenefit1": "Unlimited garment slots & 1-click Wardrobe Migration",
+      "upgradeBenefit2": "Priority Gemini 3.5 Flash AI Stylist & Suitcase Planner",
+      "upgradeBenefit3": "Daily automated outfit suggestions & Trend-Scout feeds",
+      "upgradeBtn": "Upgrade to Manager Plan",
+      "activeManagerBadge": "You're on the {{tier}} plan — full power unlocked!",
+      "allWornTitle": "100% Active Wardrobe Utilisation!",
+      "allWornDesc": "Every item in your closet has been worn! Keep logging wears with your AI Stylist to lower your average Cost-per-Wear."
+    }
   }
 }

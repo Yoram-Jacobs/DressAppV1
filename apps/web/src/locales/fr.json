@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "propre",
     "gender": "Genre",
     "eyesSlowNotice": "Moteur standard (~30 s)",
-    "skipWaitCta": "⚡ Débloquer le Turbo instantané"
+    "skipWaitCta": "⚡ Débloquer le Turbo instantané",
+    "pipeline": {
+      "selectorLabel": "Mode de capture",
+      "singleTitle": "Vêtement unique",
+      "singleDesc": "Un article posé à plat ou sur cintre pour un détourage précis.",
+      "multiTitle": "Tenue multi-pièces",
+      "multiDesc": "Photo de tenue complète — sépare et analyse chaque pièce portée.",
+      "massTitle": "Placard et pile en masse",
+      "massDesc": "Penderie ou pile de linge — catalogue chaque pièce et génère des fiches studio détourées.",
+      "massBadgePro": "PRO / MANAGER",
+      "massQuotaBadge": "{{remaining}} / {{limit}} reconstructions studio restantes ce mois-ci",
+      "massUpgradeRequired": "L'import en masse de placard et pile est disponible avec les forfaits Manager et Professionnel.",
+      "massMonthlyLimitReached": "Limite mensuelle de reconstruction studio ({{limit}}/mois) atteinte. Réinitialisation au prochain cycle de facturation.",
+      "stageCataloging": "Catalogage des vêtements sur la photo…",
+      "stageReconstructing": "Reconstruction des fiches studio ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2134,7 +2149,17 @@
     "enableOccupation": "Adapter à la profession",
     "enableOccupationDesc": "Adaptez les recommandations aux exigences de votre travail (ex. costumes pour avocats, vêtements robustes pour ouvriers du bâtiment).",
     "noOccupationSet": "Aucune profession définie dans le profil",
-    "currentOccupation": "Actuel"
+    "currentOccupation": "Actuel",
+    "onPremCreditsTooltip": "+10 crédits IA locaux par jour, cumulables jusqu’à 300 sur 30 jours",
+    "onPremAiCreditsCounter": "Crédits IA Locaux : {{count}}",
+    "reconstructionCreditsTooltip": "Crédits de Reconstruction Nano Banana",
+    "aiCreditsCounter": "Crédits de Reconstruction : {{count}}",
+    "onPremAiCreditsLabel": "Crédits IA Locaux (On-Premises)",
+    "onPremCreditsProgress": "{{count}} / {{max}} disponibles",
+    "onPremCreditsNote": "+10 crédits quotidiens • Cumulables jusqu’à 300 sur 30 jours (1 crédit par vêtement, prompt styliste ou article de valise)",
+    "aiCreditsBalanceLabel": "Crédits de Reconstruction (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} disponibles",
+    "topUpCredits": "Recharger"
   },
   "admin": {
     "title": "Administrateur",
@@ -5035,5 +5060,57 @@
     "front": "Devant",
     "back": "Dos",
     "profile": "Profil"
+  },
+  "wardrobeStats": {
+    "tabOverview": "Aperçu",
+    "tabSustainability": "Impact Durable",
+    "sustainability": {
+      "utilisationTitle": "Utilisation du Dressing",
+      "carbonTitle": "Carbone Suivi",
+      "intakeManual": "Ajouts Manuels",
+      "intakeReceipt": "Depuis Reçus",
+      "cpwTrendTitle": "Tendance Coût par Port",
+      "cpwTrendDesc": "L'efficacité de votre garde-robe sur 6 mois.",
+      "smartSuggestionTitle": "Suggestion Intelligente",
+      "smartSuggestionDesc": "Vous avez {{count}} articles non portés depuis 90 jours. Pensez à les publier sur la Marketplace ou à les donner pour garder un dressing durable.",
+      "listMarketplace": "Publier sur Marketplace",
+      "markDonate": "Marquer à Donner",
+      "selectToSell": "Sélectionner les articles à vendre",
+      "selectToDonate": "Sélectionner les articles à donner",
+      "noUnwornItems": "Aucun article non porté trouvé."
+    },
+    "onboarding": {
+      "pillDigitize": "Ajouter & Migrer",
+      "pillInvite": "Places Gratuites (+10)",
+      "pillUpgrade": "Forfait Manager",
+      "pillCircular": "Mode Circulaire",
+      "phase1Badge": "Jours 1–7 • Démarrage & Première Valeur",
+      "phase2Badge": "Jours 8–30 • Numérisation Rapide",
+      "phase3Badge": "Jours 31–60 • Adoption du Style",
+      "phase4Badge": "Jours 61–90 • Valeur & Circularité",
+      "emptyTitle": "Lancez votre garde-robe numérique",
+      "emptyDesc": "Votre garde-robe contient actuellement 0 article. Ajoutez vos premiers vêtements ou migrez votre dressing depuis une autre application pour débloquer le styliste IA et vos analyses durables.",
+      "growingTitle": "Continuez à enrichir votre dressing ({{count}} articles)",
+      "growingDesc": "Atteignez 20+ articles pour permettre à votre Styliste IA de composer des tenues complètes adaptées à la météo et de suivre votre coût par port.",
+      "tipTitle": "Astuces de numérisation rapide",
+      "tip1": "Photo de tenue complète : Importez une seule photo miroir — DressApp découpe et étiquette automatiquement chaque vêtement en un seul passage.",
+      "tip2": "Reçus & Extension Chrome : Importez vos factures d'achat numériques ou ajoutez des articles directement depuis vos boutiques en ligne.",
+      "tip3": "Migration en 1 clic : Vous venez d'une autre application ? Importez vos captures d'écran par lot en quelques secondes.",
+      "addFirstItemsBtn": "Ajouter des Articles",
+      "migrateWardrobeBtn": "Migrer le Dressing",
+      "inviteTitle": "Agrandissez votre garde-robe gratuitement",
+      "inviteDesc": "Invitez vos amis avec votre lien personnel ! Chaque ami inscrit vous offre +10 places gratuites (jusqu'à 150 articles) ainsi que des crédits IA bonus pour vous deux.",
+      "capacityProgress": "Capacité gratuite : {{used}} / {{capacity}} places (+{{bonus}} places bonus)",
+      "inviteBtn": "Inviter des Amis (+10 Places)",
+      "upgradeTitle": "Débloquez toute la puissance de DressApp avec le forfait Manager",
+      "upgradeDesc": "Passez au forfait Manager pour une capacité illimitée, la migration en 1 clic, des requêtes Styliste IA illimitées et le flux quotidien Trend-Scout.",
+      "upgradeBenefit1": "Places illimitées dans le dressing & migration en 1 clic",
+      "upgradeBenefit2": "Styliste IA & Valise propulsés en priorité par Gemini 3.5 Flash",
+      "upgradeBenefit3": "Suggestions quotidiennes automatiques & flux Trend-Scout",
+      "upgradeBtn": "Passer au Forfait Manager",
+      "activeManagerBadge": "Vous êtes sur le forfait {{tier}} — pleine puissance activée !",
+      "allWornTitle": "100 % d'utilisation active du dressing !",
+      "allWornDesc": "Chaque article de votre dressing a été porté ! Continuez d'enregistrer vos tenues avec votre Styliste IA pour réduire votre coût par port."
+    }
   }
 }

@@ -117,7 +117,11 @@ export const closet = {
           } catch (_e) {
             /* keep generic detail */
           }
-          const err = new Error(detail);
+          const msg =
+            detail && typeof detail === 'object'
+              ? detail.message || detail.code || `HTTP ${resp.status}`
+              : String(detail);
+          const err = new Error(msg);
           err.response = { status: resp.status, data: { detail } };
           throw err;
         }

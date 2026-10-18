@@ -233,6 +233,7 @@ export function ProfileScreen() {
   const [credits, setCredits] = useState(10);
   const [dailyCredits, setDailyCredits] = useState(10);
   const [subscription, setSubscription] = useState<any>(null);
+  const [isTester, setIsTester] = useState(false);
   const [closetCount, setClosetCount] = useState<number>(0);
   const [closetBonus, setClosetBonus] = useState<number>(0);
 
@@ -374,6 +375,7 @@ export function ProfileScreen() {
         // Subscription & Limits
         const sub = u.subscription || {};
         setSubscription(sub);
+        setIsTester(Boolean(sub.is_tester || sub.plan_type === 'tester' || u.roles?.includes('tester')));
         const isActive = Boolean(sub.is_active);
         const effectiveTier = (isActive && sub.tier && sub.tier !== 'free')
           ? sub.tier
@@ -625,12 +627,16 @@ export function ProfileScreen() {
           colors_to_avoid: colorsToAvoid,
           preferred_dress_code: preferredDressCode,
         },
-        ai_configuration: {
-          provider_mode: 'custom_keys',
-          selected_provider: selectedProvider,
-          selected_model: selectedModel,
-          custom_keys: customKeys,
-        },
+        ...(isTester
+          ? {
+              ai_configuration: {
+                provider_mode: 'custom_keys',
+                selected_provider: selectedProvider,
+                selected_model: selectedModel,
+                custom_keys: customKeys,
+              },
+            }
+          : {}),
         preferred_voice_id: preferredVoiceId,
         scheduler_settings: {
           enabled: canAccessScheduler ? schedulerEnabled : false,
@@ -1351,41 +1357,43 @@ export function ProfileScreen() {
 
               {!collapsedGroups.subscription && (
                 <View style={styles.groupItems}>
-                  {/* 2.1 AI Stylist & Model Settings */}
-                  <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <TouchableOpacity
-                      style={styles.sectionHeader}
-                      onPress={() => toggleAccordion('ai')}
-                    >
-                      <View style={styles.sectionTitleRow}>
-                        <Lucide.Cpu size={18} color="#3B82F6" />
-                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                          {t('profile.sections.aiConfig', { defaultValue: 'AI Stylist & Model Settings' })}
-                        </Text>
-                      </View>
-                      {expandedSection === 'ai' ? (
-                        <Lucide.ChevronUp size={18} color={colors.mutedFg} />
-                      ) : (
-                        <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                  {/* 2.1 AI Stylist & Model Settings (Strictly for Tester group) */}
+                  {isTester && (
+                    <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      <TouchableOpacity
+                        style={styles.sectionHeader}
+                        onPress={() => toggleAccordion('ai')}
+                      >
+                        <View style={styles.sectionTitleRow}>
+                          <Lucide.Cpu size={18} color="#3B82F6" />
+                          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                            {t('profile.sections.aiConfig', { defaultValue: 'AI Stylist & Model Settings' })}
+                          </Text>
+                        </View>
+                        {expandedSection === 'ai' ? (
+                          <Lucide.ChevronUp size={18} color={colors.mutedFg} />
+                        ) : (
+                          <Lucide.ChevronDown size={18} color={colors.mutedFg} />
+                        )}
+                      </TouchableOpacity>
+                      {expandedSection === 'ai' && (
+                        <View style={styles.sectionBody}>
+                          <AIConfiguration
+                            selectedProvider={selectedProvider}
+                            setSelectedProvider={setSelectedProvider}
+                            selectedModel={selectedModel}
+                            setSelectedModel={setSelectedModel}
+                            preferredVoiceId={preferredVoiceId}
+                            setPreferredVoiceId={setPreferredVoiceId}
+                            customKeys={customKeys}
+                            onSaveApiKey={handleSaveApiKey}
+                            onRemoveApiKey={handleRemoveApiKey}
+                            onSaveConfig={handleSaveConfig}
+                          />
+                        </View>
                       )}
-                    </TouchableOpacity>
-                    {expandedSection === 'ai' && (
-                      <View style={styles.sectionBody}>
-                        <AIConfiguration
-                          selectedProvider={selectedProvider}
-                          setSelectedProvider={setSelectedProvider}
-                          selectedModel={selectedModel}
-                          setSelectedModel={setSelectedModel}
-                          preferredVoiceId={preferredVoiceId}
-                          setPreferredVoiceId={setPreferredVoiceId}
-                          customKeys={customKeys}
-                          onSaveApiKey={handleSaveApiKey}
-                          onRemoveApiKey={handleRemoveApiKey}
-                          onSaveConfig={handleSaveConfig}
-                        />
-                      </View>
-                    )}
-                  </View>
+                    </View>
+                  )}
 
                   {/* 2.2 Subscription & AI Credits */}
                   <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -1399,9 +1407,26 @@ export function ProfileScreen() {
                           color={subscription?.is_active && tierName.toLowerCase() !== 'free' ? '#EAB308' : colors.accent}
                         />
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                            {t('profile.sections.subscription', { defaultValue: 'Subscription & AI Credits' })}
-                          </Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                              {t('profile.sections.subscription', { defaultValue: 'Subscription & Limits' })}
+                            </Text>
+                            {!(subscription?.is_active && tierName.toLowerCase() !== 'free') && (
+                              <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }}>
+                                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}>
+                                  {t('profile.onPremAiCreditsCounter', {
+                                    count: (user as any)?.onprem_credits_balance ?? (user as any)?.ai_configuration?.onprem_credits_balance ?? 10,
+                                    defaultValue: `On-Premises AI Credits: ${(user as any)?.onprem_credits_balance ?? 10}`,
+                                  })}
+                                </Text>
+                              </View>
+                            )}
+                            <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }}>
+                              <Text style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}>
+                                {t('profile.aiCreditsCounter', { count: credits, defaultValue: `Reconstruction Credits: ${credits}` })}
+                              </Text>
+                            </View>
+                          </View>
                           <Text style={[styles.sectionSubtext, { color: colors.mutedFg }]}>
                             {subscription?.is_active && tierName.toLowerCase() !== 'free'
                               ? t('profile.subActiveSummary', {
@@ -1413,11 +1438,14 @@ export function ProfileScreen() {
                                   })(),
                                   date: subscription?.expires_at ? new Date(subscription.expires_at).toLocaleDateString() : '',
                                 })
-                              : t('profile.subFreeSummary', {
+                              : `${t('profile.subFreeSummary', {
                                   defaultValue: 'Free Plan: {{count}} / {{capacity}} items used',
                                   count: closetCount,
                                   capacity: Math.min(150, 50 + closetBonus),
-                                })}
+                                })} • ${t('profile.onPremAiCreditsCounter', {
+                                  count: (user as any)?.onprem_credits_balance ?? (user as any)?.ai_configuration?.onprem_credits_balance ?? 10,
+                                  defaultValue: `On-Premises AI Credits: ${(user as any)?.onprem_credits_balance ?? 10}`,
+                                })} • ${t('profile.aiCreditsCounter', { count: credits, defaultValue: `Reconstruction Credits: ${credits}` })}`}
                           </Text>
                         </View>
                       </View>

@@ -31,6 +31,20 @@ export function useTierLimits() {
   const canAccessTrendScout = !isFree;
   const canAccessScheduler = !isFree;
   const canAccessMigration = !isFree;
+  const canAccessMassUpload = !isFree;
+
+  const nanoBananaMonthlyLimit =
+    user?.nano_banana_monthly?.nano_banana_monthly_limit ??
+    user?.ai_configuration?.nano_banana_monthly_limit ??
+    100;
+  const nanoBananaMonthlyUsed =
+    user?.nano_banana_monthly?.nano_banana_monthly_used ??
+    user?.ai_configuration?.nano_banana_monthly_used ??
+    0;
+  const nanoBananaMonthlyRemaining =
+    user?.nano_banana_monthly?.nano_banana_monthly_remaining ??
+    user?.ai_configuration?.nano_banana_monthly_remaining ??
+    Math.max(0, nanoBananaMonthlyLimit - nanoBananaMonthlyUsed);
 
   const closetCapacityBonus = user?.closet_capacity_bonus || 0;
   const maxClosetSlots = isFree ? Math.min(150, 50 + closetCapacityBonus) : Infinity;
@@ -60,6 +74,10 @@ export function useTierLimits() {
     canAccessTrendScout,
     canAccessScheduler,
     canAccessMigration,
+    canAccessMassUpload,
+    nanoBananaMonthlyLimit,
+    nanoBananaMonthlyUsed,
+    nanoBananaMonthlyRemaining,
     maxClosetSlots,
     maxAiActionsPerDay,
     getUpgradeMessage,

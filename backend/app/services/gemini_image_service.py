@@ -212,7 +212,7 @@ class GeminiImageService:
     def _build_edit_prompt(
         user_prompt: str, meta: dict[str, Any] | None
     ) -> str:
-        if "High-fidelity editorial product photograph" in user_prompt or "Studio lighting" in user_prompt:
+        if "High-fidelity editorial product photograph" in user_prompt or "Studio lighting" in user_prompt or "Studio e-commerce flat-lay" in user_prompt:
             return user_prompt[:1000]
         meta = meta or {}
         descriptor_bits: list[str] = []
@@ -223,11 +223,42 @@ class GeminiImageService:
         descriptor = ", ".join(descriptor_bits) if descriptor_bits else "garment"
         composed = (
             f"Commercial catalog product photograph of a complete isolated {descriptor}. {user_prompt}. "
-            "Centered flat lay filling frame, solid seamless off-white background (hex #F5F2EB), "
+            "Strictly vertical portrait orientation, completely unfolded, centered flat-lay filling frame, "
+            "pure uniform studio background for clean alpha cutout, "
             "even diffused studio softbox lighting, sharp fabric weave and edge detail, true color fidelity. "
-            "Negative: person, model, mannequin, hanger, shadow, text, watermark."
+            "Negative: person, model, mannequin, hanger, closet rod, shadow, text, watermark."
         )
         return composed[:1000]
+
+
+def build_mass_reconstruction_prompt(item_analysis: dict[str, Any]) -> str:
+    """Build a studio-quality, vertical, unfolded, front-facing reconstruction prompt for Nano Banana."""
+    custom_prompt = (item_analysis.get("reconstruction_prompt") or "").strip()
+    colors = item_analysis.get("colors") or []
+    color_str = ", ".join(str(c) for c in colors if c) or str(item_analysis.get("color") or "")
+    materials = item_analysis.get("fabric_materials") or []
+    mat_str = ", ".join(str(m) for m in materials if m) or str(item_analysis.get("material") or "")
+    pattern = str(item_analysis.get("pattern") or "")
+    sub_cat = str(item_analysis.get("sub_category") or item_analysis.get("item_type") or item_analysis.get("category") or "garment")
+    title = str(item_analysis.get("title") or item_analysis.get("name") or sub_cat)
+    caption = str(item_analysis.get("caption") or "")
+
+    spec_parts = [p for p in (color_str, mat_str, pattern, sub_cat) if p and p.lower() != "unknown"]
+    spec_desc = " ".join(spec_parts) if spec_parts else title
+    detail_clause = f" Visual details: {custom_prompt or caption}." if (custom_prompt or caption) else ""
+
+    prompt = (
+        f"Studio e-commerce flat-lay product photograph of a single isolated garment: {title} ({spec_desc})."
+        f"{detail_clause} "
+        "The garment must be completely unfolded, neatly laid out flat, strictly vertical upright portrait orientation "
+        "(collar/waistband at top, hem/cuffs at bottom), front-facing, symmetrical, and centered with balanced margins "
+        "to fit a 3:4 vertical closet card. Pure uniform solid white background (#FFFFFF) with zero cast shadows so "
+        "background alpha removal is 100% clean. Soft, even studio lighting preserving exact fabric weave, stitching, "
+        "buttons, and color shades. Do NOT include any hanger, closet rod, shelf, mannequin, human body parts, "
+        "adjacent clothes, price tags, or shadows."
+    )
+    return prompt[:1000]
+
 
 
 def _detect_mime_type(data: bytes) -> str:

@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "自分の",
     "gender": "性別",
     "eyesSlowNotice": "標準エンジン（約30秒）",
-    "skipWaitCta": "⚡ インスタントターボを解除"
+    "skipWaitCta": "⚡ インスタントターボを解除",
+    "pipeline": {
+      "selectorLabel": "撮影・解析モード",
+      "singleTitle": "単品アイテム",
+      "singleDesc": "平置きまたはハンガーにかけた1着を高精度に切り抜きます。",
+      "multiTitle": "複数アイテム（全身コーデ）",
+      "multiDesc": "全身コーデ写真から着用している各アイテムを分割・解析します。",
+      "massTitle": "クローゼット・衣類まとめ撮り",
+      "massDesc": "ハンガーラックや畳んだ衣類の山から全アイテムをカタログ化し、背景透過のスタジオ画像を生成します。",
+      "massBadgePro": "プロ / マネージャー",
+      "massQuotaBadge": "今月のスタジオ再構築残り: {{remaining}} / {{limit}}",
+      "massUpgradeRequired": "クローゼット・まとめ撮り機能はマネージャーおよびプロフェッショナルプランでご利用いただけます。",
+      "massMonthlyLimitReached": "月間スタジオ再構築上限（月{{limit}}回）に達しました。次回の請求サイクルでリセットされます。",
+      "stageCataloging": "写真内の衣類をカタログ化中…",
+      "stageReconstructing": "スタジオカードを再構築中 ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2134,7 +2149,17 @@
     "enableOccupation": "職業に合わせて提案",
     "enableOccupationDesc": "仕事の要求に合わせて服装の提案をカスタマイズします（例：弁护士にはスーツ、建設作業員には丈夫な作業着など）。",
     "noOccupationSet": "プロフィールに職業が設定されていません",
-    "currentOccupation": "現在"
+    "currentOccupation": "現在",
+    "onPremCreditsTooltip": "毎日+10オンプレミスAIクレジット（30日間で最大300まで累積）",
+    "onPremAiCreditsCounter": "オンプレミスAIクレジット: {{count}}",
+    "reconstructionCreditsTooltip": "Nano Banana 再構築AIクレジット",
+    "aiCreditsCounter": "再構築クレジット: {{count}}",
+    "onPremAiCreditsLabel": "オンプレミスAIクレジット",
+    "onPremCreditsProgress": "{{count}} / {{max}} 利用可能",
+    "onPremCreditsNote": "毎日+10クレジット • 30日間で最大300まで累積（衣類分析・スタイリスト質問・スーツケース1点につき1クレジット）",
+    "aiCreditsBalanceLabel": "再構築クレジット (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} 利用可能",
+    "topUpCredits": "チャージ"
   },
   "admin": {
     "title": "管理",
@@ -5048,5 +5073,57 @@
     "profile": "側面",
     "utility": "ユーティリティ",
     "multi_pocket": "マルチポケット"
+  },
+  "wardrobeStats": {
+    "tabOverview": "概要",
+    "tabSustainability": "サステナビリティ効果",
+    "sustainability": {
+      "utilisationTitle": "ワードローブ稼働率",
+      "carbonTitle": "追跡されたCO₂排出量",
+      "intakeManual": "手動追加",
+      "intakeReceipt": "レシートから追加",
+      "cpwTrendTitle": "着用1回あたりコスト（CPW）推移",
+      "cpwTrendDesc": "過去6ヶ月間のワードローブ価値効率。",
+      "smartSuggestionTitle": "スマート提案",
+      "smartSuggestionDesc": "過去90日間着用されていないアイテムが {{count}} 点あります。サステナブルなクローゼットを保つため、マーケットプレイスへの出品や寄付を検討しましょう。",
+      "listMarketplace": "マーケットプレイスに出品",
+      "markDonate": "寄付としてマーク",
+      "selectToSell": "出品するアイテムを選択",
+      "selectToDonate": "寄付するアイテムを選択",
+      "noUnwornItems": "未着用のアイテムはありません。"
+    },
+    "onboarding": {
+      "pillDigitize": "追加・移行",
+      "pillInvite": "無料枠 (+10)",
+      "pillUpgrade": "Managerプラン",
+      "pillCircular": "サーキュラーケア",
+      "phase1Badge": "1〜7日目 • スタート＆初期価値",
+      "phase2Badge": "8〜30日目 • スピード登録",
+      "phase3Badge": "31〜60日目 • スタイル活用",
+      "phase4Badge": "61〜90日目 • 価値最大化＆循環",
+      "emptyTitle": "デジタルクローゼットを始めよう",
+      "emptyDesc": "現在クローゼットのアイテムは0点です。最初の服を追加するか、他のアプリからワードローブを移行して、AIスタイリングとサステナビリティ分析を解放しましょう。",
+      "growingTitle": "デジタルクローゼットを充実させましょう（現在 {{count}} 点）",
+      "growingDesc": "20点以上登録すると、AIスタイリストが天候に合わせた全身コーデを提案し、正確な着用1回あたりコストを追跡できるようになります。",
+      "tipTitle": "素早く効率的に登録するコツ",
+      "tip1": "全身コーデ写真で一括登録：全身写真を1枚アップロードするだけで、DressAppが各アイテムを自動で切り抜き・タグ付けします。",
+      "tip2": "レシート＆Chrome拡張機能：デジタル領収書のインポートや、ECサイトから直接アイテムを取り込めます。",
+      "tip3": "1クリック移行：他のクローゼットアプリからの乗り換えも、スクリーンショットから数秒で一括インポート可能です。",
+      "addFirstItemsBtn": "アイテムを追加",
+      "migrateWardrobeBtn": "ワードローブを移行",
+      "inviteTitle": "クローゼット容量を無料で拡大",
+      "inviteDesc": "専用紹介リンクで友達を招待しましょう！友達が登録するたびに無料枠が+10枠（最大150点まで）増え、お互いにボーナスAIクレジットも獲得できます。",
+      "capacityProgress": "無料クローゼット容量: {{used}} / {{capacity}} 枠 (+{{bonus}} ボーナス枠)",
+      "inviteBtn": "友達を招待 (+10枠)",
+      "upgradeTitle": "ManagerプランでDressAppの全機能を解放",
+      "upgradeDesc": "Managerプランにアップグレードすると、容量無制限、1クリック移行、AIスタイリストの1日無制限利用、毎日のTrend-Scoutが解放されます。",
+      "upgradeBenefit1": "クローゼット容量無制限＆1クリックワードローブ移行",
+      "upgradeBenefit2": "高速Gemini 3.5 FlashによるAIスタイリスト＆旅行パッキング",
+      "upgradeBenefit3": "毎日の自動コーデ提案＆Trend-Scoutフィード",
+      "upgradeBtn": "Managerプランにアップグレード",
+      "activeManagerBadge": "{{tier}}プランをご利用中 — すべての機能が解放されています！",
+      "allWornTitle": "ワードローブ稼働率100%達成！",
+      "allWornDesc": "クローゼットのすべてのアイテムが着用されています！AIスタイリストで着用記録を続けて、着用1回あたりのコストをさらに下げましょう。"
+    }
   }
 }

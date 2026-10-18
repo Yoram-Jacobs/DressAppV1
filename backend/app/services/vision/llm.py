@@ -440,6 +440,195 @@ EYES_JSON_SCHEMA: dict[str, Any] = {
     ],
 }
 
+# ─────────────────────────────────────────────────────────────────────
+# Mass Closet & Pile Pipeline Structured JSON Schema (Gemini 3.5 Flash)
+# Uses DressApp's canonical 17-field garment taxonomy + bbox + reconstruction_prompt
+# in OpenAPI 3.0 / google-genai response_schema format.
+# ─────────────────────────────────────────────────────────────────────
+MASS_CATALOG_ITEM_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "required": [
+        "slot_index",
+        "is_clothing",
+        "name",
+        "title",
+        "caption",
+        "category",
+        "sub_category",
+        "item_type",
+        "gender",
+        "dress_code",
+        "season",
+        "colors",
+        "fabric_materials",
+        "pattern",
+        "state",
+        "condition",
+        "quality",
+        "tags",
+        "bbox",
+        "reconstruction_prompt",
+    ],
+    "properties": {
+        "slot_index": {
+            "type": "integer",
+            "description": "0-based sequential index of this cataloged garment in the rack or pile.",
+        },
+        "is_clothing": {
+            "type": "boolean",
+            "description": "True for wearable garments/footwear/bags/accessories.",
+        },
+        "name": {
+            "type": "string",
+            "description": "2-5 descriptive words: [Color] [Material/Pattern] [Specific Cut/Type].",
+        },
+        "title": {
+            "type": "string",
+            "description": "Display title matching name.",
+        },
+        "caption": {
+            "type": "string",
+            "description": "Concise 1-sentence description of the garment (<=18 words).",
+        },
+        "category": {
+            "type": "string",
+            "enum": [
+                "Top",
+                "Bottom",
+                "Outerwear",
+                "Full Body",
+                "Footwear",
+                "Accessories",
+                "Underwear",
+            ],
+        },
+        "sub_category": {
+            "type": "string",
+            "enum": [
+                "T-Shirt", "Shirt", "Sweater", "Hoodie", "Polo", "Blouse", "Tank Top",
+                "Jeans", "Pants", "Shorts", "Skirt", "Sweatpants",
+                "Dresses", "Suits", "Jumpsuit",
+                "Galabiya", "Kaftan", "Thobe", "Abaya", "Kurta", "Sherwani", "Achkan", "Bandhgala", "Nehru Jacket", "Sari", "Lehenga",
+                "Hanbok", "Kimono", "Dirndl", "Guayabera",
+                "Coat", "Jacket", "Blazer", "Cardigan", "Vest",
+                "Oxfords", "Loafers", "Boots", "Sandals", "Sneakers", "Heels", "Pumps", "Flats",
+                "Handbag", "Crossbody Bag", "Sunglasses", "Belts", "Headwear", "Scarves & Wraps", "Gloves",
+            ],
+        },
+        "item_type": {
+            "type": "string",
+            "description": "Detailed silhouette/cut (e.g. 'Ribbed Knit Cardigan', 'Pleated Midi Skirt', 'Button-Up Oxford Shirt').",
+        },
+        "brand": {"type": "string", "nullable": True},
+        "gender": {
+            "type": "string",
+            "enum": ["men", "women", "unisex", "kids"],
+        },
+        "dress_code": {
+            "type": "string",
+            "enum": [
+                "casual", "smart-casual", "business",
+                "formal", "athletic", "loungewear", "traditional",
+            ],
+        },
+        "season": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum": ["spring", "summer", "fall", "winter", "all"],
+            },
+        },
+        "tradition": {"type": "string", "nullable": True},
+        "colors": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["name", "pct"],
+                "properties": {
+                    "name": {"type": "string"},
+                    "pct": {"type": "integer"},
+                },
+            },
+        },
+        "fabric_materials": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["name", "pct"],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "enum": [
+                            "Cotton", "Leather", "Faux Leather", "Suede", "Wool", "Cashmere",
+                            "Denim", "Silk", "Satin", "Linen", "Polyester", "Nylon",
+                            "Spandex", "Viscose", "Rayon", "Canvas", "Acrylic", "Velvet",
+                            "Chiffon", "Fleece", "Tweed", "Corduroy", "Synthetic", "Rubber",
+                        ],
+                    },
+                    "pct": {"type": "integer"},
+                },
+            },
+        },
+        "pattern": {
+            "type": "string",
+            "enum": [
+                "camouflage", "printed", "geometric", "striped", "plaid", "floral", "herringbone",
+                "polka", "polka_dot", "paisley", "animal_print",
+                "graphic", "tie_dye", "abstract", "solid", "embroidered",
+            ],
+        },
+        "state": {
+            "type": "string",
+            "enum": ["new", "used"],
+            "description": "Physical wear state assessed strictly from the original uploaded closet/pile photo.",
+        },
+        "condition": {
+            "type": "string",
+            "enum": ["bad", "fair", "good", "excellent"],
+            "description": "Physical condition assessed strictly from the original uploaded closet/pile photo.",
+        },
+        "quality": {
+            "type": "string",
+            "enum": ["budget", "mid", "premium", "luxury"],
+            "description": "Fabric & construction quality tier assessed strictly from the original uploaded closet/pile photo.",
+        },
+        "size": {"type": "string", "nullable": True},
+        "price_cents": {"type": "integer", "nullable": True},
+        "repair_advice": {
+            "type": "string",
+            "nullable": True,
+            "description": "Care, steaming, pressing, or repair advice based on the garment's real physical state in the uploaded photo.",
+        },
+        "tags": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "bbox": {
+            "type": "array",
+            "items": {"type": "integer"},
+            "description": "[ymin, xmin, ymax, xmax] bounding box of this garment in the original photo on a 0..1000 scale.",
+        },
+        "reconstruction_prompt": {
+            "type": "string",
+            "description": "Detailed visual specification of the full unfolded garment (neckline, sleeves, buttons, weave, pattern, exact color shades, hem) for studio flat-lay reconstruction.",
+        },
+    },
+}
+
+MASS_CATALOG_JSON_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "required": ["scene_type", "items"],
+    "properties": {
+        "scene_type": {
+            "type": "string",
+            "enum": ["hanging_closet", "garment_pile", "mixed"],
+        },
+        "items": {
+            "type": "array",
+            "items": MASS_CATALOG_ITEM_SCHEMA,
+        },
+    },
+}
 
 
 # Human-readable names for each supported UI language (matches
@@ -775,6 +964,66 @@ def _build_batch_prompts(
     if gender_rule:
         system_prompt = f"{system_prompt}\n{gender_rule}"
     return system_prompt, user_text
+
+
+def _build_mass_catalog_prompts(
+    *,
+    language: str | None = None,
+    user_gender: str | None = None,
+    max_items: int = 15,
+) -> tuple[str, str]:
+    """Build ``(system_prompt, user_text)`` for the Mass Closet & Pile pipeline (Gemini 3.5 Flash)."""
+    from .validation import resolve_garment_gender
+
+    norm_gender = resolve_garment_gender(user_gender)
+    base_sys = _build_system_prompt(provider="gemini", one_pass=False, user_gender=norm_gender)
+
+    mass_sys = (
+        f"{base_sys}\n\n"
+        "MASS CLOSET & PILE CATALOGING RULES (CRITICAL):\n"
+        "1. You are inspecting a mass wardrobe photograph showing EITHER garments hanging side-by-side "
+        "on a closet rod/shelf OR a pile/stack of garments lying on a floor, bed, or surface.\n"
+        "2. Scan systematically (left-to-right for hanging rods; top-to-bottom/front-to-back for piles) "
+        f"and catalog every distinct, identifiable garment (up to {max_items} items).\n"
+        "3. GROUND-TRUTH CONDITION & QUALITY: Evaluate `state` ('new'|'used'), `condition` "
+        "('bad'|'fair'|'good'|'excellent'), `quality` ('budget'|'mid'|'premium'|'luxury'), and "
+        "`repair_advice` STRICTLY from the real fabric texture, wrinkles, pilling, stains, and drape "
+        "visible in THIS uploaded photograph. These ground-truth physical assessments are permanently "
+        "locked and will NEVER be re-evaluated on reconstructed studio images.\n"
+        "4. BOUNDING BOX (`bbox`): Provide `[ymin, xmin, ymax, xmax]` (0..1000 scale) tightly enclosing "
+        "the visible portion of each garment in the uploaded photo.\n"
+        "5. RECONSTRUCTION PROMPT (`reconstruction_prompt`): Write a rich, specific visual blueprint "
+        "(25-45 words) of the complete unfolded garment (exact color shades, fabric weave/knit, pattern "
+        "scale, collar/neckline, sleeve length, buttons/zippers, pockets, hem cut) so Nano Banana can "
+        "reconstruct a studio-quality, unfolded, centered, vertical front-facing flat-lay product shot."
+    )
+
+    user_parts: list[str] = []
+    code = (language or "en").lower()
+    if code != "en":
+        lang_name = _LANG_NAMES.get(code, code)
+        if code in ("he", "iw"):
+            user_parts.append(
+                "**OUTPUT LANGUAGE: Hebrew (עברית).** Write `name`, `title`, `caption`, `tags`, and `repair_advice` "
+                "in fluent Hebrew. Keep `reconstruction_prompt` and all JSON keys/enums in English."
+            )
+        elif code == "ar":
+            user_parts.append(
+                "**OUTPUT LANGUAGE: Arabic (العربية).** Write `name`, `title`, `caption`, `tags`, and `repair_advice` "
+                "in fluent Arabic. Keep `reconstruction_prompt` and all JSON keys/enums in English."
+            )
+        else:
+            user_parts.append(
+                f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Write `name`, `title`, `caption`, `tags`, and `repair_advice` "
+                f"in fluent {lang_name}. Keep `reconstruction_prompt` and all JSON keys/enums in English."
+            )
+
+    user_parts.append(
+        f"Catalog the garments in the image (up to {max_items} distinct garments). "
+        "Return a JSON object matching MASS_CATALOG_JSON_SCHEMA with `scene_type` and `items`."
+    )
+    return mass_sys, "\n".join(user_parts)
+
 
 
 # ─────────────────────────────────────────────────────────────────────

@@ -196,9 +196,14 @@ def should_reconstruct(
 
 def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
     """Compose a high-fidelity product-shot prompt from an analysis."""
+    if analysis.get("is_mass_pipeline"):
+        from app.services.gemini_image_service import build_mass_reconstruction_prompt
+        return build_mass_reconstruction_prompt(analysis)
+
     custom_prompt = analysis.get("reconstruction_prompt")
     if custom_prompt and isinstance(custom_prompt, str) and len(custom_prompt.strip()) > 10:
-        return custom_prompt.strip()[:1000]
+        from app.services.gemini_image_service import build_mass_reconstruction_prompt
+        return build_mass_reconstruction_prompt(analysis)
 
     bits: list[str] = []
     for key in ("color", "material", "pattern", "sub_category", "item_type"):
@@ -214,9 +219,9 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
     extras_str = (", " + ", ".join(extras)) if extras else ""
     prompt = (
         f"High-fidelity editorial product photograph of an isolated complete {descriptor}"
-        f"{extras_str}. Centered flat lay composition, solid seamless off-white background, "
-        "balanced diffused softbox lighting, sharp fabric weave and stitch detail, front view. "
-        "Negative: person, model, mannequin, hanger, room, scenery, shadow, text, watermark."
+        f"{extras_str}. Strictly vertical portrait orientation, completely unfolded, centered flat lay composition, "
+        "pure uniform white studio background, balanced diffused softbox lighting, sharp fabric weave and stitch detail, front view. "
+        "Negative: person, model, mannequin, hanger, closet rod, room, scenery, shadow, text, watermark."
     )
     return prompt[:1000]
 
@@ -227,6 +232,7 @@ async def reconstruct(
     *,
     reasons: list[str] | None = None,
     validate: bool = True,
+    preserve_catalog_metadata: bool = False,
     api_key: str | None = None,
     user: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
@@ -269,7 +275,7 @@ async def reconstruct(
 
     out_result = None
     # Route: Full reconstruction from scratch vs inpainting completion
-    if quality_status in ("needs_reconstruction", "reconstruction", "full_reconstruction"):
+    if quality_status in ("needs_reconstruction", "reconstruction", "full_reconstruction") and not analysis.get("is_mass_pipeline"):
         try:
             out_result = await provider.generate_image(prompt)
         except Exception as gen_exc:
@@ -295,7 +301,7 @@ async def reconstruct(
                 logger.error("Reconstruction edit fallback also failed: %s", repr(edit_exc))
                 return None
     else:
-        # Default or "needs_completion": inpaint/outpaint missing edges/collars/sleeves
+        # Default, "needs_completion", or Mass pipeline reference-guided reconstruction
         try:
             out_result = await provider.edit_image(
                 crop_bytes,
@@ -329,7 +335,9 @@ async def reconstruct(
 
     validated = True
     rejected_reason: str | None = None
-    if validate and not (reasons and "manual_repair" in reasons):
+    # When preserve_catalog_metadata=True (Mass pipeline), NEVER re-analyze the generated Nano Banana image
+    # so that ground-truth quality, condition, state, and repair_advice from the original photo are preserved.
+    if validate and not preserve_catalog_metadata and not (reasons and "manual_repair" in reasons):
         try:
             import base64 as _b64
             from app.services.vision import garment_vision_service
@@ -356,32 +364,38 @@ async def reconstruct(
                 repr(exc)[:160],
             )
 
-    # Unbind generated garment from background to provide a transparent clean cutout
+    # Unbind generated garment from background to provide a 100% transparent clean cutout
+    # and fit vertically onto the 900x1200 closet card canvas.
     clean_image_b64: str | None = None
     clean_image_url: str | None = None
+    final_mime = "image/png"
     try:
         from app.services.background_matting import remove_background
         import base64 as _b64
-        from app.services.vision.image import _fit_crop_to_card
+        from app.services.vision.image import ensure_transparent_vertical_card
         gen_raw = _b64.b64decode(image_b64)
-        
-        # Remove background FIRST so any Nano Banana landscape/scenery is stripped into a pure transparent PNG
-        clean_res = await remove_background(gen_raw)
-        if clean_res.get("success") and clean_res.get("image_png"):
-            clean_fitted_bytes, _ = _fit_crop_to_card(clean_res["image_png"], crop_mime="image/png")
-            clean_image_b64 = _b64.b64encode(clean_fitted_bytes).decode("ascii")
-            clean_image_url = f"data:image/png;base64,{clean_image_b64}"
-            # Ensure reconstructed image_b64 is set to the transparent background-free PNG
-            image_b64 = clean_image_b64
-        else:
-            gen_fitted_bytes, _ = _fit_crop_to_card(gen_raw, crop_mime=out_result.mime_type)
-            image_b64 = _b64.b64encode(gen_fitted_bytes).decode("ascii")
+
+        candidate_bytes = gen_raw
+        try:
+            clean_res = await remove_background(gen_raw)
+            if clean_res.get("success") and clean_res.get("image_png"):
+                candidate_bytes = clean_res["image_png"]
+        except Exception as rembg_exc:
+            logger.debug("rembg pass inside reconstruct skipped/failed: %s", rembg_exc)
+
+        clean_fitted_bytes, final_mime = ensure_transparent_vertical_card(
+            candidate_bytes,
+            category=analysis.get("category"),
+        )
+        clean_image_b64 = _b64.b64encode(clean_fitted_bytes).decode("ascii")
+        clean_image_url = f"data:{final_mime};base64,{clean_image_b64}"
+        image_b64 = clean_image_b64
     except Exception as unbind_exc:
         logger.warning("Unbinding reconstructed garment from background failed: %s", repr(unbind_exc))
 
     return {
         "image_b64": image_b64,
-        "mime_type": out_result.mime_type,
+        "mime_type": final_mime,
         "clean_image_b64": clean_image_b64,
         "clean_image_url": clean_image_url,
         "prompt": prompt,
@@ -391,3 +405,4 @@ async def reconstruct(
         "validated": validated,
         "rejected_reason": rejected_reason,
     }
+

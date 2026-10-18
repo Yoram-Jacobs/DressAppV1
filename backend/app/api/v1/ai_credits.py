@@ -197,11 +197,32 @@ async def get_balance(
     
     # Use User model for proper bucket calculations
     u_model = User.parse_obj(user_record)
+    from app.services.credit_manager import compute_onprem_credit_state
+    onprem_state = compute_onprem_credit_state(user_record)
+    if onprem_state.get("needs_cycle_reset"):
+        await db.users.update_one(
+            {"id": user["id"]},
+            {
+                "$set": {
+                    "ai_configuration.onprem_cycle_start": onprem_state["onprem_cycle_start"],
+                    "ai_configuration.onprem_credits_used": 0,
+                    "ai_configuration.onprem_credits_balance": onprem_state["onprem_credits_balance"],
+                }
+            },
+        )
     
-    # Return both old-style fields (for backward compatibility) and new bucket details
+    # Return both old-style fields (for backward compatibility) and new bucket + on-prem details
     return {
         "current_credits": u_model.total_credits,  # Backward compatible field showing total
         "total_credits": u_model.total_credits,
+        "onprem_credits_balance": onprem_state["onprem_credits_balance"],
+        "onprem_credits_accrued": onprem_state["onprem_credits_accrued"],
+        "onprem_credits_used": onprem_state["onprem_credits_used"],
+        "onprem_daily_grant": onprem_state["onprem_daily_grant"],
+        "onprem_max_credits": onprem_state["onprem_max_credits"],
+        "onprem_days_in_cycle": onprem_state["onprem_days_in_cycle"],
+        "onprem_days_until_reset": onprem_state["onprem_days_until_reset"],
+        "onprem_credits": onprem_state,
         "free_credits_available": sum(b["amount"] for b in user_record.get("credit_buckets", []) 
                                      if b["type"]=="free" and (not b.get("expires_at") or datetime.now().timestamp() <= datetime.fromisoformat(b["expires_at"]).timestamp())),
         "paid_credits": sum(b["amount"] for b in user_record.get("credit_buckets", []) if b["type"]=="paid"),

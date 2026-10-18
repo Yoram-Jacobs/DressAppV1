@@ -1538,6 +1538,24 @@ async def pack_suitcase(
         analysis.get("danger_zones_info"),
     )
 
+    # Deduct 1 AI credit per garment curated in the suitcase
+    curated_garment_count = max(
+        1,
+        len([p for p in packing_list if isinstance(p, dict) and not p.get("is_missing")])
+        or len(packing_list),
+    )
+    try:
+        from app.services.billing_service import deduct_user_credits
+        if not await deduct_user_credits(db, user, cost=curated_garment_count, operation="suitcase_pack"):
+            raise HTTPException(
+                status_code=402,
+                detail=f"Insufficient On-Premises AI credits ({curated_garment_count} credits required to curate {curated_garment_count} suitcase garments).",
+            )
+    except HTTPException:
+        raise
+    except Exception as bill_exc:
+        logger.warning("Suitcase credit deduction check soft-failed: %s", bill_exc)
+
     # Build response structure
     return {
         "status": "success",
@@ -1547,6 +1565,7 @@ async def pack_suitcase(
         "packing_list": packing_list,
         "local_fashion_stores": analysis.get("local_fashion_stores") or [],
         "missing_items": missing_items,
+        "credits_consumed": curated_garment_count,
     }
 
 

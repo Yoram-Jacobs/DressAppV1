@@ -301,75 +301,6 @@ def resolve_user_gemini_model(user: dict[str, Any] | None = None) -> str:
     return default_model
 
 
-def resolve_user_custom_key(user: dict[str, Any] | None, provider: str) -> str | None:
-    """Resolve a custom decrypted API key for a given provider, or None."""
-    if not user or not isinstance(user, dict):
-        return None
-    ai_config = user.get("ai_configuration") or {}
-    custom_keys = ai_config.get("custom_keys") or {}
-    candidate = custom_keys.get(provider)
-    if candidate and isinstance(candidate, str) and candidate.strip():
-        return decrypt_api_key(candidate)
-    return None
-
-
-def resolve_user_ai_provider(user: dict[str, Any] | None) -> str:
-    """Resolve the selected provider for a user, defaulting to 'dressapp'."""
-    if user and isinstance(user, dict):
-        ai_config = user.get("ai_configuration") or {}
-        provider = ai_config.get("selected_provider")
-        if provider and isinstance(provider, str) and provider.strip():
-            return provider.strip().lower()
-    return "dressapp"
-
-
-def resolve_user_ai_model(user: dict[str, Any] | None) -> str:
-    """Resolve the active model for a user, defaulting to 'Eyes v1'."""
-    if user and isinstance(user, dict):
-        ai_config = user.get("ai_configuration") or {}
-        selected = ai_config.get("selected_model")
-        if selected and isinstance(selected, str) and selected.strip():
-            return selected.strip()
-    return "Eyes v1"
-
-
-def resolve_user_custom_gemini_api_key(user: dict[str, Any] | None = None) -> str | None:
-    """Resolve ONLY user-provided Google Gemini custom key (without server fallback)."""
-    if user and isinstance(user, dict):
-        ai_config = user.get("ai_configuration") or {}
-        custom_keys = ai_config.get("custom_keys") or {}
-        api_keys = ai_config.get("api_keys") or {}
-        candidate = (
-            custom_keys.get("google_ai")
-            or custom_keys.get("gemini")
-            or api_keys.get("google_ai")
-            or api_keys.get("gemini")
-            or ai_config.get("google_ai_key")
-            or ai_config.get("api_key")
-        )
-        if candidate and isinstance(candidate, str) and candidate.strip():
-            decrypted = decrypt_api_key(candidate)
-            if decrypted:
-                return decrypted
-    return None
-
-
-def user_has_custom_api_key(user: dict[str, Any] | None = None) -> bool:
-    """Return True if the user has configured any active custom third-party API key."""
-    if not user or not isinstance(user, dict):
-        return False
-    ai_config = user.get("ai_configuration") or {}
-    custom_keys = ai_config.get("custom_keys") or {}
-    api_keys = ai_config.get("api_keys") or {}
-    merged = {**custom_keys, **api_keys}
-    for val in merged.values():
-        if isinstance(val, str) and val.strip():
-            return True
-    if ai_config.get("google_ai_key") or ai_config.get("api_key"):
-        return True
-    return False
-
-
 def is_tester_user(user: Any) -> bool:
     """Return True if user has tester status via email, roles, or subscription."""
     if not user:
@@ -389,6 +320,114 @@ def is_tester_user(user: Any) -> bool:
     return False
 
 
+def is_paid_tier_user(user: Any) -> bool:
+    """Return True if user has an active Manager or Professional subscription (or admin role)."""
+    if not user:
+        return False
+    u = user.model_dump() if hasattr(user, "model_dump") else user
+    if not isinstance(u, dict):
+        return False
+    roles = u.get("roles") or []
+    if "admin" in roles:
+        return True
+    sub = u.get("subscription") or {}
+    if isinstance(sub, dict):
+        is_active = bool(sub.get("is_active"))
+        tier = str(sub.get("tier") or "").strip().lower()
+        plan_type = str(sub.get("plan_type") or "").strip().lower()
+        if is_active and plan_type != "free" and tier in ("manager", "pro", "professional", "business"):
+            return True
+    sub_tier = str(u.get("subscription_tier") or "").strip().lower()
+    if sub_tier in ("manager", "pro", "professional", "business"):
+        return True
+    return False
+
+
+def resolve_user_custom_key(user: dict[str, Any] | None, provider: str) -> str | None:
+    """Resolve a custom decrypted API key for a given provider (Tester group only), or None."""
+    if not user or not isinstance(user, dict) or not is_tester_user(user):
+        return None
+    ai_config = user.get("ai_configuration") or {}
+    custom_keys = ai_config.get("custom_keys") or {}
+    candidate = custom_keys.get(provider)
+    if candidate and isinstance(candidate, str) and candidate.strip():
+        return decrypt_api_key(candidate)
+    return None
+
+
+def resolve_user_ai_provider(user: dict[str, Any] | None) -> str:
+    """Resolve the AI provider for a user.
+    - Tester group: respects user.ai_configuration.selected_provider (defaults to 'dressapp').
+    - Manager / Professional: defaults to 'gemini' (DressApp cloud Eyes).
+    - Free: defaults to 'dressapp' (DressApp on-premises Eyes).
+    """
+    if user and isinstance(user, dict):
+        if is_tester_user(user):
+            ai_config = user.get("ai_configuration") or {}
+            provider = ai_config.get("selected_provider")
+            if provider and isinstance(provider, str) and provider.strip():
+                return provider.strip().lower()
+            return "dressapp"
+        if is_paid_tier_user(user):
+            return "gemini"
+    return "dressapp"
+
+
+def resolve_user_ai_model(user: dict[str, Any] | None) -> str:
+    """Resolve the active AI model for a user.
+    - Tester group: respects user.ai_configuration.selected_model (defaults to 'Eyes v1').
+    - Manager / Professional: defaults to 'gemini-3.5-flash-lite' (cloud Eyes).
+    - Free: defaults to 'Eyes v1' (on-premises Eyes).
+    """
+    if user and isinstance(user, dict):
+        if is_tester_user(user):
+            ai_config = user.get("ai_configuration") or {}
+            selected = ai_config.get("selected_model")
+            if selected and isinstance(selected, str) and selected.strip():
+                return selected.strip()
+            return "Eyes v1"
+        if is_paid_tier_user(user):
+            return "gemini-3.5-flash-lite"
+    return "Eyes v1"
+
+
+def resolve_user_custom_gemini_api_key(user: dict[str, Any] | None = None) -> str | None:
+    """Resolve ONLY tester-provided Google Gemini custom key (without server fallback)."""
+    if user and isinstance(user, dict) and is_tester_user(user):
+        ai_config = user.get("ai_configuration") or {}
+        custom_keys = ai_config.get("custom_keys") or {}
+        api_keys = ai_config.get("api_keys") or {}
+        candidate = (
+            custom_keys.get("google_ai")
+            or custom_keys.get("gemini")
+            or api_keys.get("google_ai")
+            or api_keys.get("gemini")
+            or ai_config.get("google_ai_key")
+            or ai_config.get("api_key")
+        )
+        if candidate and isinstance(candidate, str) and candidate.strip():
+            decrypted = decrypt_api_key(candidate)
+            if decrypted:
+                return decrypted
+    return None
+
+
+def user_has_custom_api_key(user: dict[str, Any] | None = None) -> bool:
+    """Return True if a tester user has configured any active custom third-party API key."""
+    if not user or not isinstance(user, dict) or not is_tester_user(user):
+        return False
+    ai_config = user.get("ai_configuration") or {}
+    custom_keys = ai_config.get("custom_keys") or {}
+    api_keys = ai_config.get("api_keys") or {}
+    merged = {**custom_keys, **api_keys}
+    for val in merged.values():
+        if isinstance(val, str) and val.strip():
+            return True
+    if ai_config.get("google_ai_key") or ai_config.get("api_key"):
+        return True
+    return False
+
+
 def resolve_effective_provider(
     user: Any = None,
     force_provider: str | None = None,
@@ -400,30 +439,40 @@ def resolve_effective_provider(
     2. Tester group user setting: if a tester member selects DressApp / Eyes v1 ('dressapp',
        'eyes', 'gemma'), force switching to 'gemma' so they test the on-prem Gemma-4-E4B model.
        If they select 'google_ai' / 'gemini', route to 'gemini'.
-    3. Regular user / general app / unauthenticated background: returns empty string so caller
-       falls back to the global platform provider (Gemini).
+    3. Manager / Professional user: defaults to DressApp's cloud Eyes ('gemini').
+    4. Free user: defaults to DressApp's on-premises Eyes model ('gemma').
+    5. Unauthenticated background task (user=None): returns empty string so caller
+       falls back to the global platform provider.
     """
     if force_provider:
         return force_provider.lower().strip()
 
-    if user and is_tester_user(user):
-        u = user.model_dump() if hasattr(user, "model_dump") else user
-        if isinstance(u, dict):
-            ai_config = u.get("ai_configuration") or {}
-            sel_provider = (ai_config.get("selected_provider") or "").strip().lower()
-            sel_model = (ai_config.get("selected_model") or "").strip()
+    if user:
+        if is_tester_user(user):
+            u = user.model_dump() if hasattr(user, "model_dump") else user
+            if isinstance(u, dict):
+                ai_config = u.get("ai_configuration") or {}
+                sel_provider = (ai_config.get("selected_provider") or "").strip().lower()
+                sel_model = (ai_config.get("selected_model") or "").strip()
 
-            if sel_provider in ("dressapp", "eyes", "gemma") or sel_model in (
-                "Eyes v1",
-                "gemma",
-                "gemma-4-E4B-it-Q3_K_M.gguf",
-            ):
-                return "gemma"
-            if sel_provider in ("google_ai", "gemini"):
-                return "gemini"
-            if sel_provider:
-                return sel_provider
+                if sel_provider in ("dressapp", "eyes", "gemma") or sel_model in (
+                    "Eyes v1",
+                    "gemma",
+                    "gemma-4-E4B-it-Q3_K_M.gguf",
+                ):
+                    return "gemma"
+                if sel_provider in ("google_ai", "gemini"):
+                    return "gemini"
+                if sel_provider:
+                    return sel_provider
+            return ""
+
+        if is_paid_tier_user(user):
+            return "gemini"
+
+        return "gemma"
 
     return ""
+
 
 

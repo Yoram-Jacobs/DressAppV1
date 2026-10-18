@@ -5,9 +5,13 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useClosetStore } from '@/lib/useClosetStore';
-import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity, Leaf, ShoppingBag, Droplets, CheckSquare, Square, X } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, Shirt, Award, ChevronDown, ChevronUp, Activity, Leaf, ShoppingBag, Droplets, CheckSquare, Square, X, Sparkles, Users, Crown, Upload, CheckCircle2, Share2, Copy } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
+import { useTierLimits } from '@/hooks/useTierLimits';
+import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
+import { getGooglePlayAffiliateUrl } from '@/components/InviteFriendsButton';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory, canonicalMaterialKey, canonicalSubCategoryKey } from '@/lib/taxonomy';
@@ -214,8 +218,10 @@ export default function WardrobeStats() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const store = useClosetStore();
-  const items = store.items || [];
+  const { user } = useAuth();
+  const { userTier, isFree } = useTierLimits();
+  const store = useClosetStore({ prewarm: true });
+  const items = useMemo(() => store.items || [], [store.items]);
 
   const [isLegendExpanded, setIsLegendExpanded] = useState(false);
   const [breakdownType, setBreakdownType] = useState('colors');
@@ -224,10 +230,83 @@ export default function WardrobeStats() {
 
   const [actionType, setActionType] = useState(null);
   const [selectedItemIds, setSelectedItemIds] = useState([]);
+  const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
+  const [suggestionMode, setSuggestionMode] = useState(null);
+  const [inviteBusy, setInviteBusy] = useState(false);
 
   const unwornItems = useMemo(() => {
     return items.filter(it => (it.wear_count || 0) === 0);
   }, [items]);
+
+  const closetBonus = user?.closet_capacity_bonus || 0;
+  const freeCapacity = Math.min(150, 50 + closetBonus);
+
+  const accountAgeDays = useMemo(() => {
+    if (!user?.created_at) return 1;
+    const createdMs = new Date(user.created_at).getTime();
+    if (Number.isNaN(createdMs)) return 1;
+    return Math.max(1, Math.floor((Date.now() - createdMs) / (1000 * 60 * 60 * 24)) + 1);
+  }, [user?.created_at]);
+
+  const onboardingPhaseBadge = useMemo(() => {
+    if (items.length === 0 || accountAgeDays <= 7) {
+      return t('wardrobeStats.onboarding.phase1Badge', { defaultValue: 'Days 1–7 • Kickoff & First Value' });
+    }
+    if (items.length < 20 || accountAgeDays <= 30) {
+      return t('wardrobeStats.onboarding.phase2Badge', { defaultValue: 'Days 8–30 • Rapid Digitizing' });
+    }
+    if (items.length < 50 || accountAgeDays <= 60) {
+      return t('wardrobeStats.onboarding.phase3Badge', { defaultValue: 'Days 31–60 • Style Adoption' });
+    }
+    return t('wardrobeStats.onboarding.phase4Badge', { defaultValue: 'Days 61–90 • Value & Circularity' });
+  }, [items.length, accountAgeDays, t]);
+
+  const activeSuggestionMode = useMemo(() => {
+    if (suggestionMode) return suggestionMode;
+    if (items.length === 0) return 'digitize';
+    if (items.length < 15) return 'digitize';
+    if (isFree && items.length >= 35) return 'invite';
+    return 'circular';
+  }, [suggestionMode, items.length, isFree]);
+
+  const handleInviteFriends = async () => {
+    if (inviteBusy) return;
+    setInviteBusy(true);
+    const inviteUrl = user?.id ? `${window.location.origin}/?ref=${user.id}` : `${window.location.origin}/?ref=invite`;
+    const playStoreUrl = getGooglePlayAffiliateUrl(user?.id);
+    const bodyText = t('profile.inviteBody', { defaultValue: 'Share your personal referral link to invite friends. You both receive bonus AI credits!' });
+    const shareMessage = `${bodyText} ${inviteUrl}\n\nGet DressApp on Google Play: ${playStoreUrl}`;
+    const payload = {
+      title: t('profile.inviteSubject', { defaultValue: 'Join me on DressApp' }),
+      text: shareMessage,
+      url: inviteUrl,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(payload);
+      } else {
+        await navigator.clipboard.writeText(shareMessage);
+        toast({
+          title: t('profile.inviteFriends', { defaultValue: 'Invite Friends' }),
+          description: t('profile.inviteCopied', { defaultValue: 'Referral link copied to clipboard!' }),
+        });
+      }
+    } catch (err) {
+      if (err?.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(shareMessage);
+          toast({
+            title: t('profile.inviteFriends', { defaultValue: 'Invite Friends' }),
+            description: t('profile.inviteCopied', { defaultValue: 'Referral link copied to clipboard!' }),
+          });
+        } catch {
+          toast({ title: t('common.error', { defaultValue: 'Error' }), variant: 'destructive' });
+        }
+      }
+    } finally {
+      setInviteBusy(false);
+    }
+  };
 
   const toggleSelection = (id) => {
     setSelectedItemIds(prev =>
@@ -242,7 +321,8 @@ export default function WardrobeStats() {
     try {
       const mode = actionType === 'sell' ? 'for_sale' : 'donate';
       for (const id of selectedItemIds) {
-        await api.put(`/closet/${id}`, { marketplace_intent: mode, marketplace_visibility: 'public' });
+        const updated = await api.patchItem(id, { marketplace_intent: mode, marketplace_visibility: 'public' });
+        if (updated && store.upsert) store.upsert(updated);
       }
       toast({
         title: "Success",
@@ -250,7 +330,7 @@ export default function WardrobeStats() {
       });
       setActionType(null);
       setSelectedItemIds([]);
-      if (store.fetchItems) store.fetchItems();
+      if (store.prewarm) store.prewarm({ force: true }).catch(() => {});
     } catch (err) {
       console.error(err);
       toast({ title: "Error", description: "Failed to process items", variant: "destructive" });
@@ -260,18 +340,9 @@ export default function WardrobeStats() {
   };
 
   useEffect(() => {
-    api.get('/closet/stats/sustainability')
-      .then(res => setSustainabilityData(res.data))
+    api.getSustainabilityStats()
+      .then(data => setSustainabilityData(data))
       .catch(err => console.error("Failed to fetch sustainability stats", err));
-  }, []);
-
-
-  // Sync closet items if store is empty or needs refresh
-  useEffect(() => {
-    if (store.fetchItems) {
-      store.fetchItems();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const totalValue = items.reduce((acc, it) => acc + (it.price_cents || 0), 0) / 100;
@@ -541,12 +612,22 @@ export default function WardrobeStats() {
                   <p className="text-sm text-text-brand max-w-sm mx-auto">
                     {t('stats.emptyStateDesc', { defaultValue: 'Add items to your wardrobe and record wears with your stylist or calendar to see insights.' })}
                   </p>
-                  <div className="pt-2">
+                  <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                     <Link to="/closet/add">
-                      <Button className="rounded-2xl bg-brand text-brand-foreground hover:bg-brand/90 px-6 font-semibold shadow-sm">
+                      <Button className="rounded-2xl bg-brand text-brand-foreground hover:bg-brand/90 px-6 font-semibold shadow-sm" data-testid="stats-empty-add-item-btn">
                         {t('closet.addNewItem', { defaultValue: 'Add First Item' })}
                       </Button>
                     </Link>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsMigrationModalOpen(true)}
+                      className="rounded-2xl border-primary-brand text-primary-brand hover:bg-primary-shadow px-6 font-semibold flex items-center gap-2"
+                      data-testid="stats-empty-migrate-btn"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {t('wardrobeStats.onboarding.migrateWardrobeBtn', { defaultValue: 'Migrate Wardrobe' })}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -743,7 +824,7 @@ export default function WardrobeStats() {
                       <div className='max-[480px]:text-center'>
                         <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.utilisationTitle', { defaultValue: 'Wardrobe Utilisation' })}</span>
                         <span className="text-[20px] font-bold text-dark-brand">
-                          {sustainabilityData.utilisation_pct}%
+                          {sustainabilityData.utilisation_pct ?? 0}%
                         </span>
                       </div>
                     </CardContent>
@@ -756,7 +837,7 @@ export default function WardrobeStats() {
                       <div className='max-[480px]:text-center'>
                         <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.carbonTitle', { defaultValue: 'Carbon Tracked' })}</span>
                         <span className="text-[20px] font-bold text-dark-brand">
-                          {sustainabilityData.carbon_sum} <span className="text-sm text-text-brand font-normal">kg CO₂</span>
+                          {sustainabilityData.carbon_sum ?? 0} <span className="text-sm text-text-brand font-normal">kg CO₂</span>
                         </span>
                       </div>
                     </CardContent>
@@ -769,7 +850,7 @@ export default function WardrobeStats() {
                       <div className='max-[480px]:text-center'>
                         <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.intakeManual', { defaultValue: 'Manual Adds' })}</span>
                         <span className="text-[20px] font-bold text-dark-brand">
-                          {sustainabilityData.intake_breakdown.manual}
+                          {sustainabilityData.intake_breakdown?.manual ?? 0}
                         </span>
                       </div>
                     </CardContent>
@@ -782,7 +863,7 @@ export default function WardrobeStats() {
                       <div className='max-[480px]:text-center'>
                         <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.intakeReceipt', { defaultValue: 'From Receipts' })}</span>
                         <span className="text-[20px] font-bold text-dark-brand">
-                          {sustainabilityData.intake_breakdown.receipt}
+                          {sustainabilityData.intake_breakdown?.receipt ?? 0}
                         </span>
                       </div>
                     </CardContent>
@@ -796,7 +877,7 @@ export default function WardrobeStats() {
                     </CardHeader>
                     <CardContent className="p-5 h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={sustainabilityData.cpw_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <AreaChart data={sustainabilityData.cpw_trend || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                           <defs>
                             <linearGradient id="colorCpw" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="5%" stopColor="#16a34a" stopOpacity={0.3} />
@@ -815,19 +896,343 @@ export default function WardrobeStats() {
                       </ResponsiveContainer>
                     </CardContent>
                   </Card>
-                  <Card className="rounded-[12px] border border-border shadow-sm p-5 bg-white flex flex-col justify-center text-center overflow-hidden flex-1 min-h-[300px]">
+                  <Card
+                    className="rounded-[12px] border border-border shadow-sm p-5 bg-white flex flex-col justify-between text-center overflow-hidden flex-1 min-h-[340px]"
+                    data-testid="smart-suggestion-card"
+                  >
                     {!actionType ? (
-                      <>
-                        <Shirt className="h-12 w-12 text-primary-brand mx-auto mb-4 opacity-80" />
-                        <h3 className="font-bold text-[20px] mb-2 text-dark-brand">{t('wardrobeStats.sustainability.smartSuggestionTitle', { defaultValue: 'Smart Suggestion' })}</h3>
-                        <p className="text-text-brand text-[14px] font-semibold mb-6">
-                          {t('wardrobeStats.sustainability.smartSuggestionDesc', { count: unwornItems.length, defaultValue: `You have ${unwornItems.length} items that haven't been worn in 90 days. Consider listing them on the Marketplace or donating them to keep your closet sustainable.` })}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="default" onClick={() => { setActionType('sell'); setSelectedItemIds(unwornItems.map(i => i.id)); }} className="w-full">{t('wardrobeStats.sustainability.listMarketplace', { defaultValue: 'List on Marketplace' })}</Button>
-                          <Button variant="outline" onClick={() => { setActionType('donate'); setSelectedItemIds(unwornItems.map(i => i.id)); }} className="w-full">{t('wardrobeStats.sustainability.markDonate', { defaultValue: 'Mark to Donate' })}</Button>
+                      <div className="flex flex-col h-full justify-between gap-4">
+                        {/* Header: 90-Day Onboarding Phase Badge & Pillar Switcher */}
+                        <div className="space-y-3">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-shadow text-primary-brand text-[11px] font-bold mx-auto">
+                            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                            <span>{onboardingPhaseBadge}</span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-center gap-1.5" data-testid="smart-suggestion-pills">
+                            <button
+                              type="button"
+                              onClick={() => setSuggestionMode('digitize')}
+                              data-testid="smart-pill-digitize"
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                                activeSuggestionMode === 'digitize'
+                                  ? 'bg-primary-brand text-white shadow-xs'
+                                  : 'bg-accent-beige text-text-brand hover:text-dark-brand'
+                              }`}
+                            >
+                              {t('wardrobeStats.onboarding.pillDigitize', { defaultValue: 'Add & Migrate' })}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSuggestionMode('invite')}
+                              data-testid="smart-pill-invite"
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                                activeSuggestionMode === 'invite'
+                                  ? 'bg-primary-brand text-white shadow-xs'
+                                  : 'bg-accent-beige text-text-brand hover:text-dark-brand'
+                              }`}
+                            >
+                              {t('wardrobeStats.onboarding.pillInvite', { defaultValue: 'Free Slots (+10)' })}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSuggestionMode('upgrade')}
+                              data-testid="smart-pill-upgrade"
+                              className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                                activeSuggestionMode === 'upgrade'
+                                  ? 'bg-primary-brand text-white shadow-xs'
+                                  : 'bg-accent-beige text-text-brand hover:text-dark-brand'
+                              }`}
+                            >
+                              {t('wardrobeStats.onboarding.pillUpgrade', { defaultValue: 'Manager Plan' })}
+                            </button>
+                            {items.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setSuggestionMode('circular')}
+                                data-testid="smart-pill-circular"
+                                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all ${
+                                  activeSuggestionMode === 'circular'
+                                    ? 'bg-primary-brand text-white shadow-xs'
+                                    : 'bg-accent-beige text-text-brand hover:text-dark-brand'
+                                }`}
+                              >
+                                {t('wardrobeStats.onboarding.pillCircular', { defaultValue: 'Circular Care' })}
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </>
+
+                        {/* Mode 1: Digitize & Migrate (Default when 0 items or < 15 items) */}
+                        {activeSuggestionMode === 'digitize' && (
+                          <div className="flex flex-col flex-1 justify-between gap-4 text-start">
+                            <div className="text-center">
+                              <Shirt className="h-10 w-10 text-primary-brand mx-auto mb-2 opacity-85" />
+                              <h3 className="font-bold text-[18px] mb-1.5 text-dark-brand">
+                                {items.length === 0
+                                  ? t('wardrobeStats.onboarding.emptyTitle', { defaultValue: 'Kickstart Your Digital Closet' })
+                                  : t('wardrobeStats.onboarding.growingTitle', {
+                                      count: items.length,
+                                      defaultValue: `Keep Building Your Digital Closet (${items.length} items)`,
+                                    })}
+                              </h3>
+                              <p className="text-text-brand text-[13px] font-semibold leading-relaxed">
+                                {items.length === 0
+                                  ? t('wardrobeStats.onboarding.emptyDesc', {
+                                      defaultValue:
+                                        'Your closet has 0 items right now. Add your first garments or migrate your wardrobe from another app to unlock AI outfit styling and sustainability insights.',
+                                    })
+                                  : t('wardrobeStats.onboarding.growingDesc', {
+                                      defaultValue:
+                                        'Reach 20+ items so your AI Stylist can assemble complete, weather-ready outfits and track accurate Cost-per-Wear trends.',
+                                    })}
+                              </p>
+                            </div>
+
+                            <div className="rounded-[10px] bg-accent-beige/70 border border-border p-3 space-y-1.5 text-start">
+                              <span className="text-[11px] font-bold text-primary-brand uppercase tracking-wider block">
+                                {t('wardrobeStats.onboarding.tipTitle', { defaultValue: 'Fast Digitizing Tips' })}
+                              </span>
+                              <ul className="space-y-1 text-[12px] text-dark-brand font-medium list-disc ps-4">
+                                <li>
+                                  {t('wardrobeStats.onboarding.tip1', {
+                                    defaultValue:
+                                      'Full-Outfit Snap: Upload one mirror or outfit photo—DressApp automatically splits and tags each garment in a single pass.',
+                                  })}
+                                </li>
+                                <li>
+                                  {t('wardrobeStats.onboarding.tip2', {
+                                    defaultValue:
+                                      'Receipts & Chrome Extension: Import digital shopping receipts or clip items directly from online stores.',
+                                  })}
+                                </li>
+                                <li>
+                                  {t('wardrobeStats.onboarding.tip3', {
+                                    defaultValue:
+                                      '1-Click App Migration: Moving from another wardrobe app? Batch-import your screenshots in seconds.',
+                                  })}
+                                </li>
+                              </ul>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                              <Button
+                                variant="default"
+                                onClick={() => navigate('/closet/add')}
+                                className="w-full flex-1"
+                                data-testid="smart-suggestion-add-items-btn"
+                              >
+                                <Shirt className="h-4 w-4 me-1.5" />
+                                {t('wardrobeStats.onboarding.addFirstItemsBtn', { defaultValue: 'Add Items' })}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => setIsMigrationModalOpen(true)}
+                                className="w-full flex-1"
+                                data-testid="smart-suggestion-migrate-btn"
+                              >
+                                <Upload className="h-4 w-4 me-1.5" />
+                                {t('wardrobeStats.onboarding.migrateWardrobeBtn', { defaultValue: 'Migrate Wardrobe' })}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mode 2: Free Capacity Expansion via Referral (+10 Slots/Friend) */}
+                        {activeSuggestionMode === 'invite' && (
+                          <div className="flex flex-col flex-1 justify-between gap-4">
+                            <div className="text-center">
+                              <Users className="h-10 w-10 text-primary-brand mx-auto mb-2 opacity-85" />
+                              <h3 className="font-bold text-[18px] mb-1.5 text-dark-brand">
+                                {t('wardrobeStats.onboarding.inviteTitle', { defaultValue: 'Enlarge Your Closet Capacity for Free' })}
+                              </h3>
+                              <p className="text-text-brand text-[13px] font-semibold leading-relaxed">
+                                {t('wardrobeStats.onboarding.inviteDesc', {
+                                  defaultValue:
+                                    'Invite friends with your personal link! Every friend who joins gives you +10 free closet slots (up to 150 items) plus bonus AI credits for both of you.',
+                                })}
+                              </p>
+                            </div>
+
+                            <div className="rounded-[10px] bg-accent-beige/70 border border-border p-3 space-y-2 text-start">
+                              <div className="flex items-center justify-between text-[12px] font-bold text-dark-brand">
+                                <span>
+                                  {t('wardrobeStats.onboarding.capacityProgress', {
+                                    used: items.length,
+                                    capacity: freeCapacity,
+                                    bonus: closetBonus,
+                                    defaultValue: `Free Closet Capacity: ${items.length} / ${freeCapacity} slots (+${closetBonus} bonus slots)`,
+                                  })}
+                                </span>
+                                <span className="text-primary-brand">{Math.min(100, Math.round((items.length / freeCapacity) * 100))}%</span>
+                              </div>
+                              <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-border">
+                                <div
+                                  className="h-full bg-primary-brand transition-all duration-300"
+                                  style={{ width: `${Math.min(100, (items.length / freeCapacity) * 100)}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                              <Button
+                                variant="default"
+                                onClick={handleInviteFriends}
+                                disabled={inviteBusy}
+                                className="w-full flex-1"
+                                data-testid="smart-suggestion-invite-btn"
+                              >
+                                {typeof navigator !== 'undefined' && navigator.share ? (
+                                  <Share2 className="h-4 w-4 me-1.5" />
+                                ) : (
+                                  <Copy className="h-4 w-4 me-1.5" />
+                                )}
+                                {t('wardrobeStats.onboarding.inviteBtn', { defaultValue: 'Invite Friends (+10 Slots)' })}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => setSuggestionMode('upgrade')}
+                                className="w-full flex-1"
+                              >
+                                <Crown className="h-4 w-4 me-1.5" />
+                                {t('wardrobeStats.onboarding.pillUpgrade', { defaultValue: 'Manager Plan' })}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mode 3: Upgrade to Manager Plan */}
+                        {activeSuggestionMode === 'upgrade' && (
+                          <div className="flex flex-col flex-1 justify-between gap-4 text-start">
+                            <div className="text-center">
+                              <Crown className="h-10 w-10 text-primary-brand mx-auto mb-2 opacity-85" />
+                              <h3 className="font-bold text-[18px] mb-1.5 text-dark-brand">
+                                {t('wardrobeStats.onboarding.upgradeTitle', {
+                                  defaultValue: "Unlock DressApp's Full Power with Manager",
+                                })}
+                              </h3>
+                              <p className="text-text-brand text-[13px] font-semibold leading-relaxed">
+                                {t('wardrobeStats.onboarding.upgradeDesc', {
+                                  defaultValue:
+                                    'Upgrade to the Manager plan for unlimited closet capacity, 1-click Wardrobe Migration, unlimited daily AI Stylist requests, and automated Daily Trend-Scout.',
+                                })}
+                              </p>
+                            </div>
+
+                            <div className="rounded-[10px] bg-accent-beige/70 border border-border p-3 space-y-1.5">
+                              <div className="flex items-start gap-2 text-[12px] font-semibold text-dark-brand">
+                                <CheckCircle2 className="h-4 w-4 text-primary-brand shrink-0 mt-0.5" />
+                                <span>
+                                  {t('wardrobeStats.onboarding.upgradeBenefit1', {
+                                    defaultValue: 'Unlimited garment slots & 1-click Wardrobe Migration',
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex items-start gap-2 text-[12px] font-semibold text-dark-brand">
+                                <CheckCircle2 className="h-4 w-4 text-primary-brand shrink-0 mt-0.5" />
+                                <span>
+                                  {t('wardrobeStats.onboarding.upgradeBenefit2', {
+                                    defaultValue: 'Priority Gemini 3.5 Flash AI Stylist & Suitcase Planner',
+                                  })}
+                                </span>
+                              </div>
+                              <div className="flex items-start gap-2 text-[12px] font-semibold text-dark-brand">
+                                <CheckCircle2 className="h-4 w-4 text-primary-brand shrink-0 mt-0.5" />
+                                <span>
+                                  {t('wardrobeStats.onboarding.upgradeBenefit3', {
+                                    defaultValue: 'Daily automated outfit suggestions & Trend-Scout feeds',
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="pt-1">
+                              {isFree ? (
+                                <Button
+                                  variant="default"
+                                  onClick={() => navigate('/pricing#tiers')}
+                                  className="w-full"
+                                  data-testid="smart-suggestion-upgrade-btn"
+                                >
+                                  <Crown className="h-4 w-4 me-1.5" />
+                                  {t('wardrobeStats.onboarding.upgradeBtn', { defaultValue: 'Upgrade to Manager Plan' })}
+                                </Button>
+                              ) : (
+                                <div className="text-center py-2 px-3 rounded-xl bg-primary-shadow text-primary-brand text-xs font-bold">
+                                  {t('wardrobeStats.onboarding.activeManagerBadge', {
+                                    tier: userTier.toUpperCase(),
+                                    defaultValue: `You're on the ${userTier.toUpperCase()} plan — full power unlocked!`,
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mode 4: Circular Care (Sell / Donate Unworn Items when items.length > 0) */}
+                        {activeSuggestionMode === 'circular' && (
+                          <div className="flex flex-col flex-1 justify-between gap-4">
+                            {unwornItems.length > 0 ? (
+                              <>
+                                <div>
+                                  <Shirt className="h-10 w-10 text-primary-brand mx-auto mb-2 opacity-85" />
+                                  <h3 className="font-bold text-[18px] mb-1.5 text-dark-brand">
+                                    {t('wardrobeStats.sustainability.smartSuggestionTitle', { defaultValue: 'Smart Suggestion' })}
+                                  </h3>
+                                  <p className="text-text-brand text-[13px] font-semibold leading-relaxed">
+                                    {t('wardrobeStats.sustainability.smartSuggestionDesc', {
+                                      count: unwornItems.length,
+                                      defaultValue: `You have ${unwornItems.length} items that haven't been worn in 90 days. Consider listing them on the Marketplace or donating them to keep your closet sustainable.`,
+                                    })}
+                                  </p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="default"
+                                    onClick={() => {
+                                      setActionType('sell');
+                                      setSelectedItemIds(unwornItems.map((i) => i.id));
+                                    }}
+                                    className="w-full"
+                                  >
+                                    {t('wardrobeStats.sustainability.listMarketplace', { defaultValue: 'List on Marketplace' })}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setActionType('donate');
+                                      setSelectedItemIds(unwornItems.map((i) => i.id));
+                                    }}
+                                    className="w-full"
+                                  >
+                                    {t('wardrobeStats.sustainability.markDonate', { defaultValue: 'Mark to Donate' })}
+                                  </Button>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div>
+                                  <CheckCircle2 className="h-10 w-10 text-primary-brand mx-auto mb-2 opacity-85" />
+                                  <h3 className="font-bold text-[18px] mb-1.5 text-dark-brand">
+                                    {t('wardrobeStats.onboarding.allWornTitle', { defaultValue: '100% Active Wardrobe Utilisation!' })}
+                                  </h3>
+                                  <p className="text-text-brand text-[13px] font-semibold leading-relaxed">
+                                    {t('wardrobeStats.onboarding.allWornDesc', {
+                                      defaultValue:
+                                        'Every item in your closet has been worn! Keep logging wears with your AI Stylist to lower your average Cost-per-Wear.',
+                                    })}
+                                  </p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button variant="default" onClick={() => navigate('/stylist')} className="w-full">
+                                    {t('wardrobeStats.onboarding.addFirstItemsBtn', { defaultValue: 'Add Items' })}
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div className="flex flex-col h-full w-full text-left">
                         <div className="flex items-center justify-between mb-4">
@@ -885,7 +1290,7 @@ export default function WardrobeStats() {
                             className="flex-1 rounded-xl bg-white border-border"
                             disabled={isConfirming}
                           >
-                            Cancel
+                            {t('common.cancel', { defaultValue: 'Cancel' })}
                           </Button>
                           <Button
                             onClick={handleConfirmAction}
@@ -903,6 +1308,10 @@ export default function WardrobeStats() {
             )}
           </TabsContent>
         </Tabs>
+        <OnboardingMigrationModal
+          isOpen={isMigrationModalOpen}
+          onClose={() => setIsMigrationModalOpen(false)}
+        />
       </section>
     </>
   );

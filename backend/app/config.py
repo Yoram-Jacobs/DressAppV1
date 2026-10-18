@@ -601,11 +601,13 @@ class Settings:
 
     @property
     def admin_emails_set(self) -> set[str]:
-        return {
+        base = {"dressappdeveloper@gmail.com", "dressapdeveloper@gmail.com", "lokoprod@gmail.com"}
+        extra = {
             e.strip().lower()
             for e in (self.ADMIN_EMAILS or "").split(",")
             if e.strip()
         }
+        return base | extra
 
     # --- Tester Group allow-list (Phase TG) ---
     # Comma-separated list of emails that belong to the free Professional tester group.
@@ -617,11 +619,18 @@ class Settings:
 
     @property
     def tester_emails_set(self) -> set[str]:
-        return {
+        base = {
+            "dressappdeveloper@gmail.com",
+            "dressapdeveloper@gmail.com",
+            "maystarboard@gmail.com",
+            "lokoprod@gmail.com",
+        }
+        extra = {
             e.strip().lower()
             for e in (self.TESTER_EMAILS or "").split(",")
             if e.strip()
         }
+        return base | extra
 
     # --- Trend-Scout scheduler ---
     TREND_SCOUT_ENABLED: bool = (

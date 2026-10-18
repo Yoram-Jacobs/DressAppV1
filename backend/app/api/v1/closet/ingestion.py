@@ -337,6 +337,9 @@ class AnalyzeIn(BaseModel):
     # so a single outfit photo expands into one card per garment / accessory.
     # Set False to force a single, whole-frame analysis (legacy behaviour).
     multi: bool = True
+    # Pipeline mode: "single" (1 garment per photo), "multi" (worn outfit split),
+    # or "mass" (hanging closet rod/shelf or garment pile on floor/bed -> Gemini 3.5 Flash catalog + Nano Banana studio reconstruction).
+    mode: str | None = None
     # Optional ISO-639-1 code (``"en"`` / ``"he"`` / ``"ar"`` / ``"ru"`` / ...)
     # that overrides ``user.preferred_language`` for THIS request only.
     # The frontend should pass ``i18n.language`` here so the Gemini output
@@ -454,11 +457,46 @@ async def analyze_item_image(
         user.get("id"),
     )
 
-    cost = len(raw_list) if not payload.cutout_only else 0
-    # Deduct credits for the AI model calls
+    eff_mode = (payload.mode or ("multi" if payload.multi else "single")).strip().lower()
+    if eff_mode not in ("single", "multi", "mass"):
+        eff_mode = "multi" if payload.multi else "single"
+
     from app.db.database import get_db
     from app.services.billing_service import deduct_user_credits
+    from app.services.credit_manager import (
+        NANO_BANANA_MONTHLY_LIMIT,
+        compute_nano_banana_monthly_state,
+        get_user_tier,
+    )
     db = get_db()
+
+    nb_remaining = NANO_BANANA_MONTHLY_LIMIT
+    if eff_mode == "mass" and not payload.cutout_only:
+        user_tier = get_user_tier(user)
+        if user_tier not in ("manager", "professional"):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "mass_pipeline_tier_restricted",
+                    "i18n_key": "addItem.pipeline.massUpgradeRequired",
+                    "message": "The Mass Closet & Pile pipeline is available exclusively to Manager and Professional plan members.",
+                },
+            )
+        nb_state = compute_nano_banana_monthly_state(user)
+        nb_remaining = nb_state["nano_banana_monthly_remaining"]
+        if nb_remaining <= 0:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "nano_banana_monthly_limit_reached",
+                    "i18n_key": "addItem.pipeline.massMonthlyLimitReached",
+                    "limit": NANO_BANANA_MONTHLY_LIMIT,
+                    "used": nb_state["nano_banana_monthly_used"],
+                    "message": f"You have reached your monthly limit of {NANO_BANANA_MONTHLY_LIMIT} Nano Banana studio reconstructions.",
+                },
+            )
+
+    cost = len(raw_list) if (not payload.cutout_only and eff_mode != "mass") else 0
     if cost > 0 and not await deduct_user_credits(db, user, cost=cost):
         raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
@@ -480,12 +518,6 @@ async def analyze_item_image(
         except Exception as refund_err:
             logger.error("Failed to refund credits: %s", refund_err)
 
-    # Multi-item pipeline (default). Degrades gracefully to single.
-    # Language priority: explicit request override > profile setting > "en".
-    # Letting the frontend pass ``i18n.language`` here keeps the Eyes
-    # output in sync with the locale the user is actually viewing, which
-    # is what they expect (their profile setting is often stale or
-    # was never set during signup).
     user_lang = (
         (payload.language or "").strip().lower()
         or (user or {}).get("preferred_language")
@@ -494,13 +526,6 @@ async def analyze_item_image(
     from app.services.vision import resolve_garment_gender
     user_gender = resolve_garment_gender(user)
 
-    # Patch M19 (May 2026) — Streaming NDJSON variant. When the client
-    # opts in via ``Accept: application/x-ndjson``, we stream
-    # per-item frames as they arrive from Gemini rather than waiting
-    # for the full batched response. The frontend renders cards as
-    # frames land. Falls back to the legacy keepalive-whitespace
-    # JSON path on any setup error so a misbehaving client never
-    # breaks the API.
     accept = (request.headers.get("accept") or "").lower()
     wants_ndjson = "application/x-ndjson" in accept or "text/event-stream" in accept
 
@@ -511,7 +536,13 @@ async def analyze_item_image(
             analyzed_items_count = 0
             try:
                 streamer = active_vision.analyze_outfits_stream(
-                    raw_list, language=user_lang, cutout_only=payload.cutout_only, user_gender=user_gender,
+                    raw_list,
+                    language=user_lang,
+                    cutout_only=payload.cutout_only,
+                    user_gender=user_gender,
+                    mode=eff_mode,
+                    max_reconstructions=nb_remaining,
+                    user=user,
                 )
                 items_meta: list[dict[str, Any]] = []
 
@@ -669,6 +700,28 @@ async def analyze_item_image(
                     elif ftype == "item_skip":
                         await queue.put(frame)
                     elif ftype == "done":
+                        if eff_mode == "mass" and not payload.cutout_only:
+                            recon_count = int(frame.get("reconstructed_count") or analyzed_items_count or 0)
+                            if recon_count > 0:
+                                try:
+                                    await deduct_user_credits(
+                                        db, user, cost=recon_count, operation="mass_reconstruct"
+                                    )
+                                except Exception as mass_err:
+                                    logger.warning("Failed to record mass_reconstruct monthly usage: %s", mass_err)
+                            try:
+                                fresh_u = await db.users.find_one({"id": user["id"]}) or user
+                                frame["nano_banana_monthly"] = compute_nano_banana_monthly_state(fresh_u)
+                            except Exception:
+                                pass
+                        elif not payload.cutout_only and analyzed_items_count > cost:
+                            extra_garments = analyzed_items_count - cost
+                            try:
+                                await deduct_user_credits(
+                                    db, user, cost=extra_garments, operation="analyze_multi_garment"
+                                )
+                            except Exception as extra_err:
+                                logger.warning("Failed to deduct extra multi-garment credits: %s", extra_err)
                         await queue.put(frame)
                     elif ftype == "error":
                         if analyzed_items_count == 0:
@@ -736,7 +789,13 @@ async def analyze_item_image(
             items_out: list[dict[str, Any]] = []
             items_meta: list[dict[str, Any]] = []
             streamer = active_vision.analyze_outfits_stream(
-                raw_list, language=user_lang, cutout_only=payload.cutout_only, user_gender=user_gender,
+                raw_list,
+                language=user_lang,
+                cutout_only=payload.cutout_only,
+                user_gender=user_gender,
+                mode=eff_mode,
+                max_reconstructions=nb_remaining,
+                user=user,
             )
             from app.services.vision import _is_unidentifiable
 
@@ -900,8 +959,23 @@ async def analyze_item_image(
                     "We couldn't identify any garment in this photo. "
                     "Please try a clearer, well-lit shot.",
                 )
+            if eff_mode == "mass" and not payload.cutout_only and items_out:
+                try:
+                    await deduct_user_credits(
+                        db, user, cost=len(items_out), operation="mass_reconstruct"
+                    )
+                except Exception as mass_err:
+                    logger.warning("Failed to record mass_reconstruct monthly usage in fallback: %s", mass_err)
+            elif not payload.cutout_only and len(items_out) > cost:
+                extra_garments = len(items_out) - cost
+                try:
+                    await deduct_user_credits(
+                        db, user, cost=extra_garments, operation="analyze_multi_garment"
+                    )
+                except Exception as extra_err:
+                    logger.warning("Failed to deduct extra multi-garment credits: %s", extra_err)
             first = items_out[0]["analysis"] if items_out else _safe_analysis({})
-            return {"items": items_out, "count": len(items_out), **first}
+            return {"items": items_out, "count": len(items_out), "mode": eff_mode, **first}
         except HTTPException:
             raise
         except Exception as exc:  # noqa: BLE001

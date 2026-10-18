@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "eigen",
     "gender": "Geslacht",
     "eyesSlowNotice": "Standaard engine (~30s)",
-    "skipWaitCta": "⚡ Ontgrendel Instant Turbo"
+    "skipWaitCta": "⚡ Ontgrendel Instant Turbo",
+    "pipeline": {
+      "selectorLabel": "Opnamemodus",
+      "singleTitle": "Enkel kledingstuk",
+      "singleDesc": "Één item plat neergelegd of aan een hanger voor een precieze uitsnede.",
+      "multiTitle": "Outfit met meerdere items",
+      "multiDesc": "Volledige outfitfoto — splitst en analyseert elk gedragen kledingstuk.",
+      "massTitle": "Kledingkast & stapel",
+      "massDesc": "Kledingrek of stapel — catalogiseert elk stuk en genereert vrijstaande studiokaarten.",
+      "massBadgePro": "PRO / MANAGER",
+      "massQuotaBadge": "Nog {{remaining}} / {{limit}} studio-reconstructies deze maand",
+      "massUpgradeRequired": "Massa-upload voor kledingkast en stapel is beschikbaar in de Manager- en Professional-abonnementen.",
+      "massMonthlyLimitReached": "Maandelijkse limiet voor studio-reconstructies ({{limit}}/maand) bereikt. Wordt gereset bij je volgende factureringscyclus.",
+      "stageCataloging": "Kledingstukken op de foto catalogiseren…",
+      "stageReconstructing": "Studiokaarten opbouwen ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2134,7 +2149,17 @@
     "enableOccupation": "Aanpassen aan beroep",
     "enableOccupationDesc": "Stem outfitadviezen af op de eisen van uw beroep (bijv. maatkostuums voor advocaten, stevige werkkleding voor bouwvakkers).",
     "noOccupationSet": "Geen beroep ingesteld in profiel",
-    "currentOccupation": "Huidig"
+    "currentOccupation": "Huidig",
+    "onPremCreditsTooltip": "+10 dagelijkse On-Premises AI-tegoeden, cumulatief tot 300 over 30 dagen",
+    "onPremAiCreditsCounter": "On-Premises AI-tegoed: {{count}}",
+    "reconstructionCreditsTooltip": "Nano Banana Reconstructietegoed",
+    "aiCreditsCounter": "Reconstructietegoed: {{count}}",
+    "onPremAiCreditsLabel": "On-Premises AI-tegoed",
+    "onPremCreditsProgress": "{{count}} / {{max}} beschikbaar",
+    "onPremCreditsNote": "+10 dagelijks tegoed • Cumulatief tot 300 over 30 dagen (1 tegoed per kledingstuk, stylist-prompt of koffer-item)",
+    "aiCreditsBalanceLabel": "Reconstructietegoed (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} beschikbaar",
+    "topUpCredits": "Opwaarderen"
   },
   "admin": {
     "title": "Beheerder",
@@ -5049,5 +5074,57 @@
     "front": "Voorkant",
     "back": "Achterkant",
     "profile": "Profiel"
+  },
+  "wardrobeStats": {
+    "tabOverview": "Overzicht",
+    "tabSustainability": "Duurzaamheidsimpact",
+    "sustainability": {
+      "utilisationTitle": "Kastgebruik",
+      "carbonTitle": "Gevolgde CO₂",
+      "intakeManual": "Handmatig Toegevoegd",
+      "intakeReceipt": "Uit Kassabonnen",
+      "cpwTrendTitle": "Kosten-per-Keer-Dragen Trend",
+      "cpwTrendDesc": "De waarde-efficiëntie van je garderobe over 6 maanden.",
+      "smartSuggestionTitle": "Slimme Suggestie",
+      "smartSuggestionDesc": "Je hebt {{count}} items die al 90 dagen niet zijn gedragen. Overweeg ze op de Marketplace te zetten of te doneren voor een duurzame garderobe.",
+      "listMarketplace": "Zet op Marketplace",
+      "markDonate": "Markeer voor Donatie",
+      "selectToSell": "Selecteer items om te verkopen",
+      "selectToDonate": "Selecteer items om te doneren",
+      "noUnwornItems": "Geen ongedragen items gevonden."
+    },
+    "onboarding": {
+      "pillDigitize": "Toevoegen & Migreren",
+      "pillInvite": "Gratis Plekken (+10)",
+      "pillUpgrade": "Manager-plan",
+      "pillCircular": "Circulaire Zorg",
+      "phase1Badge": "Dag 1–7 • Start & Eerste Waarde",
+      "phase2Badge": "Dag 8–30 • Snel Digitaliseren",
+      "phase3Badge": "Dag 31–60 • Stijl-Adoptie",
+      "phase4Badge": "Dag 61–90 • Waarde & Circulariteit",
+      "emptyTitle": "Start je digitale garderobe",
+      "emptyDesc": "Je kast bevat momenteel 0 items. Voeg je eerste kledingstukken toe of migreer je garderobe vanuit een andere app om AI-styling en duurzaamheidsinzichten te ontgrendelen.",
+      "growingTitle": "Blijf je digitale kast opbouwen ({{count}} items)",
+      "growingDesc": "Bereik 20+ items zodat je AI-stylist complete, weerbestendige outfits kan samenstellen en nauwkeurige kosten-per-keer-dragen kan bijhouden.",
+      "tipTitle": "Tips voor snel digitaliseren",
+      "tip1": "Volledige outfitfoto: Upload één spiegelfoto — DressApp splitst en labelt elk kledingstuk automatisch in één keer.",
+      "tip2": "Bonnen & Chrome-extensie: Importeer digitale aankoopbonnen of sla items direct op vanuit webwinkels.",
+      "tip3": "1-klik app-migratie: Stap je over van een andere garderobe-app? Importeer je screenshots in enkele seconden.",
+      "addFirstItemsBtn": "Items Toevoegen",
+      "migrateWardrobeBtn": "Garderobe Migreren",
+      "inviteTitle": "Vergroot gratis je garderobecapaciteit",
+      "inviteDesc": "Nodig vrienden uit met je persoonlijke link! Elke vriend die zich aanmeldt geeft je +10 gratis kastplekken (tot 150 items) plus bonus AI-credits voor jullie allebei.",
+      "capacityProgress": "Gratis capaciteit: {{used}} / {{capacity}} plekken (+{{bonus}} bonusplekken)",
+      "inviteBtn": "Vrienden Uitnodigen (+10 Plekken)",
+      "upgradeTitle": "Ontgrendel de volledige kracht van DressApp met Manager",
+      "upgradeDesc": "Upgrade naar het Manager-plan voor onbeperkte kastcapaciteit, 1-klik Garderobemigratie, onbeperkte dagelijkse AI-stylistverzoeken en dagelijkse Trend-Scout.",
+      "upgradeBenefit1": "Onbeperkte kastplekken & 1-klik Garderobemigratie",
+      "upgradeBenefit2": "Prioriteit Gemini 3.5 Flash AI-stylist & Kofferplanner",
+      "upgradeBenefit3": "Dagelijkse automatische outfitsuggesties & Trend-Scout",
+      "upgradeBtn": "Upgraden naar Manager-plan",
+      "activeManagerBadge": "Je gebruikt het {{tier}}-plan — volledige kracht ontgrendeld!",
+      "allWornTitle": "100% actief garderobegebruik!",
+      "allWornDesc": "Elk item in je kast is gedragen! Blijf draagmomenten loggen met je AI-stylist om je gemiddelde kosten per keer dragen te verlagen."
+    }
   }
 }

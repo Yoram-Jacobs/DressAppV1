@@ -38,6 +38,8 @@ import {
   Calendar,
   Clock,
   Zap,
+  Layers,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1135,11 +1137,51 @@ export default function AddItem() {
   const nav = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { maxClosetSlots, isFree } = useTierLimits();
+  const {
+    maxClosetSlots,
+    isFree,
+    canAccessMassUpload,
+    nanoBananaMonthlyLimit,
+    nanoBananaMonthlyRemaining,
+  } = useTierLimits();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSuitcase = searchParams.get("from") === "suitcase";
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
+  const [pipelineMode, setPipelineMode] = useState("multi"); // "single" | "multi" | "mass"
+
+  const handleSelectPipelineMode = (nextMode) => {
+    if (nextMode === "mass" && !canAccessMassUpload) {
+      toast.error(
+        t("addItem.pipeline.massUpgradeRequired", {
+          defaultValue:
+            "Mass Closet & Pile upload is available on Manager and Professional plans.",
+        }),
+      );
+      return;
+    }
+    setPipelineMode(nextMode);
+  };
+
+  const resolveAnalyzeErrorMessage = (err) => {
+    const detail = err?.response?.data?.detail;
+    if (detail && typeof detail === "object") {
+      if (detail.i18n_key) {
+        return t(detail.i18n_key, {
+          limit: detail.limit ?? 100,
+          used: detail.used ?? 100,
+          defaultValue: detail.message || "Analysis failed",
+        });
+      }
+      if (detail.message) return detail.message;
+    }
+    if (typeof detail === "string" && detail.trim()) return detail;
+    return (
+      err?.response?.data?._error ||
+      err?.message ||
+      t("addItem.analyzeFailed", { defaultValue: "Analysis failed" })
+    );
+  };
 
   const [quickConfirm, setQuickConfirm] = useState(false);
   // Phase R — receipt ingest animation overlay state.
@@ -2250,6 +2292,15 @@ export default function AddItem() {
   };
 
   const handleFiles = async (fileList) => {
+    if (pipelineMode === "mass" && !canAccessMassUpload) {
+      toast.error(
+        t("addItem.pipeline.massUpgradeRequired", {
+          defaultValue:
+            "Mass Closet & Pile upload is available on Manager and Professional plans.",
+        }),
+      );
+      return;
+    }
     if (isFree && (closetItems?.length || 0) >= maxClosetSlots) {
       toast.error(
         t("common.upgradeToUse", {
@@ -2607,10 +2658,11 @@ export default function AddItem() {
         sourceFilename: fp.filename || null,
         sourceSizeBytes: fp.size_bytes || null,
         isDuplicate: !!isDup,
+        pipelineMode,
       });
     }
     console.info(
-      `[AddItem] continueInteractive: created ${drafts.length} drafts for analysis`,
+      `[AddItem] continueInteractive: created ${drafts.length} drafts for analysis (mode=${pipelineMode})`,
     );
     setCards((prev) => [...prev, ...drafts]);
     analyzeCards(drafts);
@@ -2705,16 +2757,27 @@ export default function AddItem() {
           const photoIdx = frame.image_index != null ? frame.image_index : 0;
           const photoObj = validPhotos[photoIdx] || validPhotos[0];
           const b64 = photoObj?.b64 || "";
-          const cropB64 = meta.crop_base64 || b64;
-          const mime = meta.crop_mime || photoObj?.fp?.file?.type || "image/jpeg";
+          const rec = frame.reconstruction;
+          const recValidated = !!(rec && rec.validated && rec.image_b64);
+          const cropB64 = frame.crop_base64 || meta.crop_base64 || b64;
+          const mime = frame.crop_mime || meta.crop_mime || photoObj?.fp?.file?.type || "image/jpeg";
 
           const cardLike = {
             base64: b64,
-            cropBase64: meta.crop_base64 || undefined,
+            cropBase64: cropB64 || undefined,
             mime,
             file: null,
             fields: hydrate(analysis, user, t, i18n),
-            useReconstructed: false,
+            useReconstructed: recValidated,
+            reconstructedB64: recValidated ? rec.image_b64 : null,
+            reconstructionMeta: recValidated
+              ? {
+                  reasons: rec.reasons || [],
+                  prompt: rec.prompt,
+                  model: rec.model,
+                  mime_type: rec.mime_type || "image/png",
+                }
+              : null,
             deferMatte: !!meta.defer_matte,
             ...(photoObj?.sourceMeta || {}),
           };
@@ -2758,10 +2821,7 @@ export default function AddItem() {
             }
           } catch (createErr) {
             console.error(`[handleBatchBackground] createItem failed for photo ${photoIdx}:`, createErr);
-            const detailMsg =
-              createErr?.response?.data?.detail?.message ||
-              createErr?.response?.data?.detail ||
-              createErr?.message;
+            const detailMsg = resolveAnalyzeErrorMessage(createErr);
             if (detailMsg) lastErrorMsg = detailMsg;
           }
         })();
@@ -2777,7 +2837,12 @@ export default function AddItem() {
 
       try {
         await api.analyzeItemImage(
-          { images_base64, language: requestLang },
+          {
+            images_base64,
+            language: requestLang,
+            mode: pipelineMode,
+            multi: pipelineMode !== "single",
+          },
           {
             onDetect: handleDetect,
             onItem: handleItem,
@@ -2786,10 +2851,7 @@ export default function AddItem() {
         );
       } catch (err) {
         console.warn(`[handleBatchBackground] analyzeItemImage failed:`, err);
-        const detailMsg =
-          err?.response?.data?.detail?.message ||
-          err?.response?.data?.detail ||
-          err?.message;
+        const detailMsg = resolveAnalyzeErrorMessage(err);
         if (detailMsg) lastErrorMsg = detailMsg;
       }
 
@@ -2951,6 +3013,7 @@ export default function AddItem() {
         sourceFilename: originalCard.sourceFilename || null,
         sourceSizeBytes: originalCard.sourceSizeBytes || null,
         isDuplicate: !!originalCard.isDuplicate,
+        pipelineMode: originalCard.pipelineMode || pipelineMode,
       });
 
       const handleDetect = (frame) => {
@@ -3071,6 +3134,9 @@ export default function AddItem() {
                   }
                   : null,
                 useReconstructed: recValidated,
+                originalCropUrl: frame.original_crop_base64
+                  ? `data:image/jpeg;base64,${frame.original_crop_base64}`
+                  : c.originalCropUrl,
                 cropBase64: frame.crop_base64 || c.cropBase64,
                 cropMime: frame.crop_mime || c.cropMime,
                 previewUrl: recValidated
@@ -3147,6 +3213,9 @@ export default function AddItem() {
                   ...c,
                   progress: Math.min(95, Math.round(55 + elapsed * 1.5)),
                   scanElapsedS: elapsed,
+                  scanStage: frame.stage || c.scanStage,
+                  scanCompleted: frame.completed ?? c.scanCompleted,
+                  scanTotal: frame.total ?? c.scanTotal,
                 }
               : c,
           ),
@@ -3154,10 +3223,16 @@ export default function AddItem() {
       };
 
       const images_base64 = cardsToProcess.map((c) => c.base64);
-      const payload = { images_base64, language: requestLang };
+      const activeMode = cardsToProcess[0]?.pipelineMode || pipelineMode;
+      const payload = {
+        images_base64,
+        language: requestLang,
+        mode: activeMode,
+        multi: activeMode !== "single",
+      };
 
       console.info(
-        `[AddItem] analyzeCards: sending ${images_base64.length} images to /closet/analyze`,
+        `[AddItem] analyzeCards: sending ${images_base64.length} images to /closet/analyze (mode=${activeMode})`,
       );
 
       const resp = await api.analyzeItemImage(payload, {
@@ -3232,7 +3307,7 @@ export default function AddItem() {
       );
     } catch (err) {
       clearInterval(tick);
-      const msg = err?.response?.data?.detail || err?.response?.data?._error || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
+      const msg = resolveAnalyzeErrorMessage(err);
 
       const erroredIds = new Set();
       cardsToProcess.forEach((origCard) => {
@@ -3362,6 +3437,7 @@ export default function AddItem() {
         deferMatte: !!meta.defer_matte,
         // Tracked so onItem can locate the right card in state.
         _streamSlot: meta._slot,
+        pipelineMode: card.pipelineMode || pipelineMode,
       });
 
       const handleDetect = (frame) => {
@@ -3404,9 +3480,6 @@ export default function AddItem() {
             items: Math.min((job.items || 0) + 1, job.total || job.items + 1),
           });
         }
-        // Reconstruction (Nano Banana) is disabled by the backend
-        // (ENABLE_RECONSTRUCTION=false), but echo the metadata
-        // forward so re-enabling it later is a no-op on this side.
         const rec = frame.reconstruction;
         const recValidated = !!(rec && rec.validated && rec.image_b64);
         const reconstructedUrl = recValidated
@@ -3457,6 +3530,9 @@ export default function AddItem() {
                   }
                   : null,
                 useReconstructed: recValidated,
+                originalCropUrl: frame.original_crop_base64
+                  ? `data:image/jpeg;base64,${frame.original_crop_base64}`
+                  : c.originalCropUrl,
                 cropBase64: frame.crop_base64 || c.cropBase64,
                 cropMime: frame.crop_mime || c.cropMime,
                 previewUrl: recValidated
@@ -3531,14 +3607,23 @@ export default function AddItem() {
                   ...c,
                   progress: Math.min(95, Math.round(55 + elapsed * 1.5)),
                   scanElapsedS: elapsed,
+                  scanStage: frame.stage || c.scanStage,
+                  scanCompleted: frame.completed ?? c.scanCompleted,
+                  scanTotal: frame.total ?? c.scanTotal,
                 }
               : c,
           ),
         );
       };
 
+      const activeCardMode = card.pipelineMode || pipelineMode;
       const resp = await api.analyzeItemImage(
-        { image_base64: card.base64, language: requestLang },
+        {
+          image_base64: card.base64,
+          language: requestLang,
+          mode: activeCardMode,
+          multi: activeCardMode !== "single",
+        },
         {
           onDetect: handleDetect,
           onMatte: handleMatte,
@@ -3582,7 +3667,7 @@ export default function AddItem() {
       );
     } catch (err) {
       clearInterval(tick);
-      const msg = err?.response?.data?.detail || err?.response?.data?._error || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
+      const msg = resolveAnalyzeErrorMessage(err);
       // Bug-fix May 2026 — when ``handleDetect`` has already replaced
       // the original ``card.id`` with per-item slot cards
       // (``perCardIds`` populated), the stream error that follows
@@ -4402,6 +4487,153 @@ export default function AddItem() {
                 value="upload"
                 className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               >
+                {/* 3-Mode GarmentVision Pipeline Selector */}
+                <div
+                  className="mb-5 bg-white rounded-[12px] p-4 border border-border/60 shadow-xs"
+                  data-testid="add-item-pipeline-selector"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <span className="text-[12px] font-bold uppercase tracking-wider text-text-brand flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary-brand" />
+                      {t("addItem.pipeline.selectorLabel", {
+                        defaultValue: "Capture Pipeline",
+                      })}
+                    </span>
+                    {canAccessMassUpload && (
+                      <Badge
+                        variant="outline"
+                        className="rounded-full border-primary-brand/30 bg-primary-shadow text-primary-brand font-semibold px-2.5 py-0.5 text-[11px]"
+                        data-testid="add-item-mass-quota-badge"
+                      >
+                        <Wand2 className="h-3 w-3 me-1 inline-block" />
+                        {t("addItem.pipeline.massQuotaBadge", {
+                          remaining: nanoBananaMonthlyRemaining ?? 100,
+                          limit: nanoBananaMonthlyLimit ?? 100,
+                          defaultValue: "{{remaining}} / {{limit}} studio rebuilds left this month",
+                        })}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Single Garment */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPipelineMode("single")}
+                      data-testid="pipeline-mode-single"
+                      className={cn(
+                        "flex flex-col items-start text-start p-3.5 rounded-xl border transition-all duration-200 cursor-pointer",
+                        pipelineMode === "single"
+                          ? "border-primary-brand bg-primary-shadow/60 shadow-xs ring-1 ring-primary-brand/30"
+                          : "border-border/60 bg-background/40 hover:border-primary-brand/40 hover:bg-primary-shadow/20",
+                      )}
+                    >
+                      <div className="flex items-center gap-2 w-full mb-1">
+                        <Shirt
+                          className={cn(
+                            "h-4 w-4 shrink-0",
+                            pipelineMode === "single"
+                              ? "text-primary-brand"
+                              : "text-text-brand",
+                          )}
+                        />
+                        <span className="text-[13px] font-bold text-dark-brand">
+                          {t("addItem.pipeline.singleTitle", {
+                            defaultValue: "Single Garment",
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-text-brand leading-relaxed">
+                        {t("addItem.pipeline.singleDesc", {
+                          defaultValue:
+                            "One item laid flat or on a hanger for precision cutout.",
+                        })}
+                      </p>
+                    </button>
+
+                    {/* Multi-Garment Outfit */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPipelineMode("multi")}
+                      data-testid="pipeline-mode-multi"
+                      className={cn(
+                        "flex flex-col items-start text-start p-3.5 rounded-xl border transition-all duration-200 cursor-pointer",
+                        pipelineMode === "multi"
+                          ? "border-primary-brand bg-primary-shadow/60 shadow-xs ring-1 ring-primary-brand/30"
+                          : "border-border/60 bg-background/40 hover:border-primary-brand/40 hover:bg-primary-shadow/20",
+                      )}
+                    >
+                      <div className="flex items-center gap-2 w-full mb-1">
+                        <Layers
+                          className={cn(
+                            "h-4 w-4 shrink-0",
+                            pipelineMode === "multi"
+                              ? "text-primary-brand"
+                              : "text-text-brand",
+                          )}
+                        />
+                        <span className="text-[13px] font-bold text-dark-brand">
+                          {t("addItem.pipeline.multiTitle", {
+                            defaultValue: "Multi-Garment Outfit",
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-text-brand leading-relaxed">
+                        {t("addItem.pipeline.multiDesc", {
+                          defaultValue:
+                            "Full outfit photo — splits and analyzes each worn piece.",
+                        })}
+                      </p>
+                    </button>
+
+                    {/* Mass Closet & Pile */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPipelineMode("mass")}
+                      data-testid="pipeline-mode-mass"
+                      className={cn(
+                        "flex flex-col items-start text-start p-3.5 rounded-xl border transition-all duration-200 cursor-pointer relative",
+                        pipelineMode === "mass"
+                          ? "border-primary-brand bg-primary-shadow/60 shadow-xs ring-1 ring-primary-brand/30"
+                          : !canAccessMassUpload
+                            ? "border-border/50 bg-muted/30 opacity-85 hover:border-amber-500/50"
+                            : "border-border/60 bg-background/40 hover:border-primary-brand/40 hover:bg-primary-shadow/20",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2 w-full mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Wand2
+                            className={cn(
+                              "h-4 w-4 shrink-0",
+                              pipelineMode === "mass"
+                                ? "text-primary-brand"
+                                : "text-text-brand",
+                            )}
+                          />
+                          <span className="text-[13px] font-bold text-dark-brand truncate">
+                            {t("addItem.pipeline.massTitle", {
+                              defaultValue: "Mass Closet & Pile",
+                            })}
+                          </span>
+                        </div>
+                        {!canAccessMassUpload && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0">
+                            <Lock className="h-2.5 w-2.5" />
+                            {t("addItem.pipeline.massBadgePro", {
+                              defaultValue: "PRO / MANAGER",
+                            })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-text-brand leading-relaxed">
+                        {t("addItem.pipeline.massDesc", {
+                          defaultValue:
+                            "Closet rack or garment pile — catalogs every piece and rebuilds clear studio cards.",
+                        })}
+                      </p>
+                    </button>
+                  </div>
+                </div>
+
                 <div
                   className="w-full border-2 border-dashed border-border rounded-[12px] p-10 max-[480px]:p-5 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
                   data-testid="add-item-dropzone"
@@ -5300,28 +5532,78 @@ export default function AddItem() {
           ) : (
             <>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 bg-white rounded-[12px] p-5">
-                <div className="flex items-center gap-2 bg-secondary/30 px-3 py-1.5 rounded-xl border border-border/50 self-start sm:self-auto">
-                  <input
-                    type="checkbox"
-                    id="quick-confirm-mode"
-                    checked={quickConfirm}
-                    onChange={(e) => setQuickConfirm(e.target.checked)}
-                    className="sr-only peer"
-                    data-testid="quick-confirm-toggle"
-                  />
-                  <label
-                    htmlFor="quick-confirm-mode"
-                    className="relative w-8 h-4 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[hsl(var(--accent))] cursor-pointer"
-                  />
-                  <label
-                    htmlFor="quick-confirm-mode"
-                    className="text-xs font-semibold cursor-pointer select-none text-foreground flex items-center gap-1.5"
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                  <div className="flex items-center gap-2 bg-secondary/30 px-3 py-1.5 rounded-xl border border-border/50">
+                    <input
+                      type="checkbox"
+                      id="quick-confirm-mode"
+                      checked={quickConfirm}
+                      onChange={(e) => setQuickConfirm(e.target.checked)}
+                      className="sr-only peer"
+                      data-testid="quick-confirm-toggle"
+                    />
+                    <label
+                      htmlFor="quick-confirm-mode"
+                      className="relative w-8 h-4 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[hsl(var(--accent))] cursor-pointer"
+                    />
+                    <label
+                      htmlFor="quick-confirm-mode"
+                      className="text-xs font-semibold cursor-pointer select-none text-foreground flex items-center gap-1.5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
+                      {t("addItem.quickConfirmMode", {
+                        defaultValue: "Quick Confirm Mode",
+                      })}
+                    </label>
+                  </div>
+                  <div
+                    className="inline-flex items-center gap-1 bg-secondary/30 p-1 rounded-xl border border-border/50"
+                    data-testid="add-item-pipeline-compact"
                   >
-                    <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
-                    {t("addItem.quickConfirmMode", {
-                      defaultValue: "Quick Confirm Mode",
-                    })}
-                  </label>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPipelineMode("single")}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer",
+                        pipelineMode === "single"
+                          ? "bg-primary-brand text-white"
+                          : "text-text-brand hover:text-dark-brand",
+                      )}
+                    >
+                      {t("addItem.pipeline.singleTitle", {
+                        defaultValue: "Single Garment",
+                      })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPipelineMode("multi")}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer",
+                        pipelineMode === "multi"
+                          ? "bg-primary-brand text-white"
+                          : "text-text-brand hover:text-dark-brand",
+                      )}
+                    >
+                      {t("addItem.pipeline.multiTitle", {
+                        defaultValue: "Multi-Garment Outfit",
+                      })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPipelineMode("mass")}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1",
+                        pipelineMode === "mass"
+                          ? "bg-primary-brand text-white"
+                          : "text-text-brand hover:text-dark-brand",
+                      )}
+                    >
+                      {!canAccessMassUpload && <Lock className="h-2.5 w-2.5" />}
+                      {t("addItem.pipeline.massTitle", {
+                        defaultValue: "Mass Closet & Pile",
+                      })}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 justify-end flex-wrap">
                   <Button
@@ -5553,7 +5835,12 @@ function ItemCard({
                     defaultValue: "Pending garment",
                   })
                 }
-                className="w-full h-full object-cover"
+                className={cn(
+                  "w-full h-full",
+                  showingReconstructed || card.cropMime === "image/png"
+                    ? "object-contain"
+                    : "object-cover",
+                )}
               />
             </div>
             {hasReconstruction && !isBusy && (
@@ -5604,7 +5891,30 @@ function ItemCard({
                 className="absolute bottom-0 start-0 end-0 bg-background/95 backdrop-blur-md px-3 py-2.5 border-t border-border shadow-md transition-all"
                 data-testid="add-item-scanning-overlay"
               >
-                <ScanningPipeline variant="inline" />
+                {card.scanStage === "mass_cataloging" ? (
+                  <div className="text-[11px] font-semibold text-primary-brand flex items-center gap-1.5">
+                    <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+                    <span>
+                      {t("addItem.pipeline.stageCataloging", {
+                        defaultValue: "Cataloging garments in photo…",
+                      })}
+                    </span>
+                  </div>
+                ) : card.scanStage === "mass_reconstructing" ? (
+                  <div className="text-[11px] font-semibold text-primary-brand flex items-center gap-1.5">
+                    <Wand2 className="h-3 w-3 animate-pulse shrink-0" />
+                    <span>
+                      {t("addItem.pipeline.stageReconstructing", {
+                        completed: card.scanCompleted || 0,
+                        total: card.scanTotal || 1,
+                        defaultValue:
+                          "Rebuilding studio cards ({{completed}}/{{total}})…",
+                      })}
+                    </span>
+                  </div>
+                ) : (
+                  <ScanningPipeline variant="inline" />
+                )}
                 <Progress value={progress} className="h-1.5 mt-2" />
                 {isFree && (
                   <TurboStatusCard variant="inline" context="upload" className="mt-2" />
@@ -5616,7 +5926,7 @@ function ItemCard({
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-rose-600" />
                   <span className="flex-1 font-medium">
-                    {isQuotaError
+                    {isQuotaError && isFree
                       ? t("common.upgradeToUse", {
                           feature: t("common.features.moreAiActions", { defaultValue: "more AI actions" }),
                           defaultValue: "Upgrade your plan to use more AI actions.",

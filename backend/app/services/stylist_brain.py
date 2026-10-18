@@ -340,16 +340,16 @@ def stylist_brain_service(
         resolve_user_ai_model,
     )
 
-    if user and isinstance(user, dict) and is_tester_user(user):
+    if user and isinstance(user, dict):
         eff_provider = resolve_effective_provider(user=user)
         if eff_provider == "gemma":
-            user_model = model or resolve_user_ai_model(user) or "Eyes v1"
+            user_model = model or (resolve_user_ai_model(user) if is_tester_user(user) else "Eyes v1") or "Eyes v1"
             primary = GemmaStylistBrain(model=user_model)
             fallback = GeminiStylistBrain() if gemini_stylist_service else None
             return FallbackBrain(primary=primary, fallback=fallback) if fallback else primary
         elif eff_provider == "gemini":
-            custom_key = api_key or resolve_user_custom_gemini_api_key(user)
-            gemini_model = model or resolve_user_gemini_model(user) or "gemini-3.5-flash-lite"
+            custom_key = api_key or (resolve_user_custom_gemini_api_key(user) if is_tester_user(user) else None)
+            gemini_model = model or (resolve_user_gemini_model(user) if is_tester_user(user) else "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
             primary = GeminiStylistBrain(api_key=custom_key, model=gemini_model)
             return FallbackBrain(primary=primary, fallback=GemmaStylistBrain())
 

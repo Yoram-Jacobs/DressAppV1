@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "propio",
     "gender": "Género",
     "eyesSlowNotice": "Motor estándar (~30 s)",
-    "skipWaitCta": "⚡ Desbloquear Turbo Instantáneo"
+    "skipWaitCta": "⚡ Desbloquear Turbo Instantáneo",
+    "pipeline": {
+      "selectorLabel": "Modo de captura",
+      "singleTitle": "Prenda individual",
+      "singleDesc": "Una prenda extendida o en percha para un recorte preciso.",
+      "multiTitle": "Conjunto de varias prendas",
+      "multiDesc": "Foto de conjunto completo — separa y analiza cada prenda vestida.",
+      "massTitle": "Armario y pila masiva",
+      "massDesc": "Perchero o pila de ropa — cataloga cada prenda y reconstruye tarjetas de estudio sin fondo.",
+      "massBadgePro": "PRO / MANAGER",
+      "massQuotaBadge": "{{remaining}} / {{limit}} reconstrucciones de estudio restantes este mes",
+      "massUpgradeRequired": "La carga masiva de armario y pila está disponible en los planes Manager y Profesional.",
+      "massMonthlyLimitReached": "Se alcanzó el límite mensual de reconstrucción de estudio ({{limit}}/mes). Se restablece en tu próximo ciclo de facturación.",
+      "stageCataloging": "Catalogando prendas en la foto…",
+      "stageReconstructing": "Reconstruyendo tarjetas de estudio ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2134,7 +2149,17 @@
     "enableOccupation": "Adaptar a la profesión",
     "enableOccupationDesc": "Adapta las recomendaciones a las exigencias de tu trabajo (p. ej., trajes para abogados, ropa resistente para constructores).",
     "noOccupationSet": "Sin profesión definida en el perfil",
-    "currentOccupation": "Actual"
+    "currentOccupation": "Actual",
+    "onPremCreditsTooltip": "+10 créditos diarios de IA Local, acumulables hasta 300 durante 30 días",
+    "onPremAiCreditsCounter": "Créditos de IA Local: {{count}}",
+    "reconstructionCreditsTooltip": "Créditos de Reconstrucción Nano Banana",
+    "aiCreditsCounter": "Créditos de Reconstrucción: {{count}}",
+    "onPremAiCreditsLabel": "Créditos de IA Local (On-Premises)",
+    "onPremCreditsProgress": "{{count}} / {{max}} disponibles",
+    "onPremCreditsNote": "+10 créditos diarios • Acumulables hasta 300 en 30 días (1 crédito por prenda, consulta al estilista o prenda en maleta)",
+    "aiCreditsBalanceLabel": "Créditos de Reconstrucción (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} disponibles",
+    "topUpCredits": "Recargar"
   },
   "admin": {
     "title": "Administrador",
@@ -5047,5 +5072,57 @@
     "profile": "Perfil",
     "utility": "Utilitario",
     "multi_pocket": "Multibolsillos"
+  },
+  "wardrobeStats": {
+    "tabOverview": "Resumen",
+    "tabSustainability": "Impacto de Sostenibilidad",
+    "sustainability": {
+      "utilisationTitle": "Uso del Armario",
+      "carbonTitle": "Huella de Carbono",
+      "intakeManual": "Añadidos Manuales",
+      "intakeReceipt": "Desde Recibos",
+      "cpwTrendTitle": "Tendencia de Costo por Uso",
+      "cpwTrendDesc": "Eficiencia del valor de tu armario en 6 meses.",
+      "smartSuggestionTitle": "Sugerencia Inteligente",
+      "smartSuggestionDesc": "Tienes {{count}} prendas que no has usado en 90 días. Considera publicarlas en el Marketplace o donarlas para mantener un armario sostenible.",
+      "listMarketplace": "Publicar en Marketplace",
+      "markDonate": "Marcar para Donar",
+      "selectToSell": "Seleccionar prendas para vender",
+      "selectToDonate": "Seleccionar prendas para donar",
+      "noUnwornItems": "No se encontraron prendas sin usar."
+    },
+    "onboarding": {
+      "pillDigitize": "Añadir y Migrar",
+      "pillInvite": "Espacios Gratis (+10)",
+      "pillUpgrade": "Plan Manager",
+      "pillCircular": "Moda Circular",
+      "phase1Badge": "Días 1–7 • Inicio y Primer Valor",
+      "phase2Badge": "Días 8–30 • Digitalización Rápida",
+      "phase3Badge": "Días 31–60 • Adopción de Estilo",
+      "phase4Badge": "Días 61–90 • Valor y Circularidad",
+      "emptyTitle": "Impulsa tu armario digital",
+      "emptyDesc": "Tu armario tiene 0 prendas en este momento. Añade tus primeras prendas o migra tu guardarropa desde otra aplicación para activar el estilista IA y las métricas de sostenibilidad.",
+      "growingTitle": "Sigue construyendo tu armario digital ({{count}} prendas)",
+      "growingDesc": "Llega a más de 20 prendas para que tu Estilista IA pueda crear atuendos completos según el clima y calcular tendencias precisas de costo por uso.",
+      "tipTitle": "Consejos para digitalizar rápido",
+      "tip1": "Foto de look completo: Sube una foto frente al espejo; DressApp separa y etiqueta automáticamente cada prenda en un solo paso.",
+      "tip2": "Recibos y Extensión Chrome: Importa recibos digitales de compra o guarda prendas directamente desde tiendas online.",
+      "tip3": "Migración en 1 clic: ¿Vienes de otra app de armario? Importa tus capturas de pantalla por lotes en segundos.",
+      "addFirstItemsBtn": "Añadir Prendas",
+      "migrateWardrobeBtn": "Migrar Armario",
+      "inviteTitle": "Amplía la capacidad de tu armario gratis",
+      "inviteDesc": "¡Invita a tus amigos con tu enlace personal! Cada amigo que se registre te da +10 espacios gratis en el armario (hasta 150 prendas) y créditos IA de regalo para ambos.",
+      "capacityProgress": "Capacidad gratuita: {{used}} / {{capacity}} espacios (+{{bonus}} espacios extra)",
+      "inviteBtn": "Invitar Amigos (+10 Espacios)",
+      "upgradeTitle": "Desbloquea todo el poder de DressApp con el plan Manager",
+      "upgradeDesc": "Actualiza al plan Manager para obtener capacidad ilimitada, migración de armario en 1 clic, consultas diarias ilimitadas al Estilista IA y Trend-Scout diario.",
+      "upgradeBenefit1": "Espacios ilimitados y migración de armario en 1 clic",
+      "upgradeBenefit2": "Estilista IA y Planificador de Maleta con Gemini 3.5 Flash prioritario",
+      "upgradeBenefit3": "Sugerencias diarias automáticas de looks y Trend-Scout",
+      "upgradeBtn": "Actualizar al Plan Manager",
+      "activeManagerBadge": "¡Estás en el plan {{tier}} — todo el poder desbloqueado!",
+      "allWornTitle": "¡100% de uso activo del armario!",
+      "allWornDesc": "¡Has usado todas las prendas de tu armario! Sigue registrando tus looks con el Estilista IA para reducir tu costo promedio por uso."
+    }
   }
 }

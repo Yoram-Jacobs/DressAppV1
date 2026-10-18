@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "Proprio",
     "gender": "Genere",
     "eyesSlowNotice": "Motore standard (~30s)",
-    "skipWaitCta": "⚡ Sblocca Turbo Istantaneo"
+    "skipWaitCta": "⚡ Sblocca Turbo Istantaneo",
+    "pipeline": {
+      "selectorLabel": "Modalità di acquisizione",
+      "singleTitle": "Capo singolo",
+      "singleDesc": "Un capo steso in piano o su gruccia per uno scontorno preciso.",
+      "multiTitle": "Outfit multi-capo",
+      "multiDesc": "Foto dell'outfit completo — separa e analizza ogni singolo capo indossato.",
+      "massTitle": "Armadio e pila multipla",
+      "massDesc": "Appendiabiti o pila di vestiti — cataloga ogni capo e ricrea schede da studio con sfondo trasparente.",
+      "massBadgePro": "PRO / MANAGER",
+      "massQuotaBadge": "{{remaining}} / {{limit}} ricostruzioni da studio rimanenti questo mese",
+      "massUpgradeRequired": "Il caricamento multiplo da armadio e pila è disponibile nei piani Manager e Professional.",
+      "massMonthlyLimitReached": "Limite mensile di ricostruzione da studio ({{limit}}/mese) raggiunto. Si azzera al prossimo ciclo di fatturazione.",
+      "stageCataloging": "Catalogazione dei capi nella foto…",
+      "stageReconstructing": "Ricostruzione schede da studio ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2134,7 +2149,17 @@
     "enableOccupation": "Adatta alla professione",
     "enableOccupationDesc": "Personalizza i consigli di outfit in base alle esigenze del tuo lavoro (es. completi su misura per avvocati, abiti da lavoro resistenti per edili).",
     "noOccupationSet": "Nessuna professione impostata nel profilo",
-    "currentOccupation": "Attuale"
+    "currentOccupation": "Attuale",
+    "onPremCreditsTooltip": "+10 crediti IA locali al giorno, cumulabili fino a 300 in 30 giorni",
+    "onPremAiCreditsCounter": "Crediti IA Locali: {{count}}",
+    "reconstructionCreditsTooltip": "Crediti di Ricostruzione Nano Banana",
+    "aiCreditsCounter": "Crediti di Ricostruzione: {{count}}",
+    "onPremAiCreditsLabel": "Crediti IA Locali (On-Premises)",
+    "onPremCreditsProgress": "{{count}} / {{max}} disponibili",
+    "onPremCreditsNote": "+10 crediti giornalieri • Cumulabili fino a 300 in 30 giorni (1 credito per capo, prompt stilista o capo in valigia)",
+    "aiCreditsBalanceLabel": "Crediti di Ricostruzione (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} disponibili",
+    "topUpCredits": "Ricarica"
   },
   "admin": {
     "title": "Amministratore",
@@ -5042,5 +5067,57 @@
     "front": "Fronte",
     "back": "Retro",
     "profile": "Profilo"
+  },
+  "wardrobeStats": {
+    "tabOverview": "Panoramica",
+    "tabSustainability": "Impatto di Sostenibilità",
+    "sustainability": {
+      "utilisationTitle": "Utilizzo del Guardaroba",
+      "carbonTitle": "Carbonio Tracciato",
+      "intakeManual": "Aggiunte Manuali",
+      "intakeReceipt": "Da Ricevute",
+      "cpwTrendTitle": "Trend Costo per Utilizzo",
+      "cpwTrendDesc": "L'efficienza del valore del tuo guardaroba in 6 mesi.",
+      "smartSuggestionTitle": "Suggerimento Smart",
+      "smartSuggestionDesc": "Hai {{count}} capi non indossati negli ultimi 90 giorni. Valuta di metterli in vendita sul Marketplace o donarli per mantenere il tuo guardaroba sostenibile.",
+      "listMarketplace": "Vendi sul Marketplace",
+      "markDonate": "Segna da Donare",
+      "selectToSell": "Seleziona capi da vendere",
+      "selectToDonate": "Seleziona capi da donare",
+      "noUnwornItems": "Nessun capo non indossato trovato."
+    },
+    "onboarding": {
+      "pillDigitize": "Aggiungi e Migra",
+      "pillInvite": "Slot Gratis (+10)",
+      "pillUpgrade": "Piano Manager",
+      "pillCircular": "Moda Circolare",
+      "phase1Badge": "Giorni 1–7 • Avvio e Primo Valore",
+      "phase2Badge": "Giorni 8–30 • Digitalizzazione Rapida",
+      "phase3Badge": "Giorni 31–60 • Adozione dello Stile",
+      "phase4Badge": "Giorni 61–90 • Valore e Circolarità",
+      "emptyTitle": "Avvia il tuo guardaroba digitale",
+      "emptyDesc": "Il tuo guardaroba ha 0 capi al momento. Aggiungi i tuoi primi vestiti o migra il guardaroba da un'altra app per sbloccare lo stylist IA e le statistiche di sostenibilità.",
+      "growingTitle": "Continua a costruire il tuo guardaroba ({{count}} capi)",
+      "growingDesc": "Raggiungi 20+ capi affinché il tuo Stylist IA possa creare outfit completi adatti al meteo e tracciare il Costo per Utilizzo.",
+      "tipTitle": "Consigli per digitalizzare velocemente",
+      "tip1": "Foto Outfit Completo: Carica una sola foto allo specchio — DressApp separa e tagga automaticamente ogni capo in un solo passaggio.",
+      "tip2": "Ricevute ed Estensione Chrome: Importa ricevute digitali o salva i capi direttamente dai negozi online.",
+      "tip3": "Migrazione in 1 clic: Vieni da un'altra app? Importa i tuoi screenshot in blocco in pochi secondi.",
+      "addFirstItemsBtn": "Aggiungi Capi",
+      "migrateWardrobeBtn": "Migra Guardaroba",
+      "inviteTitle": "Espandi gratuitamente la capacità del guardaroba",
+      "inviteDesc": "Invita gli amici con il tuo link personale! Ogni amico che si iscrive ti regala +10 slot gratuiti (fino a 150 capi) più crediti IA bonus per entrambi.",
+      "capacityProgress": "Capacità gratuita: {{used}} / {{capacity}} slot (+{{bonus}} slot bonus)",
+      "inviteBtn": "Invita Amici (+10 Slot)",
+      "upgradeTitle": "Sblocca tutta la potenza di DressApp con il piano Manager",
+      "upgradeDesc": "Passa al piano Manager per capacità illimitata, Migrazione del Guardaroba in 1 clic, richieste giornaliere illimitate allo Stylist IA e Trend-Scout quotidiano.",
+      "upgradeBenefit1": "Slot guardaroba illimitati e Migrazione in 1 clic",
+      "upgradeBenefit2": "Stylist IA e Pianificatore Valigia con priorità Gemini 3.5 Flash",
+      "upgradeBenefit3": "Suggerimenti outfit giornalieri automatici e feed Trend-Scout",
+      "upgradeBtn": "Passa al Piano Manager",
+      "activeManagerBadge": "Sei sul piano {{tier}} — massima potenza sbloccata!",
+      "allWornTitle": "100% di utilizzo attivo del guardaroba!",
+      "allWornDesc": "Ogni capo del tuo guardaroba è stato indossato! Continua a registrare gli outfit con lo Stylist IA per ridurre il Costo per Utilizzo."
+    }
   }
 }

@@ -394,6 +394,123 @@ def fit_image_data_url_to_card(
         return data_url
 
 
+def _strip_solid_studio_bg_to_rgba(img: Image.Image) -> Image.Image:
+    """Guarantee a pure transparent RGBA cutout (alpha=0 on background, never white/off-white).
+
+    If `img` already has a valid transparent alpha channel (transparent borders and solid garment core),
+    returns it after clearing any residual border-connected studio background pixels.
+    If `img` is RGB or has an opaque background, strips the border-connected uniform studio
+    background to pure transparent RGBA (0, 0, 0, 0) while preserving interior garment pixels.
+    """
+    rgba = img.convert("RGBA")
+    arr = np.array(rgba)
+    h, w = arr.shape[:2]
+    if h < 8 or w < 8:
+        return rgba
+
+    alpha = arr[:, :, 3]
+    border_alpha = np.concatenate([
+        alpha[0, :],
+        alpha[h - 1, :],
+        alpha[:, 0],
+        alpha[:, w - 1],
+    ])
+    coverage = float(np.mean(alpha >= 128))
+    if float(np.mean(border_alpha)) < 20.0 and 0.01 <= coverage <= 0.94:
+        return rgba
+
+    rgb = arr[:, :, :3].astype(np.float32)
+    border_rgb = np.concatenate([
+        rgb[0, :],
+        rgb[h - 1, :],
+        rgb[:, 0],
+        rgb[:, w - 1],
+    ], axis=0)
+    bg_color = np.median(border_rgb, axis=0)
+    dist = np.sqrt(np.sum((rgb - bg_color) ** 2, axis=2))
+
+    # Candidate background pixels matching the studio background color
+    bg_candidate = dist < 30.0
+    try:
+        from scipy import ndimage
+
+        labeled, num_features = ndimage.label(bg_candidate)
+        if num_features > 0:
+            border_labels = np.unique(
+                np.concatenate([
+                    labeled[0, :],
+                    labeled[h - 1, :],
+                    labeled[:, 0],
+                    labeled[:, w - 1],
+                ])
+            )
+            border_labels = border_labels[border_labels > 0]
+            exterior_bg = np.isin(labeled, border_labels)
+        else:
+            exterior_bg = bg_candidate
+
+        # Smooth feather along the 1-2px boundary between exterior background and garment
+        dilated_bg = ndimage.binary_dilation(exterior_bg, iterations=2)
+        edge_band = dilated_bg & (~exterior_bg)
+        new_alpha = np.where(exterior_bg, 0, 255).astype(np.float32)
+        if edge_band.any():
+            ramp = np.clip((dist - 16.0) / 22.0, 0.0, 1.0) * 255.0
+            new_alpha = np.where(edge_band, ramp, new_alpha)
+
+        # Combine with any pre-existing transparency
+        final_alpha = np.minimum(alpha.astype(np.float32), new_alpha).astype(np.uint8)
+        arr[:, :, 3] = final_alpha
+        out_rgba = Image.fromarray(arr, mode="RGBA")
+        try:
+            from app.services.background_matting import drop_disconnected_islands
+            out_rgba = drop_disconnected_islands(out_rgba)
+        except Exception:
+            pass
+        return out_rgba
+    except Exception as exc:
+        logger.debug("_strip_solid_studio_bg_to_rgba fallback: %s", exc)
+        new_alpha = np.clip((dist - 18.0) / 16.0, 0.0, 1.0) * 255.0
+        arr[:, :, 3] = np.minimum(alpha.astype(np.float32), new_alpha).astype(np.uint8)
+        return Image.fromarray(arr, mode="RGBA")
+
+
+def ensure_transparent_vertical_card(
+    image_bytes: bytes,
+    *,
+    category: str | None = None,
+    canvas_w: int = _CARD_CANVAS_W,
+    canvas_h: int = _CARD_CANVAS_H,
+) -> tuple[bytes, str]:
+    """Ensure a reconstructed garment has a 100% clear (transparent) background and fits the vertical 900x1200 card."""
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        img.load()
+    except Exception:
+        return _fit_crop_to_card(image_bytes, crop_mime="image/png", canvas_w=canvas_w, canvas_h=canvas_h)
+
+    rgba = _strip_solid_studio_bg_to_rgba(img)
+
+    # Check tight garment bounding box for vertical orientation
+    bbox = rgba.getbbox()
+    if bbox and (bbox[2] - bbox[0] > 16) and (bbox[3] - bbox[1] > 16):
+        bw = bbox[2] - bbox[0]
+        bh = bbox[3] - bbox[1]
+        cat_norm = (category or "").strip().lower()
+        vertical_cats = {"top", "bottom", "outerwear", "full body", "dress", ""}
+        if cat_norm in vertical_cats and bw > bh * 1.35:
+            rgba = rgba.transpose(Image.ROTATE_90)
+
+    buf = io.BytesIO()
+    rgba.save(buf, format="PNG")
+    return _fit_crop_to_card(
+        buf.getvalue(),
+        crop_mime="image/png",
+        canvas_w=canvas_w,
+        canvas_h=canvas_h,
+    )
+
+
+
 def _create_batch_collage(
     images_bytes_list: list[bytes],
     *,

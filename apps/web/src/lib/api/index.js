@@ -64,7 +64,12 @@ export { campaignApi };
 export { client, API_BASE, tokenStore, userStore, streamNdjson, sync, syncManager };
 
 // ============================================================
-// Default export: the unified api object (with .client for raw axios)
+// Default export: the unified api object (with .client and raw verb helpers)
 // ============================================================
 api.client = client;
+api.get = (...args) => client.get(...args);
+api.post = (...args) => client.post(...args);
+api.put = (...args) => client.put(...args);
+api.patch = (...args) => client.patch(...args);
+api.delete = (...args) => client.delete(...args);
 export default api;

@@ -1,0 +1,789 @@
+"""Seed script and dataset for Demo User Alex Rivera's Digitized Closet.
+
+Generated from multi-garment closet photo digitization:
+1. Extraction & Cataloging: Gemini 3.5 Flash
+2. High-fidelity Studio Reconstruction: Nano Banana (gemini-3.1-flash-lite-image)
+"""
+import os
+import json
+from pathlib import Path
+from datetime import datetime, timezone
+
+NOW = datetime.now(timezone.utc).isoformat()
+
+USER_ALEX_RIVERA = {
+    "id": "user-alex-rivera",
+    "email": "newuser.screenshoter@dressapp.co",
+    "display_name": "Alex Rivera",
+    "first_name": "Alex",
+    "last_name": "Rivera",
+    "locale": "en-US",
+    "preferred_language": "en",
+    "preferred_voice_id": "en_US-ryan-medium",
+    "home_location": {
+        "lat": 40.7128,
+        "lng": -74.0060,
+        "city": "New York"
+    },
+    "roles": ["user", "tester"],
+    "subscription": {
+        "is_active": True,
+        "tier": "professional",
+        "unlimited_closet": True,
+        "expires_at": None
+    },
+    "style_profile": {
+        "aesthetics": ["smart-casual", "tailored-minimalist", "urban-clean"],
+        "color_palette": ["charcoal", "navy", "black", "indigo", "olive", "taupe", "light-blue"],
+        "avoid": ["neon", "loud prints", "distressed denim"],
+        "body_notes": "Athletic slim tailored fit",
+        "budget_monthly_cents": 35000
+    },
+    "cultural_context": {
+        "region": "US",
+        "religion": None,
+        "dress_conservativeness": "moderate"
+    },
+    "roles": ["user"],
+    "is_demo": True,
+    "free_ai_credits_daily": 10,
+    "credit_buckets": [
+        {
+            "amount": 25,
+            "type": "free",
+            "created_at": NOW,
+            "expires_at": None
+        }
+    ],
+    "created_at": NOW,
+    "updated_at": NOW
+}
+
+CLOSET_ITEMS_ALEX_RIVERA = [
+    {
+        "id": "closet-alex-01",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "trousers",
+        "title": "Light Blue-Grey Casual Trousers",
+        "name": "Light Blue-Grey Casual Trousers",
+        "brand": "Selected Homme",
+        "size": "32x32",
+        "color": "light blue-grey",
+        "colors": [
+            {"name": "light blue", "pct": 75},
+            {"name": "grey", "pct": 25}
+        ],
+        "material": "cotton-blend",
+        "fabrics": [
+            {"name": "cotton", "pct": 98},
+            {"name": "elastane", "pct": 2}
+        ],
+        "pattern": "solid",
+        "season": ["spring", "summer"],
+        "formality": "smart_casual",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "smart_casual",
+        "cultural_tags": ["modest"],
+        "tags": ["trousers", "casual", "light-blue", "summer", "smart-casual"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-01_bottoms_trousers.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-01_bottoms_trousers.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-01_bottoms_trousers.jpg",
+        "dpp_data": {
+            "facility_country": "PT",
+            "carbon_footprint_kg": 7.4,
+            "care_instructions": ["machine_wash_cold", "line_dry", "iron_low"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 87, "candidate_tokens": 1505, "total_tokens": 1592},
+            "cost_usd": 0.04517
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-02",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "trousers",
+        "title": "Charcoal Grey Flat-Front Tailored Trousers",
+        "name": "Charcoal Grey Flat-Front Tailored Trousers",
+        "brand": "COS",
+        "size": "32x32",
+        "color": "charcoal grey",
+        "colors": [
+            {"name": "charcoal", "pct": 95},
+            {"name": "black", "pct": 5}
+        ],
+        "material": "wool-blend",
+        "fabrics": [
+            {"name": "wool", "pct": 60},
+            {"name": "polyester", "pct": 38},
+            {"name": "elastane", "pct": 2}
+        ],
+        "pattern": "solid",
+        "season": ["fall", "winter", "spring"],
+        "formality": "business",
+        "state": "used",
+        "condition": "good",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "business_casual",
+        "cultural_tags": ["modest"],
+        "tags": ["tailored", "wool", "flat-front", "charcoal", "office"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-02_bottoms_trousers.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-02_bottoms_trousers.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-02_bottoms_trousers.jpg",
+        "dpp_data": {
+            "facility_country": "TR",
+            "carbon_footprint_kg": 9.1,
+            "care_instructions": ["dry_clean_only", "steam_medium"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 83, "candidate_tokens": 1474, "total_tokens": 1557},
+            "cost_usd": 0.04424
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-03",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "cargo_pants",
+        "title": "Taupe Khaki Cargo Pants",
+        "name": "Taupe Khaki Cargo Pants",
+        "brand": "Carhartt WIP",
+        "size": "32x32",
+        "color": "taupe khaki",
+        "colors": [
+            {"name": "taupe", "pct": 60},
+            {"name": "khaki", "pct": 40}
+        ],
+        "material": "cotton twill",
+        "fabrics": [
+            {"name": "organic cotton", "pct": 100}
+        ],
+        "pattern": "solid",
+        "season": ["all-season"],
+        "formality": "casual",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "casual",
+        "cultural_tags": ["modest"],
+        "tags": ["cargo", "utility", "khaki", "taupe", "streetwear"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-03_bottoms_cargo_pants.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-03_bottoms_cargo_pants.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-03_bottoms_cargo_pants.jpg",
+        "dpp_data": {
+            "facility_country": "TN",
+            "carbon_footprint_kg": 8.0,
+            "care_instructions": ["machine_wash_warm", "tumble_dry_low"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 86, "candidate_tokens": 1471, "total_tokens": 1557},
+            "cost_usd": 0.04415
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-04",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "chinos",
+        "title": "Deep Charcoal Straight-Leg Casual Chinos",
+        "name": "Deep Charcoal Straight-Leg Casual Chinos",
+        "brand": "Uniqlo",
+        "size": "32x32",
+        "color": "dark charcoal",
+        "colors": [
+            {"name": "dark charcoal", "pct": 100}
+        ],
+        "material": "stretch cotton",
+        "fabrics": [
+            {"name": "cotton", "pct": 97},
+            {"name": "spandex", "pct": 3}
+        ],
+        "pattern": "solid",
+        "season": ["fall", "spring"],
+        "formality": "smart_casual",
+        "state": "used",
+        "condition": "good",
+        "quality": "standard",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "smart_casual",
+        "cultural_tags": ["modest"],
+        "tags": ["chinos", "straight-leg", "charcoal", "everyday"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-04_bottoms_chinos.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-04_bottoms_chinos.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-04_bottoms_chinos.jpg",
+        "dpp_data": {
+            "facility_country": "VN",
+            "carbon_footprint_kg": 6.8,
+            "care_instructions": ["machine_wash_cold", "medium_iron"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 79, "candidate_tokens": 1490, "total_tokens": 1569},
+            "cost_usd": 0.04472
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-05",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "jeans",
+        "title": "Dark Indigo Raw Denim Jeans",
+        "name": "Dark Indigo Raw Denim Jeans",
+        "brand": "Nudie Jeans",
+        "size": "32x32",
+        "color": "dark indigo",
+        "colors": [
+            {"name": "indigo", "pct": 95},
+            {"name": "copper", "pct": 5}
+        ],
+        "material": "raw denim",
+        "fabrics": [
+            {"name": "organic cotton", "pct": 100}
+        ],
+        "pattern": "solid",
+        "season": ["all-season"],
+        "formality": "smart_casual",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "smart_casual",
+        "cultural_tags": ["modest"],
+        "tags": ["denim", "raw-denim", "dark-wash", "selvedge", "durable"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-05_bottoms_jeans.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-05_bottoms_jeans.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-05_bottoms_jeans.jpg",
+        "dpp_data": {
+            "facility_country": "IT",
+            "carbon_footprint_kg": 11.2,
+            "care_instructions": ["wash_inside_out", "cold_wash", "hang_dry"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 80, "candidate_tokens": 1505, "total_tokens": 1585},
+            "cost_usd": 0.04517
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-06",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "jeans",
+        "title": "Light Wash Jeans with Leather Brand Patch",
+        "name": "Light Wash Jeans with Leather Brand Patch",
+        "brand": "Levi's",
+        "size": "32x32",
+        "color": "light blue",
+        "colors": [
+            {"name": "light blue", "pct": 90},
+            {"name": "tan", "pct": 10}
+        ],
+        "material": "cotton denim",
+        "fabrics": [
+            {"name": "cotton", "pct": 99},
+            {"name": "elastane", "pct": 1}
+        ],
+        "pattern": "washed",
+        "season": ["spring", "summer"],
+        "formality": "casual",
+        "state": "used",
+        "condition": "good",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "casual",
+        "cultural_tags": ["modest"],
+        "tags": ["denim", "light-wash", "leather-patch", "levis-style", "whiskered"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-06_bottoms_jeans.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-06_bottoms_jeans.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-06_bottoms_jeans.jpg",
+        "dpp_data": {
+            "facility_country": "EG",
+            "carbon_footprint_kg": 10.4,
+            "care_instructions": ["machine_wash_cold", "tumble_dry_normal"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 91, "candidate_tokens": 1544, "total_tokens": 1635},
+            "cost_usd": 0.04634
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-07",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "jeans",
+        "title": "Medium-Light Wash Classic Jeans",
+        "name": "Medium-Light Wash Classic Jeans",
+        "brand": "A.P.C.",
+        "size": "31x32",
+        "color": "medium-light blue",
+        "colors": [
+            {"name": "medium blue", "pct": 100}
+        ],
+        "material": "denim",
+        "fabrics": [
+            {"name": "cotton", "pct": 100}
+        ],
+        "pattern": "stonewashed",
+        "season": ["all-season"],
+        "formality": "casual",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "casual",
+        "cultural_tags": ["modest"],
+        "tags": ["denim", "stonewashed", "straight-cut", "casual"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-07_bottoms_jeans.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-07_bottoms_jeans.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-07_bottoms_jeans.jpg",
+        "dpp_data": {
+            "facility_country": "JP",
+            "carbon_footprint_kg": 9.8,
+            "care_instructions": ["wash_cold", "line_dry"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 85, "candidate_tokens": 1505, "total_tokens": 1590},
+            "cost_usd": 0.04517
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-08",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "jeans",
+        "title": "Medium Blue Jeans with White Contrast Stitching",
+        "name": "Medium Blue Jeans with White Contrast Stitching",
+        "brand": "True Religion",
+        "size": "32x32",
+        "color": "medium blue",
+        "colors": [
+            {"name": "medium blue", "pct": 92},
+            {"name": "white", "pct": 8}
+        ],
+        "material": "denim",
+        "fabrics": [
+            {"name": "cotton", "pct": 98},
+            {"name": "elastane", "pct": 2}
+        ],
+        "pattern": "contrast stitch",
+        "season": ["all-season"],
+        "formality": "casual",
+        "state": "used",
+        "condition": "good",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "casual",
+        "cultural_tags": ["modest"],
+        "tags": ["contrast-stitch", "denim", "blue-jeans", "statement-thread"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-08_bottoms_jeans.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-08_bottoms_jeans.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-08_bottoms_jeans.jpg",
+        "dpp_data": {
+            "facility_country": "US",
+            "carbon_footprint_kg": 10.9,
+            "care_instructions": ["machine_wash_cold", "tumble_dry_low"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 96, "candidate_tokens": 1471, "total_tokens": 1567},
+            "cost_usd": 0.04415
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-09",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "chinos",
+        "title": "Classic Black Casual Chino Pants",
+        "name": "Classic Black Casual Chino Pants",
+        "brand": "Everlane",
+        "size": "32x32",
+        "color": "black",
+        "colors": [
+            {"name": "black", "pct": 100}
+        ],
+        "material": "cotton twill",
+        "fabrics": [
+            {"name": "cotton", "pct": 98},
+            {"name": "elastane", "pct": 2}
+        ],
+        "pattern": "solid",
+        "season": ["all-season"],
+        "formality": "smart_casual",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "smart_casual",
+        "cultural_tags": ["modest"],
+        "tags": ["black-pants", "chinos", "minimalist", "all-season"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-09_bottoms_chinos.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-09_bottoms_chinos.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-09_bottoms_chinos.jpg",
+        "dpp_data": {
+            "facility_country": "LK",
+            "carbon_footprint_kg": 6.5,
+            "care_instructions": ["machine_wash_cold", "hang_dry"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 80, "candidate_tokens": 1501, "total_tokens": 1581},
+            "cost_usd": 0.04505
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-10",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "bottom",
+        "sub_category": "trousers",
+        "title": "Dark Charcoal Tailored Slim Trousers",
+        "name": "Dark Charcoal Tailored Slim Trousers",
+        "brand": "Reiss",
+        "size": "32x32",
+        "color": "dark charcoal",
+        "colors": [
+            {"name": "dark charcoal", "pct": 100}
+        ],
+        "material": "fine wool",
+        "fabrics": [
+            {"name": "virgin wool", "pct": 98},
+            {"name": "elastane", "pct": 2}
+        ],
+        "pattern": "solid",
+        "season": ["fall", "winter", "spring"],
+        "formality": "business",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "business",
+        "cultural_tags": ["modest"],
+        "tags": ["tailored", "creased", "slim-trouser", "fine-wool", "formal"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-10_bottoms_trousers.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-10_bottoms_trousers.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-10_bottoms_trousers.jpg",
+        "dpp_data": {
+            "facility_country": "IT",
+            "carbon_footprint_kg": 8.9,
+            "care_instructions": ["dry_clean_only"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 82, "candidate_tokens": 1485, "total_tokens": 1567},
+            "cost_usd": 0.04457
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-11",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "outerwear",
+        "sub_category": "overshirt",
+        "title": "Olive Green Utility Overshirt Jacket",
+        "name": "Olive Green Utility Overshirt Jacket",
+        "brand": "Norse Projects",
+        "size": "M",
+        "color": "olive green",
+        "colors": [
+            {"name": "olive green", "pct": 100}
+        ],
+        "material": "cotton ripstop",
+        "fabrics": [
+            {"name": "cotton ripstop", "pct": 100}
+        ],
+        "pattern": "solid",
+        "season": ["fall", "spring"],
+        "formality": "casual",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "smart_casual",
+        "cultural_tags": ["modest"],
+        "tags": ["overshirt", "utility", "olive", "military-inspired", "layering"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-11_outerwear_overshirt.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-11_outerwear_overshirt.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-11_outerwear_overshirt.jpg",
+        "dpp_data": {
+            "facility_country": "PT",
+            "carbon_footprint_kg": 8.4,
+            "care_instructions": ["machine_wash_cold", "hang_dry"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 92, "candidate_tokens": 1463, "total_tokens": 1555},
+            "cost_usd": 0.04391
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-12",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "outerwear",
+        "sub_category": "blazer",
+        "title": "Light Grey Tailored Suit Blazer",
+        "name": "Light Grey Tailored Suit Blazer",
+        "brand": "SuitSupply",
+        "size": "40R",
+        "color": "light grey",
+        "colors": [
+            {"name": "light grey", "pct": 95},
+            {"name": "white", "pct": 5}
+        ],
+        "material": "fine wool",
+        "fabrics": [
+            {"name": "pure wool", "pct": 100}
+        ],
+        "pattern": "solid",
+        "season": ["spring", "summer", "fall"],
+        "formality": "business",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "business",
+        "cultural_tags": ["modest"],
+        "tags": ["blazer", "suit-jacket", "light-grey", "tailored", "office"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-12_outerwear_blazer.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-12_outerwear_blazer.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-12_outerwear_blazer.jpg",
+        "dpp_data": {
+            "facility_country": "IT",
+            "carbon_footprint_kg": 13.5,
+            "care_instructions": ["dry_clean_only"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 89, "candidate_tokens": 1505, "total_tokens": 1594},
+            "cost_usd": 0.04517
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-13",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "outerwear",
+        "sub_category": "blazer",
+        "title": "Classic Black Formal Suit Jacket",
+        "name": "Classic Black Formal Suit Jacket",
+        "brand": "Hugo Boss",
+        "size": "40R",
+        "color": "black",
+        "colors": [
+            {"name": "black", "pct": 100}
+        ],
+        "material": "virgin wool",
+        "fabrics": [
+            {"name": "virgin wool", "pct": 100}
+        ],
+        "pattern": "solid",
+        "season": ["all-season"],
+        "formality": "formal",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "formal",
+        "cultural_tags": ["modest"],
+        "tags": ["black-blazer", "formal", "suit", "notched-lapel", "essential"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-13_outerwear_blazer.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-13_outerwear_blazer.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-13_outerwear_blazer.jpg",
+        "dpp_data": {
+            "facility_country": "DE",
+            "carbon_footprint_kg": 14.1,
+            "care_instructions": ["dry_clean_only"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 84, "candidate_tokens": 1507, "total_tokens": 1591},
+            "cost_usd": 0.04523
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    },
+    {
+        "id": "closet-alex-14",
+        "user_id": "user-alex-rivera",
+        "source": "Closet Photo Digitization (Gemini 3.5 Flash + Nano Banana)",
+        "category": "outerwear",
+        "sub_category": "blazer",
+        "title": "Deep Navy Blue Structured Suit Blazer",
+        "name": "Deep Navy Blue Structured Suit Blazer",
+        "brand": "Canali",
+        "size": "40R",
+        "color": "navy blue",
+        "colors": [
+            {"name": "navy blue", "pct": 100}
+        ],
+        "material": "wool-cashmere blend",
+        "fabrics": [
+            {"name": "wool", "pct": 90},
+            {"name": "cashmere", "pct": 10}
+        ],
+        "pattern": "solid",
+        "season": ["fall", "winter", "spring"],
+        "formality": "business",
+        "state": "used",
+        "condition": "excellent",
+        "quality": "premium",
+        "gender": "men",
+        "marketplace_intent": "own",
+        "dress_code": "business",
+        "cultural_tags": ["modest"],
+        "tags": ["navy-blazer", "cashmere-blend", "italian-tailoring", "business"],
+        "original_image_url": "/static/uploads/alex_rivera/original_closet.jpg",
+        "clean_image_url": "/static/uploads/alex_rivera/alex-item-14_outerwear_blazer.jpg",
+        "segmented_image_url": "/static/uploads/alex_rivera/alex-item-14_outerwear_blazer.jpg",
+        "thumbnail_url": "/static/uploads/alex_rivera/alex-item-14_outerwear_blazer.jpg",
+        "dpp_data": {
+            "facility_country": "IT",
+            "carbon_footprint_kg": 15.0,
+            "care_instructions": ["dry_clean_only"]
+        },
+        "reconstruction_meta": {
+            "model": "gemini-3.1-flash-lite-image",
+            "tokens": {"prompt_tokens": 88, "candidate_tokens": 1477, "total_tokens": 1565},
+            "cost_usd": 0.04433
+        },
+        "is_demo": True,
+        "created_at": NOW,
+        "updated_at": NOW
+    }
+]
+
+def save_local_seed():
+    data_dir = Path(r"c:\DressApp_AG\backend\scripts\data")
+    data_dir.mkdir(parents=True, exist_ok=True)
+    out_file = data_dir / "alex_rivera_closet.json"
+    
+    payload = {
+        "user": USER_ALEX_RIVERA,
+        "closet_items": CLOSET_ITEMS_ALEX_RIVERA,
+        "summary": {
+            "total_items": len(CLOSET_ITEMS_ALEX_RIVERA),
+            "user_id": USER_ALEX_RIVERA["id"],
+            "digitized_at": NOW
+        }
+    }
+    
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
+        
+    print(f"✔ Saved Alex Rivera closet seed bundle to: {out_file}")
+    return out_file
+
+async def seed_mongo_if_available():
+    try:
+        from app.db.database import get_db
+        db = get_db()
+        # Upsert user
+        await db.users.update_one(
+            {"id": USER_ALEX_RIVERA["id"]},
+            {"$set": USER_ALEX_RIVERA},
+            upsert=True
+        )
+        print(f"✔ Upserted user {USER_ALEX_RIVERA['display_name']} into MongoDB")
+        
+        # Upsert closet items
+        for it in CLOSET_ITEMS_ALEX_RIVERA:
+            await db.closet_items.update_one(
+                {"id": it["id"]},
+                {"$set": it},
+                upsert=True
+            )
+        print(f"✔ Upserted {len(CLOSET_ITEMS_ALEX_RIVERA)} closet items into MongoDB")
+    except Exception as e:
+        print(f"ℹ MongoDB cluster connection skipped or unavailable ({type(e).__name__}: {str(e)[:80]}). Local JSON seed bundle is active.")
+
+if __name__ == "__main__":
+    import asyncio
+    save_local_seed()
+    try:
+        asyncio.run(seed_mongo_if_available())
+    except Exception as e:
+        print(f"ℹ Mongo seed runner notice: {e}")

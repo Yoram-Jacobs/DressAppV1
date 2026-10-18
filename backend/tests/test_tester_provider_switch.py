@@ -77,21 +77,48 @@ def regular_user():
     }
 
 
-def test_is_tester_user(tester_user_dressapp, regular_user):
+@pytest.fixture
+def manager_user():
+    return {
+        "id": "manager-789",
+        "email": "manager@example.com",
+        "roles": ["user"],
+        "subscription": {
+            "is_active": True,
+            "tier": "manager",
+            "plan_type": "monthly",
+            "is_tester": False,
+        },
+        "ai_configuration": {
+            "provider_mode": "dressapp",
+            "selected_provider": "dressapp",
+            "selected_model": "Eyes v1",
+            "custom_keys": {},
+        },
+    }
+
+
+def test_is_tester_user(tester_user_dressapp, regular_user, manager_user):
     assert is_tester_user(tester_user_dressapp) is True
     assert is_tester_user(regular_user) is False
+    assert is_tester_user(manager_user) is False
     assert is_tester_user(None) is False
 
 
-def test_resolve_effective_provider_tester_switch(tester_user_dressapp, tester_user_gemini, regular_user):
+def test_resolve_effective_provider_tester_and_tiers(
+    tester_user_dressapp, tester_user_gemini, regular_user, manager_user
+):
     # 1. Tester selects DressApp Eyes -> routes to gemma
     assert resolve_effective_provider(tester_user_dressapp) == "gemma"
 
     # 2. Tester switches to Google Gemini -> routes to gemini
     assert resolve_effective_provider(tester_user_gemini) == "gemini"
 
-    # 3. Regular non-tester user with default selected_provider="dressapp" -> returns "" (defers to global default)
-    assert resolve_effective_provider(regular_user) == ""
+    # 3. Free non-tester user defaults to on-premises DressApp Eyes (gemma)
+    assert resolve_effective_provider(regular_user) == "gemma"
+
+    # 4. Manager / Professional non-tester user defaults to cloud Eyes (gemini)
+    assert resolve_effective_provider(manager_user) == "gemini"
 
 
 @pytest.mark.anyio
@@ -121,22 +148,34 @@ async def test_llm_gateway_routes_tester_gemini_switch(tester_user_gemini):
 
 
 @pytest.mark.anyio
-async def test_llm_gateway_regular_user_stays_on_gemini_platform_default(regular_user):
-    with patch("app.services.gemini_client.GeminiClient.text", new_callable=AsyncMock) as mock_gemini, \
-         patch("app.config.settings.GEMINI_API_KEY", "test_key"), \
-         patch("app.services.llm_gateway.get_active_provider", new_callable=AsyncMock, return_value="gemini"), \
-         patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma:
-        mock_gemini.return_value = '{"result": "gemini output"}'
+async def test_llm_gateway_free_user_defaults_to_on_prem_eyes(regular_user):
+    with patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma, \
+         patch("app.config.settings.EYES_GEMMA_SPACE_URL", "http://eyes:7860"):
+        mock_gemma.return_value = '{"result": "gemma free user output"}'
         res = await call_main_llm(
             user_text="Suggest outfit",
             user=regular_user,
         )
-        assert res == '{"result": "gemini output"}'
+        assert res == '{"result": "gemma free user output"}'
+        mock_gemma.assert_awaited_once()
+
+
+@pytest.mark.anyio
+async def test_llm_gateway_manager_user_defaults_to_cloud_gemini(manager_user):
+    with patch("app.services.gemini_client.GeminiClient.text", new_callable=AsyncMock) as mock_gemini, \
+         patch("app.config.settings.GEMINI_API_KEY", "test_key"), \
+         patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma:
+        mock_gemini.return_value = '{"result": "gemini manager output"}'
+        res = await call_main_llm(
+            user_text="Suggest outfit",
+            user=manager_user,
+        )
+        assert res == '{"result": "gemini manager output"}'
         mock_gemini.assert_awaited_once()
         mock_gemma.assert_not_awaited()
 
 
-def test_vision_service_tester_routes_to_gemma(tester_user_dressapp, tester_user_gemini, regular_user):
+def test_vision_service_tester_and_tiers(tester_user_dressapp, tester_user_gemini, regular_user, manager_user):
     # 1. Tester with DressApp Eyes selection gets Gemma GarmentVisionService
     v_tester = get_garment_vision_service(user=tester_user_dressapp)
     assert v_tester.provider == "gemma"
@@ -147,13 +186,17 @@ def test_vision_service_tester_routes_to_gemma(tester_user_dressapp, tester_user
         v_tester_gem = get_garment_vision_service(user=tester_user_gemini)
         assert v_tester_gem.provider == "gemini"
 
-    # 3. Regular non-tester user gets Gemini platform default
-    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"), \
-         patch("app.config.settings.EYES_PROVIDER", "gemini"):
-        v_reg = get_garment_vision_service(user=regular_user)
-        assert v_reg.provider == "gemini"
+    # 3. Free non-tester user gets on-premises DressApp Eyes (gemma)
+    v_reg = get_garment_vision_service(user=regular_user)
+    assert v_reg.provider == "gemma"
+    assert v_reg.model == "Eyes v1"
 
-    # 4. Developer / tester user without explicit Gemma selection respects active platform provider (Gemini)
+    # 4. Manager / Professional non-tester user gets cloud Eyes (gemini)
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
+        v_mgr = get_garment_vision_service(user=manager_user)
+        assert v_mgr.provider == "gemini"
+
+    # 5. Developer / tester user without explicit Gemma selection respects active platform provider (Gemini)
     with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"), \
          patch("app.config.settings.EYES_PROVIDER", "gemini"):
         dev_user = {"id": "dev-1", "email": "dressappdeveloper@gmail.com"}
@@ -161,7 +204,7 @@ def test_vision_service_tester_routes_to_gemma(tester_user_dressapp, tester_user
         assert v_dev.provider == "gemini"
 
 
-def test_stylist_brain_tester_switch(tester_user_dressapp, tester_user_gemini, regular_user):
+def test_stylist_brain_tester_and_tiers(tester_user_dressapp, tester_user_gemini, regular_user, manager_user):
     reset_stylist_brain_service()
 
     # 1. Tester with DressApp Eyes gets primary GemmaStylistBrain
@@ -178,3 +221,19 @@ def test_stylist_brain_tester_switch(tester_user_dressapp, tester_user_gemini, r
             assert brain_tester_gem.primary.provider_name == "gemini"
         else:
             assert brain_tester_gem.provider_name == "gemini"
+
+    # 3. Free user gets primary GemmaStylistBrain
+    brain_free = stylist_brain_service(user=regular_user)
+    if isinstance(brain_free, FallbackBrain):
+        assert brain_free.primary.provider_name == "gemma"
+    else:
+        assert brain_free.provider_name == "gemma"
+
+    # 4. Manager user gets primary GeminiStylistBrain
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
+        brain_mgr = stylist_brain_service(user=manager_user)
+        if isinstance(brain_mgr, FallbackBrain):
+            assert brain_mgr.primary.provider_name == "gemini"
+        else:
+            assert brain_mgr.provider_name == "gemini"
+

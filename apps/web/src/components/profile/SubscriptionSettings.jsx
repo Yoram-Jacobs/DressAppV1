@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -9,13 +9,42 @@ import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Crown, Loader2, Sparkles as Zap } from 'lucide-react';
+import { Crown, Cpu, Loader2, Sparkles } from 'lucide-react';
+
+function computeBucketCredits(user) {
+  if (typeof user?.total_credits === 'number') return user.total_credits;
+  if (typeof user?.ai_credits === 'number') return user.ai_credits;
+  if (Array.isArray(user?.credit_buckets)) {
+    const now = Date.now();
+    return user.credit_buckets.reduce((sum, b) => {
+      if (!b || typeof b.amount !== 'number') return sum;
+      if (b.type === 'free' && b.expires_at) {
+        const exp = Date.parse(b.expires_at);
+        if (!Number.isNaN(exp) && now > exp) return sum;
+      }
+      return sum + b.amount;
+    }, 0);
+  }
+  return 0;
+}
+
+function computeOnPremCredits(user) {
+  if (typeof user?.onprem_credits_balance === 'number') return user.onprem_credits_balance;
+  if (typeof user?.ai_configuration?.onprem_credits_balance === 'number') {
+    return user.ai_configuration.onprem_credits_balance;
+  }
+  const dailyUsed = Number(user?.ai_configuration?.daily_request_count || 0);
+  return Math.max(0, 10 - dailyUsed);
+}
 
 export function SubscriptionSettings() {
   const { t } = useTranslation();
   const { user, refresh } = useAuth();
   const { total: closetCount } = useClosetStore();
   const [busy, setBusy] = useState(false);
+  const [liveCredits, setLiveCredits] = useState(null);
+  const [liveOnPremCredits, setLiveOnPremCredits] = useState(null);
+  const [onPremMaxCredits, setOnPremMaxCredits] = useState(300);
 
   const sub = user?.subscription || {};
   const isActive = sub.is_active || false;
@@ -26,6 +55,36 @@ export function SubscriptionSettings() {
 
   const userTier = isTester ? 'professional' : ((isActive && planType !== 'free') ? tier : 'free');
   const capacity = userTier === 'free' ? Math.min(150, 50 + (user?.closet_capacity_bonus || 0)) : 999999;
+
+  const fallbackCredits = useMemo(() => computeBucketCredits(user), [user]);
+  const aiCredits = liveCredits !== null ? liveCredits : fallbackCredits;
+
+  const fallbackOnPremCredits = useMemo(() => computeOnPremCredits(user), [user]);
+  const onPremCredits = liveOnPremCredits !== null ? liveOnPremCredits : fallbackOnPremCredits;
+
+  useEffect(() => {
+    let mounted = true;
+    api.get('/ai-credits/balance')
+      .then((res) => {
+        const data = res?.data || res;
+        if (!mounted || !data) return;
+        if (typeof data.total_credits === 'number') {
+          setLiveCredits(data.total_credits);
+        } else if (typeof data.current_credits === 'number') {
+          setLiveCredits(data.current_credits);
+        }
+        if (typeof data.onprem_credits_balance === 'number') {
+          setLiveOnPremCredits(data.onprem_credits_balance);
+        }
+        if (typeof data.onprem_max_credits === 'number') {
+          setOnPremMaxCredits(data.onprem_max_credits);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]);
 
   const handleUpgrade = async (type) => {
     if (busy) return;
@@ -96,21 +155,51 @@ export function SubscriptionSettings() {
       value="subscription"
       className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
       <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
-        <div className="flex items-center gap-4 text-start">
+        <div className="flex items-center gap-4 text-start w-full pe-2">
           <div className="p-2.5 rounded-xl bg-[hsl(47_95%_90%)] text-[hsl(47_95%_40%)] dark:bg-[hsl(47_30%_18%)] dark:text-[hsl(47_95%_70%)] shrink-0 transition-transform duration-200">
             <Crown className="h-5 w-5" />
           </div>
-          <div>
-            <span className="text-[13px] font-bold block text-dark-brand">
-              {t('profile.subscription', { defaultValue: 'Subscription & Limits' })}
-            </span>
-            <span className="text-[11px] text-text-brand font-semibold block normal-case">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center flex-wrap gap-1.5">
+              <span className="text-[13px] font-bold text-dark-brand">
+                {t('profile.subscription', { defaultValue: 'Subscription & Limits' })}
+              </span>
+              {userTier === 'free' && (
+                <span
+                  data-testid="subscription-onprem-ai-credits-counter"
+                  title={t('profile.onPremCreditsTooltip', {
+                    defaultValue: '+10 daily On-Premises AI credits, cumulative up to 300 over 30 days',
+                  })}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary-shadow text-primary-brand border border-primary-brand/20 normal-case"
+                >
+                  <Cpu className="h-3 w-3 shrink-0" />
+                  {t('profile.onPremAiCreditsCounter', {
+                    count: onPremCredits,
+                    defaultValue: 'On-Premises AI Credits: {{count}}',
+                  })}
+                </span>
+              )}
+              <span
+                data-testid="subscription-ai-credits-counter"
+                title={t('profile.reconstructionCreditsTooltip', {
+                  defaultValue: 'Nano Banana Reconstruction AI credits',
+                })}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-[hsl(47_95%_92%)] text-[hsl(47_95%_32%)] border border-[hsl(47_95%_70%)] normal-case"
+              >
+                <Sparkles className="h-3 w-3 shrink-0" />
+                {t('profile.aiCreditsCounter', {
+                  count: aiCredits,
+                  defaultValue: 'Reconstruction Credits: {{count}}',
+                })}
+              </span>
+            </div>
+            <span className="text-[11px] text-text-brand font-semibold block normal-case mt-0.5">
               {userTier !== 'free'
                 ? (isTester
                     ? t('profile.subTesterSummary', { defaultValue: 'Active: Professional Plan (Tester Group - Free)' })
                     : t('profile.subActiveSummary', { defaultValue: 'Active: {{plan}} plan (Expires: {{date}})', plan: userTier.toUpperCase(), date: expiresAt })
                   )
-                : t('profile.subFreeSummary', { defaultValue: 'Free Plan: {{count}} / {{capacity}} items used', count: closetCount, capacity: capacity })
+                : `${t('profile.subFreeSummary', { defaultValue: 'Free Plan: {{count}} / {{capacity}} items used', count: closetCount, capacity: capacity })} • ${t('profile.onPremAiCreditsCounter', { count: onPremCredits, defaultValue: 'On-Premises AI Credits: {{count}}' })} • ${t('profile.aiCreditsCounter', { count: aiCredits, defaultValue: 'Reconstruction Credits: {{count}}' })}`
               }
             </span>
           </div>
@@ -180,6 +269,49 @@ export function SubscriptionSettings() {
                 </p>
               )}
             </div>
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-between text-xs text-dark-brand font-medium">
+                <span className="inline-flex items-center gap-1.5">
+                  <Cpu className="h-3.5 w-3.5 text-primary-brand" />
+                  {t('profile.onPremAiCreditsLabel', { defaultValue: 'On-Premises AI Credits' })}
+                </span>
+                <span className="font-bold text-dark-brand" data-testid="subscription-onprem-ai-credits-balance">
+                  {t('profile.onPremCreditsProgress', {
+                    count: onPremCredits,
+                    max: onPremMaxCredits,
+                    defaultValue: '{{count}} / {{max}} available',
+                  })}
+                </span>
+              </div>
+              <div className="h-2 bg-border rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-brand transition-all duration-300"
+                  style={{ width: `${Math.min(100, (onPremCredits / Math.max(1, onPremMaxCredits)) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-text-brand font-medium">
+                {t('profile.onPremCreditsNote', {
+                  defaultValue: '+10 daily credits • Cumulative up to 300 over 30 days (1 credit per garment, stylist prompt, or suitcase item)',
+                })}
+              </p>
+            </div>
+            <div className="flex items-center justify-between text-xs text-dark-brand font-medium pt-1">
+              <span className="inline-flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-[hsl(47_95%_40%)]" />
+                {t('profile.aiCreditsBalanceLabel', { defaultValue: 'Reconstruction Credits (Nano Banana)' })}
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-dark-brand" data-testid="subscription-ai-credits-balance">
+                  {t('profile.aiCreditsAvailableCount', { count: aiCredits, defaultValue: '{{count}} available' })}
+                </span>
+                <Link
+                  to="/pricing#pricing-credit-packs-section"
+                  className="text-[11px] font-semibold text-primary-brand hover:underline"
+                >
+                  {t('profile.topUpCredits', { defaultValue: 'Top Up' })}
+                </Link>
+              </div>
+            </div>
             <Separator className="my-2" />
             <div className="flex flex-col gap-4 pt-1">
               <Link
@@ -210,3 +342,4 @@ export function SubscriptionSettings() {
     </AccordionItem>
   );
 }
+

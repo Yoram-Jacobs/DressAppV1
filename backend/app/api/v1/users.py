@@ -130,11 +130,41 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     else:
         safe["subscription_tier"] = "free"
 
+    # Compute real AI credit balance from credit_buckets (Nano Banana Reconstructions)
+    from app.models.credit import CreditBucket, get_total_credits
+    from app.services.credit_manager import (
+        compute_nano_banana_monthly_state,
+        compute_onprem_credit_state,
+    )
+    raw_buckets = safe.get("credit_buckets") or []
+    try:
+        parsed_buckets = [CreditBucket(**b) if isinstance(b, dict) else b for b in raw_buckets]
+        computed_credits = get_total_credits(parsed_buckets)
+    except Exception:
+        computed_credits = 0
+    safe["total_credits"] = computed_credits
+    safe["ai_credits"] = computed_credits
+
+    onprem_state = compute_onprem_credit_state(safe)
+    safe["onprem_credits_balance"] = onprem_state["onprem_credits_balance"]
+    safe["onprem_credits"] = onprem_state
+
+    nb_state = compute_nano_banana_monthly_state(safe)
+    safe["nano_banana_monthly"] = nb_state
+
     # Mask API keys to keep them secured
     if "ai_configuration" in safe and isinstance(safe["ai_configuration"], dict):
         ai_config = dict(safe["ai_configuration"])
         ai_config.setdefault("selected_provider", "dressapp")
         ai_config.setdefault("selected_model", "Eyes v1")
+        ai_config["current_credits"] = computed_credits
+        ai_config["onprem_credits_balance"] = onprem_state["onprem_credits_balance"]
+        ai_config["onprem_credits_accrued"] = onprem_state["onprem_credits_accrued"]
+        ai_config["onprem_credits_used"] = onprem_state["onprem_credits_used"]
+        ai_config["onprem_max_credits"] = onprem_state["onprem_max_credits"]
+        ai_config["nano_banana_monthly_limit"] = nb_state["nano_banana_monthly_limit"]
+        ai_config["nano_banana_monthly_used"] = nb_state["nano_banana_monthly_used"]
+        ai_config["nano_banana_monthly_remaining"] = nb_state["nano_banana_monthly_remaining"]
         if "custom_keys" in ai_config:
             custom_keys = dict(ai_config["custom_keys"])
             for key_name in list(custom_keys.keys()):
@@ -150,7 +180,14 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
             "selected_provider": "dressapp",
             "selected_model": "Eyes v1",
             "custom_keys": {},
-            "current_credits": 1000,
+            "current_credits": computed_credits,
+            "onprem_credits_balance": onprem_state["onprem_credits_balance"],
+            "onprem_credits_accrued": onprem_state["onprem_credits_accrued"],
+            "onprem_credits_used": onprem_state["onprem_credits_used"],
+            "onprem_max_credits": onprem_state["onprem_max_credits"],
+            "nano_banana_monthly_limit": nb_state["nano_banana_monthly_limit"],
+            "nano_banana_monthly_used": nb_state["nano_banana_monthly_used"],
+            "nano_banana_monthly_remaining": nb_state["nano_banana_monthly_remaining"],
             "credits_used_this_month": 0,
         }
         
@@ -265,7 +302,8 @@ async def update_me(
         set_ops["address.country"] = patch["country"]
         set_ops["home_location.country"] = patch["country"]
 
-    if "ai_configuration" in patch and patch["ai_configuration"] is not None:
+    from app.services.auth import is_tester_user
+    if "ai_configuration" in patch and patch["ai_configuration"] is not None and is_tester_user(user):
         ai_config = patch["ai_configuration"]
         existing_config = user.get("ai_configuration") or {}
         provider_mode = ai_config.get("provider_mode") or existing_config.get("provider_mode") or "custom_keys"

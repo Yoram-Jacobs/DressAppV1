@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "eigen",
     "gender": "Geschlecht",
     "eyesSlowNotice": "Standard-Engine (~30 Sek.)",
-    "skipWaitCta": "⚡ Sofortiges Turbo freischalten"
+    "skipWaitCta": "⚡ Sofortiges Turbo freischalten",
+    "pipeline": {
+      "selectorLabel": "Erfassungsmodus",
+      "singleTitle": "Einzelnes Kleidungsstück",
+      "singleDesc": "Ein einzelnes Teil flach hingelegt oder auf einem Bügel für präzisen Freisteller.",
+      "multiTitle": "Mehrteiliges Outfit",
+      "multiDesc": "Komplettes Outfit-Foto — trennt und analysiert jedes getragene Teil.",
+      "massTitle": "Kleiderschrank & Stapel",
+      "massDesc": "Kleiderstange oder Wäschestapel — katalogisiert jedes Teil und erstellt freigestellte Studio-Karten.",
+      "massBadgePro": "PRO / MANAGER",
+      "massQuotaBadge": "{{remaining}} / {{limit}} Studio-Rekonstruktionen diesen Monat übrig",
+      "massUpgradeRequired": "Der Massen-Upload für Kleiderschrank & Stapel ist in den Tarifen Manager und Professional verfügbar.",
+      "massMonthlyLimitReached": "Monatliches Limit für Studio-Rekonstruktionen ({{limit}}/Monat) erreicht. Wird im nächsten Abrechnungszeitraum zurückgesetzt.",
+      "stageCataloging": "Kleidungsstücke im Foto werden katalogisiert…",
+      "stageReconstructing": "Studio-Karten werden erstellt ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2134,7 +2149,17 @@
     "enableOccupation": "An Beruf anpassen",
     "enableOccupationDesc": "Passen Sie Outfit-Empfehlungen an die Anforderungen Ihres Berufs an (z. B. maßgeschneiderte Anzüge für Anwälte, robuste Arbeitskleidung für Bauarbeiter).",
     "noOccupationSet": "Kein Beruf im Profil angegeben",
-    "currentOccupation": "Aktuell"
+    "currentOccupation": "Aktuell",
+    "onPremCreditsTooltip": "+10 tägliche On-Premises KI-Credits, kumulativ bis zu 300 über 30 Tage",
+    "onPremAiCreditsCounter": "On-Premises KI-Credits: {{count}}",
+    "reconstructionCreditsTooltip": "Nano Banana Rekonstruktions-Credits",
+    "aiCreditsCounter": "Rekonstruktions-Credits: {{count}}",
+    "onPremAiCreditsLabel": "On-Premises KI-Credits",
+    "onPremCreditsProgress": "{{count}} / {{max}} verfügbar",
+    "onPremCreditsNote": "+10 tägliche Credits • Kumulativ bis zu 300 über 30 Tage (1 Credit pro Kleidungsstück, Stylist-Prompt oder Koffer-Artikel)",
+    "aiCreditsBalanceLabel": "Rekonstruktions-Credits (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} verfügbar",
+    "topUpCredits": "Aufladen"
   },
   "admin": {
     "title": "Admin",
@@ -5035,5 +5060,57 @@
     "front": "Vorderseite",
     "back": "Rückseite",
     "profile": "Profil"
+  },
+  "wardrobeStats": {
+    "tabOverview": "Übersicht",
+    "tabSustainability": "Nachhaltigkeits-Impact",
+    "sustainability": {
+      "utilisationTitle": "Schrank-Auslastung",
+      "carbonTitle": "Erfasster CO₂-Fußabdruck",
+      "intakeManual": "Manuell hinzugefügt",
+      "intakeReceipt": "Aus Belegen",
+      "cpwTrendTitle": "Kosten-pro-Tragen-Trend",
+      "cpwTrendDesc": "Ihre Garderoben-Effizienz der letzten 6 Monate.",
+      "smartSuggestionTitle": "Smarter Vorschlag",
+      "smartSuggestionDesc": "Sie haben {{count}} Teile, die seit 90 Tagen nicht getragen wurden. Bieten Sie diese auf dem Marketplace an oder spenden Sie sie für einen nachhaltigen Kleiderschrank.",
+      "listMarketplace": "Im Marketplace anbieten",
+      "markDonate": "Zum Spenden markieren",
+      "selectToSell": "Teile zum Verkaufen wählen",
+      "selectToDonate": "Teile zum Spenden wählen",
+      "noUnwornItems": "Keine ungetragenen Teile gefunden."
+    },
+    "onboarding": {
+      "pillDigitize": "Hinzufügen & Migration",
+      "pillInvite": "Gratis-Plätze (+10)",
+      "pillUpgrade": "Manager-Tarif",
+      "pillCircular": "Kreislauf-Pflege",
+      "phase1Badge": "Tage 1–7 • Kickoff & Erster Mehrwert",
+      "phase2Badge": "Tage 8–30 • Schnelles Digitalisieren",
+      "phase3Badge": "Tage 31–60 • Styling-Routine",
+      "phase4Badge": "Tage 61–90 • Mehrwert & Kreislauf",
+      "emptyTitle": "Starten Sie Ihren digitalen Kleiderschrank",
+      "emptyDesc": "Ihr Kleiderschrank enthält aktuell 0 Teile. Fügen Sie Ihre ersten Kleidungsstücke hinzu oder migrieren Sie Ihre Garderobe aus einer anderen App, um KI-Styling und Nachhaltigkeits-Analysen freizuschalten.",
+      "growingTitle": "Bauen Sie Ihren Kleiderschrank weiter aus ({{count}} Teile)",
+      "growingDesc": "Erreichen Sie 20+ Teile, damit Ihr KI-Stylist komplette, wetterfeste Outfits zusammenstellen und präzise Kosten-pro-Tragen-Trends berechnen kann.",
+      "tipTitle": "Tipps für schnelles Digitalisieren",
+      "tip1": "Ganzkörper-Outfit-Foto: Laden Sie ein Spiegelfoto hoch – DressApp trennt und taggt jedes Kleidungsstück automatisch in einem Durchgang.",
+      "tip2": "Belege & Chrome-Erweiterung: Importieren Sie digitale Kaufbelege oder speichern Sie Teile direkt beim Online-Shopping.",
+      "tip3": "1-Klick-App-Migration: Wechseln Sie von einer anderen App? Importieren Sie Ihre Screenshots stapelweise in Sekunden.",
+      "addFirstItemsBtn": "Teile hinzufügen",
+      "migrateWardrobeBtn": "Garderobe migrieren",
+      "inviteTitle": "Kleiderschrank-Kapazität kostenlos erweitern",
+      "inviteDesc": "Laden Sie Freunde über Ihren persönlichen Link ein! Jeder registrierte Freund bringt Ihnen +10 kostenlose Schrankplätze (bis zu 150 Teile) sowie Bonus-KI-Credits für Sie beide.",
+      "capacityProgress": "Kostenlose Kapazität: {{used}} / {{capacity}} Plätze (+{{bonus}} Bonusplätze)",
+      "inviteBtn": "Freunde einladen (+10 Plätze)",
+      "upgradeTitle": "Entfesseln Sie die volle Leistung mit dem Manager-Tarif",
+      "upgradeDesc": "Wechseln Sie zum Manager-Tarif für unbegrenzte Schrankkapazität, 1-Klick-Garderobenmigration, unbegrenzte tägliche KI-Stylist-Anfragen und tägliche Trend-Scout-Feeds.",
+      "upgradeBenefit1": "Unbegrenzte Kleiderschrankplätze & 1-Klick-Migration",
+      "upgradeBenefit2": "Priorisierter Gemini 3.5 Flash KI-Stylist & Kofferplaner",
+      "upgradeBenefit3": "Tägliche automatische Outfit-Vorschläge & Trend-Scout",
+      "upgradeBtn": "Auf Manager-Tarif upgraden",
+      "activeManagerBadge": "Sie nutzen den {{tier}}-Tarif – volle Leistung freigeschaltet!",
+      "allWornTitle": "100 % aktive Garderoben-Auslastung!",
+      "allWornDesc": "Jedes Teil in Ihrem Schrank wurde bereits getragen! Erfassen Sie weiteres Tragen mit Ihrem KI-Stylisten, um Ihre Kosten pro Tragen weiter zu senken."
+    }
   }
 }

@@ -30,8 +30,17 @@ class TokenOut(BaseModel):
 
 
 def _public_user(user: dict[str, Any]) -> dict[str, Any]:
+    from app.services.credit_manager import (
+        compute_nano_banana_monthly_state,
+        compute_onprem_credit_state,
+    )
     out = {k: v for k, v in user.items() if k not in {"password_hash", "google_oauth"}}
     out["google_connected"] = bool(user.get("google_oauth"))
+    try:
+        out["onprem_credits"] = compute_onprem_credit_state(out)
+        out["nano_banana_monthly"] = compute_nano_banana_monthly_state(out)
+    except Exception:
+        pass
     return out
 
 

@@ -876,7 +876,22 @@
     "sourceTagPlaceholder": "ter",
     "gender": "Gênero",
     "eyesSlowNotice": "Motor padrão (~30s)",
-    "skipWaitCta": "⚡ Desbloquear Turbo Instantâneo"
+    "skipWaitCta": "⚡ Desbloquear Turbo Instantâneo",
+    "pipeline": {
+      "selectorLabel": "Modo de captura",
+      "singleTitle": "Peça única",
+      "singleDesc": "Uma peça estendida ou no cabide para recorte preciso.",
+      "multiTitle": "Look com várias peças",
+      "multiDesc": "Foto de look completo — separa e analisa cada peça vestida.",
+      "massTitle": "Armário e pilha em massa",
+      "massDesc": "Cabideiro ou pilha de roupas — cataloga cada peça e reconstrói cartões de estúdio com fundo transparente.",
+      "massBadgePro": "PRO / MANAGER",
+      "massQuotaBadge": "{{remaining}} / {{limit}} reconstruções de estúdio restantes este mês",
+      "massUpgradeRequired": "O envio em massa de armário e pilha está disponível nos planos Manager e Profissional.",
+      "massMonthlyLimitReached": "Limite mensal de reconstrução de estúdio ({{limit}}/mês) atingido. Será redefinido no próximo ciclo de faturação.",
+      "stageCataloging": "Catalogando peças na foto…",
+      "stageReconstructing": "Reconstruindo cartões de estúdio ({{completed}}/{{total}})…"
+    }
   },
   "itemDetail": {
     "reanalyze": {
@@ -2134,7 +2149,17 @@
     "enableOccupation": "Adaptar à profissão",
     "enableOccupationDesc": "Adapte as sugestões de visual às exigências do seu trabalho (ex.: ternos sob medida para advogados, roupas resistentes para construtores).",
     "noOccupationSet": "Nenhuma profissão definida no perfil",
-    "currentOccupation": "Atual"
+    "currentOccupation": "Atual",
+    "onPremCreditsTooltip": "+10 créditos diários de IA Local, cumulativos até 300 em 30 dias",
+    "onPremAiCreditsCounter": "Créditos de IA Local: {{count}}",
+    "reconstructionCreditsTooltip": "Créditos de Reconstrução Nano Banana",
+    "aiCreditsCounter": "Créditos de Reconstrução: {{count}}",
+    "onPremAiCreditsLabel": "Créditos de IA Local (On-Premises)",
+    "onPremCreditsProgress": "{{count}} / {{max}} disponíveis",
+    "onPremCreditsNote": "+10 créditos diários • Cumulativos até 300 em 30 dias (1 crédito por peça, prompt ao estilista ou item na mala)",
+    "aiCreditsBalanceLabel": "Créditos de Reconstrução (Nano Banana)",
+    "aiCreditsAvailableCount": "{{count}} disponíveis",
+    "topUpCredits": "Recarregar"
   },
   "admin": {
     "title": "Administrador",
@@ -5042,5 +5067,57 @@
     "front": "Frente",
     "back": "Costas",
     "profile": "Perfil"
+  },
+  "wardrobeStats": {
+    "tabOverview": "Visão Geral",
+    "tabSustainability": "Impacto de Sustentabilidade",
+    "sustainability": {
+      "utilisationTitle": "Uso do Guarda-Roupa",
+      "carbonTitle": "Carbono Rastreado",
+      "intakeManual": "Adições Manuais",
+      "intakeReceipt": "De Recibos",
+      "cpwTrendTitle": "Tendência de Custo por Uso",
+      "cpwTrendDesc": "A eficiência de valor do seu armário em 6 meses.",
+      "smartSuggestionTitle": "Sugestão Inteligente",
+      "smartSuggestionDesc": "Você tem {{count}} peças que não são usadas há 90 dias. Considere anunciá-las no Marketplace ou doá-las para manter seu guarda-roupa sustentável.",
+      "listMarketplace": "Anunciar no Marketplace",
+      "markDonate": "Marcar para Doação",
+      "selectToSell": "Selecionar peças para vender",
+      "selectToDonate": "Selecionar peças para doar",
+      "noUnwornItems": "Nenhuma peça sem uso encontrada."
+    },
+    "onboarding": {
+      "pillDigitize": "Adicionar e Migrar",
+      "pillInvite": "Espaços Grátis (+10)",
+      "pillUpgrade": "Plano Manager",
+      "pillCircular": "Moda Circular",
+      "phase1Badge": "Dias 1–7 • Início e Primeiro Valor",
+      "phase2Badge": "Dias 8–30 • Digitalização Rápida",
+      "phase3Badge": "Dias 31–60 • Adoção de Estilo",
+      "phase4Badge": "Dias 61–90 • Valor e Circularidade",
+      "emptyTitle": "Inicie seu guarda-roupa digital",
+      "emptyDesc": "Seu armário tem 0 peças no momento. Adicione suas primeiras roupas ou migre seu guarda-roupa de outro aplicativo para desbloquear o estilista IA e análises de sustentabilidade.",
+      "growingTitle": "Continue montando seu armário digital ({{count}} peças)",
+      "growingDesc": "Alcance 20+ peças para que seu Estilista IA possa montar looks completos para o clima e acompanhar o Custo por Uso com precisão.",
+      "tipTitle": "Dicas para digitalizar rápido",
+      "tip1": "Foto do look completo: Envie uma única foto no espelho — o DressApp separa e etiqueta automaticamente cada peça de uma só vez.",
+      "tip2": "Recibos e Extensão Chrome: Importe comprovantes digitais de compra ou salve peças diretamente de lojas online.",
+      "tip3": "Migração em 1 clique: Vindo de outro app de armário? Importe suas capturas de tela em lote em segundos.",
+      "addFirstItemsBtn": "Adicionar Peças",
+      "migrateWardrobeBtn": "Migrar Guarda-Roupa",
+      "inviteTitle": "Aumente a capacidade do seu guarda-roupa grátis",
+      "inviteDesc": "Convide amigos com seu link pessoal! Cada amigo que se cadastrar garante +10 espaços grátis no armário (até 150 peças) mais créditos de IA de bônus para vocês dois.",
+      "capacityProgress": "Capacidade gratuita: {{used}} / {{capacity}} espaços (+{{bonus}} espaços bônus)",
+      "inviteBtn": "Convidar Amigos (+10 Espaços)",
+      "upgradeTitle": "Desbloqueie todo o poder do DressApp com o plano Manager",
+      "upgradeDesc": "Faça upgrade para o plano Manager para ter capacidade ilimitada, Migração de Guarda-Roupa em 1 clique, pedidos diários ilimitados ao Estilista IA e Trend-Scout diário.",
+      "upgradeBenefit1": "Espaços ilimitados no armário e Migração em 1 clique",
+      "upgradeBenefit2": "Estilista IA e Planejador de Mala com prioridade Gemini 3.5 Flash",
+      "upgradeBenefit3": "Sugestões diárias automáticas de looks e feeds Trend-Scout",
+      "upgradeBtn": "Fazer Upgrade para Manager",
+      "activeManagerBadge": "Você está no plano {{tier}} — poder total desbloqueado!",
+      "allWornTitle": "100% de utilização ativa do guarda-roupa!",
+      "allWornDesc": "Todas as peças do seu armário já foram usadas! Continue registrando o uso com seu Estilista IA para reduzir seu Custo por Uso médio."
+    }
   }
 }
