@@ -3297,6 +3297,79 @@ def test_enforce_segformer_category_kurta_is_top():
     assert fixed["sub_category"] == "Kurta"
 
 
+@pytest.mark.anyio
+async def test_analyze_outfits_stream_mass_slots_no_gathering_future_type_error(monkeypatch):
+    """Regression test: verify analyze_outfits_stream handles mass crops without raising
+    TypeError: a coroutine was expected, got <_GatheringFuture pending>.
+    """
+    from unittest.mock import AsyncMock
+    from PIL import Image
+    import io
+    from app.services.vision.service import GarmentVisionService
+
+    img = Image.new("RGB", (200, 200), (128, 128, 128))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    fake_jpeg = buf.getvalue()
+
+    service = GarmentVisionService(provider="gemini")
+
+    # Mock analyze_mass_catalog to return catalog items
+    fake_catalog = [
+        {
+            "slot_index": 0,
+            "label": "White Sneakers",
+            "kind": "footwear",
+            "bbox": [100, 100, 400, 400],
+            "ref_crop_bytes": fake_jpeg,
+            "analysis": {
+                "category": "Footwear",
+                "sub_category": "Sneakers",
+                "item_type": "Low-Top Sneakers",
+                "title": "White Sneakers",
+                "is_clothing": True,
+            },
+        },
+        {
+            "slot_index": 1,
+            "label": "Black Boots",
+            "kind": "footwear",
+            "bbox": [500, 500, 800, 800],
+            "ref_crop_bytes": fake_jpeg,
+            "analysis": {
+                "category": "Footwear",
+                "sub_category": "Boots",
+                "item_type": "Ankle Boots",
+                "title": "Black Boots",
+                "is_clothing": True,
+            },
+        },
+    ]
+
+    monkeypatch.setattr(service, "analyze_mass_catalog", AsyncMock(return_value=fake_catalog))
+    # Mock detect_items to return detections that trigger auto mass
+    monkeypatch.setattr(
+        service,
+        "detect_items",
+        AsyncMock(return_value=[
+            {"category": "footwear", "kind": "footwear", "label": "shoes", "bbox": [100, 100, 400, 400], "_scene_type": "mass_closet_or_pile"}
+        ]),
+    )
+
+    frames = []
+    async for frame in service.analyze_outfits_stream([fake_jpeg], mode="auto"):
+        frames.append(frame)
+
+    frame_types = [f.get("type") for f in frames]
+    assert "error" not in frame_types, f"Stream encountered unexpected error: {[f for f in frames if f.get('type') == 'error']}"
+    assert "detect" in frame_types
+    assert "done" in frame_types
+    item_frames = [f for f in frames if f.get("type") == "item"]
+    assert len(item_frames) == 2, f"Expected 2 item frames, got {len(item_frames)}"
+    assert item_frames[0]["analysis"]["category"] == "Footwear"
+    assert item_frames[1]["analysis"]["category"] == "Footwear"
+
+
 
 
 

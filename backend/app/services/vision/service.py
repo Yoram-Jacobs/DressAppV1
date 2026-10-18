@@ -2886,6 +2886,7 @@ class GarmentVisionService:
                 is_footwear_only = bool(
                     detections
                     and not has_human_wearer
+                    and len(detections) <= 2
                     and all(
                         (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")
                         for d in detections
@@ -2933,9 +2934,9 @@ class GarmentVisionService:
                 elif eff_mode in ("auto", "multi") and not has_human_wearer and not cutout_only:
                     if scene_type == "mass_closet_or_pile":
                         is_mass = True
-                    elif (len(top_dets) >= 2 and not bottom_dets) or (len(bottom_dets) >= 2 and not top_dets):
+                    elif (len(top_dets) >= 2 and not bottom_dets) or (len(bottom_dets) >= 2 and not top_dets) or (len(shoe_dets) >= 2 and not top_dets and not bottom_dets):
                         is_mass = True
-                    elif (len(top_dets) >= 2 or len(bottom_dets) >= 2 or len(detections) >= 3) and not has_multi_body_zones:
+                    elif (len(top_dets) >= 2 or len(bottom_dets) >= 2 or len(shoe_dets) >= 2 or len(detections) >= 3) and not has_multi_body_zones:
                         is_mass = True
 
                 if is_mass:
@@ -3131,8 +3132,22 @@ class GarmentVisionService:
                 for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
                     try:
                         if det.get("is_mass_item"):
-                            fitted_b = det.get("_fitted_bytes", c_bytes)
-                            fitted_m = det.get("_fitted_mime", c_mime)
+                            matted = None
+                            try:
+                                mc = await self._matte_crops([(det, c_bytes, c_mime)])
+                                if mc and mc[0][1] and mc[0][2] == "image/png":
+                                    matted = mc[0][1]
+                            except Exception as m_sub_exc:
+                                logger.warning(
+                                    "analyze_outfits_stream: mass item rembg matte failed slot %d: %s",
+                                    slot_idx, repr(m_sub_exc)[:160],
+                                )
+
+                            if matted:
+                                fitted_b, fitted_m = _fit_crop_to_card(matted, crop_mime="image/png")
+                            else:
+                                fitted_b = det.get("_fitted_bytes", c_bytes)
+                                fitted_m = det.get("_fitted_mime", c_mime)
                             matted_cutouts[slot_idx] = (fitted_b, fitted_m)
                             await frame_queue.put({
                                 "type": "matte",
@@ -3257,9 +3272,32 @@ class GarmentVisionService:
                             "category": analysis.get("category"),
                             "sub_category": analysis.get("sub_category"),
                             "item_type": analysis.get("item_type"),
-                            "title": analysis.get("title"),
+                            "title": analysis.get("title") or analysis.get("name"),
                         },
                     })
+                    if analysis.get("color") or analysis.get("colors"):
+                        await frame_queue.put({
+                            "type": "field",
+                            "index": slot_idx,
+                            "image_index": image_idx,
+                            "group": "color",
+                            "fields": {
+                                "color": analysis.get("color"),
+                                "colors": analysis.get("colors"),
+                                "pattern": analysis.get("pattern"),
+                            },
+                        })
+                    if analysis.get("material") or analysis.get("fabric_materials"):
+                        await frame_queue.put({
+                            "type": "field",
+                            "index": slot_idx,
+                            "image_index": image_idx,
+                            "group": "fabric",
+                            "fields": {
+                                "material": analysis.get("material"),
+                                "fabric_materials": analysis.get("fabric_materials"),
+                            },
+                        })
 
                     if settings.AUTO_MATTE_CROPS and not matted_events[slot_idx].is_set():
                         try:
@@ -3267,13 +3305,17 @@ class GarmentVisionService:
                         except Exception:
                             pass
 
-                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                    final_b64 = (
-                        base64.b64encode(det["_fitted_bytes"]).decode("ascii")
-                        if det.get("_fitted_bytes")
-                        else meta_crop.get("crop_base64")
-                    )
-                    final_mime = det.get("_fitted_mime") or meta_crop.get("crop_mime", "image/png")
+                    if slot_idx in matted_cutouts and matted_cutouts[slot_idx][0]:
+                        mb, mm = matted_cutouts[slot_idx]
+                        final_b64 = base64.b64encode(mb).decode("ascii")
+                        final_mime = mm
+                    elif det.get("_fitted_bytes"):
+                        final_b64 = base64.b64encode(det["_fitted_bytes"]).decode("ascii")
+                        final_mime = det.get("_fitted_mime", "image/png")
+                    else:
+                        meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                        final_b64 = meta_crop.get("crop_base64")
+                        final_mime = meta_crop.get("crop_mime", "image/png")
                     did_reconstruct = False
 
                     can_recon = False
@@ -3285,7 +3327,11 @@ class GarmentVisionService:
                     if can_recon:
                         try:
                             from app.services.reconstruction import reconstruct
-                            ref_bytes = det.get("_ref_crop_bytes") or c_bytes
+                            ref_bytes = (
+                                matted_cutouts[slot_idx][0]
+                                if (slot_idx in matted_cutouts and matted_cutouts[slot_idx][0])
+                                else (det.get("_ref_crop_bytes") or c_bytes)
+                            )
                             recon = await reconstruct(
                                 ref_bytes,
                                 analysis,
@@ -3303,6 +3349,13 @@ class GarmentVisionService:
                                 analysis["reconstruction_model"] = recon.get("model")
                                 async with recon_lock:
                                     recon_state["reconstructed_count"] += 1
+                                await frame_queue.put({
+                                    "type": "matte",
+                                    "index": slot_idx,
+                                    "image_index": image_idx,
+                                    "crop_base64": final_b64,
+                                    "crop_mime": final_mime,
+                                })
                         except Exception as rec_exc:
                             logger.warning(
                                 "analyze_outfits_stream: mass reconstruction failed slot %d: %s; keeping reference crop",
@@ -3324,12 +3377,22 @@ class GarmentVisionService:
 
                 mass_sem = asyncio.Semaphore(3)
                 async def _safe_mass_slot(slot_idx: int) -> None:
-                    async with mass_sem:
-                        await _handle_mass_slot(slot_idx)
+                    try:
+                        async with mass_sem:
+                            await _handle_mass_slot(slot_idx)
+                    except Exception as s_exc:
+                        logger.warning(
+                            "analyze_outfits_stream: mass slot %d failed: %s",
+                            slot_idx, repr(s_exc)[:160],
+                        )
 
-                mass_task = asyncio.create_task(
-                    asyncio.gather(*[_safe_mass_slot(s) for s in mass_slots])
-                ) if mass_slots else None
+                async def _run_mass_slots() -> None:
+                    await asyncio.gather(
+                        *[_safe_mass_slot(s) for s in mass_slots],
+                        return_exceptions=True,
+                    )
+
+                mass_task = asyncio.create_task(_run_mass_slots()) if mass_slots else None
 
                 if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
                     batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)

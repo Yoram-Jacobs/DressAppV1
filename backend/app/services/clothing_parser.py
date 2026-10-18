@@ -2803,6 +2803,10 @@ def apply_alpha_intersection(
         effective_core = garment_core & (~hand_excise) if (not is_garment_nude and 'hand_excise' in locals() and hand_excise is not None and hand_excise.any()) else garment_core
         if other_mask is not None and 'other_resized' in locals() and other_resized is not None and other_resized.any():
             effective_core = effective_core & (other_resized <= 40)
+        if is_single_item:
+            from scipy import ndimage
+            filled_alpha = ndimage.binary_fill_holes(new_alpha > 20)
+            effective_core = effective_core & filled_alpha
         core_u8 = (effective_core * 255).astype(np.uint8)
         if 'is_skin' in locals() and is_skin is not None and is_skin.any() and not is_garment_nude:
             core_u8 = np.where(is_skin, np.uint8(0), core_u8)
