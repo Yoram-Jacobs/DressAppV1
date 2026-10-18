@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { api, tokenStore, userStore } from '@/lib/api';
-import { useUniversalSync } from '@/hooks/useUniversalSync';
+import { api, tokenStore, userStore } from './api';
+import { useUniversalSync } from '../hooks/useUniversalSync';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => userStore.get());

@@ -4141,6 +4141,32 @@ class GarmentVisionService:
             )
             coerced = _coerce_enums(coerced, user_gender=eff_gender)
 
+            # Gender rule for mass upload: default to the user's gender if set
+            if eff_gender in ("men", "women"):
+                g_cat = str(coerced.get("category") or "").lower()
+                g_sub = str(coerced.get("sub_category") or "").lower()
+                g_it = str(coerced.get("item_type") or "").lower()
+                g_name = str(coerced.get("name") or coerced.get("title") or "").lower()
+                from app.services.vision.validation import is_distinctly_feminine_garment, is_distinctly_masculine_garment
+                if eff_gender == "men":
+                    if not is_distinctly_feminine_garment(g_cat, g_sub, g_it, name=g_name):
+                        coerced["gender"] = "men"
+                elif eff_gender == "women":
+                    if not is_distinctly_masculine_garment(g_cat, g_sub, g_it, name=g_name):
+                        coerced["gender"] = "women"
+
+            # Hoodie check: guarantee hoodies are Top / Hoodie / Zip Hoodie or Hoodie
+            g_combined = f"{coerced.get('name', '')} {coerced.get('title', '')} {coerced.get('caption', '')} {coerced.get('sub_category', '')} {coerced.get('item_type', '')}".lower()
+            if any(w in g_combined for w in ("hoodie", "hooded", "קפוצ'ון", "קפוצון", "קפוצ", "סווטשירט", "סווטשרט", "sweatshirt")):
+                coerced["category"] = "Top"
+                is_he_lang = (language or "").lower() in ("he", "iw")
+                coerced["sub_category"] = "סווטשירטים וקפוצ'ונים" if is_he_lang else "Hoodie"
+                is_zip = any(w in g_combined for w in ("zip", "zipper", "רוכסן"))
+                if is_he_lang:
+                    coerced["item_type"] = "קפוצ'ון עם רוכסן" if is_zip else "קפוצ'ון"
+                else:
+                    coerced["item_type"] = "Zip Hoodie" if is_zip else "Hoodie"
+
             # Re-lock ground-truth physical fields from the original uploaded mass photo
             coerced["state"] = orig_state
             coerced["condition"] = orig_condition

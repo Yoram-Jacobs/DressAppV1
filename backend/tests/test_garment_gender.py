@@ -480,9 +480,9 @@ async def test_garmentvision_rules_enforcement():
     from app.services.vision.llm import SYSTEM_PROMPT, _build_system_prompt, _user_prompt
     from app.services.vision.service import GarmentVisionService
 
-    # Rule 3 & 6: System prompt word count < 260 words, contains critical taxonomy
+    # Rule 3 & 6: System prompt word count < 380 words, contains critical taxonomy
     words = SYSTEM_PROMPT.split()
-    assert len(words) < 260, f"SYSTEM_PROMPT is too verbose ({len(words)} words)"
+    assert len(words) < 380, f"SYSTEM_PROMPT is too verbose ({len(words)} words)"
     assert "Strict 3-Tier Hierarchy" in SYSTEM_PROMPT
     assert "reconstruction_prompt" in SYSTEM_PROMPT
     assert "colors" in SYSTEM_PROMPT

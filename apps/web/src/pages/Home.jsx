@@ -319,8 +319,8 @@ export default function Home() {
     }
   }, [user?.id]);
 
-  const userLat = loc?.coords?.latitude ?? (user?.home_location?.lat || user?.home_location?.latitude || null);
-  const userLng = loc?.coords?.longitude ?? (user?.home_location?.lng || user?.home_location?.lon || user?.home_location?.longitude || null);
+  const userLat = loc?.coords?.lat ?? loc?.coords?.latitude ?? (user?.home_location?.lat || user?.home_location?.latitude || user?.address?.lat || null);
+  const userLng = loc?.coords?.lng ?? loc?.coords?.longitude ?? (user?.home_location?.lng || user?.home_location?.lon || user?.home_location?.longitude || user?.address?.lng || user?.address?.lon || null);
 
   useEffect(() => {
     let cancelled = false;

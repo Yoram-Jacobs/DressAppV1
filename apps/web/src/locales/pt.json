@@ -2863,7 +2863,14 @@
     "active": "✓ Ativo",
     "notSet": "Não definido",
     "noLocationConfigured": "Nenhum local configurado",
-    "syncWeather": "Sincronize o clima e as tendências locais"
+    "syncWeather": "Sincronize o clima e as tendências locais",
+    "contactFallbackBadge": "Padrão: Dados de contato",
+    "sourceLabel": "Origem",
+    "sourceContactDetails": "Dados de contato",
+    "sourceBrowserGps": "GPS do navegador",
+    "statusContactFallback": "Os dados meteorológicos e de estilo são sincronizados com base no seu endereço de contato.",
+    "deniedWithContactFallbackHint": "Localização bloqueada no navegador. Usando automaticamente seu endereço de contato como padrão. Você pode permitir a localização nas configurações do navegador para usar GPS ao vivo.",
+    "deniedContactActive": "Localização bloqueada no navegador. Usando endereço de contato como padrão."
   },
   "language": {
     "change": "Alterar idioma",

@@ -49,6 +49,11 @@ async def get_weather(
         if isinstance(home_loc, dict):
             resolved_lat = home_loc.get("lat") or home_loc.get("latitude")
             resolved_lng = home_loc.get("lng") or home_loc.get("lon") or home_loc.get("longitude")
+        if resolved_lat is None or resolved_lng is None:
+            addr = user.get("address")
+            if isinstance(addr, dict):
+                resolved_lat = addr.get("lat") or addr.get("latitude")
+                resolved_lng = addr.get("lng") or addr.get("lon") or addr.get("longitude")
 
     if resolved_lat is None or resolved_lng is None:
         resolved_lat = 32.0853

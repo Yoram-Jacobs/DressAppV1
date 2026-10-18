@@ -323,5 +323,22 @@ export function resolveCountry(input) {
     c.name.toLowerCase().startsWith(lower),
   );
   if (prefix.length === 1) return prefix[0];
+
+  // Also check localized names using Intl.DisplayNames across supported languages
+  const locales = ['he', 'ar', 'en', 'ru', 'fr', 'es', 'de', 'it', 'pt', 'zh', 'ja', 'hi', 'nl'];
+  for (const loc of locales) {
+    try {
+      const dn = new Intl.DisplayNames([loc], { type: 'region' });
+      for (const c of COUNTRIES) {
+        const local = dn.of(c.code);
+        if (local && local.toLowerCase() === lower) {
+          return c;
+        }
+      }
+    } catch {
+      /* Intl not supported or invalid region */
+    }
+  }
+
   return null;
 }

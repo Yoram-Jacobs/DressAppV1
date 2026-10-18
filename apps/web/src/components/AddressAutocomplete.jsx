@@ -149,7 +149,8 @@ export function AddressAutocomplete({
       if (a.road) parts.push(a.road);
       streetLine = parts.join(' ').trim() || item.display_name?.split(',')[0] || '';
     }
-    justPickedRef.current = true;
+    const lat = item.lat != null ? parseFloat(item.lat) : undefined;
+    const lng = item.lon != null ? parseFloat(item.lon) : undefined;
     onSelect?.({
       line1: streetLine,
       city: cityValue,
@@ -157,6 +158,9 @@ export function AddressAutocomplete({
       postal_code: postal,
       country,
       country_code: countryCodeOut,
+      lat,
+      lng,
+      lon: lng,
     });
     setResults([]);
     setOpen(false);

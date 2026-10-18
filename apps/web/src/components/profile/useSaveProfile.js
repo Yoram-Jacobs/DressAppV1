@@ -3,6 +3,7 @@ import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { prune } from '@/lib/formUtils';
+import { geocodeContactAddress } from '@/lib/location';
 
 export function useSaveProfile(form, isDirty, baselineRef, t) {
   const { user, updateUserLocal } = useAuth();
@@ -13,6 +14,30 @@ export function useSaveProfile(form, isDirty, baselineRef, t) {
     try {
       const wUnit = form.units.weight === 'lb' ? 'lb' : 'kg';
       const lUnit = form.units.length === 'in' ? 'in' : 'cm';
+      const addressData = prune(form.address) || {};
+
+      let homeLocPatch = undefined;
+      if (addressData.city || addressData.line1 || addressData.country) {
+        try {
+          const geocoded = await geocodeContactAddress(addressData);
+          if (geocoded?.coords) {
+            homeLocPatch = {
+              lat: geocoded.coords.lat,
+              lng: geocoded.coords.lng,
+              city: geocoded.city || addressData.city || null,
+              country: geocoded.country || addressData.country || null,
+              country_code: geocoded.country_code || null,
+              updated_at: new Date().toISOString(),
+            };
+            addressData.lat = geocoded.coords.lat;
+            addressData.lng = geocoded.coords.lng;
+            if (geocoded.country_code) addressData.country_code = geocoded.country_code;
+          }
+        } catch {
+          /* ignore geocode errors on save */
+        }
+      }
+
       const payload = {
         first_name: form.first_name || null,
         last_name: form.last_name || null,
@@ -21,7 +46,8 @@ export function useSaveProfile(form, isDirty, baselineRef, t) {
         sex: form.sex || null,
         personal_status: form.personal_status || null,
         occupation: form.occupation || null,
-        address: prune(form.address),
+        address: Object.keys(addressData).length > 0 ? addressData : null,
+        ...(homeLocPatch ? { home_location: homeLocPatch } : {}),
         units: { weight: wUnit, length: lUnit },
         face_photo_url: form.face_photo_url || null,
         body_photo_url: form.body_photo_url || null,

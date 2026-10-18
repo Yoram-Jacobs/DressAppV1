@@ -95,6 +95,9 @@ export function ContactSection({
                     postal_code:
                       addr.postal_code || f.address.postal_code,
                     country: addr.country || f.address.country,
+                    country_code: addr.country_code || f.address.country_code,
+                    lat: addr.lat != null ? addr.lat : f.address.lat,
+                    lng: addr.lng != null ? addr.lng : f.address.lng,
                   },
                 }));
               }}
@@ -130,6 +133,9 @@ export function ContactSection({
                     postal_code:
                       addr.postal_code || f.address.postal_code,
                     country: addr.country || f.address.country,
+                    country_code: addr.country_code || f.address.country_code,
+                    lat: addr.lat != null ? addr.lat : f.address.lat,
+                    lng: addr.lng != null ? addr.lng : f.address.lng,
                   },
                 }));
               }}

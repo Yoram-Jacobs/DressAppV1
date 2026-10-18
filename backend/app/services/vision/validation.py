@@ -150,8 +150,8 @@ _MASCULINE_CUT_KEYWORDS = {
     "boxershorts", "frack", "boxershort", "боксеры", "смокинг",
     "平角裤", "四角裤", "燕尾服", "ボクサーパンツ", "タキシード",
     "बॉक्सर", "टक्सीडो",
-    "sherwani", "thobe", "dishdasha", "kandora", "dhoti", "lungi",
-    "ת'וב", "דשדאשה", "שרוואני", "शेरवानी",
+    "sherwani", "thobe", "dishdasha", "kandora", "dhoti", "lungi", "kurta",
+    "ת'וב", "דשדאשה", "שרוואני", "קורטה", "शेरवानी", "कुर्ता",
 }
 _UNISEX_CUT_KEYWORDS = {
     "athletic tank top", "athletic tank", "tank top", "singlet", "running tank",
@@ -856,12 +856,37 @@ def _sanitize_sandals_and_footwear(res: dict[str, Any]) -> None:
                 res[field] = cleaned.strip()
 
 
+def _sanitize_hoodie_and_sweatshirts(res: dict[str, Any], language: str | None = None) -> None:
+    """Ensure hoodies, sweatshirts, and hooded tops are classified under Hoodie, never T-Shirt or Sweater."""
+    cat_l = str(res.get("category") or "").strip().lower()
+    sub_l = str(res.get("sub_category") or "").strip().lower()
+    it_l = str(res.get("item_type") or "").strip().lower()
+    full_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {sub_l} {it_l}".lower()
+    is_he = ((language or "").lower() in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_text)
+
+    is_hoodie = any(w in full_text for w in (
+        "hoodie", "hooded", "sweatshirt", "קפוצ'ון", "קפוצון", "קפוצ", "סווטשירט", "סווטשרט", "толстовк", "худи"
+    ))
+    if is_hoodie and cat_l not in ("bottom", "bottoms", "footwear", "accessories"):
+        res["category"] = "Top"
+        res["sub_category"] = "Hoodie"
+        is_zip = any(w in full_text for w in ("zip", "zipper", "רוכסן", "רוכסנים"))
+        if is_he:
+            res["item_type"] = "קפוצ'ון עם רוכסן" if is_zip else "קפוצ'ון"
+        else:
+            res["item_type"] = "Zip Hoodie" if is_zip else "Hoodie"
+
+
 def _sanitize_tshirt_and_tops(res: dict[str, Any]) -> None:
     """Ensure crewneck and casual t-shirts are classified under T-Shirt, never Button-Down Shirt."""
     cat_l = str(res.get("category") or "").strip().lower()
     sub_l = str(res.get("sub_category") or "").strip().lower()
     it_l = str(res.get("item_type") or "").strip().lower()
     full_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {sub_l} {it_l}".lower()
+
+    # Never turn a hoodie or sweatshirt into a T-Shirt
+    if any(w in full_text for w in ("hoodie", "hooded", "קפוצ", "סווטשירט", "sweatshirt")):
+        return
 
     is_tshirt_cues = any(w in full_text for w in (
         "t-shirt", "t shirt", "tee", "crew neck t-shirt", "crewneck t-shirt", "חולצת טי", "חולצת טי עגולה",
@@ -1625,6 +1650,7 @@ def _coerce_single_garment(
     _sanitize_sleeve_and_cut_for_non_tops(res)
     _sanitize_sandals_and_footwear(res)
     _sanitize_sweatpants_and_trainer(res)
+    _sanitize_hoodie_and_sweatshirts(res, language=language)
     _sanitize_foreign_token_bleed(res, language=language)
     _sanitize_cross_category_contamination(res, language=language)
 
@@ -1673,16 +1699,16 @@ def _coerce_single_garment(
     # Subcategory collision prevention: NEVER allow sub_category to be identical to category or generic "Top"/"Tops"/"Bottom"/"Bottoms"
     if sub_lower in {"top", "tops", "bottom", "bottoms", "outerwear", "full body", "dress", "dresses", "footwear", "accessories", "clothing", "garment", ""} or sub_lower == cat_lower:
         if cat_lower == "top":
-            if any(w in full_text for w in ("blouse", "בלוזה", "cap-sleeve", "cap sleeve", "flutter")) and norm_model != "men":
+            if any(w in full_text for w in ("hoodie", "sweatshirt", "hooded", "קפוצ'ון", "קפוצון", "קפוצ", "סווטשירט", "סווטשרט", "худи", "толстовк")):
+                res["sub_category"] = "Hoodie"
+            elif any(w in full_text for w in ("blouse", "בלוזה", "cap-sleeve", "cap sleeve", "flutter")) and norm_model != "men":
                 res["sub_category"] = "Blouse"
-            elif any(w in full_text for w in ("tee", "t-shirt", "tshirt", "טי")):
-                res["sub_category"] = "T-Shirt"
-            elif any(w in full_text for w in ("sweater", "cardigan", "knit", "סריג", "סוודר")):
+            elif any(w in full_text for w in ("sweater", "cardigan", "knit", "סוודר")) and not any(w in full_text for w in ("hoodie", "sweatshirt", "קפוצ", "סווטשירט")):
                 res["sub_category"] = "Sweater"
             elif any(w in full_text for w in ("tank", "camisole", "גופיי")):
                 res["sub_category"] = "Tank Top"
-            elif any(w in full_text for w in ("hoodie", "sweatshirt", "קפוצ")):
-                res["sub_category"] = "Hoodie"
+            elif any(w in full_text for w in ("t-shirt", "t_shirt", "tshirt", "חולצת טי", "חולצות טי", "טי-שירט", "טישירט")) or re.search(r"\btee\b|\btees\b|\bטי\b", full_text):
+                res["sub_category"] = "T-Shirt"
             else:
                 res["sub_category"] = "Shirt" if norm_model == "men" else ("Blouse" if (res.get("gender") == "women" or norm_model == "women") else "Shirt")
         elif cat_lower == "bottom":
@@ -1766,7 +1792,10 @@ def _coerce_single_garment(
     if itype_lower == sub_lower or contradictory_footwear or contradictory_bottom:
         full_text_itype = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
         is_summer = any(s in res.get("season", []) for s in ("summer", "spring")) or any(w in full_text_itype for w in ("short", "cap", "summer", "קצר", "קיץ"))
-        if any(w in sub_lower for w in ("t-shirt", "t_shirt", "tshirt", "tee", "טי")):
+        if any(w in sub_lower for w in ("hoodie", "sweatshirt", "קפוצ", "סווטשירט")):
+            is_zip = any(w in full_text_itype for w in ("zip", "zipper", "רוכסן"))
+            res["item_type"] = ("קפוצ'ון עם רוכסן" if is_zip else "קפוצ'ון") if is_he else ("Zip Hoodie" if is_zip else "Hoodie")
+        elif any(w in sub_lower for w in ("t-shirt", "t_shirt", "tshirt", "חולצת טי", "חולצות טי", "טי-שירט", "טישירט")) or re.search(r"\btee\b|\btees\b|\bטי\b", sub_lower):
             if is_summer or any(w in full_text_itype for w in ("cap", "flutter", "short")):
                 res["item_type"] = "חולצת טי שרוול קצר" if is_he else "Short-Sleeve T-Shirt"
             elif any(w in full_text_itype for w in ("long", "ארוך")):
@@ -1838,6 +1867,9 @@ def _coerce_single_garment(
             res["item_type"] = "מעיל מחויט" if is_he else "Tailored Coat"
         elif any(w in sub_lower for w in ("jacket", "ג'קט")):
             res["item_type"] = "ג'קט קז'ואל" if is_he else "Casual Jacket"
+        elif any(w in sub_lower for w in ("hoodie", "sweatshirt", "קפוצ", "סווטשירט")):
+            is_zip = any(w in full_text_itype for w in ("zip", "zipper", "רוכסן"))
+            res["item_type"] = ("קפוצ'ון עם רוכסן" if is_zip else "קפוצ'ון") if is_he else ("Zip Hoodie" if is_zip else "Hoodie")
         elif any(w in sub_lower for w in ("sweater", "סוודר", "סריג")):
             res["item_type"] = "סוודר צווארון עגול" if is_he else "Crew-Neck Sweater"
         elif any(w in sub_lower for w in ("skirt", "חצאית")):
@@ -1872,6 +1904,7 @@ def _coerce_single_garment(
     _sanitize_sleeve_and_cut_for_non_tops(res)
     _sanitize_sandals_and_footwear(res)
     _sanitize_sweatpants_and_trainer(res)
+    _sanitize_hoodie_and_sweatshirts(res, language=language)
     _sanitize_tshirt_and_tops(res)
     cat_lower = (res.get("category") or "").strip().lower()
     sub_lower = (res.get("sub_category") or "").strip().lower()

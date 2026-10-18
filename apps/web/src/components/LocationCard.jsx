@@ -27,6 +27,7 @@ export const LocationCard = () => {
   const connected = !!loc.coords;
   const unavailable = !loc.available || loc.permissionState === "unavailable";
   const denied = loc.permissionState === "denied";
+  const isFallback = Boolean(loc.isFallback);
 
   const request = async () => {
     setBusy(true);
@@ -34,7 +35,13 @@ export const LocationCard = () => {
       await loc.request();
       toast.success(t("location.granted"));
     } catch (err) {
-      if (err?.code === 1) toast.error(t("location.denied"));
+      if (err?.code === 1) {
+        toast.error(
+          isFallback
+            ? t("location.deniedContactActive", { defaultValue: "Location blocked in browser. Using contact details address." })
+            : t("location.denied")
+        );
+      }
     } finally {
       setBusy(false);
     }
@@ -73,7 +80,26 @@ export const LocationCard = () => {
               <span className="text-[13px] font-bold block text-dark-brand">
                 {t("location.title", { defaultValue: "Location" })}
               </span>
-              {connected ? (
+              {denied && (
+                <Badge
+                  variant="outline"
+                  className="bg-rose-50 text-rose-800 border-rose-200 text-[10px] rounded-full py-0.5 px-2 font-semibold"
+                  data-testid="location-denied-badge"
+                >
+                  {t("location.denied")}
+                </Badge>
+              )}
+              {isFallback && (
+                <Badge
+                  variant="outline"
+                  className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] rounded-full py-0.5 px-2 font-semibold"
+                  data-testid="location-fallback-badge"
+                >
+                  <CheckCircle2 className="h-3 w-3 me-1 inline" />
+                  {t("location.contactFallbackBadge", { defaultValue: "Default: Contact Details" })}
+                </Badge>
+              )}
+              {!denied && !isFallback && connected && (
                 <Badge
                   variant="outline"
                   className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[10px] rounded-full py-0.5 px-2 font-semibold"
@@ -82,14 +108,8 @@ export const LocationCard = () => {
                   <CheckCircle2 className="h-3 w-3 me-1 inline" />
                   {t("location.granted")}
                 </Badge>
-              ) : denied ? (
-                <Badge
-                  variant="outline"
-                  className="bg-rose-50 text-rose-800 border-rose-200 text-[10px] rounded-full py-0.5 px-2 font-semibold"
-                >
-                  {t("location.denied")}
-                </Badge>
-              ) : (
+              )}
+              {!connected && !denied && (
                 <Badge
                   variant="outline"
                   className="text-[10px] rounded-full py-0.5 px-2 font-semibold"
@@ -114,7 +134,7 @@ export const LocationCard = () => {
           </p>
           {connected ? (
             <dl
-              className="text-[11px] text-text-brand grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-1 bg-card p-3 rounded-[12px] border border-border shadow-sm"
+              className="text-[11px] text-text-brand grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 bg-card p-3 rounded-[12px] border border-border shadow-sm"
               data-testid="location-details"
             >
               <div>
@@ -129,6 +149,16 @@ export const LocationCard = () => {
                 </dt>
                 <dd className="font-mono">
                   {fmtCoord(loc.coords.lat)}, {fmtCoord(loc.coords.lng)}
+                </dd>
+              </div>
+              <div>
+                <dt className="caps-label text-[9px]">
+                  {t("location.sourceLabel", { defaultValue: "Source" })}
+                </dt>
+                <dd className="font-medium text-foreground">
+                  {isFallback
+                    ? t("location.sourceContactDetails", { defaultValue: "Contact Details" })
+                    : t("location.sourceBrowserGps", { defaultValue: "Browser GPS" })}
                 </dd>
               </div>
               {loc.accuracy_m ? (
@@ -146,23 +176,35 @@ export const LocationCard = () => {
           {denied ? (
             <div className="flex items-start gap-2 text-[12px] text-primary-brand font-bold">
               <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-              <span>{t("location.deniedHint")}</span>
+              <span>
+                {isFallback
+                  ? t("location.deniedWithContactFallbackHint", {
+                      defaultValue:
+                        "Location is blocked in browser. Automatically defaulting to your contact details location. You can enable location in browser settings to use live GPS.",
+                    })
+                  : t("location.deniedHint")}
+              </span>
             </div>
           ) : null}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="text-[12px] font-semibold text-text-brand text-start">
-              {connected
+              {isFallback
+                ? t("location.statusContactFallback", {
+                    defaultValue:
+                      "Weather and styling data are synced based on your contact address.",
+                  })
+                : connected
                 ? t("location.statusActive", {
-                  defaultValue:
-                    "Weather data is synced based on your coordinates.",
-                })
+                    defaultValue:
+                      "Weather data is synced based on your coordinates.",
+                  })
                 : t("location.statusInactive", {
-                  defaultValue:
-                    "Weather feature is using offline default values.",
-                })}
+                    defaultValue:
+                      "Weather feature is using offline default values.",
+                  })}
             </div>
             <div className="shrink-0 flex gap-2 w-full sm:w-auto">
-              {unavailable ? (
+              {unavailable && !isFallback ? (
                 <Badge variant="outline">{t("location.unavailable")}</Badge>
               ) : connected ? (
                 <>

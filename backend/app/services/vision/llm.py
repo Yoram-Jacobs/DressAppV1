@@ -995,7 +995,13 @@ def _build_mass_catalog_prompts(
         "5. RECONSTRUCTION PROMPT (`reconstruction_prompt`): Write a rich, specific visual blueprint "
         "(25-45 words) of the complete unfolded garment (exact color shades, fabric weave/knit, pattern "
         "scale, collar/neckline, sleeve length, buttons/zippers, pockets, hem cut) so Nano Banana can "
-        "reconstruct a studio-quality, unfolded, centered, vertical front-facing flat-lay product shot."
+        "reconstruct a studio-quality, unfolded, centered, vertical front-facing flat-lay product shot.\n"
+        f"6. GENDER DEFAULT RULE: Default `gender` to the user's wardrobe gender ('{norm_gender or 'unisex'}') "
+        "for all wardrobe basics, hoodies, t-shirts, sweatshirts, pants, jeans, sneakers, and casual wear unless the garment "
+        "is clearly designed exclusively for the opposite sex (e.g. women's dresses, skirts, bras, high heels).\n"
+        "7. HOODIES & SWEATSHIRTS: If a garment has a hood, drawstrings, or is a hoodie/sweatshirt (קפוצ'ון / סווטשירט), "
+        "always set `category`: 'Top', `sub_category`: 'Hoodie', and `item_type`: 'Zip Hoodie' (if front zipper) or 'Hoodie'. "
+        "Never classify hoodies as T-Shirts, short-sleeve shirts, or knitwear sweaters."
     )
 
     user_parts: list[str] = []

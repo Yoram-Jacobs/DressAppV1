@@ -340,6 +340,10 @@ const itemSlug = (value) => {
   if (s === 'casual_jacket' || s === 'hooded_jacket') return 'casual_jacket';
   if (s === 'chino' || s === 'chinos') return 'chinos';
   if (s === 'pant' || s === 'pants') return 'pants';
+  if (s === 'hoodie' || s === 'sweatshirt' || s.includes('hoodie')) {
+    if (s.includes('zip') || s.includes('zipper')) return 'zip_hoodie';
+    return 'hoodie';
+  }
   return s;
 };
 

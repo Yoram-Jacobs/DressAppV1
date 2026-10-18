@@ -2856,7 +2856,14 @@
     "active": "✓ Aktiv",
     "notSet": "Nicht festgelegt",
     "noLocationConfigured": "Kein Standort konfiguriert",
-    "syncWeather": "Lokales Wetter und Trends synchronisieren"
+    "syncWeather": "Lokales Wetter und Trends synchronisieren",
+    "contactFallbackBadge": "Standard: Kontaktdaten",
+    "sourceLabel": "Quelle",
+    "sourceContactDetails": "Kontaktdaten",
+    "sourceBrowserGps": "Browser-GPS",
+    "statusContactFallback": "Wetter- und Stylingdaten werden basierend auf Ihrer Kontaktadresse synchronisiert.",
+    "deniedWithContactFallbackHint": "Standortzugriff im Browser blockiert. Es wird automatisch Ihre Kontaktadresse als Standard verwendet. Aktivieren Sie den Standort in den Browsereinstellungen für Live-GPS.",
+    "deniedContactActive": "Standort im Browser blockiert. Kontaktadresse wird als Standard verwendet."
   },
   "language": {
     "change": "Sprache ändern",

@@ -543,27 +543,29 @@ const hydrate = (a, user, t, i18n) => {
     out.price_cents = basePrices[out.category] || 2500;
   }
 
+  const userGenderRaw = String(user?.gender || user?.sex || user?.avatar_gender || '').trim().toLowerCase();
+  const userGenderNorm = (userGenderRaw === 'male' || userGenderRaw === 'men' || userGenderRaw === 'גבר' || userGenderRaw === 'זכר')
+    ? 'men'
+    : ((userGenderRaw === 'female' || userGenderRaw === 'women' || userGenderRaw === 'אישה' || userGenderRaw === 'נקבה')
+      ? 'women'
+      : null);
+
+  const femBlob = `${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''} ${out.caption || ''} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
+  const isDistinctlyFem = /dress|gown|skirt|blouse|bra|bralette|corset|lingerie|heels|pumps|stiletto|peplum|sweetheart|בלוזה|שמלה|חצאית|חזייה|מחוך|עקבים/.test(femBlob);
+  const isDistinctlyMasc = /tuxedo|boxer|sherwani|thobe|dishdasha|kurta|טוקסידו|בוקסר|שרוואני|קורטה/.test(femBlob);
+
   // Model gender from visual detection takes highest precedence
   if (out.model_gender === 'women' || out.model_gender === 'men') {
     out.gender = out.model_gender;
-  }
-
-  // 4. Fallback gender: feminine sleeve / cut detection or masculine cut detection
-  if (!out.gender || out.gender === 'unisex') {
-    const femBlob = `${subRaw} ${itemRaw} ${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
-    const isMascGarment = /men|male|guy|tuxedo|boxer|sherwani|thobe|dishdasha|גבר|גברים/.test(femBlob);
-    if (isMascGarment) {
-      out.gender = 'men';
-    } else {
-      const isFemUser = user?.sex === 'female' || user?.gender === 'female' || user?.gender === 'women';
-      const isFemSleeveOrCut = /cap[- ]sleeve|flutter|blouse|sweetheart|peplum|ruffle|scoop|curved|בלוזה|שמלה|חצאית|גופיי|קצרצר|שרוול קצר|עדינ/.test(femBlob);
-      const sizeUpper = String(out.size || '').trim().toUpperCase();
-      const isFemSize = ['XS', 'S', 'XXS', '34', '36', '38'].includes(sizeUpper);
-      const isFemTop = catLower === 'top' && (isFemUser || isFemSleeveOrCut || isFemSize || /תכלת|כחול בהיר|light blue|baby blue/.test(femBlob));
-      if (isFemUser || isFemSleeveOrCut || isFemTop) {
-        out.gender = 'women';
-      }
-    }
+  } else if (isDistinctlyFem) {
+    out.gender = 'women';
+  } else if (isDistinctlyMasc) {
+    out.gender = 'men';
+  } else if (userGenderNorm) {
+    // Primary rule: default to user's profile gender if set for all wardrobe basics
+    out.gender = userGenderNorm;
+  } else if (!out.gender) {
+    out.gender = 'unisex';
   }
 
   // Cultural attire dress code and tradition inference
@@ -621,47 +623,64 @@ const hydrate = (a, user, t, i18n) => {
     const lang = (i18n.language || 'en').split('-')[0].toLowerCase();
     const isEn = lang === 'en';
     if (!isEn) {
-      // Localize sub_category and item_type into Hebrew / active language
-      const subKey = canonicalSubCategoryKey(subRaw);
-      if (subKey && subKey !== 'other') {
-        const localizedSub = labelForSubCategory(subKey, t);
-        if (localizedSub && localizedSub !== subKey) out.sub_category = localizedSub;
-        else out.sub_category = subRaw;
+      // Explicit hoodie and sweatshirt normalization
+      const fullGarmentBlob = `${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''} ${out.caption || ''}`.toLowerCase();
+      const isHoodieOrSweatshirt = /hoodie|hooded|sweatshirt|קפוצ|סווטשירט|толстовק|худи/.test(fullGarmentBlob);
+      if (isHoodieOrSweatshirt) {
+        const isZip = /zip|רוכסן/.test(fullGarmentBlob);
+        out.category = (lang === 'he' || lang === 'iw') ? 'חלק עליון' : 'Top';
+        out.sub_category = (lang === 'he' || lang === 'iw') ? "סווטשירטים וקפוצ'ונים" : t('taxonomy.sub_category.sweatshirts', { defaultValue: 'Sweatshirts & Hoodies' });
+        out.item_type = isZip
+          ? ((lang === 'he' || lang === 'iw') ? "קפוצ'ון עם רוכסן" : t('taxonomy.item_type.zip_hoodie', { defaultValue: 'Zip hoodie' }))
+          : ((lang === 'he' || lang === 'iw') ? "קפוצ'ון" : t('taxonomy.item_type.hoodie', { defaultValue: 'Hoodie' }));
       } else {
-        out.sub_category = subRaw;
-      }
-
-      // Localize item_type using labelForItemType first, otherwise keep specific itemRaw
-      const localizedItem = labelForItemType(itemRaw, t);
-      if (localizedItem && localizedItem !== itemRaw && (isEn || !/[a-zA-Z]/.test(localizedItem))) {
-        out.item_type = localizedItem;
-      } else {
-        if (!isEn && /[a-zA-Z]/.test(itemRaw)) {
-          const rawLow = String(itemRaw).toLowerCase();
-          if (rawLow.includes('cargo') && (rawLow.includes('short') || rawLow.includes('קצר'))) {
-            out.item_type = (lang === 'he' || lang === 'iw') ? 'מכנסי דגמ"ח קצרים' : t('taxonomy.item_type.cargo_shorts', { defaultValue: 'Cargo Shorts' });
-          } else if (rawLow.includes('cargo')) {
-            out.item_type = (lang === 'he' || lang === 'iw') ? 'מכנסי דגמ"ח' : t('taxonomy.item_type.cargo_pants', { defaultValue: 'Cargo Pants' });
-          } else if (rawLow.includes('heel') || rawLow.includes('pump')) {
-            out.item_type = (lang === 'he' || lang === 'iw') ? 'נעלי עקב' : t('taxonomy.item_type.heels', { defaultValue: 'Heels' });
-          } else if (rawLow.includes('sweater') || rawLow.includes('knit') || rawLow.includes('sv')) {
-            out.item_type = (lang === 'he' || lang === 'iw') ? 'סוודר סריג' : t('taxonomy.item_type.sweater', { defaultValue: 'Sweater' });
-          } else if (rawLow.includes('jacket')) {
-            out.item_type = (lang === 'he' || lang === 'iw') ? "ז'קט קז'ואל" : t('taxonomy.item_type.casual_jacket', { defaultValue: 'Casual Jacket' });
-          } else {
-            const subKey = canonicalSubCategoryKey(itemRaw);
-            const trySub = labelForSubCategory(subKey, t);
-            out.item_type = (trySub && trySub !== subKey && !/[a-zA-Z]/.test(trySub)) ? trySub : (out.sub_category || itemRaw);
-          }
+        // Localize sub_category and item_type into Hebrew / active language
+        const subKey = canonicalSubCategoryKey(subRaw);
+        if (subKey && subKey !== 'other') {
+          const localizedSub = labelForSubCategory(subKey, t);
+          if (localizedSub && localizedSub !== subKey) out.sub_category = localizedSub;
+          else out.sub_category = subRaw;
         } else {
-          out.item_type = itemRaw;
+          out.sub_category = subRaw;
+        }
+
+        // Localize item_type using labelForItemType first, otherwise keep specific itemRaw
+        const localizedItem = labelForItemType(itemRaw, t);
+        if (localizedItem && localizedItem !== itemRaw && (isEn || !/[a-zA-Z]/.test(localizedItem))) {
+          out.item_type = localizedItem;
+        } else {
+          if (!isEn && /[a-zA-Z]/.test(itemRaw)) {
+            const rawLow = String(itemRaw).toLowerCase();
+            if (rawLow.includes('cargo') && (rawLow.includes('short') || rawLow.includes('קצר'))) {
+              out.item_type = (lang === 'he' || lang === 'iw') ? 'מכנסי דגמ"ח קצרים' : t('taxonomy.item_type.cargo_shorts', { defaultValue: 'Cargo Shorts' });
+            } else if (rawLow.includes('cargo')) {
+              out.item_type = (lang === 'he' || lang === 'iw') ? 'מכנסי דגמ"ח' : t('taxonomy.item_type.cargo_pants', { defaultValue: 'Cargo Pants' });
+            } else if (rawLow.includes('heel') || rawLow.includes('pump')) {
+              out.item_type = (lang === 'he' || lang === 'iw') ? 'נעלי עקב' : t('taxonomy.item_type.heels', { defaultValue: 'Heels' });
+            } else if (rawLow.includes('sweater') || rawLow.includes('knit') || rawLow.includes('sv')) {
+              out.item_type = (lang === 'he' || lang === 'iw') ? 'סוודר סריג' : t('taxonomy.item_type.sweater', { defaultValue: 'Sweater' });
+            } else if (rawLow.includes('jacket')) {
+              out.item_type = (lang === 'he' || lang === 'iw') ? "ז'קט קז'ואל" : t('taxonomy.item_type.casual_jacket', { defaultValue: 'Casual Jacket' });
+            } else {
+              const subKey = canonicalSubCategoryKey(itemRaw);
+              const trySub = labelForSubCategory(subKey, t);
+              out.item_type = (trySub && trySub !== subKey && !/[a-zA-Z]/.test(trySub)) ? trySub : (out.sub_category || itemRaw);
+            }
+          } else {
+            out.item_type = itemRaw;
+          }
         }
       }
 
       // Hard check: ensure sub_category and item_type are NEVER visually identical
       if (String(out.item_type).trim().toLowerCase() === String(out.sub_category).trim().toLowerCase()) {
         const subK = canonicalSubCategoryKey(subRaw);
-        if (subK === 'basket_bags') {
+        if (subK === 'sweatshirts' || /hoodie|sweatshirt|קפוצ|סווטשירט/i.test(out.sub_category || subRaw)) {
+          const isZip = /zip|רוכסן/.test(`${out.caption || ''} ${out.name || ''} ${out.title || ''} ${itemRaw || ''}`.toLowerCase());
+          out.item_type = isZip
+            ? ((lang === 'he' || lang === 'iw') ? "קפוצ'ון עם רוכסן" : t('taxonomy.item_type.zip_hoodie', { defaultValue: 'Zip hoodie' }))
+            : ((lang === 'he' || lang === 'iw') ? "קפוצ'ון" : t('taxonomy.item_type.hoodie', { defaultValue: 'Hoodie' }));
+        } else if (subK === 'basket_bags') {
           out.item_type = t('taxonomy.item_type.basket_bag', { defaultValue: 'Basket bag' });
         } else if (subK === 'bags') {
           out.item_type = t('taxonomy.item_type.handbag', { defaultValue: 'Handbag' });
