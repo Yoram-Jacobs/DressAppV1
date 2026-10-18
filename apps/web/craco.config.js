@@ -39,6 +39,7 @@ let webpackConfig = {
       '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
       'lucide-react': require.resolve('lucide-react'),
       'motion-utils': require.resolve('motion-utils'),
+      '@radix-ui/react-compose-refs$': path.resolve(__dirname, 'src/lib/composeRefs.js'),
       '@radix-ui/react-compose-refs': path.resolve(__dirname, 'src/lib/composeRefs.js'),
       // Override the package stub so the full Sonner toast fires on web
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
