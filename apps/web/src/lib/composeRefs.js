@@ -3,23 +3,17 @@ import * as React from 'react';
 /**
  * React 19-safe ref composition utility.
  *
- * Prevents "Minified React error #185: Maximum update depth exceeded" in Radix UI
- * components (Select, Switch, DropdownMenu, etc.) caused by ref-churn loops under React 19.
+ * Prevents "Minified React error #185: Maximum update depth exceeded" across all Radix UI
+ * primitives (Select, Switch, DropdownMenu, Tabs, Dialog, Slot, etc.).
  *
- * Root Cause:
- * In React 19, callback refs can return cleanup functions. When Radix UI's <Slot> or
- * components render inline ref compositions, the callback ref identity changes on every render.
- * React 19 detaches the previous ref by calling it with null (or its cleanup), which in Radix
- * invoked context state setters (e.g. setTrigger(null), setAnchor(null)) while the element
- * was still mounted. This scheduled immediate state updates during the commit phase, causing
- * infinite re-render ping-pong loops exceeding 50 renders.
- *
- * Solution:
- * 1. 2-level WeakMap memoization so composeRefs(r1, r2) returns the exact same function reference
- *    when the underlying refs are unchanged.
- * 2. Asynchronous microtask-guarded unmount so that synchronous ref identity swaps never
- *    dispatch false setRef(ref, null) updates on mounted DOM elements.
- * 3. React 19 cleanup function support.
+ * Mechanism:
+ * 1. `useComposedRefs`: Returns a 100% stable ref callback identity via `useCallback(..., [])`.
+ *    Radix components often pass inline arrow functions (e.g. `(e) => setItem(e)`) to `useComposedRefs`.
+ *    A stable callback identity ensures React 19 does not churn refs on every render.
+ * 2. `composeRefs`: Memoized with a 2-level `WeakMap` so that non-hook consumers (like `<Slot>` / `<SlotClone>`)
+ *    that call `composeRefs(anchorRef, triggerRef)` during render receive the identical function reference.
+ * 3. Microtask-guarded unmount: If React 19 does detach a ref during an identity swap, state setters
+ *    (e.g. `setTrigger(null)`, `setAnchor(null)`) are not dispatched synchronously on mounted elements.
  */
 
 export function setRef(ref, value) {
@@ -65,15 +59,11 @@ function createComposedRef(refs) {
         }
       });
 
-      // In React 19, returning a cleanup function prevents React from
-      // calling ref(null) during unmount or ref updates.
+      // In React 19, returning a cleanup function allows React to clean up on unmount
       return () => {
         const unmountingNode = activeNode;
         activeNode = null;
 
-        // Queue teardown so that if a new ref callback is immediately attached
-        // to the same mounted node (ref churn), we do NOT fire spurious state updates
-        // like setTrigger(null) / setAnchor(null).
         pendingTeardown = unmountingNode;
         queueMicrotask(() => {
           if (pendingTeardown === unmountingNode) {
@@ -157,11 +147,81 @@ export function composeRefs(...refs) {
 }
 
 /**
- * A hook that returns a stable ref callback composed of the given refs.
+ * A hook that returns a 100% stable ref callback composed of the given refs.
+ * Crucial for React 19 compatibility when components pass inline ref callbacks.
  */
 export function useComposedRefs(...refs) {
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return React.useMemo(() => composeRefs(...refs), refs);
+  const refsRef = React.useRef(refs);
+  const cleanupsRef = React.useRef(new Map());
+  const activeNodeRef = React.useRef(null);
+  const pendingTeardownRef = React.useRef(null);
+
+  refsRef.current = refs;
+
+  return React.useCallback((node) => {
+    if (node) {
+      activeNodeRef.current = node;
+      pendingTeardownRef.current = null;
+
+      refsRef.current.forEach((ref) => {
+        if (!ref) return;
+        const cleanup = setRef(ref, node);
+        if (typeof cleanup === 'function') {
+          cleanupsRef.current.set(ref, cleanup);
+        }
+      });
+
+      return () => {
+        const unmountingNode = activeNodeRef.current;
+        activeNodeRef.current = null;
+        pendingTeardownRef.current = unmountingNode;
+
+        queueMicrotask(() => {
+          if (pendingTeardownRef.current === unmountingNode) {
+            refsRef.current.forEach((ref) => {
+              if (!ref) return;
+              const cleanup = cleanupsRef.current.get(ref);
+              if (typeof cleanup === 'function') {
+                try {
+                  cleanup();
+                } catch (e) {
+                  console.error('Error during ref cleanup:', e);
+                }
+              } else {
+                setRef(ref, null);
+              }
+            });
+            cleanupsRef.current.clear();
+            pendingTeardownRef.current = null;
+          }
+        });
+      };
+    } else {
+      const unmountingNode = activeNodeRef.current;
+      activeNodeRef.current = null;
+      pendingTeardownRef.current = unmountingNode;
+
+      queueMicrotask(() => {
+        if (pendingTeardownRef.current === unmountingNode) {
+          refsRef.current.forEach((ref) => {
+            if (!ref) return;
+            const cleanup = cleanupsRef.current.get(ref);
+            if (typeof cleanup === 'function') {
+              try {
+                cleanup();
+              } catch (e) {
+                console.error('Error during ref cleanup:', e);
+              }
+            } else {
+              setRef(ref, null);
+            }
+          });
+          cleanupsRef.current.clear();
+          pendingTeardownRef.current = null;
+        }
+      });
+    }
+  }, []);
 }
 
 export default composeRefs;
