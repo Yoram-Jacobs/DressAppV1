@@ -140,7 +140,7 @@ function OutfitsRedirect() {
 
 function App() {
   return (
-    <BrowserRouter useTransitions={false}>
+    <BrowserRouter unstable_useTransitions={false} useTransitions={false}>
       <ScrollRestoration />
       <ReferralParamListener />
       <HelmetProvider>
