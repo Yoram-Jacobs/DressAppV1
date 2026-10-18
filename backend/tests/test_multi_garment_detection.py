@@ -3370,9 +3370,88 @@ async def test_analyze_outfits_stream_mass_slots_no_gathering_future_type_error(
     assert item_frames[1]["analysis"]["category"] == "Footwear"
 
 
+def test_bbox_crop_useful_preserves_upper_garment_span_with_bottoms():
+    """Verify multi-garment upper garments (jackets, shirts, dresses) retain their authentic
+    bounding box and are not truncated at the bottom garment waistband.
+    """
+    from PIL import Image
+    import numpy as np
+    import io
+    from app.services.vision.service import GarmentVisionService
+
+    # 1000x1000 image
+    img = Image.new("RGB", (1000, 1000), (240, 240, 240))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    img_bytes = buf.getvalue()
+
+    # Jacket spanning [100, 200, 700, 800] (reaches y=700, below pants waistband)
+    # Pants spanning [500, 250, 950, 750] (starts at y=500)
+    jacket_mask = np.zeros((1000, 1000), dtype=np.uint8)
+    jacket_mask[100:700, 200:800] = 255
+
+    pants_mask = np.zeros((1000, 1000), dtype=np.uint8)
+    pants_mask[500:950, 250:750] = 255
+
+    useful = [
+        {
+            "kind": "outerwear",
+            "category": "outerwear",
+            "label": "jacket",
+            "bbox": [100, 200, 700, 800],
+            "mask": jacket_mask,
+        },
+        {
+            "kind": "bottom",
+            "category": "bottom",
+            "label": "pants",
+            "bbox": [500, 250, 950, 750],
+            "mask": pants_mask,
+        },
+    ]
+
+    crops = GarmentVisionService._bbox_crop_useful(img_bytes, useful, is_single_item=False)
+    assert len(crops) == 2
+    jacket_crop_det = crops[0][0]
+    # The jacket bbox must NOT be truncated to y=500
+    assert jacket_crop_det["bbox"][2] == 700, f"Expected jacket ymax=700, got {jacket_crop_det['bbox'][2]}"
 
 
+def test_apply_alpha_intersection_does_not_chew_target_garment_at_other_overlap():
+    """Verify other_mask does not bite holes or chew into target garment's solid fabric."""
+    from PIL import Image
+    import numpy as np
+    import io
+    from app.services import clothing_parser
 
+    # 200x200 RGBA image (solid blue shirt)
+    im = Image.new("RGBA", (200, 200), (30, 80, 200, 255))
+    buf = io.BytesIO()
+    im.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Target garment mask covering entire 200x200
+    seg_mask = np.ones((200, 200), dtype=np.uint8) * 255
+
+    # Other garment mask (e.g. pants waistband overlapping bottom 50 rows)
+    other_mask = np.zeros((200, 200), dtype=np.uint8)
+    other_mask[150:200, :] = 255
+
+    refined_bytes = clothing_parser.apply_alpha_intersection(
+        matted_bytes,
+        seg_mask,
+        category="top",
+        label="shirt",
+        other_mask=other_mask,
+        is_single_item=False,
+    )
+
+    refined_im = Image.open(io.BytesIO(refined_bytes))
+    refined_alpha = np.array(refined_im.split()[-1])
+
+    # The shirt fabric should be protected and solid (alpha >= 200) throughout
+    assert refined_alpha[100, 100] >= 200
+    assert refined_alpha[160, 100] >= 200
 
 
 

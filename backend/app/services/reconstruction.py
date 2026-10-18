@@ -202,8 +202,7 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
 
     custom_prompt = analysis.get("reconstruction_prompt")
     if custom_prompt and isinstance(custom_prompt, str) and len(custom_prompt.strip()) > 10:
-        from app.services.gemini_image_service import build_mass_reconstruction_prompt
-        return build_mass_reconstruction_prompt(analysis)
+        return custom_prompt
 
     bits: list[str] = []
     for key in ("color", "material", "pattern", "sub_category", "item_type"):

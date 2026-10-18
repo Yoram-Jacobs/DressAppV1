@@ -1649,55 +1649,9 @@ class GarmentVisionService:
 
         import numpy as _np
 
-        # Multi-item outfit consistency: if both an upper garment (top/dress/outerwear)
-        # and a bottom garment (bottom/skirt/pants) are present:
-        # 1. Any 'dress' is an upper garment (tunic/kurta/top) worn with bottoms.
-        # 2. Subtract bottom masks from upper garment masks and update bbox so the upper crop
-        #    and alpha envelope never contain the skirt or pants!
-        if not is_single_item and len(useful) > 1 and img_size is not None:
-            bottom_dets = [
-                d for d in useful
-                if ((d.get("kind") or d.get("category") or "").lower() == "bottom"
-                    or any(p in (d.get("label") or "").lower() for p in ("skirt", "pant", "trouser", "jean", "short", "chino", "legging")))
-                and d.get("mask") is not None
-            ]
-            if bottom_dets:
-                combined_bot = _np.maximum.reduce([bd["mask"] for bd in bottom_dets])
-                bot_ymin = min(bd.get("bbox", [1000, 0, 1000, 0])[0] for bd in bottom_dets)
-                bot_mask_ys = _np.where(combined_bot > 0)[0]
-                bot_mask_ymin = int(bot_mask_ys.min()) if len(bot_mask_ys) > 0 else None
-                if bot_mask_ymin is not None:
-                    from scipy.ndimage import grey_erosion as _ge_1d
-                    cb_bin = combined_bot > 0
-                    has_bot_col = cb_bin.any(axis=0)
-                    col_first_y = _np.argmax(cb_bin, axis=0)
-                    col_bot_ymin = _np.where(has_bot_col, col_first_y, combined_bot.shape[0] + 10)
-                    col_bot_ymin = _ge_1d(col_bot_ymin, size=15)
-                else:
-                    col_bot_ymin = None
-                for d in useful:
-                    k = (d.get("kind") or d.get("category") or "").lower()
-                    l = (d.get("label") or "").lower()
-                    if (k in ("dress", "top", "outerwear") or "dress" in l) and d.get("mask") is not None:
-                        if k == "dress" or "dress" in l:
-                            d["kind"] = "top"
-                            d["category"] = "top"
-                            if "dress" in l:
-                                d["label"] = "Top"
-                        d["mask"] = _np.where(combined_bot > 0, _np.uint8(0), d["mask"])
-                        if col_bot_ymin is not None:
-                            d["mask"] = _np.where(_np.arange(d["mask"].shape[0])[:, None] > col_bot_ymin[None, :] + 1, _np.uint8(0), d["mask"])
-                        new_bb = clothing_parser._mask_bbox(d["mask"])
-                        if new_bb is not None:
-                            m_h, m_w = d["mask"].shape[:2]
-                            d["bbox"] = [
-                                int(new_bb[0] / m_h * 1000),
-                                int(new_bb[1] / m_w * 1000),
-                                int(new_bb[2] / m_h * 1000),
-                                int(new_bb[3] / m_w * 1000),
-                            ]
-                        elif bot_ymin < 1000:
-                            d["bbox"][2] = min(d["bbox"][2], bot_ymin)
+        # Preserve authentic detections, bounding boxes, and masks for each garment.
+        # Multi-garment crops must maintain their natural span, sleeves, collars, and hemlines.
+
 
         for det in useful:
             # Cut the per-bbox crop using the per-category asymmetric

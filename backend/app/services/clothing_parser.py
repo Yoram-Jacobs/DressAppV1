@@ -2641,7 +2641,7 @@ def apply_alpha_intersection(
         # Confident garment fabric must NEVER be classified as skin or excised.
         # On non-nude garments, hands protruding from sleeve cuffs / waistbands are not shielded by garment_protect.
         if garment_protect is not None and garment_protect.any():
-            limb_shield = is_hand_zone if norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"} else (is_waist_zone if is_bottom else False)
+            limb_shield = is_hand_zone if norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"} else (is_waist_zone if is_bottom else np.zeros_like(garment_protect, dtype=bool))
             protect_skin = garment_protect if is_garment_nude else (garment_protect & (~limb_shield))
             is_skin = is_skin & (~protect_skin)
 
@@ -2734,14 +2734,8 @@ def apply_alpha_intersection(
             else:
                 other_resized = norm_other
 
-            # Protect garment body so adjacent items never bite into or chew the target garment's fabric.
-            # CRITICAL: protect_zone must NEVER shield another garment's detected area (> 40)
-            # from being subtracted! If an adjacent item (e.g. skirt/pants under a top, or shoes under pants)
-            # is detected, its pixels belong to that adjacent item.
+            # Protect target garment body so adjacent items never bite into or chew its fabric.
             effective_protect = garment_protect if (garment_protect is not None and garment_protect.any()) else garment_core
-            if effective_protect is not None and effective_protect.any():
-                effective_protect = effective_protect & (other_resized <= 40)
-
             if effective_protect is not None and effective_protect.any():
                 other_clean = np.where(effective_protect, np.uint8(0), other_resized)
             elif garment_weight is not None:
@@ -2774,10 +2768,11 @@ def apply_alpha_intersection(
             filled = closed if is_multi_segment else ndimage.binary_fill_holes(closed)
             
             filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
-            env_dilate = 2 if (is_eyewear or is_footwear or is_acc) else dilate_px
+            # Proportional dilation so collars, cuffs, sleeves, and shoe contours are never truncated
+            env_dilate = 2 if is_eyewear else max(4, dilate_px)
             if env_dilate > 0:
                 filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * env_dilate + 1))
-            blur_r = 1.5 if (is_eyewear or is_footwear or is_acc) else 3.0
+            blur_r = 1.5 if is_eyewear else 2.5
             filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=blur_r))
             soft_envelope = np.array(filled_im).astype(float) / 255.0
             
@@ -2838,35 +2833,9 @@ def apply_alpha_intersection(
             new_alpha = np.where(hand_excise, np.uint8(0), new_alpha)
 
     # 2c. Upper garment hemline cutoff (multi-item outfits):
-    # If this upper garment was worn over a lower garment (skirt, pants, palazzo),
-    # ensure no skirt/pants fabric below the garment hem leaks into this cutout.
-    # Scan from 55% of height down for a sharp color transition away from the upper torso color.
-    if is_upper and not is_single_item:
-        try:
-            y_coords_arr = np.arange(Hc)[:, None]
-            torso_rows = (new_alpha > 100) & (y_coords_arr >= int(0.25 * Hc)) & (y_coords_arr <= int(0.52 * Hc))
-            if torso_rows.sum() >= 50:
-                t_r = float(np.median(arr[torso_rows, 0]))
-                t_g = float(np.median(arr[torso_rows, 1]))
-                t_b = float(np.median(arr[torso_rows, 2]))
-                t_rb = t_r - t_b
-
-                hem_cutoff_y = None
-                for y in range(int(0.55 * Hc), Hc):
-                    row_m = (new_alpha[y] > 50)
-                    if row_m.sum() >= 20:
-                        r_m = float(np.median(arr[y, row_m, 0]))
-                        g_m = float(np.median(arr[y, row_m, 1]))
-                        b_m = float(np.median(arr[y, row_m, 2]))
-                        diff = float(np.sqrt((r_m - t_r)**2 + (g_m - t_g)**2 + (b_m - t_b)**2))
-                        rb = r_m - b_m
-                        if diff >= 55.0 or (t_rb >= 50.0 and rb <= 35.0):
-                            hem_cutoff_y = y
-                            break
-                if hem_cutoff_y is not None and (Hc - hem_cutoff_y) >= max(10, int(0.05 * Hc)):
-                    new_alpha[hem_cutoff_y + 3:, :] = 0
-        except Exception as _hem_exc:
-            logger.debug("apply_alpha_intersection hemline cutoff: %s", _hem_exc)
+    # Disabled for studio-grade cutouts: blind color distance >= 55 deletes
+    # the lower half of patterned, striped, graphic, two-tone, or pocketed garments.
+    pass
 
     # 2c-bottom. Non-destructive top-edge chromatic bleed recoloring on bottom garments:
     # When a bright warm upper garment hem (e.g. mustard-yellow kurta) overlaps the top 16%
@@ -2921,10 +2890,8 @@ def apply_alpha_intersection(
             hook_zone = (y_idx >= int(0.64 * Hc)) & (y_idx <= int(0.74 * Hc)) & ((x_idx <= int(0.35 * Wc)) | (x_idx >= int(0.65 * Wc)))
             if 'hem_cutoff_y' in locals() and hem_cutoff_y is not None:
                 hook_zone = hook_zone & (y_idx <= hem_cutoff_y - 12)
-            protrusions = torso_bin & (~smooth_torso) & hook_zone
-            if protrusions.any():
-                protrusions_dil = _bd_up(protrusions, iterations=1) & hook_zone
-                new_alpha[protrusions_dil] = 0
+            # Protrusion wiping disabled: preserves authentic sleeves, flared hemlines, and cuffs.
+            pass
             if has_human and 'human_resized' in locals() and human_resized is not None and 't_rb' in locals() and t_rb >= 45.0:
                 hand_rim = _bd_up(human_resized > 90, iterations=4) & (y_idx >= int(0.55 * Hc)) & (y_idx <= int(0.78 * Hc))
                 px_rb = arr[:, :, 0].astype(np.float32) - arr[:, :, 2].astype(np.float32)
