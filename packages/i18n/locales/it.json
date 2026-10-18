@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "Un outfit quotidiano bilanciato che si adatta al tuo stile {{style}} preferito e al meteo locale.",
     "designerNote": "Nota dello stilista:",
     "outfitPieces": "Capi dell'outfit",
-    "tapToInspect": "Tocca per ispezionare"
+    "tapToInspect": "Tocca per ispezionare",
+    "suggestedAccessory": "Accessorio consigliato",
+    "suggestedPrefix": "Consigliato:"
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",
@@ -2866,7 +2868,14 @@
     "active": "✓ Attivo",
     "notSet": "Non impostato",
     "noLocationConfigured": "Nessuna posizione configurata",
-    "syncWeather": "Sincronizza meteo e tendenze locali"
+    "syncWeather": "Sincronizza meteo e tendenze locali",
+    "contactFallbackBadge": "Predefinito: Dati di contatto",
+    "sourceLabel": "Origine",
+    "sourceContactDetails": "Dati di contatto",
+    "sourceBrowserGps": "GPS del browser",
+    "statusContactFallback": "I dati meteo e di stile sono sincronizzati in base al tuo indirizzo di contatto.",
+    "deniedWithContactFallbackHint": "Posizione bloccata nel browser. Viene utilizzato automaticamente il tuo indirizzo di contatto come predefinito. Puoi abilitare la posizione nelle impostazioni del browser per usare il GPS in tempo reale.",
+    "deniedContactActive": "Posizione bloccata nel browser. Indirizzo di contatto usato come predefinito."
   },
   "language": {
     "change": "Cambia lingua",

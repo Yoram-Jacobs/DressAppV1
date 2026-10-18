@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "适合您喜爱的{{style}}风格及当地天气的均衡日常穿搭。",
     "designerNote": "设计师建议:",
     "outfitPieces": "搭配单品",
-    "tapToInspect": "点击查看详情"
+    "tapToInspect": "点击查看详情",
+    "suggestedAccessory": "推荐配饰",
+    "suggestedPrefix": "建议："
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -2866,7 +2868,14 @@
     "active": "✓ 活跃",
     "notSet": "未设置",
     "noLocationConfigured": "未配置位置",
-    "syncWeather": "同步当地天气和趋势"
+    "syncWeather": "同步当地天气和趋势",
+    "contactFallbackBadge": "默认：联系信息",
+    "sourceLabel": "来源",
+    "sourceContactDetails": "联系信息",
+    "sourceBrowserGps": "浏览器 GPS",
+    "statusContactFallback": "天气与造型数据已根据您的联系地址同步。",
+    "deniedWithContactFallbackHint": "浏览器已阻止获取位置。系统已自动默认使用您的联系地址。您可以在浏览器设置中允许定位以使用实时 GPS。",
+    "deniedContactActive": "浏览器已阻止获取位置。默认使用联系地址。"
   },
   "language": {
     "change": "更改语言",

@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "お好みの{{style}}スタイルと現地の天気に合わせたバランスの取れたデイリーコーディネート。",
     "designerNote": "デザイナーノート:",
     "outfitPieces": "コーディネートのアイテム",
-    "tapToInspect": "タップして詳細"
+    "tapToInspect": "タップして詳細",
+    "suggestedAccessory": "おすすめのアクセサリー",
+    "suggestedPrefix": "おすすめ："
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
@@ -2866,7 +2868,14 @@
     "active": "✓ アクティブ",
     "notSet": "未設定",
     "noLocationConfigured": "場所が設定されていません",
-    "syncWeather": "地元の天気とトレンドを同期"
+    "syncWeather": "地元の天気とトレンドを同期",
+    "contactFallbackBadge": "既定: 連絡先情報",
+    "sourceLabel": "ソース",
+    "sourceContactDetails": "連絡先情報",
+    "sourceBrowserGps": "ブラウザ GPS",
+    "statusContactFallback": "天気およびスタイリングデータは連絡先住所に基づいて同期されています。",
+    "deniedWithContactFallbackHint": "ブラウザで位置情報がブロックされています。連絡先住所が自動的に既定として使用されます。リアルタイムGPSを使用するにはブラウザ設定で位置情報を許可してください。",
+    "deniedContactActive": "ブラウザで位置情報がブロックされています。連絡先住所を既定として使用します。"
   },
   "language": {
     "change": "言語を変更",

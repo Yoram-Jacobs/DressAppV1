@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "إطلالة يومية متوازنة تناسب أسلوبك المفضل {{style}} وحالة الطقس المحلية.",
     "designerNote": "ملاحظة المصمم:",
     "outfitPieces": "قطع الإطلالة",
-    "tapToInspect": "انقر للمعاينة"
+    "tapToInspect": "انقر للمعاينة",
+    "suggestedAccessory": "إكسسوار مقترح",
+    "suggestedPrefix": "مقترح:"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",
@@ -2859,7 +2861,14 @@
     "active": "✓ نشط",
     "notSet": "غير محدد",
     "noLocationConfigured": "لم يتم تكوين أي موقع",
-    "syncWeather": "مزامنة الطقس والاتجاهات المحلية"
+    "syncWeather": "مزامنة الطقس والاتجاهات المحلية",
+    "contactFallbackBadge": "افتراضي: بيانات الاتصال",
+    "sourceLabel": "المصدر",
+    "sourceContactDetails": "بيانات الاتصال",
+    "sourceBrowserGps": "GPS المتصفح",
+    "statusContactFallback": "يتم مزامنة بيانات الطقس والتنسيق بناءً على عنوان الاتصال الخاص بك.",
+    "deniedWithContactFallbackHint": "الموقع محظور في المتصفح. يتم استخدام عنوان الاتصال الخاص بك تلقائيًا كعنوان افتراضي. يمكنك تمكين الموقع في إعدادات المتصفح لاستخدام GPS المباشر.",
+    "deniedContactActive": "الموقع محظور في المتصفح. يتم استخدام عنوان الاتصال كبديل افتراضي."
   },
   "experts": {
     "title": "اسأل خبيراً",

@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "Een evenwichtige dagelijkse outfit afgestemd op uw favoriete {{style}}-stijl en het lokale weer.",
     "designerNote": "Opmerking van de ontwerper:",
     "outfitPieces": "Outfitstukken",
-    "tapToInspect": "Tik om te bekijken"
+    "tapToInspect": "Tik om te bekijken",
+    "suggestedAccessory": "Aanbevolen accessoire",
+    "suggestedPrefix": "Aanbevolen:"
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",
@@ -2866,7 +2868,14 @@
     "active": "✓ Actief",
     "notSet": "Niet ingesteld",
     "noLocationConfigured": "Geen locatie geconfigureerd",
-    "syncWeather": "Synchroniseer lokaal weer en trends"
+    "syncWeather": "Synchroniseer lokaal weer en trends",
+    "contactFallbackBadge": "Standaard: Contactgegevens",
+    "sourceLabel": "Bron",
+    "sourceContactDetails": "Contactgegevens",
+    "sourceBrowserGps": "Browser-GPS",
+    "statusContactFallback": "Weer- en stylinggegevens worden gesynchroniseerd op basis van uw contactadres.",
+    "deniedWithContactFallbackHint": "Locatie is geblokkeerd in de browser. Uw contactadres wordt automatisch als standaard gebruikt. Schakel locatie in de browserinstellingen in voor live GPS.",
+    "deniedContactActive": "Locatie geblokkeerd in de browser. Contactadres wordt standaard gebruikt."
   },
   "experts": {
     "title": "Vraag een expert",

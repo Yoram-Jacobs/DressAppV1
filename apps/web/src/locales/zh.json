@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "适合您喜爱的{{style}}风格及当地天气的均衡日常穿搭。",
     "designerNote": "设计师建议:",
     "outfitPieces": "搭配单品",
-    "tapToInspect": "点击查看详情"
+    "tapToInspect": "点击查看详情",
+    "suggestedAccessory": "推荐配饰",
+    "suggestedPrefix": "建议："
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -2678,7 +2680,9 @@
       "floral_print_blouse": "碎花衬衫",
       "floral_print_short_sleeve_top": "碎花短袖上衣",
       "cargo": "工装裤",
-      "pants": "裤子"
+      "pants": "裤子",
+      "cargo_shorts": "工装短裤",
+      "high_heel_pump": "高跟浅口鞋"
     },
     "color": {
       "black": "黑色",
@@ -2739,7 +2743,8 @@
       "velvet": "天鹅绒",
       "vinyl": "乙烯基",
       "wool": "羊毛",
-      "other": "其他"
+      "other": "其他",
+      "synthetic": "合成纤维"
     },
     "subcategories": {
       "t_shirt": "T恤",
@@ -5073,7 +5078,9 @@
     "winter": "冬季",
     "front": "正面",
     "back": "背面",
-    "profile": "侧面"
+    "profile": "侧面",
+    "utility": "实用",
+    "multi_pocket": "多口袋"
   },
   "wardrobeStats": {
     "tabOverview": "概览",

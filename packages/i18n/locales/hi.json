@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "आपकी पसंदीदा {{style}} शैली और स्थानीय मौसम के अनुकूल एक संतुलित दैनिक पोशाक।",
     "designerNote": "डिज़ाइनर नोट:",
     "outfitPieces": "पहनावे के वस्त्र",
-    "tapToInspect": "जांचने के लिए टैप करें"
+    "tapToInspect": "जांचने के लिए टैप करें",
+    "suggestedAccessory": "सुझाया गया एक्सेसरी",
+    "suggestedPrefix": "सुझाव:"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",
@@ -2866,7 +2868,14 @@
     "active": "✓ सक्रिय",
     "notSet": "सेट नहीं",
     "noLocationConfigured": "कोई स्थान कॉन्फ़िगर नहीं किया गया",
-    "syncWeather": "स्थानीय मौसम और रुझान समन्वयित करें"
+    "syncWeather": "स्थानीय मौसम और रुझान समन्वयित करें",
+    "contactFallbackBadge": "डिफ़ॉल्ट: संपर्क विवरण",
+    "sourceLabel": "स्रोत",
+    "sourceContactDetails": "संपर्क विवरण",
+    "sourceBrowserGps": "ब्राउज़र जीपीएस",
+    "statusContactFallback": "मौसम और स्टाइलिंग डेटा आपके संपर्क पते के आधार पर सिंक्रनाइज़ किए गए हैं।",
+    "deniedWithContactFallbackHint": "ब्राउज़र में स्थान अवरोधित है। स्वचालित रूप से आपके संपर्क पते को डिफ़ॉल्ट बनाया गया है। लाइव जीपीएस का उपयोग करने के लिए ब्राउज़र सेटिंग्स में स्थान की अनुमति दें।",
+    "deniedContactActive": "ब्राउज़र में स्थान अवरोधित है। संपर्क पते का उपयोग डिफ़ॉल्ट के रूप में किया जा रहा है।"
   },
   "language": {
     "change": "भाषा बदलें",

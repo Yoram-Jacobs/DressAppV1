@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "Un atuendo diario equilibrado que combina con tu estilo {{style}} preferido y el clima local.",
     "designerNote": "Nota del diseñador:",
     "outfitPieces": "Prendas del conjunto",
-    "tapToInspect": "Toca para inspeccionar"
+    "tapToInspect": "Toca para inspeccionar",
+    "suggestedAccessory": "Accesorio sugerido",
+    "suggestedPrefix": "Sugerido:"
   },
   "outfitCompletion": {
     "cta": "Completar el look",
@@ -2671,7 +2673,9 @@
       "floral_print_blouse": "Blusa con estampado floral",
       "floral_print_short_sleeve_top": "Top de manga corta con estampado floral",
       "cargo": "Pantalón cargo",
-      "pants": "Pantalón"
+      "pants": "Pantalón",
+      "cargo_shorts": "Bermudas cargo",
+      "high_heel_pump": "Zapatos de tacón alto"
     },
     "color": {
       "black": "Negro",
@@ -2732,7 +2736,8 @@
       "velvet": "Terciopelo",
       "vinyl": "Vinilo",
       "wool": "Lana",
-      "other": "Otro"
+      "other": "Otro",
+      "synthetic": "Sintético"
     },
     "subcategories": {
       "t_shirt": "Camiseta",
@@ -5073,7 +5078,9 @@
     "winter": "Invierno",
     "front": "Frente",
     "back": "Espalda",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "utility": "Utilitario",
+    "multi_pocket": "Multibolsillos"
   },
   "wardrobeStats": {
     "tabOverview": "Resumen",

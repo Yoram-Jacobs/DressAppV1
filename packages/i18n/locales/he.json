@@ -1435,7 +1435,9 @@
     "fallbackQuotaBanner": "מכסת מפתח ה-API האישי מוצתה. הבקשה מולאה בצורה חלקה באמצעות מודל ה-AI המובנה של DressApp ‏(Gemma-4-E4B).",
     "designerNote": "הערת מעצב:",
     "outfitPieces": "פריטי הלוק",
-    "tapToInspect": "הקישו לצפייה בפריט"
+    "tapToInspect": "הקישו לצפייה בפריט",
+    "suggestedAccessory": "אקססורי מוצע",
+    "suggestedPrefix": "מוצע:"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -2899,7 +2901,14 @@
     "active": "✓ פעיל",
     "notSet": "לא מוגדר",
     "noLocationConfigured": "לא הוגדר מיקום",
-    "syncWeather": "סנכרן מזג אוויר ומגמות מקומיים"
+    "syncWeather": "סנכרן מזג אוויר ומגמות מקומיים",
+    "contactFallbackBadge": "ברירת מחדל: פרטי קשר",
+    "sourceLabel": "מקור",
+    "sourceContactDetails": "פרטי קשר",
+    "sourceBrowserGps": "GPS דפדפן",
+    "statusContactFallback": "נתוני מזג האוויר והסטייליסט מסונכרנים לפי כתובת הקשר שלך.",
+    "deniedWithContactFallbackHint": "המיקום חסום בדפדפן. המערכת משתמשת בכתובת הקשר שלך כברירת מחדל. באפשרותך לאפשר גישה למיקום בהגדרות הדפדפן כדי להשתמש ב-GPS חי.",
+    "deniedContactActive": "המיקום חסום בדפדפן. כתובת הקשר שלך פעילה כברירת מחדל."
   },
   "experts": {
     "title": "שאל מומחה",

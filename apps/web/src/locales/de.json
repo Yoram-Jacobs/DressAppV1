@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "Ein ausgewogenes Alltagsoutfit, passend zu Ihrem bevorzugten {{style}}-Stil und dem lokalen Wetter.",
     "designerNote": "Hinweis des Designers:",
     "outfitPieces": "Outfit-Teile",
-    "tapToInspect": "Tippen zum Ansehen"
+    "tapToInspect": "Tippen zum Ansehen",
+    "suggestedAccessory": "Empfohlenes Accessoire",
+    "suggestedPrefix": "Empfohlen:"
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -2671,7 +2673,9 @@
       "floral_print_blouse": "Bluse mit Blumenmuster",
       "floral_print_short_sleeve_top": "Kurzarm-Top mit Blumenmuster",
       "cargo": "Cargohose",
-      "pants": "Hose"
+      "pants": "Hose",
+      "cargo_shorts": "Cargoshorts",
+      "high_heel_pump": "Pumps mit hohem Absatz"
     },
     "color": {
       "black": "Schwarz",
@@ -2732,7 +2736,8 @@
       "velvet": "Samt",
       "vinyl": "Vinyl",
       "wool": "Wolle",
-      "other": "Andere"
+      "other": "Andere",
+      "synthetic": "Synthetik"
     },
     "subcategories": {
       "t_shirt": "T-Shirt",
@@ -5066,7 +5071,9 @@
     "winter": "Winter",
     "front": "Vorderseite",
     "back": "Rückseite",
-    "profile": "Profil"
+    "profile": "Profil",
+    "utility": "Utility",
+    "multi_pocket": "Viele Taschen"
   },
   "wardrobeStats": {
     "tabOverview": "Übersicht",

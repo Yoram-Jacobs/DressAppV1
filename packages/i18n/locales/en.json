@@ -1422,7 +1422,9 @@
     "fallbackDescriptionPattern": "A balanced daily outfit matching your preferred {{style}} style and local weather.",
     "designerNote": "Designer Note:",
     "outfitPieces": "Outfit Pieces",
-    "tapToInspect": "Tap to inspect"
+    "tapToInspect": "Tap to inspect",
+    "suggestedAccessory": "Suggested Accessory",
+    "suggestedPrefix": "Suggested:"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
@@ -2861,7 +2863,14 @@
     "active": "✓ Active",
     "notSet": "Not Set",
     "noLocationConfigured": "No location configured",
-    "syncWeather": "Sync Local Weather & Trends"
+    "syncWeather": "Sync Local Weather & Trends",
+    "contactFallbackBadge": "Default: Contact Details",
+    "sourceLabel": "Source",
+    "sourceContactDetails": "Contact Details",
+    "sourceBrowserGps": "Browser GPS",
+    "statusContactFallback": "Weather and styling data are synced based on your contact address.",
+    "deniedWithContactFallbackHint": "Location is blocked in browser. Automatically defaulting to your contact details location. You can enable location in browser settings to use live GPS.",
+    "deniedContactActive": "Location blocked in browser. Using contact details address as default."
   },
   "experts": {
     "title": "Ask a professional",
