@@ -2981,10 +2981,11 @@ export default function AddItem() {
     try {
       const requestLang = (i18n.language || "").split("-")[0] || "en";
 
-      const buildBaseCard = (meta, cardId, originalCard) => ({
+      const buildBaseCard = (meta, cardId, originalCard, isMultiSplit = false) => ({
         id: cardId,
         file: null,
         mime: meta.crop_mime || "image/jpeg",
+        cropMime: meta.crop_mime || "image/jpeg",
         previewUrl: meta.crop_base64
           ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
           : originalCard.previewUrl,
@@ -3007,12 +3008,12 @@ export default function AddItem() {
         reconstructionAdvised: false,
         deferMatte: !!meta.defer_matte,
         _streamSlot: meta._slot,
-        sourceSha256: originalCard.sourceSha256 || null,
-        sourcePhash: originalCard.sourcePhash || null,
-        sourceColorSig: originalCard.sourceColorSig || null,
+        sourceSha256: isMultiSplit ? null : (originalCard.sourceSha256 || null),
+        sourcePhash: isMultiSplit ? null : (originalCard.sourcePhash || null),
+        sourceColorSig: isMultiSplit ? null : (originalCard.sourceColorSig || null),
         sourceFilename: originalCard.sourceFilename || null,
         sourceSizeBytes: originalCard.sourceSizeBytes || null,
-        isDuplicate: !!originalCard.isDuplicate,
+        isDuplicate: isMultiSplit ? false : !!originalCard.isDuplicate,
         pipelineMode: originalCard.pipelineMode || pipelineMode,
       });
 
@@ -3037,10 +3038,14 @@ export default function AddItem() {
             flatSlotIds.push(null);
             return;
           }
+          const isMultiSplit =
+            (counts[imgIdx] || 0) > 1 ||
+            (origCard.pipelineMode || pipelineMode) === "mass" ||
+            (origCard.pipelineMode || pipelineMode) === "multi";
           const newId = `${origCard.id}-${perCardIds[origCard.id].length}`;
           perCardIds[origCard.id].push(newId);
           flatSlotIds.push({ id: newId, origCard });
-          newCards.push(buildBaseCard(m, newId, origCard));
+          newCards.push(buildBaseCard(m, newId, origCard, isMultiSplit));
         });
 
         const fallbackCards = [];
@@ -6956,7 +6961,7 @@ function buildCreatePayload(card, inSuitcase = false) {
     image_base64: asBase64 || undefined,
     crop_base64: card.cropBase64 || undefined,
     image_mime: asBase64
-      ? card.mime || card.file?.type || "image/jpeg"
+      ? card.cropMime || card.mime || card.file?.type || "image/jpeg"
       : undefined,
     // Phase Q: forward the reconstructed image when the user kept it
     reconstructed_image_b64:

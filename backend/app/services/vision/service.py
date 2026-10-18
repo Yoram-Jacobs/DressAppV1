@@ -4045,6 +4045,45 @@ class GarmentVisionService:
         t0 = time.perf_counter()
         raw: str | None = None
         used_model = "gemini-3.5-flash"
+        raw_items: list[Any] = []
+        scene_type = "hanging_closet"
+
+        def _parse_or_salvage_mass_catalog(text: str) -> tuple[list[Any], str]:
+            parsed = _extract_json(text or "")
+            if isinstance(parsed, dict):
+                items_out = parsed.get("items") or []
+                scene_out = parsed.get("scene_type") or "hanging_closet"
+                if items_out:
+                    return items_out, scene_out
+            elif isinstance(parsed, list) and parsed:
+                return parsed, "hanging_closet"
+
+            # Salvage complete item dicts if response was truncated mid-JSON array
+            salvaged: list[Any] = []
+            scene_salvaged = "hanging_closet"
+            if text:
+                m_scene = re.search(r'"scene_type"\s*:\s*"([^"]+)"', text)
+                if m_scene:
+                    scene_salvaged = m_scene.group(1)
+                m_items = re.search(r'"items"\s*:\s*\[', text)
+                if m_items:
+                    idx_scan = m_items.end()
+                    decoder = json.JSONDecoder()
+                    n_len = len(text)
+                    while idx_scan < n_len:
+                        while idx_scan < n_len and text[idx_scan] in " \t\r\n,":
+                            idx_scan += 1
+                        if idx_scan >= n_len or text[idx_scan] == "]":
+                            break
+                        try:
+                            obj, next_idx = decoder.raw_decode(text, idx_scan)
+                            if isinstance(obj, dict):
+                                salvaged.append(obj)
+                            idx_scan = next_idx
+                        except Exception:
+                            break
+            return salvaged, scene_salvaged
+
         for candidate_model in ("gemini-3.5-flash", "gemini-3.5-flash-lite"):
             try:
                 raw = await gem.vision(
@@ -4052,13 +4091,20 @@ class GarmentVisionService:
                     user_parts=[mass_user, shrunk],
                     model=candidate_model,
                     temperature=0.1,
-                    max_tokens=4096,
+                    max_tokens=8192,
+                    thinking_budget=0,
                     response_mime_type="application/json",
                     response_schema=MASS_CATALOG_JSON_SCHEMA,
                 )
                 used_model = candidate_model
-                if raw:
+                raw_items, scene_type = _parse_or_salvage_mass_catalog(raw or "")
+                if raw_items:
                     break
+                logger.warning(
+                    "analyze_mass_catalog: model=%s returned 0 items (raw_len=%d), trying fallback if available",
+                    candidate_model,
+                    len(raw or ""),
+                )
             except Exception as exc:
                 logger.warning(
                     "analyze_mass_catalog: model=%s failed (%s), trying fallback if available",
@@ -4067,17 +4113,6 @@ class GarmentVisionService:
                 )
                 if candidate_model == "gemini-3.5-flash-lite":
                     raise
-
-        parsed_root = _extract_json(raw or "")
-        if isinstance(parsed_root, dict):
-            raw_items = parsed_root.get("items") or []
-            scene_type = parsed_root.get("scene_type") or "hanging_closet"
-        elif isinstance(parsed_root, list):
-            raw_items = parsed_root
-            scene_type = "hanging_closet"
-        else:
-            raw_items = []
-            scene_type = "hanging_closet"
 
         catalog_entries: list[dict[str, Any]] = []
         for idx, raw_item in enumerate(raw_items[:max_items]):

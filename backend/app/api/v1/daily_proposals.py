@@ -417,6 +417,7 @@ async def _generate_and_save_daily_proposal(
         )
 
     is_tags_mode, filter_tags = _is_tags_style(user)
+    user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
 
     # 1. Try AI-powered recommendation first (curates 1 daily outfit)
     selected_items: list[dict[str, Any]] = []

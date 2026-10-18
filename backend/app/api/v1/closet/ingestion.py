@@ -582,7 +582,11 @@ async def analyze_item_image(
                         else:
                             # Gatekeeper: check for duplicate before saving
                             img_idx = frame.get("image_index", 0)
-                            parent_img_bytes = raw_list[img_idx] if 0 <= img_idx < len(raw_list) else None
+                            parent_img_bytes = (
+                                raw_list[img_idx]
+                                if (eff_mode == "single" and len(items_meta) <= 1 and 0 <= img_idx < len(raw_list))
+                                else None
+                            )
                             eff_crop_b64 = frame.get("crop_base64") or meta.get("crop_base64")
                             eff_crop_mime = frame.get("crop_mime") or meta.get("crop_mime", "image/png" if str(eff_crop_b64).startswith("iVBORw") else "image/jpeg")
                             dup_payload = {
@@ -840,7 +844,11 @@ async def analyze_item_image(
                     if not _is_unidentifiable(analysis):
                         from app.services.duplicate_detection import find_potential_duplicate
                         img_idx = frame.get("image_index", 0)
-                        parent_img_bytes = raw_list[img_idx] if 0 <= img_idx < len(raw_list) else None
+                        parent_img_bytes = (
+                            raw_list[img_idx]
+                            if (eff_mode == "single" and len(items_meta) <= 1 and 0 <= img_idx < len(raw_list))
+                            else None
+                        )
                         eff_crop_b64 = frame.get("crop_base64") or meta.get("crop_base64")
                         eff_crop_mime = frame.get("crop_mime") or meta.get("crop_mime", "image/png" if str(eff_crop_b64).startswith("iVBORw") else "image/jpeg")
                         dup_payload = {
