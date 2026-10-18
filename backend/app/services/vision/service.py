@@ -1640,8 +1640,8 @@ class GarmentVisionService:
         # Multi-item outfit consistency: if both an upper garment (top/dress/outerwear)
         # and a bottom garment (bottom/skirt/pants) are present:
         # 1. Any 'dress' is an upper garment (tunic/kurta/top) worn with bottoms.
-        # 2. Subtract bottom masks from upper garment masks and update bbox so the upper crop
-        #    and alpha envelope never contain the skirt or pants!
+        # 2. Subtract overlapping bottom mask pixels from upper garment masks so the upper
+        #    alpha envelope does not claim the bottom garment.
         if not is_single_item and len(useful) > 1 and img_size is not None:
             bottom_dets = [
                 d for d in useful
@@ -1651,18 +1651,6 @@ class GarmentVisionService:
             ]
             if bottom_dets:
                 combined_bot = _np.maximum.reduce([bd["mask"] for bd in bottom_dets])
-                bot_ymin = min(bd.get("bbox", [1000, 0, 1000, 0])[0] for bd in bottom_dets)
-                bot_mask_ys = _np.where(combined_bot > 0)[0]
-                bot_mask_ymin = int(bot_mask_ys.min()) if len(bot_mask_ys) > 0 else None
-                if bot_mask_ymin is not None:
-                    from scipy.ndimage import grey_erosion as _ge_1d
-                    cb_bin = combined_bot > 0
-                    has_bot_col = cb_bin.any(axis=0)
-                    col_first_y = _np.argmax(cb_bin, axis=0)
-                    col_bot_ymin = _np.where(has_bot_col, col_first_y, combined_bot.shape[0] + 10)
-                    col_bot_ymin = _ge_1d(col_bot_ymin, size=15)
-                else:
-                    col_bot_ymin = None
                 for d in useful:
                     k = (d.get("kind") or d.get("category") or "").lower()
                     l = (d.get("label") or "").lower()
@@ -1673,8 +1661,6 @@ class GarmentVisionService:
                             if "dress" in l:
                                 d["label"] = "Top"
                         d["mask"] = _np.where(combined_bot > 0, _np.uint8(0), d["mask"])
-                        if col_bot_ymin is not None:
-                            d["mask"] = _np.where(_np.arange(d["mask"].shape[0])[:, None] > col_bot_ymin[None, :] + 1, _np.uint8(0), d["mask"])
                         new_bb = clothing_parser._mask_bbox(d["mask"])
                         if new_bb is not None:
                             m_h, m_w = d["mask"].shape[:2]
@@ -1684,8 +1670,6 @@ class GarmentVisionService:
                                 int(new_bb[2] / m_h * 1000),
                                 int(new_bb[3] / m_w * 1000),
                             ]
-                        elif bot_ymin < 1000:
-                            d["bbox"][2] = min(d["bbox"][2], bot_ymin)
 
         for det in useful:
             # Cut the per-bbox crop using the per-category asymmetric
@@ -1838,30 +1822,6 @@ class GarmentVisionService:
                         im_arr = _np.array(im, dtype=_np.uint8)
                         alpha_arr = _np.array(alpha_im, dtype=_np.uint8)
                         im_arr[:, :, 3] = alpha_arr
-                        _det_cat_l = str(det.get("kind") or det.get("category") or det.get("label") or "").lower()
-                        _is_bot_det = _det_cat_l in ("bottom", "skirt", "pants", "jeans", "shorts") or "skirt" in _det_cat_l or "pant" in _det_cat_l
-                        if _is_bot_det and not is_single:
-                            b_zone = (alpha_arr[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc)] > 150)
-                            if int(b_zone.sum()) >= 100:
-                                b_rgb = im_arr[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc), :3][b_zone].astype(_np.float32)
-                                b_r, b_g, b_b = float(_np.median(b_rgb[:, 0])), float(_np.median(b_rgb[:, 1])), float(_np.median(b_rgb[:, 2]))
-                                b_rb = b_r - b_b
-                                b_chroma = float(max(b_r, b_g, b_b) - min(b_r, b_g, b_b))
-                                if b_chroma <= 35.0 and b_rb <= 32.0:
-                                    y_lim = max(4, int(0.16 * Hc))
-                                    top_slice = im_arr[:y_lim, :, :3].astype(_np.float32)
-                                    px_rb = top_slice[:, :, 0] - top_slice[:, :, 2]
-                                    bleed_px = (alpha_arr[:y_lim, :] > 5) & (px_rb >= max(36.0, b_rb + 10.0))
-                                    if bool(bleed_px.any()):
-                                        bleed_px = ndimage.binary_dilation(bleed_px, structure=_np.ones((5, 5), dtype=bool)) & (alpha_arr[:y_lim, :] > 0)
-                                        ref_y1, ref_y2 = y_lim, min(Hc, int(0.42 * Hc))
-                                        for x in range(Wc):
-                                            bx = _np.where(bleed_px[:, x])[0]
-                                            if len(bx) > 0:
-                                                r0 = min(Hc - 1, int(bx.max()) + 1)
-                                                r1 = min(Hc, r0 + 6)
-                                                rep_rgb = _np.median(im_arr[r0:r1, x, :3], axis=0).astype(_np.uint8)
-                                                im_arr[bx, x, :3] = rep_rgb
                         im = Image.fromarray(im_arr, mode="RGBA")
                         buf = io.BytesIO()
                         im.save(buf, format="PNG", optimize=True)
@@ -3157,7 +3117,7 @@ class GarmentVisionService:
                             photo_model_genders[img_i] = "women"
 
                 if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
-                    batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
+                    batch_system_prompt = _build_system_prompt(one_pass=False, provider="gemma", user_gender=eff_gender)
 
                     for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
                         item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")

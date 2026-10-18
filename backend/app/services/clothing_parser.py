@@ -194,7 +194,7 @@ _MIN_AREA_FRAC_DEFAULT = 0.010       # tops, bottoms, dresses, outerwear
 _MIN_AREA_FRAC_PER_CATEGORY: dict[str, float] = {
     "outerwear": 0.010,
     "top":       0.010,
-    "bottom":    0.0012,           # skirts, pants, palazzo pants in full-body shots
+    "bottom":    0.010,
     "dress":     0.010,
     "accessory": 0.0015,            # belts, bags, scarves (drops specks)
     "footwear":  0.0008,            # individual shoes/socks at full-body
@@ -558,19 +558,6 @@ def _is_same_garment_component(
     dx = max(0, max(bx1 - ax2, ax1 - bx2))
     dy = max(0, max(by1 - ay2, ay1 - by2))
 
-    # Guard: Two distinct substantial figures/columns side-by-side with a clear gap between them
-    # are two separate bodies/views (e.g. front & side views, or two models), not parts of one single top!
-    w_a = max(1, ax2 - ax1)
-    w_b = max(1, bx2 - bx1)
-    h_a = max(1, ay2 - ay1)
-    h_b = max(1, by2 - by1)
-    if (
-        dx > max(8, int(0.04 * frame_short))
-        and min(w_a, w_b) >= int(0.12 * frame_short)
-        and min(h_a, h_b) >= int(0.25 * frame_short)
-    ):
-        return False
-
     # General proximity (within 20% of frame short edge)
     if max(dx, dy) <= max(16, int(0.20 * frame_short)):
         return True
@@ -588,7 +575,6 @@ def _is_same_garment_component(
         return True
 
     return False
-
 
 
 def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
@@ -625,7 +611,7 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
     """
     from scipy import ndimage
 
-    if class_binary.sum() < 32:
+    if class_binary.sum() < 128:
         return []
 
     labeled, n = ndimage.label(class_binary)
@@ -770,16 +756,13 @@ def _split_instances(class_mask: np.ndarray) -> list[tuple[str, np.ndarray]]:
         label_name = _id2label.get(cid_i)
         if not label_name:
             continue
-        cat = _get_label_category(label_name)
-        if cat is None:
+        if _get_label_category(label_name) is None:
             continue
         class_binary = (class_mask == cid_i).astype(np.uint8)
 
-        min_px = 24 if cat in ("footwear", "accessory", "headwear") else 48
-
         if label_name in _SINGLE_INSTANCE_CLASSES:
             for sub in _split_into_spatial_groups(class_binary):
-                if int(sub.sum()) >= min_px:
+                if int(sub.sum()) >= 128:
                     out.append((label_name, sub))
             continue
 
@@ -790,7 +773,7 @@ def _split_instances(class_mask: np.ndarray) -> list[tuple[str, np.ndarray]]:
         labeled, n = ndimage.label(class_binary)
         for inst in range(1, n + 1):
             mask = (labeled == inst).astype(np.uint8)
-            if mask.sum() >= min_px:  # drop tiny noise
+            if mask.sum() >= 128:  # drop tiny noise
                 out.append((label_name, mask))
     return out
 
@@ -1023,13 +1006,23 @@ def _suppress_overlapping_garments(
             bb_kept = _bbox(kept_item["mask"])
 
             # Layering protection: NEVER merge outerwear (jacket/coat/cardigan) with tops (sweater/shirt/t-shirt),
-            # or skirts/dresses with tights/pants/stockings, or footwear with tights/socks/pants!
+            # or dresses with tights/pants/stockings, or skirts with tights/stockings, or footwear with tights/socks/pants!
+            # NOTE: Two bottom garments (e.g., SegFormer splitting a maxi skirt into 'pants' and 'skirt') are NOT layering!
             kept_lbl_l = str(kept_lbl).lower()
             item_lbl_l = str(lbl).lower()
+            is_dress_bottom_layer = (
+                any("dress" in l for l in (kept_lbl_l, item_lbl_l))
+                and any(any(t in l for t in ("tight", "stocking", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l))
+            )
+            is_skirt_tight_layer = (
+                any("skirt" in l for l in (kept_lbl_l, item_lbl_l))
+                and any(any(t in l for t in ("tight", "stocking")) for l in (kept_lbl_l, item_lbl_l))
+            )
             is_layering = (
                 ({kept_cat, item_cat} == {"top", "outerwear"})
                 or (has_human and kept_cat == "top" and item_cat == "top" and kept_lbl_l != item_lbl_l)
-                or (any(any(k in l for k in ("skirt", "dress")) for l in (kept_lbl_l, item_lbl_l)) and any(any(t in l for t in ("tight", "stocking", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l)))
+                or is_dress_bottom_layer
+                or is_skirt_tight_layer
                 or (has_human and any(any(k in l for k in ("shoe", "boot", "footwear")) for l in (kept_lbl_l, item_lbl_l)) and any(any(t in l for t in ("tight", "stocking", "sock", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l)))
             )
             # Top / vest / collar sub-part on outerwear:
@@ -1123,10 +1116,13 @@ def _suppress_overlapping_garments(
             is_flatlay_top_bottom = False
             is_footwear_candidate = (not has_human) and has_footwear
             if kept_cat != item_cat:
-                garment_set = {"top", "dress", "outerwear"}
+                garment_set = {"top", "dress", "outerwear"} if not has_human else {"top", "outerwear"}
                 is_garment_pair = kept_cat in garment_set and item_cat in garment_set
-                is_flatlay_top_bottom = (not has_human) and (
-                    {kept_cat, item_cat} in ({"top", "bottom"}, {"top", "dress"}, {"bottom", "dress"}, {"outerwear", "bottom"})
+                is_flatlay_top_bottom = (not has_human) and (count_hint is None or count_hint <= 1) and (
+                    {kept_cat, item_cat} == {"top", "bottom"}
+                    or {kept_cat, item_cat} == {"top", "dress"}
+                    or {kept_cat, item_cat} == {"bottom", "dress"}
+                    or {kept_cat, item_cat} == {"outerwear", "bottom"}
                 )
                 if not (is_garment_pair or is_flatlay_top_bottom or is_footwear_candidate):
                     # Attached hood / collar rule: if headwear or scarf meets the upper border/neckline of top/outerwear,
@@ -1165,8 +1161,8 @@ def _suppress_overlapping_garments(
                             break
                     continue
             else:
-                # Same category in a photo without a human model (e.g. two pieces of pants, or top fragments)
-                if not has_human and bb_item and bb_kept:
+                # Same category (e.g. SegFormer splitting a maxi skirt into 'pants' + 'skirt', or two pieces of pants/top)
+                if bb_item and bb_kept and (not has_human or kept_cat == "bottom"):
                     if _is_same_garment_component(bb_item, bb_kept, min(H, W)):
                         kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
                         kept[kept_idx] = (
@@ -1207,6 +1203,7 @@ def _suppress_overlapping_garments(
 
             is_general_overlap = (
                 pixel_containment >= 0.40 or bbox_containment >= 0.60 or bbox_iou >= 0.45
+                or (kept_cat == "bottom" and item_cat == "bottom" and (pixel_containment >= 0.15 or bbox_containment >= 0.25))
             )
 
             is_flatlay_touch = False
@@ -1218,6 +1215,8 @@ def _suppress_overlapping_garments(
                 min_w = min(max(1, x2 - x1), max(1, X2 - X1))
                 if vert_gap <= 25 and min_w > 0 and (horiz_inter / float(min_w)) >= 0.45:
                     is_flatlay_touch = True
+                elif _is_same_garment_component(bb_item, bb_kept, min(H, W)):
+                    is_flatlay_touch = True
 
             if not (is_footwear_overlap or is_general_overlap or is_flatlay_touch):
                 continue
@@ -1228,18 +1227,25 @@ def _suppress_overlapping_garments(
                 kept_lbl = "Shoes"
                 kept_item["label"] = "Shoes"
                 kept_item["category"] = "footwear"
-            elif "dress" in (kept_cat, item_cat) or "dress" in (str(kept_lbl).lower(), str(lbl).lower()):
-                kept_lbl = "Dress"
-                kept_item["label"] = "Dress"
-                kept_item["category"] = "dress"
-            elif {kept_cat, item_cat} in ({"top", "bottom"}, {"outerwear", "bottom"}):
-                kept_lbl = "Dress"
-                kept_item["label"] = "Dress"
-                kept_item["category"] = "dress"
+            elif is_flatlay_top_bottom:
+                comb_bb = _bbox(kept_item["mask"])
+                comb_h = (comb_bb[2] - comb_bb[0]) if comb_bb else 0
+                if comb_h >= int(0.45 * H) or "dress" in {kept_cat, item_cat}:
+                    kept_lbl = "Dress"
+                    kept_item["label"] = "Dress"
+                    kept_item["category"] = "dress"
+                else:
+                    kept_lbl = "Upper-clothes"
+                    kept_item["label"] = "Upper-clothes"
+                    kept_item["category"] = "top"
             elif (kept_lbl == "Dress" and lbl == "Upper-clothes") or (kept_lbl == "Pants" and lbl == "Upper-clothes"):
-                kept_lbl = "Dress"
-                kept_item["label"] = "Dress"
-                kept_item["category"] = "dress"
+                kept_lbl = "Upper-clothes"
+                kept_item["label"] = "Upper-clothes"
+                kept_item["category"] = "top"
+            elif kept_cat == "bottom" and item_cat == "top":
+                kept_lbl = "Upper-clothes"
+                kept_item["label"] = "Upper-clothes"
+                kept_item["category"] = "top"
             kept[kept_idx] = (
                 kept_lbl,
                 kept_item,
@@ -1299,7 +1305,6 @@ async def parse_garments(
         scale = 512.0 / max(orig_W, orig_H)
         img = img.resize((max(1, int(orig_W * scale)), max(1, int(orig_H * scale))), Image.BILINEAR)
     W, H = img.size
-    img_arr = np.array(img)
 
     # 1. Self-hosted takes precedence (user's future dressapp.co box).
     if settings.CLOTHING_PARSER_ENDPOINT_URL:
@@ -1377,51 +1382,38 @@ async def parse_garments(
     }
     has_head = bool(np.isin(class_mask, list(head_class_ids)).sum() >= 30) if head_class_ids else False
     has_any_human = bool(np.isin(class_mask, list(human_class_ids)).sum() >= 80) if human_class_ids else False
-    # Always compute skin chrominance to catch hands, wrists, neck, and limbs
-    # that SegFormer frequently misclassifies as background or outer garment edge.
-    skin_mask_found = None
-    try:
-        arr = np.array(img)
-        r = arr[:, :, 0].astype(float)
-        g = arr[:, :, 1].astype(float)
-        b = arr[:, :, 2].astype(float)
-        cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
-        cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
-        is_skin = (
-            (cr >= 133.0) & (cr <= 173.0) &
-            (cb >= 88.0) & (cb <= 127.0) &
-            (r > g) & (g > b) &
-            ((r - g) >= 12.0) &
-            ((g - b) <= 42.0)
-        )
-        garment_occupied = class_mask > 0
-        skin_outside = is_skin & (~garment_occupied)
-        # Also include skin at the periphery/lower/side areas where hands protrude from cuffs
-        y_grid, x_grid = np.ogrid[:H, :W]
-        is_hand_zone_full = (y_grid >= 0.50 * H) | ((y_grid >= 0.40 * H) & ((x_grid <= 0.38 * W) | (x_grid >= 0.62 * W)))
-        skin_protruding = is_skin & is_hand_zone_full
-        skin_combined = skin_outside | skin_protruding
-        skin_px = int(skin_combined.sum())
-        skin_frac = skin_px / float(total)
-        # Relax minimum threshold from 1.5% to 0.2% so cropped model shots with only hands/wrists are detected.
-        if 0.002 <= skin_frac <= 0.28:
-            skin_mask_found = skin_combined.astype(np.uint8)
-            has_any_human = True
-            if int(skin_outside[:int(0.35 * H), :].sum()) >= 30:
-                has_head = True
-    except Exception:
-        skin_mask_found = None
-
     if human_class_ids and (has_head or has_any_human):
-        seg_human = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
-        if skin_mask_found is not None:
-            human_mask_full = (seg_human | skin_mask_found).astype(np.uint8)
-        else:
-            human_mask_full = seg_human
-    elif skin_mask_found is not None:
-        human_mask_full = skin_mask_found
+        human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
     else:
-        human_mask_full = None
+        # Fashion dataset has no explicit human classes: detect human wearer via skin chrominance
+        # outside garment masks, so hands, neck, face, and bare legs are recognized and excised.
+        try:
+            arr = np.array(img)
+            r = arr[:, :, 0].astype(float)
+            g = arr[:, :, 1].astype(float)
+            b = arr[:, :, 2].astype(float)
+            cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
+            cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
+            is_skin = (
+                (cr >= 133.0) & (cr <= 173.0) &
+                (cb >= 77.0) & (cb <= 127.0) &
+                (r > g) & (g > b) &
+                ((r - g) >= 12.0)
+            )
+            # Only consider skin where SegFormer did not predict a clothing item
+            garment_occupied = class_mask > 0
+            skin_outside_garments = is_skin & (~garment_occupied)
+            skin_px = int(skin_outside_garments.sum())
+            skin_frac = skin_px / float(total)
+            # A human wearer's exposed skin (face/arms/legs) typically covers 1.5% to 25% of the frame.
+            # If > 28%, it is a warm background surface (bedsheet, table, wall, floor), NOT a human!
+            if 0.015 <= skin_frac <= 0.28:
+                human_mask_full = skin_outside_garments.astype(np.uint8)
+                has_any_human = True
+            else:
+                human_mask_full = None
+        except Exception:
+            human_mask_full = None
 
     if human_mask_full is not None:
         if not human_mask_full.any() or int(human_mask_full.sum()) < 80:
@@ -1522,12 +1514,11 @@ async def parse_garments(
                     continue
                 oy1, ox1, oy2, ox2 = obb
                 o_cat = (other_it.get("category") or "").lower()
-                o_lbl = (other_it.get("label") or "").lower()
 
-                # Shoes/footwear must NEVER absorb tops, bottoms, dresses, or outerwear!
-                if o_cat in ("top", "bottom", "dress", "outerwear") or any(
-                    w in o_lbl for w in ("pant", "skirt", "shirt", "jacket", "coat", "dress", "sweater", "hoodie", "top", "trouser", "jean", "chino", "short", "blouse", "t-shirt", "cardigan", "vest")
-                ):
+                # If there is a genuine tall upper body garment or full-length pants, do not absorb it
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and (has_human or (oy1 < int(0.35 * H) and (oy2 - oy1) >= int(0.25 * H)))
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and (has_human or (oy1 < int(0.55 * H) and (oy2 - oy1) >= int(0.25 * H)))
+                if is_genuine_tall_top or is_genuine_tall_bottom:
                     continue
 
                 x_inter = max(0, min(sx2, ox2) - max(sx1, ox1))
@@ -1591,10 +1582,14 @@ async def parse_garments(
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                # Belt must NEVER absorb tops, bottoms, dresses, outerwear, or footwear!
-                if o_cat in ("top", "bottom", "dress", "outerwear", "footwear") or any(
-                    w in o_lbl for w in ("pant", "skirt", "shirt", "jacket", "coat", "dress", "sweater", "hoodie", "top", "trouser", "jean", "chino", "short", "blouse", "t-shirt", "cardigan", "vest", "shoe", "boot", "sandal")
-                ):
+                # If there is a genuine tall upper body garment or full-length pants, do not absorb it
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and (has_human or (oy1 < int(0.35 * H) and o_h >= int(0.25 * H)))
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and (has_human or (oy1 < int(0.55 * H) and o_h >= int(0.25 * H)))
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                # Shoes/footwear should never be absorbed into a belt
+                if o_cat == "footwear" or "shoe" in o_lbl:
                     continue
 
                 x_inter = max(0, min(bx2, ox2) - max(bx1, ox1))
@@ -1739,10 +1734,15 @@ async def parse_garments(
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                # Hat must NEVER absorb tops, bottoms, dresses, outerwear, or footwear!
-                if o_cat in ("top", "bottom", "dress", "outerwear", "footwear") or any(
-                    w in o_lbl for w in ("pant", "skirt", "shirt", "jacket", "coat", "dress", "sweater", "hoodie", "top", "trouser", "jean", "chino", "short", "blouse", "t-shirt", "cardigan", "vest", "shoe", "boot", "sandal")
-                ):
+                # Protect genuine tall garments on a person wearing an outfit:
+                if has_human:
+                    is_genuine_tall_top = o_cat in ("top", "dress", "outerwear")
+                    is_genuine_tall_bottom = o_cat in ("bottom", "dress")
+                    if is_genuine_tall_top or is_genuine_tall_bottom:
+                        continue
+
+                # Shoes/footwear should never be absorbed into a hat
+                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
                     continue
 
                 x_inter = max(0, min(hx2, ox2) - max(hx1, ox1))
@@ -1775,159 +1775,6 @@ async def parse_garments(
                     break
             if not merged_any:
                 break
-
-    # 2a-5b) Anatomical human model detection from garment layout:
-    # A person wearing an outfit has an upper garment (top/dress/outerwear) above a bottom (pants/skirt)
-    # or footwear (shoes) spanning a significant vertical frame height.
-    top_candidates_init = [
-        it for it in by_label.values()
-        if (it.get("category") in ("top", "outerwear", "dress") or any(w in (it.get("label") or "").lower() for w in ("upper", "coat", "jacket", "shirt", "sweater", "dress", "kurta"))) and it.get("mask") is not None
-    ]
-    bottom_candidates_init = [
-        it for it in by_label.values()
-        if (it.get("category") == "bottom" or any(p in (it.get("label") or "").lower() for p in ("pant", "skirt", "trouser", "jean", "short", "chino", "legging")))
-        and it.get("mask") is not None
-    ]
-    footwear_candidates_init = [
-        it for it in by_label.values()
-        if (it.get("category") == "footwear" or "shoe" in (it.get("label") or "").lower() or "boot" in (it.get("label") or "").lower())
-        and it.get("mask") is not None
-    ]
-    if top_candidates_init and bottom_candidates_init:
-        min_top_y = min(_mask_bbox(it["mask"])[0] for it in top_candidates_init if _mask_bbox(it["mask"]))
-        min_bot_y = min(_mask_bbox(it["mask"])[0] for it in bottom_candidates_init if _mask_bbox(it["mask"]))
-        max_bot_y = max(_mask_bbox(it["mask"])[2] for it in bottom_candidates_init if _mask_bbox(it["mask"]))
-        if min_top_y < min_bot_y and (max_bot_y - min_top_y) >= int(0.25 * H):
-            has_human = True
-            has_head = True
-            has_any_human = True
-    elif (top_candidates_init or bottom_candidates_init) and footwear_candidates_init:
-        upper_y = min(
-            _mask_bbox(it["mask"])[0]
-            for it in (top_candidates_init or bottom_candidates_init)
-            if _mask_bbox(it["mask"])
-        )
-        shoe_y = max(
-            _mask_bbox(it["mask"])[2]
-            for it in footwear_candidates_init
-            if _mask_bbox(it["mask"])
-        )
-        if (shoe_y - upper_y) >= int(0.35 * H):
-            has_human = True
-            has_head = True
-            has_any_human = True
-
-    # 2a-6) Full-Body / Dress / Abaya / Kaftan / Jumpsuit Consolidation:
-    # SegFormer frequently fragments a long continuous garment (e.g. Abaya, Galabiya, Kaftan,
-    # Djellaba, long dress, maxi dress, jumpsuit) into separate Upper-clothes (top/outerwear)
-    # and Skirt / Pants (bottom).
-    # When an upper garment meets a lower garment at the waist/vertical corridor,
-    # shares the same color/fabric, and spans torso + legs into a full-body silhouette,
-    # consolidate them into a single "Dress" (Full Body) garment!
-    #
-    # CRITICAL GUARDS:
-    # 1. On a human model (has_human=True), a person wearing a top/kurta and pants/trousers
-    #    is wearing an outfit of separate wearable pieces. Top and Pants MUST NEVER be consolidated!
-    # 2. Pants (pants, trousers, jeans, chinos, joggers) worn with a top or dress must NEVER merge into a dress.
-    # 3. Only consolidate when NOT has_human (flat-lays, ghost mannequins, product photos) or
-    #    when the bottom is a continuous skirt/robe hem (not pants).
-    while True:
-        merged_any = False
-        top_candidates = []
-        bottom_candidates = []
-        for k, it in list(by_label.items()):
-            m = it.get("mask")
-            if m is None:
-                continue
-            bb = _mask_bbox(m)
-            if not bb:
-                continue
-            cat = (it.get("category") or "").lower()
-            lbl = (it.get("label") or "").lower()
-            if cat in ("top", "outerwear", "dress"):
-                top_candidates.append((k, bb, it))
-            if cat in ("bottom", "dress") or any(b in lbl for b in ("skirt", "pant", "chino", "trouser")):
-                bottom_candidates.append((k, bb, it))
-
-        for t_k, t_bb, t_it in top_candidates:
-            if merged_any:
-                break
-            ty1, tx1, ty2, tx2 = t_bb
-            t_h = max(1, ty2 - ty1)
-            t_w = max(1, tx2 - tx1)
-            t_lbl = (t_it.get("label") or "").lower()
-            t_cat = (t_it.get("category") or "").lower()
-
-            for b_k, b_bb, b_it in bottom_candidates:
-                if t_k == b_k:
-                    continue
-                by1, bx1, by2, bx2 = b_bb
-                b_h = max(1, by2 - by1)
-                b_w = max(1, bx2 - bx1)
-                b_lbl = (b_it.get("label") or "").lower()
-                b_cat = (b_it.get("category") or "").lower()
-
-                # Pants must NEVER merge with an upper garment/dress on a human model!
-                is_pants_bottom = any(p in b_lbl for p in ("pant", "trouser", "jean", "chino", "short", "legging", "slack"))
-                if is_pants_bottom and (has_human or t_cat == "dress" or "kurta" in t_lbl or "shirt" in t_lbl):
-                    continue
-
-                # If has_human, an outfit of separate top and bottom must not be fused
-                if has_human and (t_cat in ("top", "outerwear") or is_pants_bottom):
-                    continue
-
-                vert_gap = max(0, by1 - ty2) if by1 > ty2 else 0
-                vert_overlap = max(0, min(ty2, by2) - max(ty1, by1))
-                comb_h = max(ty2, by2) - min(ty1, by1)
-                x_inter = max(0, min(tx2, bx2) - max(tx1, bx1))
-                min_w = min(t_w, b_w)
-                x_ratio = x_inter / float(min_w) if min_w > 0 else 0
-
-                is_aligned = (
-                    (ty1 <= by1 + int(0.15 * H))
-                    and (by2 >= ty2 - int(0.15 * H))
-                    and (vert_gap <= max(16, int(0.08 * H)) or vert_overlap > 0)
-                    and (x_ratio >= 0.30 or (x_inter >= max(16, int(0.30 * b_w))))
-                    and (comb_h >= int(0.38 * H))
-                )
-                if not is_aligned:
-                    continue
-
-                color_ok = True
-                if img_arr is not None:
-                    t_pix = img_arr[t_it["mask"] > 0]
-                    b_pix = img_arr[b_it["mask"] > 0]
-                    if len(t_pix) >= 20 and len(b_pix) >= 20:
-                        cdiff = float(np.linalg.norm(t_pix.mean(axis=0) - b_pix.mean(axis=0)))
-                        max_diff = 65.0 if not has_human else 45.0
-                        color_ok = (cdiff <= max_diff)
-
-                if color_ok:
-                    logger.info(
-                        "clothing_parser: consolidating full-body garment '%s' and '%s' into Dress",
-                        t_k, b_k,
-                    )
-                    comb_mask = np.maximum(t_it["mask"], b_it["mask"])
-                    dress_key = "Dress"
-                    suffix = 0
-                    while dress_key in by_label and dress_key not in (t_k, b_k):
-                        suffix += 1
-                        dress_key = f"Dress#{suffix}"
-                    by_label[dress_key] = {
-                        "label": "Dress",
-                        "category": "dress",
-                        "score": max(float(t_it.get("score", 0.95)), float(b_it.get("score", 0.95))),
-                        "mask": comb_mask,
-                    }
-                    if t_k != dress_key and t_k in by_label:
-                        del by_label[t_k]
-                    if b_k != dress_key and b_k in by_label:
-                        del by_label[b_k]
-                    merged_any = True
-                    break
-
-        if not merged_any:
-            break
 
     distinct_cats = {it.get("category") for it in by_label.values()}
     has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
@@ -2019,7 +1866,7 @@ async def parse_garments(
     has_shoes = "footwear" in distinct_categories
     is_multi_category_outfit = (has_top and has_bottom) or (has_top and has_shoes) or (has_bottom and has_shoes)
 
-    if count_hint is not None and count_hint <= 1 and not has_human and not is_multi_category_outfit and len(by_label) > 1:
+    if (count_hint is None or count_hint <= 1) and not has_human and not is_multi_category_outfit and len(by_label) > 1:
         # Flat-lay or hanger photo of a single garment: any multiple detections are
         # sub-parts or two-tone splits of that single garment.
         items_list = list(by_label.values())
@@ -2041,111 +1888,6 @@ async def parse_garments(
             if other.get("mask") is not None:
                 primary["mask"] = np.maximum(primary["mask"], other["mask"])
         by_label = {primary["label"]: primary}
-
-    # 2e-split) Split tunic / kurta over skirt / pants misclassified as a single continuous 'dress':
-    # SegFormer models trained on western datasets frequently classify traditional South Asian, Middle Eastern,
-    # and layered outfits (e.g. Kurta + Skirt/Palazzo, Kameez + Shalwar) as a single continuous 'dress'.
-    # When on a human model (has_human=True or has_any_human=True), scan the lower portion of the 'dress' mask
-    # for a sharp horizontal color boundary / hemline. If detected and the lower portion is significant (>= 1.5% of frame),
-    # split into a standalone Top (upper garment) and Skirt / Bottom (lower garment).
-    if (has_human or has_any_human) and img_arr is not None:
-        for k, it in list(by_label.items()):
-            cat = (it.get("category") or "").lower()
-            mask = it.get("mask")
-            if cat == "dress" and mask is not None:
-                ys, xs = np.where(mask > 0)
-                if len(ys) > 0:
-                    ymin, ymax = int(ys.min()), int(ys.max())
-                    gh = ymax - ymin
-                    if gh >= int(0.35 * H):
-                        torso_y1 = ymin + int(0.20 * gh)
-                        torso_y2 = ymin + int(0.50 * gh)
-                        torso_mask = (mask > 0) & (np.arange(H)[:, None] >= torso_y1) & (np.arange(H)[:, None] <= torso_y2)
-                        if torso_mask.sum() >= 40:
-                            torso_rgb = img_arr[torso_mask].mean(axis=0)
-                            torso_rb = torso_rgb[0] - torso_rgb[2]
-                            scan_start_y = ymin + int(0.52 * gh)
-                            hem_candidates = []
-                            for y in range(scan_start_y, ymax):
-                                row_pts = mask[y] > 0
-                                if row_pts.sum() >= 15:
-                                    row_rgb = img_arr[y, row_pts].mean(axis=0)
-                                    diff = float(np.linalg.norm(row_rgb - torso_rgb))
-                                    rb = float(row_rgb[0] - row_rgb[2])
-                                    if diff >= 48.0 or (torso_rb >= 45.0 and rb <= 35.0):
-                                        hem_candidates.append(y)
-                            if hem_candidates:
-                                first_diff_y = min(hem_candidates)
-                                lower_mask = (mask > 0) & (np.arange(H)[:, None] >= first_diff_y)
-                                lower_frac = int(lower_mask.sum()) / float(total)
-                                if lower_frac >= 0.015:
-                                    logger.info(
-                                        "clothing_parser: splitting composite outfit '%s' at hemline y=%d into Top and Skirt (lower_frac=%.4f)",
-                                        k, first_diff_y, lower_frac,
-                                    )
-                                    upper_mask = np.where(np.arange(H)[:, None] < first_diff_y, mask, np.uint8(0))
-                                    it["category"] = "top"
-                                    it["label"] = "Top"
-                                    it["mask"] = upper_mask
-
-                                    # Merge into existing skirt if present, or create Skirt item
-                                    existing_skirt_keys = [sk for sk in by_label if sk.lower().startswith("skirt")]
-                                    if existing_skirt_keys:
-                                        target_sk_key = existing_skirt_keys[0]
-                                        by_label[target_sk_key]["mask"] = np.maximum(by_label[target_sk_key]["mask"], lower_mask)
-                                        by_label[target_sk_key]["label"] = "Skirt"
-                                        by_label[target_sk_key]["category"] = "bottom"
-                                    else:
-                                        by_label["Skirt"] = {
-                                            "label": "Skirt",
-                                            "category": "bottom",
-                                            "score": float(it.get("score", 0.95)),
-                                            "mask": lower_mask,
-                                        }
-
-    # 2e-skirt) Collapse all Skirt pieces into a single "Skirt" item
-    all_skirt_keys = [k for k in list(by_label.keys()) if k.lower().startswith("skirt")]
-    if len(all_skirt_keys) > 1:
-        primary_sk = max(all_skirt_keys, key=lambda k: int(by_label[k]["mask"].sum()) if by_label[k].get("mask") is not None else 0)
-        for other_sk in all_skirt_keys:
-            if other_sk != primary_sk and by_label[other_sk].get("mask") is not None:
-                by_label[primary_sk]["mask"] = np.maximum(by_label[primary_sk]["mask"], by_label[other_sk]["mask"])
-                del by_label[other_sk]
-        by_label[primary_sk]["label"] = "Skirt"
-        by_label[primary_sk]["category"] = "bottom"
-
-    # 2f) Upper / Bottom Outfit Separation:
-    # In an outfit where both an upper garment (top/outerwear or SegFormer 'dress'/tunic)
-    # AND a distinct bottom garment (skirt / pants / shorts) are present:
-    # 1. A person wearing a skirt or pants is NOT wearing a one-piece dress; any upper garment
-    #    detected as 'dress' is an upper garment (top / tunic / kurta / kameez) worn over the bottom!
-    #    Demote category to 'top' and label to 'Top'.
-    # 2. SegFormer's upper-body mask frequently leaks down into the lower garment's territory
-    #    (or was trained to predict 'dress' all the way down to mid-calf).
-    #    Excise all bottom garment pixels from the upper garment mask so the upper crop and
-    #    alpha matte terminate cleanly at the upper garment's hem!
-    bottom_masks = [
-        it["mask"] for it in by_label.values()
-        if (it.get("category") == "bottom" or any(p in (it.get("label") or "").lower() for p in ("skirt", "pant", "trouser", "jean", "short", "chino", "legging")))
-        and it.get("mask") is not None
-    ]
-    if bottom_masks:
-        combined_bottom = np.maximum.reduce(bottom_masks)
-        bot_ys = np.where(combined_bottom > 0)[0]
-        bot_min_y = int(bot_ys.min()) if len(bot_ys) > 0 else None
-
-        for k, it in list(by_label.items()):
-            cat = (it.get("category") or "").lower()
-            lbl = (it.get("label") or "").lower()
-            if cat in ("top", "outerwear", "dress") and it.get("mask") is not None:
-                if cat == "dress" or "dress" in lbl:
-                    it["category"] = "top"
-                    if "dress" in lbl:
-                        it["label"] = "Top"
-                it["mask"] = np.where(combined_bottom > 0, np.uint8(0), it["mask"])
-                if bot_min_y is not None:
-                    # Upper garment must never extend past the top edge of the bottom garment
-                    it["mask"] = np.where(np.arange(H)[:, None] > bot_min_y + 3, np.uint8(0), it["mask"])
 
     # 3) Finalise: compute bboxes from merged masks, emit canonical dict.
     out: list[dict[str, Any]] = []
@@ -2184,10 +1926,6 @@ async def parse_garments(
             upper_human_ids = arm_class_ids | head_class_ids
             if upper_human_ids and np.isin(class_mask, list(upper_human_ids)).any():
                 arm_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
-                if skin_mask_found is not None:
-                    y_grid = np.arange(H)[:, None]
-                    is_waist_or_arm = y_grid <= int(0.55 * H)
-                    arm_m = (arm_m | (skin_mask_found & is_waist_or_arm)).astype(np.uint8)
                 if arm_m.any() and int(arm_m.sum()) >= 80:
                     from scipy import ndimage
                     h_h, h_w = arm_m.shape
@@ -2196,10 +1934,6 @@ async def parse_garments(
                     garment_human_mask = arm_m
                 else:
                     garment_human_mask = None
-            elif skin_mask_found is not None:
-                y_grid = np.arange(H)[:, None]
-                is_waist_or_arm = y_grid <= int(0.55 * H)
-                garment_human_mask = (skin_mask_found & is_waist_or_arm).astype(np.uint8)
             else:
                 garment_human_mask = None
         # 3. Tops, outerwear, dresses: head + arms (never legs)
@@ -2207,8 +1941,6 @@ async def parse_garments(
             upper_human_ids = head_class_ids | arm_class_ids
             if upper_human_ids and np.isin(class_mask, list(upper_human_ids)).any():
                 up_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
-                if skin_mask_found is not None:
-                    up_m = (up_m | skin_mask_found).astype(np.uint8)
                 if up_m.any() and int(up_m.sum()) >= 80:
                     from scipy import ndimage
                     h_h, h_w = up_m.shape
@@ -2216,23 +1948,7 @@ async def parse_garments(
                     up_m = (ndimage.gaussian_filter(up_m.astype(float), sigma=smooth_sigma) >= 0.5).astype(np.uint8)
                     garment_human_mask = up_m
                 else:
-                    garment_human_mask = skin_mask_found
-            elif skin_mask_found is not None:
-                garment_human_mask = skin_mask_found.copy()
-                if has_head and ymin > int(0.03 * H):
-                    head_box = np.zeros((H, W), dtype=np.uint8)
-                    head_x1 = max(0, xmin - int(0.15 * (xmax - xmin)))
-                    head_x2 = min(W, xmax + int(0.15 * (xmax - xmin)))
-                    head_box[0:ymin, head_x1:head_x2] = 1
-                    garment_human_mask = (garment_human_mask | (head_box & (class_mask == 0))).astype(np.uint8)
-            elif has_head and ymin > int(0.03 * H):
-                # When SegFormer model has no human classes (e.g. sayeed99/segformer_b3_clothes),
-                # synthesize head mask directly above top collar so the face/beard/hair are excised!
-                head_box = np.zeros((H, W), dtype=np.uint8)
-                head_x1 = max(0, xmin - int(0.15 * (xmax - xmin)))
-                head_x2 = min(W, xmax + int(0.15 * (xmax - xmin)))
-                head_box[0:ymin, head_x1:head_x2] = 1
-                garment_human_mask = (head_box & (class_mask == 0)).astype(np.uint8)
+                    garment_human_mask = None
             else:
                 garment_human_mask = None
         else:
@@ -2449,12 +2165,6 @@ def apply_alpha_intersection(
     # SegFormer acts as a coarse semantic envelope; rembg provides studio-grade alpha boundaries.
     norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
     norm_lbl = (label or "").lower().replace(" ", "").replace("-", "")
-    if not norm_cat and norm_lbl:
-        norm_cat = (_get_label_category(norm_lbl) or "").lower().replace(" ", "").replace("-", "")
-    is_upper = bool(
-        norm_cat in {"top", "outerwear", "suit", "dress", "fullbody"}
-        or any(w in norm_lbl for w in ("top", "shirt", "blouse", "kurta", "jacket", "coat", "sweater", "dress", "tunic", "hoodie", "cardigan", "vest"))
-    )
     is_eyewear = bool(
         norm_cat in {"sunglasses", "glasses", "eyewear"}
         or norm_lbl in {"sunglasses", "glasses", "eyewear"}
@@ -2465,18 +2175,6 @@ def apply_alpha_intersection(
         norm_cat in {"footwear", "shoes"}
         or any(w in norm_lbl for w in ("shoe", "boot", "sneaker", "sandal", "slipper", "clog", "heel", "flopper", "slides"))
     )
-    is_acc = bool(
-        norm_cat in {"accessory", "accessories", "headwear", "bag", "belt", "jewelry"}
-        or any(w in norm_lbl for w in ("hat", "cap", "beanie", "bag", "belt", "necklace", "watch", "bracelet", "scarf", "tie", "gloves", "wallet"))
-        or any(w in str(category).lower() for w in ("accessory", "accessories", "bag", "belt", "jewelry", "חגור", "תיק", "כובע", "צעיף"))
-    )
-    if is_acc and not is_eyewear:
-        # Accessories (belts, bags, scarves, hats, jewelry, watches) are packshots or flat-lays
-        # with no body/limb occlusion. SegFormer human body parsing and skin chrominance filtering
-        # must NEVER touch accessories, as rembg provides the complete studio cutout and SegFormer
-        # or skin filtering would fracture or chew leather, buckles, and straps.
-        return matted_png_bytes
-
     _dilate_pct = _resolve_dilate_pct_for_category(category, label=label)
     if is_eyewear:
         _dilate_pct = min(_dilate_pct, 0.015)
@@ -2541,6 +2239,8 @@ def apply_alpha_intersection(
         norm_cat in {"accessory", "headwear", "bag", "belt", "jewelry"}
         or any(w in norm_lbl for w in ("hat", "cap", "beanie", "bag", "belt", "necklace", "watch", "bracelet"))
     )
+    if is_acc and not is_eyewear:
+        return matted_png_bytes
 
     # 1. Smooth, anti-aliased human mask subtraction (face, hair, skin, arms, legs)
     if has_human:
@@ -2560,14 +2260,6 @@ def apply_alpha_intersection(
                 human_clean = (human_resized.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
             else:
                 human_clean = human_resized
-
-            # Footwear protection rule:
-            # In footwear crops, the leg/shin is strictly in the upper portion (y <= 0.40 * Hc).
-            # Ankle straps, T-straps, buckles, and heels live in the lower portion (y > 0.40 * Hc).
-            # Restricting human leg subtraction to y <= 0.40 * Hc prevents delicate straps and buckles from being eaten!
-            if is_footwear:
-                y_coords_fw = np.arange(Hc)[:, None]
-                human_clean = np.where(y_coords_fw <= int(0.40 * Hc), human_clean, np.uint8(0))
 
             # Anti-aliased Gaussian blur on subtraction mask
             human_blur = Image.fromarray(human_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
@@ -2589,107 +2281,56 @@ def apply_alpha_intersection(
 
     # 2. Human skin chrominance filter outside confident garment body
     # (Excises bare neck skin, hanging hands next to jacket hems, fingers on waistbands, bare legs)
-    try:
-        r = arr[:, :, 0].astype(float)
-        g = arr[:, :, 1].astype(float)
-        b = arr[:, :, 2].astype(float)
-        cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
-        cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
-        is_skin = (
-            (cr >= 133.0) & (cr <= 173.0) &
-            (cb >= 88.0) & (cb <= 127.0) &
-            (r > g) & (g > b) &
-            ((r - g) >= 12.0) &
-            ((g - b) <= 42.0) &
-            (new_alpha > 30)
-        )
-        # Check if garment fabric itself is skin/nude toned
-        is_garment_nude = False
-        if garment_protect is not None and garment_protect.sum() > 50:
-            core_pts = garment_protect
-            g_r = float(np.median(arr[core_pts, 0]))
-            g_g = float(np.median(arr[core_pts, 1]))
-            g_b = float(np.median(arr[core_pts, 2]))
-            g_cr = 128.0 + 0.5 * g_r - 0.418688 * g_g - 0.081312 * g_b
-            g_cb = 128.0 - 0.168736 * g_r - 0.331264 * g_g + 0.5 * g_b
-            is_garment_nude = bool(
-                (133.0 <= g_cr <= 173.0) and
-                (88.0 <= g_cb <= 127.0) and
-                (g_r > g_g > g_b) and
-                ((g_r - g_g) >= 12.0) and
-                ((g_g - g_b) <= 42.0)
+    if not is_single_item or is_eyewear or is_acc:
+        try:
+            r = arr[:, :, 0].astype(float)
+            g = arr[:, :, 1].astype(float)
+            b = arr[:, :, 2].astype(float)
+            cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
+            cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
+            is_skin = (
+                (cr >= 133.0) & (cr <= 173.0) &
+                (cb >= 77.0) & (cb <= 127.0) &
+                (r > g) & (g > b) &
+                ((r - g) >= 12.0) &
+                (new_alpha > 30)
             )
-
-        y_coords = np.arange(Hc)[:, None]
-        x_coords = np.arange(Wc)[None, :]
-        is_lateral = (x_coords <= (0.38 * Wc)) | (x_coords >= (0.62 * Wc))
-        is_hand_zone = (y_coords >= (0.55 * Hc)) | ((y_coords >= (0.42 * Hc)) & is_lateral)
-
-        # Footwear protection: skip skin chrominance subtraction below y > 0.40 * Hc for footwear
-        if is_footwear:
-            is_skin = is_skin & (y_coords <= int(0.40 * Hc))
-        elif is_bottom and mask_resized is not None:
-            # Hands/wrists resting on the waistband (top 28% of pants crop)
-            is_waist_zone = y_coords <= (0.28 * Hc)
-            is_skin = is_skin & ((mask_resized <= 40) | is_waist_zone)
-        elif (norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"}) and mask_resized is not None:
-            # Hands hanging next to jacket hems or protruding from sleeve cuffs
-            is_skin = is_skin & ((mask_resized <= 40) | is_hand_zone)
-        else:
-            is_skin = np.zeros_like(is_skin, dtype=bool)
-
-        # Confident garment fabric must NEVER be classified as skin or excised.
-        # On non-nude garments, hands protruding from sleeve cuffs / waistbands are not shielded by garment_protect.
-        if garment_protect is not None and garment_protect.any():
-            limb_shield = is_hand_zone if norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"} else (is_waist_zone if is_bottom else False)
-            protect_skin = garment_protect if is_garment_nude else (garment_protect & (~limb_shield))
-            is_skin = is_skin & (~protect_skin)
-
-        # In hand zone / waistband: any skin detection represents human limbs/hands/wrists/fingers.
-        # Morphological dilation fills anti-aliased finger edges, knuckles, nailbeds, and creases,
-        # preventing translucent ghost hands from surviving the Gaussian blur.
-        hand_excise = None
-        if not is_garment_nude and is_skin.any():
-            from scipy import ndimage
-            target_limb_zone = is_hand_zone if norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"} else (is_waist_zone if is_bottom else is_hand_zone)
-            hand_skin_bin = is_skin & target_limb_zone
-            if garment_protect is not None and garment_protect.any():
-                hand_skin_bin = hand_skin_bin & (~garment_protect)
-            if hand_skin_bin.any():
-                hand_excise = ndimage.binary_dilation(hand_skin_bin, structure=np.ones((5, 5), dtype=bool), iterations=2) & target_limb_zone
+            if is_bottom and mask_resized is not None:
+                # Hands/wrists resting on the waistband (top 28% of pants crop)
+                y_coords = np.arange(Hc)[:, None]
+                is_waist_zone = y_coords <= (0.28 * Hc)
+                is_skin = is_skin & ((mask_resized <= 40) | is_waist_zone)
+            elif (norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"}) and mask_resized is not None:
+                # Hands hanging next to jacket hems (bottom 25% of jacket crop)
+                y_coords = np.arange(Hc)[:, None]
+                is_hem_zone = y_coords >= (0.75 * Hc)
+                is_skin = is_skin & ((mask_resized <= 40) | is_hem_zone)
+            if is_skin.any():
+                skin_u8 = (is_skin * 255).astype(np.uint8)
                 if garment_protect is not None and garment_protect.any():
-                    hand_excise = hand_excise & (~garment_protect)
+                    skin_clean = np.where(garment_protect, np.uint8(0), skin_u8)
+                elif garment_weight is not None:
+                    skin_clean = (skin_u8.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
+                else:
+                    skin_clean = skin_u8
 
-        if is_skin.any():
-            skin_u8 = (is_skin * 255).astype(np.uint8)
-            effective_protect = garment_protect
-            if effective_protect is not None and effective_protect.any():
-                skin_clean = np.where(effective_protect, np.uint8(0), skin_u8)
-            elif garment_weight is not None:
-                effective_weight = np.where(hand_excise if (hand_excise is not None and hand_excise.any()) else is_skin, 0.0, garment_weight) if not is_garment_nude else garment_weight
-                skin_clean = (skin_u8.astype(float) * (1.0 - effective_weight)).round().astype(np.uint8)
-            else:
-                skin_clean = skin_u8
-
-            skin_blur = Image.fromarray(skin_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
-            skin_factor = np.array(skin_blur, dtype=float) / 255.0
-            sub_skin = np.clip(1.0 - skin_factor, 0.0, 1.0)
-            if effective_protect is not None and effective_protect.any():
-                from scipy import ndimage
-                protect_smooth = ndimage.gaussian_filter(effective_protect.astype(float), sigma=1.2)
-                sub_skin = np.clip(sub_skin * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
-            new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
-            if hand_excise is not None and hand_excise.any():
-                new_alpha = np.where(hand_excise, np.uint8(0), new_alpha)
-    except Exception as exc:  # noqa: BLE001
-        logger.info(
-            "apply_alpha_intersection: skin-chrominance subtraction failed: %s",
-            repr(exc)[:120],
-        )
+                skin_blur = Image.fromarray(skin_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
+                skin_factor = np.array(skin_blur, dtype=float) / 255.0
+                sub_skin = np.clip(1.0 - skin_factor, 0.0, 1.0)
+                if garment_protect is not None and garment_protect.any():
+                    from scipy import ndimage
+                    protect_smooth = ndimage.gaussian_filter(garment_protect.astype(float), sigma=1.2)
+                    sub_skin = np.clip(sub_skin * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
+                new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
+        except Exception as exc:  # noqa: BLE001
+            logger.info(
+                "apply_alpha_intersection: skin-chrominance subtraction failed: %s",
+                repr(exc)[:120],
+            )
 
     # 2b. Upper garment neck/head trimming:
     # A human head, neck, chin, or throat must NEVER float above collars or lapels of tops/outerwear/suits!
-    if norm_cat in {"top", "outerwear", "suit", "dress", "fullbody"} and mask_resized is not None:
+    if norm_cat in {"top", "outerwear", "suit", "dress", "fullbody"} and not is_single_item and mask_resized is not None:
         try:
             garment_pts = np.where(mask_resized > 40)
             if len(garment_pts[0]) > 0:
@@ -2697,7 +2338,7 @@ def apply_alpha_intersection(
                 apex_y = int(ys.min())
                 # Anything above the garment apex is strictly head / neck / background
                 if apex_y > 2:
-                    new_alpha[:min(Hc, apex_y + 2), :] = 0
+                    new_alpha[:max(0, apex_y - 2), :] = 0
 
                 # Column-wise contour trimming along the central neckline/collar notch
                 col_min_y = np.full(Wc, Hc, dtype=int)
@@ -2734,16 +2375,10 @@ def apply_alpha_intersection(
             else:
                 other_resized = norm_other
 
-            # Protect garment body so adjacent items never bite into or chew the target garment's fabric.
-            # CRITICAL: protect_zone must NEVER shield another garment's detected area (> 40)
-            # from being subtracted! If an adjacent item (e.g. skirt/pants under a top, or shoes under pants)
-            # is detected, its pixels belong to that adjacent item.
-            effective_protect = garment_protect if (garment_protect is not None and garment_protect.any()) else garment_core
-            if effective_protect is not None and effective_protect.any():
-                effective_protect = effective_protect & (other_resized <= 40)
-
-            if effective_protect is not None and effective_protect.any():
-                other_clean = np.where(effective_protect, np.uint8(0), other_resized)
+            # Protect garment body so adjacent items never bite into or chew the target garment's fabric
+            protect_zone = garment_protect if (garment_protect is not None and garment_protect.any()) else garment_core
+            if protect_zone is not None and protect_zone.any():
+                other_clean = np.where(protect_zone, np.uint8(0), other_resized)
             elif garment_weight is not None:
                 other_clean = (other_resized.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
             else:
@@ -2752,9 +2387,9 @@ def apply_alpha_intersection(
             other_blur = Image.fromarray(other_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
             other_factor = np.array(other_blur, dtype=float) / 255.0
             sub_other = np.clip(1.0 - other_factor, 0.0, 1.0)
-            if effective_protect is not None and effective_protect.any():
+            if protect_zone is not None and protect_zone.any():
                 from scipy import ndimage
-                protect_smooth = ndimage.gaussian_filter(effective_protect.astype(float), sigma=1.2)
+                protect_smooth = ndimage.gaussian_filter(protect_zone.astype(float), sigma=1.2)
                 sub_other = np.clip(sub_other * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_other).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
@@ -2800,18 +2435,13 @@ def apply_alpha_intersection(
     # must never be bitten away by background matting salience dropouts!
     # To prevent staircases and sharp cliffs, we smoothly feather the interior core mask with Gaussian blur.
     if garment_core is not None and garment_core.any():
-        effective_core = garment_core & (~hand_excise) if (not is_garment_nude and 'hand_excise' in locals() and hand_excise is not None and hand_excise.any()) else garment_core
-        if other_mask is not None and 'other_resized' in locals() and other_resized is not None and other_resized.any():
-            effective_core = effective_core & (other_resized <= 40)
         if is_single_item:
             from scipy import ndimage
             filled_alpha = ndimage.binary_fill_holes(new_alpha > 20)
-            effective_core = effective_core & filled_alpha
+            effective_core = garment_core & filled_alpha
+        else:
+            effective_core = garment_core
         core_u8 = (effective_core * 255).astype(np.uint8)
-        if 'is_skin' in locals() and is_skin is not None and is_skin.any() and not is_garment_nude:
-            core_u8 = np.where(is_skin, np.uint8(0), core_u8)
-        if 'hand_excise' in locals() and hand_excise is not None and hand_excise.any() and not is_garment_nude:
-            core_u8 = np.where(hand_excise, np.uint8(0), core_u8)
         if norm_cat in {"top", "outerwear", "dress"}:
             # Preserve crew-neck collar opening at top-center of tops if transparent in input
             non_zero_rows = np.where(mask_resized > 50)[0]
@@ -2834,152 +2464,6 @@ def apply_alpha_intersection(
         target_core_alpha = 250.0 if (norm_cat in {"bottom", "pants", "skirt", "fullbody", "suit"} or not is_multi_segment) else 235.0
         healed_alpha = np.maximum(new_alpha.astype(float), feather_factor * target_core_alpha)
         new_alpha = np.clip(healed_alpha, 0, 255).astype(np.uint8)
-        if 'hand_excise' in locals() and hand_excise is not None and hand_excise.any() and not is_garment_nude:
-            new_alpha = np.where(hand_excise, np.uint8(0), new_alpha)
-
-    # 2c. Upper garment hemline cutoff (multi-item outfits):
-    # If this upper garment was worn over a lower garment (skirt, pants, palazzo),
-    # ensure no skirt/pants fabric below the garment hem leaks into this cutout.
-    # Scan from 55% of height down for a sharp color transition away from the upper torso color.
-    if is_upper and not is_single_item:
-        try:
-            y_coords_arr = np.arange(Hc)[:, None]
-            torso_rows = (new_alpha > 100) & (y_coords_arr >= int(0.25 * Hc)) & (y_coords_arr <= int(0.52 * Hc))
-            if torso_rows.sum() >= 50:
-                t_r = float(np.median(arr[torso_rows, 0]))
-                t_g = float(np.median(arr[torso_rows, 1]))
-                t_b = float(np.median(arr[torso_rows, 2]))
-                t_rb = t_r - t_b
-
-                hem_cutoff_y = None
-                for y in range(int(0.55 * Hc), Hc):
-                    row_m = (new_alpha[y] > 50)
-                    if row_m.sum() >= 20:
-                        r_m = float(np.median(arr[y, row_m, 0]))
-                        g_m = float(np.median(arr[y, row_m, 1]))
-                        b_m = float(np.median(arr[y, row_m, 2]))
-                        diff = float(np.sqrt((r_m - t_r)**2 + (g_m - t_g)**2 + (b_m - t_b)**2))
-                        rb = r_m - b_m
-                        if diff >= 55.0 or (t_rb >= 50.0 and rb <= 35.0):
-                            hem_cutoff_y = y
-                            break
-                if hem_cutoff_y is not None and (Hc - hem_cutoff_y) >= max(10, int(0.05 * Hc)):
-                    new_alpha[hem_cutoff_y + 3:, :] = 0
-        except Exception as _hem_exc:
-            logger.debug("apply_alpha_intersection hemline cutoff: %s", _hem_exc)
-
-    # 2c-bottom. Non-destructive top-edge chromatic bleed recoloring on bottom garments:
-    # When a bright warm upper garment hem (e.g. mustard-yellow kurta) overlaps the top 16%
-    # of a neutral/ivory skirt or pants cutout, recolor ONLY the RGB channels of those bleed
-    # pixels from the clean skirt fabric directly below in the same column — NEVER modifying
-    # new_alpha so the smooth SegFormer/rembg silhouette remains 100% intact.
-    if is_bottom and not is_single_item:
-        try:
-            from scipy.ndimage import binary_dilation as _bd_bot
-            b_zone = (new_alpha[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc)] > 150)
-            if b_zone.sum() >= 100:
-                b_rgb = arr[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc), :3][b_zone].astype(np.float32)
-                b_r = float(np.median(b_rgb[:, 0]))
-                b_g = float(np.median(b_rgb[:, 1]))
-                b_b = float(np.median(b_rgb[:, 2]))
-                b_rb = b_r - b_b
-                b_chroma = float(max(b_r, b_g, b_b) - min(b_r, b_g, b_b))
-                if b_chroma <= 35.0 and b_rb <= 32.0:
-                    y_lim = max(4, int(0.16 * Hc))
-                    top_slice = arr[:y_lim, :, :3].astype(np.float32)
-                    px_rb = top_slice[:, :, 0] - top_slice[:, :, 2]
-                    bleed_px = (new_alpha[:y_lim, :] > 5) & (px_rb >= max(36.0, b_rb + 10.0))
-                    if bleed_px.any():
-                        bleed_px = _bd_bot(bleed_px, structure=np.ones((5, 5), dtype=bool)) & (new_alpha[:y_lim, :] > 0)
-                        ref_y1, ref_y2 = y_lim, min(Hc, int(0.42 * Hc))
-                        for x in range(Wc):
-                            bx = np.where(bleed_px[:, x])[0]
-                            if len(bx) > 0:
-                                r0 = min(Hc - 1, int(bx.max()) + 1)
-                                r1 = min(Hc, r0 + 6)
-                                rep_rgb = np.median(arr[r0:r1, x, :3], axis=0).astype(np.uint8)
-                                arr[bx, x, :3] = rep_rgb
-        except Exception as _bot_bleed_exc:
-            logger.debug("apply_alpha_intersection bottom top-edge recolor: %s", _bot_bleed_exc)
-
-    # 2d. Lateral hand-excision hook & fingertip-rim cleanup on upper garments:
-    # Remove isolated thin lateral hooks left beside an excised hand without EDT bridging.
-    if is_upper and not is_single_item:
-        try:
-            from scipy.ndimage import (
-                binary_dilation as _bd_up,
-                binary_opening as _bo_up,
-                distance_transform_edt as _edt_up,
-                gaussian_filter as _gf_up,
-                label as _lbl_up,
-            )
-            y_idx, x_idx = np.indices((Hc, Wc))
-            torso_bin = new_alpha > 40
-            open_h = max(9, int(0.022 * Hc))
-            open_w = max(15, int(0.042 * Wc))
-            smooth_torso = _bo_up(torso_bin, structure=np.ones((open_h, open_w), dtype=bool))
-            hook_zone = (y_idx >= int(0.64 * Hc)) & (y_idx <= int(0.74 * Hc)) & ((x_idx <= int(0.35 * Wc)) | (x_idx >= int(0.65 * Wc)))
-            if 'hem_cutoff_y' in locals() and hem_cutoff_y is not None:
-                hook_zone = hook_zone & (y_idx <= hem_cutoff_y - 12)
-            protrusions = torso_bin & (~smooth_torso) & hook_zone
-            if protrusions.any():
-                protrusions_dil = _bd_up(protrusions, iterations=1) & hook_zone
-                new_alpha[protrusions_dil] = 0
-            if has_human and 'human_resized' in locals() and human_resized is not None and 't_rb' in locals() and t_rb >= 45.0:
-                hand_rim = _bd_up(human_resized > 90, iterations=4) & (y_idx >= int(0.55 * Hc)) & (y_idx <= int(0.78 * Hc))
-                px_rb = arr[:, :, 0].astype(np.float32) - arr[:, :, 2].astype(np.float32)
-                px_luma = 0.299 * arr[:, :, 0] + 0.587 * arr[:, :, 1] + 0.114 * arr[:, :, 2]
-                finger_halo = hand_rim & (new_alpha > 0) & ((px_rb < 38.0) | (px_luma < 95.0))
-                if finger_halo.any():
-                    new_alpha[_bd_up(finger_halo, iterations=1) & hand_rim] = 0
-            # Seamlessly inpaint compact enclosed interior hand islands resting on solid kaftans/dresses
-            if has_human and not is_garment_nude and 't_r' in locals():
-                r_f = arr[:, :, 0].astype(np.float32)
-                g_f = arr[:, :, 1].astype(np.float32)
-                b_f = arr[:, :, 2].astype(np.float32)
-                luma_f = 0.299 * r_f + 0.587 * g_f + 0.114 * b_f
-                cr_f = 128.0 + 0.5 * r_f - 0.418688 * g_f - 0.081312 * b_f
-                cb_f = 128.0 - 0.168736 * r_f - 0.331264 * g_f + 0.5 * b_f
-                px_diff = np.sqrt((r_f - t_r) ** 2 + (g_f - t_g) ** 2 + (b_f - t_b) ** 2)
-                mid_zone = (
-                    (y_idx >= int(0.25 * Hc)) & (y_idx <= int(0.55 * Hc))
-                    & (x_idx >= int(0.25 * Wc)) & (x_idx <= int(0.75 * Wc))
-                )
-                hand_cand = (
-                    (new_alpha > 200) & mid_zone
-                    & (cr_f >= 136.0) & (cr_f <= 172.0)
-                    & (cb_f >= 92.0) & (cb_f <= 124.0)
-                    & (r_f > g_f) & (g_f > b_f)
-                    & ((r_f - g_f) >= 25.0) & ((g_f - b_f) >= 12.0) & ((g_f - b_f) <= 38.0)
-                    & (luma_f >= 55.0) & (luma_f <= 145.0)
-                    & (px_diff >= 75.0)
-                )
-                if int(hand_cand.sum()) >= 150:
-                    labeled_h, n_h = _lbl_up(hand_cand)
-                    interior_hand = np.zeros_like(hand_cand)
-                    for cid in range(1, n_h + 1):
-                        comp = (labeled_h == cid)
-                        csum = int(comp.sum())
-                        if 150 <= csum <= 2500:
-                            interior_hand |= comp
-                    if interior_hand.any():
-                        hand_dil = _bd_up(interior_hand, structure=np.ones((9, 9), dtype=bool)) & (new_alpha > 150)
-                        clean_garment = (new_alpha > 200) & (~hand_dil) & (px_diff <= 40.0)
-                        if clean_garment.any():
-                            _, nearest_idx = _edt_up(~clean_garment, return_indices=True)
-                            ny, nx = nearest_idx[0], nearest_idx[1]
-                            inpainted = arr[:, :, :3].copy().astype(np.float32)
-                            for c in range(3):
-                                ch = inpainted[:, :, c]
-                                ch[hand_dil] = ch[ny[hand_dil], nx[hand_dil]]
-                                inpainted[:, :, c] = _gf_up(ch, sigma=2.5)
-                            blend_w = _gf_up(hand_dil.astype(np.float32), sigma=2.0)[:, :, None]
-                            arr[:, :, :3] = np.clip(
-                                arr[:, :, :3].astype(np.float32) * (1.0 - blend_w) + inpainted * blend_w,
-                                0, 255,
-                            ).astype(np.uint8)
-        except Exception as _flank_exc:
-            logger.debug("apply_alpha_intersection flank cleanup: %s", _flank_exc)
 
     # Note: SegFormer's coarse mask must NEVER force transparent background pixels (alpha < 128)
     # to 255. Rembg provides studio-grade alpha boundaries; forcing opaque holes creates

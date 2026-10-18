@@ -3297,27 +3297,47 @@ def test_enforce_segformer_category_kurta_is_top():
     assert fixed["sub_category"] == "Kurta"
 
 
+def test_maxi_skirt_fragmented_into_pants_and_skirt_merges_on_human_model():
+    """Regression test for 0010.jpg: when SegFormer classifies a grey maxi skirt on a human
+    model primarily as 'pants' and an interior patch as 'skirt', _suppress_overlapping_garments
+    must NOT treat 'skirt' + 'pants' (both category='bottom') as a layered outfit and must merge
+    them into a single bottom detection so other_mask does not punch a jigsaw hole out of the skirt."""
+    from app.services.clothing_parser import _suppress_overlapping_garments
 
+    H, W = 785, 523
+    pants_mask = np.zeros((H, W), dtype=np.uint8)
+    pants_mask[370:710, 165:308] = 1
+    # Interior patch classified as skirt
+    skirt_mask = np.zeros((H, W), dtype=np.uint8)
+    skirt_mask[415:520, 225:298] = 1
+    pants_mask[415:520, 225:298] = 0
 
+    by_label = {
+        "top, t-shirt, sweatshirt": {
+            "label": "top, t-shirt, sweatshirt",
+            "category": "top",
+            "score": 0.95,
+            "mask": np.ones((H, W), dtype=np.uint8) * 0,
+        },
+        "pants": {
+            "label": "pants",
+            "category": "bottom",
+            "score": 0.95,
+            "mask": pants_mask,
+        },
+        "skirt": {
+            "label": "skirt",
+            "category": "bottom",
+            "score": 0.95,
+            "mask": skirt_mask,
+        },
+    }
+    by_label["top, t-shirt, sweatshirt"]["mask"][200:370, 180:300] = 1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    res = _suppress_overlapping_garments(by_label, has_human=True, count_hint=None)
+    bottom_items = [v for v in res.values() if v.get("category") == "bottom"]
+    assert len(bottom_items) == 1, f"Expected 1 merged bottom item, got {len(bottom_items)}: {list(res.keys())}"
+    merged_mask = bottom_items[0]["mask"]
+    assert int(merged_mask[415:520, 225:298].sum()) == (520 - 415) * (298 - 225)
 
 

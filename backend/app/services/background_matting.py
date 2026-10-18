@@ -247,9 +247,6 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
             full_rgba = original.convert("RGBA")
             full_rgba.putalpha(alpha_full)
             full_rgba = drop_disconnected_islands(full_rgba, min_area_ratio=0.01)
-            bbox = full_rgba.getbbox()
-            if bbox and (bbox[2] - bbox[0] > 10) and (bbox[3] - bbox[1] > 10):
-                full_rgba = full_rgba.crop(bbox)
             buf = io.BytesIO()
             full_rgba.save(buf, format="PNG", optimize=True)
             out = buf.getvalue()
@@ -271,14 +268,6 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
                     opaque_ratio,
                 )
                 return None
-            # Ensure output is tightly cropped to its non-transparent bounding box
-            bbox = im.getbbox()
-            if bbox and (bbox[2] - bbox[0] > 10) and (bbox[3] - bbox[1] > 10):
-                if bbox != (0, 0, im.width, im.height):
-                    cropped = im.crop(bbox)
-                    buf = io.BytesIO()
-                    cropped.save(buf, format="PNG", optimize=True)
-                    out = buf.getvalue()
         except Exception:  # noqa: BLE001
             # If we can't inspect it, trust the bytes and return.
             pass
