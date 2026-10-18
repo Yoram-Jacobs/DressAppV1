@@ -1167,7 +1167,7 @@ export default function AddItem() {
   const isSuitcase = searchParams.get("from") === "suitcase";
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
-  const [pipelineMode, setPipelineMode] = useState("auto"); // "auto" | "single" | "multi" | "mass"
+  const [pipelineMode, setPipelineMode] = useState("multi"); // "single" | "multi" | "mass"
 
   const handleSelectPipelineMode = (nextMode) => {
     if (nextMode === "mass" && !canAccessMassUpload) {
@@ -4538,42 +4538,7 @@ export default function AddItem() {
                       </Badge>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {/* Auto-Detect (Mixed) */}
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("auto")}
-                      data-testid="pipeline-mode-auto"
-                      className={cn(
-                        "flex flex-col items-start text-start p-3.5 rounded-xl border transition-all duration-200 cursor-pointer",
-                        pipelineMode === "auto"
-                          ? "border-primary-brand bg-primary-shadow/60 shadow-xs ring-1 ring-primary-brand/30"
-                          : "border-border/60 bg-background/40 hover:border-primary-brand/40 hover:bg-primary-shadow/20",
-                      )}
-                    >
-                      <div className="flex items-center gap-2 w-full mb-1">
-                        <Sparkles
-                          className={cn(
-                            "h-4 w-4 shrink-0",
-                            pipelineMode === "auto"
-                              ? "text-primary-brand"
-                              : "text-text-brand",
-                          )}
-                        />
-                        <span className="text-[13px] font-bold text-dark-brand">
-                          {t("addItem.pipeline.autoTitle", {
-                            defaultValue: "Auto-Detect",
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-text-brand leading-relaxed">
-                        {t("addItem.pipeline.autoDesc", {
-                          defaultValue:
-                            "Automatically routes single items, worn outfits, and closet piles simultaneously.",
-                        })}
-                      </p>
-                    </button>
-
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {/* Single Garment */}
                     <button
                       type="button"
@@ -5619,20 +5584,6 @@ export default function AddItem() {
                     className="inline-flex items-center gap-1 bg-secondary/30 p-1 rounded-xl border border-border/50"
                     data-testid="add-item-pipeline-compact"
                   >
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("auto")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer",
-                        pipelineMode === "auto"
-                          ? "bg-primary-brand text-white"
-                          : "text-text-brand hover:text-dark-brand",
-                      )}
-                    >
-                      {t("addItem.pipeline.autoTitle", {
-                        defaultValue: "Auto-Detect",
-                      })}
-                    </button>
                     <button
                       type="button"
                       onClick={() => handleSelectPipelineMode("single")}

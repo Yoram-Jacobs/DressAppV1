@@ -485,18 +485,16 @@ def _align_analyses_to_crops(
 
             if c_is_top and i_is_top:
                 score += 120.0
-            elif c_is_top and (i_is_bot or i_is_fw or i_is_head or i_is_belt or i_is_bag):
+            elif c_is_top and (i_is_bot or i_is_fw):
                 score -= 120.0
 
             if c_is_bot and i_is_bot:
                 score += 120.0
-            elif c_is_bot and (i_is_top or i_is_fw or i_is_head or i_is_belt or i_is_bag):
+            elif c_is_bot and (i_is_top or i_is_fw):
                 score -= 120.0
 
             if c_is_head and i_is_head:
                 score += 120.0
-            elif c_is_head and (i_is_top or i_is_bot or i_is_fw or i_is_belt or i_is_bag):
-                score -= 120.0
 
             # General category match
             if c_cat and i_cat and (c_cat in i_cat or i_cat in c_cat):
@@ -823,7 +821,6 @@ class GarmentVisionService:
             # Bbox detector schema is {"items": [...]} — a top-level list
             # means the model misformatted; treat as no detections.
             parsed = {}
-        scene_type = str(parsed.get("scene_type") or "").strip().lower()
         items = parsed.get("items") or []
         if not isinstance(items, list):
             items = []
@@ -853,11 +850,7 @@ class GarmentVisionService:
             ):
                 continue
             clean.append(
-                {"label": label, "kind": kind, "bbox": [int(v) for v in bbox], "_scene_type": scene_type}
-            )
-        if not clean and scene_type == "mass_closet_or_pile":
-            clean.append(
-                {"label": "wardrobe items", "kind": "garment", "bbox": [0, 0, 1000, 1000], "_scene_type": "mass_closet_or_pile"}
+                {"label": label, "kind": kind, "bbox": [int(v) for v in bbox]}
             )
         return clean
 
@@ -875,11 +868,8 @@ class GarmentVisionService:
         parser_hits = await self._detect_via_clothing_parser(image_bytes, count_hint=count_hint)
         gemini_hits: list[dict[str, Any]] = []
 
-        has_wearer = _detect_human_presence(parser_hits) if parser_hits else False
-        should_query_gemini = (
-            (not parser_hits)
-            or (count_hint is not None and count_hint > len(parser_hits))
-            or (not has_wearer)
+        should_query_gemini = (not parser_hits) or (
+            count_hint is not None and count_hint > len(parser_hits)
         )
         if should_query_gemini:
             try:
@@ -901,7 +891,6 @@ class GarmentVisionService:
                 None,
             )
             has_head = any(p.get("has_human_head", False) for p in parser_hits)
-            gem_scene_type = next((gd.get("_scene_type") for gd in gemini_hits if gd.get("_scene_type")), None)
             for gd in gemini_hits:
                 g_bbox = gd.get("bbox")
                 g_label = (gd.get("label") or "garment").lower()
@@ -939,12 +928,7 @@ class GarmentVisionService:
                         "_global_human_mask": global_human,
                         "has_human_head": has_head,
                         "source": "gemini",
-                        "_scene_type": gd.get("_scene_type"),
                     })
-            if gem_scene_type:
-                for m in merged:
-                    if not m.get("_scene_type"):
-                        m["_scene_type"] = gem_scene_type
             before = len(merged)
             clean = _nms_detections(merged)
             logger.info(
@@ -1653,9 +1637,55 @@ class GarmentVisionService:
 
         import numpy as _np
 
-        # Preserve authentic detections, bounding boxes, and masks for each garment.
-        # Multi-garment crops must maintain their natural span, sleeves, collars, and hemlines.
-
+        # Multi-item outfit consistency: if both an upper garment (top/dress/outerwear)
+        # and a bottom garment (bottom/skirt/pants) are present:
+        # 1. Any 'dress' is an upper garment (tunic/kurta/top) worn with bottoms.
+        # 2. Subtract bottom masks from upper garment masks and update bbox so the upper crop
+        #    and alpha envelope never contain the skirt or pants!
+        if not is_single_item and len(useful) > 1 and img_size is not None:
+            bottom_dets = [
+                d for d in useful
+                if ((d.get("kind") or d.get("category") or "").lower() == "bottom"
+                    or any(p in (d.get("label") or "").lower() for p in ("skirt", "pant", "trouser", "jean", "short", "chino", "legging")))
+                and d.get("mask") is not None
+            ]
+            if bottom_dets:
+                combined_bot = _np.maximum.reduce([bd["mask"] for bd in bottom_dets])
+                bot_ymin = min(bd.get("bbox", [1000, 0, 1000, 0])[0] for bd in bottom_dets)
+                bot_mask_ys = _np.where(combined_bot > 0)[0]
+                bot_mask_ymin = int(bot_mask_ys.min()) if len(bot_mask_ys) > 0 else None
+                if bot_mask_ymin is not None:
+                    from scipy.ndimage import grey_erosion as _ge_1d
+                    cb_bin = combined_bot > 0
+                    has_bot_col = cb_bin.any(axis=0)
+                    col_first_y = _np.argmax(cb_bin, axis=0)
+                    col_bot_ymin = _np.where(has_bot_col, col_first_y, combined_bot.shape[0] + 10)
+                    col_bot_ymin = _ge_1d(col_bot_ymin, size=15)
+                else:
+                    col_bot_ymin = None
+                for d in useful:
+                    k = (d.get("kind") or d.get("category") or "").lower()
+                    l = (d.get("label") or "").lower()
+                    if (k in ("dress", "top", "outerwear") or "dress" in l) and d.get("mask") is not None:
+                        if k == "dress" or "dress" in l:
+                            d["kind"] = "top"
+                            d["category"] = "top"
+                            if "dress" in l:
+                                d["label"] = "Top"
+                        d["mask"] = _np.where(combined_bot > 0, _np.uint8(0), d["mask"])
+                        if col_bot_ymin is not None:
+                            d["mask"] = _np.where(_np.arange(d["mask"].shape[0])[:, None] > col_bot_ymin[None, :] + 1, _np.uint8(0), d["mask"])
+                        new_bb = clothing_parser._mask_bbox(d["mask"])
+                        if new_bb is not None:
+                            m_h, m_w = d["mask"].shape[:2]
+                            d["bbox"] = [
+                                int(new_bb[0] / m_h * 1000),
+                                int(new_bb[1] / m_w * 1000),
+                                int(new_bb[2] / m_h * 1000),
+                                int(new_bb[3] / m_w * 1000),
+                            ]
+                        elif bot_ymin < 1000:
+                            d["bbox"][2] = min(d["bbox"][2], bot_ymin)
 
         for det in useful:
             # Cut the per-bbox crop using the per-category asymmetric
@@ -2772,9 +2802,7 @@ class GarmentVisionService:
             yield {"type": "done", "count": 0}
             return
 
-        eff_mode = (mode or "auto").strip().lower()
-        if eff_mode not in ("single", "multi", "mass", "auto"):
-            eff_mode = "auto"
+        eff_mode = (mode or "multi").strip().lower()
         eff_gender = resolve_garment_gender(user_gender) or self.user_gender
 
         if eff_mode == "mass" and not cutout_only:
@@ -2844,7 +2872,6 @@ class GarmentVisionService:
                 is_footwear_only = bool(
                     detections
                     and not has_human_wearer
-                    and len(detections) <= 2
                     and all(
                         (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")
                         for d in detections
@@ -2884,57 +2911,6 @@ class GarmentVisionService:
                         or (top_dets and shoe_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in shoe_dets))
                     )
                 )
-
-                scene_type = next((d.get("_scene_type") for d in detections if d.get("_scene_type")), None)
-                is_mass = False
-                if eff_mode == "mass":
-                    is_mass = True
-                elif eff_mode in ("auto", "multi") and not has_human_wearer and not cutout_only:
-                    if scene_type == "mass_closet_or_pile":
-                        is_mass = True
-                    elif len(bottom_dets) >= 2 or len(shoe_dets) >= 2:
-                        # Multiple bottoms or multiple shoes without a human wearer cannot be a single worn outfit
-                        is_mass = True
-                    elif (len(top_dets) >= 2 and not bottom_dets) or len(top_dets) >= 3:
-                        is_mass = True
-                    elif (len(top_dets) >= 2 or len(bottom_dets) >= 2 or len(shoe_dets) >= 2 or len(detections) >= 3) and not has_multi_body_zones:
-                        is_mass = True
-
-                if is_mass:
-                    try:
-                        logger.info("analyze_outfits_stream: photo idx %d recognized as mass closet/pile (scene=%s, dets=%d)", idx, scene_type, len(detections))
-                        entries = await self.analyze_mass_catalog(
-                            img_bytes,
-                            language=language,
-                            user_gender=eff_gender,
-                            max_items=15,
-                        )
-                        if entries:
-                            mass_crops: list[tuple[dict[str, Any], bytes, str]] = []
-                            for e in entries:
-                                ref_fitted_bytes, ref_fitted_mime = ensure_transparent_vertical_card(
-                                    e["ref_crop_bytes"],
-                                    category=e["analysis"].get("category"),
-                                )
-                                det = {
-                                    "label": e["label"],
-                                    "kind": e["kind"],
-                                    "category": e["analysis"].get("category"),
-                                    "bbox": e["bbox"],
-                                    "is_mass_item": True,
-                                    "is_single_item": False,
-                                    "defer_matte": False,
-                                    "_analysis": e["analysis"],
-                                    "_ref_crop_bytes": e["ref_crop_bytes"],
-                                    "_fitted_bytes": ref_fitted_bytes,
-                                    "_fitted_mime": ref_fitted_mime,
-                                    "_photo_model_gender": photo_model_gender,
-                                    "_detections": detections,
-                                }
-                                mass_crops.append((det, ref_fitted_bytes, ref_fitted_mime))
-                            return idx, mass_crops
-                    except Exception as mass_cat_exc:
-                        logger.warning("analyze_outfits_stream: mass catalog failed for idx %d: %s; falling back to standard detection", idx, repr(mass_cat_exc)[:160])
 
                 same_zone_or_category = False
                 if not has_human_wearer and not has_multi_body_zones and detections and len(detections) <= 4:
@@ -3062,11 +3038,7 @@ class GarmentVisionService:
         # Emit the detect frame FIRST
         items_meta = []
         for idx, d, crop_b, crop_m in flat_crops:
-            if d.get("is_mass_item") and d.get("_fitted_bytes"):
-                fitted_b = d["_fitted_bytes"]
-                fitted_m = d.get("_fitted_mime", "image/png")
-            else:
-                fitted_b, fitted_m = _fit_crop_to_card(crop_b, crop_mime=crop_m)
+            fitted_b, fitted_m = _fit_crop_to_card(crop_b, crop_mime=crop_m)
             items_meta.append({
                 "image_index": idx,
                 "label": d.get("label") or "garment",
@@ -3092,33 +3064,6 @@ class GarmentVisionService:
 
                 for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
                     try:
-                        if det.get("is_mass_item"):
-                            matted = None
-                            try:
-                                mc = await self._matte_crops([(det, c_bytes, c_mime)])
-                                if mc and mc[0][1] and mc[0][2] == "image/png":
-                                    matted = mc[0][1]
-                            except Exception as m_sub_exc:
-                                logger.warning(
-                                    "analyze_outfits_stream: mass item rembg matte failed slot %d: %s",
-                                    slot_idx, repr(m_sub_exc)[:160],
-                                )
-
-                            if matted:
-                                fitted_b, fitted_m = _fit_crop_to_card(matted, crop_mime="image/png")
-                            else:
-                                fitted_b = det.get("_fitted_bytes", c_bytes)
-                                fitted_m = det.get("_fitted_mime", c_mime)
-                            matted_cutouts[slot_idx] = (fitted_b, fitted_m)
-                            await frame_queue.put({
-                                "type": "matte",
-                                "index": slot_idx,
-                                "image_index": image_idx,
-                                "crop_base64": base64.b64encode(fitted_b).decode("ascii"),
-                                "crop_mime": fitted_m,
-                            })
-                            continue
-
                         matted = None
                         if det.get("is_single_item"):
                             matted = await self._whole_image_matte(
@@ -3150,8 +3095,6 @@ class GarmentVisionService:
                 logger.error("analyze_outfits_stream: _matte_worker fatal error: %s", fatal_m_exc)
                 for i in range(len(flat_crops)):
                     matted_events[i].set()
-
-        recon_state = {"reconstructed_count": 0}
 
         async def _vlm_worker() -> None:
             try:
@@ -3213,153 +3156,10 @@ class GarmentVisionService:
                         elif photo_fem_cues.get(img_i) and not photo_masc_cues.get(img_i):
                             photo_model_genders[img_i] = "women"
 
-                recon_lock = asyncio.Lock()
-                remaining_budget = max(0, int(max_reconstructions))
-
-                mass_slots = [slot_idx for slot_idx, c in enumerate(flat_crops) if c[1].get("is_mass_item")]
-                std_slots = [slot_idx for slot_idx, c in enumerate(flat_crops) if not c[1].get("is_mass_item")]
-
-                async def _handle_mass_slot(slot_idx: int) -> None:
-                    nonlocal remaining_budget
-                    image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
-                    analysis = dict(det.get("_analysis") or {})
-
-                    await frame_queue.put({
-                        "type": "field",
-                        "index": slot_idx,
-                        "image_index": image_idx,
-                        "group": "category",
-                        "fields": {
-                            "category": analysis.get("category"),
-                            "sub_category": analysis.get("sub_category"),
-                            "item_type": analysis.get("item_type"),
-                            "title": analysis.get("title") or analysis.get("name"),
-                        },
-                    })
-                    if analysis.get("color") or analysis.get("colors"):
-                        await frame_queue.put({
-                            "type": "field",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "group": "color",
-                            "fields": {
-                                "color": analysis.get("color"),
-                                "colors": analysis.get("colors"),
-                                "pattern": analysis.get("pattern"),
-                            },
-                        })
-                    if analysis.get("material") or analysis.get("fabric_materials"):
-                        await frame_queue.put({
-                            "type": "field",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "group": "fabric",
-                            "fields": {
-                                "material": analysis.get("material"),
-                                "fabric_materials": analysis.get("fabric_materials"),
-                            },
-                        })
-
-                    if settings.AUTO_MATTE_CROPS and not matted_events[slot_idx].is_set():
-                        try:
-                            await asyncio.wait_for(matted_events[slot_idx].wait(), timeout=4.0)
-                        except Exception:
-                            pass
-
-                    if slot_idx in matted_cutouts and matted_cutouts[slot_idx][0]:
-                        mb, mm = matted_cutouts[slot_idx]
-                        final_b64 = base64.b64encode(mb).decode("ascii")
-                        final_mime = mm
-                    elif det.get("_fitted_bytes"):
-                        final_b64 = base64.b64encode(det["_fitted_bytes"]).decode("ascii")
-                        final_mime = det.get("_fitted_mime", "image/png")
-                    else:
-                        meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                        final_b64 = meta_crop.get("crop_base64")
-                        final_mime = meta_crop.get("crop_mime", "image/png")
-                    did_reconstruct = False
-
-                    can_recon = False
-                    async with recon_lock:
-                        if remaining_budget > 0:
-                            remaining_budget -= 1
-                            can_recon = True
-
-                    if can_recon:
-                        try:
-                            from app.services.reconstruction import reconstruct
-                            ref_bytes = (
-                                matted_cutouts[slot_idx][0]
-                                if (slot_idx in matted_cutouts and matted_cutouts[slot_idx][0])
-                                else (det.get("_ref_crop_bytes") or c_bytes)
-                            )
-                            recon = await reconstruct(
-                                ref_bytes,
-                                analysis,
-                                reasons=["mass_pipeline"],
-                                validate=False,
-                                preserve_catalog_metadata=True,
-                                api_key=self.api_key,
-                                user=user,
-                            )
-                            if recon and (recon.get("clean_image_b64") or recon.get("image_b64")):
-                                final_b64 = recon.get("clean_image_b64") or recon["image_b64"]
-                                final_mime = recon.get("mime_type") or "image/png"
-                                did_reconstruct = True
-                                analysis["reconstructed"] = True
-                                analysis["reconstruction_model"] = recon.get("model")
-                                async with recon_lock:
-                                    recon_state["reconstructed_count"] += 1
-                                await frame_queue.put({
-                                    "type": "matte",
-                                    "index": slot_idx,
-                                    "image_index": image_idx,
-                                    "crop_base64": final_b64,
-                                    "crop_mime": final_mime,
-                                })
-                        except Exception as rec_exc:
-                            logger.warning(
-                                "analyze_outfits_stream: mass reconstruction failed slot %d: %s; keeping reference crop",
-                                slot_idx, repr(rec_exc)[:160],
-                            )
-
-                    await frame_queue.put({
-                        "type": "item",
-                        "index": slot_idx,
-                        "image_index": image_idx,
-                        "analysis": analysis,
-                        "crop_base64": final_b64,
-                        "crop_mime": final_mime,
-                        "label": analysis.get("sub_category") or analysis.get("item_type"),
-                        "needs_reconstruction": False,
-                        "reconstruction_reasons": [],
-                        "reconstructed": did_reconstruct,
-                    })
-
-                mass_sem = asyncio.Semaphore(3)
-                async def _safe_mass_slot(slot_idx: int) -> None:
-                    try:
-                        async with mass_sem:
-                            await _handle_mass_slot(slot_idx)
-                    except Exception as s_exc:
-                        logger.warning(
-                            "analyze_outfits_stream: mass slot %d failed: %s",
-                            slot_idx, repr(s_exc)[:160],
-                        )
-
-                async def _run_mass_slots() -> None:
-                    await asyncio.gather(
-                        *[_safe_mass_slot(s) for s in mass_slots],
-                        return_exceptions=True,
-                    )
-
-                mass_task = asyncio.create_task(_run_mass_slots()) if mass_slots else None
-
                 if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
                     batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
 
-                    for slot_idx in std_slots:
-                        image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
+                    for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
                         item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
                         vlm_crop_bytes = _prepare_vlm_crop_and_color_stats(c_bytes, det)
                         shrunk = _shrink_for_vision(vlm_crop_bytes)
@@ -3552,10 +3352,10 @@ class GarmentVisionService:
 
                 else:
                     # ── Gemini batched path (single system prompt for whole batch) ──
-                    if len(std_slots) == 1:
-                        slot_idx = std_slots[0]
-                        image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
-                        item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
+                    if len(flat_crops) == 1:
+                        slot_idx = 0
+                        image_idx, det, c_bytes, c_mime = flat_crops[0]
+                        item_mg = det.get("_photo_model_gender")
                         raw_for_vision = _prepare_vlm_crop_and_color_stats(c_bytes, det)
                         try:
                             analysis = await self.analyze(
@@ -3661,35 +3461,34 @@ class GarmentVisionService:
                                     reasons = list(raw_reasons)
                             except Exception as exc:  # noqa: BLE001
                                 logger.warning(
-                                    "reconstruction gate failed slot=%d: %s",
-                                    slot_idx,
+                                    "reconstruction gate failed slot=0: %s",
                                     repr(exc)[:160],
                                 )
 
                         if _is_unidentifiable(analysis):
-                            logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
+                            logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot 0 (%s)", analysis.get("title"))
                             await frame_queue.put({
                                 "type": "item_skip",
-                                "index": slot_idx,
+                                "index": 0,
                                 "image_index": image_idx,
                                 "reason": "non_clothing",
                             })
                             return
 
-                        if settings.AUTO_MATTE_CROPS and not matted_events[slot_idx].is_set():
+                        if settings.AUTO_MATTE_CROPS and not matted_events[0].is_set():
                             try:
-                                await asyncio.wait_for(matted_events[slot_idx].wait(), timeout=4.0)
+                                await asyncio.wait_for(matted_events[0].wait(), timeout=4.0)
                             except (asyncio.TimeoutError, Exception):
                                 pass
 
-                        m_res = matted_cutouts.get(slot_idx)
-                        meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                        m_res = matted_cutouts.get(0)
+                        meta_crop = items_meta[0] if items_meta else {}
                         crop_b64 = base64.b64encode(m_res[0]).decode("ascii") if m_res else meta_crop.get("crop_base64")
                         crop_mime = m_res[1] if m_res else meta_crop.get("crop_mime", "image/png")
 
                         await frame_queue.put({
                             "type": "item",
-                            "index": slot_idx,
+                            "index": 0,
                             "image_index": image_idx,
                             "analysis": analysis,
                             "crop_base64": crop_b64,
@@ -3699,11 +3498,10 @@ class GarmentVisionService:
                             "reconstruction_reasons": reasons,
                         })
 
-                    elif len(std_slots) > 1:
-                        CHUNK_SIZE = max(30, len(std_slots))
-                        for chunk_start in range(0, len(std_slots), CHUNK_SIZE):
-                            chunk_slot_indices = std_slots[chunk_start : chunk_start + CHUNK_SIZE]
-                            chunk_crops = [flat_crops[i] for i in chunk_slot_indices]
+                    else:
+                        CHUNK_SIZE = max(30, len(flat_crops))
+                        for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
+                            chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
                             chunk_bytes = [_prepare_vlm_crop_and_color_stats(c[2], c[1]) for c in chunk_crops]
                             chunk_hints = [
                                 (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
@@ -3733,9 +3531,9 @@ class GarmentVisionService:
                                     chunk_bytes,
                                     **batch_kwargs,
                                 ):
-                                    if local_idx >= len(chunk_slot_indices):
+                                    slot_idx = chunk_start + local_idx
+                                    if slot_idx >= len(flat_crops):
                                         continue
-                                    slot_idx = chunk_slot_indices[local_idx]
                                     image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
                                     chunk_emitted.add(local_idx)
                                     item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender") or chunk_mg
@@ -3874,7 +3672,7 @@ class GarmentVisionService:
                                 for local_i, (image_idx, det, c_bytes, c_mime) in enumerate(chunk_crops):
                                     if local_i in chunk_emitted:
                                         continue
-                                    slot_idx = chunk_slot_indices[local_i]
+                                    slot_idx = chunk_start + local_i
                                     item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
                                     fallback_analysis = None
                                     raw_fb = c_bytes
@@ -3956,9 +3754,6 @@ class GarmentVisionService:
                                         "reconstruction_reasons": [],
                                     })
 
-                if mass_task:
-                    await mass_task
-
             except Exception as exc:
                 err_text = repr(exc)
                 logger.error(
@@ -4027,7 +3822,7 @@ class GarmentVisionService:
         if cutout_only:
             emitted = len(flat_crops)
 
-        yield {"type": "done", "count": emitted, "reconstructed_count": recon_state.get("reconstructed_count", 0)}
+        yield {"type": "done", "count": emitted}
 
 
     # ──────────────────────────────────────────────────────────────────
