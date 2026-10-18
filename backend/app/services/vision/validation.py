@@ -4287,6 +4287,22 @@ def _enforce_segformer_category(
             analysis["sub_category"] = "Headwear"
         return analysis
 
+    # If the LLM has identified the crop as Top or Outerwear (blazer, jacket, suit, coat, shirt, sweater, hoodie),
+    # never override it with SegFormer's headwear or accessory kind!
+    is_llm_upper = (
+        current.lower() in ("top", "outerwear", "suit", "full body")
+        or any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in (
+            "blazer", "jacket", "suit", "coat", "shirt", "sweater", "hoodie", "cardigan", "blouse", "top", "vest",
+            "ז'קט", "חליפה", "מעיל", "חולצה", "סוודר", "סריג", "קפוצ'ון"
+        ))
+    )
+    if is_llm_upper and kind in ("headwear", "accessory") and "bag" not in lbl_low:
+        logger.info(
+            "garment_vision: preserving LLM upper garment (%s / %s) over SegFormer %r kind",
+            current, analysis.get("sub_category"), kind,
+        )
+        return analysis
+
     if current.lower() in allowed:
         # Category is compatible with SegFormer, but check sub_category & item_type anchors
         # (e.g. prevent straw basket bag from being classified as a Belt under Accessories,

@@ -485,16 +485,18 @@ def _align_analyses_to_crops(
 
             if c_is_top and i_is_top:
                 score += 120.0
-            elif c_is_top and (i_is_bot or i_is_fw):
+            elif c_is_top and (i_is_bot or i_is_fw or i_is_head or i_is_belt or i_is_bag):
                 score -= 120.0
 
             if c_is_bot and i_is_bot:
                 score += 120.0
-            elif c_is_bot and (i_is_top or i_is_fw):
+            elif c_is_bot and (i_is_top or i_is_fw or i_is_head or i_is_belt or i_is_bag):
                 score -= 120.0
 
             if c_is_head and i_is_head:
                 score += 120.0
+            elif c_is_head and (i_is_top or i_is_bot or i_is_fw or i_is_belt or i_is_bag):
+                score -= 120.0
 
             # General category match
             if c_cat and i_cat and (c_cat in i_cat or i_cat in c_cat):
@@ -874,9 +876,11 @@ class GarmentVisionService:
         gemini_hits: list[dict[str, Any]] = []
 
         has_wearer = _detect_human_presence(parser_hits) if parser_hits else False
-        should_query_gemini = (not parser_hits) or (
-            count_hint is not None and count_hint > len(parser_hits)
-        ) or (not has_wearer and len(parser_hits) <= 3)
+        should_query_gemini = (
+            (not parser_hits)
+            or (count_hint is not None and count_hint > len(parser_hits))
+            or (not has_wearer)
+        )
         if should_query_gemini:
             try:
                 gemini_hits = await self._detect_via_gemini(image_bytes)
@@ -2888,7 +2892,10 @@ class GarmentVisionService:
                 elif eff_mode in ("auto", "multi") and not has_human_wearer and not cutout_only:
                     if scene_type == "mass_closet_or_pile":
                         is_mass = True
-                    elif (len(top_dets) >= 2 and not bottom_dets) or (len(bottom_dets) >= 2 and not top_dets) or (len(shoe_dets) >= 2 and not top_dets and not bottom_dets):
+                    elif len(bottom_dets) >= 2 or len(shoe_dets) >= 2:
+                        # Multiple bottoms or multiple shoes without a human wearer cannot be a single worn outfit
+                        is_mass = True
+                    elif (len(top_dets) >= 2 and not bottom_dets) or len(top_dets) >= 3:
                         is_mass = True
                     elif (len(top_dets) >= 2 or len(bottom_dets) >= 2 or len(shoe_dets) >= 2 or len(detections) >= 3) and not has_multi_body_zones:
                         is_mass = True

@@ -1776,6 +1776,13 @@ async def parse_garments(
             if not merged_any:
                 break
 
+    # Drop false-positive Hat on torso/lower body when human model is present
+    if "Hat" in by_label and has_human:
+        h_bb = _mask_bbox(by_label["Hat"]["mask"])
+        if h_bb and h_bb[0] >= int(0.20 * H):
+            logger.info("clothing_parser: dropping false-positive Hat on torso (ymin=%d >= 0.20*H)", h_bb[0])
+            del by_label["Hat"]
+
     # 2a-5b) Anatomical human model detection from garment layout:
     # A person wearing an outfit has an upper garment (top/dress/outerwear) above a bottom (pants/skirt)
     # or footwear (shoes) spanning a significant vertical frame height.
@@ -2581,6 +2588,11 @@ def apply_alpha_intersection(
                 protect_smooth = ndimage.gaussian_filter(garment_protect.astype(float), sigma=1.2)
                 sub_human = np.clip(sub_human * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_human).round().astype(np.uint8)
+            if mask_resized is not None and not is_single_item:
+                human_outside = (human_clean >= 60) & (mask_resized <= 30)
+                if garment_protect is not None and garment_protect.any():
+                    human_outside = human_outside & (~garment_protect)
+                new_alpha = np.where(human_outside, np.uint8(0), new_alpha)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: human-mask subtraction failed: %s",
@@ -2696,27 +2708,26 @@ def apply_alpha_intersection(
                 ys, xs = garment_pts
                 apex_y = int(ys.min())
                 # Anything above the garment apex is strictly head / neck / background
-                if apex_y > 2:
-                    new_alpha[:min(Hc, apex_y + 2), :] = 0
+                if apex_y > 0:
+                    new_alpha[:max(0, apex_y + 1), :] = 0
 
                 # Column-wise contour trimming along the central neckline/collar notch
                 col_min_y = np.full(Wc, Hc, dtype=int)
                 np.minimum.at(col_min_y, xs, ys)
-                # Bounding: a neckline curve never dips deeper than 18% of crop height from apex.
-                # Deeper dips are occlusions (hair, jewelry, scarves, hands) and must NOT slice the garment!
-                max_neck_dip = min(Hc - 1, apex_y + max(12, int(0.18 * Hc)))
-                col_min_y = np.minimum(col_min_y, max_neck_dip)
 
-                # Restrict column trimming to the central neck/throat corridor (20% to 80% of width)
-                # so shoulders, lapels, and fur collars on either side are never truncated.
+                # Restrict column trimming to the central neck/throat corridor (18% to 82% of width)
+                # so shoulders, outer lapels, and sleeves on either side are never truncated.
                 neck_cols = np.zeros(Wc, dtype=bool)
-                neck_cols[int(0.20 * Wc):int(0.80 * Wc)] = True
+                neck_cols[int(0.18 * Wc):int(0.82 * Wc)] = True
                 valid_cols = (col_min_y < Hc) & neck_cols
                 if valid_cols.any():
                     y_indices = np.arange(Hc)[:, None]
-                    # Pixels above the collar in the central neck zone are neck/face/background
-                    above_collar = (y_indices < (col_min_y[None, :] - 3)) & valid_cols[None, :]
-                    new_alpha = np.where(above_collar, np.uint8(0), new_alpha)
+                    # Pixels above the garment in the central neck zone are neck/face/background
+                    above_collar = (y_indices < col_min_y[None, :]) & valid_cols[None, :]
+                    is_h_part = (human_resized > 25) if ('human_resized' in locals() and human_resized is not None) else False
+                    is_s_part = is_skin if ('is_skin' in locals() and is_skin is not None) else False
+                    trim_neck = above_collar & ((mask_resized <= 30) | is_h_part | is_s_part)
+                    new_alpha = np.where(trim_neck, np.uint8(0), new_alpha)
         except Exception as _neck_exc:
             logger.debug("apply_alpha_intersection collar neck trim: %s", _neck_exc)
 
@@ -2751,11 +2762,38 @@ def apply_alpha_intersection(
                 protect_smooth = ndimage.gaussian_filter(effective_protect.astype(float), sigma=1.2)
                 sub_other = np.clip(sub_other * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_other).round().astype(np.uint8)
+
+            # Strict non-destructive adjacent garment separation:
+            # Where target garment mask is weak/absent (<= 30) and an adjacent garment is confident (>= 45),
+            # that region is definitively the adjacent garment (e.g. blazer lapels over white shirt, pants cuff over shoes).
+            if mask_resized is not None:
+                adjacent_bleed = (mask_resized <= 30) & (other_resized >= 45)
+                if effective_protect is not None and effective_protect.any():
+                    adjacent_bleed = adjacent_bleed & (~effective_protect)
+                new_alpha = np.where(adjacent_bleed, np.uint8(0), new_alpha)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: other_mask subtraction failed: %s",
                 repr(exc)[:120],
             )
+
+    # 3c. Footwear pants-cuff & ankle cleanup
+    if is_footwear and mask_resized is not None and not is_single_item:
+        try:
+            shoe_pts = np.where(mask_resized > 40)
+            if len(shoe_pts[0]) > 0:
+                s_ys, s_xs = shoe_pts
+                s_apex_y = int(s_ys.min())
+                col_shoe_min = np.full(Wc, Hc, dtype=int)
+                np.minimum.at(col_shoe_min, s_xs, s_ys)
+                y_idx = np.arange(Hc)[:, None]
+                valid_shoe_cols = (col_shoe_min < Hc)[None, :]
+                above_shoes = (y_idx < (col_shoe_min[None, :] - 2)) & valid_shoe_cols & (mask_resized <= 30)
+                new_alpha = np.where(above_shoes, np.uint8(0), new_alpha)
+                if s_apex_y > 2:
+                    new_alpha[:max(0, s_apex_y - 2), :] = 0
+        except Exception as _fw_exc:
+            logger.debug("apply_alpha_intersection footwear cuff trim: %s", _fw_exc)
 
     # 4. Intersect with the smooth, dilated soft envelope of the target garment.
     # On single items, envelope truncation is skipped so rembg's outer garment contours

@@ -3454,6 +3454,186 @@ def test_apply_alpha_intersection_does_not_chew_target_garment_at_other_overlap(
     assert refined_alpha[160, 100] >= 200
 
 
+def test_apply_alpha_intersection_excises_neck_in_collar_notch():
+    """Verify that human neck/chin skin inside the collar notch is excised while lapels remain intact."""
+    from PIL import Image
+    import numpy as np
+    import io
+    from app.services import clothing_parser
+
+    # 200x200 RGBA image (blazer with V-neck notch, wearer has skin inside notch)
+    im_arr = np.zeros((200, 200, 4), dtype=np.uint8)
+    # Background is transparent
+    # Wearer neck skin in central corridor y: 20..100, x: 80..120
+    im_arr[20:100, 80:120, :3] = [210, 160, 130]  # skin tone
+    im_arr[20:100, 80:120, 3] = 255
+    # Blazer fabric: shoulders y: 30..200, lapels flanking central notch
+    im_arr[30:200, 30:80, :3] = [30, 40, 80]   # navy blazer
+    im_arr[30:200, 30:80, 3] = 255
+    im_arr[30:200, 120:170, :3] = [30, 40, 80]
+    im_arr[30:200, 120:170, 3] = 255
+    # Below V-notch (y >= 100), blazer joins in center
+    im_arr[100:200, 80:120, :3] = [30, 40, 80]
+    im_arr[100:200, 80:120, 3] = 255
+
+    buf = io.BytesIO()
+    Image.fromarray(im_arr).save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # SegFormer mask for blazer: 1 on blazer, 0 on neck
+    seg_mask = np.zeros((200, 200), dtype=np.uint8)
+    seg_mask[30:200, 30:80] = 255
+    seg_mask[30:200, 120:170] = 255
+    seg_mask[100:200, 80:120] = 255
+
+    # Human mask on neck
+    human_mask = np.zeros((200, 200), dtype=np.uint8)
+    human_mask[10:95, 75:125] = 255
+
+    refined_bytes = clothing_parser.apply_alpha_intersection(
+        matted_bytes,
+        seg_mask,
+        category="outerwear",
+        label="jacket",
+        human_mask=human_mask,
+        is_single_item=False,
+    )
+    assert refined_bytes is not None
+    ref_im = Image.open(io.BytesIO(refined_bytes))
+    ref_alpha = np.array(ref_im.split()[-1])
+
+    # Neck skin inside the notch (y=60, x=100) must be zeroed out
+    assert ref_alpha[60, 100] == 0, f"Expected neck alpha 0, got {ref_alpha[60, 100]}"
+    # Blazer lapels (y=60, x=50 and y=60, x=150) must remain solid
+    assert ref_alpha[60, 50] >= 200, f"Expected lapel alpha >= 200, got {ref_alpha[60, 50]}"
+    assert ref_alpha[60, 150] >= 200, f"Expected lapel alpha >= 200, got {ref_alpha[60, 150]}"
+    # Below notch blazer center (y=150, x=100) must remain solid
+    assert ref_alpha[150, 100] >= 200
+
+
+def test_apply_alpha_intersection_suppresses_adjacent_outerwear_on_inner_shirt():
+    """Verify that adjacent outer blazer lapels are suppressed on an inner shirt cutout."""
+    from PIL import Image
+    import numpy as np
+    import io
+    from app.services import clothing_parser
+
+    # 200x200 image where center is white shirt, sides are navy blazer
+    im_arr = np.zeros((200, 200, 4), dtype=np.uint8)
+    # Left and right: navy blazer
+    im_arr[20:180, 10:70, :3] = [30, 40, 80]
+    im_arr[20:180, 10:70, 3] = 255
+    im_arr[20:180, 130:190, :3] = [30, 40, 80]
+    im_arr[20:180, 130:190, 3] = 255
+    # Center: white shirt
+    im_arr[30:170, 70:130, :3] = [240, 240, 240]
+    im_arr[30:170, 70:130, 3] = 255
+
+    buf = io.BytesIO()
+    Image.fromarray(im_arr).save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Target mask is white shirt (center only)
+    seg_mask = np.zeros((200, 200), dtype=np.uint8)
+    seg_mask[30:170, 70:130] = 255
+
+    # other_mask has blazer (sides)
+    other_mask = np.zeros((200, 200), dtype=np.uint8)
+    other_mask[20:180, 10:70] = 255
+    other_mask[20:180, 130:190] = 255
+
+    refined_bytes = clothing_parser.apply_alpha_intersection(
+        matted_bytes,
+        seg_mask,
+        category="top",
+        label="shirt",
+        other_mask=other_mask,
+        is_single_item=False,
+    )
+    assert refined_bytes is not None
+    ref_im = Image.open(io.BytesIO(refined_bytes))
+    ref_alpha = np.array(ref_im.split()[-1])
+
+    # Center white shirt must be preserved
+    assert ref_alpha[100, 100] >= 200
+    # Outer blazer sides must be zeroed out
+    assert ref_alpha[100, 40] == 0, f"Expected blazer left alpha 0, got {ref_alpha[100, 40]}"
+    assert ref_alpha[100, 160] == 0, f"Expected blazer right alpha 0, got {ref_alpha[100, 160]}"
+
+
+def test_apply_alpha_intersection_footwear_suppresses_pants_cuff():
+    """Verify that pants cuff bleeding above shoes is excised."""
+    from PIL import Image
+    import numpy as np
+    import io
+    from app.services import clothing_parser
+
+    # 200x200 image where top 30% is pants cuffs, bottom 70% is shoes
+    im_arr = np.zeros((200, 200, 4), dtype=np.uint8)
+    # Pants cuffs at top (y: 10..60)
+    im_arr[10:60, 30:170, :3] = [100, 100, 105]  # grey pants
+    im_arr[10:60, 30:170, 3] = 255
+    # Brown shoes at bottom (y: 80..180)
+    im_arr[80:180, 40:160, :3] = [120, 70, 40]   # brown suede
+    im_arr[80:180, 40:160, 3] = 255
+
+    buf = io.BytesIO()
+    Image.fromarray(im_arr).save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Target mask covers shoes only
+    seg_mask = np.zeros((200, 200), dtype=np.uint8)
+    seg_mask[80:180, 40:160] = 255
+
+    # other_mask covers pants
+    other_mask = np.zeros((200, 200), dtype=np.uint8)
+    other_mask[10:60, 30:170] = 255
+
+    refined_bytes = clothing_parser.apply_alpha_intersection(
+        matted_bytes,
+        seg_mask,
+        category="footwear",
+        label="shoes",
+        other_mask=other_mask,
+        is_single_item=False,
+    )
+    assert refined_bytes is not None
+    ref_im = Image.open(io.BytesIO(refined_bytes))
+    ref_alpha = np.array(ref_im.split()[-1])
+
+    # Shoe body must be preserved
+    assert ref_alpha[120, 100] >= 200
+    # Pants cuff above shoes (y=30, x=100) must be excised
+    assert ref_alpha[30, 100] == 0, f"Expected pants cuff alpha 0, got {ref_alpha[30, 100]}"
+
+
+def test_enforce_segformer_category_protects_blazer_from_headwear_override():
+    """Verify that a blazer/jacket is never overridden into Headwear by noisy SegFormer kinds."""
+    from app.services.vision.validation import _enforce_segformer_category
+
+    blazer_analysis = {
+        "category": "Top",
+        "sub_category": "Blazer",
+        "item_type": "Navy Plaid Patterned Blazer",
+        "title": "Navy Plaid Patterned Blazer",
+        "caption": "A tailored navy plaid blazer adds classic sophistication to smart casual outfits.",
+        "gender": "men",
+    }
+
+    result = _enforce_segformer_category(
+        blazer_analysis,
+        segformer_kind="headwear",
+        label="hat",
+        is_single_item=False,
+    )
+
+    assert result["category"] == "Top"
+    assert result["sub_category"] == "Blazer"
+    assert result["item_type"] == "Navy Plaid Patterned Blazer"
+    assert "hat" not in result["item_type"].lower()
+
+
+
 
 
 
