@@ -25,7 +25,7 @@ Trova risposte immediate per l'accesso alla fotocamera, domande sulla velocità 
 6. **Accesso all'IA Cloud veloce e a Trend Scout**:
    - Gli utenti gratuiti usufruiscono del modello on-premises **Eyes** (`Qwen 2.5 VL 3B`) di DressApp senza alcuna configurazione. L'upgrade al piano **Manager** ($10/mese) o **Professional** ($15/mese) sblocca l'instradamento prioritario verso il modello IA Cloud veloce (attualmente **Google Gemini 3.5 Flash**) e il pieno accesso all'intelligenza moda quotidiana di Trend Scout.
 7. **Collegamento di Google Calendar**:
-   - Vai su **Profilo** &rarr; **Google Calendar** e tocca **Connetti**. Autorizza i permessi del calendario affinché lo Stylist possa controllare i tuoi impegni giornalieri.
+   - Vai su **Profilo** → **Google Calendar** e tocca **Connetti**. Autorizza i permessi del calendario affinché lo Stylist possa controllare i tuoi impegni giornalieri.
 
 ## Risultati attesi
 Risoluzione rapida dei problemi più comuni per far funzionare il tuo guardaroba digitale senza intoppi.

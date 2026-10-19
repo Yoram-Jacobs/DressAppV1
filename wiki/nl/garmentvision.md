@@ -69,7 +69,7 @@ graph TD
 
 ### Modi & Werkstroomhandleiding
 1. **Interactieve Momentopname & Batch-inname:**
-   - Tik op **Item Toevoegen** &rarr; maak of upload een foto met een of meerdere kledingstukken.
+   - Tik op **Item Toevoegen** → maak of upload een foto met een of meerdere kledingstukken.
    - Het systeem voert realtime duplicaatcontroles uit (`crypto.subtle` SHA-256 en perceptuele hashing) om dubbele uploads direct te signaleren.
 2. **AI-kwaliteitsbeoordeling:**
    - Terwijl SegFormer de segmenten uitsnijdt, inspecteert Gemini's Kwaliteitscontroleur elk kledingstuk:

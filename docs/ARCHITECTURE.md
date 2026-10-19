@@ -66,12 +66,12 @@ DressApp is an AI-powered fashion editor and digital wardrobe platform that turn
         │              │              │
         ▼              ▼              ▼
 ┌──────────────┐ ┌─────────────┐ ┌─────────────────────────────────────────┐
-│MongoDB 7.0   │ │dressapp-eyes│ │External Cloud Services (BYOK)           │
+│MongoDB 7.0   │ │dressapp-eyes│ │External Cloud Services                  │
 │dressapp-mongo│ │Container    │ ├─────────────────────────────────────────┤
-│(Users, Items,│ │Gemma-4 E4B  │ │• Google Gemini API (BYOK / Nano Banana) │
+│(Users, Items,│ │Qwen2.5-VL-3B│ │• Google Gemini 3.5 Flash / Nano Banana  │
 │Listings,     │ │llama-server │ │• Deepgram Speech API (STT/TTS)          │
 │Vector Embed) │ │(:7860)      │ │• OpenWeatherMap & Google Calendar APIs  │
-└──────────────┘ └─────────────┘ │• PayPal Subscriptions & Orders REST API │
+└──────────────┘ └─────────────┘ │• PayPal Subscriptions & Atzmai ILS API  │
                                  └─────────────────────────────────────────┘
 ```
 
@@ -105,10 +105,10 @@ The repository is organized as a Turborepo workspace linking applications and sh
 │   └── requirements.txt         # Production backend dependencies
 │
 ├── chrome-extension/            # Manifest V3 Shopping Assistant Extension
-├── inference-server/            # Optional standalone GPU inference server (BiRefNet / Gemma-4)
+├── inference-server/            # On-prem Eyes inference server (Qwen2.5-VL-3B-Instruct)
 ├── deploy/                      # Production Docker Compose, Caddyfile, and Dockerfiles
 ├── docs/                        # Technical documentation, ADRs, and schema references
-│   ├── adr/                     # Architectural Decision Records (0001 - 0004)
+│   ├── adr/                     # Architectural Decision Records (0001 - 0005)
 │   ├── agents/                  # AI agent guidelines and domain documentation
 │   ├── ARCHITECTURE.md          # This technical architecture document
 │   └── MONGODB_SCHEMA.md        # Complete MongoDB collection & index schema
@@ -120,24 +120,26 @@ The repository is organized as a Turborepo workspace linking applications and sh
 
 ## 4. Subsystems & Data Pipelines
 
-### 4.1 Ingestion, Segmentation & Inpainting Pipeline
+### 4.1 Ingestion, Automatic 3-Pipeline Routing & Inpainting Pipeline
 
-When an image is ingested via camera, file upload, or external URL:
-1. **Analysis & Bounding Boxes**: The request is routed to `backend/app/services/clothing_parser.py`, which utilizes HuggingFace `SegFormer-b2-clothes` running locally on CPU. The parser segments multi-garment photos into distinct items (tops, bottoms, outerwear, shoes, accessories).
-2. **Background Matting**: Handled by `backend/app/services/background_matting.py` using `rembg` (U2-Net). Non-clothing background pixels are keyed out into a transparent PNG (`clean_image_url`).
+When one or more images (with any mix of characteristics) are ingested via camera, file upload, or external URL:
+1. **Automatic 3-Pipeline Routing (`parse_clothing_items_auto`)**: Each photo is analyzed by `backend/app/services/clothing_parser.py` using HuggingFace `SegFormer-b2-clothes` on CPU, border-aware skin filtering (`_filter_border_touching_skin`), and anatomical stack verification (`_has_worn_outfit_stack`):
+   - **`single` pipeline**: Single isolated garment on a hanger, flat surface, or mannequin (`total == 1`). Streams live `matte` and progressive `field` frames.
+   - **`multi` pipeline**: Multiple garments worn on a human body or vertically aligned anatomical outfit stack (`has_human == True`). Segments tops, bottoms, outerwear, footwear, and headwear (guarded by `has_face_or_hair`) while subtracting human skin/face/hair.
+   - **`mass` pipeline**: Unworn multi-item clusters (`has_human == False`, $\ge 2$ items or side-by-side hanging/folded layout). Isolates each item and triggers **Nano Banana** (`gemini-3.1-flash-lite-image`) studio product reconstruction for folded or occluded pieces.
+2. **Background Matting**: Handled by `backend/app/services/background_matting.py` using `rembg` (U2-Net) intersected with the SegFormer category mask ($\text{Alpha}_\text{final} = \text{Alpha}_\text{rembg} \cap \text{Mask}_\text{SegFormer}$).
 3. **Deep Module `GarmentVisuals`** (`backend/app/services/garment_visuals.py`): Enforces the Transparency Invariant across all operations. Ensures thumbnails and layered crops have zero bounding-box artifacts when composited onto canvases or 2D avatars.
-4. **Garment Attribute Analysis & Vision Routing**: Analyzes cropped garments via `GarmentVisionService` and `llm_gateway.py`. Routes by default to **Google Gemini** (`gemini-3.5-flash-lite`) via native `google-genai` SDK with sub-350ms TTFT, with transparent on-the-fly fallback to on-prem Gemma-4-E4B upon `429` / `RESOURCE_EXHAUSTED` quota limits.
-5. **Nano Banana Inpainting**: If the user requests corrections via the interactive chat prompt (*"remove the belt"*, *"complete the sleeve where the hand was"*), the image is sent to `gemini-3.1-flash-lite-image` via `gemini_image_service.py` to perform photorealistic inpainting. This high-cost generative feature strictly requires a user-supplied BYOK key.
+4. **Garment Attribute Analysis, Taxonomy Enforcement & Cultural RAG**: Analyzes cropped garments via `GarmentVisionService` and `llm_gateway.py`. Deterministic post-processing (`_sanitize_hoodie_and_sweatshirts`, cultural RAG grounding, and frontend `hydrate()`) enforces canonical taxonomy across all 13 languages (e.g., `Sweatshirts & Hoodies` vs. `T-Shirt`, and 60+ traditional cultural garments mapped to `dress_code: "traditional"`).
+5. **Nano Banana Inpainting**: In the Item Details editor, users can request conversational edits (*"remove the shoes"*, *"complete the hole where the hand was"*) via `gemini-3.1-flash-lite-image` (`gemini_image_service.py`).
 
 ### 4.2 Conversational AI Stylist & Speech Pipeline
 
 The stylist provides contextually-grounded outfit suggestions:
 - **`StylingContext`** (`backend/app/services/styling_context.py`): Synthesizes user preferences, body sizing, wardrobe inventory, localized weather conditions (via OpenWeatherMap), and Google Calendar events into an optimized prompt.
-- **Multi-Tier LLM Routing (`llm_gateway.py` & `stylist_brain.py`)**:
-  - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: All 6 core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and Closet Ingestion) route by default to Google Gemini via `llm_gateway.py` with strict JSON schema enforcement and zero-friction user onboarding.
-  - **On-Prem VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 of the Hetzner CPX32 VPS. Serves as the zero-cost baseline for offline/free usage and transparently intercepts quota exhaustion (`429` / `RESOURCE_EXHAUSTED`), stripping thinking tokens and returning fallback status without raising 500 errors.
-  - **Developer Authentication**: Standardized on Google OAuth sign-in (`dressappdeveloper@gmail.com`) with permanent Admin rights.
-  - **Custom BYOK Models**: Users with configured Google Gemini keys can select higher-tier models (`gemini-2.5-pro`, etc.).
+- **Zero-BYOK Multi-Tier LLM Routing (`llm_gateway.py` & `stylist_brain.py`)**:
+  - **Manager & Professional Plans — Fast Cloud Engine (Google Gemini 3.5 Flash-Lite)**: Paid subscribers route across all 6 core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and Closet Ingestion) to Google Gemini (`gemini-3.5-flash-lite`) via `llm_gateway.py` with strict JSON schema enforcement and sub-350ms TTFT.
+  - **Free Tier & Quota Safety Net — On-Prem VPS Eyes (`Qwen2.5-VL-3B-Instruct`)**: `dressapp-eyes` container running fine-tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` on port 7860 of the Hetzner CPX32 VPS. Serves as the zero-cost engine for Free Tier users and transparently intercepts cloud quota exhaustion (`429` / `RESOURCE_EXHAUSTED`) without raising 500 errors.
+  - **Developer Authentication**: Standardized on Google OAuth sign-in (`dressapdeveloper@gmail.com`) with permanent Admin rights.
 - **Audio Routing**:
   - *Speech-to-Text (STT)*: Routes microphone audio between Deepgram Aura STT, direct Gemini audio transcription, and client-side browser Web Speech Recognition.
   - *Text-to-Speech (TTS)*: Generates spoken responses using native Gemini Audio voice profiles (`puck`, `aoede`, `charon`), falling back to Deepgram TTS, local Piper ONNX, or browser `speechSynthesis`.
@@ -145,10 +147,10 @@ The stylist provides contextually-grounded outfit suggestions:
 ### 4.3 Monetization & Credit Bucket System
 
 The billing engine in `backend/app/services/pricing.py` and `backend/app/models/credit.py` supports a hybrid monetization model:
-- **Closet Capacity Limit**: Free-tier accounts have a hard cap of 150 garments. Users can expand capacity via invite referral loops (+10 slots per verified user) or upgrade to an unlimited Pro tier via the PayPal Subscriptions REST API.
+- **Closet Capacity Limit**: Free-tier accounts start at 50 garments baseline, expandable up to 150 garments via invite referral loops (+10 slots per verified user), or unlimited storage on the **Manager** ($10/mo) and **Professional** ($15/mo) plans via PayPal Subscriptions REST API and Atzmai ILS gateway.
 - **Pre-Paid AI Credit Buckets**:
   - *Daily Free Credits*: 10 credits granted daily with a strict 30-day expiration window.
-  - *Paid Credit Packs*: Purchased via PayPal/Stripe (10, 25, 50, 100 credits); paid credits **never expire**.
+  - *Paid Credit Packs*: Purchased via PayPal/Atzmai (10, 25, 50, 100 credits); paid credits **never expire**.
   - *Consumption Order*: The oldest expiring free credits are consumed first before dipping into permanent paid credits.
   - *Token Metering*: `TokenMeter` (`backend/app/services/token_meter.py`) tracks and attributes exact credit burn per AI operation.
 
@@ -159,7 +161,7 @@ The billing engine in `backend/app/services/pricing.py` and `backend/app/models/
 
 ### 4.5 Trends-Scout Autonomous Fashion Intelligence Pipeline
 
-- **Access Gating**: Strictly requires a user-supplied custom AI supplier API key (`user_has_custom_api_key(user)`). Zero-BYOK users receive HTTP 403 to prevent unmetered web crawling and cloud synthesis costs.
+- **Access Gating**: Available to **Manager** and **Professional** plan subscribers.
 - **Dual Gender Intelligence**: Curates 7 independent channels separately for Men's and Women's fashion ecosystems (`local`, `runway`, `street`, `sustainability`, `influencers`, `vintage`, `maintenance_repairs`).
 - **Discovery & Crawling Engine** (`backend/app/services/trend_scout.py`): Scheduled cron sweeps (monthly on the 1st at midnight UTC, daily at 07:00 UTC) scrape authoritative publications via `httpx` + `BeautifulSoup`, extracting OpenGraph metadata and inline anchors.
 - **Strict Heuristic & Quality Shield (`_verify_trend_card`)**: Validates HTTP 200 responses, rejects commercial checkout links (`/cart`, `/buy`, Shopify/WooCommerce), filters paywalls/login gates, identifies soft-404 strings across languages, and verifies high-resolution OpenGraph hero imagery.
@@ -180,7 +182,7 @@ The production application is deployed on a Hetzner Cloud CPX32 VPS (4 AMD vCPUs
 │  ┌─────────────────┐   ┌──────────────────┐   ┌──────────────┐   ┌──────────────────┐  ┌─────────────┐ │
 │  │ dressapp-caddy  │   │ dressapp-backend │   │dressapp-     │   │ dressapp-eyes    │  │dressapp-    │ │
 │  │ Ports 80, 443   │──▶│ Internal :8001   │──▶│frontend      │   │ Internal :7860   │  │mongo (:27017│ │
-│  │ (Caddy 2 Alpine)│   │ (FastAPI + ML)   │   │Internal :3000│   │ (Gemma-4 E4B)    │  │NVMe Storage)│ │
+│  │ (Caddy 2 Alpine)│   │ (FastAPI + ML)   │   │Internal :3000│   │ (Qwen2.5-VL-3B)  │  │NVMe Storage)│ │
 │  └────────┬────────┘   └────────┬─────────┘   └──────┬───────┘   └────────┬─────────┘  └──────┬──────┘ │
 │           │                     │                    │                    │                   │        │
 │           └─────────────────────┴────────────────────┴────────────────────┴───────────────────┘        │
@@ -190,7 +192,7 @@ The production application is deployed on a Hetzner Cloud CPX32 VPS (4 AMD vCPUs
 
 - **Reverse Proxy**: Caddy 2 terminates TLS with automatic Let's Encrypt certificates, proxying `/api/*` to `dressapp-backend:8001` and static requests to `dressapp-frontend:3000`.
 - **Backend Service**: Runs `backend/server.py` via Uvicorn. Model weights for SegFormer and U2-Net persist across container restarts in named Docker volumes (`model-cache`, `rembg-cache`).
-- **Eyes Inference Service**: Dedicated `dressapp-eyes` container running `llama-server` on port 7860 with fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` + `mmproj-BF16.gguf` (~2.85 GB RAM), authenticated via `EYES_API_TOKEN`.
+- **Eyes Inference Service**: Dedicated `dressapp-eyes` container running `llama-server` on port 7860 with fine-tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` (~2.8 GB RAM), authenticated via `EYES_API_TOKEN`.
 - **Frontend Service**: Static React 19 SPA bundle served by Nginx with client-side routing fallback (`try_files $uri /index.html`).
 - **Database**: On-prem MongoDB 7.0 Community containerized (`dressapp-mongo`) with persistent storage on high-speed local NVMe SSD at `/mnt/dressapp-db-data`, automated nightly backups at 03:00 UTC, and optimized WiredTiger cache capped at 0.75 GB.
 

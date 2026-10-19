@@ -69,7 +69,7 @@ graph TD
 
 ### Modes & Parcours d'Utilisation
 1. **Instantané Interactif & Ingestion par Lot :**
-   - Appuyez sur **Ajouter un article** &rarr; prenez ou téléversez une photo contenant un ou plusieurs vêtements.
+   - Appuyez sur **Ajouter un article** → prenez ou téléversez une photo contenant un ou plusieurs vêtements.
    - Le système effectue des contrôles préventifs anti-doublons en temps réel (SHA-256 via `crypto.subtle` et hachage perceptuel) pour détecter immédiatement les doublons.
 2. **Évaluation de Qualité par IA :**
    - Au fur et à mesure que SegFormer segmente les pièces, le Contrôleur de Qualité Gemini inspecte chaque vêtement :

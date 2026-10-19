@@ -44,14 +44,18 @@ O DressApp é um gerenciador de guarda-roupa pessoal, consultor de estilo e merc
 ### 3.1 Cadastrando Roupas (Adicionando Itens)
 PARADIGMAS DE CADASTRO: Fotografia, Passaportes Digitais de Produtos da UE e Recibos de Comércio Digital.
 
-#### A. Câmera Interativa e Upload de Arquivos
+#### A. Câmera Interativa, Envio de Lotes Mistos e Roteamento Automático de 3 Fluxos
 1. Navegue até a tela **Adicionar Item** (*Add Item*).
-2. Selecione **Tirar Foto** (abre a câmera nativa do celular) ou clique em **Enviar Fotos** (abre o seletor de arquivos do sistema).
-3. O cliente calcula o hash SHA-256 e o hash de diferença horizontal (dHash) da imagem no navegador (~100-180 ms) para verificar no seu guarda-roupa existente.
-4. Se uma correspondência for encontrada, o **Diálogo de Verificação de Duplicatas** será aberto mostrando as prévias correspondentes. Selecione **Pular** ou **Adicionar mesmo assim**.
-5. Uma vez aceito, o servidor inicia um fluxo NDJSON. Um quadro de pré-visualização provisório é exibido em 5-7 segundos, permitindo editar os detalhes do item imediatamente enquanto o backend conclui a etiquetagem.
-6. Verifique as tags detectadas automaticamente (cor, tecido, caimento, estampa, ocasião). Se o formato do recorte estiver incorreto, altere o menu suspenso **Categoria**; isso aciona o SegFormer para recortar a peça novamente de forma automática.
-7. Clique em **Salvar** para exibir o item de forma otimista na grade do guarda-roupa imediatamente (~16 ms) enquanto a geração de miniaturas WebP em segundo plano é concluída.
+2. Selecione **Tirar Foto** (abre a câmera nativa do celular) ou clique em **Enviar Fotos** (abre o seletor de arquivos do sistema). Você pode enviar várias fotos com características mistas em um único lote (peças isoladas, looks completos em uma pessoa/manequim e pilhas/agrupamentos de roupas não vestidas) sem precisar escolher abas manuais de fluxo.
+3. O cliente calcula o hash SHA-256 e o hash de diferença horizontal (dHash) de cada imagem no navegador (~100-180 ms) para verificar duplicatas no seu guarda-roupa.
+4. Se uma correspondência for encontrada, o **Diálogo de Verificação de Duplicatas** será aberto mostrando as prévias correspondentes. Selecione **Pular** (*Skip*) ou **Adicionar mesmo assim** (*Add anyway*).
+5. **Roteamento Automático de 3 Fluxos (`detect_photo_pipeline`)**: Para cada foto aceita, `clothing_parser.py` inspeciona as máscaras semânticas do SegFormer (`face_skin_ratio`, `anatomical_stack`, componentes conectados) e direciona automaticamente a foto para:
+   - **Fluxo `single`**: Peça única isolada com recorte alfa de estúdio (`rembg` + interseção de máscara SegFormer).
+   - **Fluxo `multi`**: Look com várias peças vestido por um modelo ou manequim, extraindo recortes distintos de parte superior, parte inferior, casacos, calçados e acessórios.
+   - **Fluxo `mass`**: Agrupamentos de roupas não vestidas, composições flat-lay ou várias peças penduradas em ganchos (`parse_unworn_cluster`), separando componentes desconectados e executando divisão por cor watershed enquanto protege estampas frontais.
+6. O servidor transmite quadros NDJSON progressivos (`detect`, `field`, `item`, `done`) em segundos, permitindo editar os detalhes imediatamente enquanto o backend conclui a etiquetagem — incluindo a classificação precisa entre **Moletons e Hoodies** (*Sweatshirts & Hoodies*) vs. **Camisetas** (*T-Shirt*) e mais de 60 **trajes tradicionais e culturais** nos 13 idiomas.
+7. Verifique as tags detectadas automaticamente (cor, tecido, caimento, estampa, dress code, ocasião). Se o formato do recorte estiver incorreto, altere o menu suspenso **Categoria**; isso aciona o SegFormer para recortar a peça novamente de forma automática.
+8. Clique em **Salvar** para exibir o item na grade do guarda-roupa imediatamente (~16 ms) enquanto a geração de miniaturas WebP e as reconstruções generativas Nano Banana são concluídas em segundo plano.
 
 #### B. Escaneando Passaportes Digitais de Produtos da UE (DPP)
 1. Toque no botão **Escanear QR (DPP)** na página Adicionar Item.

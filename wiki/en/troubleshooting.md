@@ -1,39 +1,18 @@
-# Troubleshooting & Helpful Solutions
+# Troubleshooting & Quick Fixes
 
-Quick, easy solutions for common questions, permissions, and app limits.
+Here are simple solutions to the most common questions when using DressApp:
 
-## Overview
-Find fast answers for camera access, upload speed questions, closet limit ceilings, audio settings, and AI key notices so you can get back to styling effortlessly.
+## 1. My closet is full and I can't add more clothes!
+- **Why it happens**: Free accounts start with 50 item slots (and can expand up to 150 item slots through friend referrals).
+- **Easy fix**: Share your personal invite link from your **Profile** page to earn **+10 free slots** for every friend who registers, or upgrade to the **Manager** or **Professional** plan for unlimited closet space.
 
-## Prerequisites
-- An active internet connection.
-- A modern web browser (Google Chrome or Apple Safari recommended) or the DressApp mobile app.
+## 2. Adding several photos at once takes a moment!
+- **Why it happens**: DressApp's AI carefully removes the background and identifies the category, colors, and details of every piece of clothing in your photos.
+- **Easy fix**: Your photos are processed automatically in the background—you can continue browsing your closet while DressApp finishes adding them! Upgrading to the **Manager** or **Professional** plan also unlocks our faster **cutting-edge AI model**.
 
-## Step-by-Step Instructions
-1. **Camera Won't Turn On**:
-   - Open your browser or device settings, find **DressApp**, and ensure **Camera** permissions are set to "Allow". Refresh the page.
-2. **"Closet Capacity Reached" Message**:
-   - Free accounts store up to **150 garments** baseline.
-   - You can invite friends to get **+10 extra slots** per signup (up to 150 items max), delete unworn clothes, or tap **Upgrade to Manager** ($10/mo) or **Professional** ($15/mo) for unlimited storage.
-3. **Voice Typing or Audio Replay Not Working**:
-   - Verify that microphone permissions are allowed in your browser settings.
-   - Check that your phone or computer volume is turned up and not muted or in "Do Not Disturb" mode.
-4. **Photos Taking Time to Process**:
-   - Multi-item outfits take a few moments as the AI cuts out backgrounds, inspects image completeness, and extracts clothing tags. Items process smoothly one-by-one; you can continue browsing the app while they finish!
-5. **"Using Platform Stylist (Quota Fallback)" Notice**:
-   - If the external cloud AI model temporarily hits a `429 Too Many Requests` rate limit, DressApp automatically catches this and completes your styling request using our built-in on-premises **Eyes** model (currently a fine-tuned `Qwen 2.5 VL 3B` model). Your styling request will never crash or fail with an error!
-6. **Accessing Fast Cloud AI & Trend Scout**:
-   - Free users enjoy DressApp's on-premises **Eyes** (`Qwen 2.5 VL 3B`) model with zero setup. Upgrading to the **Manager** ($10/mo) or **Professional** ($15/mo) plan unlocks priority routing to the fast Cloud AI model (currently **Google Gemini 3.5 Flash**) and full access to Trend Scout daily fashion intelligence.
-7. **Connecting Google Calendar**:
-   - Go to **Profile** &rarr; **Google Calendar** and tap **Connect**. Authorize calendar permissions so the Stylist can check your daily events.
+## 3. My camera or microphone isn't working!
+- **Why it happens**: Your web browser needs permission to access your device's camera or microphone.
+- **Easy fix**: Click the permissions icon in your browser's address bar (or open your browser settings), allow Camera and Microphone access for DressApp, and refresh the page.
 
-## Expected Results
-Fast resolution of common issues so your digital wardrobe runs smoothly.
-
-## Troubleshooting
-- **Still experiencing issues?** Log out of your account and log back in, or clear your browser cache to refresh your session.
-- **RTL Language Displays**: In Hebrew and Arabic, text and tabs mirror automatically to the right for natural reading.
-
-## Limitations
-- Digital wardrobe imports from competitor apps require a desktop browser and cannot be started from mobile phones.
-- Fast Cloud model routing (`Gemini 3.5 Flash`) and full Trend Scout fashion channels require an active **Manager** or **Professional** plan.
+## 4. What happens if the cloud AI is very busy?
+- DressApp automatically switches to **DressApp's on-premises AI model** behind the scenes whenever cloud traffic is high, ensuring your styling chats and photo uploads always complete smoothly without errors.

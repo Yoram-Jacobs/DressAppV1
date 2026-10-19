@@ -44,14 +44,18 @@ DressApp is een door AI aangedreven persoonlijke garderobebeheerder, stylingadvi
 ### 3.1 Kledingstukken Invoeren (Items Toevoegen)
 INVOERMETHODEN: Fotografie, EU Digitale Productpaspoorten en Digitale Aankoopbewijzen.
 
-#### A. Interactieve Camera en Bestandsupload
+#### A. Interactieve Camera, Gemengde Batch-Upload & Automatische 3-Pijplijn Routering
 1. Ga naar het scherm **Item toevoegen (Add Item)**.
-2. Selecteer **Foto maken (Take Photo)** (opent de camera van uw mobiele apparaat) of klik op **Foto's uploaden (Upload Photos)** (opent de bestandskiezer van het besturingssysteem).
-3. De client berekent de SHA-256 en horizontale verschil-hash (dHash) van de afbeelding in de browser (~100–180 ms) om te controleren of het item al in uw kledingkast staat.
+2. Selecteer **Foto maken (Take Photo)** (opent de camera van uw mobiele apparaat) of klik op **Foto's uploaden (Upload Photos)** (opent de bestandskiezer). U kunt meerdere foto's met gemengde kenmerken in één enkele batch uploaden (losse kledingstukken, volledige outfits op een persoon/paspop en ongedragen stapels/clusters kleding) zonder handmatige pijplijntabbladen te kiezen.
+3. De client berekent in de browser de SHA-256 en horizontale verschil-hash (dHash) van elke afbeelding (~100–180 ms) om te controleren of het item al in uw kledingkast staat.
 4. Als er een overeenkomst wordt gevonden, verschijnt het **Duplicaatcontroledialoogvenster (Duplicate Preflight Dialog)** met overeenkomende voorbeelden. Kies **Overslaan (Skip)** of **Toch toevoegen (Add anyway)**.
-5. Na acceptatie start de server een NDJSON-stream. Binnen 5–7 seconden wordt een voorlopig voorbeeldframe getoond, zodat u de itemgegevens direct kunt bewerken terwijl de backend het taggen voltooit.
-6. Controleer de automatisch gedetecteerde tags (kleur, stof, pasvorm, patroon, gelegenheid). Als de vorm van de uitsnede niet klopt, wijzigt u het keuzemenu **Categorie (Category)**; hierdoor snijdt SegFormer het kledingstuk automatisch opnieuw uit.
-7. Klik op **Opslaan (Save)** om het item direct optimistisch weer te geven in het kledingkastraster (~16 ms), terwijl op de achtergrond het genereren van WebP-miniaturen wordt afgerond.
+5. **Automatische 3-Pijplijn Fotoroutering (`detect_photo_pipeline`)**: Voor elke geaccepteerde foto inspecteert `clothing_parser.py` de semantische SegFormer-maskers (`face_skin_ratio`, `anatomical_stack`, verbonden componenten) en stuurt de foto automatisch naar:
+   - **`single`-pijplijn**: Geïsoleerd enkel kledingstuk met studio-alfa-uitsnijding (`rembg` + SegFormer-maskerintersectie).
+   - **`multi`-pijplijn**: Gedragen multi-item outfit op een model of paspop, waarbij afzonderlijke uitsneden voor bovenkleding, onderkleding, jassen, schoenen en accessoires worden geëxtraheerd.
+   - **`mass`-pijplijn**: Ongedragen kledingclusters, flat-lay-opstellingen of meerdere items aan wandhaken (`parse_unworn_cluster`), waarbij losse componenten worden gescheiden en kleurgebaseerde watershed-splitsing wordt uitgevoerd met behoud van borstprints.
+6. De server streamt binnen enkele seconden progressieve NDJSON-frames (`detect`, `field`, `item`, `done`), zodat u de itemgegevens direct kunt bewerken terwijl de backend het taggen voltooit — inclusief nauwkeurig onderscheid tussen **Sweatshirts & Hoodies** en **T-shirts** en meer dan 60 **traditionele & culturele kledingstukken** in alle 13 talen.
+7. Controleer de automatisch gedetecteerde tags (kleur, stof, pasvorm, patroon, dresscode, gelegenheid). Als de vorm van de uitsnede niet klopt, wijzigt u het keuzemenu **Categorie (Category)**; hierdoor snijdt SegFormer het kledingstuk automatisch opnieuw uit.
+8. Klik op **Opslaan (Save)** om het item direct optimistisch weer te geven in het kledingkastraster (~16 ms), terwijl op de achtergrond het genereren van WebP-miniaturen en optionele generatieve Nano Banana-aanvullingen worden afgerond.
 
 #### B. EU Digitale Productpaspoorten (DPP) Scannen
 1. Tik op de knop **Scan QR (DPP)** op de pagina Item toevoegen.

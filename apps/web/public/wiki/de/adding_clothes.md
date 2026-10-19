@@ -1,41 +1,44 @@
 # Kleidung erfassen & hinzufügen
 
-Digitalisieren Sie Ihren physischen Kleiderschrank in Sekundenschnelle mit multimodaler KI-Erkennung, intelligenter Hintergrundentfernung und automatischer Bildvervollständigung.
+Digitalisiere deinen physischen Kleiderschrank in Sekunden – mit automatischem 3-Pipeline-Foto-Routing, intelligenter Hintergrundentfernung und generativer Bildvervollständigung.
 
 ## Übersicht
-Erfassen Sie Kleidungsstücke per Live-Kamerafoto, Galerie-Mehrfachupload, Digital Product Passport (DPP) QR-Codes oder digitalen Kaufbelegen (Rechnungs-OCR). Die integrierte On-Premises-KI entfernt Hintergründe automatisch, extrahiert über 20 Modemerkmale und erstellt saubere Studiofreisteller – ganz ohne erforderliche API-Schlüssel.
+Erfasse Kleidung per Live-Kameraschnappschuss, Mehrfach-Upload aus der Galerie (einschließlich gemischter Stapel aus Einzelteilen, getragenen Outfits und Kleiderhaufen), QR-Codes des Digitalen Produktpasses (DPP) oder digitalen Kaufbelegen (Rechnungs-OCR). Die integrierte lokale KI erkennt automatisch die Eigenschaften jedes Fotos, entfernt Hintergründe, vergibt über 20 Mode-Attribute (inklusive Sweatshirts/Hoodies sowie über 60 traditioneller & kultureller Kleidungsstücke) und erstellt saubere Studio-Freisteller ganz ohne API-Schlüssel.
 
 ## Voraussetzungen
-- Klare, gut beleuchtete Fotos der Kleidungsstücke (Spiegelselfies, Ganzkörper-Outfitfotos oder Flat-Lays).
-- Kamerazugriff für das Scannen von physischen Kleidungsstücken und QR-Codes.
-- Digitale Kaufbelege oder Rechnungs-Screenshots (PDF / PNG / JPEG) für Online-Einkäufe.
+- Klare, gut beleuchtete Fotos von Kleidungsstücken (Einzelteile, Ganzkörper-Spiegelselfies, Schaufensterpuppen oder Flat-Lays mehrerer Kleidungsstücke).
+- Kamerazugriff zum Scannen physischer Artikel und QR-Codes.
+- Digitale Quittungen oder Rechnungs-Screenshots (PDF / PNG / JPEG) für Online-Einkäufe.
 
 ## Schritt-für-Schritt-Anleitung
 
-1. **Interaktiver Upload & Aufnahme**:
-   - Tippen Sie auf **Artikel hinzufügen** &rarr; wählen Sie **Foto aufnehmen** oder laden Sie ein oder mehrere Outfitfotos von Ihrem Gerät hoch.
-   - Die integrierte Duplikaterkennung prüft sofort, ob Sie dasselbe Kleidungsstück bereits zuvor hochgeladen haben.
-2. **KI-Segmentierung & Mehrfachartikel-Erkennung**:
-   - Das Vision-Modell erkennt und isoliert verschiedene Kleidungsstücke (Jacken, Oberteile, Röcke, Hosen, Schuhe, Accessoires) in einem einzigen Durchgang.
-3. **KI-Freistellung & saubere Studiofotos**:
-   - Die integrierte Bildverarbeitung entfernt Hintergründe automatisch und erstellt gestochen scharfe, transparente PNG-Bilder für alle Konten.
-4. **Automatische Metadaten-Erkennung**:
-   - Konten im kostenlosen Tarif (Free Tier) nutzen die lokale On-Premises-**Eyes**-Engine von DressApp (derzeit ein feinabgestimmtes `Qwen 2.5 VL 3B`-Modell), während Abonnenten der Tarife **Manager** und **Professional** vom schnellen Cloud-Modell (`Google Gemini 3.5 Flash`) profitieren, um über 20 Modemerkmale (Farben, Materialzusammensetzung, Unterkategorie, Dresscode, Marke und Zustand) zu extrahieren.
-5. **Erweiterte generative Fotoreparatur (Nano Banana)**:
-   - Nano Banana untersucht zugeschnittene Artikel auf Verdeckungen (Taschen, Hände) und Bildränder und rekonstruiert fehlende Stoffpartien automatisch per Outpainting zu vollständigen Studioaufnahmen – ganz ohne externe API-Schlüssel.
+1. **Interaktiver Upload & Gemischte Stapelverarbeitung**:
+   - Tippe auf **Artikel hinzufügen** → wähle **Foto aufnehmen** oder **Fotos hochladen**, um ein oder mehrere Fotos von deinem Gerät auszuwählen. Du kannst Fotos einzelner Kleidungsstücke, komplette Outfits am Körper und Kleiderstapel frei in einem einzigen Upload mischen, ohne Modus-Tabs auswählen zu müssen!
+   - Die integrierte Duplikaterkennung prüft sofort, ob du dasselbe Kleidungsstück bereits hochgeladen hast.
+2. **Automatisches 3-Pipeline-Routing (`GarmentVision`)**:
+   - **GarmentVision** analysiert jedes Foto automatisch und leitet es an die passende Pipeline weiter:
+     - **Einzelteil (`Single`)**: Isoliert ein einzelnes Kleidungsstück mit präzisem Studio-Alpha-Matting.
+     - **Mehrteiliges Outfit (`Multi-Garment`)**: Teilt Kopf-bis-Fuß-Outfits an einer Person oder Puppe in separate Karten für Oberteil, Unterteil, Jacke/Mantel, Schuhe und Accessoires auf.
+     - **Kleider-Cluster (`Mass Cluster`)**: Trennt Gruppen ungetragener Kleidung (nebeneinander ausgelegt oder an Wandhaken hängend) in einzelne Kleiderschrank-Elemente.
+3. **KI-Freistellung & Saubere Studiofotos**:
+   - Die integrierte Vision-Pipeline entfernt Hintergründe automatisch und erzeugt gestochen scharfe, transparente PNG-Bilder für alle Konten.
+4. **Automatisches Tagging für Metadaten, Hoodies & Traditionelle Kleidung**:
+   - Kostenlose Konten nutzen die lokale **Eyes**-Engine von DressApp (feinabgestimmtes `Qwen 2.5 VL 3B`), während **Manager**- ($10/Monat) und **Professional**-Nutzer ($15/Monat) vom schnellen Cloud-Modell (`Google Gemini 3.5 Flash`) profitieren, um über 20 Mode-Attribute zu extrahieren – mit präziser Unterscheidung zwischen **Sweatshirts & Hoodies** und **T-Shirts** sowie Erkennung von über 60 **traditionellen & kulturellen Kleidungsstücken** (Sari, Kimono, Thobe, Kaftan, Hanbok, Cheongsam, Ao Dai, Dirndl, Kilt u. v. m.) in allen 13 Sprachen.
+5. **Generative Fotoreparatur (Nano Banana)**:
+   - Nano Banana prüft freigestellte Artikel auf Verdeckungen (Taschen, Hände) und Bildränder und vervollständigt fehlende Stoffpartien automatisch zu vollständigen Studiofotos – ohne externe API-Schlüssel.
 6. **Digitale Belege & DPP-Tags**:
-   - Wechseln Sie zu **Digitaler Import**, um Bestellbestätigungs-E-Mails oder Rechnungen auszulesen und den Kaufpreis sowie verifizierte Größen fest zu speichern.
-   - Tippen Sie auf **QR scannen (DPP)** auf dem Pflegeetikett, um Lieferkettendaten des Digitalen EU-Produktpasses und Pflegehinweise zu importieren.
+   - Wechsle zu **Digitaler Import**, um Bestellbestätigungen oder Rechnungen auszulesen und Kaufpreis sowie verifizierte Größen zu sperren.
+   - Tippe auf **QR scannen (DPP)** am Etikett, um Lieferkettendaten und Pflegehinweise des EU-Digitalen Produktpasses zu importieren.
 7. **Im Kleiderschrank speichern**:
-   - Tippen Sie auf **Speichern**. Die Artikel erscheinen sofort in Ihrer Kleiderschrank-Übersicht.
+   - Tippe auf **Speichern**. Die Artikel erscheinen sofort in deinem Kleiderschrank-Raster.
 
 ## Erwartete Ergebnisse
-Jedes Kleidungsstück erscheint in Ihrer digitalen Garderobe als zentriertes, sauberes Foto in Studioqualität mit vollständig indexierten Suchattributen und umfangreichen Taxonomie-Tags.
+Jedes Kleidungsstück erscheint in deiner digitalen Garderobe als zentriertes, sauberes Studiofoto mit präzisen Kategorie-/Unterkategorie-Labels, kulturellen Heritage-Tags und vollständig indexierten Suchattributen.
 
 ## Fehlerbehebung
-- **Abgeschnittene / unvollständige Kleidungsstücke auf Fotos**: Platzieren Sie das Kleidungsstück mittig vor einem kontrastierenden Hintergrund. Nano Banana kann abgeschnittene Kragen oder Säume automatisch rekonstruieren.
-- **Beleuchtung & Kontrast**: Fotografieren Sie dunkle Kleidungsstücke für optimale Ergebnisse vor einem hellen, kontrastreichen Hintergrund.
-- **Abweichungen bei der Rechnungs-OCR**: Nutzen Sie die interaktive Box-Auswahl auf Rechnungsbildern, um einzelne Produktzeilen manuell zuzuweisen.
+- **Abgeschnittene / Unvollständige Kleidung auf Fotos**: Zentriere das Kleidungsstück vor einem kontrastreichen Hintergrund. Nano Banana kann abgeschnittene Kragen oder Säume automatisch rekonstruieren.
+- **Beleuchtung & Kontrast**: Fotografiere dunkle Kleidung für beste Ergebnisse vor einem hellen, kontrastreichen Hintergrund.
+- **Beleg-OCR-Abweichungen**: Nutze die interaktive Rahmenauswahl auf Rechnungsbildern, um einzelne Produktzeilen manuell zu markieren.
 
 ## Einschränkungen
-- Hochauflösende Stapel-Uploads (>5 Artikel) werden über asynchrone Hintergrund-Warteschlangen verarbeitet, um eine reaktionsschnelle Bedienung ohne Browser-Timeouts zu gewährleisten.
+- Hochauflösende Stapel-Uploads (>5 Artikel) werden über asynchrone Hintergrund-Warteschlangen verarbeitet, um eine flüssige Bedienung ohne Browser-Timeouts zu gewährleisten.

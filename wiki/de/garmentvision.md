@@ -69,7 +69,7 @@ graph TD
 
 ### Modi & Workflow-Anleitungen
 1. **Interaktive Momentaufnahme & Stapelaufnahme:**
-   - Tippen Sie auf **Artikel hinzufügen** &rarr; nehmen Sie ein Foto auf oder laden Sie ein Foto mit einem oder mehreren Kleidungsstücken hoch.
+   - Tippen Sie auf **Artikel hinzufügen** → nehmen Sie ein Foto auf oder laden Sie ein Foto mit einem oder mehreren Kleidungsstücken hoch.
    - Das System führt Pre-Flight-Duplikatsprüfungen in Echtzeit durch (`crypto.subtle` SHA-256 und perzeptives Hashing), um doppelte Uploads sofort zu erkennen.
 2. **KI-Qualitätsbewertung:**
    - Während SegFormer die Segmente zuschneidet, prüft der Gemini-Qualitätsprüfer jedes Kleidungsstück:

@@ -231,7 +231,11 @@ export default function HelpMenu() {
       }
     };
 
-    const parseInline = (text) => {
+    const parseInline = (rawText) => {
+      const text = String(rawText ?? "")
+        .replace(/&rarr;/g, "→")
+        .replace(/&larr;/g, "←")
+        .replace(/&amp;/g, "&");
       const parts = [];
       const regex = /(\*\*.*?\*\*|`.*?`|\[.*?\]\(.*?\))/g;
       let match;
@@ -256,7 +260,8 @@ export default function HelpMenu() {
           parts.push(
             <code
               key={keyIdx++}
-              className="px-1.5 py-0.5 rounded bg-secondary/50 text-xs font-mono"
+              dir="auto"
+              className="px-1.5 py-0.5 rounded bg-secondary/50 text-xs font-mono [unicode-bidi:isolate]"
             >
               {matchText.slice(1, -1)}
             </code>,
@@ -301,7 +306,8 @@ export default function HelpMenu() {
           elements.push(
             <pre
               key={`code-${idx}`}
-              className="p-4 rounded-lg bg-secondary/30 border border-border/40 font-mono text-xs overflow-x-auto my-4 text-foreground"
+              dir="ltr"
+              className="p-4 rounded-lg bg-secondary/30 border border-border/40 font-mono text-xs overflow-x-auto my-4 text-foreground text-left"
             >
               {codeLines.join("\n")}
             </pre>,
@@ -432,11 +438,9 @@ export default function HelpMenu() {
           <div className="border-r border-border md:pr-4">
             <div>
               <h6 className="text-base font-extrabold text-foreground mb-2.5">
-                {isRtl
-                  ? i18n.language === "he"
-                    ? "תוכן העניינים"
-                    : "جدول المحتويات"
-                  : "Table of Contents"}
+                {t("help.tableOfContents", {
+                  defaultValue: "Table of Contents",
+                })}
               </h6>
             </div>
             <ScrollArea>
@@ -492,7 +496,10 @@ export default function HelpMenu() {
             {viewingGuide ? (
               <div className="">
                 <button onClick={() => setViewingGuide(false)}>
-                  &larr; {isRtl ? "חזרה לתקציר" : "Back to Summary"}
+                  {isRtl ? "→" : "←"}{" "}
+                  {t("help.backToSummary", {
+                    defaultValue: "Back to Summary",
+                  })}
                 </button>
                 <div className="">{parseMarkdown(guideContent)}</div>
               </div>
@@ -529,6 +536,7 @@ export default function HelpMenu() {
                         t("help.prereq_item1"),
                         t("help.prereq_item2"),
                         t("help.prereq_item3"),
+                        t("help.prereq_item4"),
                       ].map((item, idx) => (
                         <li key={idx} className="flex items-start gap-3">
                           <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
@@ -539,17 +547,6 @@ export default function HelpMenu() {
                           </span>
                         </li>
                       ))}
-                      <li className="flex items-start gap-3">
-                        <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
-                          4
-                        </span>
-                        <span className="text-[14px] text-text-brand font-semibold">
-                          {t("help.geminiKeyStep", {
-                            defaultValue:
-                              'A Gemini API Key. Get it for free on <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">Google AI Studio</a>.',
-                          })}
-                        </span>
-                      </li>
                     </ul>
                   </div>
                 )}
@@ -653,25 +650,27 @@ export default function HelpMenu() {
                         t("help.stylist_step4"),
                         t("help.stylist_step5"),
                         t("help.stylist_step6"),
-                        t("help.stylist_step7"),
-                      ].map((text, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
-                            {idx + 1}
-                          </span>
-                          <span className="text-[14px] text-text-brand font-semibold">
-                            {text
-                              .split("**")
-                              .map((part, i) =>
-                                i % 2 === 1 ? (
-                                  <strong key={i}>{part}</strong>
-                                ) : (
-                                  part
-                                ),
-                              )}
-                          </span>
-                        </li>
-                      ))}
+                        t("help.stylist_step7", { defaultValue: "" }),
+                      ]
+                        .filter(Boolean)
+                        .map((text, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
+                              {idx + 1}
+                            </span>
+                            <span className="text-[14px] text-text-brand font-semibold">
+                              {text
+                                .split("**")
+                                .map((part, i) =>
+                                  i % 2 === 1 ? (
+                                    <strong key={i}>{part}</strong>
+                                  ) : (
+                                    part
+                                  ),
+                                )}
+                            </span>
+                          </li>
+                        ))}
                     </ul>
                   </div>
                 )}
@@ -748,11 +747,9 @@ export default function HelpMenu() {
                               )}
                             >
                               <strong className="text-primary-brand">
-                                {isRtl
-                                  ? i18n.language === "he"
-                                    ? "למה זה משנה:"
-                                    : "لماذا يهم:"
-                                  : "Why it matters:"}
+                                {t("help.whyItMatters", {
+                                  defaultValue: "Why it matters:",
+                                })}
                               </strong>{" "}
                               {item.desc}
                             </p>
@@ -1336,7 +1333,7 @@ export default function HelpMenu() {
                       {loadingGuide ? (
                         <>
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          {isRtl ? "טוען..." : "Loading..."}
+                          {t("common.loading", { defaultValue: "Loading..." })}
                         </>
                       ) : (
                         <>

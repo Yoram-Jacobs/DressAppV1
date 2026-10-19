@@ -44,14 +44,18 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 ### 3.1 Ingesting Garments (Adding Items)
 INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Receipts.
 
-#### A. Interactive Camera and File Upload
+#### A. Interactive Camera, Mixed-Batch Upload & Automatic 3-Pipeline Routing
 1. Navigate to the **Add Item** screen.
-2. Select **Take Photo** (launches native mobile camera) or click **Upload Photos** (opens OS file chooser).
-3. The client computes the image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
+2. Select **Take Photo** (launches native mobile camera) or click **Upload Photos** (opens OS file chooser). You can upload multiple photos with mixed characteristics in a single batch (single items, full outfits on a person/mannequin, and unworn piles/clusters of garments) without choosing any manual pipeline tabs.
+3. The client computes each image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
 4. If a match is found, the **Duplicate Preflight Dialog** opens showing matching previews. Select **Skip** or **Add anyway**.
-5. Once accepted, the server starts an NDJSON stream. A placeholders preview frame displays within 5-7 seconds, allowing you to edit the item details immediately while the backend completes tagging.
-6. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
-7. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background WebP thumbnail generation concludes.
+5. **Automatic 3-Pipeline Photo Routing**: For each accepted photo, `clothing_parser.py` inspects SegFormer semantic masks (`face_skin_ratio`, `anatomical_stack`, connected components) and automatically dispatches the photo to:
+   - **`single` Pipeline**: Isolated single garment with studio alpha matting (`rembg` + SegFormer mask intersection).
+   - **`multi` Pipeline**: Worn multi-garment outfit on a model or mannequin, extracting distinct upper/lower/outerwear/footwear/accessory crops.
+   - **`mass` Pipeline**: Unworn garment clusters, flat-lay arrangements, or multiple items hanging on hooks (`parse_unworn_cluster`), separating disconnected components and running semantic-color watershed splitting while protecting printed graphics.
+6. The server streams progressive NDJSON frames (`detect`, `field`, `item`, `done`) within seconds, allowing you to edit item details immediately while the backend completes tagging—including accurate **Sweatshirts & Hoodies** vs. **T-Shirt** classification and 60+ **Traditional & Cultural** attire terms across all 13 locales.
+7. Verify auto-detected tags (color, fabric, fit, pattern, dress code, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
+8. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background WebP thumbnail generation and optional Nano Banana generative completions conclude.
 
 #### B. Scanning EU Digital Product Passports (DPP)
 1. Tap the **Scan QR (DPP)** button on the Add Item page.
@@ -212,7 +216,7 @@ System liveness validation, financial bookkeeping, and user account management.
 
 1. Navigate to `/admin` (available to administrator roles).
 2. **Overview**: Audit Gross Volumes and Platform Fee income summaries. Inspect the **Provider Activity Table** to view downstream liveness statistics (Gemini API, weather service latency, and error rates).
-3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and a local Gemma container.
+3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and the on-premises `dressapp-eyes` (`Qwen 2.5 VL 3B`) container.
 4. **Users**: View active credits, roles, and lifetime payments. Use direct actions to Promote or Demote users.
 5. **Listings**: View listing states and toggle active flags to suspend fraudulent items.
 

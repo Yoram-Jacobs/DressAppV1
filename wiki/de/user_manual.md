@@ -44,14 +44,18 @@ DressApp ist ein KI-gestützter persönlicher Garderoben-Manager, Styling-Berate
 ### 3.1 Erfassen von Kleidungsstücken (Artikel hinzufügen)
 ERFASSUNGSPARADIGMEN: Fotografie, Digitale EU-Produktpässe und digitale Kaufbelege.
 
-#### A. Interaktive Kamera und Datei-Upload
-1. Navigieren Sie zum Bildschirm **Artikel hinzufügen (Add Item)**.
-2. Wählen Sie **Foto aufnehmen (Take Photo)** (startet die native Kamera des Mobilgeräts) oder klicken Sie auf **Fotos hochladen (Upload Photos)** (öffnet die Dateiauswahl des Betriebssystems).
-3. Der Client berechnet im Browser den SHA-256-Wert und den horizontalen Differenz-Hash (dHash) des Bildes (~100–180 ms), um es mit Ihrem bestehenden Kleiderschrank abzugleichen.
-4. Wird eine Übereinstimmung gefunden, öffnet sich der **Duplikat-Prüfdialog (Duplicate Preflight Dialog)** mit passenden Vorschaubildern. Wählen Sie **Überspringen (Skip)** oder **Trotzdem hinzufügen (Add anyway)**.
-5. Nach der Annahme startet der Server einen NDJSON-Stream. Innerhalb von 5–7 Sekunden wird ein Platzhalter-Vorschaubild angezeigt, sodass Sie die Artikeldetails sofort bearbeiten können, während das Backend die Verschlagwortung abschließt.
-6. Überprüfen Sie die automatisch erkannten Tags (Farbe, Stoff, Passform, Muster, Anlass). Falls die Form des Freistellers nicht stimmt, ändern Sie das Dropdown-Menü **Kategorie (Category)**; dadurch schneidet SegFormer das Kleidungsstück automatisch neu zu.
-7. Klicken Sie auf **Speichern (Save)**, um den Artikel sofort optimistisch im Kleiderschrank-Raster darzustellen (~16 ms), während im Hintergrund die WebP-Thumbnail-Generierung abgeschlossen wird.
+#### A. Interaktive Kamera, Gemischter Batch-Upload & Automatisches 3-Pipeline-Routing
+1. Navigiere zum Bildschirm **Artikel hinzufügen** (*Add Item*).
+2. Wähle **Foto aufnehmen** (startet die native Kamera) oder klicke auf **Fotos hochladen** (öffnet die Dateiauswahl). Du kannst mehrere Fotos mit gemischten Eigenschaften in einem einzigen Durchgang hochladen (einzelne Kleidungsstücke, komplette Outfits an einer Person/Schaufensterpuppe und ungetragene Kleiderstapel/Cluster), ohne manuelle Pipeline-Tabs auswählen zu müssen.
+3. Der Client berechnet im Browser den SHA-256-Hash und den horizontalen Differenz-Hash (dHash) jedes Bildes (~100–180 ms), um deinen bestehenden Kleiderschrank auf Duplikate zu prüfen.
+4. Wird eine Übereinstimmung gefunden, öffnet sich der **Duplikat-Prüfdialog** mit passenden Vorschauen. Wähle **Überspringen** (*Skip*) oder **Trotzdem hinzufügen** (*Add anyway*).
+5. **Automatisches 3-Pipeline-Foto-Routing (`detect_photo_pipeline`)**: Für jedes akzeptierte Foto analysiert `clothing_parser.py` die semantischen SegFormer-Masken (`face_skin_ratio`, `anatomical_stack`, verbundene Komponenten) und leitet das Foto automatisch weiter an:
+   - **`single`-Pipeline**: Isoliertes Einzelstück mit Studio-Alpha-Matting (`rembg` + SegFormer-Maskenschnittmenge).
+   - **`multi`-Pipeline**: Getragenes Mehrteil-Outfit an einem Model oder einer Puppe; extrahiert separate Zuschnitte für Oberteil, Unterteil, Outerwear, Schuhe und Accessoires.
+   - **`mass`-Pipeline**: Ungetragene Kleider-Cluster, Flat-Lay-Arrangements oder mehrere an Haken hängende Kleidungsstücke (`parse_unworn_cluster`); trennt unverbundene Komponenten und führt eine Farb-Watershed-Trennung durch, während Brustdrucke geschützt bleiben.
+6. Der Server streamt innerhalb von Sekunden progressive NDJSON-Frames (`detect`, `field`, `item`, `done`), sodass du Artikeldetails sofort bearbeiten kannst, während das Backend das Tagging abschließt – einschließlich präziser Klassifizierung von **Sweatshirts & Hoodies** gegenüber **T-Shirts** sowie über 60 **traditionellen & kulturellen Kleidungsstücken** in allen 13 Sprachen.
+7. Überprüfe die automatisch erkannten Tags (Farbe, Stoff, Passform, Muster, Dresscode, Anlass). Falls die Freistellungsform nicht stimmt, ändere das Dropdown **Kategorie**; dadurch schneidet SegFormer das Kleidungsstück automatisch neu zu.
+8. Klicke auf **Speichern**, um das Element sofort optimistisch im Kleiderschrank-Raster darzustellen (~16 ms), während im Hintergrund die WebP-Thumbnail-Erstellung und optionale generative Nano-Banana-Ergänzungen abgeschlossen werden.
 
 #### B. Scannen von Digitalen EU-Produktpässen (DPP)
 1. Tippen Sie auf der Seite „Artikel hinzufügen" auf die Schaltfläche **QR scannen (DPP)**.

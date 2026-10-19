@@ -2,7 +2,7 @@
 
 > Session log covering the locale-translation backfill effort and the
 > subsequent backend i18n consolidation. Captured for handoff so the next
-> agent (or you) can resume without re-deriving context.
+> agent can resume without re-deriving context.
 
 ---
 
@@ -26,15 +26,15 @@ were still raw English. This session:
 
 | Locale | Coverage | Notes |
 |--------|----------|-------|
-| `en`   | source   | — |
-| `hi`   | 100.00%  | Fully translated. |
-| `ar` / `he` / `ja` / `ru` / `zh` | 99.7–100% | Residue is legitimate cognates (`GTIN`, `kg`, `cm`, `Email`, etc.). |
-| `de` / `es` / `it` / `pt` | 96–99% | Residue is mostly cognates + a handful of borderline strings (`Admin`, `Trend-Scout`, `Fashion Scout`). |
-| `fr`   | ~65%     | **Outstanding** — 358 raw-English keys remain in `fr.json`. Backfill payload prepared but not yet fed back through an LLM. |
+| `en` | source | — |
+| `hi` | 100.00% | Fully translated. |
+| `ar` / `he` / `ja` / `ru` / `zh` | 99.7–100% | Residue is legitimate cognates. |
+| `de` / `es` / `it` / `pt` | 96–99% | Residue is mostly cognates + a handful of borderline strings. |
+| `fr` | ~65% | **Outstanding** — 358 raw-English keys remain in `fr.json`. Backfill payload prepared but not yet fed back through an LLM. |
 
 ---
 
-## Tooling built (lives under /app/scripts/ and /app/backend/)
+## Tooling built
 
 ### 1. `/app/scripts/apply_locale_backfill.py`
 
@@ -43,8 +43,8 @@ Safely merges a translation payload into `/app/frontend/src/locales/<loc>.json`.
 * Auto-detects two input shapes:
   * **Starter** — `{_summary, locales: {fr: {strings: {nested...}}}}`
   * **Flat** — `{ "fr": {"nav.experts": "Experts", ...} }`
-* Strips UTF-8 BOM (`utf-8-sig`).
-* Rejects unknown keys with a warning (cannot inject a hallucinated key).
+* Strips UTF-8 BOM.
+* Rejects unknown keys with a warning.
 * Warns on placeholder drift (`{{count}}` vs `{{n}}` etc.) without blocking.
 * Deep-merges, preserves existing translations, writes 2-space-indent JSON
   with `ensure_ascii=False` to match repo convention.
@@ -100,10 +100,10 @@ Behaviour:
 
 * Walks dotted paths through nested JSON.
 * Falls back to English if the key is missing/empty in the requested locale.
-* Returns the raw key string if missing from both (never raises).
-* Interpolates `{{var}}`, `{var}`, and `%(var)s` placeholders.
+* Returns the raw key string if missing from both.
+* Interpolates `{{var}}`, `{var}`, and `%s` placeholders.
 * BOM-tolerant load.
-* Override via env var `DRESSAPP_LOCALES_DIR=/some/path` (useful for Docker).
+* Override via env var `DRESSAPP_LOCALES_DIR=/some/path`.
 
 Refactor side-effect: `gemini_stylist.py`'s hard-coded `_LANG_NAMES` and inline
 `_language_directive()` were replaced with thin re-exports delegating to this
@@ -117,9 +117,9 @@ from `gemini_stylist`.
 `/app/docs/locale_backfill_fr_only.json` is a verified single-locale payload
 covering all 358 still-English keys in `fr.json`.
 
-Audit guarantees (asserted at generation time):
+Audit guarantees:
 
-* Exactly one locale block (`"fr"`) — no de/es/it/pt/zh content.
+* Exactly one locale block — no de/es/it/pt/zh content.
 * `payload.fr.keys() == { k ∈ en.json | fr.json[k] == en.json[k] } \ {brand}`
 * All values are non-empty English source strings.
 * Placeholders intact (`{{label}}`, `{{count}}`, `{{amount}}`, `{{km}}`).
@@ -138,19 +138,17 @@ python3 /app/scripts/apply_locale_backfill.py /tmp/fr.fixed.json
 
 ---
 
-## What went wrong (and how it was contained)
+## What went wrong
 
 Three recurring LLM failure modes surfaced during the session:
 
 1. **Locale drift** — Gemini, asked to translate a payload covering
-   `ar/fr/ja/ru/pt`, returned `de/es/hi/it/pt/zh` instead (ignoring the
-   requested set, expanding the file's `fr` block into 6 unrequested
-   languages). Mitigation: `_purpose`, `_direction`, `_locales_in_this_file`,
+   `ar/fr/ja/ru/pt`, returned `de/es/hi/it/pt/zh` instead. Mitigation: `_purpose`, `_direction`, `_locales_in_this_file`,
    and worked `_examples` fields were added to the payload to make the
    target unambiguous.
 
 2. **Truncation** — every Gemini run truncated mid-key around the 1400-key
-   mark (always inside the last locale). Mitigation: salvage script that
+   mark. Mitigation: salvage script that
    discards the truncated tail, plus follow-up "missing" payload regenerated
    from what was delivered vs what's still English-bleed.
 
@@ -165,8 +163,7 @@ Three recurring LLM failure modes surfaced during the session:
 
 The safe-fill strategy throughout was: **only apply a new translation if
 the current locale value is verbatim English**. This prevented any of the
-~425 "stylistic overwrites" that Gemini wanted to apply (e.g. swapping a
-valid Italian translation for a slightly different valid Italian translation)
+~425 "stylistic overwrites" that Gemini wanted to apply
 from re-litigating already-translated work.
 
 ---
@@ -174,13 +171,11 @@ from re-litigating already-translated work.
 ## Cleanup / leftovers
 
 * `.bak` files were created next to every locale file the script touched
-  (`de.json.bak`, `es.json.bak`, etc.). Roll back instantly with
+ . Roll back instantly with
   `mv de.json.bak de.json`. Safe to delete once you're happy with the result.
-* `/app/docs/locale_backfill_starters.json` (nested-shape) was removed —
+* `/app/docs/locale_backfill_starters.json` was removed —
   superseded by the flat-shape payloads.
-* `/app/docs/locale_backfill_missing.json` (the ar/fr/ja/ru/pt round-trip
-  payload) and `/app/docs/locale_backfill_fr_only.json` (the focused fr
-  payload) remain in `/app/docs/`.
+* `/app/docs/locale_backfill_missing.json` and `/app/docs/locale_backfill_fr_only.json` remain in `/app/docs/`.
 
 ---
 
@@ -212,8 +207,7 @@ edited    /app/frontend/src/locales/zh.json               (+50 fills)
 2. **Cleanup** — once you've QA'd the locale changes in the running app,
    delete the `.json.bak` files.
 3. **Adopt `app.services.i18n`** — start using `i18n.t(...)` in any new
-   backend code that produces user-facing strings (system emails, stylist
-   prompts, push notifications). The dictionary is loaded once at import,
+   backend code that produces user-facing strings. The dictionary is loaded once at import,
    so calls are cheap.
 4. **Pending issue from the handover** — Profile "Save changes" button
    always active (P2). Not started in this session.
@@ -223,9 +217,7 @@ edited    /app/frontend/src/locales/zh.json               (+50 fills)
 ## Session 2 — Hard-coded string audit + auto-patch
 
 After the first round of locale fills, several UI screens still showed
-English fragments on non-English locales (screenshots provided by the user:
-Profile occupation field, listing detail chips, donation banner, trend cards,
-duplicate-detection dialog). Cause: **hard-coded English strings in JSX/JS
+English fragments on non-English locales. Cause: **hard-coded English strings in JSX/JS
 source that never went through `react-i18next`**.
 
 ### Tooling added
@@ -239,8 +231,8 @@ source that never went through `react-i18next`**.
 /app/docs/code_fixes_needed.md              — module-scope literals & raw-enum bleeds that need manual code work
 ```
 
-The audit detects: JSX text content (multi-line tolerant), HTML-attribute
-strings (`placeholder`, `title`, `aria-label`, `alt`), toast/alert calls,
+The audit detects: JSX text content, HTML-attribute
+strings, toast/alert calls,
 `t('key', { defaultValue: 'English' })` patterns where the key is missing in
 en.json, and object-literal labels in fixture/array data.
 
@@ -253,30 +245,29 @@ rather than `t()`) are skipped — those are listed in
 
 * Audit found **154 distinct English strings** across **68 files**.
 * DeepSeek translated all 154 × 11 locales in one shot — payload validated
-  clean (the script auto-repaired 10 inner-quote escapes).
+  clean.
 * Apply script detected **13 `defaultValue` findings** whose existing i18n
-  key was already chosen by the developer (e.g. `home.trendsRefreshed`) —
+  key was already chosen by the developer —
   translations got written under the developer's key, not the audit's
   synthetic `suggested_key`. Avoids dead translation entries.
 * `apply_audit_translations.py` then wrote 154 × 12 locales = **1,848
-  merged entries** (zero placeholder drift).
+  merged entries**.
 
 ### Source-code patch round
 
 * `patch_hardcoded_strings.py` rewrote each finding in place. Two passes:
   - **Pass 1:** 69 patches applied across 8 files.
-  - **Pass 2** (after `inject_use_translation.py` added the hook to four
-    components missing it): 23 more patches across SwapPickerModal,
+  - **Pass 2**: 23 more patches across SwapPickerModal,
     OutfitCanvas, ExtensionConnect, TransactionLanding.
 * **92 source-code patches total** across 12 files.
-* Backups (`.bak`) written alongside every modified file.
+* Backups written alongside every modified file.
 * Whitespace-flexible multi-line JSX regex handles `<p>multi-line\nblock</p>`
   patterns automatically.
 
 ### Final state after Session 2
 
 * **Audit re-run shows 0 hard-coded English strings** in the auditable scope.
-* Frontend builds clean (`esbuild` no errors).
+* Frontend builds clean.
 * All 12 locale files extended with the 154 new keys.
 
 ### Manual code work still required (see code_fixes_needed.md)
@@ -284,7 +275,7 @@ rather than `t()`) are skipped — those are listed in
 * `src/pages/ListingDetail.jsx` — 4 chip patches to pipe `listing.mode` /
   `listing.category` / `listing.condition` / `listing.size` through their
   existing `taxonomy.*` translations.
-* `src/pages/Home.jsx` — restructure `FALLBACK_TRENDS` (module scope), add
+* `src/pages/Home.jsx` — restructure `FALLBACK_TRENDS`, add
   `trends.bucket.*` map for Trend-Scout backend labels.
 * `src/components/SeoBase.jsx` — META map at module scope, refactor to use
   i18n keys.
@@ -301,8 +292,7 @@ gap that translation alone can't reach.
 ### Added: language-switch loading floater
 
 The picker's `change()` round-trip can take up to ~20 s on slow networks
-(i18n.changeLanguage + LanguageSync DOM re-paint + optional `PATCH /me`
-profile sync). Users were clicking the picker, seeing nothing visible
+. Users were clicking the picker, seeing nothing visible
 happen, and assuming nothing did.
 
 #### Files added / changed
@@ -317,20 +307,20 @@ edited   12 × src/locales/<loc>.json       (3 new keys: language.switching,
 
 #### How it works
 
-* `LanguagePicker.change(code)` dispatches `dressapp:lang-switch-start`
+* `LanguagePicker.change` dispatches `dressapp:lang-switch-start`
   *before* the async work begins, with `{ code, nativeName }` so the
   overlay shows the target locale in its native script (e.g. `中文`).
 * The picker dispatches `dressapp:lang-switch-done` in a `finally` block
   — guarantees the overlay closes even if `i18n.changeLanguage` or the
   `PATCH /me` request throws.
-* Custom DOM events (not React context) so the overlay can mount once at
+* Custom DOM events so the overlay can mount once at
   the root and doesn't require a provider wrapping every route.
 * The overlay has a 30 s safety-net timer that auto-closes itself if the
-  picker never emits the `done` event (e.g. network hangs).
+  picker never emits the `done` event.
 * Escape key dismisses immediately (a11y); `aria-live="polite"` announces
   the state to screen readers; `aria-busy="true"` set on the backdrop.
 * Mounted at the `BrowserRouter` root so authenticated **and** logged-out
-  flows (Login / Register) get the affordance — the picker appears in all
+  flows get the affordance — the picker appears in all
   three places.
 * Visual: 12 px `backdrop-blur` over `bg-background/60`, centred card with
   `rounded-2xl` + `shadow-2xl`, `Loader2` spinner from lucide-react. No
@@ -342,7 +332,7 @@ Captured during user QA: in `/experts`, the Profession filter drop-down
 lists user-entered profession strings verbatim across every locale.
 
 Root cause: `professions` is derived from `p.professional?.profession`
-free-text values stored on each professional's profile (not an enum):
+free-text values stored on each professional's profile:
 
 ```jsx
 // src/pages/ExpertsDirectory.jsx:83
@@ -359,23 +349,23 @@ properly needs:
    (e.g. `stylist`, `personal_shopper`, `tailor`, `image_consultant`, …)
    with a free-text `profession_other` escape hatch.
 2. **Taxonomy** — add `taxonomy.profession.<slug>` keys in all 12 locale
-   files (will go through the same Gemini/DeepSeek pipeline as before).
+   files.
 3. **Frontend** — read the enum, render via
    `t(\`taxonomy.profession.${item.professional.profession}\`)`.
 4. **Migration** — one-shot DB pass that maps existing free-text values
    to the nearest enum slug.
 
-Estimated effort: ~2-3 hours total (mostly backend schema + migration).
+Estimated effort: ~2-3 hours total.
 
 ### Status snapshot at end of Session 3
 
-* Hard-coded English strings in scope: **0** (audit re-confirmed).
+* Hard-coded English strings in scope: **0**.
 * Locale parity: 12 / 12 locales now have language-switch copy + the 154
   audit fills + the 13 redirected `defaultValue` keys + Session 1's bulk
   translation work.
-* Frontend builds clean (`esbuild` in 399 ms).
-* Outstanding manual code patches: 4 (see `code_fixes_needed.md`).
-* Outstanding data/taxonomy work: 1 (Experts profession dropdown, above).
+* Frontend builds clean.
+* Outstanding manual code patches: 4.
+* Outstanding data/taxonomy work: 1.
 
 ---
 
@@ -395,14 +385,13 @@ the moment the page loaded, even when the user hadn't touched anything.
 #### Fix
 
 * Capture a JSON-serialised baseline of `initial` in a `useRef` at mount.
-* Compute `isDirty = JSON.stringify(form) !== baselineRef.current` per
+* Compute `isDirty = JSON.stringify !== baselineRef.current` per
   render (cheap — form is plain JSON, deterministic key order from the
   `useMemo` above).
 * Re-baseline inside `save()` after the API call succeeds:
-  `baselineRef.current = JSON.stringify(form)`. Drops the button back
+  `baselineRef.current = JSON.stringify`. Drops the button back
   to its disabled state if the user stays on the page.
-* If `initial` ever recomputes externally (e.g. `updateUserLocal` from
-  another tab, avatar change elsewhere), keep the baseline in step via
+* If `initial` ever recomputes externally, keep the baseline in step via
   a `lastSeenInitialRef` reference-identity check — external updates
   aren't mistaken for dirt.
 * Button now `disabled={busy || !isDirty}`.
@@ -413,18 +402,18 @@ Edge cases covered:
 |---|---|
 | Page load, no edits | Disabled |
 | User types in a field | Enabled |
-| User reverts the field to its loaded value | Disabled (deep-equality re-check) |
-| User clicks Save, succeeds | Disabled (baseline updated) |
-| Save fails (toast.error) | Still enabled (baseline NOT updated) |
-| User navigates away and back | Disabled (fresh mount, fresh baseline) |
-| Another tab updates user via context | Disabled (baseline tracks `initial`) |
+| User reverts the field to its loaded value | Disabled |
+| User clicks Save, succeeds | Disabled |
+| Save fails | Still enabled |
+| User navigates away and back | Disabled |
+| Another tab updates user via context | Disabled |
 
 ### 2. "Save all" → "Save" in the Add to Closet pipeline
 
 **Files touched:** 12 × `src/locales/<loc>.json`
 
 The internal i18n key was kept as `addItem.saveAll` and `common.saveAll`
-(both refer to the same button) so no JSX/source edits were needed —
+ so no JSX/source edits were needed —
 only the displayed value was rewritten per locale. Translations match
 the standard UI verb for "Save" in each language:
 
@@ -443,7 +432,7 @@ the standard UI verb for "Save" in each language:
 | ja | すべて保存 | 保存 |
 | zh | 全部保存 | 保存 |
 
-Frontend builds clean (`esbuild` in 240 ms), no JS lint findings.
+Frontend builds clean, no JS lint findings.
 
 ---
 

@@ -44,14 +44,18 @@ DressApp è un gestore di guardaroba personale basato su IA, un consulente di st
 ### 3.1 Acquisizione dei Capi (Aggiunta di Articoli)
 PARADIGMI DI ACQUISIZIONE: Fotografia, Passaporti Digitali dei Prodotti dell'UE e Ricevute di Commercio Digitale.
 
-#### A. Fotocamera Interattiva e Caricamento File
-1. Accedi alla schermata **Aggiungi capo (Add Item)**.
-2. Seleziona **Scatta foto** (avvia la fotocamera nativa su mobile) o fai clic su **Carica foto** (apre il selettore file del sistema operativo).
-3. Il client calcola l'impronta SHA-256 dell'immagine e il difference-hash orizzontale (dHash) direttamente nel browser (~100-180 ms) per confrontarla con il guardaroba esistente.
-4. Se viene trovata una corrispondenza, si apre la **finestra di dialogo preliminare dei duplicati** con le anteprime corrispondenti. Seleziona **Salta** o **Aggiungi comunque**.
-5. Una volta accettato, il server avvia uno stream NDJSON. Entro 5-7 secondi viene visualizzato un riquadro di anteprima provvisorio, che consente di modificare immediatamente i dettagli dell'articolo mentre il backend completa il tagging.
-6. Verifica i tag rilevati automaticamente (colore, tessuto, vestibilità, fantasia, occasione). Se la forma dello scontorno non è corretta, modifica il menu a discesa **Categoria**; questo attiva SegFormer per ritagliare nuovamente il capo in automatico.
-7. Fai clic su **Salva** per disegnare in modo ottimistico l'articolo nella griglia del guardaroba all'istante (~16 ms) mentre si conclude la generazione in background della miniatura WebP.
+#### A. Fotocamera Interattiva, Caricamento Lotti Misti e Routing Automatico a 3 Pipeline
+1. Vai alla schermata **Aggiungi capo** (*Add Item*).
+2. Seleziona **Scatta foto** (avvia la fotocamera nativa) o fai clic su **Carica foto** (apre il selettore file). Puoi caricare più foto con caratteristiche miste in un unico lotto (capi singoli, outfit completi su persona/manichino e pile/cluster di capi non indossati) senza dover selezionare schede manuali di pipeline.
+3. Il client calcola nel browser l'hash SHA-256 e il dHash orizzontale (~100-180 ms) di ogni immagine per verificare eventuali duplicati nel guardaroba.
+4. Se viene trovata una corrispondenza, si apre la **Finestra di controllo duplicati** con le anteprime corrispondenti. Seleziona **Salta** (*Skip*) o **Aggiungi comunque** (*Add anyway*).
+5. **Routing Automatico a 3 Pipeline (`detect_photo_pipeline`)**: Per ogni foto accettata, `clothing_parser.py` ispeziona le maschere semantiche SegFormer (`face_skin_ratio`, `anatomical_stack`, componenti connesse) e invia automaticamente la foto a:
+   - **Pipeline `single`**: Singolo capo isolato con scontorno alfa da studio (`rembg` + intersezione maschera SegFormer).
+   - **Pipeline `multi`**: Outfit multi-capo indossato da un modello o manichino, con estrazione separata di top, pantaloni/gonne, capispalla, calzature e accessori.
+   - **Pipeline `mass`**: Cluster di capi non indossati, composizioni flat-lay o capi multipli appesi a ganci (`parse_unworn_cluster`), separando le componenti disconnesse ed eseguendo la separazione cromatica watershed proteggendo le stampe grafiche.
+6. Il server trasmette frame NDJSON progressivi (`detect`, `field`, `item`, `done`) in pochi secondi, consentendoti di modificare subito i dettagli mentre il backend completa il tagging—inclusa la classificazione precisa tra **Felpe e Hoodie** (*Sweatshirts & Hoodies*) rispetto a **T-Shirt** e oltre 60 **abiti tradizionali e culturali** in tutte le 13 lingue.
+7. Verifica i tag rilevati automaticamente (colore, tessuto, vestibilità, fantasia, dress code, occasione). Se la forma del ritaglio non è corretta, modifica il menu a tendina **Categoria**; questo attiva SegFormer per ritagliare nuovamente il capo in automatico.
+8. Fai clic su **Salva** per visualizzare immediatamente il capo nella griglia dell'armadio (~16 ms) mentre la generazione di miniature WebP e i completamenti generativi Nano Banana terminano in background.
 
 #### B. Scansione dei Passaporti Digitali dei Prodotti dell'UE (DPP)
 1. Tocca il pulsante **Scansiona QR (DPP)** nella pagina Aggiungi capo.

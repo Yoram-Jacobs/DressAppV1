@@ -25,7 +25,7 @@ Vind snel antwoorden over cameratoegang, uploadsnelheden, opslaglimieten van uw 
 6. **Toegang tot Snelle Cloud-AI & Trend Scout**:
    - Gratis gebruikers maken zonder enige configuratie gebruik van het on-premises **Eyes**-model (`Qwen 2.5 VL 3B`) van DressApp. Door te upgraden naar het **Manager**-abonnement ($ 10/mnd) of **Professional**-abonnement ($ 15/mnd) krijgt u prioriteitsroutering naar het snelle Cloud AI-model (momenteel **Google Gemini 3.5 Flash**) en volledige toegang tot de dagelijkse mode-intelligentie van Trend Scout.
 7. **Google Agenda Koppelen**:
-   - Ga naar **Profiel** &rarr; **Google Agenda** en tik op **Verbinden (Connect)**. Geef toestemming voor agendatoegang, zodat de Stylist rekening kan houden met uw dagelijkse afspraken.
+   - Ga naar **Profiel** → **Google Agenda** en tik op **Verbinden (Connect)**. Geef toestemming voor agendatoegang, zodat de Stylist rekening kan houden met uw dagelijkse afspraken.
 
 ## Verwachte Resultaten
 Snelle oplossing van veelvoorkomende problemen, zodat uw digitale garderobe soepel blijft werken.

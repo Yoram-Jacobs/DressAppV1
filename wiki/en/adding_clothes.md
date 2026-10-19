@@ -1,41 +1,33 @@
-# Ingesting & Adding Clothes
+# Adding Clothes to Your Closet
 
-Digitize your physical wardrobe in seconds with multi-modal AI scanning, smart background removal, and automatic image completion.
+Bring your physical wardrobe into DressApp in seconds—whether you photograph one item at a time, a full outfit you are wearing, or several clothes laid out together.
 
 ## Overview
-Ingest clothes using live camera snaps, multi-image gallery uploads, Digital Product Passports (DPP) QR tags, or digital receipts (invoice OCR). Built-in on-premises AI automatically cuts out backgrounds, tags 20+ fashion attributes, and prepares clean studio cutouts with zero required API keys.
-
-## Prerequisites
-- Clear, well-lit photos of garments (mirror selfies, full-body outfit photos, or flat lays).
-- Camera access for scanning physical items and QR codes.
-- Digital receipts or invoice screenshots (PDF / PNG / JPEG) for e-commerce purchases.
+You can add clothes by taking live photos with your camera, uploading saved photos from your gallery, scanning digital product tags, or importing online shopping links and receipts. DressApp's AI automatically identifies every garment, removes the background, and fills in the details for you.
 
 ## Step-by-Step Instructions
 
-1. **Interactive Upload & Capture**:
-   - Tap **Add Item** &rarr; select **Take Photo** or upload one or more outfit photos from your device.
-   - Built-in duplicate detection instantly checks if you previously uploaded the same garment.
-2. **AI Segmentation & Multi-Item Detection**:
-   - The vision model isolates distinct garments (jackets, tops, skirts, pants, footwear, accessories) in a single pass.
-3. **AI Matting & Clean Studio Photos**:
-   - The built-in vision pipeline automatically keys out backgrounds into crisp, transparent PNG images for all accounts.
-4. **Automatic Metadata Tagging**:
-   - Free Tier accounts use DressApp's on-premises **Eyes** engine (currently a fine-tuned `Qwen 2.5 VL 3B` model), while **Manager** and **Professional** plan users enjoy the fast Cloud model (`Google Gemini 3.5 Flash`) to extract 20+ fashion attributes (colors, fabric composition, sub-category, dress code, brand, and condition).
-5. **Advanced Generative Photo Repair (Nano Banana)**:
-   - Nano Banana inspects cropped items for occlusions (bags, hands) and frame boundaries, automatically outpainting and reconstructing missing fabric into complete studio photographs with zero external API keys required.
-6. **Digital Receipts & DPP Tags**:
-   - Switch to **Digital Import** to parse order confirmation emails or invoices, locking purchase price and verified sizes.
-   - Tap **Scan QR (DPP)** on the label to import EU Digital Product Passport supply chain facts and care guidelines.
-7. **Save to Closet**:
-   - Tap **Save**. Items appear immediately in your Closet grid.
+1. **Open the Add Item Screen**:
+   - Tap the **Add Item** button in the main navigation bar.
 
-## Expected Results
-Every garment appears in your digital wardrobe as a centered, clean studio-quality photograph with fully indexed search attributes and rich taxonomy tags.
+2. **Take or Upload Photos**:
+   - Tap **Take Photo** to use your camera, or **Upload Photos** to select one or more pictures from your device.
+   - You can upload any combination of photos at once:
+     - **A single piece of clothing** on a hanger, table, or bed.
+     - **A full outfit worn by a person**, which DressApp automatically splits into separate cards for the top, bottom, outerwear, shoes, and accessories.
+     - **Several items laid out side by side**, which DressApp separates into individual closet items.
 
-## Troubleshooting
-- **Cut-Off / Partial Garments in Photos**: Cleanly center the garment against a contrasting background. Nano Banana can reconstruct clipped collars or hems automatically.
-- **Lighting & Contrast**: For best results on dark garments, photograph against contrasting light backgrounds.
-- **Receipt OCR Mismatches**: Use the interactive box selector on receipt images to manually designate individual product lines.
+3. **Automatic Background Removal & Smart Tagging**:
+   - DressApp's AI removes the background from each item and detects its **Category**, **Subcategory** (accurately distinguishing sweatshirts and hoodies from T-shirts), **Colors**, **Pattern**, **Material**, **Season**, and **Occasion**.
+   - It also recognizes over 60 **Traditional & Cultural** garments from around the world.
+   - Free accounts use **DressApp's on-premises AI model**, while **Manager** and **Professional** subscribers enjoy faster processing with our **cutting-edge AI model**.
 
-## Limitations
-- High-resolution batch uploads (>5 items) process via asynchronous background queues to guarantee responsive performance without browser timeout.
+4. **Automatic Edge Completion**:
+   - If part of a sleeve or hem was slightly cut off in the photo, DressApp's AI can automatically fill in the missing edge to create a clean studio-style image.
+
+5. **Review & Save**:
+   - Check the detected details, make any edits you like, and tap **Save** to add the items to your closet!
+
+## Helpful Tips
+- Take photos in a well-lit room against a simple background for the cleanest results.
+- When photographing several items together, leave a small gap between each piece so they are easy to separate.

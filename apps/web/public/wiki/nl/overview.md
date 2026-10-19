@@ -1,37 +1,37 @@
 # Welkom bij DressApp
 
-Welkom bij uw ultieme digitale garderobemetgezel! DressApp is ontworpen om u te helpen uw fysieke kledingkast te digitaliseren, te organiseren en er het maximale uit te halen.
+Welkom bij je ultieme digitale garderobe-assistent! DressApp is ontworpen om je te helpen je fysieke kledingkast te digitaliseren, organiseren en optimaal te benutten.
 
 ## Overzicht
-DressApp transformeert uw fysieke kleding in een gestructureerd digitaal archief, aangedreven door een geavanceerde multi-tier AI-engine:
-- **Moeiteloos intelligent stylen**: Aangedreven door **Google Gemini 3.5 Flash-Lite** als primaire engine voor reactietijden van minder dan 350 ms, ondersteund door een on-premises **Gemma-4-E4B**-container die dient als transparant quotumvangnet (Quota Safety Net). U krijgt direct slimme aanbevelingen zonder dat u persoonlijke API-sleutels nodig heeft.
-- **Agenda- & Weerintegratie**: Realtime ochtendaanbevelingen afgestemd op de dagelijkse weersverwachting en uw persoonlijke afspraken in Google Agenda.
-- **Outfit Planner & Avatar Canvas**: Breng kledingstukken digitaal in lagen aan op een gepersonaliseerde 2D-vectormaniquin of uw eigen fotocut-out.
-- **Interactieve Inpakassistent**: Door AI samengestelde kofferchecklist voor reizen van elke duur.
-- **Shopping Assistant**: Chrome-extensie en universele bookmarklet voor slimme vergelijkingen van maten en pasvormen bij online retailers.
-- **Circulaire Marktplaats**: Directe advertenties om ongebruikte kledingstukken te verkopen, ruilen of verhuren met geïntegreerde veiligheid voor koper en verkoper.
+DressApp transformeert je fysieke kleding in een gestructureerd digitaal archief, aangedreven door een geavanceerde multi-tier AI-engine:
+- **Zero-BYOK Intelligente Styling & Visie**: Gratis accounts werken direct uit de doos op de lokale **Eyes**-engine van DressApp (een fijn-afgestemd **Qwen 2.5 VL 3B**-model), terwijl **Manager** ($10/mnd) en **Professional** ($15/mnd) abonnees profiteren van prioriteitsroutering naar **Google Gemini 3.5 Flash** met automatische lokale terugval. Je krijgt direct slimme aanbevelingen en automatische 3-pijplijn fotoverwerking (losse items, gedragen outfits en kledingclusters) zonder persoonlijke API-sleutels.
+- **Agenda- & Weerintegratie**: Realtime ochtendaanbevelingen afgestemd op de dagelijkse weersverwachting en je persoonlijke Google Agenda-afspraken.
+- **Outfitplanner & Avatar-Canvas**: Combineer kleding digitaal in laagjes op een gepersonaliseerde 2D-vectormanifestatie of je eigen uitgesneden foto.
+- **Interactieve Inpakassistent**: Door AI samengestelde kofferchecklists voor reizen van elke duur.
+- **Shopping Assistant**: Chrome-extensie en universele bookmarklet voor slimme maat- en pasvormvergelijkingen bij online winkels.
+- **Circulaire Marktplaats**: Directe advertenties om ongedragen kleding te verkopen, ruilen of verhuren met geïntegreerde koper- en verkoperbescherming.
 
 ## Vereisten
 - Een moderne webbrowser (Google Chrome, Apple Safari of Mozilla Firefox aanbevolen).
 - Internettoegang.
-- Toegang tot de camera van uw apparaat of fotobibliotheek voor het digitaliseren van kleding.
-- *(Optioneel)* Microfoontoestemming voor interactieve gesproken styling.
+- Toegang tot je camera of fotobibliotheek voor het digitaliseren van kleding.
+- *(Optioneel)* Microfoontoestemming voor spraakgestuurde styling.
 
-## Stapsgewijze instructies
-1. **Digitaliseren**: Leg kleding vast met uw camera, upload foto's of importeer digitale aankoopbewijzen. De app segmenteert items automatisch en verwijdert de achtergrond.
-2. **Organiseren**: Tag, doorzoek en groepeer kledingstukken in collecties binnen uw Closet-werkruimte.
-3. **De stylist raadplegen**: Tik op de AI Stylist om contextbewuste outfit-aanbevelingen te vragen via spraak of tekst.
-4. **Plannen & Layeren**: Stel looks samen op het Outfit Canvas, bekijk kledinglagen naast elkaar en plan ze in uw Diary.
-5. **Inpakken voor vertrek**: Genereer op maat gemaakte kofferpaklijsten op basis van de komende weersvoorspelling op uw bestemming.
-6. **Doorverkopen of ruilen**: Plaats ongedragen kledingstukken direct op de circulaire marktplaats om inkomsten te halen uit uw garderobe.
+## Stapsgewijze Instructies
+1. **Digitaliseren**: Maak foto's van je kleding met je camera, upload gemengde batches foto's (losse items, volledige outfits of stapels kleding) of importeer digitale kassabonnen. GarmentVision stuurt elke foto automatisch naar de juiste pijplijn, splitst items en verwijdert de achtergrond.
+2. **Organiseren**: Tag, zoek en groepeer kledingstukken in collecties binnen je Kledingkast.
+3. **Raadpleeg de Stylist**: Tik op de AI Stylist om via spraak of tekst contextbewuste outfitadviezen te vragen.
+4. **Plannen & Laagjes**: Stel looks samen op het Outfit Canvas, bekijk laagjes naast elkaar en plan ze in je Dagboek.
+5. **Inpakken voor Reizen**: Genereer op maat gemaakte paklijsten op basis van het verwachte weer op je bestemming.
+6. **Doorverkopen of Ruilen**: Plaats ongedragen kleding direct op de circulaire marktplaats om waarde uit je garderobe te halen.
 
-## Verwachte resultaten
-U beschikt over een gestructureerde, toegankelijke digitale kledingkast die keuzestress in de ochtend wegneemt, de benutting van uw kleding verhoogt en u helpt duurzame modekeuzes te maken.
+## Verwachte Resultaten
+Je krijgt een gestructureerde, toegankelijke digitale kledingkast die keuzestress in de ochtend wegneemt, het gebruik van je kleding verhoogt en je helpt duurzame modekeuzes te maken.
 
 ## Probleemoplossing
-- **Pagina's of afbeeldingen laden traag**: Zorg voor een stabiele internetverbinding; offline gecachte items blijven beschikbaar.
-- **Problemen met de lay-outrichting**: Schakel tussen talen; DressApp spiegelt de interface-uitlijning automatisch voor RTL-talen (Hebreeuws, Arabisch).
+- **Pagina's of afbeeldingen laden traag**: Zorg voor een stabiele netwerkverbinding; offline gecachte items blijven toegankelijk.
+- **Problemen met lay-outrichting**: Wissel tussen talen; DressApp spiegelt automatisch de interface-uitlijning voor RTL-talen (Hebreeuws, Arabisch).
 
 ## Beperkingen
-- De kledingkastcapaciteit in het Free Tier begint bij 50 items (uitbreidbaar tot 150 via aanbevelingsbonussen); een upgrade naar Manager of Professional ontgrendelt onbeperkte opslag.
-- Achtergrondverwijdering en segmentatie presteren het best bij goede verlichting en contrasterende achtergronden.
+- De capaciteit in de Gratis Tier begint bij 50 items (uitbreidbaar tot 150 via doorverwijzingsbonussen); upgraden naar Manager ($10/mnd) of Professional ($15/mnd) ontgrendelt onbeperkte opslag.
+- Achtergrondverwijdering en segmentatie werken het best bij goede verlichting en een contrasterende achtergrond.

@@ -1,29 +1,29 @@
-# DressApp: Resumen Ejecutivo y Preguntas Frecuentes (Q&A)
+# DressApp: Resumen Ejecutivo y Preguntas Frecuentes
 
-Te damos la bienvenida a **DressApp** — tu gestor de armario inteligente impulsado por IA, estilista personal y ecosistema de moda sostenible. Tanto si vas a subir tu primera prenda como si estás preparando una maleta para varias ciudades, esta guía combina un **Resumen Ejecutivo** conciso sobre cómo funciona DressApp con un directorio cercano de **Preguntas Frecuentes (Q&A)** para que domines la plataforma en pocos minutos.
+Bienvenido a **DressApp** — tu asistente inteligente de armario, estilista personal y aliado de moda sostenible. Tanto si estás subiendo tu primera prenda como si estás preparando el equipaje para un viaje, esta guía combina un **Resumen Ejecutivo** de cómo funciona DressApp con un directorio de **Preguntas Frecuentes** para empezar en pocos minutos.
 
 ---
 
 ## Resumen Ejecutivo (De un Vistazo)
 
-### Situación y Reto
-La mayoría de las personas utiliza solo el **20 % de su armario el 80 % del tiempo** porque su ropa está desorganizada, elegir qué ponerse cada mañana genera fatiga de decisión y catalogar prendas manualmente en aplicaciones tradicionales resulta lento y tedioso.
+### El Reto Diario frente al Armario
+La mayoría de las personas usa solo el **20 % de su ropa el 80 % del tiempo** porque su armario está desorganizado, elegir qué ponerse cada mañana genera cansancio y catalogar prendas manualmente en las aplicaciones tradicionales es lento y tedioso.
 
 ### La Solución de DressApp
-DressApp elimina la catalogación manual y la fatiga de decisión mediante un **ecosistema híbrido de IA visual y conversacional**:
-- **Digitalización sin Fricción**: Toma una foto en superficie plana (flat-lay), sube una foto de cuerpo entero frente al espejo, escanea un recibo digital de compra, escanea el código QR del Pasaporte Digital de Producto (DPP) de la UE o migra tu armario desde otra app en 1 clic. DressApp aísla las prendas automáticamente, elimina el fondo y etiqueta más de 9 atributos (Categoría, Color, Tejido, Corte, Temporada, Código de Vestimenta, Género, Nivel de Abrigo y Modestia).
-- **Economía de Créditos de IA Acumulativos**: Los usuarios del plan Gratuito reciben **10 Créditos de IA Local diarios** que se acumulan hasta **300 créditos durante 30 días**, además de **5 Créditos de Reconstrucción Nano Banana gratuitos** al registrarse. Al fotografiar tu armario en pequeños bloques diarios durante 5 días, acumulas automáticamente **50 créditos de IA**, suficiente para digitalizar tus 50 prendas básicas totalmente gratis.
-- **Estilismo Personal Consciente del Contexto**: Tu Estilista IA conversacional combina tus prendas reales, el pronóstico del tiempo local, tus eventos de Google Calendar, tu nivel de modestia personal y tu perfil biométrico 3D para crear conjuntos completos de pies a cabeza o detectar qué básicos faltan en tu armario.
+DressApp elimina el trabajo manual y la indecisión matutina mediante reconocimiento visual inteligente y asesoría de estilo personalizada:
+- **Digitalización sin Esfuerzo**: Toma una foto de una prenda extendida, un selfie de cuerpo entero frente al espejo o varias prendas juntas; o bien importa desde el enlace de una tienda online, un recibo digital, un código QR de producto o desde otra aplicación de armario. DressApp detecta automáticamente el tipo de imagen, elimina el fondo, separa las prendas y completa sus detalles (Categoría, Color, Tejido, Corte, Temporada, Código de vestimenta y Nivel de abrigo).
+- **Sistema de Créditos Acumulativos Gratuitos**: Los usuarios del plan Gratuito reciben **10 créditos diarios de IA propia** que se acumulan hasta **300 créditos durante 30 días**, además de **5 créditos gratuitos de Reconstrucción de Estudio** al registrarse. Fotografiar unas pocas prendas al día durante 5 días te permite reunir **50 créditos**, suficiente para digitalizar gratis un armario básico de 50 prendas.
+- **Estilismo Personal Adaptado a tu Contexto**: Tu Estilista de IA combina las prendas reales de tu armario, el pronóstico del tiempo local, tus eventos del calendario, tu preferencia de modestia y tus medidas corporales para crear conjuntos de pies a cabeza o detectar qué básicos te faltan.
 
-### Planes Principales y Valor Cuantificado
+### Comparativa de Planes
 
-| Función / Métrica | Plan Gratuito (0 \$) | Plan Manager (10 \$/mes o 100 \$/año) | Plan Professional (15 \$/mes o 150 \$/año) |
+| Característica | Plan Gratuito ($0) | Gestor de Armario ($10/mes o $100/año) | Estilista Pro ($15/mes o $100/año) |
 | :--- | :--- | :--- | :--- |
-| **Capacidad del Armario** | **50 prendas** (hasta **150** invitando amigos) | **Ilimitada** | **Ilimitada** |
-| **Motor de IA** | Motor local **Eyes** | Nube **Google Gemini** (<350 ms) + Respaldo | Nube **Google Gemini** (<350 ms) + Respaldo |
-| **Créditos de IA Diarios** | **10/día** (acumulables hasta **300 / 30 días**) | **Ilimitados** para estilismo y subidas | **Ilimitados** para estilismo y subidas |
-| **Reconstrucción de Estudio** | **5 créditos gratis** de bienvenida | **100 créditos mensuales** Nano Banana | **100 créditos mensuales** Nano Banana |
-| **Crecimiento y Ecosistema** | Armario, Estilista, Planificador y Maleta | + Migración en 1 Clic, Trend-Scout y Mercado | + Registro de Expertos Certificados y Anuncios |
+| **Capacidad del Armario** | **50 prendas** (hasta **150** invitando a amigos) | **Ilimitada** | **Ilimitada** |
+| **Modelo de IA** | **Modelo de IA propio de DressApp** | **Modelo de IA de vanguardia** + respaldo local automático | **Modelo de IA de vanguardia** + respaldo local automático |
+| **Créditos Diarios** | **10/día** (acumulables hasta **300 / 30 días**) | **Ilimitados** para estilismo y escaneo diario | **Ilimitados** para estilismo y escaneo diario |
+| **Reconstrucción de Estudio** | **5 créditos gratis** de bienvenida | **100 créditos mensuales** de Reconstrucción de Estudio | **100 créditos mensuales** de Reconstrucción de Estudio |
+| **Funciones Incluidas** | Armario Digital, Estilista, Planificador, Maleta | + Importación Rápida, Cazador de Tendencias, Marketplace | + Directorio de Expertos Certificados y Campañas |
 
 ---
 
@@ -31,121 +31,121 @@ DressApp elimina la catalogación manual y la fatiga de decisión mediante un **
 
 ### P: ¿Qué es lo primero que debo hacer después de registrarme?
 **R:** ¡Completa tu **Perfil** antes de subir ropa! Abre la pestaña **Perfil** y configura cuatro ajustes esenciales:
-1. **Preferencia de Género**: Garantiza que las prendas recién subidas hereden la clasificación predeterminada y las reglas de ajuste correctas.
-2. **Nivel de Modestia**: Indica al Estilista IA tus preferencias personales de cobertura para que cada sugerencia de conjunto resulte cómoda y fiel a tu estilo.
-3. **Ubicación Principal**: Activa la integración meteorológica local en tiempo real para que DressApp nunca te sugiera un abrigo grueso de lana en una mañana cálida y soleada.
-4. **Medidas Corporales**: Introduce solo **4 datos sencillos** (Altura, Peso, Cintura y talla de Pecho/Sujetador). El motor biométrico de DressApp (entrenado con la base de datos antropométrica ANSUR II) predice automáticamente **6 medidas corporales adicionales** para ofrecer recomendaciones de talla precisas y estilismo según tu silueta.
+1. **Preferencia de Género**: Asegura que las prendas nuevas reciban la clasificación y el ajuste predeterminados adecuados.
+2. **Nivel de Modestia**: Indica al Estilista de IA tus preferencias personales de cobertura para que cada sugerencia te resulte cómoda y fiel a tu estilo.
+3. **Ubicación**: Activa el pronóstico meteorológico local en tiempo real para que DressApp nunca te sugiera un abrigo de lana en una mañana cálida.
+4. **Medidas Corporales**: Introduce solo **4 datos sencillos** (Altura, Peso, Cintura y Contorno de pecho). El sistema calcula automáticamente **6 medidas corporales adicionales** para ofrecerte recomendaciones precisas de talla y silueta.
 
 ### P: ¿Cuánto tiempo se tarda en digitalizar mi armario?
-**R:** ¡No necesitas fotografiar todo tu armario en una sola tarde! Recomendamos el **Sprint de Inicio de 5 Días** (10 prendas al día, dedicando solo 10–15 minutos diarios):
-- **Día 1**: Partes de Abajo de Diario (10 vaqueros, pantalones de vestir, faldas o pantalones cortos)
-- **Día 2**: Partes de Arriba de Diario (10 camisetas, blusas, camisas o polos)
-- **Día 3**: Capas, Punto y Abrigos (10 jerséis, blazers, chaquetas o abrigos)
-- **Día 4**: Calzado (10 pares de zapatillas, botas, mocasines o tacones)
-- **Día 5**: Vestidos, Conjuntos y Accesorios Clave (10 vestidos/monos, bolsos, cinturones o pañuelos)
+**R:** ¡No necesitas fotografiar todo tu armario en una sola tarde! Te recomendamos el **Plan Inicial de 5 Días** (10 prendas al día, dedicando solo unos minutos diarios):
+- **Día 1**: Partes inferiores de diario (10 vaqueros, pantalones, faldas o bermudas)
+- **Día 2**: Partes superiores de diario (10 camisetas, blusas, camisas o polos)
+- **Día 3**: Punto, sudaderas y prendas exteriores (10 jerséis, sudaderas, blazers, chaquetas o abrigos)
+- **Día 4**: Calzado (10 pares de zapatillas, botas, mocasines o zapatos de tacón)
+- **Día 5**: Vestidos, conjuntos y accesorios clave (10 vestidos, trajes tradicionales, bolsos, cinturones o pañuelos)
 
-Al quinto día tendrás **50 prendas esenciales** digitalizadas, ¡desbloqueando miles de combinaciones de conjuntos!
+Al quinto día tendrás **50 prendas esenciales** digitalizadas, ¡desbloqueando miles de combinaciones posibles!
 
 ### P: ¿Puedo importar mi ropa desde otra aplicación de armario?
-**R:** ¡Sí! Si antes utilizabas aplicaciones como **Whering**, **Indyx**, **Alta**, **Acloset** o **Stylebook**, ve a **Añadir Prenda → Migrar Armario** para importar tu catálogo actual en **1 clic** con limpieza automática de fondo y asignación de atributos.
+**R:** ¡Sí! Si tienes fotos o capturas de pantalla de otra aplicación de vestuario, ve a **Perfil → Importar Armario** (o desde **Añadir Prenda**) para importar tu catálogo con recorte automático de prendas, eliminación de fondo y detección de detalles.
 
 ---
 
 ## 2. Créditos de IA, Suscripciones e Invitaciones
 
-### P: ¿Cómo funcionan los Créditos de IA gratuitos?
-**R:** Los usuarios gratuitos disponen de dos saldos de créditos separados visibles en **Perfil → Suscripciones y Límites**:
-1. **Créditos de IA Local (10 Créditos Diarios Gratuitos)**: Se utilizan para las tareas diarias de IA impulsadas por el motor local **Eyes** de DressApp. Recibes **10 créditos gratis cada día**, y los créditos no utilizados **se acumulan durante un máximo de 30 días (hasta 300 créditos)** antes de reiniciarse.
-2. **Créditos de Reconstrucción Nano Banana (5 Créditos Gratuitos de Bienvenida)**: Se utilizan exclusivamente cuando pulsas el botón **Reconstruir** para transformar la foto de una prenda arrugada o con mala luz en una imagen de catálogo de calidad de estudio.
+### P: ¿Cómo funcionan los créditos gratuitos?
+**R:** Los usuarios del plan Gratuito cuentan con dos saldos visibles en **Perfil**:
+1. **Créditos de IA Propia (10 créditos gratis al día)**: Se utilizan para las tareas cotidianas impulsadas por el **modelo de IA propio de DressApp**. Recibes **10 créditos gratis cada día**, y los créditos no utilizados **se acumulan durante un máximo de 30 días (hasta 300 créditos)** antes de reiniciarse.
+2. **Créditos de Reconstrucción de Estudio (5 créditos gratis de bienvenida)**: Se utilizan exclusivamente al pulsar el botón **Reconstruir** para transformar una foto con arrugas o iluminación difícil en una imagen limpia con acabado de catálogo mediante nuestro **modelo de IA de vanguardia**.
 
-### P: ¿Cuántos Créditos de IA Local cuesta cada acción en el plan Gratuito?
-**R:** Cada solicitud al modelo de IA local cuesta **1 Crédito de IA por prenda o consulta**:
-- **Análisis fotográfico de una sola prenda**: **1 Crédito de IA**
-- **Análisis fotográfico de múltiples prendas** (p. ej., 5 prendas detectadas en una foto de cuerpo entero frente al espejo): **5 Créditos de IA** (1 crédito por prenda)
-- **Consulta por chat al Estilista IA**: **1 Crédito de IA** por mensaje
-- **Selección de Maleta**: **1 Crédito de IA por cada prenda** seleccionada para tu lista de equipaje
-- **Navegación manual, filtrado, edición de etiquetas y creación de looks en el Lienzo de Conjuntos**: **0 Créditos de IA (¡Siempre Gratis!)**
+### P: ¿Cuántos créditos consume cada acción en el plan Gratuito?
+**R:** Cada acción con el modelo de IA propio de DressApp consume **1 crédito por prenda o consulta**:
+- **Escaneo de una prenda individual**: **1 crédito**
+- **Escaneo de foto con varias prendas** (por ejemplo, 5 prendas detectadas en un conjunto frente al espejo): **5 créditos** (1 por prenda)
+- **Consulta por chat al Estilista de IA**: **1 crédito** por mensaje
+- **Armado de maleta de viaje**: **1 crédito por prenda** seleccionada para tu lista de equipaje
+- **Explorar tu armario, filtrar, editar etiquetas manualmente y armar conjuntos en el Planificador**: **0 créditos (¡Siempre gratis!)**
 
-### P: ¿Cómo puedo conseguir más espacio en el armario y créditos de IA extra gratis?
-**R:** ¡Usa tu enlace personal de invitación en **Perfil → Invitar Amigos**! Cada amigo que se registre con tu enlace te otorga **+10 espacios permanentes gratuitos en el armario** (ampliando tu armario Gratuito de 50 hasta **150 prendas**) además de créditos de IA de bonificación.
+### P: ¿Cómo puedo conseguir más espacio en el armario y créditos extra gratis?
+**R:** ¡Comparte tu enlace personal de invitación desde **Perfil → Invitar Amigos**! Cada amigo que se registre con tu enlace te otorga **+10 espacios permanentes gratis en tu armario** (ampliando tu armario gratuito de 50 a **150 prendas**) además de créditos adicionales.
 
-### P: ¿Qué ocurre si agoto mis créditos de Reconstrucción o quiero IA diaria ilimitada?
-**R:** Tienes dos opciones flexibles en la página de **Precios**:
-- **Comprar Paquetes de Créditos Adicionales (Nunca Caducan)**: Adquiere **10 créditos (3 \$)**, **50 créditos (12 \$)** o **100 créditos (20 \$)**. Los créditos comprados no caducan nunca y solo se consumen después de agotar tus créditos gratuitos o mensuales.
-- **Actualizar al Plan Manager (10 \$/mes o 100 \$/año)**: Desbloquea **prendas ilimitadas en el armario**, **estilismo y subidas diarias ilimitadas** con la IA ultrarrápida de Gemini en la nube, **100 créditos mensuales de Reconstrucción**, notificaciones matutinas diarias con tu look del día, **Trend-Scout** y el **Mercado Circular**.
+### P: ¿Qué ocurre si agoto mis créditos de Reconstrucción o quiero uso diario ilimitado?
+**R:** Tienes dos opciones flexibles en la página de **Planes**:
+- **Comprar Paquetes de Créditos (No Caducan Nunca)**: Adquiere **10 créditos ($3)**, **50 créditos ($12)** o **100 créditos ($20)**. Los créditos comprados no caducan nunca y solo se consumen cuando se agotan tus créditos gratuitos o mensuales.
+- **Mejorar al Plan Gestor de Armario ($10/mes o $100/año)**: Desbloquea **espacio ilimitado en el armario**, **estilismo y escaneos diarios ilimitados** con el **modelo de IA de vanguardia**, **100 créditos mensuales de Reconstrucción de Estudio**, notificaciones matutinas de conjuntos, **Cazador de Tendencias** y el **Marketplace**.
 
 ---
 
-## 3. Fotografiar, Subir y Editar Prendas
+## 3. Fotografiar, Subir y Editar Ropa
 
-### P: ¿Cuál es la mejor manera de fotografiar una prenda para un recorte de IA 100 % preciso?
-**R:** Sigue la **Regla de Oro de la Fotografía Plana (Flat-Lay)**:
-1. Extiende la prenda **plana sobre el suelo** en una habitación luminosa con luz natural sobre una **superficie de color contrastante** (coloca la ropa oscura sobre un suelo o sábana clara, y la ropa clara sobre un fondo oscuro).
-2. Centra la prenda recta dentro del encuadre dejando un **margen pequeño y uniforme** alrededor de todos los bordes para que las mangas y los bajos nunca queden cortados.
-3. Alisa las arrugas, desabrocha las chaquetas y **despliega las mangas** ligeramente separadas del cuerpo para que la IA distinga claramente el corte y el cuello.
-4. Da un pequeño paso atrás para que tu cuerpo y tu teléfono **no proyecten ninguna sombra** sobre el tejido, mantén el pulso firme y toma la foto.
+### P: ¿Cuál es la mejor manera de fotografiar una prenda para un recorte perfecto?
+**R:** Sigue estos cuatro pasos sencillos:
+1. Extiende la prenda **plana** en una habitación luminosa sobre una **superficie de color contrastante** (ropa oscura sobre fondo claro, y ropa clara sobre fondo oscuro).
+2. Centra la prenda en el encuadre dejando un **margen pequeño y uniforme** alrededor para no cortar mangas ni bajos.
+3. Alisa las arrugas y **separa ligeramente las mangas** para que la IA aprecie claramente el corte y el cuello.
+4. Asegúrate de no proyectar sombras sobre la tela, sujeta el móvil con firmeza y toma la foto.
 
-### P: ¿Cuál es la diferencia entre la eliminación de fondo estándar y "Reconstruir"?
+### P: ¿Cuál es la diferencia entre la eliminación de fondo normal y "Reconstruir"?
 **R:**
-- **Recorte Estándar (Automático)**: Se ejecuta automáticamente al subir la foto (1 Crédito de IA Local en el plan Gratuito). Elimina el fondo y extrae todas las etiquetas de metadatos conservando tu fotografía original.
-- **Reconstrucción de Estudio (Opcional — "Nano Banana")**: Se activa al pulsar **Reconstruir** (1 Crédito de Reconstrucción). Utiliza IA generativa para eliminar arrugas profundas, corregir luces duras y presentar la prenda como una foto de producto nítida de estudio.
+- **Recorte Estándar (Automático)**: Se ejecuta automáticamente al subir la foto (1 crédito de IA propia en el plan Gratuito). Elimina el fondo y extrae todos los detalles conservando tu fotografía original.
+- **Reconstrucción de Estudio (Opcional)**: Se activa al pulsar **Reconstruir** (1 crédito de Reconstrucción de Estudio). Utiliza nuestro modelo de IA de vanguardia para eliminar arrugas profundas, corregir la iluminación y presentar la prenda como una foto de catálogo profesional.
 
-### P: ¿Por qué debería revisar y editar una prenda justo después de subirla?
-**R:** Aunque la IA de DressApp es sumamente precisa, la iluminación interior cálida puede hacer que el azul marino parezca negro ocasionalmente, o el ángulo de la cámara puede ocultar si un pantalón es de tiro alto o medio. Dedicar **10 segundos** a verificar la **Categoría, Color, Temporada, Nivel de Abrigo (1–5) y Código de Vestimenta** garantiza que el Estilista IA, el Motor Meteorológico y el Planificador de Maletas nunca se equivoquen al combinar esa prenda.
+### P: ¿Por qué conviene revisar una prenda justo después de subirla?
+**R:** Aunque la IA de DressApp es muy precisa, la luz interior cálida puede hacer que el azul marino parezca negro. Dedicar **10 segundos** a confirmar la **Categoría, Color, Temporada, Nivel de abrigo (1–5) y Código de vestimenta** garantiza que el Estilista de IA y el Asistente de Maleta combinen esa prenda a la perfección.
 
-### P: ¿Puedo agrupar prendas a juego o etiquetar muchas prendas a la vez?
+### P: ¿Puedo agrupar prendas que forman un conjunto o etiquetar varias a la vez?
 **R:** ¡Sí!
-- **Etiquetado en Grupo**: En tu **Armario**, pulsa **Selección Múltiple**, elige las prendas que deseas actualizar (por ejemplo, 8 camisas de oficina) y aplica etiquetas como `Trabajo`, `Todo el Año` o `Planchado` a todas a la vez.
-- **Conjuntos Coordinados (Sets)**: Vincula un blazer y un pantalón a juego (o un chándal de dos piezas) como un **Conjunto** para poder combinarlos juntos o por separado.
+- **Etiquetado Múltiple**: En tu **Armario**, pulsa **Selección Múltiple**, marca las prendas que quieras actualizar (por ejemplo, 8 camisas de oficina) y aplica etiquetas o temporadas a todas a la vez.
+- **Conjuntos y Trajes Coordinados**: Vincula una chaqueta y un pantalón a juego (o un conjunto de dos piezas) como un **Conjunto** para combinarlos juntos o por separado.
 
 ---
 
-## 4. Uso del Estilista IA y Planificador de Maletas
+## 4. Uso del Estilista de IA y del Asistente de Maleta
 
-### P: ¿Cómo escribo la mejor consulta (prompt) para el Estilista IA?
-**R:** El Estilista IA local funciona mejor cuando le proporcionas **cuatro elementos claros de contexto**:
-> **[Ocasión / Evento] + [Clima / Ubicación] + [Código de Vestimenta / Estilo] + [Prenda Clave o Restricción]**
+### P: ¿Cómo escribo la mejor consulta para el Estilista de IA?
+**R:** El Estilista ofrece los mejores resultados cuando incluyes **cuatro datos claros**:
+> **[Ocasión / Evento] + [Clima / Lugar] + [Código de Vestimenta / Estilo] + [Prenda Base o Color]**
 
-**Ejemplos de Consultas Excelentes:**
-- *"Crea un conjunto smart-casual para una cena lluviosa de otoño en Londres usando mi gabardina beige."*
-- *"Sugiere un look business-casual cómodo para todo un día de reuniones en una oficina con aire acondicionado y zapatos planos."*
-- *"¿Qué 3 partes de arriba versátiles me faltan para maximizar las combinaciones con mis faldas y vaqueros actuales?"*
+**Buenos ejemplos:**
+- *"Crea un conjunto smart-casual para una cena lluviosa de otoño usando mi gabardina beige."*
+- *"Sugiere un look cómodo de oficina para un día entero de reuniones con aire acondicionado y zapatos planos."*
+- *"¿Qué 3 partes superiores versátiles me faltan para aprovechar al máximo mis faldas y vaqueros actuales?"*
 
-### P: ¿Cuál es la diferencia entre la "Creación de Conjuntos" y la "Auditoría de Armario" del Estilista?
-**R:** El Estilista de DressApp detecta tu intención automáticamente:
-- **Modo 1 — Creación de Conjuntos**: Cuando preguntas *"¿Qué me pongo para..."*, el Estilista selecciona **únicamente prendas reales que están actualmente en tu armario digital** y muestra tarjetas visuales de conjuntos que puedes guardar o usar hoy mismo.
-- **Modo 2 — Auditoría Analítica de Armario**: Cuando preguntas *"¿Qué falta en mi armario?"* o *"¿Qué tan equilibrada está mi cápsula de otoño?"*, el Estilista analiza todo tu inventario y recomienda piezas específicas de alto valor que conectarán tus prendas existentes.
+### P: ¿Cuál es la diferencia entre pedir un conjunto y pedir una revisión de armario?
+**R:** El Estilista detecta tu intención automáticamente:
+- **Modo 1 — Creación de Conjuntos**: Cuando preguntas *"¿Qué me pongo para...?"*, el Estilista selecciona **únicamente prendas reales que están en tu armario digital** y muestra tarjetas visuales que puedes guardar o usar hoy.
+- **Modo 2 — Revisión Analítica del Armario**: Cuando preguntas *"¿Qué falta en mi armario?"*, el Estilista analiza todo tu inventario y recomienda prendas específicas que cubrirían los huecos entre tu ropa actual.
 
-### P: ¿Cómo funciona el Asistente de Equipaje (Maleta)?
-**R:** Abre **Maleta**, introduce tu **ciudad de destino, fechas de viaje y actividades previstas** (p. ej., turismo, conferencia de negocios, cena en la playa). DressApp consulta el clima del destino y selecciona una **cápsula de viaje combinable** desde tu armario para que lleves menos prendas y tengas un conjunto completo para cada día del viaje. *(En el plan Gratuito, cada prenda seleccionada para la maleta cuesta 1 Crédito de IA Local).*
+### P: ¿Cómo funciona el Asistente de Maleta de Viaje?
+**R:** Abre **Maleta**, introduce tu **ciudad de destino, fechas de viaje y actividades previstas** (por ejemplo, turismo, congreso de negocios, cena en la playa). DressApp consulta el clima del destino y selecciona una **cápsula de viaje combinable** de tu armario para que lleves menos equipaje teniendo conjuntos completos para cada día.
 
 ---
 
-## 5. Planificador de Conjuntos, Estadísticas, Asistente de Compras y Mercado
+## 5. Planificador de Conjuntos, Estadísticas, Asistente de Compras y Marketplace
 
-### P: ¿Puedo crear conjuntos manualmente y programarlos en un calendario?
-**R:** ¡Sí! En el **Planificador de Conjuntos**, puedes arrastrar y soltar prendas sobre un **lienzo interactivo de capas** (o verlas sobre un maniquí 2D), ajustar el orden de las capas, guardar el look en tu **Lookbook** y asignarlo a una fecha específica en el calendario de tu **Diario de Conjuntos**.
+### P: ¿Puedo armar conjuntos manualmente y programarlos en el calendario?
+**R:** ¡Sí! En el **Planificador de Conjuntos**, puedes arrastrar y colocar prendas sobre un lienzo interactivo, ajustar las capas, guardar el look y asignarlo a una fecha concreta en tu **Calendario de Conjuntos**.
 
-### P: ¿Qué puedo descubrir en las Estadísticas del Armario (Wardrobe Insights)?
-**R:** El panel de **Estadísticas del Armario** muestra la valoración total de tu ropa, clasificaciones de **Coste por Uso (CPW)**, distribución de tu paleta de colores, equilibrio estacional e impacto de sostenibilidad en carbono y agua, ayudándote a detectar prendas olvidadas y comprar de forma más consciente.
+### P: ¿Qué información ofrece la sección de Estadísticas del Armario?
+**R:** El panel de **Estadísticas del Armario** muestra el valor total de tu ropa, el cálculo de **Costo por Uso**, la distribución de colores, el equilibrio por temporadas y métricas de sostenibilidad, ayudándote a detectar prendas olvidadas y comprar con mayor criterio.
 
-### P: ¿Cómo me ayuda la extensión de Chrome del Asistente de Compras al comprar online?
-**R:** Mientras navegas por tiendas de moda online compatibles, el **Asistente de Compras de DressApp** compara la tabla de tallas de la tienda con tu **Perfil Biométrico Corporal 3D** guardado para recomendarte tu talla ideal y mostrarte cómo combinaría la nueva prenda con la ropa que ya tienes.
+### P: ¿Cómo me ayuda el Asistente de Compras al comprar en tiendas online?
+**R:** Mientras navegas por tiendas de moda online compatibles, el **Asistente de Compras de DressApp** compara la guía de tallas de la tienda con tus **Medidas Corporales** guardadas para recomendarte tu talla ideal y mostrarte cómo combinaría la prenda nueva con tu armario actual.
 
 ### P: ¿Puedo vender, intercambiar o donar la ropa que ya no uso?
-**R:** ¡Sí! A través del **Mercado Circular**, puedes publicar prendas sin uso de tu armario para **Venta**, **Intercambio** o **Alquiler**, o conectar con organizaciones benéficas locales para **Donarlas**. Incluso puedes probar cómo queda un artículo del mercado junto a tu propio armario en la **Sala Sandbox** virtual antes de comprarlo.
+**R:** ¡Sí! A través del **Marketplace**, puedes publicar prendas de tu armario para **Venta**, **Intercambio** o **Alquiler**, o marcarlas para **Donación**. Incluso puedes probar cómo queda una prenda del Marketplace junto a tu propia ropa en el **Probador Virtual** antes de adquirirla.
 
 ---
 
-## 6. Privacidad, Seguridad y Solución de Problemas
+## 6. Privacidad, Seguridad y Ayuda
 
 ### P: ¿Mis fotos y medidas corporales son privadas?
-**R:** Totalmente. Tus medidas biométricas y las fotos personales de tu armario son estrictamente privadas para tu cuenta. Al utilizar el motor local **Eyes** de DressApp, las imágenes de tus prendas se procesan directamente en la infraestructura privada dedicada de DressApp. Solo compartes prendas públicamente si decides publicar un anuncio en el Mercado Circular.
+**R:** Por supuesto. Tus medidas corporales y las fotos de tu armario son estrictamente privadas. Al utilizar el **modelo de IA propio de DressApp**, las imágenes de tus prendas se procesan directamente en la infraestructura privada de DressApp. Tus prendas solo se muestran públicamente si decides publicar un anuncio en el Marketplace.
 
-### P: ¿Por qué mi página de estadísticas o el estilista aparecían vacíos cuando me registré?
-**R:** ¡Las estadísticas y la creación de conjuntos requieren que haya ropa en tu armario! En cuanto subas tus primeras prendas (o migres un armario existente), tus gráficos de **Estadísticas del Armario**, **Sugerencias Inteligentes** y recomendaciones del **Estilista IA** se completarán de inmediato.
+### P: ¿Por qué mi página de estadísticas o el estilista aparecían vacíos al registrarme?
+**R:** ¡Las estadísticas y las recomendaciones necesitan prendas en tu armario! En cuanto subas tus primeras prendas (o importes tu armario), los gráficos de **Estadísticas** y las propuestas del **Estilista de IA** se activarán de inmediato.
 
-### P: ¿Dónde puedo obtener más ayuda o contactar con un estilista humano?
+### P: ¿Dónde puedo obtener más ayuda o contactar con un estilista profesional humano?
 **R:**
-- Pulsa el botón de **Ayuda (?)** en la parte superior de cualquier pantalla de DressApp para ver guías visuales rápidas de 6 pasos y artículos detallados de **"Saber más"** en los 13 idiomas.
-- Visita el **Registro de Expertos Certificados** dentro de DressApp para reservar auditorías virtuales de armario 1 a 1 o sesiones de estilismo personal con estilistas de moda profesionales verificados.
+- Pulsa el botón de **Ayuda (?)** en la parte superior de cualquier pantalla para ver guías rápidas de 6 pasos y artículos detallados de **"Más información"** en los 13 idiomas.
+- Visita el **Directorio de Expertos Certificados** dentro de DressApp para reservar sesiones individuales de estilismo o revisión de armario con estilistas profesionales.

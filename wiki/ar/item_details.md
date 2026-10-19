@@ -1,13 +1,13 @@
 # Item Details Architecture & User Guide
 
-This document provides a comprehensive technical overview and operational guide for the **Item Details** page (`ItemDetail.jsx`) within DressApp. It covers the user experience structure, API communication flows, AI processing utilities, Nano Banana image editing pipeline, validation schemas, and internationalization details.
+This document provides a comprehensive technical overview and operational guide for the **Item Details** page within DressApp. It covers the user experience structure, API communication flows, AI processing utilities, Nano Banana image editing pipeline, validation schemas, and internationalization details.
 
 ---
 
 ## 1. Executive Summary & Value Proposition
 
 ### High-Level Overview
-The **Item Details** panel is the central command center for managing individual garments within a user's digital wardrobe. It bridges raw visual media (photos) with semantic metadata (category, fabric composition, color weights, brand, formality level, and notes). It enables users to refine automated AI-ingestion outputs, trigger non-generative background removal (matting), run conversational vision re-analyses, execute generative inpainting and object removal with **Nano Banana** (`gemini-3.1-flash-lite-image`), and configure circular marketplace listing options.
+The **Item Details** panel is the central command center for managing individual garments within a user's digital wardrobe. It bridges raw visual media with semantic metadata. It enables users to refine automated AI-ingestion outputs, trigger non-generative background removal, run conversational vision re-analyses, execute generative inpainting and object removal with **Nano Banana**, and configure circular marketplace listing options.
 
 ### Architectural Flow
 
@@ -46,7 +46,7 @@ graph TD
 ```
 
 ### User Value Proposition
-* **Interactive AI Garment Editor**: Users can prompt **The Eyes** in natural language to modify photos (*"Remove the shoes"*, *"Complete the hole where the hand was"*, *"Remove metal studs"*).
+* **Interactive AI Garment Editor**: Users can prompt **The Eyes** in natural language to modify photos.
 * **Studio-Grade Generative Inpainting**: **Nano Banana** repairs occluded or cropped fabrics, preserving texture, silhouette, and pattern fidelity without whole-image hallucinations.
 * **Smart Clarification Dialogues**: The Eyes asks focused questions when instructions are ambiguous, avoiding unnecessary credit usage.
 * **Precision Wardrobe Refining**: Simple, structured cards group attributes logically, preventing input fatigue.
@@ -115,9 +115,9 @@ The Item Details page utilizes an asymmetrical two-column layout tailored for de
 * Users can replace the garment photo using the `memberPhotoInputRef` slot. 
 * Clicking **Replace Photo** opens the native file selector. Clicking **Take Photo** accesses mobile devices' cameras directly via `capture="environment"`.
 
-#### 2. Clean Background (Non-Generative Alpha Matting)
+#### 2. Clean Background
 * Non-generative matting runs in the background. A progress bar updates in real time.
-* If a matting session was run previously, the action button text changes to **Clean again** (fully localized) so users can retry the background separation.
+* If a matting session was run previously, the action button text changes to **Clean again** so users can retry the background separation.
 
 #### 3. Re-analyse Photo & AI Eyes Conversational Assistant
 * **Natural Language Prompting**: Type or dictate prompts directly into the prompt box:
@@ -132,27 +132,27 @@ The Item Details page utilizes an asymmetrical two-column layout tailored for de
 
 #### 4. Taxonomy & Composition Editor
 * Weighted Lists allow users to specify percentages for color palettes (e.g., Black 100%) and materials (e.g., Polyester 80%, Rayon 20%).
-* Form inputs dynamically display a red border (`border-red-400 dark:border-red-900`) if they are left empty, providing clear feedback on missing attributes.
+* Form inputs dynamically display a red border if they are left empty, providing clear feedback on missing attributes.
 
 #### 5. Speech-To-Text Dictation
-* Prompt box and metadata fields (like **Tradition**) support voice dictation. Clicking the microphone icon activates the Web Speech API browser listener with localized language detection (`user.preferred_language`).
+* Prompt box and metadata fields support voice dictation. Clicking the microphone icon activates the Web Speech API browser listener with localized language detection.
 
 ---
 
 ## 3. Modals & Dialogs
 
-### 1. Closet Item Picker Dialog (`addOpen`)
-* **Purpose**: Allows users to associate other wardrobe garments with this item (e.g., matching suits, inner linings, or sets).
+### 1. Closet Item Picker Dialog
+* **Purpose**: Allows users to associate other wardrobe garments with this item.
 * **Structure**: A scrollable list of other closet items with checkboxes.
-* **Layout**: Displays inside a glassmorphic container (`glassmorphic border-white/20`) configured to scale on mobile screens (`max-h-[90dvh]`).
+* **Layout**: Displays inside a glassmorphic container configured to scale on mobile screens (`max-h-[90dvh]`).
 
-### 2. Taxonomy Gatekeeper Warning Dialog (`gatekeeperOpen`)
-* **Purpose**: Prevents unintended layout misclassifications. Triggers if the user changes the garment's root Category (e.g., Top to Bottom) or changes the item Type to something mismatching the parent category.
+### 2. Taxonomy Gatekeeper Warning Dialog
+* **Purpose**: Prevents unintended layout misclassifications. Triggers if the user changes the garment's root Category or changes the item Type to something mismatching the parent category.
 * **User Options**:
   * **Confirm**: Proceeds with the category change and adapts metadata fields.
   * **Cancel**: Aborts change and restores original category state.
 
-### 3. Delete Confirmation Alert Dialog (`AlertDialog`)
+### 3. Delete Confirmation Alert Dialog
 * **Purpose**: Prevents accidental garment deletion.
 * **Actions**:
   * **Cancel**: Dismisses dialog.
@@ -164,14 +164,14 @@ The Item Details page utilizes an asymmetrical two-column layout tailored for de
 
 ### Microservice & AI Orchestration
 * **Multimodal Decision Pipeline (`POST /api/v1/closet/{item_id}/chat-analyse`)**:
-  - Uses `GeminiClient` (`Interactions API`) to evaluate image bytes, metadata context, and conversation history.
+  - Uses `GeminiClient` to evaluate image bytes, metadata context, and conversation history.
   - Automatically routes to `image_edit`, `clarification`, `metadata_update`, or `answered`.
-* **Nano Banana Inpainting Engine (`GeminiImageService.edit`)**:
+* **Nano Banana Inpainting Engine**:
   - Employs `gemini-3.1-flash-lite-image` with visual conditioning from original/segmented pixels.
   - Deducts 1 AI credit via `deduct_user_credits` on image generation calls.
 * **Form & State Management**:
-  - Handled via local React state (`form` object). Changes trigger `setField(key, value)`.
+  - Handled via local React state. Changes trigger `setField`.
   - Preview images remain in-memory until the user explicitly clicks the **Save** button to persist to MongoDB.
 * **Universal 13-Locale Synchronization**:
   - Complete JSON coverage across `en`, `he`, `ar`, `de`, `fr`, `es`, `it`, `nl`, `pt`, `ru`, `hi`, `ja`, and `zh`.
-  - Full RTL direction mirroring with Tailwind logical spacing (`ms-auto`, `me-1.5`, `start/end`).
+  - Full RTL direction mirroring with Tailwind logical spacing.

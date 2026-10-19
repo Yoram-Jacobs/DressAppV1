@@ -5,7 +5,7 @@
       "editorial boutique magazine",
       "quiet-luxury minimal",
       "camera-first utility hidden behind polish",
-      "sustainability-forward (swap/donate cues)",
+      "sustainability-forward",
       "AI stylist feels like a fashion editor, not a chatbot"
     ],
     "north_star": "Make every screen feel like a curated spread: strong typography, generous whitespace, tactile cards, and fast, confident interactions—especially on mobile."
@@ -13,7 +13,7 @@
 
   "design_tokens": {
     "notes": [
-      "Implement via CSS custom properties in /app/frontend/src/index.css under :root and .dark (shadcn token style).",
+      "Implement via CSS custom properties in /app/frontend/src/index.css under :root and .dark.",
       "Avoid purple for AI surfaces; use ocean-teal + persimmon + ink neutrals.",
       "No transparent backgrounds behind text blocks; use solid card surfaces.",
       "Gradients are decorative only and must stay under 20% viewport coverage."
@@ -127,15 +127,15 @@
         }
       },
       "css_scaffold": {
-        "notes": "Add to /app/frontend/src/index.css (or import in index.html) and set body font-family to Manrope; headings use a utility class.",
+        "notes": "Add to /app/frontend/src/index.css and set body font-family to Manrope; headings use a utility class.",
         "google_import": "@import url('https://fonts.googleapis.com/css2?family=Gloock&family=Manrope:wght@400;500;600;700&display=swap');",
         "font_vars": {
           "--font-display": "Gloock, ui-serif, Georgia, serif",
           "--font-body": "Manrope, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
         },
         "tailwind_usage": {
-          "display_class": "font-[var(--font-display)] tracking-[-0.02em]",
-          "body_class": "font-[var(--font-body)]"
+          "display_class": "font-[var] tracking-[-0.02em]",
+          "body_class": "font-[var]"
         }
       },
       "type_scale_tailwind": {
@@ -158,11 +158,11 @@
         "mobile": {
           "container": "px-4",
           "max_width": "max-w-[480px] for dense flows; allow full width for image grids",
-          "bottom_tab_safe_area": "pb-[calc(env(safe-area-inset-bottom)+88px)]"
+          "bottom_tab_safe_area": "pb-[calc(env+88px)]"
         },
         "desktop": {
           "container": "mx-auto max-w-6xl px-6",
-          "grid": "12-col grid for admin + marketplace detail; 2-col split for stylist (history + chat)"
+          "grid": "12-col grid for admin + marketplace detail; 2-col split for stylist"
         }
       }
     },
@@ -170,7 +170,7 @@
     "radius_and_shadow": {
       "radius": {
         "global": "--radius: 0.9rem",
-        "card": "rounded-[calc(var(--radius)+6px)]",
+        "card": "rounded-[calc(var+6px)]",
         "button": "rounded-xl",
         "chip": "rounded-full",
         "drawer_sheet": "rounded-t-[28px]"
@@ -183,8 +183,8 @@
           "--shadow-focus": "0 0 0 4px rgba(31,111,107,0.22)"
         },
         "tailwind_usage": {
-          "card": "shadow-[var(--shadow-sm)]",
-          "modal": "shadow-[var(--shadow-md)]"
+          "card": "shadow-[var]",
+          "modal": "shadow-[var]"
         }
       }
     },
@@ -194,7 +194,7 @@
         "goal": "Add subtle print-like grain to avoid flatness.",
         "implementation": {
           "css": ".noise::before{content:'';position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22120%22 height=%22120%22 filter=%22url(%23n)%22 opacity=%220.08%22/%3E%3C/svg%3E');mix-blend-mode:multiply;pointer-events:none;border-radius:inherit;}",
-          "usage": "Apply `relative noise` to hero wrappers and large image cards only (not to text-heavy reading areas)."
+          "usage": "Apply `relative noise` to hero wrappers and large image cards only."
         }
       }
     }
@@ -244,19 +244,19 @@
         "style": "Luxury / Elegant",
         "variants": {
           "primary": {
-            "use": "Primary CTA (Ask Stylist, Publish listing, Save item)",
-            "classes": "rounded-xl bg-primary text-primary-foreground shadow-[var(--shadow-sm)] hover:bg-primary/92 focus-visible:outline-none focus-visible:shadow-[var(--shadow-focus)]",
-            "motion": "hover: translateY(-1px) via framer-motion; active: scale(0.98)"
+            "use": "Primary CTA",
+            "classes": "rounded-xl bg-primary text-primary-foreground shadow-[var] hover:bg-primary/92 focus-visible:outline-none focus-visible:shadow-[var]",
+            "motion": "hover: translateY via framer-motion; active: scale(0.98)"
           },
           "secondary": {
-            "use": "Secondary actions (Preview fees, Add variant)",
+            "use": "Secondary actions",
             "classes": "rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border",
             "motion": "hover: subtle lift; active: scale(0.99)"
           },
           "ghost": {
-            "use": "Icon-only actions (mic, attach, more)",
+            "use": "Icon-only actions",
             "classes": "rounded-xl hover:bg-accent/10 text-foreground",
-            "motion": "hover: background fade only (no transform unless wrapped in motion.button)"
+            "motion": "hover: background fade only"
           }
         }
       },
@@ -265,11 +265,11 @@
         "source_tags": {
           "private": {
             "label": "Private",
-            "classes": "bg-[hsl(var(--secondary))] text-foreground border border-border"
+            "classes": "bg-[hsl(var)] text-foreground border border-border"
           },
           "shared": {
             "label": "Shared",
-            "classes": "bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border border-[hsl(var(--accent))]/25"
+            "classes": "bg-[hsl(var)]/10 text-[hsl(var)] border border-[hsl(var)]/25"
           },
           "retail": {
             "label": "Retail",
@@ -281,27 +281,27 @@
 
       "cards": {
         "editorial_card": {
-          "classes": "rounded-[calc(var(--radius)+6px)] bg-card text-card-foreground border border-border shadow-[var(--shadow-sm)]",
+          "classes": "rounded-[calc(var+6px)] bg-card text-card-foreground border border-border shadow-[var]",
           "image_rule": "Always keep text on solid card area; image can be top with AspectRatio; add gradient overlay only on image area if needed for legibility."
         },
         "bento_grid": {
-          "home": "Use 2-col bento on mobile (stacked), 3–4 col on desktop; mix 1x1 and 2x1 cards for magazine rhythm.",
+          "home": "Use 2-col bento on mobile, 3–4 col on desktop; mix 1x1 and 2x1 cards for magazine rhythm.",
           "closet": "Use dense image grid with sticky filter bar; cards show 1–2 metadata lines only."
         }
       },
 
       "forms": {
         "inputs": {
-          "classes": "rounded-xl bg-card border border-input focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))]",
+          "classes": "rounded-xl bg-card border border-input focus-visible:ring-2 focus-visible:ring-[hsl(var)]",
           "helper_text": "Use small muted text; errors in destructive with concise copy."
         },
-        "selects": "Use shadcn Select + Command for searchable lists (brands, categories).",
-        "calendar": "Use shadcn Calendar for date picking (listing availability, etc.)."
+        "selects": "Use shadcn Select + Command for searchable lists.",
+        "calendar": "Use shadcn Calendar for date picking."
       },
 
       "navigation": {
         "mobile_bottom_tabs": {
-          "pattern": "Fixed bottom bar with 5 tabs (Home/Closet/Stylist/Market/Me).",
+          "pattern": "Fixed bottom bar with 5 tabs.",
           "classes": "fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t border-border",
           "interaction": "Active tab uses accent underline + icon fill; haptic-like scale on tap via framer-motion.",
           "a11y": "44px min hit targets; labels always visible."
@@ -315,11 +315,11 @@
 
     "page_blueprints": {
       "home": {
-        "layout": "Editorial feed: hero header (small gradient wash) + Trend-Scout cards + CTA to Stylist.",
+        "layout": "Editorial feed: hero header + Trend-Scout cards + CTA to Stylist.",
         "components": ["card", "carousel", "badge", "button", "skeleton"],
         "key_interactions": [
           "Trend-Scout cards expand into Drawer with full summary + sources",
-          "Pull-to-refresh on mobile (optional) with subtle spinner",
+          "Pull-to-refresh on mobile with subtle spinner",
           "Weather + Calendar chips are tappable Popovers with details"
         ],
         "testids": [
@@ -331,10 +331,10 @@
       },
 
       "closet": {
-        "layout": "Sticky filter row + masonry-like grid (use CSS columns or responsive grid). Item tap opens Drawer detail.",
+        "layout": "Sticky filter row + masonry-like grid. Item tap opens Drawer detail.",
         "components": ["badge", "drawer", "tabs", "select", "command", "scroll-area", "skeleton"],
         "key_interactions": [
-          "Long-press (mobile) or right-click (desktop) opens ContextMenu for quick actions (Share, List, Donate)",
+          "Long-press or right-click opens ContextMenu for quick actions",
           "Filter chips animate in/out; show active filter count",
           "FAB expands into mini-sheet with Capture/Upload options"
         ],
@@ -350,9 +350,9 @@
         "layout": "Full-screen camera/upload with segmented preview; metadata stepper.",
         "components": ["aspect-ratio", "progress", "tabs", "button", "sheet", "skeleton"],
         "key_interactions": [
-          "Live cutout preview: show before/after toggle (Toggle component)",
-          "Edge refinement slider (Slider) with instant preview",
-          "Save triggers optimistic UI + toast (sonner)"
+          "Live cutout preview: show before/after toggle",
+          "Edge refinement slider with instant preview",
+          "Save triggers optimistic UI + toast"
         ],
         "loading_states": [
           "SAM-2 segmentation: show skeleton silhouette + progress bar with copy: 'Cutting out your piece…'",
@@ -366,11 +366,11 @@
       },
 
       "item_detail_variants": {
-        "layout": "Drawer with image, metadata, and variant carousel (original + edits).",
+        "layout": "Drawer with image, metadata, and variant carousel.",
         "components": ["drawer", "carousel", "tabs", "button", "badge"],
         "key_interactions": [
           "Variant generation uses SD image-to-image: show queued state + skeleton tile",
-          "Tap variant to compare with original (split view toggle)",
+          "Tap variant to compare with original",
           "'Make sleeves long' opens Sheet with prompt presets"
         ],
         "testids": [
@@ -385,7 +385,7 @@
         "components": ["scroll-area", "textarea", "button", "popover", "tabs", "card", "sonner"],
         "key_interactions": [
           "Composer includes: attach image, mic record, send; weather + calendar chips inline",
-          "AI reply supports audio playback with waveform (custom component) and transcript toggle",
+          "AI reply supports audio playback with waveform and transcript toggle",
           "Outfit cards inside messages: swipe horizontally to browse looks"
         ],
         "performance": [
@@ -421,7 +421,7 @@
         "layout": "Magazine-like settings: grouped cards with short descriptions; dangerous actions separated.",
         "components": ["card", "select", "switch", "button", "separator"],
         "integrations": [
-          "Google Calendar connect CTA (OAuth) uses Button + inline status badge",
+          "Google Calendar connect CTA uses Button + inline status badge",
           "Stripe Connect onboarding CTA uses primary button + explainer"
         ],
         "testids": [
@@ -461,15 +461,15 @@
     "timings": {
       "fast": "120–160ms",
       "base": "180–240ms",
-      "slow": "320–420ms (drawers/sheets only)"
+      "slow": "320–420ms"
     },
     "easings": {
       "standard": "[0.2, 0.8, 0.2, 1]",
       "exit": "[0.4, 0, 1, 1]"
     },
     "micro_interactions": [
-      "Buttons: hover lift -1px (desktop), active scale 0.98",
-      "Cards: hover shows subtle border darken + shadow increase (desktop only)",
+      "Buttons: hover lift -1px, active scale 0.98",
+      "Cards: hover shows subtle border darken + shadow increase",
       "Chips: selected state animates underline in 160ms",
       "Drawer open: slide up + fade; backdrop blur increases",
       "Skeleton shimmer: keep subtle; avoid high-contrast shimmer"
@@ -507,7 +507,7 @@
     "rules": [
       "Minimum 44px touch targets for bottom tabs, FAB, composer buttons.",
       "Visible focus ring using --ring + --shadow-focus.",
-      "Never encode meaning by color alone (source tags include text).",
+      "Never encode meaning by color alone.",
       "Audio player: provide play/pause button labels, progress slider with aria-valuetext, and transcript toggle.",
       "Respect prefers-reduced-motion: disable parallax/lift transforms."
     ]
@@ -517,21 +517,21 @@
     "hero_and_editorial": [
       {
         "category": "home-hero-background",
-        "description": "Abstract teal paper-like waves for subtle editorial hero wash (use as decorative background only).",
+        "description": "Abstract teal paper-like waves for subtle editorial hero wash.",
         "url": "https://images.unsplash.com/photo-1660721858662-9ad9f37447f7?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85"
       }
     ],
     "closet_and_flatlay": [
       {
         "category": "closet-empty-state",
-        "description": "Minimal flat-lay sweater/wallet image for empty state illustration (keep small, not full-bleed).",
+        "description": "Minimal flat-lay sweater/wallet image for empty state illustration.",
         "url": "https://images.unsplash.com/photo-1654773125909-6d73f0c12407?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85"
       }
     ],
     "marketplace_editorial": [
       {
         "category": "marketplace-featured-banner",
-        "description": "Warm editorial street-style image for featured collection banner (use with solid text card overlay).",
+        "description": "Warm editorial street-style image for featured collection banner.",
         "url": "https://images.unsplash.com/photo-1646105659698-1389145bf6a0?crop=entropy&cs=srgb&fm=jpg&ixlib=rb-4.1.0&q=85"
       }
     ]
@@ -540,18 +540,18 @@
   "instructions_to_main_agent": {
     "priority_changes": [
       "Replace CRA default App.css usage; do not center the app container. Remove/ignore .App-header styles.",
-      "Update /app/frontend/src/index.css tokens to match the semantic_tokens_hsl above (light + dark).",
+      "Update /app/frontend/src/index.css tokens to match the semantic_tokens_hsl above.",
       "Add Google Fonts import for Gloock + Manrope and set body font to Manrope.",
       "Implement mobile bottom tab bar + desktop top nav; ensure safe-area padding.",
       "Use Drawer for closet item detail and listing fee breakdown; Sheet for wizards and prompt presets.",
       "Add skeleton states for SAM-2 segmentation and Gemini responses.",
-      "Ensure every interactive element and key info has data-testid attributes (kebab-case)."
+      "Ensure every interactive element and key info has data-testid attributes."
     ],
     "recommended_custom_components_js": [
       {
         "name": "WaveformAudioPlayer.jsx",
         "why": "Phase 3 uses base64 MP3; provide a polished audio UI for stylist replies.",
-        "behavior": "Play/pause, scrubber (Slider), time labels, transcript toggle; keyboard accessible.",
+        "behavior": "Play/pause, scrubber, time labels, transcript toggle; keyboard accessible.",
         "testids": [
           "stylist-reply-audio-player",
           "audio-player-play-button",
@@ -584,7 +584,7 @@
       {
         "name": "recharts",
         "install": "npm i recharts",
-        "use": "Admin charts (revenue, take-rate, users)"
+        "use": "Admin charts"
       }
     ]
   }
@@ -598,18 +598,18 @@
    - NEVER: use AI assistant Emoji characters like`🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons. Always use **FontAwesome cdn** or **lucid-react** library already installed in the package.json
 
  **GRADIENT RESTRICTION RULE**
-NEVER use dark/saturated gradient combos (e.g., purple/pink) on any UI element.  Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc
+NEVER use dark/saturated gradient combos on any UI element. Prohibited gradients: blue-500 to purple 600, purple 500 to pink-500, green-500 to blue-500, red to pink etc
 NEVER use dark gradients for logo, testimonial, footer etc
 NEVER let gradients cover more than 20% of the viewport.
 NEVER apply gradients to text-heavy content or reading areas.
-NEVER use gradients on small UI elements (<100px width).
+NEVER use gradients on small UI elements.
 NEVER stack multiple gradient layers in the same viewport.
 
 **ENFORCEMENT RULE:**
     • Id gradient area exceeds 20% of viewport OR affects readability, **THEN** use solid colors
 
 **How and where to use:**
-   • Section backgrounds (not content backgrounds)
+   • Section backgrounds
    • Hero section header content. Eg: dark to light to dark color
    • Decorative overlays and accent elements only
    • Hero section with 2-3 mild color
@@ -625,7 +625,7 @@ NEVER stack multiple gradient layers in the same viewport.
 
 - Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.
    
-- Before generating UI, infer the visual style from the problem statement (palette, contrast, mood, motion) and immediately instantiate it by setting global design tokens (primary, secondary/accent, background, foreground, ring, state colors), rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly
+- Before generating UI, infer the visual style from the problem statement and immediately instantiate it by setting global design tokens, rather than relying on any library defaults. Don't make the background dark as a default step, always understand problem first and define colors accordingly
     Eg: - if it implies playful/energetic, choose a colorful scheme
            - if it implies monochrome/minimal, choose a black–white/neutral scheme
 
@@ -641,7 +641,7 @@ NEVER stack multiple gradient layers in the same viewport.
 	- Import path: ./components/[component-name]
 
 **Export Conventions:**
-	- Components MUST use named exports (export const ComponentName = ...)
+	- Components MUST use named exports
 	- Pages MUST use default exports (export default function PageName() {...})
 
 **Toasts:**

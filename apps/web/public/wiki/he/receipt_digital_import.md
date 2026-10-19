@@ -1,7 +1,7 @@
 # Digital Receipt & Email Import — Architecture & User Manual
 
-> **Module:** `frontend/src/pages/AddItem.jsx` (import tab) · `backend/app/api/v1/closet.py`
-> **Phase:** R (July 2026)
+> **Module:** `frontend/src/pages/AddItem.jsx` · `backend/app/api/v1/closet.py`
+> **Phase:** R
 > **Surface:** Add Item → Digital Import tab
 > **API Routes:** `POST /closet/parse-receipt` · `POST /closet/extract-pdf-text` · `POST /closet/items`
 
@@ -13,9 +13,9 @@
 
 The **Digital Import** feature is DressApp's zero-friction bridge between the digital commerce world and the personal wardrobe. Instead of photographing each garment and waiting for GarmentVision to scan it, a user can paste a receipt email, upload a store invoice PDF/image, or paste a link to an order confirmation page — and DressApp extracts brand, price, size, category, and title automatically using Gemini's multimodal vision.
 
-Unlike a naive OCR-to-text scraper, Digital Import runs a **dual-path concurrent analysis** for image receipts: Gemini reads the image as a wardrobe cataloguing agent while GarmentVision's SegFormer detects and crops the garment region simultaneously via `asyncio.gather`. The two outputs are merged by a strict field-priority rule — OCR wins on transactional facts (`price_cents`, `size`, `brand`), GarmentVision wins on aesthetic attributes (`colors`, `pattern`, `dress_code`, `season`).
+Unlike a naive OCR-to-text scraper, Digital Import runs a **dual-path concurrent analysis** for image receipts: Gemini reads the image as a wardrobe cataloguing agent while GarmentVision's SegFormer detects and crops the garment region simultaneously via `asyncio.gather`. The two outputs are merged by a strict field-priority rule — OCR wins on transactional facts, GarmentVision wins on aesthetic attributes.
 
-Once items are confirmed and saved, they inherit **receipt-locked field** protection: any future re-analysis (triggered when the user later attaches a photo) can only *fill empty fields*, never overwrite the purchase facts the user already reviewed and accepted.
+Once items are confirmed and saved, they inherit **receipt-locked field** protection: any future re-analysis can only *fill empty fields*, never overwrite the purchase facts the user already reviewed and accepted.
 
 ### User Value Proposition
 
@@ -23,7 +23,7 @@ Once items are confirmed and saved, they inherit **receipt-locked field** protec
 - **Transactional accuracy guaranteed** — price, brand, and size come from the receipt text, not from a model inference. These fields are permanently protected after save via `receipt_locked_fields`.
 - **Per-item region selection** — draggable selector boxes isolate individual items on multi-item receipt images. OCR fires only on the selected sub-regions, not the full page.
 - **Image receipts get full visual analysis** — GarmentVision's SegFormer runs concurrently with OCR for image inputs, producing rich aesthetic metadata at no extra latency cost.
-- **Closet linking** — a receipt item can be matched to an *existing* closet entry: only empty commercial fields (price, brand, size) are patched; the user's edited title and thumbnail are untouched.
+- **Closet linking** — a receipt item can be matched to an *existing* closet entry: only empty commercial fields are patched; the user's edited title and thumbnail are untouched.
 - **Optimistic UI** — items appear in the Closet grid immediately via `closetStore.upsert`; GarmentVision enrichment continues in the background asynchronously.
 - **12-language localisation** — full RTL support for Arabic and Hebrew; every string uses the `{ defaultValue }` audit rule.
 
@@ -33,22 +33,22 @@ Once items are confirmed and saved, they inherit **receipt-locked field** protec
 
 ### 2.1 Mode A — Paste Text
 
-1. The **Paste Text** sub-tab is selected by default (`importMode = 'text'`).
+1. The **Paste Text** sub-tab is selected by default.
 2. A `<textarea>` renders with a multilingual placeholder example.
 3. The user pastes raw email body, receipt text, or invoice content. **No network call fires at this stage**.
 4. The selector overlay renders over the text preview region. Each selector's `{y, h}` percentages map to character-line offsets via `cropText()`.
-5. Clicking **Extract Selected Items** iterates each selector, calls `cropText(receiptText, sel)`, and POSTs the sub-string to `/closet/parse-receipt` with `text=<fragment>`.
-6. The backend sends the text directly to Gemini; `run_visual()` returns `None` (no image bytes).
+5. Clicking **Extract Selected Items** iterates each selector, calls `cropText`, and POSTs the sub-string to `/closet/parse-receipt` with `text=<fragment>`.
+6. The backend sends the text directly to Gemini; `run_visual()` returns `None`.
 
 ---
 
-### 2.2 Mode B — Upload File (Image)
+### 2.2 Mode B — Upload File
 
 1. The user selects **Upload File** and picks a JPEG, PNG, WEBP, or HEIC file.
-2. `handleImportFileChange` detects `file.type.startsWith('image/')` and **returns immediately** after `setImportFile(file)`. A `useEffect` watching `importFile` calls `URL.createObjectURL(importFile)` → `setImagePreviewUrl(url)`. **Zero network calls on upload**.
+2. `handleImportFileChange` detects `file.type.startsWith` and **returns immediately** after `setImportFile`. A `useEffect` watching `importFile` calls `URL.createObjectURL` → `setImagePreviewUrl`. **Zero network calls on upload**.
 3. The image renders inside the preview container with the draggable selector overlay on top.
 4. On **Extract Selected Items**, for each selector:
-   - `cropImageFile(importFile, sel)` draws the region onto an off-screen `<canvas>` and exports a JPEG `Blob` at 90% quality.
+   - `cropImageFile` draws the region onto an off-screen `<canvas>` and exports a JPEG `Blob` at 90% quality.
    - The cropped `File` is appended to `FormData` as `file=crop-N.jpeg`.
    - The backend detects `"image" in mime_type` → sets `is_image = True` → runs `asyncio.gather(run_ocr(), run_visual())`.
 5. If the backend returns `image_base64`, the card shows a GarmentVision-cropped thumbnail; otherwise the browser-cropped JPEG is used directly.
@@ -57,14 +57,14 @@ Once items are confirmed and saved, they inherit **receipt-locked field** protec
 
 ---
 
-### 2.3 Mode C — Upload File (PDF)
+### 2.3 Mode C — Upload File
 
 1. The user picks a `.pdf` file.
-2. `handleImportFileChange` detects `isPdf === true` and **immediately** triggers `api.extractPdfText(formData)`.
+2. `handleImportFileChange` detects `isPdf === true` and **immediately** triggers `api.extractPdfText`.
 3. Loading toast: *"Extracting text using Gemini OCR…"*
 4. The backend's `/closet/extract-pdf-text` endpoint:
    - **Primary path:** Gemini Multimodal OCR with a column-merge prompt.
-   - **Fallback:** `pypdf.PdfReader` local text extraction (PDF only, no Gemini credits consumed).
+   - **Fallback:** `pypdf.PdfReader` local text extraction.
 5. On success, `receiptText` is populated; a success toast confirms.
 6. The selector overlay renders over the text preview. **Extract Selected Items** then uses `cropText()` to isolate line ranges per-selector.
 
@@ -74,11 +74,11 @@ Once items are confirmed and saved, they inherit **receipt-locked field** protec
 
 ### 2.4 Mode D — Web Link
 
-1. The user pastes any URL (order confirmation page, or direct link to a JPEG/PDF invoice).
+1. The user pastes any URL.
 2. No network call fires on typing.
 3. On **Extract Selected Items**, each selector POSTs `url=<value>` to `/closet/parse-receipt`.
 4. The backend fetches the URL via `httpx` with a browser-like User-Agent, follows redirects, and routes by content type:
-   - `image/*` → multimodal binary part + `is_image = True` (full dual-path).
+   - `image/*` → multimodal binary part + `is_image = True`.
    - `text/html` → `resp.text` string part.
 5. A 15-second fetch timeout guards against slow merchant servers.
 
@@ -93,7 +93,7 @@ Once items are confirmed and saved, they inherit **receipt-locked field** protec
 | **Add** | `handleAddSelector()` stacks below the last box, inheriting its width |
 | **Move** | onMouseDown/onTouchStart records delta; onMouseMove updates (x,y) in state |
 | **Resize** | 8-direction edge/corner hit zones update (w,h) clamped to container bounds |
-| **Remove** | `handleRemoveSelector(id)` filters the entry from state |
+| **Remove** | `handleRemoveSelector` filters the entry from state |
 | **Label** | `t('addItem.selectorItemLabel', {n: idx+1})` — fully localised in 12 locales |
 | **Drag session** | `dragState: {id, type, startX, startY, origX, origY, origW, origH}` — null on mouseUp |
 
@@ -110,13 +110,13 @@ Once items are confirmed and saved, they inherit **receipt-locked field** protec
 | Size | `res.size` or `"M"` |
 | Price | `res.price_cents / 100` formatted with locale currency |
 | Colors | `res.colors[]` normalised to `{name, pct:null}` objects |
-| Selected | Checkbox toggle via `handleToggleItemSelect(id)` |
+| Selected | Checkbox toggle via `handleToggleItemSelect` |
 
 **Card actions:**
 
 - **Attach Photo** — opens hidden `<input type="file" ref={itemImageInputRef}>` bound to `activeItemForImage` ID. FileReader stores the image as `base64Image` on the card.
-- **Link to Closet Item** — opens closet picker (`closetModalOpen = true`). Selecting a match calls `handleLinkItem(closetItem)`, sets `item.closetItem`, and copies its image URL if the card has none.
-- **Linked chip** — tapping opens `closetItemDetailPane` showing full detail of the linked closet entry (image, title, brand/category/size, price).
+- **Link to Closet Item** — opens closet picker. Selecting a match calls `handleLinkItem`, sets `item.closetItem`, and copies its image URL if the card has none.
+- **Linked chip** — tapping opens `closetItemDetailPane` showing full detail of the linked closet entry.
 
 ---
 
@@ -141,11 +141,11 @@ Once items are confirmed and saved, they inherit **receipt-locked field** protec
 
 A `<AnimatePresence>` block positioned `absolute inset-0 z-50` renders during the save phase:
 
-- **SVG progress ring:** `<motion.circle>` with `strokeDasharray = 2π×34` and `strokeDashoffset = (2π×34)×(1 − done/total)` during saving; `0` (complete) during syncing.
-- **Phase icon:** ✦ Sparkles (saving) → spinning ↺ RefreshCw (syncing).
+- **SVG progress ring:** `<motion.circle>` with `strokeDasharray = 2π×34` and `strokeDashoffset = (2π×34)×(1 − done/total)` during saving; `0` during syncing.
+- **Phase icon:** ✦ Sparkles → spinning ↺ RefreshCw.
 - **Phase label:** `AnimatePresence mode="wait"` keyed on `ingestPhase`, fades `{y:6}→{y:0}` on enter, `{y:-6}` on exit.
-- **Counter pill:** monospace `done / total` badge (saving phase only).
-- **Backdrop:** `hsl(var(--background)/0.92)` with `backdrop-filter: blur(12px)`.
+- **Counter pill:** monospace `done / total` badge.
+- **Backdrop:** `hsl(var/0.92)` with `backdrop-filter: blur`.
 
 ---
 
@@ -153,12 +153,12 @@ A `<AnimatePresence>` block positioned `absolute inset-0 z-50` renders during th
 
 | Scenario | Feedback |
 |---|---|
-| PDF OCR fails (Gemini + pypdf) | `toast.error(detail or t('addItem.import.textError'))` |
-| No text found in PDF/image | `toast.error(t('addItem.import.textEmpty'))` |
-| `/closet/parse-receipt` fails for a selector | `toast.error(detail or t('addItem.import.error'))` |
-| Save with nothing selected | `toast.error(t('addItem.import.noSelectedItems'))` |
-| `createItem` or `updateItem` fails | `toast.error(detail or t('addItem.import.saveFailed'))` |
-| Web URL fetch fails (4xx/5xx/timeout) | `HTTPException(400, "Failed to fetch receipt from URL…")` |
+| PDF OCR fails | `toast.error(detail or t)` |
+| No text found in PDF/image | `toast.error(t)` |
+| `/closet/parse-receipt` fails for a selector | `toast.error(detail or t)` |
+| Save with nothing selected | `toast.error(t)` |
+| `createItem` or `updateItem` fails | `toast.error(detail or t)` |
+| Web URL fetch fails | `HTTPException(400, "Failed to fetch receipt from URL…")` |
 
 ---
 
@@ -172,7 +172,7 @@ A `<AnimatePresence>` block positioned `absolute inset-0 z-50` renders during th
 | `importFile` | `File | null` | Selected file object |
 | `importUrl` | `string` | Web link URL |
 | `receiptText` | `string` | OCR-extracted or pasted text |
-| `imagePreviewUrl` | `string | null` | `URL.createObjectURL(importFile)` |
+| `imagePreviewUrl` | `string | null` | `URL.createObjectURL` |
 | `isExtracting` | `boolean` | Disables Extract button; shows spinner |
 | `selectors` | `{id,x,y,w,h}[]` | Selector regions in % |
 | `dragState` | `object | null` | Active drag/resize session |
@@ -225,9 +225,9 @@ return lines.slice(startLine, endLine).join('\n');
 |---|---|---|---|
 | `text` param | non-blank string | `[text_string]` | False |
 | file — text type | MIME starts with `text/` or known ext | `[decoded_utf8]` | False |
-| file — binary | PDF or image | `[(bytes, mime)]` | True if image |
+| file — binary | PDF or image | `[]` | True if image |
 | url — HTML | `text/html` response | `[resp.text]` | False |
-| url — image/PDF | Binary content-type | `[(content, ct)]` | True if image |
+| url — image/PDF | Binary content-type | `[]` | True if image |
 
 **Dual-path concurrent analysis (lines 6038–6039):**
 
@@ -236,10 +236,10 @@ ocr_result, visual_result = await asyncio.gather(run_ocr(), run_visual())
 ```
 
 - **`run_ocr()`** — Gemini Vision with wardrobe-cataloguing system prompt; `response_mime_type="application/json"`; code-fence stripping before `json.loads`.
-- **`run_visual()`** — `detect_items(image_bytes)` → largest bbox → `_bbox_crop_useful` → `analyze(crop_bytes, language=user_lang)`. Returns `{visual_analysis, image_base64, image_mime}`.
+- **`run_visual()`** — `detect_items` → largest bbox → `_bbox_crop_useful` → `analyze`. Returns `{visual_analysis, image_base64, image_mime}`.
 
 **Gemini system prompt extracts seven fields:**
-`brand` · `item_type` (singular lowercase noun) · `size` · `price_cents` (integer cents after discount) · `colors` (lowercase list) · `category` (constrained to 7 canonical values) · `name` (friendly descriptive label)
+`brand` · `item_type` · `size` · `price_cents` · `colors` · `category` · `name`
 
 **Field merge priority (lines 6041–6086):**
 
@@ -377,7 +377,7 @@ await closetStore.prewarm({ force: true });
 
 ---
 
-### 3.9 API Client Methods (`frontend/src/lib/api.js`)
+### 3.9 API Client Methods
 
 ```javascript
 parseReceipt: (formData) =>
@@ -395,9 +395,9 @@ extractPdfText: (formData) =>
 
 ---
 
-### 3.10 Localisation (12 Locales)
+### 3.10 Localisation
 
-| Key | Default (en) |
+| Key | Default |
 |---|---|
 | `addItem.tabs.import` | Digital Import |
 | `addItem.tabs.upload` | Camera & Upload |
@@ -430,7 +430,7 @@ extractPdfText: (formData) =>
 | Field | Type | Description |
 |---|---|---|
 | `text` | `string` | Pasted receipt or email body |
-| `file` | `UploadFile` | Image (JPEG/PNG/WEBP/HEIC) or PDF |
+| `file` | `UploadFile` | Image or PDF |
 | `url` | `string` | URL to a receipt page or image/PDF |
 
 **Response:**
@@ -458,7 +458,7 @@ extractPdfText: (formData) =>
 
 **Auth:** Bearer JWT · **Content-Type:** `multipart/form-data` · **Timeout:** 30 s
 
-**Request:** `file: UploadFile` (PDF or image)
+**Request:** `file: UploadFile`
 
 **Response:** `{ "text": "<extracted string>" }`
 
@@ -473,8 +473,8 @@ extractPdfText: (formData) =>
 | **`asyncio.gather` for OCR + Vision** | Both calls are I/O-bound and independent; concurrent execution cuts per-item latency from ~4 s sequential to ~2.5 s |
 | **`receipt_locked_fields` is granular** | Only fields that *actually have receipt data* are locked; missing fields remain freely fillable by later GarmentVision analysis |
 | **Title excluded from closet-link patch** | `handleSaveExtractedItems` link path patches only `brand`, `size`, `price_cents`, `purchase_price_cents` — user's edited title is never overwritten |
-| **SVG placeholder fallback** | When no image is available, a branded SVG is generated client-side using `btoa(unescape(encodeURIComponent(svg)))` with brand/type text in SVG `<text>` nodes |
+| **SVG placeholder fallback** | When no image is available, a branded SVG is generated client-side using `btoa(unescape(encodeURIComponent))` with brand/type text in SVG `<text>` nodes |
 | **`cropImageFile` JPEG at 0.9 quality** | 90% quality preserves enough detail for Gemini's OCR without inflating the FormData payload size |
 | **`_is_unidentifiable` guard in background task** | Prevents GarmentVision garbage output from polluting a receipt item that already has clean, authoritative receipt metadata |
 | **`prewarm({ force: true })` after save** | Without forced re-fetch, the closet cache would serve stale entries until TTL expiry; force ensures real thumbnails and pipeline status are visible immediately |
-| **SVG detection by data URI prefix** | `item.base64Image.startsWith('data:image/svg+xml')` marks the item as "no photo" so `from_receipt` items with placeholder SVGs do not trigger the GarmentVision pipeline |
+| **SVG detection by data URI prefix** | `item.base64Image.startsWith` marks the item as "no photo" so `from_receipt` items with placeholder SVGs do not trigger the GarmentVision pipeline |

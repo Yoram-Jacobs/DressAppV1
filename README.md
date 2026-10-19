@@ -16,10 +16,10 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 
 | Flow | What it does |
 | --- | --- |
-| **Capture** | Snap or upload photos. The vision pipeline crops each garment, removes the background, and auto-fills 20+ attributes (category, fabric, fit, season, dress-code, colours, condition, repair advice…). |
-| **Auto-fill & Re-analyse** | Falls back to local SegFormer + rembg + Gemini. The **Re-analyse Photo** card features an interactive AI prompt box allowing users to ask **The Eyes** for specific modifications (*"Remove the shoes"*, *"Complete the hole where the hand was"*, *"Remove metal studs"*) executing photorealistic inpainting via **Nano Banana** (`gemini-3.1-flash-lite-image`). |
+| **Capture & Auto-Route** | Snap or upload any mix of photos (single items, full-body worn outfits, or multi-item unworn clusters). **GarmentVision** automatically routes each photo to the **Single**, **Multi-Garment**, or **Mass** pipeline, removes backgrounds (`rembg ∩ SegFormer`), unfolds/reconstructs clustered items via **Nano Banana**, and auto-fills 20+ attributes (including **Sweatshirts & Hoodies** vs. **T-Shirts** and 60+ **Traditional & Cultural** garments across 13 languages). |
+| **Auto-fill & Re-analyse** | Combines local SegFormer-b2 + U2-Net matting + multimodal LLM extraction. The **Re-analyse Photo** card features an interactive AI prompt box allowing users to ask **The Eyes** for specific modifications (*"Remove the shoes"*, *"Complete the hole where the hand was"*, *"Remove metal studs"*) executing photorealistic inpainting via **Nano Banana** (`gemini-3.1-flash-lite-image`). |
 | **DPP QR scan** | Scans EU Digital Product Passport QR codes (JSON-LD or inline JSON), imports brand, fibre composition, supply-chain trace and care info — even without a photo. |
-| **AI Stylist & Audio** | Conversational chat (text or voice) that pulls weather, your calendar, your closet, and your cultural context to suggest complete outfits. Speaks 13 languages. Integrated STT/TTS routes between Gemma4 and Gemini 2.5 Flash, with native Web Speech transcription fallback and mobile offline VITS models (Piper/Sherpa-ONNX). |
+| **AI Stylist & Audio** | Conversational chat (text or voice) that pulls weather, your calendar, your closet, and your cultural context to suggest complete outfits. Speaks 13 languages. Integrated STT/TTS routes between on-prem `Qwen 2.5 VL 3B` and `Gemini 3.5 Flash`, with native Web Speech transcription fallback and mobile offline VITS models (Piper/Sherpa-ONNX). |
 | **Marketplace** | Sell, swap or donate pieces. Region-matched feed, Live PayPal checkout, transparent platform fee (7% after processing). |
 | **Experts directory** | Find vetted stylists, tailors and designers. Self-serve promotion campaigns (Draft/Pending/Active/Paused/Rejected lifecycles) with daily billing options ($1.00 USD/day PayPal checkout), customizable notification timing, and detailed performance reports drive a region-aware ticker on the home screen. Includes a dedicated My Campaigns dashboard for active expert tracking. |
 | **Trend Scout** | Daily and monthly background scheduler curating 7 distinct channels across Men's and Women's fashion ecosystems — Local News, Runway, Street Style, Sustainability, Influencers & Icons, Vintage / Archival, and Care & Repairs. Employs web scraping (httpx + BeautifulSoup), Gemini JSON synthesis, strict anti-commerce/anti-paywall heuristic shields, dynamic translation across 13 locales, 1-tap "Style with My Closet" outfit handoff, and personalized demographic ranking. |
@@ -29,7 +29,7 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 | **Outfit Canvas & 2D Avatar** | Adaptive dual-canvas interactive avatar (real-body photo cutout with U2-Net matting vs dynamic SVG vector mannequin `DynamicAvatar.jsx`) with calibrated landmark positioning (`top-[14.5%]` collar-to-neckline and `top-[36.5%]` waistband-to-waistline), scikit-learn ANSUR II physical sizing predictor, proportional scaling, and interactive layer click details. |
 | **Wardrobe Scheduler** | Automated daily push notifications with 3 styled outfit recommendations generated from your closet history, preventing wear repetition. |
 | **State & Network Optimization** | `useSyncExternalStore` thread-safe state architecture across Stylist, Daily Suggestions, Closet, and Marketplace, with in-flight deduplication, 15-min caching, and `visibilitychange` tab revalidation (0 idle background GET requests). |
-| **Monetization & Limits**| Gated closet space (50-item baseline limit for Free users) with a paid Pro upgrade path via PayPal Subscriptions REST API (mock-testing supported) or free expansion (+10 slots) via invite referral loops. Pre-paid credit bucket billing (10 free credits daily with 30-day expiry, and purchased credit packs that never expire) with soft/hard exhaustion thresholds and a pause-and-resume execution pattern. |
+| **Monetization & Limits**| Gated closet space (50-item baseline limit for Free users, expandable up to 150 via invite referral loops) with paid **Manager** ($10/mo) and **Professional** ($15/mo) plans via PayPal Subscriptions REST API and Atzmai ILS gateway. Pre-paid credit bucket billing (10 free credits daily with 30-day expiry, and purchased credit packs that never expire). |
 
 ---
 
@@ -40,19 +40,18 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 **Frontend** — React 19 · `useSyncExternalStore` custom stores · React Router · Tailwind · Shadcn/UI · `react-i18next` (13 locales) · Sonner toasts · Lucide icons
 
 **Vision pipeline** — full stack:
-* **Hetzner / dev**: `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for clothing parsing · Fashion-CLIP for embeddings — all CPU-local. See `requirements-ml.txt` and the auto-detection in `app/config.py`.
-* **Inference Server**: Optional self-hosted GPU endpoint (Modal/RunPod) wrapping SegFormer-b3 and BiRefNet for fast background matting and parsing.
+* **Hetzner / dev**: `rembg` (U2-Net) for matting · HuggingFace SegFormer-b2-clothes for 18-class clothing parsing & automatic 3-pipeline routing (`single` / `multi` / `mass`) · Fashion-CLIP for embeddings — all CPU-local. See `requirements-ml.txt` and the auto-detection in `app/config.py`.
+* **Generative Studio Reconstruction**: **Nano Banana** (`gemini-3.1-flash-lite-image`) for unfolding/reconstructing clustered garments in the `mass` pipeline and conversational photo inpainting.
 
-**Voice / Audio** — Deepgram (STT/TTS fallback), Gemini 2.5 Flash native modulations (prebuilt voice configs puck/aoede/charon), Web Speech API browser integration, and local Piper ONNX support.
+**Voice / Audio** — Deepgram (STT/TTS fallback), Gemini native modulations (prebuilt voice configs puck/aoede/charon), Web Speech API browser integration, and local Piper ONNX support.
 
-**LLM / Inference Engine** — Multi-tier production routing:
-* **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: Powers all 6 interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and Closet Ingestion) via `backend/app/services/llm_gateway.py` with native `google-genai` SDK and sub-350ms TTFT.
-* **On-Premises VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: Self-hosted `dressapp-eyes` container running fine-tuned **Gemma-4-E4B** (`gemma-4-E4B-it-Q3_K_M.gguf` via `llama-server` on port 7860). Serves as the zero-cost baseline for offline/free usage and transparently intercepts quota exhaustion (`429` / `RESOURCE_EXHAUSTED`) with zero downtime.
-* **High-Cost Generative Features**: Trend Scout and Nano Banana photorealistic inpainting strictly require validated user keys.
+**LLM / Inference Engine** — Zero-BYOK Multi-tier production routing:
+* **Manager & Professional Plans — Fast Cloud Engine (Google Gemini 3.5 Flash-Lite)**: Powers all 6 interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and Closet Ingestion) via `backend/app/services/llm_gateway.py` with native `google-genai` SDK and sub-350ms TTFT.
+* **Free Tier & Quota Safety Net — On-Premises VPS Eyes (`Qwen2.5-VL-3B-Instruct`)**: Self-hosted `dressapp-eyes` container running fine-tuned **Qwen2.5-VL-3B-Instruct** (`Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` via `llama-server` on port 7860, ~2.8 GB RAM). Serves as the zero-cost baseline for Free Tier users and transparently intercepts cloud quota exhaustion (`429` / `RESOURCE_EXHAUSTED`) with zero downtime.
 
-**External APIs** — OpenWeather · PayPal Live · Google OAuth + Google Calendar · HuggingFace Inference API
+**External APIs** — OpenWeather · PayPal Live · Atzmai ILS · Google OAuth + Google Calendar
 
-**Hosting** — Docker Compose · Caddy 2 (auto Let's Encrypt) · MongoDB Atlas
+**Hosting** — 5-container Docker Compose stack · Caddy 2 (auto Let's Encrypt) · On-Prem MongoDB 7.0 Community on NVMe
 
 **Extension** — Manifest V3 Shopping Assistant (React popup + content scripts)
 
@@ -74,21 +73,20 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
    │  :8001   │    │  React build       │
    └────┬─────┴────┴────────────────────┘
         │
-        ├─ MongoDB Atlas (users, closet, listings, trends, …)
-        ├─ Vision pipeline: local SegFormer + rembg + Fashion-CLIP
-        ├─ Primary Engine: Google Gemini 3.5 Flash-Lite (native google-genai)
-        ├─ On-prem Eyes (:7860): llama-server + Gemma-4-E4B (Free Tier & Quota Safety Net)
+        ├─ On-Prem MongoDB 7.0 (:27017 on NVMe /mnt/dressapp-db-data)
+        ├─ Vision pipeline: SegFormer-b2 (auto 3-pipeline routing) + rembg + Fashion-CLIP
+        ├─ Cloud Engine (Manager/Pro): Google Gemini 3.5 Flash-Lite + Nano Banana
+        ├─ On-prem Eyes (:7860): llama-server + Qwen2.5-VL-3B-Instruct (Free Tier & Quota Safety Net)
         ├─ Deepgram & Gemini Audio (STT/TTS over HTTPS)
-        ├─ OpenWeather, PayPal Live, Google OAuth/Calendar
-        └─ High-cost generative cloud endpoints (BYOK keys for Nano Banana & Trend Scout)
+        └─ OpenWeather, PayPal Live, Atzmai ILS, Google OAuth/Calendar
 ```
 
 ### In-depth documentation
 
 *   **Technical Architecture**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Monorepo structure, FARM runtime, ML vision stack, and Hetzner VPS topology.
-*   **Database Schema**: [`docs/MONGODB_SCHEMA.md`](docs/MONGODB_SCHEMA.md) — Complete 15-collection MongoDB Atlas schema, indexes, and credit bucket definitions.
-*   **Domain Context & ADRs**: [`CONTEXT.md`](CONTEXT.md) and [`docs/adr/`](docs/adr/) — Bounded contexts, architectural decision records, and deep module boundaries.
-*   **Modular Wiki**: [`wiki/en/overview.md`](wiki/en/overview.md) — 40 detailed feature guides localized into 13 languages.
+*   **Database Schema**: [`docs/MONGODB_SCHEMA.md`](docs/MONGODB_SCHEMA.md) — Complete 15-collection MongoDB 7.0 schema, indexes, and credit bucket definitions.
+*   **Domain Context & ADRs**: [`CONTEXT.md`](CONTEXT.md) and [`docs/adr/`](docs/adr/) — Bounded contexts, architectural decision records (0001–0005), and deep module boundaries.
+*   **Modular Wiki**: [`wiki/en/overview.md`](wiki/en/overview.md) — Modular user and feature guides localized into 13 languages.
 *   **Deployment Facts**: [`CONCRETE_FACTS.md`](CONCRETE_FACTS.md) — Authoritative hardware, container layouts, and operational reference commands.
 
 ---
@@ -200,11 +198,12 @@ python -m scripts.seed_demo   # idempotent — re-running upserts
 
 ## Production deployment
 
-4-container Docker Compose stack on Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM, running on `dressapp.co`):
+5-container Docker Compose stack on Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM, running on `dressapp.co`):
 
-- `backend` — FastAPI + local SegFormer + rembg + Fashion-CLIP (~1.5 GB RAM at idle)
-- `eyes` — Self-hosted inference server (`llama-server` + FastAPI proxy) running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 (~2.85 GB RAM)
-- `frontend` — Nginx serving the built React 19 SPA
+- `dressapp-mongo` — On-prem MongoDB 7.0 Community with persistent storage on local NVMe (`/mnt/dressapp-db-data`, WiredTiger cache capped at 0.75 GB)
+- `dressapp-backend` — FastAPI + local SegFormer-b2 + rembg + Fashion-CLIP (~1.5 GB RAM at idle)
+- `dressapp-eyes` — Self-hosted inference server (`llama-server` + FastAPI proxy) running fine-tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj` on port 7860 (~2.8 GB RAM)
+- `dressapp-frontend` — Nginx serving the built React 19 SPA
 - `caddy` — TLS termination, automatic Let's Encrypt, HTTP→HTTPS redirect
 
 `deploy/Dockerfile.backend` installs `requirements.txt` **and** `requirements-ml.txt` so torch / transformers / rembg are all present. `app/config.py` auto-detects them and turns `USE_LOCAL_CLOTHING_PARSER` and `AUTO_MATTE_CROPS` to `true`.

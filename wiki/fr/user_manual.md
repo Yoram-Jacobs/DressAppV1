@@ -44,14 +44,18 @@ DressApp est un gestionnaire de garde-robe personnelle propulsé par l'IA, un co
 ### 3.1 Intégration des vêtements (Ajout d'articles)
 PARADIGMES D'INTÉGRATION : Photographie, Passeports Numériques des Produits de l'UE et Reçus de commerce numérique.
 
-#### A. Appareil photo interactif et téléversement de fichiers
-1. Accédez à l'écran **Ajouter un article (Add Item)**.
-2. Sélectionnez **Prendre une photo** (lance l'appareil photo natif sur mobile) ou cliquez sur **Téléverser des photos** (ouvre le sélecteur de fichiers du système).
-3. Le client calcule l'empreinte SHA-256 et le hachage différentiel horizontal (dHash) de l'image directement dans le navigateur (~100 à 180 ms) pour la comparer à votre dressing existant.
-4. Si une correspondance est détectée, la **boîte de dialogue de détection de doublons** s'ouvre en affichant les aperçus correspondants. Sélectionnez **Ignorer** ou **Ajouter quand même**.
-5. Une fois l'article accepté, le serveur démarre un flux NDJSON. Un cadre de prévisualisation s'affiche sous 5 à 7 secondes, vous permettant de modifier immédiatement les détails de l'article pendant que le backend termine l'étiquetage.
-6. Vérifiez les étiquettes détectées automatiquement (couleur, tissu, coupe, motif, occasion). Si la forme du détourage est incorrecte, modifiez le menu déroulant **Catégorie** ; cela déclenche SegFormer pour recadrer automatiquement le vêtement.
-7. Cliquez sur **Enregistrer** pour afficher de manière optimiste l'article immédiatement dans la grille du dressing (~16 ms) pendant que la génération de la miniature WebP en arrière-plan se termine.
+#### A. Caméra Interactive, Import de Lots Mixtes et Routage Automatique à 3 Pipelines
+1. Accédez à l'écran **Ajouter un article** (*Add Item*).
+2. Sélectionnez **Prendre une photo** (ouvre l'appareil photo natif) ou cliquez sur **Importer des photos** (ouvre le sélecteur de fichiers). Vous pouvez importer plusieurs photos aux caractéristiques mixtes dans un seul lot (pièces uniques, tenues complètes sur une personne/un mannequin et piles/groupes de vêtements non portés) sans sélectionner d'onglet de mode manuel.
+3. Le client calcule dans le navigateur le condensat SHA-256 et le dHash horizontal (~100-180 ms) de chaque image pour vérifier l'absence de doublon dans votre garde-robe.
+4. Si une correspondance est trouvée, la **Boîte de dialogue de détection des doublons** s'ouvre avec les aperçus correspondants. Choisissez **Ignorer** (*Skip*) ou **Ajouter quand même** (*Add anyway*).
+5. **Routage Automatique à 3 Pipelines (`detect_photo_pipeline`)** : Pour chaque photo acceptée, `clothing_parser.py` inspecte les masques sémantiques SegFormer (`face_skin_ratio`, `anatomical_stack`, composantes connexes) et oriente automatiquement la photo vers :
+   - **Pipeline `single`** : Vêtement unique isolé avec détourage alpha studio (`rembg` + intersection de masque SegFormer).
+   - **Pipeline `multi`** : Tenue multi-pièces portée par un modèle ou un mannequin, extrayant séparément haut, bas, vêtement d'extérieur, chaussures et accessoires.
+   - **Pipeline `mass`** : Lots de vêtements non portés, dispositions à plat ou articles suspendus à des patères (`parse_unworn_cluster`), séparant les composantes disjointes et appliquant une segmentation couleur tout en protégeant les motifs imprimés.
+6. Le serveur diffuse des trames NDJSON progressives (`detect`, `field`, `item`, `done`) en quelques secondes, vous permettant de modifier les détails immédiatement pendant que le backend termine l'étiquetage — y compris la distinction précise entre **Sweats & Hoodies** (*Sweatshirts & Hoodies*) et **T-shirts** (*T-Shirt*) ainsi que plus de 60 **tenues traditionnelles et culturelles** dans les 13 langues.
+7. Vérifiez les étiquettes détectées automatiquement (couleur, matière, coupe, motif, code vestimentaire, occasion). Si la forme du détourage est incorrecte, modifiez le menu déroulant **Catégorie** ; cela déclenche le recadrage automatique par SegFormer.
+8. Cliquez sur **Enregistrer** pour afficher immédiatement l'article dans la grille (~16 ms) pendant que la génération des miniatures WebP et les complétions génératives Nano Banana se terminent en arrière-plan.
 
 #### B. Scan des Passeports Numériques des Produits de l'UE (DPP)
 1. Appuyez sur le bouton **Scanner QR (DPP)** sur la page Ajouter un article.

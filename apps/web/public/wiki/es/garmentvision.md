@@ -69,7 +69,7 @@ graph TD
 
 ### Modos y Recorridos de Trabajo
 1. **Captura Interactiva e Ingesta por Lotes:**
-   - Pulsa en **Añadir elemento** &rarr; toma o sube una foto que contenga una o más prendas.
+   - Pulsa en **Añadir elemento** → toma o sube una foto que contenga una o más prendas.
    - El sistema realiza comprobaciones preventivas de duplicados en tiempo real (SHA-256 mediante `crypto.subtle` y hash perceptual) para detectar subidas duplicadas al instante.
 2. **Evaluación de Calidad por IA:**
    - A medida que SegFormer segmenta las prendas, el Comprobador de Calidad de Gemini inspecciona cada prenda:

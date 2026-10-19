@@ -1,151 +1,151 @@
-# DressApp: Managementsamenvatting & Veelgestelde Vragen (Q&A)
+# DressApp: Samenvatting & Veelgestelde Vragen
 
-Welkom bij **DressApp** — jouw intelligente, AI-gestuurde garderobebeheerder, persoonlijke stylist en ecosysteem voor duurzame mode. Of je nu je allereerste kledingstuk uploadt of een paklijst samenstelt voor een reis langs meerdere steden, deze gids combineert een beknopte **Managementsamenvatting** van hoe DressApp werkt met een toegankelijk overzicht van **Veelgestelde Vragen (Q&A)** zodat je binnen enkele minuten aan de slag kunt.
+Welkom bij **DressApp** — uw slimme garderobe-assistent, persoonlijke stylist en duurzame modepartner. Of u nu uw allereerste kledingstuk toevoegt of een paklijst maakt voor een reis, deze gids combineert een **Korte Samenvatting** van hoe DressApp werkt met **Veelgestelde Vragen** zodat u binnen enkele minuten aan de slag kunt.
 
 ---
 
-## Managementsamenvatting (In één Oogopslag)
+## Korte Samenvatting (In Één Oogopslag)
 
-### Situatie & Uitdaging
-De meeste mensen dragen **80% van de tijd slechts 20% van hun garderobe** omdat hun kledingkast onoverzichtelijk is, het kiezen van een outfit elke ochtend tot keuzestress leidt en het handmatig catalogiseren van kleding in traditionele apps traag en tijdrovend is.
+### De Dagelijkse Uitdaging voor de Kledingkast
+De meeste mensen dragen **80% van de tijd slechts 20% van hun kleding** omdat hun kast onoverzichtelijk is, het kiezen van een outfit elke ochtend tijd kost en het handmatig invoeren van kleding in traditionele apps traag en tijdrovend is.
 
-### De DressApp-oplossing
-DressApp maakt een einde aan handmatig catalogiseren en keuzestress via een **hybride visueel en conversationeel AI-ecosysteem**:
-- **Moeiteloze Digitalisering**: Maak een flat-lay-foto, upload een spiegelselfie van je volledige outfit, scan een digitale kassabon, scan een QR-code van het Europese Digitale Productpaspoort (DPP) of migreer een bestaande garderobe met 1 klik. DressApp isoleert kledingstukken automatisch, verwijdert de achtergrond en kent meer dan 9 kenmerken toe (Categorie, Kleur, Stof, Pasvorm, Seizoen, Dresscode, Geslacht, Warmtegraad en Bedekkingsgraad).
-- **Cumulatief AI-tegoedsysteem**: Gratis gebruikers ontvangen **dagelijks 10 lokale AI-credits** die gedurende **30 dagen oplopen tot maximaal 300 credits**, plus **5 gratis Nano Banana Reconstructie-credits** bij aanmelding. Door je kledingkast gedurende 5 dagen in kleine dagelijkse stappen te fotograferen, spaar je automatisch **50 AI-credits** op — genoeg om je volledige basisgarderobe van 50 stuks helemaal gratis te digitaliseren.
-- **Contextbewuste Persoonlijke Styling**: Je conversationele AI-stylist combineert jouw echte kledingstukken, lokale weersvoorspellingen, Google Agenda-afspraken, je persoonlijke bedekkingsvoorkeur (Modesty) en je biometrische 3D-lichaamsprofiel om complete outfits van top tot teen samen te stellen of ontbrekende basics in je kast op te sporen.
+### De Oplossing van DressApp
+DressApp neemt handmatig invoerwerk en keuzestress in de ochtend weg met slimme beeldherkenning en persoonlijk stijladvies:
+- **Moeiteloos Digitaliseren**: Maak een foto van een los kledingstuk, een volledige outfit in de spiegel of meerdere kledingstukken naast elkaar — of importeer via een webshoplink, digitale kassabon, product-QR-code of vanuit een andere kledingkast-app. DressApp herkent automatisch het type foto, verwijdert de achtergrond, splitst meerdere items en vult alle details in (Categorie, Kleur, Stof, Pasvorm, Seizoen, Kledingstijl en Warmte).
+- **Cumulatief Gratis Creditsysteem**: Gebruikers van het Gratis-abonnement ontvangen **dagelijks 10 interne AI-credits** die tot **300 credits over 30 dagen** worden opgespaard, plus **5 gratis Studio-reconstructiecredits** bij aanmelding. Door gedurende 5 dagen elke dag een paar items te fotograferen, spaart u automatisch **50 credits** — genoeg om gratis een basisgarderobe van 50 stuks te digitaliseren.
+- **Persoonlijk Stijladvies op Maat**: Uw AI-stylist combineert de kleding in uw kast, het lokale weerbericht, uw agenda-afspraken, uw bedekkingsvoorkeur en uw lichaamsmaten om complete outfits samen te stellen of ontbrekende basics aan te wijzen.
 
-### Belangrijkste Abonnementen & Gekwantificeerde Waarde
+### Abonnementen & Functies in Één Oogopslag
 
-| Functie / Graadmeter | Gratis Abonnement (\$0) | Manager-abonnement (\$10/mnd of \$100/jr) | Professional-abonnement (\$15/mnd of \$150/jr) |
+| Functie | Gratis Plan ($0) | Garderobebeheerder ($10/mnd of $100/jr) | Pro-Stylist ($15/mnd of $150/jr) |
 | :--- | :--- | :--- | :--- |
-| **Kastcapaciteit** | **50 items** (tot **150** via uitnodigingen) | **Onbeperkt** | **Onbeperkt** |
-| **AI-engine** | Lokale **Eyes**-engine | Cloud **Google Gemini** (<350 ms) + Fallback | Cloud **Google Gemini** (<350 ms) + Fallback |
-| **Dagelijkse AI-credits** | **10/dag** (cumulatief tot **300 / 30 dagen**) | **Onbeperkt** dagelijks stylen & uploaden | **Onbeperkt** dagelijks stylen & uploaden |
-| **Studio-reconstructie** | **5 gratis** startcredits | **100 maandelijkse** Nano Banana-credits | **100 maandelijkse** Nano Banana-credits |
-| **Groei & Ecosysteem** | Kast, Stylist, Outfitplanner, Koffer | + 1-klik-migratie, Trend-Scout, Marktplaats | + Gecertificeerd Expertenregister & Advertenties |
+| **Kastcapaciteit** | **50 items** (tot **150** via vrienden uitnodigen) | **Onbeperkt** | **Onbeperkt** |
+| **AI-model** | **Het eigen AI-model van DressApp** | **Geavanceerd AI-model** + automatische interne terugvaloptie | **Geavanceerd AI-model** + automatische interne terugvaloptie |
+| **Dagelijkse Credits** | **10/dag** (spaart op tot **300 / 30 dagen**) | **Onbeperkt** dagelijks stylen & kleding scannen | **Onbeperkt** dagelijks stylen & kleding scannen |
+| **Studio-reconstructie** | **5 gratis** startcredits | **100 maandelijkse** Studio-reconstructiecredits | **100 maandelijkse** Studio-reconstructiecredits |
+| **Inbegrepen Functies** | Digitale Kast, Stylist, Outfitplanner, Koffer | + Snelle Kastimport, Trendverkenner, Marktplaats | + Gecertificeerd Stylistenregister & Campagnes |
 
 ---
 
 ## 1. Aan de Slag & Profiel Instellen
 
-### V: Wat is het allereerste dat ik moet doen na mijn aanmelding?
-**A:** Vul eerst je **Profiel** in voordat je kleding uploadt! Open het tabblad **Profiel** en stel vier essentiële onderdelen in:
-1. **Geslachtsvoorkeur**: Zorgt ervoor dat nieuw geüploade kledingstukken automatisch de juiste standaardclassificatie en pasvormregels krijgen.
-2. **Bedekkingsgraad (Modesty Level)**: Laat de AI-stylist weten wat jouw persoonlijke voorkeuren zijn qua lichaamsbedekking, zodat elke outfitsuggestie prettig en vertrouwd aanvoelt.
-3. **Thuisomgeving**: Activeert realtime lokale weerintegratie, zodat DressApp nooit een dikke wollen jas voorstelt op een warme, zonnige ochtend.
-4. **Lichaamsmaten**: Voer slechts **4 eenvoudige waarden** in (Lengte, Gewicht, Taille en Bh-/Borstmaat). De biometrische engine van DressApp (getraind op de antropometrische ANSUR II-dataset) voorspelt automatisch **6 extra lichaamsmaten** voor nauwkeurig maatadvies en styling op maat.
+### V: Wat kan ik het beste als allereerste doen na mijn aanmelding?
+**A:** Vul eerst uw **Profiel** in voordat u kleding toevoegt! Open het tabblad **Profiel** en stel vier belangrijke voorkeuren in:
+1. **Geslachtsvoorkeur**: Zorgt ervoor dat nieuwe kledingstukken direct de juiste standaardcategorie en pasvorm krijgen.
+2. **Bedekkingsvoorkeur**: Laat de AI-stylist weten hoeveel bedekking u prettig vindt, zodat elk outfitvoorstel comfortabel aanvoelt.
+3. **Woonplaats**: Koppelt de lokale weersverwachting zodat DressApp nooit een dikke winterjas voorstelt op een zonnige ochtend.
+4. **Lichaamsmaten**: Vul slechts **4 eenvoudige maten** in (Lengte, Gewicht, Taille en Borstomvang). DressApp berekent automatisch **6 aanvullende lichaamsmaten** voor nauwkeurig maatadvies en flatterende verhoudingen.
 
 ### V: Hoe lang duurt het om mijn kledingkast te digitaliseren?
-**A:** Je hoeft echt niet je hele kledingkast op één middag te fotograferen! Wij adviseren de **5-daagse Onboarding-sprint** (10 items per dag, slechts 10–15 minuten per dag):
-- **Dag 1**: Dagelijkse onderstukken (10 spijkerbroeken, pantalons, rokken of shorts)
-- **Dag 2**: Dagelijkse bovenstukken (10 T-shirts, blouses, overhemden of polo's)
-- **Dag 3**: Laagjes, breigoed & jassen (10 truien, blazers, jasjes of mantels)
+**A:** U hoeft niet uw hele kast op één middag te fotograferen! Wij adviseren het **5-Daagse Startplan** (10 stuks per dag, in slechts een paar minuten per dag):
+- **Dag 1**: Dagelijkse broeken & rokken (10 jeans, pantalons, rokken of shorts)
+- **Dag 2**: Dagelijkse bovenkleding (10 T-shirts, blouses, overhemden of polo's)
+- **Dag 3**: Truien, hoodies & jassen (10 truien, vesten, blazers, jacks of mantels)
 - **Dag 4**: Schoenen (10 paar sneakers, laarzen, loafers of hakken)
-- **Dag 5**: Jurken, sets & belangrijke accessoires (10 jurken/jumpsuits, tassen, riemen of sjaals)
+- **Dag 5**: Jurken, sets & accessoires (10 jurken, traditionele kleding, tassen, riemen of sjaals)
 
-Op dag 5 heb je **50 basisstukken** gedigitaliseerd — goed voor duizenden outfitcombinaties!
+Op dag 5 heeft u **50 basisitems** gedigitaliseerd — goed voor duizenden outfitcombinaties!
 
-### V: Kan ik mijn kleding importeren vanuit een andere garderobe-app?
-**A:** Ja! Als je eerder apps zoals **Whering**, **Indyx**, **Alta**, **Acloset** of **Stylebook** hebt gebruikt, ga je naar **Item toevoegen → Garderobe migreren** om je bestaande catalogus met **1 klik** te importeren, inclusief automatische achtergrondverwijdering en kenmerktoewijzing.
+### V: Kan ik mijn kleding importeren vanuit een andere kledingkast-app?
+**A:** Ja! Als u foto's of schermafbeeldingen uit een andere garderobe-app heeft, gaat u naar **Profiel → Garderobe Importeren** (of via **Item toevoegen**) om uw bestaande collectie te uploaden met automatische itemscheiding, achtergrondverwijdering en kenmerkherkenning.
 
 ---
 
 ## 2. AI-credits, Abonnementen & Vrienden Uitnodigen
 
 ### V: Hoe werken de gratis AI-credits?
-**A:** Gratis gebruikers hebben twee afzonderlijke tegoeden die zichtbaar zijn onder **Profiel → Abonnementen & Limieten**:
-1. **Lokale AI-credits (10 gratis credits per dag)**: Worden gebruikt voor dagelijkse AI-taken die draaien op de lokale **Eyes**-engine van DressApp. Je ontvangt **elke dag 10 gratis credits**, en ongebruikte credits **worden tot 30 dagen lang opgespaard (tot een maximum van 300 credits)** voordat ze worden gereset.
-2. **Nano Banana Reconstructie-credits (5 gratis startcredits)**: Worden uitsluitend gebruikt wanneer je op de knop **Reconstrueren** tikt om een gekreukte of lastig belichte kledingfoto om te zetten in een strakke catalogusfoto van studiokwaliteit.
+**A:** Gebruikers van het Gratis-abonnement zien twee aparte tegoeden in hun **Profiel**:
+1. **Interne AI-credits (10 gratis credits per dag)**: Gebruikt voor dagelijkse scans en stijladvies via **het eigen AI-model van DressApp**. U ontvangt **elke dag 10 gratis credits**, en ongebruikte credits **worden tot 30 dagen lang opgespaard (tot maximaal 300 credits)**.
+2. **Studio-reconstructiecredits (5 gratis startcredits)**: Uitsluitend gebruikt wanneer u op **Reconstrueren** tikt om een gekreukte of lastig belichte kledingfoto om te zetten in een strakke catalogusfoto met behulp van ons **geavanceerde AI-model**.
 
-### V: Hoeveel lokale AI-credits kost elke actie binnen het Gratis abonnement?
-**A:** Elke aanvraag bij het lokale AI-model kost **1 AI-credit per kledingstuk of prompt**:
-- **Fotoanalyse van één kledingstuk**: **1 AI-credit**
-- **Fotoanalyse van meerdere kledingstukken** (bijv. 5 gedetecteerde kledingstukken op één spiegelfoto): **5 AI-credits** (1 credit per kledingstuk)
-- **Chatvraag aan de AI-stylist**: **1 AI-credit** per bericht
-- **Koffer samenstellen**: **1 AI-credit per kledingstuk** dat in je paklijst wordt opgenomen
-- **Handmatig bladeren, filteren, tags bewerken en outfits maken op het Outfitcanvas**: **0 AI-credits (Altijd gratis!)**
+### V: Hoeveel credits kost elke actie in het Gratis-abonnement?
+**A:** Elke actie met het eigen AI-model van DressApp kost **1 credit per kledingstuk of vraag**:
+- **Scan van één los kledingstuk**: **1 credit**
+- **Scan van een foto met meerdere kledingstukken** (bijv. 5 items herkend op één spiegelfoto): **5 credits** (1 per kledingstuk)
+- **Chatvraag aan de AI-stylist**: **1 credit** per bericht
+- **Koffer inpakken**: **1 credit per kledingstuk** dat aan uw paklijst wordt toegevoegd
+- **Bladeren door uw kast, filteren, tags handmatig aanpassen en outfits bouwen in de Outfitplanner**: **0 credits (Altijd gratis!)**
 
-### V: Hoe krijg ik gratis meer kastruimte en extra AI-credits?
-**A:** Gebruik je persoonlijke uitnodigingslink onder **Profiel → Vrienden uitnodigen**! Elke vriend die zich via jouw link aanmeldt, levert jou **+10 blijvende gratis kastplaatsen** op (waarmee je jouw Gratis kast uitbreidt van 50 naar maximaal **150 items**) plus bonus AI-credits.
+### V: Hoe krijg ik gratis meer kastruimte en extra credits?
+**A:** Deel uw persoonlijke uitnodigingslink via **Profiel → Vrienden Uitnodigen**! Elke vriend die zich via uw link aanmeldt, levert u **+10 blijvende gratis kastplaatsen** op (waarmee u uw gratis kast uitbreidt van 50 naar **150 items**) plus bonuscredits.
 
-### V: Wat gebeurt er als mijn Reconstructie-credits op zijn of als ik onbeperkte dagelijkse AI wil?
-**A:** Je hebt twee flexibele opties op de pagina **Prijzen**:
-- **Aanvullende Creditpakketten kopen (verlopen nooit)**: Koop **10 credits (\$3)**, **50 credits (\$12)** of **100 credits (\$20)**. Gekochte credits verlopen nooit en worden pas aangesproken nadat je gratis of maandelijkse credits zijn opgebruikt.
-- **Upgraden naar het Manager-abonnement (\$10/mnd of \$100/jr)**: Ontgrendelt **onbeperkte kledingstukken in je kast**, **onbeperkt dagelijks stylen en uploaden** via de razendsnelle Cloud Gemini-AI, **100 maandelijkse Reconstructie-credits**, dagelijkse ochtendmeldingen met een outfitvoorstel, **Trend-Scout** en de **Circulaire Marktplaats**.
+### V: Wat gebeurt er als mijn Reconstructiecredits op zijn of als ik onbeperkt dagelijks AI-gebruik wil?
+**A:** U heeft twee flexibele opties op de **Prijzenpagina**:
+- **Losse Creditpakketten Kopen (Verlopen Nooit)**: Koop **10 credits ($3)**, **50 credits ($12)** of **100 credits ($20)**. Gekochte credits verlopen nooit en worden pas aangesproken nadat uw gratis of maandelijkse credits zijn gebruikt.
+- **Upgraden naar Garderobebeheerder ($10/mnd of $100/jr)**: Ontgrendelt **onbeperkte kastruimte**, **onbeperkt dagelijks stylen en scannen** met ons **geavanceerde AI-model**, **100 maandelijkse Studio-reconstructiecredits**, dagelijkse outfitmeldingen in de ochtend, **Trendverkenner** en de **Marktplaats**.
 
 ---
 
-## 3. Kleding Fotograferen, Uploaden & Bewerken
+## 3. Kleding Fotograferen, Toevoegen & Bewerken
 
-### V: Wat is de beste manier om een kledingstuk te fotograferen voor een 100% nauwkeurige AI-uitsnijding?
-**A:** Volg de **Gouden Regel voor Flat-Lay-fotografie**:
-1. Leg het kledingstuk **plat op de vloer** in een lichte kamer met daglicht op een **contrasterende ondergrond** (leg donkere kleding op een lichte vloer of laken, en lichte kleding op een donkere achtergrond).
-2. Leg het kledingstuk recht in het midden van het kader met een **kleine, gelijkmatige marge** rondom alle randen, zodat mouwen en zomen nooit worden afgesneden.
-3. Strijk kreukels glad, maak knopen van jasjes los en **vouw de mouwen** iets van het lijfje weg zodat de AI de pasvorm en halslijn goed kan zien.
-4. Doe een kleine stap achteruit zodat je lichaam en telefoon **geen schaduw** op de stof werpen, houd je handen stil en maak de foto.
+### V: Wat is de beste manier om een kledingstuk te fotograferen voor een strakke uitsnede?
+**A:** Volg deze vier eenvoudige stappen:
+1. Leg het kledingstuk **plat** neer in een lichte kamer op een **contrasterende ondergrond** (donkere kleding op een lichte ondergrond, lichte kleding op een donkere ondergrond).
+2. Centreer het kledingstuk recht in beeld met een **kleine, gelijke marge** rondom zodat mouwen en zomen volledig zichtbaar zijn.
+3. Strijk kreukels glad en **spreid de mouwen** iets uit zodat de AI de mouwlengte en halslijn goed ziet.
+4. Zorg dat er geen schaduw op de stof valt, houd uw telefoon stil en maak de foto.
 
 ### V: Wat is het verschil tussen standaard achtergrondverwijdering en "Reconstrueren"?
 **A:**
-- **Standaard Uitsnijding (Automatisch)**: Wordt automatisch uitgevoerd bij het uploaden (1 lokale AI-credit in het Gratis abonnement). Het verwijdert de achtergrond en haalt alle metadatatags op met behoud van je originele foto.
-- **Studio-reconstructie (Optioneel — "Nano Banana")**: Wordt gestart wanneer je op **Reconstrueren** tikt (1 Reconstructie-credit). Het gebruikt generatieve AI om diepe kreukels glad te strijken, harde belichting te corrigeren en het kledingstuk weer te geven als een haarscherpe studio-productfoto.
+- **Standaard Uitsnede (Automatisch)**: Draait automatisch bij het uploaden (1 interne AI-credit in het Gratis-abonnement). Verwijdert de achtergrond en herkent alle details met behoud van uw echte foto.
+- **Studio-reconstructie (Optioneel)**: Wordt uitgevoerd wanneer u op **Reconstrueren** tikt (1 Studio-reconstructiecredit). Ons geavanceerde AI-model verwijdert diepe kreukels, corrigeert harde schaduwen en maakt er een strakke studio-productfoto van.
 
-### V: Waarom is het slim om een item direct na het uploaden even te controleren en bij te werken?
-**A:** Hoewel de AI van DressApp uiterst nauwkeurig is, kan warm binnenlicht donkerblauw soms zwart doen lijken, of kan een camerahoek verhullen of een broek een hoge of normale taille heeft. Door **10 seconden** de tijd te nemen om **Categorie, Kleur, Seizoen, Warmtegraad (1–5) en Dresscode** te controleren, weet je zeker dat de AI-stylist, de Weer-engine en de Kofferplanner dat kledingstuk altijd foutloos combineren.
+### V: Waarom is het slim om een kledingstuk direct na het toevoegen even te controleren?
+**A:** Hoewel de AI van DressApp zeer nauwkeurig is, kan warm kamerlicht donkerblauw soms op zwart laten lijken. Door **10 seconden** de **Categorie, Kleur, het Seizoen, de Warmte (1–5) en de Kledingstijl** te controleren, weet u zeker dat de AI-stylist en Koffer-assistent het kledingstuk altijd foutloos combineren.
 
-### V: Kan ik bijpassende items groeperen of meerdere items tegelijk taggen?
+### V: Kan ik bijpassende stukken koppelen als set of meerdere items tegelijk bewerken?
 **A:** Ja!
-- **Groepstagging**: Tik in je **Kledingkast** op **Meerdere selecteren**, kies de items die je wilt bijwerken (bijvoorbeeld 8 kantooroverhemden) en pas in één keer tags toe zoals `Werk`, `Alle seizoenen` of `Gestreken`.
-- **Gecoördineerde Sets**: Koppel een bijpassende blazer en pantalon (of een tweedelig trainingspak) als een **Set**, zodat je ze samen of los van elkaar kunt stylen.
+- **Meerdere Items Bewerken**: Tik in uw **Kledingkast** op **Meerdere selecteren**, vink de items aan die u wilt bijwerken (bijvoorbeeld 8 werkoverhemden) en pas labels of seizoenen in één keer toe.
+- **Bijpassende Sets & Pakken**: Koppel een bijpassende blazer en broek (of een tweedelig pak) als **Set**, zodat u ze samen of los van elkaar kunt stylen.
 
 ---
 
-## 4. De AI-stylist & Kofferplanner Gebruiken
+## 4. De AI-stylist & Koffer-assistent Gebruiken
 
-### V: Hoe schrijf ik de beste prompt voor de AI-stylist?
-**A:** De lokale AI-stylist werkt het best wanneer je **vier duidelijke contextelementen** meegeeft:
-> **[Gelegenheid / Evenement] + [Weer / Locatie] + [Dresscode / Sfeer] + [Sleutelitem of Voorwaarde]**
+### V: Hoe stel ik de beste vraag aan de AI-stylist?
+**A:** De stylist werkt het best wanneer u **vier korte gegevens** meegeeft:
+> **[Gelegenheid / Activiteit] + [Weer / Locatie] + [Kledingstijl / Sfeer] + [Favoriet Item of Kleur]**
 
-**Voorbeelden van Goede Prompts:**
-- *"Stel een smart-casual outfit samen voor een regenachtig herfstdiner in Londen met mijn beige trenchcoat."*
-- *"Geef een comfortabele business-casual look voor een hele dag kantoorvergaderingen met airconditioning en platte schoenen."*
-- *"Welke 3 veelzijdige tops mis ik nog om maximale outfitcombinaties te maken met mijn huidige rokken en spijkerbroeken?"*
+**Goede voorbeelden:**
+- *"Stel een smart-casual outfit samen voor een regenachtig herfstdiner met mijn beige trenchcoat."*
+- *"Geef een comfortabele kantoorlook voor een hele dag vergaderen in de airconditioning, met platte schoenen."*
+- *"Welke 3 veelzijdige tops mis ik nog om meer combinaties te maken met mijn huidige rokken en jeans?"*
 
-### V: Wat is het verschil tussen "Outfit Samenstellen" en een "Garderobe-audit" bij de Stylist?
-**A:** De Stylist van DressApp herkent automatisch jouw bedoeling:
-- **Modus 1 — Outfit Samenstellen**: Wanneer je vraagt *"Wat zal ik aantrekken naar..."*, selecteert de Stylist **uitsluitend echte kledingstukken die momenteel in je digitale kledingkast hangen** en toont visuele outfitkaarten die je direct kunt opslaan of dragen.
-- **Modus 2 — Analytische Garderobe-audit**: Wanneer je vraagt *"Wat ontbreekt er in mijn kast?"* of *"Hoe gebalanceerd is mijn herfstcapsule?"*, analyseert de Stylist je volledige collectie en adviseert specifieke sleutelstukken die gaten tussen je bestaande kleding opvullen.
+### V: Wat is het verschil tussen "Outfit-ideeën" en een "Garderobe-analyse"?
+**A:** De stylist herkent uw bedoeling automatisch:
+- **Modus 1 — Outfit-ideeën**: Wanneer u vraagt *"Wat zal ik aantrekken naar...?"*, kiest de stylist **uitsluitend echte kledingstukken uit uw digitale kast** en toont hij visuele outfitkaarten die u direct kunt dragen of opslaan.
+- **Modus 2 — Garderobe-analyse**: Wanneer u vraagt *"Wat mist er in mijn kast?"*, analyseert de stylist uw volledige collectie en adviseert hij specifieke basisstukken die gaten in uw huidige garderobe opvullen.
 
-### V: Hoe werkt de Koffer-inpakassistent?
-**A:** Open **Koffer**, voer je **bestemmingsstad, reisdata en geplande activiteiten** in (bijv. sightseeing, zakelijke conferentie, stranddiner). DressApp controleert het klimaat op de bestemming en stelt een **mix-and-match reiscapsule** samen uit jouw kledingkast, zodat je minder inpakt en toch voor elke dag van je reis een complete outfit hebt. *(In het Gratis abonnement kost elk kledingstuk dat voor de koffer wordt geselecteerd 1 lokale AI-credit).*
+### V: Hoe werkt de Koffer-assistent?
+**A:** Open **Koffer**, vul uw **bestemming, reisdata en geplande activiteiten** in (bijv. stedentrip, zakelijke conferentie, strandvakantie). DressApp bekijkt de weersverwachting op uw bestemming en stelt een **slimme, onderling combineerbare reiscapsule** samen uit uw eigen kast, zodat u minder hoeft in te pakken en toch voor elke dag een complete outfit heeft.
 
 ---
 
-## 5. Outfitplanner, Inzichten, Shopping-assistent & Marktplaats
+## 5. Outfitplanner, Garderobe-inzichten, Winkelassistent & Marktplaats
 
-### V: Kan ik handmatig outfits bouwen en inplannen op een kalender?
-**A:** Ja! In de **Outfitplanner** kun je kledingstukken slepen en neerzetten op een interactief **laagjescanvas** (of bekijken op een 2D-paspop), de volgorde van laagjes aanpassen, de look opslaan in je **Lookbook** en deze toewijzen aan een specifieke datum op je **Outfitdagboek**-kalender.
+### V: Kan ik zelf handmatig outfits samenstellen en inplannen op de kalender?
+**A:** Ja! In de **Outfitplanner** kunt u kledingstukken op een interactief canvas plaatsen, de volgorde van laagjes aanpassen, de look opslaan en deze direct inplannen op uw **Outfitkalender**.
 
-### V: Wat kan ik leren van Garderobe-inzichten (Wardrobe Insights)?
-**A:** Het dashboard **Garderobe-inzichten (Statistieken)** toont de totale waarde van je garderobe, **Kosten-per-Dracht (CPW)**-ranglijsten, de verdeling van je kleurenpalet, seizoensbalans en duurzaamheidsimpact op het gebied van CO₂ en water — zodat je vergeten kledingstukken ontdekt en bewuster winkelt.
+### V: Wat kan ik zien bij Garderobe-inzichten?
+**A:** Het dashboard **Garderobe-inzichten (Statistieken)** toont de totale waarde van uw kast, de **Kosten per Draagbeurt**, kleurverdeling, seizoensbalans en duurzaamheidsstatistieken — zo ziet u direct welke kledingstukken ongedragen blijven.
 
-### V: Hoe helpt de Chrome-extensie van de Shopping-assistent tijdens het online winkelen?
-**A:** Tijdens het winkelen bij ondersteunde online modewinkels vergelijkt de **DressApp Shopping-assistent** de maattabel van de winkel met jouw opgeslagen **biometrische 3D-lichaamsprofiel** om je beste maat aan te bevelen en te laten zien hoe het nieuwe item combineert met kleding die je al hebt.
+### V: Hoe helpt de Winkelassistent tijdens het online winkelen?
+**A:** Wanneer u ondersteunde online kledingwinkels bezoekt, vergelijkt de **DressApp Winkelassistent** de maattabel van de winkel met uw opgeslagen **Lichaamsmaten** om uw beste maat aan te bevelen en te laten zien hoe het nieuwe stuk past bij kleding die u al heeft.
 
 ### V: Kan ik kleding die ik niet meer draag verkopen, ruilen of doneren?
-**A:** Ja! Via de **Circulaire Marktplaats** kun je ongedragen kleding uit je kast aanbieden voor **Verkoop**, **Ruil** of **Verhuur**, of contact leggen met lokale goede doelen om ze te **Doneren**. Je kunt zelfs vóór aankoop in de virtuele **Sandbox Room** testen hoe een marktplaatsitem staat bij je eigen garderobe.
+**A:** Ja! Via de **Circulaire Marktplaats** kunt u ongedragen kleding uit uw kast aanbieden voor **Verkoop**, **Ruil** of **Verhuur**, of markeren voor **Donatie**. U kunt in de virtuele **Paskamer** zelfs vooraf bekijken hoe een Marktplaats-item staat bij uw eigen garderobe.
 
 ---
 
-## 6. Privacy, Beveiliging & Probleemoplossing
+## 6. Privacy, Veiligheid & Hulp
 
 ### V: Zijn mijn foto's en lichaamsmaten privé?
-**A:** Absoluut. Je biometrische maten en persoonlijke garderobefoto's zijn strikt privé voor jouw account. Wanneer je gebruikmaakt van de lokale **Eyes**-engine van DressApp, worden je kledingfoto's rechtstreeks verwerkt op de afgeschermde privé-infrastructuur van DressApp. Items worden alleen openbaar gedeeld als je er zelf expliciet voor kiest om een advertentie op de Marktplaats te plaatsen.
+**A:** Absoluut. Uw lichaamsmaten en persoonlijke kledingkastfoto's zijn strikt privé voor uw account. Wanneer u **het eigen AI-model van DressApp** gebruikt, worden uw foto's rechtstreeks verwerkt op de eigen besloten infrastructuur van DressApp. Items worden alleen openbaar gedeeld als u er zelf voor kiest om een advertentie op de Marktplaats te plaatsen.
 
-### V: Waarom leken mijn statistiekenpagina of de stylist leeg toen ik net begon?
-**A:** Voor statistieken en outfitsuggesties zijn kledingstukken in je kast nodig! Zodra je je eerste kledingstukken uploadt (of een bestaande garderobe migreert), worden je **Garderobe-inzichten**, **Slimme Suggesties** en **AI-stylist**-aanbevelingen direct gevuld.
+### V: Waarom leken mijn statistiekenpagina of stylist leeg toen ik net lid werd?
+**A:** Inzichten en outfitvoorstellen hebben eerst kleding in uw kast nodig! Zodra u uw eerste kledingstukken toevoegt (of een bestaande kast importeert), worden uw **Garderobe-inzichten** en de aanbevelingen van de **AI-stylist** direct zichtbaar.
 
-### V: Waar kan ik meer hulp krijgen of in contact komen met een menselijke stylist?
+### V: Waar vind ik meer hulp of hoe neem ik contact op met een menselijke stylist?
 **A:**
-- Tik op de knop **Help (?)** bovenaan elk scherm in DressApp voor snelle visuele gidsen in 6 stappen en uitgebreide **"Meer informatie"**-artikelen in alle 13 talen.
-- Bezoek het **Register van Gecertificeerde Experts** in DressApp om 1-op-1 virtuele kastaudits of persoonlijke stylingsessies te boeken bij geselecteerde professionele modestylisten.
+- Tik op de knop **Help (?)** boven aan elk scherm in DressApp voor snelle stapsgewijze gidsen en uitgebreide **"Meer informatie"**-artikelen in alle 13 talen.
+- Bezoek het **Gecertificeerd Stylistenregister** in DressApp om een-op-een sessies of kastanalyses te boeken bij professionele modestylisten.

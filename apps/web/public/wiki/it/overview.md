@@ -1,37 +1,37 @@
-# Benvenuti su DressApp
+# Benvenuto in DressApp
 
-Benvenuti nel vostro compagno di guardaroba digitale definitivo! DressApp è progettato per aiutarvi a digitalizzare, organizzare e sfruttare al meglio il vostro armadio fisico.
+Benvenuto nel tuo compagno definitivo per il guardaroba digitale! DressApp è progettata per aiutarti a digitalizzare, organizzare e valorizzare al massimo il tuo armadio fisico.
 
 ## Panoramica
-DressApp trasforma i vostri capi fisici in un archivio digitale strutturato, basato su un motore di intelligenza artificiale multilivello all'avanguardia:
-- **Styling intelligente e immediato**: Guidato da **Google Gemini 3.5 Flash-Lite** come motore principale per risposte inferiori a 350 ms, supportato da un container on-premises **Gemma-4-E4B** che funge da rete di sicurezza trasparente per le quote. Ricevete consigli intelligenti all'istante senza bisogno di chiavi API personali.
-- **Integrazione con calendario e meteo**: Consigli mattutini in tempo reale su misura in base alle previsioni meteo giornaliere e agli appuntamenti di Google Calendar.
-- **Pianificatore di outfit e canvas dell'avatar**: Sovrapponete i capi digitalmente su un manichino vettoriale 2D personalizzato o sul vostro ritaglio fotografico.
-- **Assistente interattivo per la valigia**: Checklist per la valigia curate dall'IA per viaggi di qualsiasi durata.
-- **Assistente per lo shopping**: Estensione Chrome e bookmarklet universale per confrontare taglie e vestibilità nei negozi online in modo intelligente.
-- **Marketplace circolare**: Annunci diretti per vendere, scambiare o noleggiare capi inutilizzati con protezione integrata per acquirenti e venditori.
+DressApp trasforma i tuoi vestiti fisici in un archivio digitale strutturato alimentato da un motore IA multi-livello all'avanguardia:
+- **Styling e Visione Intelligente Zero-BYOK**: Gli account del Piano Gratuito funzionano subito grazie al motore locale **Eyes** di DressApp (un modello **Qwen 2.5 VL 3B** ottimizzato), mentre gli abbonati **Manager** ($10/mese) e **Professional** ($15/mese) beneficiano dell'instradamento prioritario a **Google Gemini 3.5 Flash** con fallback locale automatico. Ottieni consigli intelligenti e acquisizione fotografica automatica a 3 pipeline (capi singoli, outfit indossati e cluster di vestiti) istantaneamente senza bisogno di chiavi API personali.
+- **Integrazione Calendario e Meteo**: Consigli mattutini in tempo reale basati sulle previsioni meteo giornaliere e sugli impegni del tuo Google Calendar.
+- **Pianificatore di Outfit e Avatar Canvas**: Sovrapponi digitalmente i capi su un manichino vettoriale 2D personalizzato o sulla tua foto scontornata.
+- **Assistente Bagagli Interattivo**: Liste valigia curate dall'IA per viaggi di qualsiasi durata.
+- **Shopping Assistant**: Estensione Chrome e bookmarklet universale per confrontare taglie e vestibilità nei negozi online.
+- **Marketplace Circolare**: Annunci diretti per vendere, scambiare o noleggiare capi inutilizzati con sicurezza integrata per acquirenti e venditori.
 
 ## Prerequisiti
 - Un browser web moderno (consigliati Google Chrome, Apple Safari o Mozilla Firefox).
 - Connessione a Internet.
-- Accesso alla fotocamera o alla libreria fotografica del dispositivo per digitalizzare i vestiti.
-- *(Opzionale)* Autorizzazione all'uso del microfono per i consigli di stile vocali interattivi.
+- Accesso alla fotocamera o alla galleria fotografica del dispositivo per digitalizzare i vestiti.
+- *(Opzionale)* Autorizzazione del microfono per lo styling vocale conversazionale.
 
-## Istruzioni passo dopo passo
-1. **Digitalizzare**: Fotografate i vestiti con la fotocamera, caricate foto o importate scontrini digitali. L'app segmenta automaticamente i capi e rimuove lo sfondo.
-2. **Organizzare**: Aggiungete tag, cercate e raggruppate i capi in collezioni all'interno del vostro spazio Closet.
-3. **Consultare lo stylist**: Toccate l'AI Stylist per richiedere consigli di outfit contestuali tramite voce o testo.
-4. **Pianificare e comporre**: Componete i look nell'Outfit Canvas, verificate la sovrapposizione dei capi e programmateli nel vostro Diario.
-5. **Preparare la valigia**: Generate checklist per i bagagli personalizzate in base al meteo previsto a destinazione.
-6. **Rivendere o scambiare**: Pubblicate i capi inutilizzati direttamente sul marketplace circolare per monetizzare il vostro guardaroba.
+## Istruzioni Passo-Passo
+1. **Digitalizza**: Scatta foto ai vestiti con la fotocamera, carica lotti misti di foto (capi singoli, outfit completi o pile di vestiti) o importa ricevute digitali. GarmentVision indirizza automaticamente ogni foto alla pipeline corretta, separa i capi e rimuove lo sfondo.
+2. **Organizza**: Assegna tag, cerca e raggruppa i capi in collezioni nel tuo spazio Armadio.
+3. **Consulta lo Stilista**: Tocca AI Stylist per chiedere consigli di outfit contestuali tramite voce o testo.
+4. **Pianifica e Stratifica**: Componi i look sull'Outfit Canvas, controlla gli strati affiancati e pianificali nel Diario.
+5. **Prepara la Valigia**: Genera liste di imballaggio su misura in base al meteo previsto a destinazione.
+6. **Rivendi o Scambia**: Pubblica i capi non indossati direttamente sul marketplace circolare per monetizzare il tuo guardaroba.
 
-## Risultati attesi
-Otterrete un guardaroba digitale strutturato e accessibile che elimina l'indecisione mattutina, aumenta l'utilizzo dei vostri capi e vi aiuta a compiere scelte di moda più sostenibili.
+## Risultati Attesi
+Ottieni un guardaroba digitale strutturato e accessibile che elimina l'indecisione mattutina, aumenta l'utilizzo dei capi e favorisce scelte di moda sostenibili.
 
-## Risoluzione dei problemi
-- **Caricamento lento di pagine o immagini**: Verificate di avere una connessione di rete stabile; gli elementi memorizzati nella cache offline rimangono accessibili.
-- **Problemi di direzione del layout**: Passate da una lingua all'altra; DressApp adatta automaticamente la direzione dell'interfaccia per le lingue RTL (ebraico, arabo).
+## Risoluzione dei Problemi
+- **Pagine o immagini lente a caricare**: Assicurati di avere una connessione di rete stabile; gli elementi memorizzati nella cache offline rimangono accessibili.
+- **Problemi di direzione del layout**: Cambia lingua; DressApp specchia automaticamente l'allineamento dell'interfaccia per le lingue RTL (ebraico, arabo).
 
 ## Limitazioni
-- La capacità dell'armadio nel piano Free Tier parte da 50 articoli (espandibile fino a 150 tramite bonus di invito); il passaggio a Manager o Professional sblocca lo spazio illimitato.
-- La rimozione dello sfondo e la segmentazione offrono i risultati migliori con una buona illuminazione e sfondi contrastanti.
+- La capacità dell'armadio nel Piano Gratuito parte da 50 capi (espandibile fino a 150 tramite bonus invito); passando a Manager ($10/mese) o Professional ($15/mese) si sblocca lo spazio illimitato.
+- La rimozione dello sfondo e la segmentazione rendono al meglio con una buona illuminazione e sfondi a contrasto.

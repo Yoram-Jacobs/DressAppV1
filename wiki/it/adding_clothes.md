@@ -1,41 +1,24 @@
-# Acquisizione e Aggiunta di Capi
+# Aggiungere vestiti al guardaroba
 
-Digitalizza il tuo guardaroba fisico in pochi secondi grazie alla scansione IA multimodale, alla rimozione intelligente dello sfondo e al completamento automatico delle immagini.
-
-## Panoramica
-Carica i tuoi capi tramite scatti dal vivo della fotocamera, caricamenti multipli dalla galleria, codici QR del Passaporto Digitale del Prodotto (DPP) o ricevute digitali (OCR delle fatture). L'IA on-premises integrata rimuove automaticamente gli sfondi, assegna oltre 20 attributi di moda e prepara ritagli di qualità da studio senza richiedere alcuna chiave API.
-
-## Prerequisiti
-- Foto chiare e ben illuminate dei capi (selfie allo specchio, foto di outfit a figura intera o capi stesi in piano).
-- Autorizzazione di accesso alla fotocamera per scansionare capi fisici e codici QR.
-- Ricevute digitali o screenshot di fatture (PDF / PNG / JPEG) per gli acquisti e-commerce.
+Digitalizza il tuo guardaroba in pochi secondi, sia che tu fotografi un singolo capo, un outfit completo indossato o più vestiti disposti insieme.
 
 ## Istruzioni passo dopo passo
 
-1. **Scatto e caricamento interattivo**:
-   - Tocca **Aggiungi capo** &rarr; seleziona **Scatta foto** o carica una o più foto di outfit dal tuo dispositivo.
-   - Il rilevamento duplicati integrato verifica all'istante se hai già caricato lo stesso indumento.
-2. **Segmentazione IA e rilevamento multi-capo**:
-   - Il modello visivo isola i singoli capi distinti (giacche, top, gonne, pantaloni, calzature, accessori) in un unico passaggio.
-3. **Scontorno IA e foto da studio nitide**:
-   - La pipeline visiva integrata rimuove automaticamente gli sfondi creando immagini PNG trasparenti e nitide per tutti gli account.
-4. **Etichettatura automatica dei metadati**:
-   - Gli account del piano Gratuito (Free Tier) utilizzano il motore on-premises **Eyes** di DressApp (attualmente un modello `Qwen 2.5 VL 3B` ottimizzato), mentre gli utenti dei piani **Manager** e **Professional** usufruiscono del modello Cloud veloce (`Google Gemini 3.5 Flash`) per estrarre oltre 20 attributi di moda (colori, composizione dei tessuti, sottocategoria, dress code, marchio e condizioni).
-5. **Riparazione fotografica generativa avanzata (Nano Banana)**:
-   - Nano Banana ispeziona i capi ritagliati per rilevare occlusioni (borse, mani) e bordi dell'inquadratura, ricostruendo e completando automaticamente il tessuto mancante per ottenere fotografie da studio complete senza alcuna chiave API esterna richiesta.
-6. **Ricevute digitali e tag DPP**:
-   - Passa a **Importazione digitale** per analizzare le email di conferma d'ordine o le fatture, salvando in modo verificato prezzo d'acquisto e taglie.
-   - Tocca **Scansiona QR (DPP)** sull'etichetta per importare i dati sulla filiera del Passaporto Digitale del Prodotto dell'UE e le istruzioni di lavaggio.
-7. **Salva nel guardaroba**:
-   - Tocca **Salva**. I capi appaiono immediatamente nella griglia del tuo guardaroba.
+1. **Aprire Aggiungi capo**:
+   - Tocca il pulsante **Aggiungi capo** nella barra di navigazione principale.
 
-## Risultati attesi
-Ogni capo appare nel tuo guardaroba digitale come una fotografia centrata, pulita e di qualità da studio, completa di attributi di ricerca indicizzati e ricchi tag tassonomici.
+2. **Scattare o caricare foto**:
+   - Scegli **Scatta foto** o **Carica foto** per selezionare una o più immagini contemporaneamente:
+     - **Un singolo capo** su una gruccia o su una superficie piana.
+     - **Un outfit completo indossato da una persona**, che DressApp suddivide automaticamente in schede separate per maglia, pantaloni/gonna, capospalla, scarpe e accessori.
+     - **Più capi disposti uno accanto all'altro**, separati automaticamente in singoli articoli.
 
-## Risoluzione dei problemi
-- **Capi tagliati o parziali nelle foto**: Centra bene il capo su uno sfondo a contrasto. Nano Banana può ricostruire automaticamente colletti o orli tagliati.
-- **Illuminazione e contrasto**: Per risultati ottimali sui capi scuri, scatta le foto su uno sfondo chiaro a contrasto.
-- **Errori OCR sulle ricevute**: Usa il selettore di riquadro interattivo sulle immagini delle ricevute per indicare manualmente le singole righe di prodotto.
+3. **Rimozione automatica dello sfondo ed etichettatura intelligente**:
+   - L'IA di DressApp rimuove lo sfondo da ogni capo e rileva **Categoria**, **Sottocategoria** (distinguendo con precisione felpe e cappuccio dalle magliette), **Colori**, **Fantasia**, **Materiale**, **Stagione** e **Occasione**, oltre a più di 60 **abiti tradizionali e culturali** di tutto il mondo.
+   - Gli account gratuiti utilizzano il **modello IA locale di DressApp**, mentre gli abbonati **Manager** e **Professional** beneficiano di un'elaborazione più rapida grazie al nostro **modello IA all'avanguardia**.
 
-## Limitazioni
-- I caricamenti multipli ad alta risoluzione (> 5 capi) vengono elaborati tramite code asincrone in background per garantire prestazioni fluide senza timeout del browser.
+4. **Completamento automatico dei bordi**:
+   - Se una manica o un orlo risulta leggermente tagliato nella foto, l'IA di DressApp completa automaticamente il bordo mancante per offrire un'immagine pulita da studio.
+
+5. **Controllare e salvare**:
+   - Verifica i dettagli rilevati, apporta eventuali modifiche e tocca **Salva**!

@@ -69,7 +69,7 @@ graph TD
 
 ### Modos e Passo a Passo do Fluxo
 1. **Captura Interativa e Ingestão em Lote:**
-   - Toque em **Add Item** (Adicionar Item) &rarr; tire ou envie uma foto contendo uma ou mais peças.
+   - Toque em **Add Item** (Adicionar Item) → tire ou envie uma foto contendo uma ou mais peças.
    - O sistema realiza verificações de duplicidade em tempo real (`crypto.subtle` SHA-256 e hash perceptivo médio) para evitar envios duplicados imediatamente.
 2. **Avaliação de Qualidade por IA:**
    - Conforme o SegFormer segmenta os recortes, o Verificador de Qualidade do Gemini inspeciona cada peça:

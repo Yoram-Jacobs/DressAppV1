@@ -1,41 +1,44 @@
-# Registro y Adición de Prendas
+# Ingesta y Adición de Ropa
 
-Digitaliza tu guardarropa físico en segundos con escaneo de IA multimodal, eliminación inteligente del fondo y reconstrucción automática de imágenes.
+Digitaliza tu armario físico en segundos con enrutamiento automático de 3 flujos de visión, eliminación inteligente de fondo y completado generativo de imágenes.
 
-## Resumen
-Registra prendas mediante fotos en directo con la cámara, subidas múltiples desde la galería, códigos QR del Pasaporte Digital de Producto (DPP) o recibos digitales (OCR de facturas). La IA integrada en servidores propios (on-premises) recorta los fondos automáticamente, etiqueta más de 20 atributos de moda y prepara fotografías limpias de estudio sin necesidad de claves de API.
+## Descripción General
+Añade ropa mediante fotos con la cámara en vivo, cargas múltiples desde la galería (incluyendo lotes mixtos de prendas sueltas, conjuntos puestos y montones de ropa), códigos QR de Pasaportes Digitales de Productos (DPP) o recibos digitales (OCR de facturas). La IA local integrada detecta automáticamente las características de cada foto, recorta el fondo, etiqueta más de 20 atributos de moda (incluyendo sudaderas/hoodies y más de 60 prendas tradicionales y culturales) y prepara recortes de estudio sin necesidad de claves API.
 
-## Requisitos previos
-- Fotografías claras y bien iluminadas de las prendas (selfies frente al espejo, fotos de cuerpo entero o prendas extendidas).
-- Permiso de cámara para escanear prendas físicas y códigos QR.
-- Recibos digitales o capturas de facturas (PDF / PNG / JPEG) para compras de comercio electrónico.
+## Requisitos Previos
+- Fotos claras y bien iluminadas de las prendas (prendas individuales, selfies de cuerpo entero en el espejo, maniquíes o composiciones planas de varias prendas).
+- Acceso a la cámara para escanear prendas físicas y códigos QR.
+- Recibos digitales o capturas de pantalla de facturas (PDF / PNG / JPEG) de compras online.
 
-## Instrucciones paso a paso
+## Instrucciones Paso a Paso
 
-1. **Subida y captura interactiva**:
-   - Pulsa **Añadir prenda** &rarr; selecciona **Tomar foto** o sube una o más fotos de atuendos desde tu dispositivo.
-   - La detección de duplicados integrada comprueba al instante si ya habías subido la misma prenda anteriormente.
-2. **Segmentación por IA y detección de múltiples prendas**:
-   - El modelo de visión aísla distintas prendas (chaquetas, partes superiores, faldas, pantalones, calzado, accesorios) en una sola pasada.
-3. **Recorte con IA y fotos limpias de estudio**:
-   - El flujo de visión integrado elimina automáticamente los fondos, generando imágenes PNG transparentes y nítidas para todas las cuentas.
-4. **Etiquetado automático de metadatos**:
-   - Las cuentas del nivel gratuito (Free Tier) utilizan el motor **Eyes** en servidores propios de DressApp (actualmente un modelo `Qwen 2.5 VL 3B` ajustado), mientras que los usuarios de los planes **Manager** y **Professional** disfrutan del modelo rápido en la nube (`Google Gemini 3.5 Flash`) para extraer más de 20 atributos de moda (colores, composición del tejido, subcategoría, código de vestimenta, marca y estado).
-5. **Reparación fotográfica generativa avanzada (Nano Banana)**:
-   - Nano Banana inspecciona las prendas recortadas en busca de oclusiones (bolsos, manos) y bordes del encuadre, reconstruyendo y completando automáticamente el tejido faltante para crear fotografías de estudio completas sin requerir claves de API externas.
-6. **Recibos digitales y etiquetas DPP**:
-   - Cambia a **Importación digital** para analizar correos de confirmación de pedidos o facturas, fijando el precio de compra y las tallas verificadas.
-   - Pulsa **Escanear QR (DPP)** en la etiqueta para importar datos de la cadena de suministro y pautas de cuidado del Pasaporte Digital de Producto de la UE.
-7. **Guardar en el armario**:
-   - Pulsa **Guardar**. Los artículos aparecen inmediatamente en la cuadrícula de tu armario.
+1. **Carga Interactiva y Lotes Mixtos**:
+   - Toca **Añadir Prenda** → selecciona **Tomar Foto** o **Subir Fotos** para elegir una o varias fotos de tu dispositivo. ¡Puedes mezclar libremente fotos de una sola prenda, conjuntos completos en una persona y pilas/grupos de ropa en el mismo lote sin seleccionar pestañas de modo!
+   - La detección integrada de duplicados comprueba al instante si ya subiste la misma prenda anteriormente.
+2. **Enrutamiento Automático de 3 Flujos (`GarmentVision`)**:
+   - **GarmentVision** inspecciona automáticamente cada foto y la dirige al flujo adecuado:
+     - **Prenda Única (`Single`)**: Aísla una sola prenda con recorte alfa de estudio.
+     - **Conjunto Múltiple (`Multi-Garment`)**: Divide conjuntos de pies a cabeza en una persona o maniquí en tarjetas separadas de parte superior, inferior, abrigo, calzado y accesorios.
+     - **Grupo Masivo (`Mass Cluster`)**: Separa grupos de ropa no vestida dispuesta una al lado de otra o colgada en percheros en artículos individuales.
+3. **Recorte con IA y Fotos Limpias de Estudio**:
+   - El flujo de visión integrado elimina automáticamente los fondos generando imágenes PNG transparentes y nítidas para todas las cuentas.
+4. **Etiquetado Automático de Metadatos, Hoodies y Ropa Tradicional**:
+   - Las cuentas del Plan Gratuito utilizan el motor local **Eyes** de DressApp (`Qwen 2.5 VL 3B` optimizado), mientras que los usuarios de los planes **Manager** ($10/mes) y **Professional** ($15/mes) disfrutan del modelo rápido en la nube (`Google Gemini 3.5 Flash`) para extraer más de 20 atributos de moda, distinguiendo con precisión **Sudaderas y Hoodies** de **Camisetas** y reconociendo más de 60 **prendas tradicionales y culturales** (Sari, Kimono, Thobe, Kaftan, Hanbok, Cheongsam, Ao Dai, Dirndl, Kilt y más) en los 13 idiomas.
+5. **Reparación Generativa Avanzada de Fotos (Nano Banana)**:
+   - Nano Banana inspecciona las prendas recortadas en busca de oclusiones (bolsos, manos) y bordes cortados, reconstruyendo automáticamente la tela faltante en fotografías de estudio completas sin requerir claves API externas.
+6. **Recibos Digitales y Etiquetas DPP**:
+   - Cambia a **Importación Digital** para analizar correos de confirmación de pedidos o facturas, bloqueando el precio de compra y las tallas verificadas.
+   - Toca **Escanear QR (DPP)** en la etiqueta para importar datos de la cadena de suministro e instrucciones de cuidado del Pasaporte Digital de Producto de la UE.
+7. **Guardar en el Armario**:
+   - Toca **Guardar**. Los artículos aparecen inmediatamente en la cuadrícula de tu Armario.
 
-## Resultados esperados
-Cada prenda aparece en tu armario digital como una fotografía centrada y limpia con calidad de estudio, con atributos de búsqueda totalmente indexados y etiquetas taxonómicas detalladas.
+## Resultados Esperados
+Cada prenda aparece en tu armario digital como una fotografía de estudio limpia y centrada, con categorías/subcategorías precisas, etiquetas de herencia cultural y atributos de búsqueda indexados.
 
-## Solución de problemas
-- **Prendas cortadas o parciales en las fotos**: Centra limpiamente la prenda sobre un fondo que contraste. Nano Banana puede reconstruir cuellos o dobladillos cortados de forma automática.
-- **Iluminación y contraste**: Para obtener mejores resultados con prendas oscuras, fotografíalas sobre fondos claros que contrasten.
-- **Errores en el OCR de recibos**: Utiliza el selector de recuadro interactivo sobre las imágenes de los recibos para señalar manualmente cada línea de producto.
+## Solución de Problemas
+- **Prendas Cortadas o Parciales**: Centra bien la prenda sobre un fondo contrastado. Nano Banana puede reconstruir cuellos o dobladillos cortados automáticamente.
+- **Iluminación y Contraste**: Para obtener mejores resultados con prendas oscuras, fotografíalas sobre fondos claros y contrastados.
+- **Errores de OCR en Recibos**: Usa el selector de cuadros interactivo sobre las imágenes de recibos para señalar manualmente las líneas de producto individuales.
 
 ## Limitaciones
-- Las subidas por lotes en alta resolución (>5 artículos) se procesan mediante colas asíncronas en segundo plano para garantizar un rendimiento fluido sin tiempos de espera agotados en el navegador.
+- Las cargas por lotes de alta resolución (>5 artículos) se procesan mediante colas asíncronas en segundo plano para garantizar un rendimiento fluido sin tiempos de espera en el navegador.

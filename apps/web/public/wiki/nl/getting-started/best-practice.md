@@ -1,142 +1,137 @@
-# DressApp Aan de Slag: Best Practices-gids
+# DressApp Aan de Slag: Gids met Beste Praktijken
 
-Welkom bij **DressApp**! Deze gids behandelt de belangrijkste best practices voor het fotograferen van je kleding, het efficiënt digitaliseren van je kledingkast met het cumulatieve AI-tegoedsysteem van DressApp, het controleren van item-metadata en het schrijven van nauwkeurige prompts voor de lokale On-Premises AI Stylist.
+Welkom bij **DressApp**! Deze gids behandelt de belangrijkste tips voor het fotograferen van uw kleding, het efficiënt digitaliseren van uw kledingkast met het cumulatieve creditsysteem, het controleren van kledinggegevens en het formuleren van duidelijke vragen voor uw persoonlijke AI-stylist.
 
 ---
 
-## 1. Je Gratis AI-tegoedbudget Begrijpen
+## 1. Uw Gratis AI-Creditbudget Begrijpen
 
-Als gebruiker van het Gratis Plan (Free Plan) geeft DressApp je twee gespecialiseerde AI-tegoedbundels zodat je je garderobe soepel kunt digitaliseren, herstellen en stylen:
+Als gebruiker van het Gratis-abonnement geeft DressApp u twee aparte credittegoeden, zodat u uw garderobe moeiteloos kunt digitaliseren, verbeteren en stylen:
 
-| Tegoedbundel | Toekenning & Opbouw | Waar het voor dient | Kosten per Actie |
+| Creditpool | Toewijzing & Opbouw | Waarvoor het wordt gebruikt | Kosten per actie |
 | :--- | :--- | :--- | :--- |
-| **On-Premises AI-tegoed** *(DressApp Eyes)* | **10 gratis tegoed / dag**, cumulatief tot **30 dagen (maximaal 300 tegoed)**, daarna reset | Kledinganalyse, detectie van meerdere kledingstukken, AI Stylist-chat en Koffer samenstellen | • **Analyse van 1 kledingstuk**: 1 tegoed<br>• **Analyse van meerdere stukken (bijv. 5 stuks)**: 5 tegoed (1 per stuk)<br>• **AI Stylist-prompt**: 1 tegoed<br>• **Koffer samenstellen**: 1 tegoed per geselecteerd kledingstuk |
-| **Reconstructietegoed** *(Nano Banana)* | **5 gratis welkomsttegoed** (op elk moment op te waarderen op de Prijzen-pagina) | Generatieve studioreconstructie van kleding, uitsnijdingsherstel en AI-fotobewerking | • **1 Reconstructietegoed** per generatieve studioreparatie |
+| **Interne AI-credits** *(Het eigen AI-model van DressApp)* | **10 gratis credits / dag**, cumulatief tot **30 dagen (maximaal 300 credits)**, daarna reset | Kledingscannen, meerdere kledingstukken herkennen, AI-stylistchat en Koffer-assistent | • **Scan van 1 kledingstuk**: 1 credit — • **Foto met meerdere items (bijv. 5 stuks)**: 5 credits (1 per stuk) — • **Vraag aan AI-stylist**: 1 credit — • **Koffer inpakken**: 1 credit per geselecteerd item |
+| **Studio-reconstructiecredits** *(Geavanceerd AI-model)* | **5 gratis startcredits** (altijd aan te vullen via de Prijzenpagina) | Fotoreconstructie in studiokwaliteit, reparatie van afgesneden randen en fotoverbetering | • **1 Reconstructiecredit** per studio-fotoverbetering |
 
-> [!TIP]
-> **Waarom cumulatief tegoed zo handig is tijdens de onboarding:** Omdat je **10 dagelijkse On-Premises AI-tegoeden** gedurende 30 dagen oplopen tot **300 tegoed**, verlies je nooit een dag als je kleding liever in batches fotografeert. Na slechts **5 dagen** heb je **50 AI-tegoed** verzameld — precies genoeg om in één keer een complete gratis kledingkast van 50 stuks te digitaliseren!
+> **Tip:** **Waarom cumulatieve credits handig zijn bij het starten:** Omdat uw **10 dagelijkse interne AI-credits** tot **300 credits over 30 dagen** worden opgespaard, verliest u nooit een dag als u uw kleding liever in het weekend in één keer fotografeert. Na slechts **5 dagen** heeft u **50 credits** — precies genoeg om een complete gratis kledingkast van 50 items te digitaliseren!
 
 ---
 
-## 2. Best Practices voor Kledingfotografie (Flat-Lay)
+## 2. Beste Praktijken voor het Fotograferen van Kleding
 
-De **GarmentVision**-pijplijn van DressApp verwijdert automatisch de achtergrond, haalt de echte stofkleuren op en herkent de pasvorm. Schone, consistente flat-lay-foto's zorgen direct bij de eerste poging voor perfecte uitsnijdingen en kleurherkenning, zodat je je **5 Nano Banana Reconstructietegoeden** bewaart voor echt lastige kledingstukken.
+Wanneer u een foto uploadt, herkent de AI van DressApp automatisch of het gaat om **één kledingstuk**, een **complete outfit die u draagt**, of **meerdere kledingstukken die naast elkaar liggen**. De achtergrond wordt verwijderd en de kleuren, pasvorm en stijl worden direct herkend. Heldere, goed belichte foto's zorgen meteen voor een strakke uitsnede en nauwkeurige kleurherkenning, zodat u uw **5 Studio-reconstructiecredits** bewaart voor echt lastige kledingstukken.
 
-### De 4 Gouden Regels voor Flat-Lay Fotografie
+### De 4 Gouden Regels voor Vlakke Kledingfoto's
 
-1. **Gebruik een Lichte Ruimte & een Contrasterende Mat**
-   - Leg het kledingstuk plat op de vloer in een lichte, goed verlichte kamer (bij voorkeur met natuurlijk daglicht).
-   - Plaats het kledingstuk op een **mat of ondergrond met een contrasterende kleur** (gebruik bijvoorbeeld een donkere mat of houten vloer voor witte, crèmekleurige of pastelkleurige kleding, en een lichte, neutrale ondergrond voor zwarte, marineblauwe of donkere stukken).
-   - Een hoog contrast langs de randen helpt de segmentatie-engine om kragen, mouwen en zomen haarscherp uit te snijden en de vloerkleur volledig te negeren.
+1. **Gebruik een Lichte Ruimte en een Contrasterende Ondergrond**
+   - Leg het kledingstuk plat neer in een lichte kamer met natuurlijk daglicht.
+   - Plaats het op een **ondergrond met een contrasterende kleur** (bijvoorbeeld een donkere vloer voor witte, crèmekleurige of pastelkleurige kleding, en een licht laken voor zwarte, donkerblauwe of donkere kleding).
+   - Een duidelijk contrast langs de randen helpt de AI om zomen, kragen en bandjes strak uit te snijden.
 
 2. **Centreer het Kledingstuk Recht met Kleine Marges**
-   - Strijk vouwen en kreukels glad en leg mouwen of broekspijpen natuurlijk neer zodat het volledige silhouet zichtbaar is.
-   - Lijn het kledingstuk **recht uit in het midden van het camerakader** en laat aan alle vier de zijden **kleine, gelijkmatige marges** vrij. Voorkom dat kragen, manchetten of zomen worden afgesneden en ga niet te ver weg staan.
+   - Strijk vouwen glad en leg mouwen of broekspijpen natuurlijk neer zodat het volledige model zichtbaar is (zo wordt een trui met lange mouwen direct onderscheiden van een T-shirt met korte mouwen).
+   - Fotografeert u meerdere kledingstukken tegelijk? Laat dan een kleine ruimte tussen elk item zodat ze netjes apart worden uitgesneden.
+   - Leg het kledingstuk **recht in het midden van het beeld** en laat aan alle vier de zijden een **kleine, gelijkmatige marge** vrij zonder boorden of kragen af te snijden.
 
-3. **Werp Geen Schaduw op het Kledingstuk**
-   - Controleer je houding voordat je afdrukt zodat noch je lichaam, noch je telefoon een schaduw over de stof werpt.
-   - Schaduwen veranderen de waargenomen kleurtemperatuur (wit lijkt grijs en marineblauw lijkt zwart) en kunnen de stofherkenning verstoren. Indirect daglicht bij een raam of gelijkmatige plafondverlichting werkt het best.
+3. **Voorkom Schaduwen op de Stof**
+   - Controleer uw houding voordat u afdrukt, zodat uw lichaam of telefoon geen schaduw over het kledingstuk werpt.
+   - Sterke schaduwen veranderen de kleurweergave (wit lijkt grijs of donkerblauw lijkt zwart). Indirect daglicht bij een raam werkt het best.
 
-4. **Houd je Telefoon Stil Tijdens het Fotograferen**
-   - Houd je telefoon parallel aan de vloer recht boven het kledingstuk en **blijf volledig stil staan** wanneer je op de sluiterknop drukt.
-   - Een scherpe, bewegingsvrije opname stelt het lokale vision-model in staat om fijne weefsels (zoals linnen versus katoen, of wol versus synthetisch breisel) en subtiele patronen te onderscheiden.
+4. **Houd de Camera Stil**
+   - Houd uw telefoon recht boven het kledingstuk en **blijf stil staan** wanneer u de foto maakt.
+   - Een scherpe foto helpt het eigen AI-model van DressApp om fijne stofstructuren (zoals linnen versus katoen, of wol versus fijn breisel) en subtiele patronen te herkennen.
 
 ---
 
-## 3. Je Kledingkast Digitaliseren: 5-Dagenplannen voor Onboarding
+## 3. Uw Kledingkast Digitaliseren: 5-Daagse Startplannen
 
-Het in één keer digitaliseren van een hele garderobe kan overweldigend aanvoelen. Door je kast op te delen in **5 logische dagelijkse categorieën (10 items per dag)** — of elke dag één plank te fotograferen en op dag 5 alles in één batch te uploaden — digitaliseer je je **50 belangrijkste basisstukken in 5 dagen** met je gratis dagelijkse On-Premises AI-tegoed.
+Een hele kledingkast in één keer fotograferen kan veel lijken. Door uw kast op te delen in **5 overzichtelijke dagcategorieën (10 stuks per dag)** — of elke dag één plank te fotograferen en op dag 5 alles tegelijk te uploaden — digitaliseert u uw **50 belangrijkste kledingstukken in 5 dagen** met uw gratis credits.
 
-### Optie A: Het "10 Items per Dag"-plan (10 Tegoed / Dag)
+### Optie A: Het "10 Items per Dag"-Plan (10 Credits / Dag)
 
-Upload en controleer elke dag 10 kledingstukken in minder dan 6 minuten:
+Upload en controleer elke dag 10 kledingstukken in slechts enkele minuten:
 
-| Dag | Focuscategorie | Doel-items (10 Kledingstukken) | Gebruikt Tegoed |
+| Dag | Categorie van de Dag | Doelitems (10 Kledingstukken) | Gebruikte Credits |
 | :--- | :--- | :--- | :--- |
-| **Dag 1** | **Basis Onderstukken** | Je 10 meest gedragen jeans, chino's, nette broeken, rokken en shorts | 10 tegoed |
-| **Dag 2** | **Dagelijkse Tops & T-shirts** | 10 basis T-shirts, polo's, tanktops en casual blouses | 10 tegoed |
-| **Dag 3** | **Overhemden, Breisels & Jurken** | 10 overhemden met knopen, truien, vesten of jurken uit één stuk | 10 tegoed |
-| **Dag 4** | **Jassen, Blazers & Laagjes** | 10 blazers, jassen, mantels, overshirts en bodywarmers | 10 tegoed |
-| **Dag 5** | **Schoenen & Vaste Accessoires** | 6–7 essentiële paren schoenen (sneakers, loafers, laarzen, nette schoenen) + 3–4 riemen, tassen of hoeden | 10 tegoed |
+| **Dag 1** | **Dagelijkse Broeken & Rokken** | Uw 10 meest gedragen jeans, chino's, nette broeken, rokken en shorts | 10 credits |
+| **Dag 2** | **Dagelijkse Tops & T-shirts** | 10 basis-T-shirts, polo's, hemdjes en casual blouses | 10 credits |
+| **Dag 3** | **Overhemden, Truien & Jurken** | 10 overhemden, hoodies, truien, vesten of jurken | 10 credits |
+| **Dag 4** | **Jassen, Blazers & Laagjes** | 10 blazers, jassen, mantels, overshirts en bodywarmers | 10 credits |
+| **Dag 5** | **Schoenen & Accessoires** | 6–7 veelgedragen paar schoenen (sneakers, loafers, laarzen, nette schoenen) + 3–4 riemen, tassen of mutsen | 10 credits |
 
-### Optie B: Het "Plank-voor-Plank Opbouw"-batchplan (50 Tegoed op Dag 5)
+### Optie B: Het "Plank-voor-Plank" Spaarplan (50 Credits op Dag 5)
 
-Als je het fotograferen liever scheidt van het uploaden in de app, profiteer dan van de **opbouw van tegoed over 30 dagen**:
+Maakt u liever eerst alle foto's om ze later in één keer te uploaden? Maak dan gebruik van de **30-daagse creditopbouw**:
 
-- **Dag 1–4 (Fotograferen & Opbouwen):** Besteed elke dag 5 minuten aan het fotograferen van één plank of categorie (Dag 1: Jeans & broeken; Dag 2: T-shirts & tops; Dag 3: Overhemden & truien; Dag 4: Jassen & schoenen) in een apart fotoalbum op je telefoon. Ondertussen groeit je On-Premises AI-tegoed automatisch aan (**10 → 20 → 30 → 40 tegoed**).
-- **Dag 5 (Batch-upload van 50 Kledingstukken):** Op dag 5 bereikt je saldo **50 On-Premises AI-tegoed**. Open **Item toevoegen**, selecteer je gefotografeerde kleding (of gebruik foto's met meerdere kledingstukken waarbij 5 stukken op één foto 5 tegoed kosten) en digitaliseer je volledige basisgarderobe van 50 items in één sessie!
-
----
-
-## 4. Items Bewerken: Controleer en Verifieer Altijd Nieuw Geüploade Kleding
-
-> [!IMPORTANT]
-> **Basis- en geavanceerde functies van de AI Stylist zijn rechtstreeks afhankelijk van nauwkeurige kleding-metadata.** Maak er een gewoonte van om elke nieuw geüploade itemkaart te openen, de geëxtraheerde labels te controleren en eventuele fouten direct handmatig te corrigeren.
-
-Wanneer de On-Premises AI Stylist een outfit samenstelt of een koffer inpakt, bekijkt deze **niet** telkens opnieuw je ruwe foto's — de engine leest de gestructureerde metadata die op elke itemkaart is opgeslagen. Bovendien controleert de **Stylist QA Engine** van DressApp strenge anatomische regels en dresscodes voordat een outfit wordt goedgekeurd.
-
-### De 5 Metadatavelden om bij Elk Nieuw Item te Controleren
-
-1. **Categorie & Subcategorie** (`Bovenstuk`, `Onderstuk`, `Bovenkleding & Jassen`, `Jurk / Jumpsuit`, `Schoenen`, `Accessoires`)
-   - *Waarom dit telt:* Elke outfit moet een geldige anatomische combinatie bevatten (`Bovenstuk + Onderstuk + Schoenen`, of `Jurk/Jumpsuit + Schoenen`). Als een blazer per ongeluk als `Bovenstuk` in plaats van `Bovenkleding & Jassen` wordt opgeslagen, kan de QA Engine deze niet goed als laagje over een overhemd combineren.
-2. **Kleuren** (Primaire & secundaire stofkleuren)
-   - *Waarom dit telt:* Zelfs met achtergrondverwijdering kan extreme verlichting marineblauw soms op zwart of crème op wit laten lijken. Het corrigeren van de kleur zorgt voor een nauwkeurige **60-30-10-kleurharmonie** en voorkomt etiquettefouten bij formele of religieuze gelegenheden.
-3. **Materiaal / Stof** (`Katoen`, `Linnen`, `Wol`, `Denim`, `Leer`, `Zijde`, enz.)
-   - *Waarom dit telt:* Wordt gebruikt voor weerbestendige laagjes (ademend linnen/katoen in de zomerhitte versus isolerende wol in de winter) en culturele regels (zoals leervrije schoenen op bepaalde religieuze dagen of in tempels).
-4. **Dresscode / Formaliteit** (`Casual`, `Smart-Casual`, `Zakelijk`, `Formeel`, `Sportief`, `Traditioneel`)
-   - *Waarom dit telt:* De AI Stylist hanteert een strikte **Formaliteitshiërarchie** (Formeel → Semi-Formeel → Smart-Casual). Door je pantalon als `Formeel` en je chino als `Smart-Casual` te labelen, stelt de Stylist nooit sportkleding of een cargobroek voor bij een bruiloft of zakelijke bijeenkomst.
-5. **Seizoen & Patroon** (`Lente`, `Zomer`, `Herfst`, `Winter` • `Effen`, `Gestreept`, `Geruit`, `Gebloemd`)
-   - *Waarom dit telt:* Voorkomt vloekende patronen en houdt dikke winterjassen buiten de aanbevelingen voor warme dagen.
+- **Dag 1–4 (Fotograferen & Opsparen):** Fotografeer elke dag in 5 minuten één plank of categorie in een apart fotoalbum op uw telefoon. Ondertussen lopen uw interne AI-credits automatisch op (**10 → 20 → 30 → 40 credits**).
+- **Dag 5 (50 Kledingstukken Tegelijk Uploaden):** Op dag 5 bereikt uw tegoed **50 credits**. Open **Item toevoegen**, selecteer uw foto's en digitaliseer uw hele basisgarderobe in één sessie!
 
 ---
 
-## 5. Stylist-prompts: Hoe je de On-Premises AI Stylist Optimaal Aanstuurt
+## 4. Items Bewerken: Controleer Altijd Nieuw Toegevoegde Kleding
 
-Elke prompt aan de AI Stylist binnen het Gratis Plan kost **1 On-Premises AI-tegoed**. Als je begrijpt hoe het lokale **Gemma / Eyes Stylist Brain** van DressApp je bericht verwerkt, krijg je in één enkele prompt precies de outfit of garderobe-analyse die je zoekt.
+> **Belangrijk:** **De adviezen van uw AI-stylist zijn rechtstreeks afhankelijk van nauwkeurige kledinggegevens.** Maak er een gewoonte van om elk nieuw toegevoegd kledingstuk kort te controleren en waar nodig aan te passen voordat u het opslaat.
 
-### Hoe het On-Premises Stylist Brain Onder de Motorkap Werkt
+Wanneer de AI-stylist een outfit samenstelt of uw koffer inpakt, leest hij de opgeslagen kenmerken op de itemkaart en controleert hij of elke outfit compleet en gepast is voor de gelegenheid en het weer.
 
-Wanneer je een bericht stuurt naar de Stylist, doorloopt DressApp een pijplijn van 4 fasen:
+### De 5 Kenmerken om te Controleren bij Elk Nieuw Item
 
-1. **Automatische Meertalige Vertaling:** Je kunt schrijven in elk van de 13 ondersteunde talen. De backend vertaalt je prompt automatisch naar standaard Engels voor het lokale model en vertaalt het gestructureerde stijladvies terug naar jouw taal.
-2. **Intentie-routering (Outfit Samenstellen vs. Garderobe-audit):**
-   - **Modus 1 — Outfit Samenstellen ("Wat zal ik aantrekken?"):** Wordt geactiveerd wanneer je vraagt wat je moet dragen of om een look vraagt. Het model levert **1–2 complete, verschillende outfits** die uitsluitend zijn opgebouwd uit items in jouw kledingkast, inclusief stijltoelichting en Do's & Don'ts.
-   - **Modus 2 — Analytische Garderobe-audit ("Welke basics mis ik?"):** Wordt geactiveerd wanneer je vraagt welke basisstukken er ontbreken, om een kast-audit vraagt of een winkellijst wilt om je capsulegarderobe compleet te maken. In plaats van paspoppen te tonen, analyseert de engine je collectie aan de hand van **4 Essentiële Garderobepijlers** (Formele Tailoring, Smart-Casual Kern, Bovenkleding & Weer, Schoenen & Accessoires) en geeft **5–7 concrete specificaties van ontbrekende kledingstukken**.
-3. **4-Signalen Fashion RAG & Voorfiltering:**
-   - Voordat het AI-model een antwoord genereert, scant de Fashion Knowledge Base je prompt op **4 belangrijke signalen**:
-     1. **Gelegenheid / Activiteit** (bijv. *sollicitatiegesprek, bruiloftsgast, date-avond, diner in een restaurant, gala, klussen, wandelen*)
-     2. **Cultureel, Religieus of Regionaal Protocol** (bijv. *Kerk/Vaticaan, Synagoge/Sjabbat/Sjiva-condoleancebezoek, Moskee/Vrijdaggebed, Hindoestaanse bruiloft/tempel, Boeddhistische tempel*)
-     3. **Weer & Temperatuur** (bijv. *regenachtig, koele avond van 12 °C, warme vochtige middag*)
-     4. **Anker-kledingstuk of Kleurvoorkeur** (bijv. *rond mijn marineblauwe blazer, aardetinten, smart-casual*)
-   - Kledingstukken die de etiquette van de gelegenheid schenden (zoals shorts, T-shirts met drukke prints of slippers voor een formele of heilige plek) worden vooraf automatisch weggefilterd.
-4. **Autonome QA-verificatie:** Tot slot controleert de Stylist QA Engine of elke aanbevolen outfit een geldig bovenstuk, onderstuk (of jurk) en schoenen uit je daadwerkelijke kastvoorraad bevat.
+1. **Categorie & Subcategorie** (Bovenkleding, Onderkleding, Jassen/Mantels, Jurken/Jumpsuits, Schoenen, Accessoires, Traditionele kleding)
+   - *Waarom dit telt:* Elke complete outfit bestaat uit een logische combinatie van kleding en schoenen. Als een blazer per ongeluk als gewoon shirt wordt opgeslagen in plaats van als Jas/Blazer, kan de stylist hem niet goed als buitenste laag combineren.
+2. **Kleuren** (Hoofd- en bijkleur)
+   - *Waarom dit telt:* Warm binnenlicht kan donkerblauw soms zwart laten lijken of crème wit. De juiste kleur zorgt voor harmonieuze kleurencombinaties.
+3. **Materiaal / Stof** (Katoen, Linnen, Wol, Denim, Leer, Zijde, enz.)
+   - *Waarom dit telt:* Helpt de stylist om luchtige stoffen te kiezen in de zomer, warme lagen in de winter en gepaste materialen voor culturele of religieuze gelegenheden.
+4. **Kledingvoorschrift / Stijl** (Casual, Smart-Casual, Zakelijk, Formeel, Sportief, Feestelijk/Traditioneel)
+   - *Waarom dit telt:* Voorkomt dat de stylist sportkleding aanbeveelt voor een bruiloft of zakelijke afspraak.
+5. **Seizoen & Patroon** (Lente, Zomer, Herfst, Winter • Effen, Gestreept, Geruit, Gebloemd)
+   - *Waarom dit telt:* Voorkomt vloekende prints en houdt dikke winterjassen buiten de suggesties op warme dagen.
 
-### De Winnende 4-Delige Promptstructuur
+---
 
-Om met **1 tegoed** de scherpste aanbeveling te krijgen, bouw je je prompt op met deze eenvoudige formule:
+## 5. Stylist-tips: Hoe U de Beste Outfits Vraagt aan de AI-stylist
 
-> **`[1. Doel / Intentie]` + `[2. Specifieke Gelegenheid & Locatie]` + `[3. Weer / Dagdeel]` + `[4. Optioneel Anker-item of Stijl-/Bescheidenheidsvoorkeur]`**
+Elke vraag aan de AI-stylist in het Gratis-abonnement kost **1 interne AI-credit**. Als u weet hoe de stylist uw bericht verwerkt, krijgt u direct het gewenste kledingadvies in één bericht.
 
-### Voorbeeldprompts volgens Best Practices
+### Hoe de AI-stylist Uw Vraag Begrijpt
 
-#### A. Een Complete Outfit Aanvragen (Modus 1 — Samenstellen)
-* **Goede Prompt:** *"Stel een outfit samen voor een formeel sollicitatiegesprek in de financiële sector morgenochtend. Het wordt koel en regenachtig (12 °C). Voorkeur voor een marineblauw met wit kleurenpalet."*
-* **Waarom dit werkt:** Activeert de regels voor zakelijk-formele kleding, voegt regenbescherming toe en verankert de kleurharmonie.
+1. **Werkt in Uw Eigen Taal:** U kunt in het Nederlands of een van de andere 13 ondersteunde talen typen of spreken.
+2. **Twee Slimme Modi (Outfit-ideeën vs. Garderobe-analyse):**
+   - **Modus 1 — Outfit-ideeën ("Kleed mij"):** Wanneer u vraagt *wat u kunt aantrekken* voor een gelegenheid, stelt de stylist **1–2 complete outfits** samen met uitsluitend kleding uit uw digitale kast, inclusief uitleg waarom de stukken bij elkaar passen.
+   - **Modus 2 — Garderobe-analyse ("Wat mist er in mijn kast?"):** Wanneer u vraagt *welke basics ik mis* of *analyseer mijn kledingkast*, bekijkt de stylist de balans in uw garderobe en adviseert hij **5–7 gerichte aanvullingen** waarmee u de meeste nieuwe combinaties maakt.
+3. **Rekening Houden met Gelegenheid, Weer en Etiquette:**
+   - De stylist let automatisch op vier signalen in uw vraag:
+     1. **Gelegenheid of Activiteit** (bijv.: *sollicitatiegesprek, bruiloftsgast, diner, kantoordag, weekendwandeling*)
+     2. **Culturele, Religieuze of Lokale Etiquette** (bijv.: *kerkbezoek, synagoge, moskee, traditioneel feest, condoleancebezoek*)
+     3. **Weer & Temperatuur** (bijv.: *regenachtige en frisse avond van 12 °C, zonnige middag*)
+     4. **Specifiek Kledingstuk of Kleurvoorkeur** (bijv.: *combineer met mijn donkerblauwe blazer, aardetinten, platte schoenen*)
 
-#### B. Stylen Rond een Specifiek Kledingstuk uit je Kast
-* **Goede Prompt:** *"Wat zal ik vanavond dragen voor een smart-casual dinerdate met mijn olijfgroene chino? Zacht avondweer."*
-* **Waarom dit werkt:** Laat de Stylist je olijfgroene chino vastzetten als onderstuk en zoekt daar een bijpassend overhemd, schoenen en accessoire bij.
+### De Eenvoudige 4-Delige Formule voor een Topvraag
 
-#### C. Culturele, Religieuze of Reisetiquette-outfits
-* **Goede Prompt:** *"Adviseer een respectvolle outfit uit mijn kledingkast voor een bezoek aan een kerk in Rome op een zonnige middag."* (of *"Wat draag ik naar een Sjiva-condoleancebezoek?"* / *"Stel een feestelijke outfit samen voor een Hindoestaanse bruiloft."*)
-* **Waarom dit werkt:** Activeert direct de culturele en bescheidenheidsregels van DressApp, waardoor ongepaste items automatisch worden uitgefilterd.
+Voor het scherpste advies met **1 credit** neemt u deze vier punten op in uw bericht:
 
-#### D. Je Garderobe Auditen op Ontbrekende Basics (Modus 2 — Audit Q&A)
-* **Goede Prompt:** *"Voer een audit uit op mijn kledingkast en vertel me welke essentiële basisstukken ik mis om een veelzijdige smart-casual en formele capsulegarderobe compleet te maken."*
-* **Waarom dit werkt:** Schakelt expliciet de **Analytische Basisstukken-modus** in en geeft een helder overzicht van de sterke punten van je kast plus 5–7 specifieke aankoopadviezen.
+> **`[1. Wat U Zoekt]` + `[2. Gelegenheid & Locatie]` + `[3. Weer / Tijdstip]` + `[4. Favoriet Kledingstuk of Kleur]`**
 
-### Veelvoorkomende Prompt-valkuilen om te Vermijden
+### Voorbeeldvragen
 
-* **Vermijd vage prompts van één woord** zoals *"Outfit"* of *"Help"* — zonder gelegenheid of sfeer kan de Stylist alleen maar raden naar je dresscode.
-* **Combineer een audit-aanvraag en een outfit-aanvraag niet in hetzelfde bericht** — vraag *"Wat zal ik aantrekken naar een bruiloft?"* in één beurt (1 tegoed) en *"Welke basisstukken mis ik in mijn kast?"* in een aparte beurt (1 tegoed), zodat de Intent Router je het volledige resultaat voor elke modus kan geven.
-* **Houd je Profielgegevens Actueel:** Zorg dat je **Geslacht**, **Bescheidenheidsniveau** en **Locatie** zijn opgeslagen in je Profiel — de On-Premises Stylist gebruikt deze automatisch bij elke aanvraag, zodat je ze nooit in je prompt hoeft te herhalen!
+#### A. Een Complete Outfit Vragen
+* **Voorbeeld:** *"Stel een outfit samen voor een formeel sollicitatiegesprek morgenochtend. Het wordt fris en regenachtig (12 °C). Ik geef de voorkeur aan donkerblauw en wit."*
+* **Waarom dit werkt:** Geeft de stylist direct het kledingvoorschrift, de weersomstandigheden en uw kleurvoorkeur.
+
+#### B. Stylen Rondom Één Specifiek Kledingstuk
+* **Voorbeeld:** *"Wat kan ik vanavond aantrekken voor een smart-casual etentje met mijn olijfgroene chino? Het is een zachte avond."*
+* **Waarom dit werkt:** Kiest uw olijfgroene broek als basis en zoekt daar het best passende overhemd, schoenen en accessoires bij.
+
+#### C. Culturele, Religieuze of Reisetiquette
+* **Voorbeeld:** *"Adviseer een respectvolle outfit uit mijn kast voor het bezoeken van een kerk in Rome op een zonnige middag."*
+* **Waarom dit werkt:** Past automatisch gepaste kledingregels toe en houdt tegelijk rekening met het warme weer.
+
+#### D. Uw Kledingkast Controleren op Ontbrekende Basics
+* **Voorbeeld:** *"Analyseer mijn kledingkast en vertel me welke basisstukken ik mis om meer smart-casual en zakelijke outfits te maken."*
+* **Waarom dit werkt:** Schakelt de garderobe-analyse in en geeft een helder overzicht van de nuttigste aanvullingen voor uw kast.
+
+### Handige Tips om te Onthouden
+
+* **Vermijd berichten van één woord** zoals *"Outfit"* of *"Help"* — even vermelden waar u naartoe gaat en wat voor weer het is, maakt een wereld van verschil.
+* **Stel een outfitvraag en een kastanalyse in twee aparte berichten**, zodat u voor beide een volledig antwoord krijgt.
+* **Houd Uw Profiel Actueel:** Sla uw **Geslacht**, **Bedekkingsvoorkeur** en **Woonplaats** op in uw Profiel — de stylist neemt deze bij elke vraag automatisch mee!

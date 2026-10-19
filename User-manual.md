@@ -49,18 +49,22 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 ### 3.1 Ingesting Garments (Adding Items)
 INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Receipts.
 
-#### A. Interactive Camera and File Upload
+#### A. Interactive Camera, Mixed-Batch Upload & Automatic 3-Pipeline Routing
 1. Navigate to the **Add Item** screen.
-2. Select **Take Photo** (launches native mobile camera) or click **Upload Photos** (opens OS file chooser).
-3. The client computes the image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
+2. Select **Take Photo** (launches native mobile camera) or click **Upload Photos** (opens OS file chooser). You can upload multiple photos with mixed characteristics in a single batch—combining single isolated garments, head-to-toe outfits worn by a person or mannequin, and unworn piles/clusters of garments—without selecting any manual pipeline mode tabs.
+3. The client computes each image's SHA-256 and horizontal difference-hash (dHash) in-browser (~100-180ms) to check against your existing closet.
 4. If a match is found, the **Duplicate Preflight Dialog** opens showing matching previews. Select **Skip** or **Add anyway**.
-5. Once accepted, the server starts an NDJSON stream. A placeholders preview frame displays within 5-7 seconds, allowing you to edit the item details immediately while the backend completes tagging.
-6. **AI Quality Checker & Automatic Generative Repair**: Gemini's visual Quality Checker inspects each cropped garment for occlusions (bags, arms, hair) and camera frame cutoffs:
+5. **Automatic 3-Pipeline Photo Routing (`detect_photo_pipeline`)**: Once accepted, the backend inspects SegFormer semantic masks (`face_skin_ratio`, `anatomical_stack`, connected component topology) and automatically routes each photo to the optimal pipeline:
+   - **`single` Pipeline**: Single isolated garment matted via studio alpha blending (`rembg` + SegFormer mask intersection).
+   - **`multi` Pipeline**: Multi-garment outfit worn by a model or mannequin (`face_skin_ratio >= 0.008` or vertically aligned `anatomical_stack`), isolating upper-body, lower-body, dress, outerwear, footwear, and accessory crops while filtering exposed skin.
+   - **`mass` Pipeline**: Unworn garment clusters, flat-lay arrangements, or multiple garments hanging on wall hooks (`parse_unworn_cluster`), separating disconnected components and running semantic-color watershed splitting on touching multi-color items while protecting screen-printed chest graphics.
+6. The server starts an NDJSON stream (`detect`, `field`, `item`, `done`), displaying cropped preview frames within seconds and allowing you to edit item details immediately while the backend completes tagging—including deterministic **Sweatshirts & Hoodies** vs. **T-Shirt** classification and 60+ **Traditional & Cultural** attire terms (`Traditional` dress code and localized heritage tags across all 13 languages).
+7. **AI Quality Checker & Automatic Generative Repair**: The visual Quality Checker inspects each cropped garment for occlusions (bags, arms, hair) and camera frame cutoffs:
    - **Complete**: Intact, unoccluded garments are matted directly.
    - **Image Completion**: If an item has missing side contours, occluded sections, or clipped hems/collars, `gemini-3.1-flash-lite-image` (Nano Banana) automatically outpaints and completes the missing fabric into a full, symmetrical piece.
    - **Full Studio Reconstruction**: Severely cut-off items (such as shoes showing only toe caps) are fully regenerated into pristine studio catalog photographs.
-7. Verify auto-detected tags (color, fabric, fit, pattern, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
-8. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background generative reconstructions and WebP thumbnails conclude in the background.
+8. Verify auto-detected tags (color, fabric, fit, pattern, dress code, occasion). If the cutout shape is incorrect, change the **Category** dropdown; this triggers SegFormer to automatically re-crop the garment.
+9. Click **Save** to optimistically paint the item in the closet grid immediately (~16ms) while background generative reconstructions and WebP thumbnails conclude in the background.
 
 #### B. Scanning EU Digital Product Passports (DPP)
 1. Tap the **Scan QR (DPP)** button on the Add Item page.
@@ -750,7 +754,7 @@ System liveness validation, financial bookkeeping, and user account management.
 
 1. Navigate to `/admin` (available to administrator roles).
 2. **Overview**: Audit Gross Volumes and Platform Fee income summaries. Inspect the **Provider Activity Table** to view downstream liveness statistics (Gemini API, weather service latency, and error rates).
-3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and a local Gemma container.
+3. **Providers**: Click **Verify Key** to send a direct ping to the Gemini API. Toggle the **Eyes Vision Override** switch to route image analysis between the default Gemini endpoint and the on-premises `dressapp-eyes` (`Qwen 2.5 VL 3B`) container.
 4. **Users**: View active credits, roles, and lifetime payments. Use direct actions to Promote or Demote users.
 5. **Listings**: View listing states and toggle active flags to suspend fraudulent items.
 
@@ -759,8 +763,8 @@ System liveness validation, financial bookkeeping, and user account management.
 ### 3.13 Subscriptions, Billing, and Localized Payments
 Integration with PayPal Subscriptions and Atzmai APIs for subscription management, credit purchases, and automated bookkeeping.
 
-1. **PayPal Pro Subscription (Closet Capacity)**:
-   - Upgrades free accounts (50–150 item ceiling) to unlimited closet storage via the PayPal Subscriptions REST API.
+1. **Manager ($10/mo) & Professional ($15/mo) Subscriptions**:
+   - Upgrades Free Tier accounts (50–150 item ceiling, on-premises `Qwen 2.5 VL 3B` Eyes engine) to unlimited closet storage and fast Cloud AI routing (`Google Gemini 3.5 Flash`) via the PayPal Subscriptions REST API.
    - Monthly and annual tiers with automatic recurring billing and instant webhooks updating user roles.
 2. **Pre-Paid AI Credit Bucket Management**:
    - **Daily Free Credits**: 10 free credits granted every 24 hours with a strict 30-day expiration window.
@@ -780,11 +784,11 @@ Integration with PayPal Subscriptions and Atzmai APIs for subscription managemen
 
 ## 4. Expected Results
 
-- **Ingestion**: Items immediately populate the closet grid (~16ms). Background cutouts render clean, transparent PNG results.
+- **Ingestion**: Items immediately populate the closet grid (~16ms) across single, multi-garment, and mass-cluster photos. Background cutouts render clean, transparent PNG results.
 - **DPP Verified Badge**: Scanning valid passports displays the green information card with sustainability details.
 - **Avatar Outerwear**: Outerwear displays correctly layered over tops on the 2D avatar canvas without clipping headwear/shoes.
 - **Voice Response**: Virtual Stylist text outputs play spoken audio automatically with a visible waveform indicator.
-- **Subscriptions**: Activating Pro immediately removes the closet limit warning.
+- **Subscriptions**: Activating a Manager or Professional plan immediately removes the closet limit warning and enables fast Cloud AI routing.
 
 ---
 
@@ -792,7 +796,7 @@ Integration with PayPal Subscriptions and Atzmai APIs for subscription managemen
 
 ### HTTP 402 Payment Required
 - **Problem**: Ingestion blocked. You have reached the capacity limit (50 items baseline, up to 150 with referral slots).
-- **Solution**: Go to Profile -> Subscription and upgrade to Pro, or share your invite link to get +10 slots per registration.
+- **Solution**: Go to the Pricing page (`/pricing`) and subscribe to the Manager ($10/mo) or Professional ($15/mo) plan, or share your invite link to get +10 slots per registration.
 
 ### SSRF Blocked / DNS Error on DPP
 - **Problem**: Scanned QR passport URL fails to parse.
@@ -804,15 +808,11 @@ Integration with PayPal Subscriptions and Atzmai APIs for subscription managemen
 
 ### Stylist Chat Quota Fallback ("Using Platform Stylist")
 - **Problem**: A banner appears above the Stylist's answer: *"Using Platform Stylist (Quota Fallback)"*.
-- **Explanation & Solution**: Your custom Google Gemini API key has exceeded its rate limit (`429 Too Many Requests`) or exhausted its daily quota. Rather than failing or returning a 500 error, DressApp's `FallbackBrain` seamlessly rerouted your request to the on-premise Gemma-4-E4B engine. You can check your quota balance in Google AI Studio or continue conversing with the built-in model.
-
-### HTTP 403 Forbidden on Trend Scout or Nano Banana
-- **Problem**: Opening Trend Scout or requesting Nano Banana photo repair returns a 403 error stating an API key is required.
-- **Solution**: These two high-cost generative features require a personal Google Gemini API key. Free Tier accounts can obtain a free key at [Google AI Studio](https://aistudio.google.com/) and paste it under **Profile > AI Configuration**.
+- **Explanation & Solution**: When upstream Google Gemini cloud rate limits (`429 Too Many Requests`) or transient quota spikes occur, DressApp's `FallbackBrain` seamlessly reroutes your request to the on-premises `dressapp-eyes` (`Qwen 2.5 VL 3B`) engine so your session never fails with a 500 error.
 
 ### Out of Memory (OOM) VPS Spikes
 - **Problem**: CPU/RAM peaks during upload processes.
-- **Solution**: Ingestion utilizes sequential queue locks for batches >5 items. Ensure the server has at least 8 GB RAM (CPX32 configuration) to host `llama-server` alongside the FastAPI backend and SegFormer workers.
+- **Solution**: Ingestion utilizes sequential queue locks for batches >5 items. Ensure the server has at least 8 GB RAM (CPX32 configuration) to host `llama-server` (`Qwen 2.5 VL 3B`, ~2.8 GB RAM) alongside the FastAPI backend and SegFormer workers.
 
 ---
 

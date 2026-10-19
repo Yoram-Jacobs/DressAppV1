@@ -1,6 +1,6 @@
 # DressApp Audio & Speech Architecture: STT & TTS Deep-Dive
 
-This document provides a comprehensive technical breakdown, architectural analysis, and user guide for the Speech-to-Text (STT) and Text-to-Speech (TTS) subsystems within the DressApp ecosystem. It details both the server-side multimodal AI pipelines and the local web/mobile client speech fallbacks.
+This document provides a comprehensive technical breakdown, architectural analysis, and user guide for the Speech-to-Text and Text-to-Speech subsystems within the DressApp ecosystem. It details both the server-side multimodal AI pipelines and the local web/mobile client speech fallbacks.
 
 ---
 
@@ -8,8 +8,8 @@ This document provides a comprehensive technical breakdown, architectural analys
 
 ### High-Level Overview
 DressApp integrates a dual-tier, highly resilient audio system designed to offer an immersive, hands-free conversation loop with the AI Virtual Stylist. The system supports full bidirectional speech:
-* **Speech-to-Text (STT)**: Transcribes user voice commands to guide closet queries, outfit creation, and style advice. It automatically routes between an on-premises Gemma4 sidecar container and Google's native Gemini 2.5 Flash multimodal endpoint.
-* **Text-to-Speech (TTS)**: Synthesizes the Virtual Stylist's outfit advice into high-quality spoken audio. It leverages Gemini's native audio generation capabilities at the server level, with automatic client-side Web Speech synthesis and on-device offline Piper TTS engines for mobile pods.
+* **Speech-to-Text**: Transcribes user voice commands to guide closet queries, outfit creation, and style advice. It automatically routes between an on-premises Gemma4 sidecar container and Google's native Gemini 2.5 Flash multimodal endpoint.
+* **Text-to-Speech**: Synthesizes the Virtual Stylist's outfit advice into high-quality spoken audio. It leverages Gemini's native audio generation capabilities at the server level, with automatic client-side Web Speech synthesis and on-device offline Piper TTS engines for mobile pods.
 
 ### Architectural Flow
 
@@ -56,7 +56,7 @@ graph TD
 
 ## 2. Comprehensive User Manual
 
-### Visual Interface Topology (Stylist Chat Panel)
+### Visual Interface Topology
 
 ```text
 +---------------------------------------------------------+
@@ -80,13 +80,13 @@ graph TD
 
 ### Mode & Workflow Walkthroughs
 
-#### 1. Voice Query Mode (Speech-to-Text Input)
+#### 1. Voice Query Mode
 * **Start Recording**: The user taps the microphone (`[🎤]`) button in the stylist input bar.
-* **Browser STT (Primary)**: In supported browsers (e.g., Chrome, Safari), the system requests mic permissions and invokes `window.SpeechRecognition`. Interim transcripts appear in the input bar in real time.
-* **Recording/Fallback (Alternative)**: On browsers lacking speech recognition APIs (e.g., Firefox Desktop), the interface defaults to recording raw WebM audio chunks via `MediaRecorder`.
+* **Browser STT**: In supported browsers, the system requests mic permissions and invokes `window.SpeechRecognition`. Interim transcripts appear in the input bar in real time.
+* **Recording/Fallback**: On browsers lacking speech recognition APIs, the interface defaults to recording raw WebM audio chunks via `MediaRecorder`.
 * **Submitting**: Once speech stops, the text query is automatically populated and sent. If the fallback recording was used, the audio binary is packaged in a `MultipartForm` under `voice_audio` and analyzed on the backend.
 
-#### 2. Spoken Response Mode (Text-to-Speech Output)
+#### 2. Spoken Response Mode
 * **Auto-Play**: After the AI Stylist processes a request, the response is played automatically if server audio is generated.
 * **Manual Replay**: Each AI message card contains a dynamic button labeled **Play reply** (or localized variants like **השמע תשובה**). Clicking it streams the synthesized audio again.
 * **Toggle Stop**: Clicking the button while audio is playing immediately cancels the audio stream.
@@ -102,10 +102,10 @@ graph TD
 
 ### Core Orchestration & AI/Logic
 
-#### Dual-Tier Speech-to-Text (`stt_service.py`)
+#### Dual-Tier Speech-to-Text
 The backend orchestrator uses `EyesSTTService` to implement a robust, fail-safe dual-path transcription system:
-1. **Dedicated Container Path (Gemma4)**: When `EYES_PROVIDER=gemma` is active, the service submits a `POST` request with the audio file to the Gemma4 container space (`EYES_GEMMA_SPACE_URL`).
-2. **Native Multimodal Path (Gemini 2.5 Flash)**: If the Gemma container fails or is bypassed, `GeminiSTTService` takes over. The audio bytes are converted into an inline multimodal object and processed directly by Gemini:
+1. **Dedicated Container Path**: When `EYES_PROVIDER=gemma` is active, the service submits a `POST` request with the audio file to the Gemma4 container space.
+2. **Native Multimodal Path**: If the Gemma container fails or is bypassed, `GeminiSTTService` takes over. The audio bytes are converted into an inline multimodal object and processed directly by Gemini:
    ```python
    # Gemini STT transcription request configuration
    text = await client.vision(
@@ -117,7 +117,7 @@ The backend orchestrator uses `EyesSTTService` to implement a robust, fail-safe 
    )
    ```
 
-#### Multimodal Server-Side TTS (`tts_service.py`)
+#### Multimodal Server-Side TTS
 Instead of relying on third-party cloud audio APIs, DressApp leverages **Gemini 2.5 Flash** native speech synthesis:
 * **Audio Model Config**: The request requests Gemini to respond explicitly in audio format:
   ```python
@@ -138,20 +138,20 @@ Instead of relying on third-party cloud audio APIs, DressApp leverages **Gemini 
 
 ### Data & Context Pipelines
 
-#### Backend API Pipeline (`logic.py`)
+#### Backend API Pipeline
 When a stylist query hits the backend:
 1. `logic.py` checks if `voice_audio` is provided. If so, it invokes `stt_service.transcribe` to resolve the audio into a textual transcript.
 2. The transcript is processed by the Stylist Brain to generate a contextual recommendation.
 3. The generated text is fed to `tts_service.speak_to_bytes` using the user's preferred voice.
 4. The output bytes are converted to base64 and returned in `tts_audio_base64`.
-5. Each stage logs its latency (`whisper_ms`, `stylist_brain_ms`, `tts_ms`) to monitor performance.
+5. Each stage logs its latency to monitor performance.
 
 ---
 
 ### Frontend & Client Architecture
 
-#### Web Speech API Wrapper (`speech.js`)
-* **BCP-47 Mapping**: The frontend maps local 2-letter language codes to their full BCP-47 counterparts (e.g., `he` -> `he-IL`, `ar` -> `ar-SA`) to fetch correct regional speech synthesis voices.
+#### Web Speech API Wrapper
+* **BCP-47 Mapping**: The frontend maps local 2-letter language codes to their full BCP-47 counterparts to fetch correct regional speech synthesis voices.
 * **Ensure Voices Loaded**: Chrome and Safari load system-native voices asynchronously. The frontend primes voices using a promise-wrapped listener on the `voiceschanged` event:
   ```javascript
   const synth = window.speechSynthesis;
@@ -160,7 +160,7 @@ When a stylist query hits the backend:
 * **Voice Matching Hierarchy**: If the exact regional voice is missing, it falls back to the parent language prefix or bare language code before defaulting to standard English.
 
 #### Local TTS Fallback
-If the backend does not return `tts_audio_base64` (or if it is null), the frontend leverages the client browser's native text-to-speech engine:
+If the backend does not return `tts_audio_base64`, the frontend leverages the client browser's native text-to-speech engine:
 ```javascript
 // Native browser speech fallback call
 if (ttsSupportedRef.current && !audioUrl) {
@@ -168,17 +168,17 @@ if (ttsSupportedRef.current && !audioUrl) {
 }
 ```
 
-#### On-Device Piper Offline TTS Blueprint (Mobile Client Pods)
-For mobile platforms (React Native, Android, and iOS) where servers should be bypassed for offline operations:
+#### On-Device Piper Offline TTS Blueprint
+For mobile platforms where servers should be bypassed for offline operations:
 * **Sherpa-ONNX Integration**: Uses the ONNX runtime to execute VITS models locally.
 * **Component Architecture**:
-  1. **Model & Config (`*.onnx`, `*.onnx.json`)**: Pre-trained voice weights stored inside the application package.
-  2. **Lexicon (`lexicon.txt`)**: Maps words directly to phonetic sounds.
-  3. **Tokens (`tokens.txt`)**: Maps phonemes to specific model output layers.
-  4. **Phonemizer (`espeak-ng-data`)**: Compiled assets executing language-specific phoneme translation on-device.
+  1. **Model & Config**: Pre-trained voice weights stored inside the application package.
+  2. **Lexicon**: Maps words directly to phonetic sounds.
+  3. **Tokens**: Maps phonemes to specific model output layers.
+  4. **Phonemizer**: Compiled assets executing language-specific phoneme translation on-device.
 * **Language-Voice Mapping**: The app automatically sets the default voice ID mapping during registration or language switches, eliminating manual dropdown configurations:
   * **English**: `en_US-ryan-medium`
-  * **Hebrew**: `he_IL-hebrew-medium` (community model)
+  * **Hebrew**: `he_IL-hebrew-medium`
   * **Arabic**: `ar_JO-kareem-low`
   * **Hindi**: `hi_IN-rohan-medium`
   * **Spanish**: `es_ES-carl-medium`

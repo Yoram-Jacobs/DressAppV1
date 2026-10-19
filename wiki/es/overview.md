@@ -1,37 +1,13 @@
-# Bienvenido a DressApp
+# ¿Qué es DressApp?
 
-¡Bienvenido a tu compañero de guardarropa digital definitivo! DressApp está diseñado para ayudarte a digitalizar, organizar y aprovechar al máximo tu armario físico.
+Bienvenido a **DressApp**, tu armario digital inteligente y asistente de estilo personal. DressApp combina reconocimiento inteligente de fotos, un Estilista IA con voz y herramientas prácticas de planificación para que vestirte cada día sea sencillo.
 
-## Descripción general
-DressApp transforma tu ropa física en un archivo digital estructurado impulsado por un motor de IA multinivel de última generación:
-- **Estilismo inteligente sin fricciones**: Impulsado por **Google Gemini 3.5 Flash-Lite** como motor principal para respuestas en menos de 350 ms, respaldado por un contenedor **Gemma-4-E4B** on-premises que funciona como una red de seguridad de cuotas transparente. Obtienes recomendaciones inteligentes al instante sin necesidad de claves de API personales.
-- **Integración con calendario y clima**: Recomendaciones matutinas en tiempo real adaptadas a los pronósticos meteorológicos diarios y a tus citas personales de Google Calendar.
-- **Planificador de atuendos y lienzo de avatar**: Superpón prendas digitalmente en un maniquí vectorial 2D personalizado o en tu propio recorte de foto.
-- **Asistente de equipaje interactivo**: Listas de verificación de maletas seleccionadas por IA para viajes de cualquier duración.
-- **Asistente de compras**: Extensión de Chrome y bookmarklet universal para comparaciones inteligentes de tallas y ajustes en tiendas online.
-- **Mercado circular**: Publicaciones directas para vender, intercambiar o alquilar prendas sin usar con seguridad integrada para compradores y vendedores.
-
-## Requisitos previos
-- Un navegador web moderno (se recomienda Google Chrome, Apple Safari o Mozilla Firefox).
-- Acceso a Internet.
-- Acceso a la cámara o biblioteca de fotos de tu dispositivo para digitalizar ropa.
-- *(Opcional)* Permiso de micrófono para estilismo conversacional por voz.
-
-## Instrucciones paso a paso
-1. **Digitalizar**: Captura prendas con tu cámara, sube fotos o importa recibos digitales. La aplicación segmenta automáticamente los artículos y elimina los fondos.
-2. **Organizar**: Etiqueta, busca y agrupa prendas en colecciones dentro de tu espacio de trabajo del Closet.
-3. **Consultar al estilista**: Toca el AI Stylist para solicitar recomendaciones de atuendos adaptadas al contexto mediante voz o texto.
-4. **Planificar y superponer**: Arma atuendos en el Outfit Canvas, revisa la superposición de capas y prográmalos en tu Diario.
-5. **Empacar para viajar**: Genera listas de equipaje personalizadas según el clima previsto en tu destino.
-6. **Revender o intercambiar**: Publica prendas sin usar directamente en el mercado circular para monetizar tu guardarropa.
-
-## Resultados esperados
-Obtienes un armario digital estructurado y accesible que elimina la fatiga de elegir estilo cada mañana, aumenta la utilización de las prendas y te ayuda a tomar decisiones de moda sostenibles.
-
-## Solución de problemas
-- **Carga lenta de páginas o imágenes**: Asegúrate de tener una conexión de red estable; los elementos almacenados en caché sin conexión seguirán accesibles.
-- **Problemas de dirección del diseño**: Cambia entre idiomas; DressApp refleja automáticamente la alineación de la interfaz para idiomas RTL (hebreo, árabe).
-
-## Limitaciones
-- La capacidad del armario en el plan Free Tier comienza en 50 artículos (ampliable a 150 mediante bonificaciones por recomendación); actualizar a Manager o Professional desbloquea almacenamiento ilimitado.
-- La eliminación de fondos y la segmentación funcionan mejor con buena iluminación y fondos contrastantes.
+## Características principales
+- **Estilismo e identificación por IA listos para usar**: Las cuentas gratuitas funcionan desde el primer momento con el **modelo de IA local de DressApp**, mientras que los planes **Manager** (10 $/mes) y **Professional** (15 $/mes) desbloquean nuestro **modelo de IA de última generación** más rápido (con respaldo automático en nuestro modelo de IA local para que tus sesiones nunca se interrumpan).
+- **Digitalización sencilla del armario**: Toma o sube fotos de una sola prenda, de un conjunto completo puesto o de varias prendas colocadas juntas. La IA de DressApp detecta cada pieza automáticamente, las separa en tarjetas individuales y elimina el fondo.
+- **Estilista IA por voz**: Habla con naturalidad con tu estilista personal para recibir sugerencias adaptadas a tu armario, al clima local, a tus eventos del calendario y a tu gusto.
+- **Prueba virtual y planificador de conjuntos**: Combina y superpón tu ropa en tu avatar personal antes de vestirte.
+- **Asistente de maleta de viaje**: Genera listas de equipaje día por día adaptadas al clima de tu destino y a tu itinerario.
+- **Estadísticas del armario**: Consulta el valor total de tu ropa, el coste por uso y la distribución de colores.
+- **Mercado comunitario**: Compra, vende, alquila, intercambia o dona ropa y prueba cómo quedan las prendas de la comunidad con tu propio armario.
+- **Trend Scout y estilistas profesionales**: Explora inspiración diaria de moda o contacta con estilistas certificados para asesorías personalizadas.

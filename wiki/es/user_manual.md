@@ -44,14 +44,18 @@ DressApp es un gestor de armario personal, asesor de estilismo y mercado circula
 ### 3.1 Registro de Prendas (Añadir Artículos)
 PARADIGMAS DE REGISTRO: Fotografía, Pasaportes Digitales de Producto de la UE y Recibos de Comercio Digital.
 
-#### A. Cámara Interactiva y Subida de Archivos
-1. Navega hasta la pantalla **Añadir artículo** (*Add Item*).
-2. Selecciona **Tomar foto** (abre la cámara nativa del móvil) o haz clic en **Subir fotos** (abre el selector de archivos del sistema operativo).
-3. El cliente calcula el hash SHA-256 y el hash de diferencia horizontal (dHash) de la imagen en el navegador (~100-180 ms) para compararla con tu armario actual.
-4. Si se encuentra una coincidencia, se abre el **Diálogo de verificación previa de duplicados** mostrando vistas previas coincidentes. Selecciona **Omitir** o **Añadir de todos modos**.
-5. Una vez aceptada, el servidor inicia un flujo NDJSON. En un plazo de 5 a 7 segundos se muestra un marco de vista previa provisional que te permite editar los detalles del artículo de inmediato mientras el backend completa el etiquetado.
-6. Verifica las etiquetas detectadas automáticamente (color, tejido, ajuste, estampado, ocasión). Si la forma del recorte es incorrecta, cambia el menú desplegable **Categoría**; esto hace que SegFormer vuelva a recortar la prenda automáticamente.
-7. Haz clic en **Guardar** para mostrar de forma optimista el artículo en la cuadrícula del armario de inmediato (~16 ms) mientras concluye en segundo plano la generación de miniaturas WebP.
+#### A. Cámara Interactiva, Carga de Lotes Mixtos y Enrutamiento Automático de 3 Flujos
+1. Navega hasta la pantalla **Añadir Prenda** (*Add Item*).
+2. Selecciona **Tomar Foto** (abre la cámara nativa) o haz clic en **Subir Fotos** (abre el selector de archivos). Puedes subir múltiples fotos con características mixtas en un mismo lote (prendas individuales, conjuntos completos en una persona/maniquí y pilas/grupos de ropa no vestida) sin elegir pestañas manuales de flujo.
+3. El cliente calcula en el navegador el hash SHA-256 y dHash horizontal (~100-180ms) de cada imagen para comprobar duplicados frente a tu armario.
+4. Si se encuentra una coincidencia, se abre el **Diálogo de Duplicados** mostrando vistas previas. Selecciona **Omitir** (*Skip*) o **Añadir de todos modos** (*Add anyway*).
+5. **Enrutamiento Automático de 3 Flujos (`detect_photo_pipeline`)**: Para cada foto aceptada, `clothing_parser.py` inspecciona las máscaras semánticas de SegFormer (`face_skin_ratio`, `anatomical_stack`, componentes conectados) y envía automáticamente la foto a:
+   - **Flujo `single`**: Prenda individual aislada con recorte alfa de estudio (`rembg` + intersección de máscara SegFormer).
+   - **Flujo `multi`**: Conjunto de varias prendas vestido por un modelo o maniquí, extrayendo recortes separados de parte superior, inferior, abrigo, calzado y accesorios.
+   - **Flujo `mass`**: Grupos de ropa no vestida, composiciones planas o prendas colgadas en percheros (`parse_unworn_cluster`), separando componentes desconectados y aplicando división por color sin fragmentar gráficos impresos.
+6. El servidor transmite fotogramas NDJSON progresivos (`detect`, `field`, `item`, `done`) en segundos, permitiéndote editar detalles de inmediato mientras el backend completa el etiquetado, incluyendo la clasificación precisa entre **Sudaderas y Hoodies** (*Sweatshirts & Hoodies*) frente a **Camisetas** (*T-Shirt*) y más de 60 **prendas tradicionales y culturales** en los 13 idiomas.
+7. Verifica las etiquetas detectadas automáticamente (color, tela, corte, estampado, código de vestimenta, ocasión). Si la forma del recorte es incorrecta, cambia el desplegable **Categoría**; esto activa SegFormer para volver a recortar la prenda automáticamente.
+8. Haz clic en **Guardar** para pintar el artículo de forma optimista en la cuadrícula del armario de inmediato (~16ms) mientras concluyen en segundo plano las miniaturas WebP y las reparaciones generativas de Nano Banana.
 
 #### B. Escaneo de Pasaportes Digitales de Producto de la UE (DPP)
 1. Toca el botón **Escanear QR (DPP)** en la página Añadir artículo.

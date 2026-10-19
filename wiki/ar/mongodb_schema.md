@@ -1,25 +1,25 @@
-# DressApp — MongoDB Schema (Phase 1)
+# DressApp — MongoDB Schema
 
-> All documents use `id: UUID (string)` as the public identifier. The native `_id` is excluded from API responses.  
-> Timestamps are ISO-8601 strings (not `BSON Date`) to avoid the classic `datetime not JSON serializable` pitfall.  
-> All monetary amounts are stored as **cents/minor units** (integers) to avoid float drift.
+> All documents use `id: UUID` as the public identifier. The native `_id` is excluded from API responses.  
+> Timestamps are ISO-8601 strings to avoid the classic `datetime not JSON serializable` pitfall.  
+> All monetary amounts are stored as **cents/minor units** to avoid float drift.
 
 ---
 
 ## Collections & Indexes
 
-| Collection         | Purpose                                              | Key Indexes                                                                         |
+| Collection | Purpose | Key Indexes |
 |--------------------|------------------------------------------------------|-------------------------------------------------------------------------------------|
-| `users`            | Auth + profile + style preferences + OAuth tokens    | `email` (unique), `stripe_account_id`                                                |
-| `closet_items`     | User's wardrobe items                                | `user_id`, `source`, `category`, text index on `tags`                                |
-| `listings`         | Marketplace items (subset of closet_items or retail) | `source`, `status`, `seller_id`, `category`, 2dsphere on `location`                   |
-| `transactions`     | Money ledger for marketplace sales                   | `buyer_id`, `seller_id`, `listing_id`, `status`, `stripe_checkout_session_id`        |
-| `stylist_sessions` | Per-user agent memory (Durable Object equivalent)    | `user_id` (unique)                                                                    |
-| `stylist_messages` | Conversation turns within a session                  | `(session_id, created_at)` compound                                                    |
-| `embeddings`       | Vector store for items / outfits / text queries      | `entity_type`, `entity_id`; **Atlas Vector Search** on `vector`                       |
-| `cultural_rules`   | Regional / religious / occasion constraints          | `(region, religion, occasion)` compound                                                |
-| `trend_reports`    | Daily Trend-Scout summaries                          | `date`, `category`                                                                    |
-| `outfits`          | Saved AI-generated outfits for later reuse           | `user_id`, `created_at`                                                                |
+| `users` | Auth + profile + style preferences + OAuth tokens | `email`, `stripe_account_id` |
+| `closet_items` | User's wardrobe items | `user_id`, `source`, `category`, text index on `tags` |
+| `listings` | Marketplace items | `source`, `status`, `seller_id`, `category`, 2dsphere on `location` |
+| `transactions` | Money ledger for marketplace sales | `buyer_id`, `seller_id`, `listing_id`, `status`, `stripe_checkout_session_id` |
+| `stylist_sessions` | Per-user agent memory | `user_id` |
+| `stylist_messages` | Conversation turns within a session | `` compound |
+| `embeddings` | Vector store for items / outfits / text queries | `entity_type`, `entity_id`; **Atlas Vector Search** on `vector` |
+| `cultural_rules` | Regional / religious / occasion constraints | `` compound |
+| `trend_reports` | Daily Trend-Scout summaries | `date`, `category` |
+| `outfits` | Saved AI-generated outfits for later reuse | `user_id`, `created_at` |
 
 ---
 
@@ -98,7 +98,7 @@
 }
 ```
 
-`retail_metadata` (only when `source = 'Retail'`):
+`retail_metadata`:
 
 ```json
 {
@@ -186,7 +186,7 @@ One document per marketplace payment. Gross, Stripe fees, platform fees and sell
 
 ---
 
-## 5. `stylist_sessions` (Durable Object equivalent)
+## 5. `stylist_sessions`
 
 One per user — holds persistent agent memory.
 
@@ -249,7 +249,7 @@ One per user — holds persistent agent memory.
 
 ---
 
-## 6. `embeddings` (Vectorize equivalent)
+## 6. `embeddings`
 
 ```json
 {
@@ -267,7 +267,7 @@ One per user — holds persistent agent memory.
 }
 ```
 
-**Atlas Vector Search index** (to be created in Phase 2):
+**Atlas Vector Search index**:
 
 ```json
 {
@@ -282,7 +282,7 @@ One per user — holds persistent agent memory.
 }
 ```
 
-Fallback (if Atlas Vector Search not available on the MongoDB instance): cosine similarity computed in-process with a small FAISS index hydrated on startup.
+Fallback: cosine similarity computed in-process with a small FAISS index hydrated on startup.
 
 ---
 
@@ -354,7 +354,7 @@ The stylist prompt merges the user's `cultural_context` with matching `cultural_
 
 ---
 
-## 10. Index creation (idempotent bootstrap on FastAPI startup)
+## 10. Index creation
 
 ```python
 await db.users.create_index("email", unique=True)

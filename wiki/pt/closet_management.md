@@ -1,31 +1,17 @@
-# Centro de Comando do Guarda-Roupa Virtual
+# Gestão do Guarda-Roupa Digital
 
-Gerencie, pesquise e organize suas roupas digitalizadas com total facilidade.
+O guarda-roupa digital reúne todas as suas roupas, calçado e acessórios num único local fácil de pesquisar e organizar.
 
-## Visão Geral
-O Closet exibe todas as suas roupas em uma grade de carregamento instantâneo. Você pode navegar pelas peças, pesquisar por cor ou estilo, organizar vários itens simultaneamente com a etiquetagem em grupo e criar conjuntos coordenados.
+---
 
-## Pré-requisitos
-- Pelo menos uma peça digitalizada no seu guarda-roupa.
+## 1. Navegação e Filtros
+- **Filtros por categoria**: Alterne facilmente entre camisolas, calças, vestidos, casacos, calçado e acessórios.
+- **Filtros por cor e estação**: Encontre rapidamente as peças ideais para a estação atual ou da cor que procura.
+- **Pesquisa inteligente em linguagem natural**: Escreva o que procura na barra de pesquisa (ex.: *"blazer elegante para noite"* ou *"ténis brancos confortáveis"*) e o sistema encontrará as peças mais adequadas.
 
-## Passo a Passo
-1. **Navegar pelo Guarda-Roupa**: Role pela grade. Use as abas (*Partes de Cima*, *Partes de Baixo*, *Casacos*, *Sapatos*, *Acessórios*, *Vestidos*) para filtrar em segundos.
-2. **Pesquisar com Facilidade**: Digite palavras-chave (ex.: *"suéter azul"*, *"linho"*) ou descreva o estilo com suas próprias palavras (*"algo confortável para o outono"*).
-3. **Etiquetagem em Grupo (Organização Rápida)**:
-   - Toque no botão **Selecionar / Edição em Lote** na barra superior.
-   - Escolha as roupas desejadas ou toque em *"Selecionar todas as partes de cima"*.
-   - Toque no botão flutuante **Etiquetar Grupo** na parte inferior.
-   - Escolha as estações (*Primavera*, *Verão*, *Outono*, *Inverno*), estilos (*Casual*, *Smart Casual*, *Trabalho*, *Festa*) ou adicione tags personalizadas (*"Férias"*, *"Escritório"*).
-   - Toque em **Aplicar às peças selecionadas** para atualizar tudo de uma vez só!
-4. **Criar Conjuntos Coordenados**: Arraste peças complementares uma sobre a outra para uni-las como conjunto (como um terno de duas peças).
-5. **Editar Detalhes**: Toque em qualquer peça para atualizar informações, preços e recortes de fotos.
+---
 
-## Resultados Esperados
-Um guarda-roupa digital impecável que carrega instantaneamente, permitindo organizar dezenas de roupas em poucos segundos.
-
-## Solução de Problemas
-- **Miniaturas cinzas**: Toque em **Reparar Miniaturas** nas configurações para recriar as fotos.
-- **Agrupamento por engano**: Abra os detalhes da peça e toque em **Desagrupar**.
-
-## Limitações
-- Contas gratuitas armazenam até 150 peças. Convide amigos (+10 vagas por cadastro) ou assine o Pro para espaço ilimitado.
+## 2. Edição de Peças e Conjuntos
+- Toque em qualquer peça para abrir os **Detalhes da Peça**.
+- Pode editar o nome, marca, preço, local de arrumação ou marcar se a peça está para lavar.
+- Agrupe várias peças como um **conjunto ou fato** para que o stylist as combine em conjunto.

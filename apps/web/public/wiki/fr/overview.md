@@ -1,37 +1,37 @@
 # Bienvenue sur DressApp
 
-Bienvenue sur votre compagnon de garde-robe numérique ultime ! DressApp est conçu pour vous aider à numériser, organiser et tirer le meilleur parti de votre dressing physique.
+Bienvenue dans votre compagnon ultime de garde-robe numérique ! DressApp est conçu pour vous aider à numériser, organiser et tirer le meilleur parti de votre dressing physique.
 
-## Vue d'ensemble
-DressApp transforme vos vêtements physiques en une archive numérique structurée, alimentée par un moteur d'IA multiniveau de pointe :
-- **Stylisme intelligent sans friction** : Propulsé par **Google Gemini 3.5 Flash-Lite** en tant que moteur principal pour des réponses en moins de 350 ms, soutenu par un conteneur sur site **Gemma-4-E4B** servant de filet de sécurité transparent pour les quotas. Vous obtenez instantanément des recommandations intelligentes sans avoir besoin de clés API personnelles.
-- **Intégration du calendrier et de la météo** : Recommandations matinales en temps réel adaptées aux prévisions météorologiques quotidiennes et à vos rendez-vous Google Calendar.
-- **Planificateur de tenues et toile d'avatar** : Superposez vos vêtements numériquement sur un mannequin vectoriel 2D personnalisé ou sur votre propre découpe photo.
-- **Assistant de valise interactif** : Listes de contrôle de valise créées par l'IA pour des voyages de toute durée.
-- **Assistant de shopping** : Extension Chrome et bookmarklet universel pour des comparaisons intelligentes de tailles et de coupes chez les détaillants en ligne.
-- **Place de marché circulaire** : Annonces directes pour vendre, échanger ou louer des vêtements non portés avec sécurité intégrée pour acheteurs et vendeurs.
+## Aperçu
+DressApp transforme vos vêtements physiques en une archive numérique structurée propulsée par un moteur d'IA multi-niveaux de pointe :
+- **Stylisme & Vision Intelligents Zero-BYOK**: Les comptes Gratuits fonctionnent directement sur le moteur local **Eyes** de DressApp (un modèle **Qwen 2.5 VL 3B** affiné), tandis que les abonnés **Manager** (10 $/mois) et **Professional** (15 $/mois) bénéficient d'un routage prioritaire vers **Google Gemini 3.5 Flash** avec bascule locale automatique. Vous obtenez des recommandations intelligentes et une numérisation photo automatique à 3 pipelines (pièces uniques, tenues portées et lots de vêtements) instantanément sans clé API personnelle.
+- **Intégration Calendrier & Météo**: Recommandations matinales en temps réel adaptées aux prévisions météo du jour et à vos rendez-vous Google Agenda.
+- **Planificateur de Tenues & Canevas d'Avatar**: Superposez numériquement vos vêtements sur un mannequin vectoriel 2D personnalisé ou sur votre propre photo détourée.
+- **Assistant Valise Interactif**: Listes de bagages préparées par l'IA pour des séjours de toute durée.
+- **Assistant Shopping**: Extension Chrome et bookmarklet universel pour comparer intelligemment les tailles sur les boutiques en ligne.
+- **Marketplace Circulaire**: Annonces directes pour vendre, échanger ou louer vos vêtements inutilisés avec protection acheteur-vendeur intégrée.
 
 ## Prérequis
 - Un navigateur web moderne (Google Chrome, Apple Safari ou Mozilla Firefox recommandé).
 - Un accès à Internet.
-- L'accès à l'appareil photo ou à la bibliothèque de photos de votre appareil pour numériser vos vêtements.
-- *(Optionnel)* Autorisation du microphone pour le stylisme vocal conversationnel.
+- L'accès à la caméra ou à la photothèque de votre appareil pour numériser vos vêtements.
+- *(Optionnel)* L'autorisation du microphone pour le stylisme vocal conversationnel.
 
-## Instructions étape par étape
-1. **Numériser** : Prenez vos vêtements en photo avec votre appareil, téléversez des photos ou importez des reçus numériques. L'application segmente automatiquement les articles et supprime l'arrière-plan.
-2. **Organiser** : Étiquetez, recherchez et regroupez vos vêtements en collections dans votre espace Closet.
-3. **Consulter le styliste** : Appuyez sur l'AI Stylist pour demander des recommandations de tenues adaptées au contexte par la voix ou par texte.
-4. **Planifier et superposer** : Composez des looks sur l'Outfit Canvas, visualisez la superposition des pièces et planifiez-les dans votre Journal.
-5. **Préparer la valise** : Générez des listes de bagages sur mesure basées sur les prévisions météorologiques de votre destination.
-6. **Revendre ou échanger** : Publiez directement les vêtements non portés sur la place de marché circulaire pour rentabiliser votre garde-robe.
+## Instructions Étape par Étape
+1. **Numériser**: Prenez vos vêtements en photo, importez des lots mixtes de photos (pièces uniques, tenues complètes ou piles de vêtements) ou importez des reçus numériques. GarmentVision oriente automatiquement chaque photo vers le bon pipeline, sépare les articles et supprime l'arrière-plan.
+2. **Organiser**: Étiquetez, recherchez et regroupez vos vêtements en collections dans votre espace Garde-Robe.
+3. **Consulter le Styliste**: Appuyez sur AI Stylist pour demander des idées de tenues adaptées au contexte par la voix ou par texte.
+4. **Planifier & Superposer**: Assemblez vos looks sur l'Outfit Canvas, visualisez les couches côte à côte et programmez-les dans votre Agenda.
+5. **Préparer ses Bagages**: Générez des listes de valise sur mesure selon la météo prévue à votre destination.
+6. **Revendre ou Échanger**: Publiez vos pièces non portées sur la marketplace circulaire pour valoriser votre dressing.
 
-## Résultats attendus
-Vous disposez d'un dressing numérique structuré et accessible qui élimine la fatigue vestimentaire matinale, optimise l'utilisation de vos vêtements et vous aide à adopter une démarche écoresponsable.
+## Résultats Attendus
+Vous disposez d'une garde-robe numérique structurée et accessible qui élimine l'hésitation du matin, augmente le taux d'utilisation de vos vêtements et favorise une mode durable.
 
 ## Dépannage
-- **Chargement lent des pages ou des images** : Assurez-vous d'avoir une connexion réseau stable ; les éléments mis en cache hors ligne restent accessibles.
-- **Problèmes de sens de lecture de l'interface** : Basculez entre les langues ; DressApp inverse automatiquement l'alignement de l'interface pour les langues RTL (hébreu, arabe).
+- **Chargement lent des pages ou images**: Vérifiez votre connexion réseau ; les articles mis en cache restent accessibles hors ligne.
+- **Orientation de l'interface**: Changez de langue ; DressApp adapte automatiquement l'alignement pour les langues RTL (hébreu, arabe).
 
 ## Limites
-- La capacité de la garde-robe sur l'offre Free Tier démarre à 150 articles (extensible à 150 grâce aux bonus de parrainage) ; passer au forfait Manager ou Professional débloque un stockage illimité.
-- La suppression d'arrière-plan et la segmentation fonctionnent de manière optimale avec un bon éclairage et des arrière-plans contrastés.
+- La capacité du forfait Gratuit commence à 50 articles (extensible jusqu'à 150 via les bonus de parrainage) ; passer au forfait Manager (10 $/mois) ou Professional (15 $/mois) débloque un stockage illimité.
+- Le détourage et la segmentation offrent de meilleurs résultats avec un bon éclairage et un fond contrasté.

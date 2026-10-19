@@ -25,7 +25,7 @@ Hier finden Sie schnelle Antworten zu Kamerazugriff, Upload-Geschwindigkeit, Kap
 6. **Zugriff auf schnelle Cloud-KI & Trend Scout**:
    - Kostenlose Nutzer verwenden das lokale **Eyes**-Modell (`Qwen 2.5 VL 3B`) von DressApp ganz ohne Einrichtung. Ein Upgrade auf den Tarif **Manager** (10 $/Monat) oder **Professional** (15 $/Monat) schaltet vorrangiges Routing zum schnellen Cloud-KI-Modell (derzeit **Google Gemini 3.5 Flash**) sowie vollen Zugriff auf die tägliche Modeintelligenz von Trend Scout frei.
 7. **Google Kalender verbinden**:
-   - Gehen Sie zu **Profil** &rarr; **Google Kalender** und tippen Sie auf **Verbinden**. Autorisieren Sie die Kalenderberechtigungen, damit der Stylist Ihre täglichen Termine prüfen kann.
+   - Gehen Sie zu **Profil** → **Google Kalender** und tippen Sie auf **Verbinden**. Autorisieren Sie die Kalenderberechtigungen, damit der Stylist Ihre täglichen Termine prüfen kann.
 
 ## Erwartete Ergebnisse
 Schnelle Behebung häufiger Probleme, damit Ihre digitale Garderobe reibungslos funktioniert.

@@ -1,151 +1,151 @@
-# DressApp: Management-Zusammenfassung & Erste-Schritte-Q&A
+# DressApp: Kurzübersicht & Häufige Fragen zum Einstieg
 
-Willkommen bei **DressApp** — Ihrem intelligenten, KI-gestützten Kleiderschrank-Manager, persönlichen Stylisten und Ökosystem für nachhaltige Mode. Egal, ob Sie Ihr allererstes Kleidungsstück hochladen oder eine Packliste für eine Reise durch mehrere Städte planen: Dieser Leitfaden kombiniert eine kompakte **Management-Zusammenfassung** der Funktionsweise von DressApp mit einem freundlichen **Fragen-und-Antworten-Katalog (Q&A)**, damit Sie in wenigen Minuten startklar sind.
+Willkommen bei **DressApp** – Ihrem intelligenten Garderoben-Assistenten, persönlichen Stylisten und Begleiter für nachhaltige Mode. Egal, ob Sie Ihr erstes Kleidungsstück hochladen oder eine Packliste für eine Reise planen: Dieser Leitfaden verbindet eine kompakte **Kurzübersicht** mit **Häufig gestellten Fragen** für einen schnellen Start.
 
 ---
 
-## Management-Zusammenfassung (Auf einen Blick)
+## Kurzübersicht (Auf einen Blick)
 
-### Ausgangslage & Herausforderung
-Die meisten Menschen tragen **80 % der Zeit nur 20 % ihrer Garderobe**, weil ihr Kleiderschrank unübersichtlich ist, die morgendliche Outfit-Wahl tägliche Entscheidungsmüdigkeit verursacht und das manuelle Katalogisieren von Kleidung in herkömmlichen Apps mühsam und zeitaufwendig ist.
+### Die alltägliche Herausforderung am Kleiderschrank
+Die meisten Menschen tragen **80 % der Zeit nur 20 % ihrer Kleidung**, weil der Überblick im Kleiderschrank fehlt, die morgendliche Outfitwahl Zeit kostet und das manuelle Eintragen in herkömmlichen Apps mühsam ist.
 
-### Die DressApp-Lösung
-DressApp beseitigt manuelles Katalogisieren und Entscheidungsmüdigkeit durch ein **hybrides visuelles und dialogorientiertes KI-Ökosystem**:
-- **Reibungslose Digitalisierung**: Machen Sie ein Flat-Lay-Foto, laden Sie ein Ganzkörper-Spiegelselfie hoch, scannen Sie einen digitalen Kassenbon, scannen Sie einen QR-Code des digitalen EU-Produktpasses (DPP) oder migrieren Sie eine bestehende Garderobe mit nur einem Klick. DressApp stellt Kleidungsstücke automatisch frei, entfernt den Hintergrund und vergibt über 9 Attribute (Kategorie, Farbe, Material, Schnitt, Saison, Dresscode, Geschlecht, Wärmegrad und Bedeckungsgrad).
-- **Kumulatives KI-Guthaben-System**: Kostenlose Nutzer erhalten **täglich 10 lokale KI-Credits**, die sich über **30 Tage auf bis zu 300 Credits** ansammeln, sowie **5 kostenlose Nano-Banana-Rekonstruktions-Credits** bei der Registrierung. Wenn Sie Ihren Kleiderschrank über 5 Tage hinweg in kleinen täglichen Etappen fotografieren, sammeln Sie automatisch **50 KI-Credits** — genug, um Ihre gesamte Basisgarderobe mit 50 Teilen komplett kostenlos zu digitalisieren.
-- **Kontextbezogenes Personal Styling**: Ihr dialogorientierter KI-Stylist kombiniert Ihre tatsächlichen Kleidungsstücke, lokale Wettervorhersagen, Google-Kalender-Termine, Ihren persönlichen Bedeckungsgrad und Ihr biometrisches 3D-Körperprofil, um komplette Outfits von Kopf bis Fuß zusammenzustellen oder fehlende Basics in Ihrem Schrank zu identifizieren.
+### Die Lösung von DressApp
+DressApp nimmt Ihnen die manuelle Arbeit und die morgendliche Entscheidungsschwierigkeit durch intelligente Bilderkennung und persönliche Stilberatung ab:
+- **Mühelose Digitalisierung**: Fotografieren Sie ein einzelnes Kleidungsstück, ein komplettes Spiegel-Outfit oder mehrere nebeneinander gelegte Teile – oder importieren Sie Artikel per Online-Shop-Link, digitalem Kassenbon, Produkt-QR-Code oder aus einer anderen Kleiderschrank-App. DressApp erkennt den Fototyp automatisch, entfernt den Hintergrund, trennt mehrere Teile und trägt wichtige Merkmale ein (Kategorie, Farbe, Stoff, Schnitt, Saison, Dresscode und Wärmegrad).
+- **Kumulatives Gratis-Credits-System**: Nutzer im kostenlosen Tarif erhalten **täglich 10 interne KI-Credits**, die sich über **30 Tage auf bis zu 300 Credits** ansammeln, sowie **5 kostenlose Studio-Rekonstruktions-Credits** zur Begrüßung. Wenn Sie an 5 Tagen jeweils ein paar Teile fotografieren, stehen Ihnen **50 Credits** zur Verfügung – genug, um Ihre 50 wichtigsten Kleidungsstücke kostenlos zu digitalisieren.
+- **Persönliches Styling für jeden Tag**: Ihr KI-Stylist kombiniert Ihre vorhandene Kleidung mit lokalen Wettervorhersagen, Kalenderterminen, Ihren Stilvorlieben und Ihren Körpermaßen, um komplette Outfits zusammenzustellen oder fehlende Basics aufzuzeigen.
 
-### Tarife & Quantifizierter Mehrwert
+### Tarife & Leistungen im Überblick
 
-| Funktion / Kennzahl | Kostenloser Tarif (0 \$) | Manager-Tarif (10 \$/Monat oder 100 \$/Jahr) | Professional-Tarif (15 \$/Monat oder 150 \$/Jahr) |
+| Merkmal | Kostenloser Tarif ($0) | Garderoben-Manager ($10/Monat oder $100/Jahr) | Profi-Stylist ($15/Monat oder $150/Jahr) |
 | :--- | :--- | :--- | :--- |
-| **Schrank-Kapazität** | **50 Teile** (bis zu **150** durch Empfehlungen) | **Unbegrenzt** | **Unbegrenzt** |
-| **KI-Engine** | Lokale **Eyes**-Engine | Cloud **Google Gemini** (<350 ms) + Fallback | Cloud **Google Gemini** (<350 ms) + Fallback |
-| **Tägliche KI-Credits** | **10/Tag** (kumulativ bis **300 / 30 Tage**) | **Unbegrenzt** für tägliches Styling & Uploads | **Unbegrenzt** für tägliches Styling & Uploads |
-| **Studio-Rekonstruktion** | **5 kostenlose** Start-Credits | **100 monatliche** Nano-Banana-Credits | **100 monatliche** Nano-Banana-Credits |
-| **Ökosystem & Wachstum** | Schrank, Stylist, Outfit-Planer, Koffer | + 1-Klick-Migration, Trend-Scout, Marktplatz | + Zertifiziertes Expertenverzeichnis & Anzeigen |
+| **Schrankkapazität** | **50 Teile** (bis zu **150** durch Freundeseinladungen) | **Unbegrenzt** | **Unbegrenzt** |
+| **KI-Modell** | **DressApps eigenes KI-Modell** | **Hochmodernes KI-Modell** + automatischer interner Rückfallschutz | **Hochmodernes KI-Modell** + automatischer interner Rückfallschutz |
+| **Tägliche KI-Credits** | **10/Tag** (kumulativ bis **300 / 30 Tage**) | **Unbegrenzt** für tägliches Styling & Kleidungsscans | **Unbegrenzt** für tägliches Styling & Kleidungsscans |
+| **Studio-Rekonstruktion** | **5 kostenlose** Start-Credits | **100 monatliche** Studio-Rekonstruktions-Credits | **100 monatliche** Studio-Rekonstruktions-Credits |
+| **Enthaltene Funktionen** | Digitaler Schrank, Stylist, Outfit-Planer, Koffer | + Schneller Schrank-Import, Trend-Entdecker, Marktplatz | + Expertenverzeichnis & Werbekampagnen |
 
 ---
 
 ## 1. Erste Schritte & Profileinrichtung
 
-### F: Was sollte ich direkt nach der Registrierung als Erstes tun?
-**A:** Vervollständigen Sie Ihr **Profil**, bevor Sie Kleidung hochladen! Öffnen Sie den Reiter **Profil** und tragen Sie vier wichtige Grundeinstellungen ein:
-1. **Geschlechtspräferenz**: Stellt sicher, dass neu hochgeladene Kleidungsstücke automatisch die richtige Standardklassifizierung und Passformregeln erhalten.
-2. **Bedeckungsgrad (Modesty)**: Teilt dem KI-Stylisten Ihre persönlichen Vorlieben zur Hautbedeckung mit, damit sich jeder Outfit-Vorschlag für Sie authentisch und wohlfühlend anfühlt.
-3. **Heimatstandort**: Aktiviert die lokale Echtzeit-Wetterintegration, damit DressApp Ihnen an einem warmen, sonnigen Morgen niemals einen dicken Wollmantel vorschlägt.
-4. **Körpermaße**: Geben Sie nur **4 einfache Werte** ein (Körpergröße, Gewicht, Taillenumfang und BH-/Brustgröße). Die biometrische Engine von DressApp (trainiert auf dem anthropometrischen ANSUR-II-Datensatz) berechnet daraus automatisch **6 weitere Körpermaße** für präzise Größenempfehlungen und Schnittführungen.
+### F: Was sollte ich direkt nach der Anmeldung als Erstes tun?
+**A:** Vervollständigen Sie Ihr **Profil**, bevor Sie Kleidung hinzufügen! Öffnen Sie den Reiter **Profil** und tragen Sie vier wichtige Grundeinstellungen ein:
+1. **Geschlechtspräferenz**: Sorgt dafür, dass neue Kleidungsstücke automatisch den passenden Kategorien und Passformregeln zugeordnet werden.
+2. **Bedeckungspräferenz**: Teilt dem KI-Stylisten mit, wie viel Bedeckung Sie bevorzugen, damit Sie sich in jedem vorgeschlagenen Outfit wohlfühlen.
+3. **Heimatort**: Verbindet die App mit der lokalen Wettervorhersage, damit Ihnen an einem warmen Sommertag kein dicker Wollmantel vorgeschlagen wird.
+4. **Körpermaße**: Geben Sie nur **4 einfache Werte** ein (Größe, Gewicht, Taillenumfang und Brustumfang). DressApp berechnet daraus automatisch **6 weitere Körpermaße** für präzise Größenempfehlungen und vorteilhafte Schnitte.
 
 ### F: Wie lange dauert es, meinen Kleiderschrank zu digitalisieren?
-**A:** Sie müssen Ihren Kleiderschrank nicht an einem einzigen Nachmittag fotografieren! Wir empfehlen den **5-Tage-Onboarding-Sprint** (10 Teile pro Tag, Zeitaufwand nur 10–15 Minuten täglich):
-- **Tag 1**: Alltags-Unterteile (10 Jeans, Stoffhosen, Röcke oder Shorts)
+**A:** Sie müssen nicht Ihren gesamten Schrank an einem Nachmittag fotografieren! Wir empfehlen den **5-Tage-Startplan** (10 Teile pro Tag in nur wenigen Minuten):
+- **Tag 1**: Alltags-Hosen & Röcke (10 Jeans, Stoffhosen, Röcke oder Shorts)
 - **Tag 2**: Alltags-Oberteile (10 T-Shirts, Blusen, Hemden oder Poloshirts)
-- **Tag 3**: Layering, Strick & Jacken (10 Pullover, Blazer, Jacken oder Mäntel)
+- **Tag 3**: Pullover, Hoodies & Jacken (10 Pullover, Kapuzenpullover, Blazer, Jacken oder Mäntel)
 - **Tag 4**: Schuhe (10 Paar Sneaker, Stiefel, Loafer oder Absatzschuhe)
-- **Tag 5**: Kleider, Sets & wichtige Accessoires (10 Einteiler, Taschen, Gürtel oder Schals)
+- **Tag 5**: Kleider, Sets & Accessoires (10 Einteiler, Festtagskleidung, Taschen, Gürtel oder Schals)
 
-Nach Tag 5 haben Sie **50 Kernstücke** digitalisiert — das eröffnet Tausende von Outfit-Kombinationen!
+Nach 5 Tagen haben Sie **50 Grundteile** digitalisiert – die Basis für tausende Outfit-Kombinationen!
 
 ### F: Kann ich meine Kleidung aus einer anderen Kleiderschrank-App importieren?
-**A:** Ja! Wenn Sie zuvor Apps wie **Whering**, **Indyx**, **Alta**, **Acloset** oder **Stylebook** genutzt haben, gehen Sie auf **Teil hinzufügen → Garderobe migrieren**, um Ihren bestehenden Katalog mit **1 Klick** inklusive automatischer Hintergrundentfernung und Attributzuordnung zu importieren.
+**A:** Ja! Wenn Sie bereits Fotos oder Screenshots aus einer anderen Garderoben-App haben, öffnen Sie **Profil → Garderobe importieren** (oder **Artikel hinzufügen**), um Ihre bestehenden Aufnahmen mit automatischer Einzelteiltrennung, Hintergrundentfernung und Detailerkennung zu übernehmen.
 
 ---
 
-## 2. KI-Credits, Abonnements & Empfehlungen
+## 2. KI-Credits, Abonnements & Freunde einladen
 
 ### F: Wie funktionieren die kostenlosen KI-Credits?
-**A:** Kostenlose Nutzer verfügen über zwei separate Guthaben, die unter **Profil → Abonnements & Limits** angezeigt werden:
-1. **Lokale KI-Credits (10 kostenlose Credits täglich)**: Werden für alltägliche KI-Aufgaben über die lokale **Eyes**-Engine von DressApp genutzt. Sie erhalten **jeden Tag 10 kostenlose Credits**, und nicht genutzte Credits **sammeln sich über bis zu 30 Tage an (bis zu maximal 300 Credits)**, bevor sie zurückgesetzt werden.
-2. **Nano-Banana-Rekonstruktions-Credits (5 kostenlose Start-Credits)**: Werden ausschließlich verwendet, wenn Sie auf **Rekonstruieren** tippen, um ein zerknittertes oder schwierig beleuchtetes Kleidungsfoto in eine hochwertige Studio-Katalogaufnahme zu verwandeln.
+**A:** Nutzer im kostenlosen Tarif sehen im **Profil** zwei getrennte Guthaben:
+1. **Interne KI-Credits (10 kostenlose Credits täglich)**: Werden für alltägliche Kleidungsscans und Styling-Anfragen über **DressApps eigenes KI-Modell** genutzt. Sie erhalten **jeden Tag 10 kostenlose Credits**, und ungenutzte Credits **sammeln sich bis zu 30 Tage lang an (maximal 300 Credits)**.
+2. **Studio-Rekonstruktions-Credits (5 kostenlose Start-Credits)**: Werden genutzt, wenn Sie auf **Rekonstruieren** tippen, um ein zerknittertes oder schlecht beleuchtetes Foto mithilfe unseres **hochmodernen KI-Modells** in ein glattes Katalogbild in Studioqualität zu verwandeln.
 
-### F: Wie viele lokale KI-Credits kostet jede Aktion im kostenlosen Tarif?
-**A:** Jede Anfrage an das lokale KI-Modell kostet **1 KI-Credit pro Kleidungsstück oder Anfrage**:
-- **Fotoanalyse eines einzelnen Kleidungsstücks**: **1 KI-Credit**
-- **Fotoanalyse mehrerer Kleidungsstücke** (z. B. 5 erkannte Teile auf einem Ganzkörper-Spiegelfoto): **5 KI-Credits** (1 Credit pro Teil)
-- **Chat-Anfrage an den KI-Stylisten**: **1 KI-Credit** pro Nachricht
-- **Koffer-Zusammenstellung**: **1 KI-Credit pro Kleidungsstück**, das in Ihre Packliste aufgenommen wird
-- **Manuelles Durchstöbern, Filtern, Bearbeiten von Tags und Erstellen von Outfits auf der Outfit-Leinwand**: **0 KI-Credits (Immer kostenlos!)**
+### F: Wie viele interne KI-Credits kostet jede Aktion im kostenlosen Tarif?
+**A:** Jede Anfrage an DressApps eigenes KI-Modell kostet **1 Credit pro Kleidungsstück oder Nachricht**:
+- **Scan eines einzelnen Kleidungsstücks**: **1 Credit**
+- **Scan eines Fotos mit mehreren Teilen** (z. B. 5 Kleidungsstücke auf einem Ganzkörperfoto): **5 Credits** (1 Credit pro Teil)
+- **Nachricht an den KI-Stylisten**: **1 Credit** pro Anfrage
+- **Kofferpack-Assistent**: **1 Credit pro Kleidungsstück**, das für Ihre Reise ausgewählt wird
+- **Kleiderschrank durchsuchen, filtern, Details bearbeiten und Outfits im Planer zusammenstellen**: **0 Credits (Immer kostenlos!)**
 
-### F: Wie erhalte ich kostenlos mehr Platz im Kleiderschrank und zusätzliche KI-Credits?
-**A:** Nutzen Sie Ihren persönlichen Empfehlungslink unter **Profil → Freunde einladen**! Jede Person, die sich über Ihren Link registriert, bringt Ihnen **+10 dauerhafte kostenlose Schrankplätze** (wodurch Ihr kostenloser Schrank von 50 auf bis zu **150 Teile** wächst) sowie Bonus-KI-Credits.
+### F: Wie erhalte ich kostenlos mehr Platz im Kleiderschrank und zusätzliche Credits?
+**A:** Teilen Sie Ihren persönlichen Einladungslink unter **Profil → Freunde einladen**! Für jeden Freund, der sich über Ihren Link anmeldet, erhalten Sie **dauerhaft +10 kostenlose Schrankplätze** (bis zu **150 Teile** im kostenlosen Tarif) sowie Bonus-Credits.
 
-### F: Was passiert, wenn meine Rekonstruktions-Credits aufgebraucht sind oder ich unbegrenzte tägliche KI wünsche?
-**A:** Auf der **Preisseite** stehen Ihnen zwei flexible Optionen zur Verfügung:
-- **Zusatz-Credit-Pakete kaufen (verfallen nie)**: Erwerben Sie **10 Credits (3 \$)**, **50 Credits (12 \$)** oder **100 Credits (20 \$)**. Gekaufte Credits verfallen nie und werden erst verbraucht, wenn Ihre kostenlosen oder monatlichen Credits aufgebraucht sind.
-- **Upgrade auf den Manager-Tarif (10 \$/Monat oder 100 \$/Jahr)**: Schaltet **unbegrenzte Kleidungsstücke**, **unbegrenztes tägliches Styling und Hochladen** mit der ultraschnellen Cloud-Gemini-KI, **100 monatliche Rekonstruktions-Credits**, tägliche Morgen-Push-Benachrichtigungen mit Outfit-Vorschlägen, **Trend-Scout** und den **zirkulären Marktplatz** frei.
+### F: Was passiert, wenn meine Studio-Rekonstruktions-Credits aufgebraucht sind oder ich unbegrenzte KI-Nutzung möchte?
+**A:** Auf der **Preisseite** haben Sie zwei flexible Möglichkeiten:
+- **Zusatz-Credit-Pakete kaufen (verfallen nie)**: Kaufen Sie **10 Credits ($3)**, **50 Credits ($12)** oder **100 Credits ($20)**. Gekaufte Credits verfallen nie und werden erst genutzt, wenn Ihre kostenlosen oder monatlichen Credits aufgebraucht sind.
+- **Upgrade auf Garderoben-Manager ($10/Monat oder $100/Jahr)**: Schaltet **unbegrenzten Platz im Kleiderschrank**, **unbegrenztes tägliches Styling und Scannen** mit unserem **hochmodernen KI-Modell**, **100 monatliche Studio-Rekonstruktions-Credits**, morgendliche Outfit-Benachrichtigungen, **Trend-Entdecker** und den **Marktplatz** frei.
 
 ---
 
-## 3. Kleidung fotografieren, hochladen & bearbeiten
+## 3. Kleidung fotografieren, hinzufügen & bearbeiten
 
-### F: Wie fotografiere ich ein Kleidungsstück am besten für einen 100 % präzisen KI-Zuschnitt?
-**A:** Befolgen Sie die **Goldene Regel für Flat-Lay-Fotos**:
-1. Legen Sie das Kleidungsstück **flach auf den Boden** in einem hellen Raum mit Tageslicht auf einen **kontrastreichen Untergrund** (dunkle Kleidung auf hellen Boden/Laken, helle Kleidung auf dunklen Hintergrund).
-2. Richten Sie das Teil gerade in der Bildmitte aus und lassen Sie an allen Seiten einen **kleinen, gleichmäßigen Rand**, damit Ärmel und Säume nicht abgeschnitten werden.
-3. Streichen Sie Falten glatt, knöpfen Sie Jacken auf und **falten Sie die Ärmel** leicht vom Körper weg, damit die KI Schnitt und Ausschnitt klar erkennt.
-4. Treten Sie leicht zurück, sodass Ihr Körper und Ihr Smartphone **keinerlei Schatten** auf den Stoff werfen, halten Sie die Hände ruhig und lösen Sie aus.
+### F: Wie fotografiere ich ein Kleidungsstück für eine optimale Hintergrundentfernung?
+**A:** Befolgen Sie vier einfache Schritte:
+1. Legen Sie das Teil **flach** in einem hellen Raum auf einen **kontrastreichen Untergrund** (dunkle Kleidung auf hellen Boden, helle Kleidung auf dunklen Untergrund).
+2. Platzieren Sie das Teil mittig im Bild mit einem **schmalen, gleichmäßigen Rand**, damit Ärmel und Säume vollständig sichtbar sind.
+3. Streichen Sie Falten glatt und **breiten Sie die Ärmel leicht aus**, damit die KI Ärmellänge und Ausschnitt klar erkennt.
+4. Achten Sie darauf, keinen Schatten auf den Stoff zu werfen, halten Sie das Smartphone ruhig und lösen Sie aus.
 
-### F: Was ist der Unterschied zwischen normaler Hintergrundentfernung und „Rekonstruieren“?
+### F: Was ist der Unterschied zwischen der normalen Hintergrundentfernung und „Rekonstruieren"?
 **A:**
-- **Standard-Freistellung (Automatisch)**: Läuft automatisch beim Hochladen (1 lokaler KI-Credit im kostenlosen Tarif). Entfernt den Hintergrund und extrahiert alle Metadaten-Tags unter Beibehaltung Ihres Originalfotos.
-- **Studio-Rekonstruktion (Optional — „Nano Banana“)**: Wird ausgelöst, wenn Sie auf **Rekonstruieren** tippen (1 Rekonstruktions-Credit). Nutzt generative KI, um tiefe Falten zu glätten, hartes Licht zu korrigieren und das Kleidungsstück als gestochen scharfes Studio-Produktfoto darzustellen.
+- **Standard-Freistellung (Automatisch)**: Läuft automatisch beim Hochladen (1 interner KI-Credit im kostenlosen Tarif). Entfernt den Hintergrund und erkennt alle Details unter Beibehaltung Ihres Originalfotos.
+- **Studio-Rekonstruktion (Optional)**: Wird beim Tippen auf **Rekonstruieren** ausgeführt (1 Studio-Rekonstruktions-Credit). Unser hochmodernes KI-Modell glättet starke Falten, gleicht Lichtschatten aus und erstellt eine makellose Studio-Produktaufnahme.
 
-### F: Warum sollte ich ein Kleidungsstück direkt nach dem Hochladen kurz überprüfen?
-**A:** Obwohl die KI von DressApp äußerst präzise arbeitet, kann warmes Innenlicht Dunkelblau manchmal wie Schwarz wirken lassen, oder ein Kamerawinkel verdeckt, ob eine Hose hoch oder mittelhoch geschnitten ist. Wenn Sie sich **10 Sekunden** Zeit nehmen, um **Kategorie, Farbe, Saison, Wärmegrad (1–5) und Dresscode** zu prüfen, stellen Sie sicher, dass KI-Stylist, Wetter-Engine und Kofferplaner dieses Teil immer fehlerfrei kombinieren.
+### F: Warum sollte ich die Angaben eines Kleidungsstücks direkt nach dem Hochladen kurz prüfen?
+**A:** Warmes Zimmerlicht kann Dunkelblau gelegentlich wie Schwarz wirken lassen. Wenn Sie **10 Sekunden** investieren, um **Kategorie, Farbe, Saison, Wärmegrad (1–5) und Dresscode** zu bestätigen, arbeitet der KI-Stylist bei jedem künftigen Outfit-Vorschlag absolut fehlerfrei.
 
-### F: Kann ich zusammengehörige Teile gruppieren oder mehrere Teile gleichzeitig taggen?
+### F: Kann ich zusammengehörige Teile als Set verknüpfen oder mehrere Teile gleichzeitig bearbeiten?
 **A:** Ja!
-- **Gruppen-Tagging**: Tippen Sie in Ihrem **Kleiderschrank** auf **Mehrfachauswahl**, wählen Sie die gewünschten Teile aus (z. B. 8 Bürohemden) und weisen Sie allen gleichzeitig Tags wie `Arbeit`, `Ganzjährig` oder `Gebügelt` zu.
-- **Koordinierte Sets**: Verknüpfen Sie einen passenden Blazer und eine Hose (oder einen Zweiteiler) als **Set**, um sie gemeinsam oder einzeln zu stylen.
+- **Mehrfachbearbeitung**: Tippen Sie im **Kleiderschrank** auf **Mehrfachauswahl**, markieren Sie die gewünschten Teile (z. B. 8 Bürohemden) und weisen Sie allen gleichzeitig Attribute oder Saisons zu.
+- **Kombinierte Sets & Anzüge**: Verknüpfen Sie Sakko und passende Hose (oder einen Zweiteiler) als **Set**, um sie gemeinsam oder einzeln zu stylen.
 
 ---
 
-## 4. KI-Stylist & Kofferplaner optimal nutzen
+## 4. KI-Stylist & Kofferpack-Assistent nutzen
 
-### F: Wie formuliere ich den besten Prompt für den KI-Stylisten?
-**A:** Der lokale KI-Stylist liefert die besten Ergebnisse, wenn Sie ihm **vier klare Kontextinformationen** geben:
-> **[Anlass / Event] + [Wetter / Ort] + [Dresscode / Stimmung] + [Schlüsselteil oder Bedingung]**
+### F: Wie schreibe ich die beste Anfrage an den KI-Stylisten?
+**A:** Geben Sie dem Stylisten **vier kurze Hinweise**:
+> **[Anlass / Event] + [Wetter / Ort] + [Dresscode / Stil] + [Wunschteil oder Farbe]**
 
-**Beispiele für ideale Prompts:**
-- *„Erstelle ein Smart-Casual-Outfit für ein regnerisches Herbst-Abendessen in London mit meinem beigefarbenen Trenchcoat.“*
-- *„Schlage einen bequemen Business-Casual-Look für einen ganzen Tag voller Büromeetings mit Klimaanlage und flachen Schuhen vor.“*
-- *„Welche 3 vielseitigen Oberteile fehlen mir, um maximale Outfit-Kombinationen mit meinen vorhandenen Röcken und Jeans zu erzielen?“*
+**Gute Beispiele:**
+- *„Stelle mir ein Smart-Casual-Outfit für ein regnerisches Herbst-Abendessen mit meinem beigefarbenen Trenchcoat zusammen."*
+- *„Schlage mir einen bequemen Büro-Look für einen langen Konferenztag im klimatisierten Raum mit flachen Schuhen vor."*
+- *„Welche 3 vielseitigen Oberteile fehlen mir, um meine vorhandenen Röcke und Jeans noch besser zu kombinieren?"*
 
-### F: Was ist der Unterschied zwischen „Outfit-Erstellung“ und „Garderoben-Audit“ beim Stylisten?
-**A:** Der Stylist von DressApp erkennt Ihre Absicht automatisch:
-- **Modus 1 — Outfit-Erstellung**: Wenn Sie fragen *„Was soll ich anziehen zu...“*, wählt der Stylist **ausschließlich echte Kleidungsstücke aus Ihrem digitalen Kleiderschrank** aus und zeigt visuelle Outfit-Karten an, die Sie speichern oder sofort tragen können.
-- **Modus 2 — Analytisches Garderoben-Audit**: Wenn Sie fragen *„Was fehlt in meinem Kleiderschrank?“* oder *„Wie ausgewogen ist meine Herbst-Capsule?“*, analysiert der Stylist Ihren gesamten Bestand und empfiehlt gezielt hochwertige Einzelstücke, die Lücken zwischen Ihrer vorhandenen Kleidung schließen.
+### F: Was ist der Unterschied zwischen „Outfit-Vorschlag" und „Garderoben-Check"?
+**A:** Der Stylist erkennt Ihr Anliegen automatisch:
+- **Outfit-Vorschläge**: Wenn Sie fragen *„Was soll ich zu ... anziehen?"*, wählt der Stylist **ausschließlich echte Kleidungsstücke aus Ihrem digitalen Kleiderschrank** aus und zeigt fertige Outfit-Karten an.
+- **Garderoben-Check**: Wenn Sie fragen *„Was fehlt in meinem Kleiderschrank?"*, analysiert der Stylist Ihre gesamte Garderobe und empfiehlt gezielte Basics, die Lücken zwischen Ihren vorhandenen Teilen schließen.
 
-### F: Wie funktioniert der Koffer-Packassistent?
-**A:** Öffnen Sie **Koffer**, geben Sie Ihr **Reiseziel, die Reisedaten und geplante Aktivitäten** ein (z. B. Sightseeing, Geschäftskonferenz, Stranddinner). DressApp prüft das Klima am Zielort und stellt aus Ihrem Kleiderschrank eine **kombinierbare Reise-Capsule** zusammen, sodass Sie weniger einpacken und dennoch für jeden Reisetag ein komplettes Outfit haben. *(Im kostenlosen Tarif kostet jedes für den Koffer ausgewählte Kleidungsstück 1 lokalen KI-Credit).*
+### F: Wie funktioniert der Kofferpack-Assistent?
+**A:** Öffnen Sie **Koffer**, geben Sie **Reiseziel, Reisedaten und geplante Aktivitäten** ein (z. B. Städtereise, Geschäftskonferenz, Strandurlaub). DressApp prüft das Wetter am Zielort und stellt eine **optimal kombinierbare Reisegarderobe** aus Ihrem Kleiderschrank zusammen, damit Sie mit leichtem Gepäck für jeden Tag perfekt gekleidet sind.
 
 ---
 
-## 5. Outfit-Planer, Statistiken, Shopping-Assistent & Marktplatz
+## 5. Outfit-Planer, Garderoben-Statistik, Shopping-Assistent & Marktplatz
 
-### F: Kann ich Outfits manuell zusammenstellen und im Kalender einplanen?
-**A:** Ja! Im **Outfit-Planer** können Sie Kleidungsstücke per Drag-and-Drop auf eine interaktive **Layering-Leinwand** ziehen (oder an einer 2D-Puppe betrachten), die Schichtreihenfolge anpassen, den Look in Ihrem **Lookbook** speichern und ihn im **Outfit-Tagebuch** einem bestimmten Datum zuordnen.
+### F: Kann ich Outfits selbst zusammenstellen und im Kalender einplanen?
+**A:** Ja! Im **Outfit-Planer** können Sie Kleidungsstücke frei auf einer Arbeitsfläche kombinieren, Schichten anpassen, den Look speichern und direkt einem Datum in Ihrem **Outfit-Kalender** zuweisen.
 
-### F: Was verraten mir die Garderoben-Einblicke (Wardrobe Insights)?
-**A:** Das Dashboard **Garderoben-Einblicke (Statistiken)** zeigt den Gesamtwert Ihrer Garderobe, **Kosten-pro-Tragen-Rankings (CPW)**, die Farbpaletten-Verteilung, die saisonale Balance sowie CO₂- und Wassereinsparungen — ideal, um ungenutzte Schrankhüter zu entdecken und bewusster einzukaufen.
+### F: Was zeigt mir die Garderoben-Statistik?
+**A:** Die **Garderoben-Statistik** zeigt den Gesamtwert Ihres Kleiderschranks, die **Kosten pro Tragen**, Farbverteilung, saisonale Ausgewogenheit sowie Nachhaltigkeitswerte – so entdecken Sie ungenutzte Schrankhüter sofort.
 
-### F: Wie hilft mir die Chrome-Erweiterung des Shopping-Assistenten beim Online-Shopping?
-**A:** Beim Stöbern in unterstützten Online-Modegeschäften vergleicht der **DressApp Shopping-Assistent** die Größentabelle des Shops mit Ihrem gespeicherten **biometrischen 3D-Körperprofil**, empfiehlt Ihre optimale Größe und zeigt, wie sich das neue Teil mit Ihrer vorhandenen Garderobe kombinieren lässt.
+### F: Wie hilft mir der Shopping-Assistent beim Online-Einkauf?
+**A:** Beim Stöbern in unterstützten Online-Shops gleicht der **DressApp Shopping-Assistent** die Größentabelle des Händlers mit Ihren gespeicherten **Körpermaßen** ab, empfiehlt die optimale Größe und zeigt, wie das neue Teil zu Ihrer bestehenden Garderobe passt.
 
 ### F: Kann ich Kleidung, die ich nicht mehr trage, verkaufen, tauschen oder spenden?
-**A:** Ja! Über den **zirkulären Marktplatz** können Sie ungetragene Kleidungsstücke aus Ihrem Schrank zum **Verkauf**, **Tausch** oder zur **Vermietung** anbieten oder an lokale Hilfsorganisationen **spenden**. Im virtuellen **Sandbox-Raum** können Sie vor dem Kauf sogar testen, wie ein Marktplatz-Artikel zu Ihrer eigenen Garderobe passt.
+**A:** Ja! Über den **Marktplatz** können Sie ungetragene Kleidung zum **Verkauf**, **Tausch** oder **Verleih** anbieten oder zum **Spenden** vormerken. Im virtuellen **Proberaum** können Käufer vorab testen, wie ein Artikel zu ihrer eigenen Garderobe passt.
 
 ---
 
-## 6. Datenschutz, Sicherheit & Fehlerbehebung
+## 6. Datenschutz, Sicherheit & Hilfe
 
 ### F: Sind meine Fotos und Körpermaße privat?
-**A:** Absolut. Ihre biometrischen Maße und persönlichen Kleidungsfotos sind streng privat und nur für Ihr Konto zugänglich. Bei Nutzung der lokalen **Eyes**-Engine von DressApp werden Ihre Bilder direkt auf der dedizierten privaten Infrastruktur von DressApp verarbeitet. Kleidungsstücke werden nur dann öffentlich sichtbar, wenn Sie diese ausdrücklich auf dem Marktplatz inserieren.
+**A:** Absolut. Ihre Körpermaße und privaten Kleiderschrankfotos sind streng vertraulich und nur für Ihr Konto sichtbar. Bei Nutzung von **DressApps eigenem KI-Modell** werden Ihre Bilder direkt auf der privaten Infrastruktur von DressApp verarbeitet. Öffentlich sichtbar werden nur Artikel, die Sie selbst aktiv auf dem Marktplatz inserieren.
 
-### F: Warum sahen meine Statistikseite oder der Stylist direkt nach der Anmeldung leer aus?
-**A:** Statistiken und Outfit-Vorschläge setzen Kleidungsstücke in Ihrem Schrank voraus! Sobald Sie Ihre ersten Teile hochladen (oder eine bestehende Garderobe migrieren), füllen sich Ihre **Garderoben-Einblicke**, **Smart Suggestions** und **KI-Stylist**-Empfehlungen sofort.
+### F: Warum war meine Statistik- oder Stylist-Seite direkt nach der Anmeldung leer?
+**A:** Statistiken und Outfit-Vorschläge benötigen Kleidung in Ihrem digitalen Schrank! Sobald Sie Ihre ersten Kleidungsstücke hinzufügen, füllen sich die **Garderoben-Statistik** und die Vorschläge des **KI-Stylisten** sofort.
 
-### F: Wo erhalte ich weitere Hilfe oder Kontakt zu einem menschlichen Stylisten?
+### F: Wo finde ich weitere Hilfe oder persönliche Stilberatung?
 **A:**
-- Tippen Sie oben auf jedem Bildschirm in DressApp auf die Schaltfläche **Hilfe (?)**, um kurze 6-Schritte-Anleitungen und ausführliche **„Mehr erfahren“**-Guides in allen 13 Sprachen zu öffnen.
-- Besuchen Sie das **Verzeichnis zertifizierter Experten** in DressApp, um persönliche virtuelle Kleiderschrank-Audits oder 1-zu-1-Styling-Sessions mit geprüften Mode-Stylisten zu buchen.
+- Tippen Sie oben auf einem beliebigen Bildschirm auf das **Hilfe-Symbol (?)**, um Kurzanleitungen und ausführliche **„Mehr erfahren"**-Artikel in allen 13 Sprachen zu öffnen.
+- Besuchen Sie das **Expertenverzeichnis** in DressApp, um persönliche Beratungstermine mit zertifizierten Mode-Stylisten zu buchen.

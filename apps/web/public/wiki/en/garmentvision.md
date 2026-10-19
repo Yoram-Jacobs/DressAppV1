@@ -9,27 +9,29 @@
 ## 1. Executive Summary & Value Proposition
 
 ### High-Level Overview
-**GarmentVision** is the optical intelligence core of DressApp. It transforms unconstrained user photography—ranging from full-body mirror selfies and multi-item outfit snaps to tabletop flat lays and digital receipts—into cleanly isolated, background-matted, catalog-grade wardrobe assets.
+**GarmentVision** is the optical intelligence core of DressApp. It transforms unconstrained user photography—ranging from single garment snaps and full-body mirror selfies to multi-garment flat-lay clusters and digital receipts—into cleanly isolated, background-matted, catalog-grade wardrobe assets.
 
-Anchored in a hybrid edge-cloud pipeline, GarmentVision harmonizes zero-marginal-cost CPU-local segmentation (**SegFormer-b3** + **rembg** U2-Net) with multimodal visual analysis powered primarily by the self-hosted **Gemma-4 E4B** container (`dressapp-eyes`) and secondarily by **Google Gemini 3.5 Flash**. Defective, amputated, or limb-occluded garments are diagnosed by an integrated Visual Quality Checker and restored through generative fabric outpainting and studio reshoots via **Nano Banana** (`gemini-3.1-flash-lite-image`).
+Anchored in a hybrid edge-cloud pipeline, GarmentVision harmonizes zero-marginal-cost CPU-local segmentation (**SegFormer-b2** + **rembg** U2-Net + automatic 3-pipeline routing across `single`, `multi`, and `mass` clusters) with multimodal visual analysis powered on the Free Tier by the self-hosted **Qwen 2.5 VL 3B** container (`dressapp-eyes` running `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf`) and on the Manager ($10/mo) and Professional ($15/mo) plans by **Google Gemini 3.5 Flash**. Defective, amputated, or limb-occluded garments are diagnosed by an integrated Visual Quality Checker and restored through generative fabric outpainting and studio reshoots via **Nano Banana** (`gemini-3.1-flash-lite-image`).
 
 ### Architectural Flow
 
 ```mermaid
 graph TD
-    A[User Snaps or Uploads Photo / Batch Upload] --> B[Duplicate Preflight: dHash & SHA-256]
-    B --> C[Local Segmentation: SegFormer-b3 / clothing_parser.py]
-    C --> D[Useful Detections & Skin Filter: geometry.py]
+    A[User Snaps or Uploads Mixed-Batch Photos] --> B[Duplicate Preflight: dHash & SHA-256]
+    B --> C[Automatic 3-Pipeline Detection: detect_photo_pipeline / clothing_parser.py]
+    C -->|single: 1 item| D1[Single Garment Studio Matting]
+    C -->|multi: worn outfit / anatomical stack| D2[Multi-Garment Anatomical Parsing]
+    C -->|mass: unworn cluster / flat-lay / hooks| D3[Mass Cluster Parsing: parse_unworn_cluster]
     
     subgraph SinglePromptIngestion ["GarmentVision Single-Prompt Ingestion Engine"]
-        D -->|Single Photo Multi-Item| E[Single Image Context]
-        D -->|Multi-Photo Batch Upload| F[Composite Collage Context: _create_batch_collage]
-        E --> G[Single Pass LLM Extraction: Gemma-4 E4B / Gemini 3.5 Flash]
-        F --> G
+        D1 --> E[Single Image / Composite Collage Context]
+        D2 --> E
+        D3 --> E
+        E --> G[Single Pass LLM Extraction: Qwen 2.5 VL 3B / Gemini 3.5 Flash]
         G -->|Multi-Item JSON Array| H[Semantic Affinity Bipartite Matching: _align_analyses_to_crops]
     end
     
-    H --> I[Strict 3-Tier Gender & Taxonomy Post-Validation: validation.py]
+    H --> I[Strict 3-Tier Gender & Cultural/Hoodie Taxonomy Validation: validation.py]
     I --> J[Streaming NDJSON Feed: detect / field / item frames]
     J --> K[Frontend Grid Live Paint: apps/web & apps/mobile]
     
@@ -45,8 +47,8 @@ graph TD
 ### The 6 Canonical GarmentVision Rules
 The vision pipeline strictly adheres to six non-negotiable operational invariants:
 
-1. **Multi-Item Single-Prompt Ingestion**: Multi-garment images processed by Gemma/Eyes ingest the image once and extract all items in a single pass.
-2. **Batch-Upload Single-Prompt Ingestion**: Multi-photo uploads processed by Gemma/Eyes ingest the photos once as a composite context and extract all items in a single pass.
+1. **Multi-Item Single-Prompt Ingestion**: Multi-garment and mass-cluster images processed by Eyes/Gemini ingest the image once and extract all items in a single pass.
+2. **Batch-Upload Single-Prompt Ingestion**: Multi-photo uploads (including mixed-characteristic batches of `single`, `multi`, and `mass` photos) ingest the photos once as a composite context and extract all items in a single pass.
 3. **Single System Prompt Sequence in AddItem**: The analysis sequence fires the system prompt exactly once in any AddItem workflow, preserving the `llama-server` KV-prefix cache across inferences.
 4. **Strict 3-Tier Gender Hierarchy**:
    - **Tier 4a (Human Model Gender)**: If an identifiable human model is detected in the photo, anchor all detected garments to the model's gender (`"women"` or `"men"`).
@@ -57,11 +59,11 @@ The vision pipeline strictly adheres to six non-negotiable operational invariant
 6. **Token Minimization via `/agency-image-prompt-engineer`**: System prompts are strictly budgeted (<260 words); predictable auxiliary fields (`clothing_condition`, `quality_tier`, `price_tier`, `fit_style`, `care_instructions`) are omitted from the LLM prompt and populated deterministically in Python post-processing, saving 150–250 output tokens per item; generative prompts utilize professional photographic terminology without boilerplate filler words.
 
 ### User Value Proposition
-- **One-Shot Multi-Item Extraction**: Upload a complete head-to-toe selfie; GarmentVision isolates the jacket, top, trousers, shoes, and sunglasses in parallel in seconds.
+- **Automatic 3-Pipeline Routing & Mixed Batch Uploads**: Upload any combination of single items, head-to-toe selfies, and flat-lay garment clusters in one batch—GarmentVision automatically routes each photo to the `single`, `multi`, or `mass` pipeline without manual mode tabs.
 - **Strict Transparency Invariant**: Enforces pure alpha-matted cutouts free of bounding box edges, background shadows, or residual drywall backdrops.
 - **Autonomous Generative Repair**: Clothing amputated by the camera edge or occluded by bags and crossed arms is automatically inpainted and completed.
-- **Zero-Cost Free Tier Execution**: Powered by local CPU inference on the VPS via `gemma-4-E4B-it-Q3_K_M.gguf`, delivering zero-marginal-cost processing for daily wardrobe logging.
-- **Multilingual Native Experience**: Clothes are cataloged naturally in 13 languages, ensuring non-English users receive natural native names (e.g., חולצת טי, שמלת מקסי, סנדלים) rather than awkward automated translations.
+- **Zero-Cost Free Tier Execution**: Powered by local CPU inference on the VPS via `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf`, delivering zero-marginal-cost processing for daily wardrobe logging.
+- **Accurate Hoodie & Cultural Attire Recognition**: Automatically distinguishes `Sweatshirts & Hoodies` from `T-Shirt` and recognizes 60+ cultural & traditional garments (`Traditional` dress code) natively across all 13 languages.
 
 ---
 
@@ -95,19 +97,19 @@ The vision pipeline strictly adheres to six non-negotiable operational invariant
 
 ### Mode & Workflow Walkthroughs
 
-#### 1. Multi-Item Single-Photo Ingestion (Mirror Selfie / Outfit Snap)
+#### 1. Automatic 3-Pipeline Routing (`single`, `multi`, `mass`)
 1. Navigate to **Add Item** (`apps/web/src/pages/AddItem.jsx` or `apps/mobile/src/screens/closet/ClosetAddScreen.tsx`).
-2. Snap or upload an outfit photo containing multiple garments.
+2. Snap or upload any photo—or a batch of photos with mixed characteristics (single items, full outfits on a person/mannequin, and unworn garment clusters). No manual pipeline mode tab is required.
 3. The browser runs instant duplicate pre-flight verification (dHash + SHA-256 in <150ms).
-4. `clothing_parser.py` executes local CPU SegFormer-b3 segmentation, isolating bounding boxes and initial masks.
-5. In accordance with **Rule 1**, the entire image is processed once by Gemma/Eyes. All garment items are extracted in a single prompt execution.
-6. The streaming connection emits an initial `detect` frame containing cropped thumbnails, followed by progressive `item` frames containing the parsed taxonomy.
+4. `clothing_parser.py` executes local CPU SegFormer segmentation and `detect_photo_pipeline()` automatically routes each photo to `single` (1 garment), `multi` (anatomically stacked outfit on a person/mannequin), or `mass` (unworn cluster, flat-lay, or wall hooks via `parse_unworn_cluster()`).
+5. In accordance with **Rule 1**, the entire image (or composite collage) is processed once by `dressapp-eyes` (`Qwen 2.5 VL 3B`) or `Gemini 3.5 Flash`. All garment items are extracted in a single prompt execution.
+6. The streaming connection emits an initial `detect` frame containing cropped thumbnails, followed by progressive `item` frames containing the parsed taxonomy (including `Sweatshirts & Hoodies` vs. `T-Shirt` and 60+ `Traditional` cultural garments).
 7. Cards paint instantly onto the user's screen without blocking navigation.
 
-#### 2. Multi-Photo Batch Upload (Closet Bulk Logging)
-1. Drag and drop up to 10 photos simultaneously into the upload zone.
-2. In accordance with **Rule 2**, `_create_batch_collage` constructs a normalized 768px composite contact sheet.
-3. Gemma/Eyes ingests the composite collage once. It assigns each detected item to its respective `(photo_index, slot_index)` in a single JSON array pass.
+#### 2. Multi-Photo Mixed-Batch Upload (Closet Bulk Logging)
+1. Drag and drop up to 10 photos with mixed characteristics simultaneously into the upload zone.
+2. In accordance with **Rule 2**, `_create_batch_collage` constructs a normalized 768px composite contact sheet across all isolated cutouts from all three pipelines.
+3. Eyes/Gemini ingests the composite collage once. It assigns each detected item to its respective `(photo_index, slot_index)` in a single JSON array pass.
 4. Bipartite semantic matching (`_align_analyses_to_crops`) guarantees that detected items are assigned to their corresponding cutouts without category swapping.
 
 #### 3. Automatic Visual Quality Checking & Generative Inpainting
@@ -131,10 +133,10 @@ Located inside the **Item Details** editor:
 
 | Layer | Technology | Execution Target | Role |
 | :--- | :--- | :--- | :--- |
-| **Segmentation** | `sayeed99/segformer_b3_clothes` | Local CPU (`backend`) | 18-class fashion segmentation, mask generation, skin filtering |
+| **Segmentation & Auto-Router** | `mattmdjaga/segformer_b2_clothes` + `detect_photo_pipeline` | Local CPU (`backend`) | 18-class fashion segmentation, automatic `single`/`multi`/`mass` routing, skin filtering |
 | **Background Matting** | `rembg` (U2-Net / u2netp) | Local CPU (`backend`) | Alpha matte isolation, boundary smoothing |
-| **Primary Vision LLM** | Fine-Tuned Gemma-4 E4B GGUF | Local VPS (`dressapp-eyes:7860`) | Single-pass attribute extraction, zero-cost Free Tier execution |
-| **Cloud Vision Fallback** | Gemini 3.5 Flash | Google Cloud (`google-genai` SDK) | Low-latency fallback for Pro users and quota overflow failover |
+| **Free-Tier & Fallback Vision LLM** | Fine-Tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` | Local VPS (`dressapp-eyes:7860`) | Single-pass attribute extraction, zero-cost Free Tier execution & quota fallback |
+| **Paid Tier Cloud Vision LLM** | Gemini 3.5 Flash | Google Cloud (`google-genai` SDK) | Sub-350ms primary vision & styling for Manager ($10/mo) & Professional ($15/mo) plans |
 | **Generative Reshoot** | `gemini-3.1-flash-lite-image` | Google Cloud (Nano Banana) | Photographic inpainting, fabric outpainting, studio reconstruction |
 
 ### 3.2 Prompt Engineering & Token Budgeting (Rule 3 & Rule 6)

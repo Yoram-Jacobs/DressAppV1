@@ -36,16 +36,21 @@ DressApp turns your physical closet into an intelligent digital wardrobe right o
 ### Step 1: Adding Clothes to Your Closet
 Adding garments to your digital closet takes just a few seconds. Choose whichever method is easiest for you:
 
-#### Option A: Take or Upload Photos
+#### Option A: Take or Upload Photos (Single Items, Full Outfits, or Piles of Clothes!)
 1. Tap **Add Item** from the navigation bar.
-2. Choose **Take Photo** to snap a picture of your garment (or a full-outfit mirror selfie), or choose **Upload Photos** from your gallery.
+2. Choose **Take Photo** to snap a picture, or choose **Upload Photos** from your gallery. **Mix & Match Freely**: You can upload multiple photos of completely different types in the same batch—a photo of one sweater, a full-body mirror selfie, and a flat-lay pile of several clothes on your bed—without picking any mode tabs!
 3. **Instant Duplicate Check**: The app quickly checks if you already added the same garment so you never duplicate items by accident.
-4. **Multi-Garment Splitting**: If your photo contains a full outfit, DressApp automatically detects and splits the top, pants/skirt, jacket, and shoes into separate cards.
-5. **AI Quality Checker & Automatic Image Completion**:
+4. **Automatic 3-Pipeline Photo Routing**:
+   - **Single Garment**: Cleanly removes the background from an individual item.
+   - **Full Outfit on a Person or Mannequin**: Automatically detects and splits the top, pants/skirt, jacket, shoes, and accessories into separate cards.
+   - **Group / Pile of Clothes (Mass Cluster)**: Automatically separates multiple unworn garments laid out side-by-side or hanging on wall hooks into individual closet items.
+5. **Smart Tagging (Sweatshirts, Hoodies & Cultural Attire)**:
+   - DressApp automatically tags colors, fabrics, seasons, and categories—accurately distinguishing **Sweatshirts & Hoodies** from T-shirts and recognizing 60+ **Traditional & Cultural** garments (Sari, Kimono, Thobe, Kaftan, Hanbok, Cheongsam, Ao Dai, Dirndl, Kilt, and more) in your language.
+6. **AI Quality Checker & Automatic Image Completion**:
    - **Pristine Items**: Clean photos have their background removed instantly into a crisp, transparent image.
-   - **Image Completion**: If parts of a garment are covered by your hands, a bag, or hair (or cut off by the camera frame), the AI automatically completes the missing fabric symmetrically.
+   - **Image Completion**: If parts of a garment are covered by your hands, a bag, or hair (or cut off by the camera frame), **Nano Banana** automatically completes the missing fabric symmetrically.
    - **Studio Reconstruction**: If an item is severely cut off (like a photo where only the toe of a shoe is visible), the AI reconstructs the full item into a clean studio catalog photo.
-6. Tap **Save** to add the items to your closet!
+7. Tap **Save** to add the items to your closet!
 
 #### Option B: Scan Product Passport QR Codes (DPP)
 1. Tap **Scan QR (DPP)** on the Add Item screen.
@@ -85,7 +90,7 @@ Have dozens of clothes you want to organize at once? Group Tagging makes bulk wa
 4. Tap the floating **Group Tag** button at the bottom.
 5. Select the attributes you want to apply to all selected items at once:
    - **Seasons**: Spring, Summer, Fall, Winter.
-   - **Formality & Occasions**: Casual, Smart Casual, Business, Formal, Athletic, Loungewear.
+   - **Formality & Occasions**: Casual, Smart Casual, Business, Formal, Athletic, Loungewear, Traditional.
    - **Custom Tags**: Type custom labels (such as *"Vacation"*, *"Office Wear"*, or *"Weekend"*).
 6. Tap **Apply to Selected Items**. Your closet grid updates immediately!
 
@@ -101,7 +106,7 @@ Need advice on what to wear for a meeting, a date, or unpredictable weather? You
    - *"I have an important business presentation at 2 PM. What looks best?"*
 3. The AI Stylist checks your local weather, your Google Calendar schedule, your saved style preferences, and your closet inventory.
 4. The stylist responds with personalized outfit proposals and speaks the answer back to you in a warm, natural voice.
-5. **Built-in Model & Safe Quota Fallback**: The stylist runs on DressApp's fast built-in AI engine with zero setup. If you ever connect your own Google Gemini key and it runs out of daily requests or hits a rate limit, don't worry—DressApp automatically switches to our built-in assistant and shows a friendly notice (*"Using Platform Stylist"*), so your conversation never fails!
+5. **Built-in Multi-Tier AI & Safe Quota Fallback**: Every account works out of the box with zero API keys required! Free Tier accounts use DressApp's built-in **Eyes** engine (`Qwen 2.5 VL 3B`), while **Manager** ($10/mo) and **Professional** ($15/mo) plans use the ultra-fast **Google Gemini 3.5 Flash** cloud model with automatic fallback to our built-in assistant (*"Using Platform Stylist"*) if cloud traffic is high—so your conversation never fails!
 6. Tap **Play reply** anytime to hear the advice spoken again.
 
 ---
@@ -187,8 +192,6 @@ Stay ahead of global fashion trends without spending a fortune on new clothes:
    - See a trend you love? Tap **Style with My Closet** on any trend card!
    - The AI Stylist immediately searches your existing closet for matching colors, silhouettes, and fabrics to recreate that trend using clothes you already own.
 5. **Clean & Safe Reading**: Every trend is rigorously filtered to eliminate shopping carts, ads, and paid sponsor walls, keeping your inspiration pure and creative.
-6. **Connecting Your Free API Key**: Because Trend Scout performs live web searches and article synthesis, it requires connecting a free personal Google Gemini API key under **Profile > AI Configuration**.
-
 
 ---
 
@@ -227,9 +230,9 @@ Never buy the wrong size online again!
 Understand your plan and manage your AI styling credits:
 
 1. **Monetization Tiers**:
-   - **Free Tier ($0/month)**: Stores up to **50 closet garments** baseline (expandable up to 150 via referral bonuses) with full access to basic styling and marketplace features. Includes **10 free daily AI credits** (which refresh every 24 hours and have a 30-day lifespan).
-   - **Pro Plan ($4.99/month or $29.99/year)**: Upgrades you to **unlimited closet storage**, priority image processing, and 50 initial bonus credits. Comes with a 14-day free trial.
-   - **Business / Expert Plan ($29/month)**: Designed for professional stylists and local tailors, including directory listings and client booking tools.
+   - **Free Tier ($0/month)**: Stores up to **50 closet garments** baseline (expandable up to 150 via referral bonuses), powered by DressApp's built-in **Eyes** AI (`Qwen 2.5 VL 3B`) with full access to styling and marketplace features. Includes **10 free daily AI credits** (which refresh every 24 hours and have a 30-day lifespan).
+   - **Manager Plan ($10/month)**: Upgrades you to **unlimited closet storage**, priority cloud AI processing (**Google Gemini 3.5 Flash**), and monthly bonus credits.
+   - **Professional / Expert Plan ($15/month)**: Designed for power users, professional stylists, and local tailors—including unlimited closet storage, priority cloud AI (**Google Gemini 3.5 Flash**), directory listings, and promotional campaign tools.
 2. **Viral Referral Bonus**:
    - On the free plan, invite friends using your unique referral link found under **Profile -> Invite Friends**.
    - Every friend who signs up gives you **+10 bonus closet slots** for free (up to 150 items max)!
@@ -254,7 +257,7 @@ If your account has administrative permissions:
 
 ## 3. What to Expect (Expected Results)
 
-- **Quick Uploads**: Clothing photos upload and process in seconds with clean transparent backgrounds.
+- **Effortless Mixed-Batch Uploads**: Upload single items, full outfits, and piles of clothes together—each photo automatically routes to the right pipeline and produces clean, transparent studio cutouts.
 - **Natural Voice Conversations**: The AI Stylist answers your voice questions promptly in clear, friendly speech.
 - **Accurate Recommendations**: Suggestions reflect real local weather and your real closet contents—no hallucinated clothes you don't own!
 - **Accurate Sizing**: The 4-measurement predictor saves you time and accurately identifies your retail sizes across international brands.
@@ -264,11 +267,10 @@ If your account has administrative permissions:
 
 ## 4. Quick Troubleshooting & Tips
 
-- **"Using Platform Stylist (Quota Fallback)" Notice**: If you entered your own Google Gemini API key and it runs out of requests or hits a rate limit, DressApp automatically answers using our built-in engine so your chat never crashes! You can check your quota at Google AI Studio or continue styling with the built-in engine.
-- **"API Key Required" Message on Trend Scout or Nano Banana**: Trend Scout and Nano Banana image editing require a free Google Gemini API key. Go to **Profile -> AI Configuration** to enter your key.
-- **"Closet Limit Reached"**: Free accounts hold 50 items baseline (up to 150 with referrals). You can invite friends to gain +10 free slots per signup, or tap **Upgrade to Pro** ($4.99/mo) for unlimited storage.
+- **"Using Platform Stylist (Quota Fallback)" Notice**: If the cloud AI hits a temporary rate limit, DressApp automatically answers using our built-in on-premises **Eyes** engine so your chat never crashes!
+- **"Closet Limit Reached"**: Free accounts hold 50 items baseline (up to 150 with referrals). You can invite friends to gain +10 free slots per signup, or upgrade to the **Manager** ($10/mo) or **Professional** ($15/mo) plan for unlimited storage.
 - **Microphone or Voice Typing Not Responding**: Ensure microphone permissions are enabled in your browser or device settings. In Chrome, click the lock icon in the address bar to check permissions.
-- **Background Removal Quality**: For the crispest cutout, lay clothes flat against a contrasting surface (like a plain bedsheet, wood floor, or light wall) with good lighting.
+- **Background Removal Quality**: For the crispest cutout, photograph clothes against a contrasting surface (like a plain bedsheet, wood floor, or light wall) with good lighting.
 - **Wardrobe Import Stalling?** Competitor wardrobe import works best on desktop computers in Google Chrome. Ensure the competitor closet page is scrolled so items are visible.
 - **Size Recommendation Not Showing?** Click the DressApp extension icon and make sure your DressApp account is connected with your body measurements filled out.
 
@@ -276,7 +278,7 @@ If your account has administrative permissions:
 
 ## 5. Helpful Limitations to Keep in Mind
 
-- **Free Tier Capacity**: Baseline storage is 50 garments (up to 150 items with referrals). To store more, invite friends or activate a Pro subscription.
+- **Free Tier Capacity**: Baseline storage is 50 garments (up to 150 items with referrals). To store more, invite friends or activate a Manager or Professional subscription.
 - **Daily Free Credits**: The 10 daily free AI credits expire after 30 days if unused. Purchased credit packs never expire.
 - **Desktop Requirement for Bookmarklet**: The competitor wardrobe migration bookmarklet requires desktop browser bookmark capabilities and cannot run inside mobile phone browsers.
 - **Receipt OCR Quality**: When taking photos of physical paper receipts, ensure the text is well-lit, flat, and legible for optimal brand and price extraction.

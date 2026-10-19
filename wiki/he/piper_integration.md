@@ -1,4 +1,4 @@
-# Piper TTS Mobile Integration Guide (Sherpa-ONNX)
+# Piper TTS Mobile Integration Guide
 
 This guide documents how to integrate **Piper TTS** using **Sherpa-ONNX** as a 100% offline, on-device text-to-speech solution across React Native, Native Android, and iOS.
 
@@ -7,16 +7,16 @@ This guide documents how to integrate **Piper TTS** using **Sherpa-ONNX** as a 1
 ## 🏛️ Architecture & Companion Files
 
 On-device speech synthesis via Piper requires four assets for a language model tier:
-1. **Model file (`*.onnx`)**: The compiled neural network graph containing model weights.
-2. **Configuration file (`*.onnx.json`)**: Contains voice metadata, phoneme settings, and speaker details.
-3. **Lexicon file (`lexicon.txt`)**: Maps language words to phonemes.
-4. **Tokens file (`tokens.txt`)**: Maps phonemes to ID indices used by the VITS model.
-5. **Data directory (`espeak-ng-data`)**: Phoneme and language assets compiled from `espeak-ng`.
+1. **Model file**: The compiled neural network graph containing model weights.
+2. **Configuration file**: Contains voice metadata, phoneme settings, and speaker details.
+3. **Lexicon file**: Maps language words to phonemes.
+4. **Tokens file**: Maps phonemes to ID indices used by the VITS model.
+5. **Data directory**: Phoneme and language assets compiled from `espeak-ng`.
 
 ### Lexicon and Tokens Format
 
 #### `lexicon.txt`
-Maps individual words directly to phonemes (space-separated). E.g.:
+Maps individual words directly to phonemes. E.g.:
 ```text
 a ah
 about ah b aw t
@@ -88,7 +88,7 @@ const handleSpeak = async (text: string) => {
 
 ---
 
-## 🤖 2. Native Android (Kotlin) Implementation
+## 🤖 2. Native Android Implementation
 
 Use `com.k2fsa.sherpa.onnx` from MavenCentral.
 
@@ -149,7 +149,7 @@ class OnDeviceTtsEngine(private val context: Context) {
 
 ---
 
-## 🍏 3. Native iOS (Swift) Implementation
+## 🍏 3. Native iOS Implementation
 
 Link the C++ static core or use the Swift Package Manager wrapper for `sherpa-onnx`.
 
@@ -208,6 +208,6 @@ class PiperTTSWrapper {
 
 ## ⚠️ Essential Engineering Checklist for Production
 
-* **Memory Management & Singletons**: Under no circumstances should you instantiate the `OfflineTts` model on every voice request. The model loads massive weights and compiles graphs into RAM, which will lead to Jetpack OS OOM termination or iOS Jetsam crashes. Always use a single persistent Instance (Singleton).
-* **AV Foundation Binding (iOS)**: The output samples array (`[Float]`) representing raw PCM data must be mapped into `AVAudioPCMBuffer` to be fed into `AVAudioEngine` for output playback.
-* **Background Model Loading**: Downloading voice files should be handled on-demand from a remote repo (like Hugging Face `rhasspy/piper-voices` repo) to prevent app binary bloat, and loading the model into memory must always be dispatched onto background worker threads.
+* **Memory Management & Singletons**: Under no circumstances should you instantiate the `OfflineTts` model on every voice request. The model loads massive weights and compiles graphs into RAM, which will lead to Jetpack OS OOM termination or iOS Jetsam crashes. Always use a single persistent Instance.
+* **AV Foundation Binding**: The output samples array (`[Float]`) representing raw PCM data must be mapped into `AVAudioPCMBuffer` to be fed into `AVAudioEngine` for output playback.
+* **Background Model Loading**: Downloading voice files should be handled on-demand from a remote repo to prevent app binary bloat, and loading the model into memory must always be dispatched onto background worker threads.

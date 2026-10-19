@@ -25,7 +25,7 @@ Find fast answers for camera access, upload speed questions, closet limit ceilin
 6. **Accessing Fast Cloud AI & Trend Scout**:
    - Free users enjoy DressApp's on-premises **Eyes** (`Qwen 2.5 VL 3B`) model with zero setup. Upgrading to the **Manager** ($10/mo) or **Professional** ($15/mo) plan unlocks priority routing to the fast Cloud AI model (currently **Google Gemini 3.5 Flash**) and full access to Trend Scout daily fashion intelligence.
 7. **Connecting Google Calendar**:
-   - Go to **Profile** &rarr; **Google Calendar** and tap **Connect**. Authorize calendar permissions so the Stylist can check your daily events.
+   - Go to **Profile** → **Google Calendar** and tap **Connect**. Authorize calendar permissions so the Stylist can check your daily events.
 
 ## Expected Results
 Fast resolution of common issues so your digital wardrobe runs smoothly.
