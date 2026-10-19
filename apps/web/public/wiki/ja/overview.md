@@ -17,3 +17,4 @@
 
 ### 4. コーデカレンダー・旅行パッキング・分析
 毎日の服装を事前にスケジュールしたり、旅行用のスマートな持ち物リストを作成したり、よく着る服や眠っている服をひと目で把握できます。
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

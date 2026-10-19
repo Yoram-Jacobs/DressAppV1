@@ -694,6 +694,16 @@ export default function ItemDetail() {
       // the new baseline correctly reflects only the user's
       // editable-field drafts.
       setItem(res.item);
+      setForm((prev) =>
+        prev
+          ? {
+              ...prev,
+              tags: Array.isArray(prev.tags)
+                ? prev.tags.filter((tg) => tg !== 'starter_capsule')
+                : [],
+            }
+          : prev
+      );
       try {
         closetStore.upsert(res.item);
         closetStore.triggerRepair();
@@ -1591,6 +1601,10 @@ export default function ItemDetail() {
     (!!mergedItem.reconstruction_advised || !!mergedItem.from_receipt) && !mergedItem.reconstructed_image_url;
   const reconstructionReasons =
     (mergedItem.reconstruction_metadata && mergedItem.reconstruction_metadata.reasons) || [];
+  const isStarterCapsuleItem = Boolean(
+    item?.is_starter_capsule ||
+      (Array.isArray(item?.tags) && item.tags.includes('starter_capsule'))
+  );
 
   /* ========================= RENDER ========================= */
   return (
@@ -1655,6 +1669,58 @@ export default function ItemDetail() {
           <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" />{" "}
           {t("common.back")}
         </button>
+
+        {isStarterCapsuleItem && (
+          <div
+            className="mb-5 flex flex-col gap-3 rounded-[14px] border border-amber-300/80 bg-amber-50/90 p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between"
+            data-testid="item-detail-starter-capsule-banner"
+          >
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-amber-900">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+                {t("closet.starterBasicBannerTitle", {
+                  defaultValue: "Starter Capsule Staple · Catalog Reference Photo",
+                })}
+              </div>
+              <p className="text-xs font-semibold text-amber-900/85">
+                {t("closet.starterBasicBannerDesc", {
+                  defaultValue:
+                    "This staple works immediately in your AI Stylist, Outfit Canvas, and Suitcase. Snap or upload your own photo anytime to personalize it and unlock Marketplace listing.",
+                })}
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={openCameraCapture}
+                disabled={uploadingPhoto}
+                className="rounded-full bg-primary-brand text-white hover:bg-primary-hover"
+                data-testid="starter-banner-take-photo-btn"
+              >
+                {uploadingPhoto ? (
+                  <Loader2 className="me-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Camera className="me-1.5 h-3.5 w-3.5" />
+                )}
+                {t("closet.starterBasicSnapBtn", { defaultValue: "Snap My Photo" })}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={onPickPhoto}
+                disabled={uploadingPhoto}
+                className="rounded-full border-amber-400 bg-white text-dark-brand hover:bg-amber-100/50"
+                data-testid="starter-banner-upload-photo-btn"
+              >
+                <Images className="me-1.5 h-3.5 w-3.5 text-primary-brand" />
+                {t("closet.starterBasicUploadBtn", { defaultValue: "Upload Photo" })}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Floating Action Bar */}
         <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-white backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
           <Button
@@ -2879,8 +2945,20 @@ export default function ItemDetail() {
                   <Field label={t('itemDetail.edit.intent')}>
                     <NullableSelect
                       value={form.marketplace_intent}
-                      onChange={(v) => setField('marketplace_intent', v || 'own')}
-                      options={INTENT_OPTIONS}
+                      onChange={(v) => {
+                        const nextIntent = v || 'own';
+                        if (isStarterCapsuleItem && nextIntent !== 'own') {
+                          toast.error(
+                            t('closet.starterBasicMarketplaceBlocked', {
+                              defaultValue:
+                                'Please upload a real photo of your garment before listing it on the Marketplace.',
+                            })
+                          );
+                          return;
+                        }
+                        setField('marketplace_intent', nextIntent);
+                      }}
+                      options={isStarterCapsuleItem ? ['own'] : INTENT_OPTIONS}
                       placeholder={t('addItem.sourceTagPlaceholder', { defaultValue: 'own' })}
                       testid="item-edit-field-marketplace_intent"
                       format={(o) => labelForIntent(o, t)}
@@ -2936,11 +3014,32 @@ export default function ItemDetail() {
             </Card>
             {/* Bottom actions */}
             <div className="grid grid-cols-2 gap-3">
-              <Button asChild data-testid="item-list-for-sale">
-                <Link to={`/market/create?itemId=${item.id}`} className='!py-3'>
-                  <Store className="h-4 w-4" />{t('itemDetail.listForSale')}
-                </Link>
-              </Button>
+              {isStarterCapsuleItem ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    toast.info(
+                      t('closet.starterBasicMarketplaceBlocked', {
+                        defaultValue:
+                          'Please upload a real photo of your garment before listing it on the Marketplace.',
+                      })
+                    );
+                    onPickPhoto();
+                  }}
+                  className="rounded-xl !py-3 border-amber-300 text-amber-900 hover:bg-amber-50"
+                  data-testid="item-list-for-sale-locked"
+                >
+                  <Lock className="me-1.5 h-4 w-4 text-amber-600" />
+                  {t('itemDetail.listForSale')}
+                </Button>
+              ) : (
+                <Button asChild data-testid="item-list-for-sale">
+                  <Link to={`/market/create?itemId=${item.id}`} className='!py-3'>
+                    <Store className="h-4 w-4" />{t('itemDetail.listForSale')}
+                  </Link>
+                </Button>
+              )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" className="rounded-xl" data-testid="item-delete-button">

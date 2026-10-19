@@ -6,34 +6,235 @@ import React, { useMemo } from 'react';
  * Generates an SVG mannequin silhouette using dynamic cubic Bezier curves (C & S commands).
  * Fixed viewBox (0 0 200 450) ensures dramatic 1-to-1 dynamic morphing when parameters change.
  */
+export function getFullAvatarAnatomy({
+  height = 170,
+  shoulders = 40,
+  chest = 90,
+  waist = 72,
+  hip = 96,
+  armLength = 60,
+  inseam = 78,
+  footLength = 24.5,
+  gender = 'female'
+} = {}) {
+  const numH = Math.max(130, Math.min(215, Number(height) || 170));
+  const numSh = Math.max(28, Math.min(58, Number(shoulders) || 40));
+  const numCh = Math.max(65, Math.min(138, Number(chest) || 90));
+  const numW = Math.max(54, Math.min(128, Number(waist) || 72));
+  const numHip = Math.max(68, Math.min(148, Number(hip) || 96));
+  const numArm = Math.max(42, Math.min(85, Number(armLength) || 60));
+  const numIns = Math.max(52, Math.min(100, Number(inseam) || 78));
+  const numFoot = Math.max(19, Math.min(33, Number(footLength) || (String(gender).toLowerCase() === 'male' ? 27.0 : 24.5)));
+  const isMale = String(gender).toLowerCase() === 'male';
+
+  const X0 = 100;
+  const viewBoxHeight = 450;
+  const totalBodySvgHeight = 360 * (numH / 170.0);
+  const yHeadTop = (viewBoxHeight - totalBodySvgHeight) / 2 + 10;
+  const yFeet = yHeadTop + totalBodySvgHeight;
+
+  const headHeight = totalBodySvgHeight / 7.3;
+  const yChin = yHeadTop + headHeight;
+  const neckHeight = totalBodySvgHeight * 0.045;
+  const yShoulders = yChin + neckHeight;
+
+  const inseamSvg = totalBodySvgHeight * (numIns / numH);
+  const yAnkles = yFeet - 18;
+  const yCrotch = yFeet - inseamSvg;
+
+  const torsoHeight = yCrotch - yShoulders;
+  const yChest = yShoulders + torsoHeight * (isMale ? 0.30 : 0.26);
+  const yWaist = yShoulders + torsoHeight * (isMale ? 0.62 : 0.58);
+  const yHip = yShoulders + torsoHeight * 0.88;
+  const yKnees = yCrotch + inseamSvg * 0.48;
+
+  const armSvg = totalBodySvgHeight * (numArm / numH);
+  const yElbow = yShoulders + armSvg * 0.48;
+  const yWrist = yShoulders + armSvg * 0.88;
+  const yHandTip = yShoulders + armSvg;
+
+  const DIVISOR = 2.65;
+  const wShoulders = isMale ? (numSh * 1.05) : (numSh * 0.92);
+  const wChest = isMale ? ((numCh / DIVISOR) * 1.1) : ((numCh / DIVISOR) * 0.95);
+  const wWaist = isMale ? ((numW / DIVISOR) * 1.02) : ((numW / DIVISOR) * 0.82);
+  const wHip = isMale ? ((numHip / DIVISOR) * 0.92) : ((numHip / DIVISOR) * 1.08);
+  const wNeck = isMale ? 14 : 9.5;
+
+  const wOuterKnee = isMale ? (wHip * 0.65) : (wHip * 0.58);
+  const wInnerKnee = isMale ? 10.5 : 9.5;
+  const wOuterAnkle = isMale ? 21 : 18.5;
+  const wInnerAnkle = isMale ? 9.5 : 8.0;
+
+  const refFoot = isMale ? 27.0 : 24.5;
+  const footScale = Math.max(0.88, Math.min(1.18, numFoot / refFoot));
+  const wFootTip = (isMale ? 24 : 20) * footScale;
+  const wFootHeel = isMale ? 10 : 8.5;
+
+  const shoulderYPercent = (yShoulders / viewBoxHeight) * 100;
+  const shoulderWidthPercent = ((wShoulders * 4) / viewBoxHeight) * 100;
+
+  return {
+    X0,
+    viewBoxHeight,
+    isMale,
+    yHeadTop,
+    yChin,
+    yShoulders,
+    yChest,
+    yWaist,
+    yHip,
+    yCrotch,
+    yKnees,
+    yAnkles,
+    yFeet,
+    yElbow,
+    yWrist,
+    yHandTip,
+    wNeck,
+    wShoulders,
+    wChest,
+    wWaist,
+    wHip,
+    wOuterKnee,
+    wInnerKnee,
+    wOuterAnkle,
+    wInnerAnkle,
+    wFootTip,
+    wFootHeel,
+    shoulderYPercent,
+    shoulderWidthPercent
+  };
+}
+
+export function getDefaultAvatarAnatomy(sex = 'female') {
+  const isMale = String(sex).toLowerCase() === 'male';
+  if (isMale) {
+    return getFullAvatarAnatomy({
+      height: 178,
+      shoulders: 44,
+      chest: 98,
+      waist: 82,
+      hip: 96,
+      armLength: 64,
+      inseam: 82,
+      footLength: 27.0,
+      gender: 'male'
+    });
+  }
+  return getFullAvatarAnatomy({
+    height: 168,
+    shoulders: 38,
+    chest: 88,
+    waist: 68,
+    hip: 94,
+    armLength: 58,
+    inseam: 76,
+    footLength: 24.5,
+    gender: 'female'
+  });
+}
+
+/**
+ * Maps any coordinate `(x0, y0)` from the Default Avatar's `200 x 450` SVG viewBox
+ * into the Live Resized Avatar's `200 x 450` SVG viewBox using piecewise-linear
+ * anatomical interpolation across 9 body zones (Neck, Shoulders, Chest, Waist,
+ * Hips, Crotch, Knees, Ankles, Feet).
+ */
+export function warpDefaultAvatarPoint(x0, y0, defaultAnatomy, liveAnatomy) {
+  if (!defaultAnatomy || !liveAnatomy) {
+    return { x: x0, y: y0, scaleX: 1, scaleY: 1 };
+  }
+
+  const Y0 = [
+    0,
+    defaultAnatomy.yChin,
+    defaultAnatomy.yShoulders,
+    defaultAnatomy.yChest,
+    defaultAnatomy.yWaist,
+    defaultAnatomy.yHip,
+    defaultAnatomy.yCrotch,
+    defaultAnatomy.yKnees,
+    defaultAnatomy.yAnkles,
+    defaultAnatomy.yFeet,
+    450
+  ];
+  const YL = [
+    0,
+    liveAnatomy.yChin,
+    liveAnatomy.yShoulders,
+    liveAnatomy.yChest,
+    liveAnatomy.yWaist,
+    liveAnatomy.yHip,
+    liveAnatomy.yCrotch,
+    liveAnatomy.yKnees,
+    liveAnatomy.yAnkles,
+    liveAnatomy.yFeet,
+    450
+  ];
+
+  const W0 = [
+    defaultAnatomy.wNeck,
+    defaultAnatomy.wNeck,
+    defaultAnatomy.wShoulders,
+    defaultAnatomy.wChest,
+    defaultAnatomy.wWaist,
+    defaultAnatomy.wHip,
+    defaultAnatomy.wHip,
+    defaultAnatomy.wOuterKnee,
+    defaultAnatomy.wOuterAnkle,
+    defaultAnatomy.wFootTip,
+    defaultAnatomy.wFootTip
+  ];
+  const WL = [
+    liveAnatomy.wNeck,
+    liveAnatomy.wNeck,
+    liveAnatomy.wShoulders,
+    liveAnatomy.wChest,
+    liveAnatomy.wWaist,
+    liveAnatomy.wHip,
+    liveAnatomy.wHip,
+    liveAnatomy.wOuterKnee,
+    liveAnatomy.wOuterAnkle,
+    liveAnatomy.wFootTip,
+    liveAnatomy.wFootTip
+  ];
+
+  const clampedY = Math.max(0, Math.min(450, Number(y0) || 0));
+  let seg = 0;
+  for (let i = 0; i < Y0.length - 1; i++) {
+    if (clampedY >= Y0[i] && clampedY <= Y0[i + 1]) {
+      seg = i;
+      break;
+    }
+  }
+
+  const span0 = Math.max(0.001, Y0[seg + 1] - Y0[seg]);
+  const spanL = YL[seg + 1] - YL[seg];
+  const t = Math.max(0, Math.min(1, (clampedY - Y0[seg]) / span0));
+
+  const yLive = YL[seg] + t * spanL;
+  const scaleY = spanL / span0;
+
+  const r0 = WL[seg] / Math.max(1, W0[seg]);
+  const r1 = WL[seg + 1] / Math.max(1, W0[seg + 1]);
+  const scaleX = Math.max(0.68, Math.min(1.48, r0 + t * (r1 - r0)));
+
+  const xLive = 100 + (Number(x0) - 100) * scaleX;
+  return { x: xLive, y: yLive, scaleX, scaleY };
+}
+
 export function getAvatarGeometry({
   height = 170,
   shoulders = 40,
   gender = 'female'
 } = {}) {
-  const numH = Math.max(130, Math.min(215, Number(height) || 170));
-  const numSh = Math.max(28, Math.min(58, Number(shoulders) || 40));
-  const isMale = String(gender).toLowerCase() === 'male';
-
-  const viewBoxHeight = 450;
-  const totalBodySvgHeight = 360 * (numH / 170.0);
-  const yHeadTop = (viewBoxHeight - totalBodySvgHeight) / 2 + 10;
-  const headHeight = totalBodySvgHeight / 7.3;
-  const yChin = yHeadTop + headHeight;
-  const neckHeight = totalBodySvgHeight * 0.045;
-  const yShoulders = yChin + neckHeight;
-  const wShoulders = isMale ? (numSh * 1.05) : (numSh * 0.92);
-
-  // In aspect-[1/2] container:
-  const shoulderYPercent = (yShoulders / viewBoxHeight) * 100;
-  const shoulderWidthPercent = ((wShoulders * 4) / viewBoxHeight) * 100;
-
+  const full = getFullAvatarAnatomy({ height, shoulders, gender });
   return {
-    yShoulders,
-    wShoulders,
-    shoulderYPercent,
-    shoulderWidthPercent,
-    isMale
+    yShoulders: full.yShoulders,
+    wShoulders: full.wShoulders,
+    shoulderYPercent: full.shoulderYPercent,
+    shoulderWidthPercent: full.shoulderWidthPercent,
+    isMale: full.isMale
   };
 }
 

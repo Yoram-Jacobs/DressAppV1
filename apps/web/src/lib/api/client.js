@@ -49,6 +49,7 @@ export const isPublicPath = (pathname = (typeof window !== 'undefined' ? window.
   const publicExact = [
     '/',
     '/home',
+    '/onboarding',
     '/login',
     '/register',
     '/privacy',

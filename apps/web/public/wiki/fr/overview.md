@@ -35,3 +35,4 @@ Vous disposez d'une garde-robe numérique structurée et accessible qui élimine
 ## Limites
 - La capacité du forfait Gratuit commence à 50 articles (extensible jusqu'à 150 via les bonus de parrainage) ; passer au forfait Manager (10 $/mois) ou Professional (15 $/mois) débloque un stockage illimité.
 - Le détourage et la segmentation offrent de meilleurs résultats avec un bon éclairage et un fond contrasté.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

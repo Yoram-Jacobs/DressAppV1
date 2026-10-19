@@ -234,6 +234,12 @@ async def create_listing(
         )
         if not closet_item:
             raise HTTPException(404, "Linked closet item not found")
+        item_tags = [str(t).strip().lower() for t in (closet_item.get("tags") or [])]
+        if closet_item.get("is_starter_capsule") or "starter_capsule" in item_tags:
+            raise HTTPException(
+                status_code=400,
+                detail="Please replace the Starter Basic catalog photo with your own real photo before listing on the Marketplace.",
+            )
 
     fees = compute_fees(payload.list_price_cents)
     financial = FinancialMetadata(

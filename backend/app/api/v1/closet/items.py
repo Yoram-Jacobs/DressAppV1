@@ -205,6 +205,10 @@ async def save_closet_item_document(
         source_color_sig=payload.source_color_sig,
         is_duplicate=payload.is_duplicate,
         in_suitcase=payload.in_suitcase or False,
+        is_starter_capsule=bool(
+            getattr(payload, "is_starter_capsule", False)
+            or ("starter_capsule" in [str(t).strip().lower() for t in (tags_list or [])])
+        ),
     )
     doc = item.model_dump()
 
@@ -885,8 +889,20 @@ async def update_item(
     # honour both entry points.
     prior = await db.closet_items.find_one(
         {"id": item_id, "user_id": user["id"]},
-        {"_id": 0, "source": 1, "marketplace_intent": 1, "preferred_image_view": 1},
+        {"_id": 0, "source": 1, "marketplace_intent": 1, "preferred_image_view": 1, "is_starter_capsule": 1, "tags": 1},
     )
+    if prior:
+        prior_tags = [str(t).strip().lower() for t in (prior.get("tags") or [])]
+        is_starter = bool(prior.get("is_starter_capsule") or "starter_capsule" in prior_tags)
+        if is_starter and not (patch.get("is_starter_capsule") is False):
+            if patch.get("source") == "Shared" or patch.get("marketplace_intent") in {"for_sale", "swap", "donate", "rent"}:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "code": "starter_capsule_photo_required",
+                        "message": "Please replace the Starter Basic catalog photo with your own real photo before listing on the Marketplace.",
+                    },
+                )
 
     # If the patch explicitly provides a new reconstructed_image_url or changes
     # preferred_image_view, we must invalidate the thumbnail so it doesn't mask it.

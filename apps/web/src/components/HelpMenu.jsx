@@ -520,6 +520,12 @@ export default function HelpMenu() {
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
                       {t("help.overview_p3")}
                     </p>
+                    <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
+                      {t("help.overview_onboarding", {
+                        defaultValue:
+                          "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
+                      })}
+                    </p>
                   </div>
                 )}
                 {activeTab === "prerequisites" && (

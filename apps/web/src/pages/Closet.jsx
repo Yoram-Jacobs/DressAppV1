@@ -2372,6 +2372,24 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             <Star className="h-4 w-4 text-primary-brand" />
           </div>
         )}
+        {/* STARTER CAPSULE BADGE */}
+        {!item._pendingSync &&
+          Boolean(
+            item.is_starter_capsule ||
+              (Array.isArray(item.tags) && item.tags.includes("starter_capsule"))
+          ) && (
+            <div
+              className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-center rounded-full bg-dark-brand/85 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-xs"
+              data-testid="closet-item-starter-badge"
+            >
+              <Sparkles className="me-1 h-3 w-3 shrink-0 text-amber-300" />
+              <span className="truncate">
+                {t("closet.starterBasicBadge", {
+                  defaultValue: "Starter Basic · Tap to add your photo",
+                })}
+              </span>
+            </div>
+          )}
         {/* PENDING SYNC */}
         {item._pendingSync && (
           <div

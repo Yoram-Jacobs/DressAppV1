@@ -35,3 +35,4 @@ Ottieni un guardaroba digitale strutturato e accessibile che elimina l'indecisio
 ## Limitazioni
 - La capacità dell'armadio nel Piano Gratuito parte da 50 capi (espandibile fino a 150 tramite bonus invito); passando a Manager ($10/mese) o Professional ($15/mese) si sblocca lo spazio illimitato.
 - La rimozione dello sfondo e la segmentazione rendono al meglio con una buona illuminazione e sfondi a contrasto.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

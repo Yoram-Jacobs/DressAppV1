@@ -145,3 +145,37 @@ flowchart LR
 3. **Quick-Win Bug Fixes Along the Way:**
    - Fix [`LoginClosetReminderModal.jsx`](../../apps/web/src/components/LoginClosetReminderModal.jsx#L35) where `nav('/upload')` points to a non-existent route instead of `nav('/closet/add')`.
    - Update [`Login.jsx`](../../apps/web/src/pages/Login.jsx#L56) and [`Register.jsx`](../../apps/web/src/pages/Register.jsx#L58) so `<GoogleAuthButton />` reads `location.state?.from?.pathname` (or `?next=`) instead of always hardcoding `next="/home"`.
+
+---
+
+## 6. Locked Design Decisions (`/grill-me` Alignment — 2026-10-19)
+
+1. **Entry Point & Routing Architecture:**
+   - Keep `/home` as the public showcase.
+   - Route all `"Get Started"`, `"Create Account"` (`/register`), and guest clicks on protected-feature CTAs (via [`ProtectedRoute.jsx`](../../apps/web/src/components/ProtectedRoute.jsx)) into the new `/onboarding` wizard (preserving `state.from` as the intended destination).
+   - Keep `/login` as a fast, direct 1-click Google Sign-In for returning users.
+2. **Step 3 Closet Seeding — Men's & Women's Static Onboarding Datasets (`onboardingDataset.js`, Mode B Disabled):**
+   - **48-Item Static Dataset (24 Women's + 24 Men's):** Divided into Men's and Women's collections covering the full spectrum of global silhouettes aligned with [`AvatarViewer2D.jsx`](../../apps/web/src/components/AvatarViewer2D.jsx) topography:
+     - *Women's (24 items):* Full-Body Cultural & One-Piece (*Embroidered Kaftan, Flowing Jalabiya/Galabiya, Classic Abaya, Midi Wrap Dress, Long-Sleeve Modest Maxi Dress, Tailored Jumpsuit*), Skirts (*Pleated Maxi Skirt, A-Line Midi Skirt, Tailored Pencil Skirt*), Trousers & Loose Pants (*Tailored Suit Trousers, Wide-Leg Linen Palazzo Pants, Straight Jeans, Athleisure Joggers*), Tops & Loose Tunics (*Longline Linen Tunic/Overshirt, Crisp White Button-Down, High-Neck Silk Blouse, Crewneck Tee*), Suits & Outerwear (*Navy Business Suit Blazer, Belted Trench Coat, Fine-Knit Cardigan*), and Footwear (*White Sneakers, Closed-Toe Block-Heel Pumps, Leather Loafers/Flats, Boots/Sandals*).
+     - *Men's (24 items):* Full-Body Traditional & Tailored Suits (*Traditional Thobe/Dishdasha, Relaxed Jalabiya/Djellaba, Longline Linen Kurta/Tunic, Two-Piece Navy Business Suit, Double-Breasted Blazer*), Tops & Loose Layers (*Crisp Oxford Dress Shirt, Loose Linen Overshirt, Merino Crewneck Sweater, Piqué Polo, Essential Cotton Tee, Streetwear Hoodie*), Trousers & Loose Pants (*Tailored Wool Dress Trousers, Wide-Leg Linen Drawstring Pants, Sand Chinos, Straight Denim Jeans, Athletic Joggers*), Outerwear (*Hopsack Blazer, Wool Overcoat, Bomber Jacket, Suit Waistcoat*), and Footwear (*Oxford Dress Shoes, White Leather Sneakers, Suede Loafers, Chelsea Boots*).
+   - **Dual-Path Outfit Completeness:** Step 3 & Step 4 validate a complete outfit via **either** the **Full-Body Path** (`1 Full-Body [Dress / Kaftan / Jalabiya / Thobe / Abaya / Jumpsuit] + 1 Footwear`, 4+ items total) **or** the **Separates/Suit Path** (`1 Top + 1 Bottom [Trousers or Skirt] + 1 Footwear`, 4+ items total).
+   - **Mode B Disabled:** No single-photo camera/selfie upload in Step 3.
+   - **Mode C (Power-User Pill):** *"Migrating from Whering / Acloset / Stylebook? Import in 1 click"* (`migration_flag: "Migrate"`).
+3. **Starter Capsule Lifecycle & Marketplace Guardrails:**
+   - Mark Starter Capsule items with a `starter_capsule` tag/flag and display a subtle *"Starter Basic — Tap to snap your real photo"* badge on the card.
+   - Allow the AI Stylist, Outfit Canvas, and Suitcase to use them immediately.
+   - Block publishing `starter_capsule` items to the Marketplace until the user replaces the stock cutout with their own real photo via `POST /api/v1/closet/{item_id}/photo` ([`set_item_photo`](../../backend/app/api/v1/closet/ingestion.py#L1751)).
+4. **Step 1 & Step 2 Profile Scope + B2B Professional Branch:**
+   - **Step 1 (Style & Lifestyle DNA):** Visual, zero-typing cards/chips for `sex`, `style_profile.aesthetics`, `style_profile.color_palette`, `cultural_context.dress_conservativeness`, `occupation`, **plus** an *"Are you a Professional Stylist / Tailor / Designer?"* toggle (`professional.is_professional`).
+   - **Step 1B (Conditional B2B Professional Card):** When the Professional toggle is enabled, show a compact Business Card step (`profession` chip, `business.name`, `business.address`/city, `business.website`/Instagram, `business.description`).
+   - **Step 2 (AI Fit & Avatar Calibration):** 4 interactive sliders (`height`, `weight`, `waist`, `foot_length` with `cm/kg` ↔ `in/lb` toggle) + `skin_tone` picker, calling stateless `POST /api/v1/sizes/predict-measurements` live and morphing [`AvatarViewer.jsx`](../../apps/web/src/components/AvatarViewer.jsx).
+   - Let Google OAuth auto-fill Name, Email, Avatar, DOB, and Location on sign-in; defer Phone, Full Street Address, Hair, and PayPal payout fields to `/me`.
+5. **Step 4 "Aha! Moment" Reveal & Post-OAuth Landing Destination:**
+   - **Step 4 Reveal:** Show the user's calibrated **3D/2D Avatar** wearing a complete head-to-toe outfit assembled from their selected Starter Capsule items, matched to their **real local weather** (`GET /api/v1/weather`), alongside their **AI Size Passport** (and a live preview of their **Experts Directory Card** if they enabled the Professional toggle).
+   - **Post-OAuth Landing:** After [`AuthCallback.jsx`](../../apps/web/src/pages/AuthCallback.jsx) flushes the onboarding draft and seeds their closet, land them directly in `/stylist` with their newly generated first outfit loaded on the canvas and a welcome message from the AI Stylist (or honor the specific feature route they originally clicked if it wasn't `/stylist` or `/home`).
+6. **Direct `/login` New Users & Existing Account Collision Handling:**
+   - If a user signs in directly via `/login` and has **0 closet items + no style/measurement profile yet**, route them into `/onboarding` (in authenticated mode) instead of showing the legacy empty-closet popup in [`AppLayout.jsx`](../../apps/web/src/components/AppLayout.jsx).
+   - If an existing user with saved data completes `/onboarding` as a guest before signing into their existing Google account, **merge non-destructively** (only populate empty profile fields and append newly selected starter items).
+7. **Rollout Sequence:**
+   - Build and ship **Web (`apps/web`) + Backend (`backend`) + 13 Locales + HelpMenu/Wiki docs** first as the reference implementation, then port the flow to **Mobile (`apps/mobile`)**.
+

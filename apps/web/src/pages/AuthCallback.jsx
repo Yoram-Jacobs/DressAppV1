@@ -4,8 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { tokenStore, userStore } from '@/lib/api';
+import { tokenStore, userStore, api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { closetStore } from '@/lib/closetStore';
+import {
+  getOnboardingDraft,
+  flushOnboardingDraftToBackend,
+} from '@/lib/onboardingStore';
 import { toast } from 'sonner';
 
 /**
@@ -20,8 +25,9 @@ import { toast } from 'sonner';
  *   1. parse the fragment (never the query string — keeps the JWT out of
  *      every reverse-proxy access log)
  *   2. persist the token + fetch /me
- *   3. surface a success / warning / error toast
- *   4. redirect into the app
+ *   3. flush any pending gradual-engagement onboarding draft (profile + starter capsule)
+ *   4. surface a success / warning / error toast
+ *   5. redirect into the app
  */
 export default function AuthCallback() {
   const { t } = useTranslation();
@@ -52,11 +58,11 @@ export default function AuthCallback() {
       return;
     }
 
-    // 1) Store token, 2) fetch user, 3) toast, 4) redirect.
+    // 1) Store token, 2) fetch user, 3) flush onboarding draft if present, 4) toast, 5) redirect.
     tokenStore.set(token);
     userStore.set(null); // force a fresh /me on the AuthProvider refresh
     refresh()
-      .then((u) => {
+      .then(async (u) => {
         if (!u) {
           setError('session_failed');
           tokenStore.clear();
@@ -68,12 +74,46 @@ export default function AuthCallback() {
         } catch {
           /* noop */
         }
+
+        let targetRoute = safeNext;
+        try {
+          const draft = getOnboardingDraft();
+          const userAlreadyOnboarded = Boolean(
+            u?.migration_flag ||
+              (Array.isArray(u?.style_profile?.aesthetics) &&
+                u.style_profile.aesthetics.length > 0 &&
+                (u?.body_measurements?.height || u?.body_measurements?.height_cm))
+          );
+          const hasDraftContent =
+            draft &&
+            Boolean(draft.updated_at) &&
+            (userAlreadyOnboarded ? Number(draft.step) >= 3 : Number(draft.step) >= 1);
+          if (hasDraftContent) {
+            const flushResult = await flushOnboardingDraftToBackend({
+              api,
+              closetStore,
+              currentUser: u,
+              draft,
+            });
+            await refresh().catch(() => {});
+            if (
+              flushResult?.flushed &&
+              (safeNext === '/home' || safeNext === '/onboarding') &&
+              flushResult.redirectTo
+            ) {
+              targetRoute = flushResult.redirectTo;
+            }
+          }
+        } catch {
+          /* non-fatal: proceed to targetRoute */
+        }
+
         if (warning === 'calendar_persist_failed') {
           toast.warning(t('auth.calendarPersistWarning'));
         } else {
           toast.success(t('auth.signedInWithGoogle'));
         }
-        nav(safeNext, { replace: true });
+        nav(targetRoute, { replace: true });
       })
       .catch(() => {
         setError('session_failed');

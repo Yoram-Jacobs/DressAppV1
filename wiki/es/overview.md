@@ -11,3 +11,4 @@ Bienvenido a **DressApp**, tu armario digital inteligente y asistente de estilo 
 - **Estadísticas del armario**: Consulta el valor total de tu ropa, el coste por uso y la distribución de colores.
 - **Mercado comunitario**: Compra, vende, alquila, intercambia o dona ropa y prueba cómo quedan las prendas de la comunidad con tu propio armario.
 - **Trend Scout y estilistas profesionales**: Explora inspiración diaria de moda o contacta con estilistas certificados para asesorías personalizadas.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

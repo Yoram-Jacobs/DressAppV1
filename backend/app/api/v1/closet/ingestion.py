@@ -1853,6 +1853,13 @@ async def set_item_photo(
                 "set_item_photo: CLIP re-embed failed (%s)", repr(exc)[:120]
             )
 
+    existing_tags = [
+        t for t in (item.get("tags") or [])
+        if str(t).strip().lower() != "starter_capsule"
+    ]
+    update_doc["is_starter_capsule"] = False
+    update_doc["tags"] = existing_tags
+
     await db.closet_items.update_one(
         {"id": item_id},
         {"$set": update_doc, "$unset": {"thumbnail_data_url": ""}},

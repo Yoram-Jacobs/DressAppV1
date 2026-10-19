@@ -11,3 +11,4 @@ Benvenuto su **DressApp** — il tuo guardaroba digitale intelligente e assisten
 - **Statistiche del guardaroba**: Monitora il valore totale dell'armadio, il costo per utilizzo e la distribuzione dei colori.
 - **Marketplace della community**: Acquista, vendi, noleggia, scambia o dona abiti e prova virtualmente i capi della community con il tuo guardaroba.
 - **Trend Scout e stilisti professionisti**: Esplora l'ispirazione moda quotidiana o contatta stilisti certificati per consulenze personalizzate.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

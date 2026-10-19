@@ -643,7 +643,13 @@
     "dpp": "DPP",
     "saveFailuresTitle": "Estos artículos no se pudieron guardar en tu armario. Intente cargarlos nuevamente.",
     "garmentsCount": "{{count}} prendas",
-    "views": "vistas"
+    "views": "vistas",
+    "starterBasicBadge": "Básico inicial · Toca para añadir tu foto",
+    "starterBasicBannerTitle": "Starter Capsule Staple · Catalog Reference Photo",
+    "starterBasicBannerDesc": "This staple works immediately in your AI Stylist, Outfit Canvas, and Suitcase. Snap or upload your own photo anytime to personalize it and unlock Marketplace listing.",
+    "starterBasicSnapBtn": "Snap My Photo",
+    "starterBasicUploadBtn": "Upload Photo",
+    "starterBasicMarketplaceBlocked": "Sube una foto real de tu prenda antes de publicarla en el Marketplace."
   },
   "addItem": {
     "namePlaceholder": "ej. Cazadora vaquera vintage",
@@ -4233,7 +4239,8 @@
     "trend_gender_desc": "Cambia con facilidad entre moda femenina y masculina, lee artículos verificados en Vogue/GQ y toca Actualizar (🔄) para novedades al instante.",
     "tableOfContents": "Índice de contenidos",
     "backToSummary": "Volver al resumen",
-    "whyItMatters": "Por qué es importante:"
+    "whyItMatters": "Por qué es importante:",
+    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in."
   },
   "campaigns": {
     "status": {
@@ -5153,6 +5160,75 @@
       "activeManagerBadge": "¡Estás en el plan {{tier}} — todo el poder desbloqueado!",
       "allWornTitle": "¡100% de uso activo del armario!",
       "allWornDesc": "¡Has usado todas las prendas de tu armario! Sigue registrando tus looks con el Estilista IA para reducir tu costo promedio por uso."
+    }
+  },
+  "onboarding": {
+    "stepOf": "Paso {{current}} de {{total}}",
+    "newToDressApp": "¿Nuevo en DressApp?",
+    "startSetupLink": "Personaliza tu Estilista IA y Avatar 3D en 60s",
+    "firstOutfitTitle": "My First AI Look",
+    "firstOutfitDesc": "Assembled during your style & fit calibration.",
+    "step1": {
+      "eyebrow": "Step 1 · Style & Silhouette DNA",
+      "title": "Build Your Personal Style Profile",
+      "subtitle": "Tell your AI Stylist how you like to dress so every outfit recommendation feels tailored to you.",
+      "departmentLabel": "1. Select Your Wardrobe Collection",
+      "womenswear": "Womenswear",
+      "womenswearSub": "Dresses, skirts, trousers, abayas, kaftans, sarees & more",
+      "menswear": "Menswear",
+      "menswearSub": "Trousers, suits, thobes, kurtas, knitwear & outerwear",
+      "aestheticsLabel": "2. Choose Your Signatures & Silhouettes",
+      "aestheticsHint": "Pick 1 or more styles you wear most",
+      "paletteLabel": "3. Preferred Color Palette",
+      "routineLabel": "4. Daily Routine",
+      "modestyLabel": "5. Modesty & Coverage Preference",
+      "b2bTitle": "Are you a Professional Stylist, Tailor, or Fashion Designer?",
+      "b2bSubtitle": "Join the DressApp Certified Experts Registry to showcase your digital business card to clients.",
+      "b2bProfession": "Profession",
+      "b2bCompanyName": "Studio / Brand Name",
+      "b2bCity": "City / Region",
+      "b2bWebsite": "Website or Instagram",
+      "b2bBio": "Short Bio / Specialties",
+      "b2bBioPlaceholder": "Personal shopper, bridal couturier, wardrobe consultant...",
+      "continueCta": "Calibrate My Fit & 3D Avatar"
+    },
+    "step2": {
+      "eyebrow": "Step 2 · 15-Second Fit Calibration",
+      "title": "Calibrate Your 3D Avatar & Size Passport",
+      "subtitle": "Slide to your approximate measurements—our AI predicts your full tailoring passport in real time.",
+      "height": "Height",
+      "weight": "Weight",
+      "waist": "Waist",
+      "footLength": "Foot Length",
+      "skinToneLabel": "Avatar Skin Tone",
+      "liveAvatarBadge": "Live 3D/2D Avatar",
+      "aiSizePassport": "AI Size Passport",
+      "calibrating": "Calibrating...",
+      "continueCta": "Build My Starter Capsule"
+    },
+    "step3": {
+      "eyebrow": "Step 3 · Zero-Friction Closet Builder",
+      "title": "Tap 4+ Staples You Own (or Similar)",
+      "subtitle": "Pick from our pre-cataloged studio dataset—each staple includes full fabric, color, and seasonal DNA at 0 AI credit cost.",
+      "autoSelectBtn": "Auto-pick 6 Staples for My Style",
+      "formulaComplete": "Ready! {{count}} staples selected — complete head-to-toe outfit unlocked",
+      "formulaHint": "Select at least 4 items including (1 Full-Body + 1 Footwear) OR (1 Top + 1 Bottom + 1 Footwear) ({{count}}/4 selected)",
+      "migrateTitle": "Already have a digital closet on Whering, Acloset, Indyx, or Stylebook?",
+      "migrateSubtitle": "Enable 1-click desktop wardrobe import immediately after sign-in.",
+      "continueCta": "Assemble My First AI Outfit"
+    },
+    "step4": {
+      "eyebrow": "Your AI Stylist is Ready",
+      "title": "Here Is Your First Personalized Look",
+      "subtitle": "Assembled from your Starter Capsule and calibrated to your 3D/2D avatar & local weather.",
+      "shuffleLook": "Try Another Combination",
+      "wearingNow": "Assembled Head-to-Toe Capsule",
+      "sizePassportTitle": "Calibrated AI Size Passport",
+      "expertPreviewBadge": "Experts Registry Preview",
+      "saveAndFinishCta": "Save My Capsule & Open AI Stylist",
+      "unlockTitle": "Save Your Avatar, Size Passport & {{count}}-Piece Closet",
+      "unlockSub": "Sign in with 1 click so your calibrated measurements, starter staples, and first AI outfit are permanently saved to your account.",
+      "continueWithGoogle": "Save My Closet & Continue with Google"
     }
   }
 }

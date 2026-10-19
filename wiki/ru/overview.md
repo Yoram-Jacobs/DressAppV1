@@ -17,3 +17,4 @@
 
 ### 4. Календарь образов, сбор чемодана и аналитика
 Планируйте образы на неделю вперёд, создавайте умные списки вещей для поездок и узнавайте, какие вещи вы носите чаще всего, а какие пылятся в шкафу.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

@@ -17,3 +17,4 @@
 
 ### 4. आउटफिट कैलेंडर, सूटकेस पैकिंग और वार्डरोब इनसाइट्स
 हर दिन क्या पहनना है इसकी पहले से योजना बनाएं, यात्रा के लिए स्मार्ट पैकिंग सूचियां तैयार करें और जानें कि आप किन कपड़ों का सबसे अधिक उपयोग करते हैं।
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

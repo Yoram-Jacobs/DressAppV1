@@ -35,3 +35,4 @@ You achieve a structured, accessible digital closet that eliminates morning styl
 ## Limitations
 - Closet capacity on the Free Tier starts at 50 items (expandable up to 150 via referral bonuses); upgrading to Manager ($10/mo) or Professional ($15/mo) unlocks unlimited storage.
 - Background removal and segmentation perform best with good lighting and contrasting backgrounds.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

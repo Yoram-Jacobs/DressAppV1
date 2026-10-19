@@ -17,3 +17,4 @@
 
 ### 4. 穿搭日历、旅行打包与衣橱分析
 提前规划每周穿搭，生成高利用率的旅行打包清单，并直观了解哪些衣物常穿、哪些衣物被闲置。
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

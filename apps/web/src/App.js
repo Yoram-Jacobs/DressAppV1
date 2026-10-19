@@ -55,6 +55,7 @@ const Privacy = lazy(() => import('@/pages/Privacy'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const AboutUs = lazy(() => import('@/pages/AboutUs'));
+const Onboarding = lazy(() => import('@/pages/Onboarding'));
 
 /** Global listener for migration events from the bookmarklet or cross-tab BroadcastChannel. */
 function MigrationMessageListener() {
@@ -152,7 +153,8 @@ function App() {
                   <Routes>
                     {/* Public routes that don't require auth/layout */}
                     <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
-                    <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
+                    <Route path="/register" element={<Navigate to="/onboarding" replace />} />
+                    <Route path="/onboarding" element={<Onboarding />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     
                     {/* Extension bridge route */}

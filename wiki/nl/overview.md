@@ -11,3 +11,4 @@ Welkom bij **DressApp** — jouw slimme digitale kledingkast en persoonlijke sti
 - **Garderobe-inzichten**: Bekijk de totale waarde van je kast, de kosten per draagbeurt en je kleurenverdeling.
 - **Community-marktplaats**: Koop, verkoop, huur, ruil of doneer kleding en pas items uit de community virtueel met je eigen garderobe.
 - **Trend Scout & professionele stylisten**: Ontdek dagelijkse mode-inspiratie of neem contact op met gecertificeerde stylisten voor persoonlijk advies.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

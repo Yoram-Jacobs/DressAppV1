@@ -32,7 +32,7 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
 
   const handleLetsStart = () => {
     onClose();
-    nav('/upload');
+    nav('/closet/add');
   };
 
   const handleOpenHelpDoc = (e) => {

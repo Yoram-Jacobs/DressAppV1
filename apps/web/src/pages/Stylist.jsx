@@ -182,11 +182,13 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
           id: cid,
           closet_item_id: cid,
           image_url: img,
+          clean_image_url: matchedCi?.clean_image_url || g.clean_image_url || img,
           role: role,
           category: matchedCi?.category || g.category,
           sub_category: matchedCi?.sub_category || g.sub_category,
           name: matchedCi?.name || matchedCi?.title || g.name || g.title,
-          item_type: matchedCi?.item_type || g.item_type
+          item_type: matchedCi?.item_type || g.item_type,
+          avatar_fit: matchedCi?.avatar_fit || g.avatar_fit || null,
         };
       }
     });
@@ -891,6 +893,54 @@ export default function Stylist() {
       }
     }
   }, [location.state, outfits]);
+
+  // Hydrate the user's first starter outfit assembled during /onboarding
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('dressapp.onboarding_first_outfit');
+      if (!raw) return;
+      sessionStorage.removeItem('dressapp.onboarding_first_outfit');
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.garments) || parsed.garments.length === 0) return;
+
+      const todayStr = formatLocalDate(new Date());
+      const body = {
+        name: parsed.name || t('onboarding.firstOutfitTitle', { defaultValue: 'My First AI Look' }),
+        description: t('onboarding.firstOutfitDesc', {
+          defaultValue: 'Assembled during your style & fit calibration.',
+        }),
+        source_workflow: 'manual',
+        prompt: 'onboarding_starter_capsule',
+        garments: parsed.garments,
+        usage: {
+          date: todayStr,
+          time: '08:00',
+        },
+      };
+      api
+        .saveOutfit(body)
+        .then((saved) => {
+          const finalOutfit = saved?.outfit || saved;
+          if (finalOutfit) {
+            upsert(finalOutfit);
+            setSelectedOutfitForDetail(finalOutfit);
+            setActiveTab('shuffle');
+          }
+        })
+        .catch(() => {
+          const localFallback = {
+            id: `onboarding-${Date.now()}`,
+            ...body,
+            created_at: new Date().toISOString(),
+          };
+          upsert(localFallback);
+          setSelectedOutfitForDetail(localFallback);
+          setActiveTab('shuffle');
+        });
+    } catch {
+      /* ignore */
+    }
+  }, [upsert, setSelectedOutfitForDetail, setActiveTab, t]);
 
   const deleteOutfit = async (id) => {
     try {

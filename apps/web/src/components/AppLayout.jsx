@@ -18,6 +18,7 @@ import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
 import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Footer } from '@/components/Footer';
+import { hasCompletedOnboarding } from '@/lib/onboardingStore';
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
@@ -190,6 +191,27 @@ export const AppLayout = () => {
   }
 
   const isPricingPage = location.pathname === '/pricing';
+  const isPublicBrowsePage =
+    location.pathname === '/' ||
+    location.pathname === '/home' ||
+    location.pathname === '/about' ||
+    location.pathname === '/pricing' ||
+    location.pathname === '/experts' ||
+    location.pathname === '/trends' ||
+    location.pathname.startsWith('/market') ||
+    location.pathname.startsWith('/transactions');
+  const needsOnboardingSetup =
+    !isPublicBrowsePage &&
+    isLoaded &&
+    !closetError &&
+    user &&
+    !hasClosetItems &&
+    !hasCompletedOnboarding(user, hasClosetItems);
+
+  if (needsOnboardingSetup) {
+    return <Navigate to="/onboarding" state={{ from: location }} replace />;
+  }
+
   const showOnboardingMigration = !dismissedMigration && !isPricingPage && isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems;
   const showLoginReminder = isLoaded && !closetError && user && user.migration_flag && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
 

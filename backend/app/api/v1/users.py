@@ -489,15 +489,16 @@ async def update_me(
 
     set_ops["updated_at"] = datetime.now(timezone.utc).isoformat()
     if set_ops:
-        if any(k.startswith("body_measurements.") for k in set_ops):
-            raw_bm = user.get("body_measurements")
+        if "body_measurements" in set_ops or any(k.startswith("body_measurements.") for k in set_ops):
+            raw_bm = set_ops.get("body_measurements") or user.get("body_measurements")
             current_measurements = dict(raw_bm) if isinstance(raw_bm, dict) else {}
             for k, v in set_ops.items():
                 if k.startswith("body_measurements."):
                     sub_k = k.split(".", 1)[1]
                     current_measurements[sub_k] = v
+            effective_sex = set_ops.get("sex") or user.get("sex") or "female"
             try:
-                set_ops["avatar_shape_params"] = calculate_shape_parameters(current_measurements)
+                set_ops["avatar_shape_params"] = calculate_shape_parameters(current_measurements, sex=effective_sex)
             except Exception:
                 pass
             

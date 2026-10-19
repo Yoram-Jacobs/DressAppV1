@@ -416,6 +416,8 @@ class ClosetItem(BaseDoc):
     # --- AI Stylist Scheduler & Rotation (Phase Scheduler) ---
     rejection_count: int = 0
     last_suggested_at: str | None = None
+    # --- Gradual Engagement Onboarding Starter Capsule ---
+    is_starter_capsule: bool = False
 
 
 # ----------------- The Eyes: analyzer response payload -----------------

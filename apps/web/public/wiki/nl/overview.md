@@ -35,3 +35,4 @@ Je krijgt een gestructureerde, toegankelijke digitale kledingkast die keuzestres
 ## Beperkingen
 - De capaciteit in de Gratis Tier begint bij 50 items (uitbreidbaar tot 150 via doorverwijzingsbonussen); upgraden naar Manager ($10/mnd) of Professional ($15/mnd) ontgrendelt onbeperkte opslag.
 - Achtergrondverwijdering en segmentatie werken het best bij goede verlichting en een contrasterende achtergrond.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

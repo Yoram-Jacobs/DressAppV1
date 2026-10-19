@@ -188,6 +188,8 @@ class CreateItemIn(BaseModel):
     # these as immutable: Gemini output for a locked field is silently
     # discarded unless the current DB value is empty/falsy.
     receipt_locked_fields: list[str] = Field(default_factory=list)
+    # Onboarding Starter Capsule provenance flag
+    is_starter_capsule: bool = False
 
 
 class UpdateItemIn(BaseModel):
@@ -242,6 +244,7 @@ class UpdateItemIn(BaseModel):
     clean_image_status: str | None = None
     # Allow clearing the reconstruction (user can "revert" via Repair UI)
     clear_reconstruction: bool = False
+    is_starter_capsule: bool | None = None
 
 
 

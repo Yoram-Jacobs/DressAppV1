@@ -35,3 +35,4 @@ Logras un armario digital estructurado y accesible que elimina la fatiga matutin
 ## Limitaciones
 - La capacidad del armario en el Plan Gratuito comienza en 50 prendas (ampliable hasta 150 mediante bonos de invitación); actualizar a Manager ($10/mes) o Professional ($15/mes) desbloquea almacenamiento ilimitado.
 - La eliminación de fondo y la segmentación funcionan mejor con buena iluminación y fondos contrastados.
+- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.

@@ -1,3 +1,4 @@
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -6,6 +7,14 @@ import loginimg from "../assets/img/loginimg.webp";
 
 export default function Login() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const fromObj = location.state?.from;
+  const nextPath =
+    typeof fromObj === "string"
+      ? fromObj
+      : fromObj?.pathname
+        ? `${fromObj.pathname}${fromObj.search || ""}`
+        : "/home";
 
   return (
     <div className="relative grid min-h-[100dvh] grid-rows-[auto_1fr] overflow-x-hidden bg-accent-beige md:grid-rows-none md:grid-cols-[3fr_2fr]">
@@ -53,12 +62,25 @@ export default function Login() {
 
           <div className="mb-4 space-y-3 sm:mb-6" data-testid="google-signin-block">
             <GoogleAuthButton
-              next="/home"
+              next={nextPath}
               label={t("auth.continueWithGoogle")}
               testId="login-google-button"
               className="w-full min-h-11"
             />
           </div>
+
+          <p className="mt-4 text-xs font-semibold text-text-brand">
+            {t("onboarding.newToDressApp", { defaultValue: "New to DressApp?" })}{" "}
+            <Link
+              to="/onboarding"
+              className="text-primary-brand underline underline-offset-4 hover:opacity-80"
+              data-testid="login-start-onboarding-link"
+            >
+              {t("onboarding.startSetupLink", {
+                defaultValue: "Personalize your AI Stylist & 3D Avatar in 60s",
+              })}
+            </Link>
+          </p>
         </div>
       </div>
     </div>
