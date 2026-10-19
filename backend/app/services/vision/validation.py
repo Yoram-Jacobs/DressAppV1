@@ -861,7 +861,8 @@ def _sanitize_hoodie_and_sweatshirts(res: dict[str, Any], language: str | None =
     cat_l = str(res.get("category") or "").strip().lower()
     sub_l = str(res.get("sub_category") or "").strip().lower()
     it_l = str(res.get("item_type") or "").strip().lower()
-    full_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {sub_l} {it_l}".lower()
+    tags_str = " ".join(str(t) for t in (res.get("tags") or []) if t)
+    full_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {sub_l} {it_l} {tags_str}".lower()
     is_he = ((language or "").lower() in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_text)
 
     is_hoodie = any(w in full_text for w in (
@@ -869,7 +870,7 @@ def _sanitize_hoodie_and_sweatshirts(res: dict[str, Any], language: str | None =
     ))
     if is_hoodie and cat_l not in ("bottom", "bottoms", "footwear", "accessories"):
         res["category"] = "Top"
-        res["sub_category"] = "Hoodie"
+        res["sub_category"] = "סווטשירטים וקפוצ'ונים" if is_he else "Hoodie"
         is_zip = any(w in full_text for w in ("zip", "zipper", "רוכסן", "רוכסנים"))
         if is_he:
             res["item_type"] = "קפוצ'ון עם רוכסן" if is_zip else "קפוצ'ון"
@@ -3491,6 +3492,8 @@ def _coerce_enums(
     _sanitize_sleeve_and_cut_for_non_tops(parsed)
     _sanitize_sandals_and_footwear(parsed)
     _sanitize_sweatpants_and_trainer(parsed)
+    _sanitize_hoodie_and_sweatshirts(parsed)
+    _sanitize_tshirt_and_tops(parsed)
 
     norm_user = resolve_garment_gender(user_gender)
     norm_model = resolve_garment_gender(model_gender) or resolve_garment_gender(parsed.get("model_gender"))
@@ -3537,6 +3540,7 @@ def _coerce_enums(
     _sanitize_sleeve_and_cut_for_non_tops(parsed)
     _sanitize_sandals_and_footwear(parsed)
     _sanitize_sweatpants_and_trainer(parsed)
+    _sanitize_hoodie_and_sweatshirts(parsed)
     cat_lower = str(parsed.get("category") or "").strip().lower()
     sub_lower = str(parsed.get("sub_category") or "").strip().lower()
     itype_lower = str(parsed.get("item_type") or "").strip().lower()
@@ -4784,5 +4788,6 @@ def _enforce_segformer_category(
                 analysis["item_type"] = f"קלאסי {sub_str}" if is_he_post else f"Classic {sub_str}"
 
     _sanitize_cross_category_contamination(analysis, language=language)
+    _sanitize_hoodie_and_sweatshirts(analysis, language=language)
     return analysis
 

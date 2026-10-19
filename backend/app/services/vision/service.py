@@ -2749,7 +2749,7 @@ class GarmentVisionService:
           wearer (e.g. two pairs of pants and a belt on wall-mounted hooks, clothes hanging on a
           closet rack/rod, a pile of clothes on a bed/floor, or a multi-item unworn cluster).
         """
-        if detections and _detect_human_presence(detections):
+        if detections and any(d.get("has_human_head") for d in detections):
             return "multi"
         if detections and any(d.get("_unworn_cluster_hint") for d in detections):
             return "mass"
@@ -2771,7 +2771,7 @@ class GarmentVisionService:
                 client = self._get_gemini()
                 system_prompt = (
                     "You are a fashion vision router. Classify this clothing photo into one of three pipelines:\n"
-                    "- 'single': Exactly ONE standalone garment, ONE pair of shoes, or ONE accessory (e.g. 1 shirt on a hanger, 1 pair of pants laid flat, 1 dress, 1 jacket, 1 pair of boots) with no human wearer.\n"
+                    "- 'single': Exactly ONE standalone garment, ONE pair of shoes, or ONE accessory (e.g. 1 hoodie, 1 shirt on a hanger, 1 pair of pants laid flat, 1 dress, 1 jacket, 1 pair of boots) with no human wearer.\n"
                     "- 'multi': A human model, person, or dressed full-body mannequin wearing an outfit of 2 or more garments.\n"
                     "- 'mass': TWO OR MORE unworn garments/accessories in the same photo WITHOUT a human wearer — including multiple items hanging on wall-mounted hooks or door hooks (e.g. two pairs of pants and a belt on wall hooks), clothes hanging on a closet rod/rack, a pile/stack of clothes on a bed/floor/chair, or multiple separate unworn garments arranged together."
                 )
@@ -2789,12 +2789,10 @@ class GarmentVisionService:
                         system=system_prompt,
                         user_parts=["Classify the capture pipeline for this photo.", small_bytes],
                         model=self.detect_model,
-                        temperature=0.0,
-                        thinking_budget=0,
                         response_mime_type="application/json",
                         response_schema=schema,
                     ),
-                    timeout=6.0,
+                    timeout=8.0,
                 )
                 parsed = _extract_json(resp or "")
                 if isinstance(parsed, dict):
@@ -2814,6 +2812,8 @@ class GarmentVisionService:
             except Exception as exc:
                 logger.info("_detect_unworn_pipeline_mode fallback after check: %s", repr(exc)[:140])
 
+        if detections and _detect_human_presence(detections):
+            return "multi"
         return "single"
 
     async def analyze_outfits_stream(
@@ -2884,6 +2884,7 @@ class GarmentVisionService:
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
+                has_explicit_head = any(bool(d.get("has_human_head")) for d in (detections or []))
                 if detections:
                     cat_labels = {
                         (d.get("label") or d.get("category") or "").lower()
@@ -2957,12 +2958,13 @@ class GarmentVisionService:
 
                 # Auto-route unworn clusters (wall hooks, closet racks, garment piles) to the Mass pipeline
                 unworn_cluster_hint = bool(
-                    not has_human_wearer
+                    not has_explicit_head
                     and any(d.get("_unworn_cluster_hint") for d in (detections or []))
                 )
                 force_multi_from_router = False
+                force_single_from_router = False
                 if (
-                    not has_human_wearer
+                    (not has_human_wearer or (not has_explicit_head and not shoe_dets and len(detections) >= 2))
                     and not is_footwear_only
                     and not unworn_cluster_hint
                     and eff_mode == "auto"
@@ -2972,8 +2974,14 @@ class GarmentVisionService:
                     routed_pipe = await self._detect_unworn_pipeline_mode(img_bytes, detections=detections)
                     if routed_pipe == "mass":
                         unworn_cluster_hint = True
+                        has_human_wearer = False
                     elif routed_pipe == "multi":
                         force_multi_from_router = True
+                        has_human_wearer = True
+                    elif routed_pipe == "single":
+                        force_single_from_router = True
+                        has_human_wearer = False
+                        has_multi_body_zones = False
 
                 if unworn_cluster_hint and remaining_mass_budget > 0 and not cutout_only:
                     try:
@@ -3039,6 +3047,7 @@ class GarmentVisionService:
                     and not force_multi_from_router
                     and (
                         (count is not None and count <= 1)
+                        or force_single_from_router
                         or is_footwear_only
                         or same_zone_or_category
                         or _looks_already_cropped(detections, count_hint=count)

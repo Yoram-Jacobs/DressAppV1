@@ -3535,3 +3535,129 @@ async def test_auto_route_mixed_batch_single_multi_and_mass_pipelines(monkeypatc
     assert len(done_frames) == 1
     assert done_frames[0]["count"] == 6
     assert done_frames[0]["reconstructed_count"] == 3
+
+
+def test_hoodie_subcategory_never_identified_as_tshirt():
+    """Issue 1 regression: A long-sleeved graphic hoodie must have sub_category='Hoodie', never 'T-Shirts' or 'T-Shirt'."""
+    from app.services.vision.validation import _coerce_enums, _enforce_segformer_category
+
+    raw = {
+        "name": "Black Cropped Graphic Hoodie",
+        "title": "Black Cropped Graphic Hoodie",
+        "category": "Top",
+        "sub_category": "T-Shirts",
+        "item_type": "Hoodie",
+        "caption": "Black long-sleeve cropped hoodie with graphic print.",
+        "tags": ["hoodie", "streetwear"],
+    }
+    coerced = _coerce_enums(raw, "women")
+    assert coerced["category"] == "Top"
+    assert coerced["sub_category"] == "Hoodie"
+    assert coerced["item_type"] == "Hoodie"
+
+    enforced = _enforce_segformer_category(
+        coerced,
+        segformer_kind="top",
+        label="t_shirt",
+        is_single_item=True,
+        language="en",
+    )
+    assert enforced["category"] == "Top"
+    assert enforced["sub_category"] == "Hoodie"
+    assert enforced["item_type"] == "Hoodie"
+
+
+@pytest.mark.asyncio
+async def test_full_body_man_in_blazer_shirt_belt_pants_shoes_never_synthesizes_hat_or_collapses_to_shoes(monkeypatch):
+    """Issue 2 regression: Full-body man wearing blazer + shirt + belt + trousers + shoes with minimal exposed skin (<1%)
+    must be recognized as an anatomical outfit stack, never synthesize a 'Hat' from jacket+Belt, and preserve all 5 garments."""
+    import io
+    from PIL import Image
+    import app.services.clothing_parser as cp
+
+    H, W = 512, 384
+    img = Image.new("RGB", (W, H), (240, 240, 240))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    img_bytes = buf.getvalue()
+
+    fake_id2label = {
+        0: "background",
+        1: "shirt, blouse",
+        2: "jacket",
+        3: "pants",
+        4: "belt",
+        5: "shoe",
+    }
+    class_mask = np.zeros((H, W), dtype=np.int32)
+    # Shirt in center torso
+    class_mask[110:250, 150:230] = 1
+    # Jacket lapels/sleeves around shirt
+    class_mask[105:265, 110:150] = 2
+    class_mask[105:265, 230:275] = 2
+    # Belt at waist
+    class_mask[250:268, 140:245] = 4
+    # Pants below belt
+    class_mask[268:445, 135:250] = 3
+    # Shoes at bottom
+    class_mask[445:490, 130:180] = 5
+    class_mask[445:490, 205:255] = 5
+
+    monkeypatch.setattr(cp.settings, "CLOTHING_PARSER_ENDPOINT_URL", "")
+    monkeypatch.setattr(cp.settings, "USE_LOCAL_CLOTHING_PARSER", True)
+    monkeypatch.setattr(cp, "_id2label", fake_id2label)
+    monkeypatch.setattr(cp, "_run_inference", lambda _im: class_mask)
+
+    res = await cp.parse_garments(img_bytes)
+    labels = [r["label"] for r in res]
+    labels_low = [l.lower() for l in labels]
+    assert "hat" not in labels_low, f"Jacket + Belt must never synthesize a Hat! Got labels={labels}"
+    assert len(res) == 5, f"Expected all 5 outfit items preserved, got {labels}"
+    assert "shoes" in labels_low
+    assert "pants" in labels_low
+    assert "belt" in labels_low
+    assert "jacket" in labels_low
+    assert "shirt" in labels_low
+    assert all(r.get("has_human_skin") is True for r in res)
+
+
+@pytest.mark.asyncio
+async def test_wall_hooks_two_pants_and_belt_never_triggers_false_human_skin_and_sets_unworn_cluster_hint(monkeypatch):
+    """Issue 3 regression: Two pairs of pants and a belt hanging vertically on a warm beige wall must NOT trigger
+    has_human_skin from wall chrominance and MUST set _unworn_cluster_hint=True so it routes to the Mass pipeline."""
+    import io
+    from PIL import Image
+    import app.services.clothing_parser as cp
+
+    H, W = 512, 384
+    # Warm beige wall that falls inside raw YCbCr skin thresholds (R=210, G=175, B=145)
+    img = Image.new("RGB", (W, H), (210, 175, 145))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    img_bytes = buf.getvalue()
+
+    fake_id2label = {
+        0: "background",
+        1: "pants",
+        2: "jumpsuit",
+        3: "jacket",
+        4: "belt",
+    }
+    class_mask = np.zeros((H, W), dtype=np.int32)
+    # Left hanging navy pants
+    class_mask[80:450, 40:150] = 1
+    # Center vertical hanging belt
+    class_mask[75:380, 170:195] = 4
+    # Right hanging blue jeans (even if mislabeled by SegFormer as jumpsuit/jacket)
+    class_mask[85:455, 220:340] = 2
+
+    monkeypatch.setattr(cp.settings, "CLOTHING_PARSER_ENDPOINT_URL", "")
+    monkeypatch.setattr(cp.settings, "USE_LOCAL_CLOTHING_PARSER", True)
+    monkeypatch.setattr(cp, "_id2label", fake_id2label)
+    monkeypatch.setattr(cp, "_run_inference", lambda _im: class_mask)
+
+    res = await cp.parse_garments(img_bytes)
+    assert len(res) >= 1
+    assert all(r.get("has_human_skin") is False for r in res), "Warm wall + hanging pants/belt must not trigger has_human_skin!"
+    assert all(r.get("_unworn_cluster_hint") is True for r in res), "Side-by-side hanging garments + vertical belt must set _unworn_cluster_hint=True!"
+

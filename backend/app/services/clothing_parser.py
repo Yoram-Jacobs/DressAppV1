@@ -1382,11 +1382,84 @@ async def parse_garments(
     }
     has_head = bool(np.isin(class_mask, list(head_class_ids)).sum() >= 30) if head_class_ids else False
     has_any_human = bool(np.isin(class_mask, list(human_class_ids)).sum() >= 80) if human_class_ids else False
+
+    # Pre-scan raw instances for anatomical outfit stacking vs side-by-side unworn clusters
+    raw_upper_bbs: list[tuple[int, int, int, int]] = []
+    raw_bottom_bbs: list[tuple[int, int, int, int]] = []
+    raw_shoe_bbs: list[tuple[int, int, int, int]] = []
+    raw_major_bbs: list[tuple[str, tuple[int, int, int, int]]] = []
+    has_vertical_belt = False
+    for lbl_inst, m_inst in instances:
+        cat_inst = _get_label_category(lbl_inst)
+        if not cat_inst:
+            continue
+        area_frac = int(m_inst.sum()) / float(total)
+        bb_inst = _mask_bbox(m_inst)
+        if not bb_inst:
+            continue
+        iy1, ix1, iy2, ix2 = bb_inst
+        ih = max(1, iy2 - iy1)
+        iw = max(1, ix2 - ix1)
+        if str(lbl_inst).lower().startswith("belt") and ih >= int(1.25 * iw) and ih >= int(0.18 * H):
+            has_vertical_belt = True
+        if cat_inst in ("top", "outerwear", "dress") and area_frac >= 0.015:
+            raw_upper_bbs.append(bb_inst)
+        elif cat_inst == "bottom" and area_frac >= 0.015:
+            raw_bottom_bbs.append(bb_inst)
+        elif cat_inst == "footwear" and area_frac >= 0.002:
+            raw_shoe_bbs.append(bb_inst)
+        if cat_inst in ("top", "bottom", "dress", "outerwear") and area_frac >= 0.025 and ih >= int(0.22 * H) and iw >= int(0.12 * W):
+            raw_major_bbs.append((cat_inst, bb_inst))
+
+    is_side_by_side_unworn_cluster = has_vertical_belt
+    if not is_side_by_side_unworn_cluster:
+        for i_a in range(len(raw_major_bbs)):
+            _ca, (ay1, ax1, ay2, ax2) = raw_major_bbs[i_a]
+            aw = max(1, ax2 - ax1)
+            for i_b in range(i_a + 1, len(raw_major_bbs)):
+                _cb, (by1, bx1, by2, bx2) = raw_major_bbs[i_b]
+                bw = max(1, bx2 - bx1)
+                x_ov = max(0, min(ax2, bx2) - max(ax1, bx1))
+                y_ov = max(0, min(ay2, by2) - max(ay1, by1))
+                min_h = max(1, min(ay2 - ay1, by2 - by1))
+                if (y_ov / float(min_h)) >= 0.40 and (x_ov / float(min(aw, bw))) < 0.35:
+                    is_side_by_side_unworn_cluster = True
+                    break
+            if is_side_by_side_unworn_cluster:
+                break
+
+    has_anatomical_outfit_stack = False
+    if not is_side_by_side_unworn_cluster:
+        # 1. Standing outfit with footwear at bottom and upper/lower garments above
+        if raw_shoe_bbs and (raw_upper_bbs or raw_bottom_bbs):
+            max_shoe_y2 = max(b[2] for b in raw_shoe_bbs)
+            min_shoe_y1 = min(b[0] for b in raw_shoe_bbs)
+            min_cloth_y1 = min(b[0] for b in (raw_upper_bbs + raw_bottom_bbs))
+            if min_shoe_y1 >= int(0.55 * H) and min_cloth_y1 <= int(0.50 * H) and (max_shoe_y2 - min_cloth_y1) >= int(0.45 * H):
+                has_anatomical_outfit_stack = True
+        # 2. Upper garment stacked vertically above lower garment along the same body axis
+        if not has_anatomical_outfit_stack and raw_upper_bbs and raw_bottom_bbs:
+            for uy1, ux1, uy2, ux2 in raw_upper_bbs:
+                uw = max(1, ux2 - ux1)
+                for by1, bx1, by2, bx2 in raw_bottom_bbs:
+                    bw = max(1, bx2 - bx1)
+                    x_ov = max(0, min(ux2, bx2) - max(ux1, bx1))
+                    if (
+                        uy1 < by1
+                        and by2 > uy2 + int(0.10 * H)
+                        and (x_ov / float(min(uw, bw))) >= 0.40
+                        and (by2 - uy1) >= int(0.45 * H)
+                    ):
+                        has_anatomical_outfit_stack = True
+                        break
+                if has_anatomical_outfit_stack:
+                    break
+
     if human_class_ids and (has_head or has_any_human):
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
     else:
-        # Fashion dataset has no explicit human classes: detect human wearer via skin chrominance
-        # outside garment masks, so hands, neck, face, and bare legs are recognized and excised.
+        # Fashion dataset has no explicit human classes: detect human wearer via anatomical outfit stack
+        # combined with skin chrominance outside garment masks (rejecting warm walls/backgrounds).
         try:
             arr = np.array(img)
             r = arr[:, :, 0].astype(float)
@@ -1400,14 +1473,30 @@ async def parse_garments(
                 (r > g) & (g > b) &
                 ((r - g) >= 12.0)
             )
-            # Only consider skin where SegFormer did not predict a clothing item
             garment_occupied = class_mask > 0
             skin_outside_garments = is_skin & (~garment_occupied)
             skin_px = int(skin_outside_garments.sum())
             skin_frac = skin_px / float(total)
-            # A human wearer's exposed skin (face/arms/legs) typically covers 1.5% to 25% of the frame.
-            # If > 28%, it is a warm background surface (bedsheet, table, wall, floor), NOT a human!
-            if 0.015 <= skin_frac <= 0.28:
+
+            # Check image border (outer 6% left/right) to reject warm walls, wood doors, or beige backdrops
+            border_w = max(1, int(0.06 * W))
+            border_mask = np.zeros_like(is_skin, dtype=bool)
+            border_mask[:, :border_w] = True
+            border_mask[:, W - border_w:] = True
+            border_skin_frac = float((skin_outside_garments & border_mask).sum()) / float(max(1, int(border_mask.sum())))
+            is_warm_wall_bg = border_skin_frac >= 0.06 or (border_skin_frac > 0.02 and skin_frac < 2.2 * border_skin_frac)
+
+            if is_side_by_side_unworn_cluster:
+                human_mask_full = None
+                has_any_human = False
+            elif has_anatomical_outfit_stack and raw_shoe_bbs:
+                # Full-body standing person wearing clothes + shoes (even if exposed skin is small, e.g. 0.2%-25%)
+                human_mask_full = skin_outside_garments.astype(np.uint8) if (0.001 <= skin_frac <= 0.28 and not is_warm_wall_bg) else None
+                has_any_human = True
+            elif has_anatomical_outfit_stack and (0.003 <= skin_frac <= 0.25) and not is_warm_wall_bg:
+                human_mask_full = skin_outside_garments.astype(np.uint8)
+                has_any_human = True
+            elif raw_upper_bbs and (0.015 <= skin_frac <= 0.22) and not is_warm_wall_bg:
                 human_mask_full = skin_outside_garments.astype(np.uint8)
                 has_any_human = True
             else:
@@ -1416,7 +1505,7 @@ async def parse_garments(
             human_mask_full = None
 
     if human_mask_full is not None:
-        if not human_mask_full.any() or int(human_mask_full.sum()) < 80:
+        if not human_mask_full.any() or int(human_mask_full.sum()) < 40:
             human_mask_full = None
         else:
             from scipy import ndimage
@@ -1425,7 +1514,7 @@ async def parse_garments(
             human_blurred = ndimage.gaussian_filter(human_mask_full.astype(float), sigma=smooth_sigma)
             human_mask_full = (human_blurred >= 0.3).astype(np.uint8)
 
-    has_human = bool(has_head or (human_mask_full is not None and int(human_mask_full.sum()) >= 150))
+    has_human = bool(has_head or has_any_human or (human_mask_full is not None and int(human_mask_full.sum()) >= 150))
 
     # 1) First pass: keep only sufficiently-large instances; index by label.
     by_label: dict[str, dict[str, Any]] = {}
@@ -1560,7 +1649,7 @@ async def parse_garments(
             }
 
     # 2a-3) Belt Consolidation (when SegFormer fragments a belt into buckle and strap pieces mislabeled as skirt/pants/accessory)
-    if "Belt" in by_label:
+    if "Belt" in by_label and not is_side_by_side_unworn_cluster:
         from scipy import ndimage
         while True:
             belt_mask = by_label["Belt"]["mask"]
@@ -1615,9 +1704,18 @@ async def parse_garments(
             if not merged_any:
                 break
 
-    # 2a-3b) Detect and synthesize Hat when SegFormer (Fashion 47-class) fragments a baseball cap into
-    # crown (vest/top/jacket/hood) and brim/visor (shorts/pants/skirt)
-    if not any(k.lower().startswith(("hat", "headwear", "cap", "beanie")) or (v and v.get("category") == "headwear") for k, v in by_label.items()) and not has_human:
+    # 2a-3b) Detect and synthesize Hat ONLY on standalone headwear close-ups when SegFormer (Fashion 47-class)
+    # fragments a baseball cap into crown (vest/top/hood) and brim/visor (shorts/skirt).
+    # NEVER run on full outfits, when Shoes or Belt are present, or when >= 3 distinct garment labels exist.
+    if (
+        not any(k.lower().startswith(("hat", "headwear", "cap", "beanie")) or (v and v.get("category") == "headwear") for k, v in by_label.items())
+        and not has_human
+        and not has_anatomical_outfit_stack
+        and not is_side_by_side_unworn_cluster
+        and "Shoes" not in by_label
+        and "Belt" not in by_label
+        and len(by_label) <= 2
+    ):
         from scipy import ndimage
         dome_candidates = []
         brim_candidates = []
@@ -1634,17 +1732,16 @@ async def parse_garments(
             cat = (it.get("category") or "").lower()
             lbl = (it.get("label") or "").lower()
 
-            # Visor/brim candidates: wide, short bottom piece (shorts, pants, skirt)
+            # Visor/brim candidates: wide, short bottom piece (shorts, skirt, scarf - never belt or full pants)
             is_brim_candidate = (
-                cat in ("bottom", "accessory")
-                or any(b in lbl for b in ("short", "pant", "skirt", "belt", "scarf"))
-            ) and (h <= int(0.65 * H)) and (float(w) / float(h) >= 0.9)
+                any(b in lbl for b in ("short", "skirt", "scarf"))
+            ) and (h <= int(0.45 * H)) and (float(w) / float(h) >= 1.1)
 
-            # Dome candidates: compact upper piece (vest, top, jacket, hoodie)
+            # Dome candidates: compact upper piece (vest, hood, head covering)
             is_dome_candidate = (
-                cat in ("top", "outerwear", "headwear")
-                or any(d in lbl for d in ("vest", "top", "shirt", "jacket", "sweater", "hood", "cover"))
-            ) and (h <= int(0.80 * H))
+                cat == "headwear"
+                or any(d in lbl for d in ("vest", "hood", "cover"))
+            ) and (h <= int(0.65 * H))
 
             if is_brim_candidate:
                 brim_candidates.append((k, bb, it))
@@ -1670,10 +1767,10 @@ async def parse_garments(
 
                 is_cap_geometry = (
                     (by1 >= dy1 + int(0.20 * d_h))
-                    and (vert_gap <= int(0.12 * H))
-                    and (horiz_overlap >= int(0.20 * min(d_w, b_w)))
-                    and (total_h <= int(0.95 * H))
-                    and (float(total_w) / float(total_h) >= 0.60)
+                    and (vert_gap <= int(0.10 * H))
+                    and (horiz_overlap >= int(0.35 * min(d_w, b_w)))
+                    and (total_h <= int(0.85 * H))
+                    and (float(total_w) / float(total_h) >= 0.75)
                 )
                 if is_cap_geometry:
                     logger.info("clothing_parser: synthesized Hat from dome '%s' and brim '%s'", d_k, b_k)
@@ -1710,8 +1807,8 @@ async def parse_garments(
                 "mask": combined,
             }
 
-    # 2a-5) Headwear Consolidation (when SegFormer fragments a hat/cap into crown, visor/brim, and embroidery patches)
-    if "Hat" in by_label:
+    # 2a-5) Headwear Consolidation (when SegFormer fragments a standalone hat/cap into crown, visor/brim, and embroidery patches)
+    if "Hat" in by_label and not has_human and not has_anatomical_outfit_stack and "Shoes" not in by_label and "Belt" not in by_label:
         from scipy import ndimage
         while True:
             hat_mask = by_label["Hat"]["mask"]
@@ -1734,15 +1831,10 @@ async def parse_garments(
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                # Protect genuine tall garments on a person wearing an outfit:
-                if has_human:
-                    is_genuine_tall_top = o_cat in ("top", "dress", "outerwear")
-                    is_genuine_tall_bottom = o_cat in ("bottom", "dress")
-                    if is_genuine_tall_top or is_genuine_tall_bottom:
-                        continue
-
-                # Shoes/footwear should never be absorbed into a hat
-                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
+                # Never absorb genuine tall garments, footwear, or belts into a hat
+                if o_cat in ("top", "dress", "outerwear", "bottom") and o_h >= int(0.35 * H):
+                    continue
+                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl or "belt" in o_lbl:
                     continue
 
                 x_inter = max(0, min(hx2, ox2) - max(hx1, ox1))
@@ -1761,10 +1853,10 @@ async def parse_garments(
                 horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
                 total_comb_h = max(hy2, oy2) - min(hy1, oy1)
                 is_adjacent_brim = (
-                    (vert_gap <= int(0.12 * H))
-                    and (horiz_overlap >= int(0.20 * min(hat_w, o_w)))
-                    and (o_h <= int(0.65 * H))
-                    and (total_comb_h <= int(0.95 * H) or not has_human)
+                    (vert_gap <= int(0.10 * H))
+                    and (horiz_overlap >= int(0.30 * min(hat_w, o_w)))
+                    and (o_h <= int(0.45 * H))
+                    and (total_comb_h <= int(0.85 * H))
                 )
 
                 if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
@@ -1778,7 +1870,7 @@ async def parse_garments(
 
     distinct_cats = {it.get("category") for it in by_label.values()}
     has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
-    has_human = bool(has_head or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
+    has_human = bool(has_head or has_any_human or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
 
     # 2b) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one
@@ -1868,53 +1960,30 @@ async def parse_garments(
 
     # Read-only cluster hint for auto-routing unworn multi-garment scenes (wall hooks, racks, piles)
     # to the Mass pipeline without altering single/multi garment segmentation masks.
-    unworn_cluster_hint = False
-    if not has_human:
-        major_garment_bbs: list[tuple[str, tuple[int, int, int, int]]] = []
-        for lbl_inst, m_inst in instances:
-            cat_inst = _get_label_category(lbl_inst)
-            if cat_inst in ("top", "bottom", "dress", "outerwear") and int(m_inst.sum()) / float(total) >= 0.030:
-                bb_inst = _mask_bbox(m_inst)
-                if bb_inst and (bb_inst[2] - bb_inst[0]) >= int(0.22 * H) and (bb_inst[3] - bb_inst[1]) >= int(0.14 * W):
-                    major_garment_bbs.append((cat_inst, bb_inst))
-        for i_a in range(len(major_garment_bbs)):
-            cat_a, (ay1, ax1, ay2, ax2) = major_garment_bbs[i_a]
-            aw = max(1, ax2 - ax1)
-            for i_b in range(i_a + 1, len(major_garment_bbs)):
-                cat_b, (by1, bx1, by2, bx2) = major_garment_bbs[i_b]
+    unworn_cluster_hint = bool(not has_human and is_side_by_side_unworn_cluster)
+    if not has_human and not unworn_cluster_hint and len(by_label) >= 2:
+        if "Belt" in by_label and any(it.get("category") in ("bottom", "top", "outerwear") for k, it in by_label.items() if k != "Belt"):
+            belt_bb = _mask_bbox(by_label["Belt"]["mask"])
+            if belt_bb:
+                by1, bx1, by2, bx2 = belt_bb
                 bw = max(1, bx2 - bx1)
-                x_ov = max(0, min(ax2, bx2) - max(ax1, bx1))
-                y_ov = max(0, min(ay2, by2) - max(ay1, by1))
-                min_h = max(1, min(ay2 - ay1, by2 - by1))
-                # Two tall garments side-by-side horizontally (e.g. 2 pants on wall hooks or 2 shirts on hangers)
-                if cat_a == cat_b and (y_ov / float(min_h)) >= 0.45 and (x_ov / float(min(aw, bw))) < 0.35:
+                bh = max(1, by2 - by1)
+                if bh >= bw:
                     unworn_cluster_hint = True
-                    break
-            if unworn_cluster_hint:
-                break
-        if not unworn_cluster_hint and len(by_label) >= 2:
-            if "Belt" in by_label and any(it.get("category") in ("bottom", "top", "outerwear") for k, it in by_label.items() if k != "Belt"):
-                belt_bb = _mask_bbox(by_label["Belt"]["mask"])
-                if belt_bb:
-                    by1, bx1, by2, bx2 = belt_bb
-                    bw = max(1, bx2 - bx1)
-                    bh = max(1, by2 - by1)
-                    if bh >= bw:
-                        unworn_cluster_hint = True
-                    else:
-                        for k_other, it_other in by_label.items():
-                            if k_other == "Belt" or it_other.get("mask") is None:
-                                continue
-                            obb = _mask_bbox(it_other["mask"])
-                            if obb:
-                                x_in = max(0, min(bx2, obb[3]) - max(bx1, obb[1]))
-                                if (x_in / float(bw)) < 0.65:
-                                    unworn_cluster_hint = True
-                                    break
-            elif len(by_label) >= 3 and "Shoes" not in by_label:
-                unworn_cluster_hint = True
+                else:
+                    for k_other, it_other in by_label.items():
+                        if k_other == "Belt" or it_other.get("mask") is None:
+                            continue
+                        obb = _mask_bbox(it_other["mask"])
+                        if obb:
+                            x_in = max(0, min(bx2, obb[3]) - max(bx1, obb[1]))
+                            if (x_in / float(bw)) < 0.65:
+                                unworn_cluster_hint = True
+                                break
+        elif len(by_label) >= 3 and "Shoes" not in by_label:
+            unworn_cluster_hint = True
 
-    if (count_hint is None or count_hint <= 1) and not has_human and not is_multi_category_outfit and len(by_label) > 1:
+    if (count_hint is None or count_hint <= 1) and not has_human and not unworn_cluster_hint and not is_multi_category_outfit and len(by_label) > 1:
         # Flat-lay or hanger photo of a single garment: any multiple detections are
         # sub-parts or two-tone splits of that single garment.
         items_list = list(by_label.values())

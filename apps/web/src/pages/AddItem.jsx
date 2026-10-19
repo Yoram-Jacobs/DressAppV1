@@ -428,9 +428,11 @@ const hydrate = (a, user, t, i18n) => {
     } else if (catLower === 'full body' || catLower === 'dress' || catLower === 'one_piece') {
       subRaw = 'dress';
     } else {
-      if (/t[-_ ]?shirt|tee|טי/.test(itemBlob)) {
+      if (/hoodie|hooded|sweatshirt|קפוצ|סווטשירט|толстовк|худи/.test(itemBlob)) {
+        subRaw = 'sweatshirts';
+      } else if (/t[-_ ]?shirt|tee|טי/.test(itemBlob)) {
         subRaw = 't_shirts';
-      } else if (/sweater|סוודר|cardigan|pullover|hoodie|קפוצ/.test(itemBlob)) {
+      } else if (/sweater|סוודר|cardigan|pullover/.test(itemBlob)) {
         subRaw = 'knitwear';
       } else if (/blouse|בלוזה/.test(itemBlob)) {
         subRaw = 'blouses';
@@ -446,8 +448,13 @@ const hydrate = (a, user, t, i18n) => {
     }
   }
 
-  // Cross-consistency: If itemRaw is explicitly a t-shirt, boots, or bag, align subRaw
-  if (/t[-_ ]?shirt|tee|חולצת טי/i.test(itemRaw) && !/button[-_ ]?down|מכופתר/i.test(itemRaw)) {
+  // Cross-consistency: If itemRaw/title is a hoodie/sweatshirt, t-shirt, boots, or bag, align subRaw
+  const fullHoodieBlob = `${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''} ${out.caption || ''}`.toLowerCase();
+  if (/hoodie|hooded|sweatshirt|קפוצ|סווטשירט|толстовк|худи/i.test(fullHoodieBlob) && !/bottom|pant|skirt|shoe|footwear/i.test(String(out.category || ''))) {
+    subRaw = 'sweatshirts';
+    out.category = 'Top';
+    itemRaw = /zip|רוכסן/i.test(fullHoodieBlob) ? 'zip_hoodie' : 'hoodie';
+  } else if (/t[-_ ]?shirt|tee|חולצת טי/i.test(itemRaw) && !/button[-_ ]?down|מכופתר|hoodie|sweatshirt|קפוצ/i.test(itemRaw)) {
     if (subRaw.toLowerCase().includes('tailored') || /מכופתר/.test(subRaw) || subRaw.toLowerCase() === 'shirt') {
       subRaw = 't_shirts';
     }
@@ -1010,19 +1017,30 @@ const hydrate = (a, user, t, i18n) => {
       }
     } else {
       // English: format canonical keys into proper display labels (e.g. 'tailored_shirts' -> 'Tailored Shirts', 'headwear' -> 'Headwear')
-      const subKey = canonicalSubCategoryKey(subRaw);
-      if (subKey && subKey !== 'other') {
-        const formattedSub = labelForSubCategory(subKey, t);
-        out.sub_category = (formattedSub && formattedSub !== subKey) ? formattedSub : subRaw;
+      const fullGarmentBlob = `${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''} ${out.caption || ''}`.toLowerCase();
+      const isHoodieOrSweatshirt = /hoodie|hooded|sweatshirt|קפוצ|סווטשירט|толстовк|худи/.test(fullGarmentBlob);
+      if (isHoodieOrSweatshirt && !/bottom|pant|skirt|shoe|footwear/i.test(String(out.category || ''))) {
+        const isZip = /zip|רוכסן/.test(fullGarmentBlob);
+        out.category = 'Top';
+        out.sub_category = t('taxonomy.sub_category.sweatshirts', { defaultValue: 'Sweatshirts & Hoodies' });
+        out.item_type = isZip
+          ? t('taxonomy.item_type.zip_hoodie', { defaultValue: 'Zip hoodie' })
+          : t('taxonomy.item_type.hoodie', { defaultValue: 'Hoodie' });
       } else {
-        out.sub_category = subRaw;
-      }
+        const subKey = canonicalSubCategoryKey(subRaw);
+        if (subKey && subKey !== 'other') {
+          const formattedSub = labelForSubCategory(subKey, t);
+          out.sub_category = (formattedSub && formattedSub !== subKey) ? formattedSub : subRaw;
+        } else {
+          out.sub_category = subRaw;
+        }
 
-      const formattedItem = labelForItemType(itemRaw, t);
-      if (formattedItem && formattedItem !== itemRaw) {
-        out.item_type = formattedItem;
-      } else {
-        out.item_type = itemRaw;
+        const formattedItem = labelForItemType(itemRaw, t);
+        if (formattedItem && formattedItem !== itemRaw) {
+          out.item_type = formattedItem;
+        } else {
+          out.item_type = itemRaw;
+        }
       }
     }
   } else {
