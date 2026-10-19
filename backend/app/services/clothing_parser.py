@@ -1866,6 +1866,54 @@ async def parse_garments(
     has_shoes = "footwear" in distinct_categories
     is_multi_category_outfit = (has_top and has_bottom) or (has_top and has_shoes) or (has_bottom and has_shoes)
 
+    # Read-only cluster hint for auto-routing unworn multi-garment scenes (wall hooks, racks, piles)
+    # to the Mass pipeline without altering single/multi garment segmentation masks.
+    unworn_cluster_hint = False
+    if not has_human:
+        major_garment_bbs: list[tuple[str, tuple[int, int, int, int]]] = []
+        for lbl_inst, m_inst in instances:
+            cat_inst = _get_label_category(lbl_inst)
+            if cat_inst in ("top", "bottom", "dress", "outerwear") and int(m_inst.sum()) / float(total) >= 0.030:
+                bb_inst = _mask_bbox(m_inst)
+                if bb_inst and (bb_inst[2] - bb_inst[0]) >= int(0.22 * H) and (bb_inst[3] - bb_inst[1]) >= int(0.14 * W):
+                    major_garment_bbs.append((cat_inst, bb_inst))
+        for i_a in range(len(major_garment_bbs)):
+            cat_a, (ay1, ax1, ay2, ax2) = major_garment_bbs[i_a]
+            aw = max(1, ax2 - ax1)
+            for i_b in range(i_a + 1, len(major_garment_bbs)):
+                cat_b, (by1, bx1, by2, bx2) = major_garment_bbs[i_b]
+                bw = max(1, bx2 - bx1)
+                x_ov = max(0, min(ax2, bx2) - max(ax1, bx1))
+                y_ov = max(0, min(ay2, by2) - max(ay1, by1))
+                min_h = max(1, min(ay2 - ay1, by2 - by1))
+                # Two tall garments side-by-side horizontally (e.g. 2 pants on wall hooks or 2 shirts on hangers)
+                if cat_a == cat_b and (y_ov / float(min_h)) >= 0.45 and (x_ov / float(min(aw, bw))) < 0.35:
+                    unworn_cluster_hint = True
+                    break
+            if unworn_cluster_hint:
+                break
+        if not unworn_cluster_hint and len(by_label) >= 2:
+            if "Belt" in by_label and any(it.get("category") in ("bottom", "top", "outerwear") for k, it in by_label.items() if k != "Belt"):
+                belt_bb = _mask_bbox(by_label["Belt"]["mask"])
+                if belt_bb:
+                    by1, bx1, by2, bx2 = belt_bb
+                    bw = max(1, bx2 - bx1)
+                    bh = max(1, by2 - by1)
+                    if bh >= bw:
+                        unworn_cluster_hint = True
+                    else:
+                        for k_other, it_other in by_label.items():
+                            if k_other == "Belt" or it_other.get("mask") is None:
+                                continue
+                            obb = _mask_bbox(it_other["mask"])
+                            if obb:
+                                x_in = max(0, min(bx2, obb[3]) - max(bx1, obb[1]))
+                                if (x_in / float(bw)) < 0.65:
+                                    unworn_cluster_hint = True
+                                    break
+            elif len(by_label) >= 3 and "Shoes" not in by_label:
+                unworn_cluster_hint = True
+
     if (count_hint is None or count_hint <= 1) and not has_human and not is_multi_category_outfit and len(by_label) > 1:
         # Flat-lay or hanger photo of a single garment: any multiple detections are
         # sub-parts or two-tone splits of that single garment.
@@ -1972,6 +2020,7 @@ async def parse_garments(
                 "_global_human_mask": human_mask_full,
                 "has_human_head": bool(has_head),
                 "has_human_skin": bool(has_any_human),
+                "_unworn_cluster_hint": bool(unworn_cluster_hint),
             }
         )
     logger.info(

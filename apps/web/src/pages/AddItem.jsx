@@ -1167,20 +1167,7 @@ export default function AddItem() {
   const isSuitcase = searchParams.get("from") === "suitcase";
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
-  const [pipelineMode, setPipelineMode] = useState("multi"); // "single" | "multi" | "mass"
-
-  const handleSelectPipelineMode = (nextMode) => {
-    if (nextMode === "mass" && !canAccessMassUpload) {
-      toast.error(
-        t("addItem.pipeline.massUpgradeRequired", {
-          defaultValue:
-            "Mass Closet & Pile upload is available on Manager and Professional plans.",
-        }),
-      );
-      return;
-    }
-    setPipelineMode(nextMode);
-  };
+  const pipelineMode = "auto";
 
   const resolveAnalyzeErrorMessage = (err) => {
     const detail = err?.response?.data?.detail;
@@ -3033,7 +3020,7 @@ export default function AddItem() {
         sourceFilename: originalCard.sourceFilename || null,
         sourceSizeBytes: originalCard.sourceSizeBytes || null,
         isDuplicate: isMultiSplit ? false : !!originalCard.isDuplicate,
-        pipelineMode: originalCard.pipelineMode || pipelineMode,
+        pipelineMode: meta.pipeline_mode || originalCard.pipelineMode || pipelineMode,
       });
 
       const handleDetect = (frame) => {
@@ -3057,10 +3044,11 @@ export default function AddItem() {
             flatSlotIds.push(null);
             return;
           }
+          const detectedMode = m.pipeline_mode || origCard.pipelineMode || pipelineMode;
           const isMultiSplit =
             (counts[imgIdx] || 0) > 1 ||
-            (origCard.pipelineMode || pipelineMode) === "mass" ||
-            (origCard.pipelineMode || pipelineMode) === "multi";
+            detectedMode === "mass" ||
+            detectedMode === "multi";
           const newId = `${origCard.id}-${perCardIds[origCard.id].length}`;
           perCardIds[origCard.id].push(newId);
           flatSlotIds.push({ id: newId, origCard });
@@ -3232,7 +3220,8 @@ export default function AddItem() {
         const elapsed = frame.elapsed_s || 0;
         setCards((prev) =>
           prev.map((c) =>
-            c.status === "scanning"
+            c.status === "scanning" &&
+            (!frame.mode || frame.mode !== "mass" || c.pipelineMode === "mass")
               ? {
                   ...c,
                   progress: Math.min(95, Math.round(55 + elapsed * 1.5)),
@@ -3247,12 +3236,12 @@ export default function AddItem() {
       };
 
       const images_base64 = cardsToProcess.map((c) => c.base64);
-      const activeMode = cardsToProcess[0]?.pipelineMode || pipelineMode;
+      const activeMode = "auto";
       const payload = {
         images_base64,
         language: requestLang,
         mode: activeMode,
-        multi: activeMode !== "single",
+        multi: true,
       };
 
       console.info(
@@ -3461,7 +3450,7 @@ export default function AddItem() {
         deferMatte: !!meta.defer_matte,
         // Tracked so onItem can locate the right card in state.
         _streamSlot: meta._slot,
-        pipelineMode: card.pipelineMode || pipelineMode,
+        pipelineMode: meta.pipeline_mode || card.pipelineMode || pipelineMode,
       });
 
       const handleDetect = (frame) => {
@@ -3640,13 +3629,12 @@ export default function AddItem() {
         );
       };
 
-      const activeCardMode = card.pipelineMode || pipelineMode;
       const resp = await api.analyzeItemImage(
         {
           image_base64: card.base64,
           language: requestLang,
-          mode: activeCardMode,
-          multi: activeCardMode !== "single",
+          mode: "auto",
+          multi: true,
         },
         {
           onDetect: handleDetect,
@@ -4511,153 +4499,6 @@ export default function AddItem() {
                 value="upload"
                 className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               >
-                {/* 3-Mode GarmentVision Pipeline Selector */}
-                <div
-                  className="mb-5 bg-white rounded-[12px] p-4 border border-border/60 shadow-xs"
-                  data-testid="add-item-pipeline-selector"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <span className="text-[12px] font-bold uppercase tracking-wider text-text-brand flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-primary-brand" />
-                      {t("addItem.pipeline.selectorLabel", {
-                        defaultValue: "Capture Pipeline",
-                      })}
-                    </span>
-                    {canAccessMassUpload && (
-                      <Badge
-                        variant="outline"
-                        className="rounded-full border-primary-brand/30 bg-primary-shadow text-primary-brand font-semibold px-2.5 py-0.5 text-[11px]"
-                        data-testid="add-item-mass-quota-badge"
-                      >
-                        <Wand2 className="h-3 w-3 me-1 inline-block" />
-                        {t("addItem.pipeline.massQuotaBadge", {
-                          remaining: nanoBananaMonthlyRemaining ?? 100,
-                          limit: nanoBananaMonthlyLimit ?? 100,
-                          defaultValue: "{{remaining}} / {{limit}} studio rebuilds left this month",
-                        })}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {/* Single Garment */}
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("single")}
-                      data-testid="pipeline-mode-single"
-                      className={cn(
-                        "flex flex-col items-start text-start p-3.5 rounded-xl border transition-all duration-200 cursor-pointer",
-                        pipelineMode === "single"
-                          ? "border-primary-brand bg-primary-shadow/60 shadow-xs ring-1 ring-primary-brand/30"
-                          : "border-border/60 bg-background/40 hover:border-primary-brand/40 hover:bg-primary-shadow/20",
-                      )}
-                    >
-                      <div className="flex items-center gap-2 w-full mb-1">
-                        <Shirt
-                          className={cn(
-                            "h-4 w-4 shrink-0",
-                            pipelineMode === "single"
-                              ? "text-primary-brand"
-                              : "text-text-brand",
-                          )}
-                        />
-                        <span className="text-[13px] font-bold text-dark-brand">
-                          {t("addItem.pipeline.singleTitle", {
-                            defaultValue: "Single Garment",
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-text-brand leading-relaxed">
-                        {t("addItem.pipeline.singleDesc", {
-                          defaultValue:
-                            "One item laid flat or on a hanger for precision cutout.",
-                        })}
-                      </p>
-                    </button>
-
-                    {/* Multi-Garment Outfit */}
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("multi")}
-                      data-testid="pipeline-mode-multi"
-                      className={cn(
-                        "flex flex-col items-start text-start p-3.5 rounded-xl border transition-all duration-200 cursor-pointer",
-                        pipelineMode === "multi"
-                          ? "border-primary-brand bg-primary-shadow/60 shadow-xs ring-1 ring-primary-brand/30"
-                          : "border-border/60 bg-background/40 hover:border-primary-brand/40 hover:bg-primary-shadow/20",
-                      )}
-                    >
-                      <div className="flex items-center gap-2 w-full mb-1">
-                        <Layers
-                          className={cn(
-                            "h-4 w-4 shrink-0",
-                            pipelineMode === "multi"
-                              ? "text-primary-brand"
-                              : "text-text-brand",
-                          )}
-                        />
-                        <span className="text-[13px] font-bold text-dark-brand">
-                          {t("addItem.pipeline.multiTitle", {
-                            defaultValue: "Multi-Garment Outfit",
-                          })}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-text-brand leading-relaxed">
-                        {t("addItem.pipeline.multiDesc", {
-                          defaultValue:
-                            "Full outfit photo — splits and analyzes each worn piece.",
-                        })}
-                      </p>
-                    </button>
-
-                    {/* Mass Closet & Pile */}
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("mass")}
-                      data-testid="pipeline-mode-mass"
-                      className={cn(
-                        "flex flex-col items-start text-start p-3.5 rounded-xl border transition-all duration-200 cursor-pointer relative",
-                        pipelineMode === "mass"
-                          ? "border-primary-brand bg-primary-shadow/60 shadow-xs ring-1 ring-primary-brand/30"
-                          : !canAccessMassUpload
-                            ? "border-border/50 bg-muted/30 opacity-85 hover:border-amber-500/50"
-                            : "border-border/60 bg-background/40 hover:border-primary-brand/40 hover:bg-primary-shadow/20",
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2 w-full mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Wand2
-                            className={cn(
-                              "h-4 w-4 shrink-0",
-                              pipelineMode === "mass"
-                                ? "text-primary-brand"
-                                : "text-text-brand",
-                            )}
-                          />
-                          <span className="text-[13px] font-bold text-dark-brand truncate">
-                            {t("addItem.pipeline.massTitle", {
-                              defaultValue: "Mass Closet & Pile",
-                            })}
-                          </span>
-                        </div>
-                        {!canAccessMassUpload && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider shrink-0">
-                            <Lock className="h-2.5 w-2.5" />
-                            {t("addItem.pipeline.massBadgePro", {
-                              defaultValue: "PRO / MANAGER",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-text-brand leading-relaxed">
-                        {t("addItem.pipeline.massDesc", {
-                          defaultValue:
-                            "Closet rack or garment pile — catalogs every piece and rebuilds clear studio cards.",
-                        })}
-                      </p>
-                    </button>
-                  </div>
-                </div>
-
                 <div
                   className="w-full border-2 border-dashed border-border rounded-[12px] p-10 max-[480px]:p-5 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
                   data-testid="add-item-dropzone"
@@ -5579,54 +5420,6 @@ export default function AddItem() {
                         defaultValue: "Quick Confirm Mode",
                       })}
                     </label>
-                  </div>
-                  <div
-                    className="inline-flex items-center gap-1 bg-secondary/30 p-1 rounded-xl border border-border/50"
-                    data-testid="add-item-pipeline-compact"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("single")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer",
-                        pipelineMode === "single"
-                          ? "bg-primary-brand text-white"
-                          : "text-text-brand hover:text-dark-brand",
-                      )}
-                    >
-                      {t("addItem.pipeline.singleTitle", {
-                        defaultValue: "Single Garment",
-                      })}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("multi")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer",
-                        pipelineMode === "multi"
-                          ? "bg-primary-brand text-white"
-                          : "text-text-brand hover:text-dark-brand",
-                      )}
-                    >
-                      {t("addItem.pipeline.multiTitle", {
-                        defaultValue: "Multi-Garment Outfit",
-                      })}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectPipelineMode("mass")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer inline-flex items-center gap-1",
-                        pipelineMode === "mass"
-                          ? "bg-primary-brand text-white"
-                          : "text-text-brand hover:text-dark-brand",
-                      )}
-                    >
-                      {!canAccessMassUpload && <Lock className="h-2.5 w-2.5" />}
-                      {t("addItem.pipeline.massTitle", {
-                        defaultValue: "Mass Closet & Pile",
-                      })}
-                    </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 justify-end flex-wrap">

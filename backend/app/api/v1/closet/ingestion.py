@@ -457,9 +457,9 @@ async def analyze_item_image(
         user.get("id"),
     )
 
-    eff_mode = (payload.mode or ("multi" if payload.multi else "single")).strip().lower()
-    if eff_mode not in ("single", "multi", "mass"):
-        eff_mode = "multi" if payload.multi else "single"
+    eff_mode = (payload.mode or ("auto" if payload.multi else "single")).strip().lower()
+    if eff_mode not in ("auto", "single", "multi", "mass"):
+        eff_mode = "auto" if payload.multi else "single"
 
     from app.db.database import get_db
     from app.services.billing_service import deduct_user_credits
@@ -495,6 +495,13 @@ async def analyze_item_image(
                     "message": f"You have reached your monthly limit of {NANO_BANANA_MONTHLY_LIMIT} Nano Banana studio reconstructions.",
                 },
             )
+    elif eff_mode in ("auto", "multi") and not payload.cutout_only:
+        user_tier = get_user_tier(user)
+        if user_tier in ("manager", "professional"):
+            nb_state = compute_nano_banana_monthly_state(user)
+            nb_remaining = max(0, nb_state["nano_banana_monthly_remaining"])
+        else:
+            nb_remaining = 0
 
     cost = len(raw_list) if (not payload.cutout_only and eff_mode != "mass") else 0
     if cost > 0 and not await deduct_user_credits(db, user, cost=cost):
@@ -584,7 +591,11 @@ async def analyze_item_image(
                             img_idx = frame.get("image_index", 0)
                             parent_img_bytes = (
                                 raw_list[img_idx]
-                                if (eff_mode == "single" and len(items_meta) <= 1 and 0 <= img_idx < len(raw_list))
+                                if (
+                                    (eff_mode == "single" or meta.get("pipeline_mode") == "single")
+                                    and len(items_meta) <= 1
+                                    and 0 <= img_idx < len(raw_list)
+                                )
                                 else None
                             )
                             eff_crop_b64 = frame.get("crop_base64") or meta.get("crop_base64")
@@ -681,6 +692,8 @@ async def analyze_item_image(
                                 "label": meta.get("label"),
                                 "kind": meta.get("kind"),
                                 "bbox": meta.get("bbox"),
+                                "pipeline_mode": meta.get("pipeline_mode"),
+                                "reconstructed": bool(frame.get("reconstructed", False)),
                                 "crop_base64": crop_b64,
                                 "crop_mime": crop_mime,
                                 "clean_image_url": saved_doc.get("clean_image_url") if saved_doc else None,
@@ -704,22 +717,26 @@ async def analyze_item_image(
                     elif ftype == "item_skip":
                         await queue.put(frame)
                     elif ftype == "done":
-                        if eff_mode == "mass" and not payload.cutout_only:
-                            recon_count = int(frame.get("reconstructed_count") or analyzed_items_count or 0)
-                            if recon_count > 0:
-                                try:
-                                    await deduct_user_credits(
-                                        db, user, cost=recon_count, operation="mass_reconstruct"
-                                    )
-                                except Exception as mass_err:
-                                    logger.warning("Failed to record mass_reconstruct monthly usage: %s", mass_err)
+                        recon_count = int(
+                            frame.get("reconstructed_count")
+                            or (analyzed_items_count if eff_mode == "mass" else 0)
+                            or 0
+                        )
+                        if recon_count > 0 and not payload.cutout_only:
+                            try:
+                                await deduct_user_credits(
+                                    db, user, cost=recon_count, operation="mass_reconstruct"
+                                )
+                            except Exception as mass_err:
+                                logger.warning("Failed to record mass_reconstruct monthly usage: %s", mass_err)
                             try:
                                 fresh_u = await db.users.find_one({"id": user["id"]}) or user
                                 frame["nano_banana_monthly"] = compute_nano_banana_monthly_state(fresh_u)
                             except Exception:
                                 pass
-                        elif not payload.cutout_only and analyzed_items_count > cost:
-                            extra_garments = analyzed_items_count - cost
+                        non_mass_items = max(0, analyzed_items_count - recon_count)
+                        if not payload.cutout_only and eff_mode != "mass" and non_mass_items > cost:
+                            extra_garments = non_mass_items - cost
                             try:
                                 await deduct_user_credits(
                                     db, user, cost=extra_garments, operation="analyze_multi_garment"

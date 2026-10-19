@@ -3341,3 +3341,197 @@ def test_maxi_skirt_fragmented_into_pants_and_skirt_merges_on_human_model():
     assert int(merged_mask[415:520, 225:298].sum()) == (520 - 415) * (298 - 225)
 
 
+@pytest.mark.asyncio
+async def test_auto_route_mixed_batch_single_multi_and_mass_pipelines(monkeypatch):
+    """Verify that analyze_outfits_stream(mode='auto') automatically routes a mixed batch of
+    photos (Photo 0: single t-shirt, Photo 1: worn multi-garment outfit, Photo 2: two pants + belt
+    on wall-mounted hooks) to 'single', 'multi', and 'mass' pipelines respectively in one unified stream."""
+    import io
+    from PIL import Image
+    from app.services.vision.service import GarmentVisionService
+
+    def _make_jpeg(color):
+        buf = io.BytesIO()
+        Image.new("RGB", (300, 400), color).save(buf, format="JPEG")
+        return buf.getvalue()
+
+    img_single = _make_jpeg((200, 50, 50))
+    img_multi = _make_jpeg((50, 200, 50))
+    img_mass = _make_jpeg((50, 50, 200))
+
+    svc = GarmentVisionService(provider="gemini", api_key="test-key")
+
+    async def fake_detect_items(image_bytes, count_hint=None):
+        if image_bytes == img_single:
+            return [
+                {
+                    "label": "top, t-shirt, sweatshirt",
+                    "category": "top",
+                    "kind": "top",
+                    "bbox": [100, 100, 850, 900],
+                    "has_human_head": False,
+                    "has_human_skin": False,
+                    "_unworn_cluster_hint": False,
+                }
+            ]
+        if image_bytes == img_multi:
+            return [
+                {
+                    "label": "top, t-shirt, sweatshirt",
+                    "category": "top",
+                    "kind": "top",
+                    "bbox": [180, 250, 500, 750],
+                    "has_human_head": True,
+                    "has_human_skin": True,
+                    "_unworn_cluster_hint": False,
+                },
+                {
+                    "label": "pants",
+                    "category": "bottom",
+                    "kind": "bottom",
+                    "bbox": [490, 260, 900, 740],
+                    "has_human_head": True,
+                    "has_human_skin": True,
+                    "_unworn_cluster_hint": False,
+                },
+            ]
+        # img_mass: two pants and a vertical belt on wall hooks (unworn cluster)
+        return [
+            {
+                "label": "pants",
+                "category": "bottom",
+                "kind": "bottom",
+                "bbox": [150, 80, 920, 480],
+                "has_human_head": False,
+                "has_human_skin": False,
+                "_unworn_cluster_hint": True,
+            },
+            {
+                "label": "belt",
+                "category": "accessory",
+                "kind": "accessory",
+                "bbox": [140, 460, 780, 560],
+                "has_human_head": False,
+                "has_human_skin": False,
+                "_unworn_cluster_hint": True,
+            },
+        ]
+
+    async def fake_detect_model_gender(image_bytes, detections=None):
+        if image_bytes == img_multi:
+            return "women"
+        return None
+
+    async def fake_detect_unworn_pipeline_mode(image_bytes, detections=None):
+        if image_bytes == img_mass:
+            return "mass"
+        return "single"
+
+    async def fake_analyze_mass_catalog(image_bytes, *, language=None, user_gender=None, max_items=15):
+        return [
+            {
+                "label": "Charcoal Wool Trousers",
+                "kind": "bottom",
+                "bbox": [150, 80, 920, 450],
+                "ref_crop_bytes": img_mass,
+                "analysis": {
+                    "name": "Charcoal Wool Trousers",
+                    "title": "Charcoal Wool Trousers",
+                    "category": "Bottom",
+                    "sub_category": "Pants",
+                    "item_type": "Trousers",
+                    "gender": "men",
+                    "colors": [{"name": "Charcoal", "pct": 100}],
+                },
+            },
+            {
+                "label": "Navy Chino Pants",
+                "kind": "bottom",
+                "bbox": [150, 480, 920, 880],
+                "ref_crop_bytes": img_mass,
+                "analysis": {
+                    "name": "Navy Chino Pants",
+                    "title": "Navy Chino Pants",
+                    "category": "Bottom",
+                    "sub_category": "Chinos",
+                    "item_type": "Chinos",
+                    "gender": "men",
+                    "colors": [{"name": "Navy", "pct": 100}],
+                },
+            },
+            {
+                "label": "Black Leather Belt",
+                "kind": "accessory",
+                "bbox": [140, 440, 780, 560],
+                "ref_crop_bytes": img_mass,
+                "analysis": {
+                    "name": "Black Leather Belt",
+                    "title": "Black Leather Belt",
+                    "category": "Accessories",
+                    "sub_category": "Belt",
+                    "item_type": "Belt",
+                    "gender": "men",
+                    "colors": [{"name": "Black", "pct": 100}],
+                },
+            },
+        ]
+
+    async def fake_analyze_batch_stream(crop_bytes_list, **kwargs):
+        for i in range(len(crop_bytes_list)):
+            yield (
+                i,
+                {
+                    "name": f"Standard Garment {i}",
+                    "title": f"Standard Garment {i}",
+                    "category": "Top" if i < 2 else "Bottom",
+                    "sub_category": "T-Shirt" if i < 2 else "Pants",
+                    "item_type": "T-Shirt" if i < 2 else "Pants",
+                    "colors": [{"name": "Red", "pct": 100}],
+                },
+            )
+
+    async def fake_reconstruct(crop_bytes, analysis, **kwargs):
+        import base64
+        return {
+            "clean_image_b64": base64.b64encode(img_mass).decode("ascii"),
+            "mime_type": "image/png",
+            "model": "gemini-3.1-flash-lite-image",
+        }
+
+    monkeypatch.setattr(svc, "detect_items", fake_detect_items)
+    monkeypatch.setattr(svc, "detect_model_gender", fake_detect_model_gender)
+    monkeypatch.setattr(svc, "_detect_unworn_pipeline_mode", fake_detect_unworn_pipeline_mode)
+    monkeypatch.setattr(svc, "analyze_mass_catalog", fake_analyze_mass_catalog)
+    monkeypatch.setattr(svc, "analyze_batch_stream", fake_analyze_batch_stream)
+    import app.services.reconstruction as recon_mod
+    monkeypatch.setattr(recon_mod, "reconstruct", fake_reconstruct)
+
+    frames = []
+    async for f in svc.analyze_outfits_stream(
+        [img_single, img_multi, img_mass],
+        mode="auto",
+        max_reconstructions=10,
+    ):
+        frames.append(f)
+
+    detect_frames = [f for f in frames if f.get("type") == "detect"]
+    assert len(detect_frames) == 1
+    metas = detect_frames[0]["items_meta"]
+    # Photo 0 -> 1 single item; Photo 1 -> 2 multi items; Photo 2 -> 3 mass items = 6 total
+    assert len(metas) == 6
+    assert metas[0]["pipeline_mode"] == "single"
+    assert metas[1]["pipeline_mode"] == "multi"
+    assert metas[2]["pipeline_mode"] == "multi"
+    assert metas[3]["pipeline_mode"] == "mass"
+    assert metas[4]["pipeline_mode"] == "mass"
+    assert metas[5]["pipeline_mode"] == "mass"
+
+    item_frames = [f for f in frames if f.get("type") == "item"]
+    assert len(item_frames) == 6
+    emitted_indices = sorted(f["index"] for f in item_frames)
+    assert emitted_indices == [0, 1, 2, 3, 4, 5]
+
+    done_frames = [f for f in frames if f.get("type") == "done"]
+    assert len(done_frames) == 1
+    assert done_frames[0]["count"] == 6
+    assert done_frames[0]["reconstructed_count"] == 3
