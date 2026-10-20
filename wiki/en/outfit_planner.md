@@ -11,10 +11,10 @@ The Outfit Planner provides an interactive 2D avatar canvas where you can test-f
 
 ## Step-by-Step Instructions
 1. **Open the Canvas**: Tap the **Outfit Canvas** tab in the app.
-2. **Dress Your Avatar**: Drag and drop or tap garments to position them on the mannequin:
-   - Tops fit cleanly against the neckline.
-   - Pants and skirts align comfortably with the natural waist.
-   - Shoes sit neatly on the foot plane.
+2. **Dress Your Avatar**: Drag and drop or tap garments to position them on the mannequin or your full-body photo:
+   - **Tops, Outerwear & Dresses** automatically fit your avatar's shoulders and neckline while keeping their original sleeve and torso cut untouched.
+   - **Pants & Skirts** position their waistband between your natural waist and hips based on their rise style (high-rise, mid-rise, relaxed, or low-rise), fit your waist and pelvis, and keep their original leg cut (wide-leg, straight-leg, bootcut, flared, cargo, or slim) untouched.
+   - **Shoes & Boots** automatically split paired footwear photos so one shoe maps cleanly onto each foot.
 3. **Outerwear Layering ("With / Without Outerwear")**:
    - Add a jacket, cardigan, or overcoat.
    - Use the toggle to view your outfit **With Outerwear** (jacket closed over shirt) or **Without Outerwear** (shirt and pants visible underneath).

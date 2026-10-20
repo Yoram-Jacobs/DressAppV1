@@ -1,33 +1,33 @@
-# Outfit Planner & 2D Avatar
+# Outfitplanner & 2D-Canvas
 
-Combineer, laag en bekijk gecoördineerde outfits op uw virtuele avatar voordat u zich aankleedt.
+Stel gecoördineerde outfits samen, combineer lagen en bekijk een voorbeeld op je virtuele avatar voordat je je aankleedt.
 
 ## Overzicht
-De Outfit Planner biedt een interactieve 2D-avatar waarop u gemakkelijk kleding kunt passen. U ziet meteen hoe tops, broeken, schoenen en accessoires samengaan, kunt jassen aan- en uittrekken en harmonie-scores controleren.
+De Outfitplanner biedt een interactief 2D-avatarcanvas waarop je kledingstukken samen kunt passen. Je kunt tops, broeken, schoenen en accessoires op je avatar bekijken, bovenkleding aan- en uitzetten en compatibiliteitsscores controleren.
 
 ## Vereisten
-- Gedigitaliseerde kledingstukken in uw kast.
-- (Optioneel) Een foto van uzelf in uw profiel voor een realistische paspop op uw eigen lichaamsbouw.
+- Gedigitaliseerde kleding in je kledingkast.
+- *(Optioneel)* Een volledige lichaamsfoto in je profiel als je kleding liever op je eigen silhouet past.
 
 ## Stapsgewijze instructies
-1. **Paspop openen**: Tik op het tabblad **Outfit Canvas** in de app.
-2. **Avatar aankleden**: Sleep kledingstukken naar de paspop of tik erop:
-   - Tops sluiten netjes aan rond de halslijn.
-   - Broeken en rokken sluiten aan op de taille.
-   - Schoenen staan precies op de voeten.
-3. **Jassen & vesten laagjesweergave ("Met / Zonder jas")**:
-   - Voeg een jas, vest of colbert toe.
-   - Gebruik de knop om uw look **Met jas** of **Zonder jas** (top eronder zichtbaar) te bekijken.
-4. **Details bekijken**: Tik op een kledingstuk op de paspop om details te openen of een ander item te kiezen.
-5. **Harmoniescores controleren**: Bekijk hoe goed kleuren, stoffen en het weer op elkaar zijn afgestemd.
-6. **Opslaan in kalender**: Tik op **Look opslaan** om de outfit vast te leggen.
+1. **Open het canvas**: Tik op het tabblad **Outfitcanvas** in de app.
+2. **Kleed je avatar aan**: Sleep kledingstukken of tik erop om ze op de paspop of je lichaamsfoto te plaatsen:
+   - **Tops, jassen & jurken** passen zich automatisch aan de schouders en halslijn van je avatar aan, terwijl de oorspronkelijke pasvorm van de mouwen en het bovenlichaam volledig behouden blijft.
+   - **Broeken & rokken** plaatsen de tailleband tussen je natuurlijke taille en heupen op basis van de taillehoogte (high-rise, mid-rise, relaxed of low-rise), sluiten aan op je taille en bekken, en behouden de originele pijpsnit (wijde pijp, recht, flared, cargo of slim) ongewijzigd.
+   - **Schoenen & laarzen** splitsen foto's van een paar schoenen automatisch op, zodat er netjes één schoen op elke voet wordt geplaatst.
+3. **Bovenkleding in lagen ("Met / Zonder jas")**:
+   - Voeg een jasje, vest of mantel toe.
+   - Gebruik de schakelaar om je outfit **Met jas** of **Zonder jas** (shirt en broek eronder zichtbaar) te bekijken.
+4. **Tik voor details**: Tik direct op een kledingstuk op je avatar om de detailkaart te openen of het te wisselen voor een ander item.
+5. **Controleer compatibiliteitsscores**: Bekijk de harmoniebalken voor kleuren, stoffen, weersgeschiktheid en formaliteit.
+6. **Opslaan in kalender**: Tik op **Look opslaan** om de outfit in te plannen voor vandaag of een toekomstige datum.
 
 ## Verwachte resultaten
-Een realistische en mooie weergave van uw outfit die ochtendstress voor de kledingkast wegneemt.
+Een realistisch, mooi gelaagd voorbeeld van je outfit dat twijfel in de ochtend voorkomt.
 
 ## Probleemoplossing
-- **Jas verschijnt onder het shirt**: Controleer of het kledingstuk is gecategoriseerd als "Jassen" zodat het er vanzelf overheen valt.
-- **Avatar oogt vertekend**: Controleer lengte en gewicht in uw Profiel of tik op "Avatar herstellen".
+- **Jas verschijnt achter het shirt**: Zorg ervoor dat je jas is gecategoriseerd als "Bovenkleding", zodat het systeem deze automatisch over shirts plaatst.
+- **Avatar lijkt niet goed uitgelijnd**: Open je Profiel om je lengte en gewicht te controleren, of tik op "Avatar resetten".
 
 ## Beperkingen
-- Jassen worden automatisch over tops gedragen; afwijkende laagvolgordes zijn vooralsnog niet handmatig versleepbaar.
+- Bovenkleding wordt automatisch over tops geplaatst; ongebruikelijke aangepaste laagvolgordes (zoals een overhemd over een hoodie) kunnen nog niet handmatig worden versleept.

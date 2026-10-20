@@ -3886,7 +3886,7 @@
     "profile_title": "Je profiel beheren",
     "profile_p1": "Op je Profielpagina pas je je maten, stijlvoorkeuren en steminstellingen aan:",
     "profile_item1_title": "1. Foto's & persoonlijke avatar",
-    "profile_item1_desc": "Upload een lichaamsfoto voor realistische pasbeurten of pas de lichaamsvorm en huidskleur van je virtuele paspop aan. DressApp verwijdert automatisch de achtergrond van je foto.",
+    "profile_item1_desc": "Upload een volledige lichaamsfoto voor realistische pasbeurten of pas de lichaamsvorm en huidskleur van je virtuele paspop aan. DressApp verwijdert automatisch de achtergrond, detecteert je exacte anatomische punten (schouders, taille, bekken en enkels) en toont het 2D Point-Cloud Fit Mesh.",
     "profile_item2_title": "2. Stijlvoorkeuren",
     "profile_item2_desc": "Vertel de Stylist je favoriete stijlen, voorkeurskleuren, items die je wilt vermijden en je gewenste bedekkingsgraad.",
     "profile_item3_title": "3. Persoonlijke & contactgegevens",
@@ -3926,7 +3926,7 @@
     "planner_title": "Outfitplanner",
     "planner_p1": "De Outfit Planner helpt je bij het rangschikken, rangschikken en evalueren van je stylingselecties:",
     "planner_item1_title": "Outfitdoek",
-    "planner_item1_desc": "Laag en combineer kleding dynamisch op je aangepaste karakteravatar om je outfitlay-out samen te stellen.",
+    "planner_item1_desc": "Selecteer tops, broeken, jurken, schoenen en accessoires uit je kast om ze op je avatar te passen. Tops sluiten aan op schouders en halslijn met behoud van hun originele pasvorm; broeken passen op taille en bekken met behoud van de pijpsnit; en schoenen plaatsen één schoen per voet.",
     "planner_item2_title": "Dubbel canvas (gelaagdheid)",
     "planner_item2_desc": "Als u een jas of bovenkleding over een overhemd draagt, geeft de interface een zij-aan-zij-weergave weer (één avatar toont de bovenkleding, één zonder), zodat u beide lagen tegelijkertijd kunt bekijken.",
     "planner_item3_title": "Interactieve bodymapping",
@@ -4094,7 +4094,7 @@
       "profile_title": "Je profiel beheren",
       "profile_p1": "Op je Profielpagina pas je je maten, stijlvoorkeuren en steminstellingen aan:",
       "profile_item1_title": "1. Foto's & persoonlijke avatar",
-      "profile_item1_desc": "Upload een lichaamsfoto voor realistische pasbeurten of pas de lichaamsvorm en huidskleur van je virtuele paspop aan. DressApp verwijdert automatisch de achtergrond van je foto.",
+      "profile_item1_desc": "Upload een volledige lichaamsfoto voor realistische pasbeurten of pas de lichaamsvorm en huidskleur van je virtuele paspop aan. DressApp verwijdert automatisch de achtergrond, detecteert je exacte anatomische punten (schouders, taille, bekken en enkels) en toont het 2D Point-Cloud Fit Mesh.",
       "profile_item2_title": "2. Stijlvoorkeuren",
       "profile_item2_desc": "Vertel de Stylist je favoriete stijlen, voorkeurskleuren, items die je wilt vermijden en je gewenste bedekkingsgraad.",
       "profile_item3_title": "3. Persoonlijke & contactgegevens",
@@ -4126,7 +4126,7 @@
       "planner_title": "Outfitplanner",
       "planner_p1": "Combineer en beoordeel kledingcombinaties:",
       "planner_item1_title": "Outfitdoek",
-      "planner_item1_desc": "Combineer kledingstukken dynamisch op je gepersonaliseerde 2D-avatar.",
+      "planner_item1_desc": "Selecteer tops, broeken, jurken, schoenen en accessoires uit je kast om ze op je avatar te passen. Tops sluiten aan op schouders en halslijn met behoud van hun originele pasvorm; broeken passen op taille en bekken met behoud van de pijpsnit; en schoenen plaatsen één schoen per voet.",
       "planner_item2_title": "Duaal Canvas (Lagen)",
       "planner_item2_desc": "Bekijk outfits met en zonder jas/bovenkleding naast elkaar om beide lagen te beoordelen.",
       "planner_item3_title": "Interactieve Kledingselectie",
@@ -4240,7 +4240,21 @@
     "trend_gender_desc": "Schakel soepel tussen Dames- en Herenmode, lees geverifieerde artikelen op Vogue/GQ en tik op Vernieuwen (🔄) voor realtime updates.",
     "tableOfContents": "Inhoudsopgave",
     "backToSummary": "Terug naar overzicht",
-    "whyItMatters": "Waarom dit belangrijk is:"
+    "whyItMatters": "Waarom dit belangrijk is:",
+    "best_practice_title": "Beste Praktijken",
+    "best_practice_p1": "Volg deze eenvoudige gewoonten om een nauwkeurige digitale kledingkast op te bouwen, uw dagelijkse credits optimaal te benutten en elke dag kledingadvies op maat te krijgen.",
+    "best_practice_step1": "**Vul eerst uw Profiel in**: Stel uw lichaamsmaten, favoriete kleuren, stijlvoorkeuren en bedekkingsgraad in uw **Profiel** in voordat u kleding uploadt.",
+    "best_practice_step2": "**Maak duidelijke foto's**: Upload één plat neergelegd kledingstuk, een spiegelfoto van een volledige outfit of meerdere items naast elkaar — DressApp herkent automatisch het fototype en splitst elk stuk.",
+    "best_practice_step3": "**Bouw uw kast op in 5 dagen**: Gebruik uw 10 gratis dagelijkse credits om 10 items per dag toe te voegen (dagelijkse broeken, tops, laagjes, schoenen en gelegenheidskleding).",
+    "best_practice_step4": "**Controleer de itemkaart (10 seconden)**: Controleer kort de categorie, kleur, warmtegraad en dresscode — inclusief traditionele en culturele kleding.",
+    "best_practice_step5": "**Geef de Stylist 4 aanwijzingen**: Vermeld uw **gelegenheid**, **locatie**, **weer** en **gewenste uitstraling** wanneer u de AI-stylist om een outfit vraagt.",
+    "qa_title": "Veelgestelde Vragen (FAQ)",
+    "qa_p1": "Snelle antwoorden op de meest gestelde vragen over starten, credits beheren, uw garderobe digitaliseren en outfits samenstellen.",
+    "qa_step1": "**Hoe begin ik op Dag 1?** Vul eerst uw maten en stijlvoorkeuren in uw **Profiel** in en voeg daarna uw 10 meest gedragen dagelijkse kledingstukken toe.",
+    "qa_step2": "**Hoe werken gratis credits?** Gratis accounts ontvangen **10 dagelijkse credits** (elke 24 uur vernieuwd, opspaarbaar tot 50) voor het toevoegen van kleding en de stylist, plus **5 maandelijkse Studio-reconstructiecredits**.",
+    "qa_step3": "**Hoe breid ik mijn gratis kast uit?** Deel uw uitnodigingslink via **Profiel → Vrienden uitnodigen** en verdien **+10 blijvende kastplaatsen** per vriend (van 50 tot maximaal 150 gratis items).",
+    "qa_step4": "**Kan ik volledige outfits of meerdere items tegelijk uploaden?** Ja — upload één item, een volledige outfitfoto of meerdere items naast elkaar, of importeer vanuit een webshop of andere kledingkast-app.",
+    "qa_step5": "**Is mijn garderobe privé?** Ja. Uw foto's en maten zijn privé, en het **lokale AI-model van DressApp** verwerkt uw garderobe rechtstreeks binnen onze eigen beveiligde omgeving."
   },
   "campaigns": {
     "status": {
@@ -5084,7 +5098,9 @@
     "dppApiSpecs": "Browserextensiebrug",
     "privacyPolicy": "Privacybeleid",
     "termsOfUse": "Gebruiksvoorwaarden",
-    "rights": "Alle rechten voorbehouden. Ontworpen volgens luxueuze ecologische specificaties."
+    "rights": "Alle rechten voorbehouden. Ontworpen volgens luxueuze ecologische specificaties.",
+    "bestPractices": "Beste Praktijken",
+    "qaFaq": "Veelgestelde Vragen (FAQ)"
   },
   "scanner": {
     "tabFile": "Afbeelding uploaden"

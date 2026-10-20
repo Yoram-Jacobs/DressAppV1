@@ -3892,7 +3892,7 @@
     "profile_title": "Gerir o seu perfil",
     "profile_p1": "A página de Perfil permite personalizar as suas medidas, preferências de estilo e voz na DressApp:",
     "profile_item1_title": "1. Fotos e avatar pessoal",
-    "profile_item1_desc": "Carregue uma foto de corpo inteiro para provas realistas ou personalize a silhueta e o tom de pele do seu manequim virtual. A DressApp remove automaticamente o fundo da sua foto.",
+    "profile_item1_desc": "Envie uma foto de corpo inteiro para provas realistas ou personalize o formato do corpo e o tom de pele do seu manequim virtual. O DressApp remove automaticamente o fundo, detecta seus pontos anatômicos exatos (ombros, cintura, pelve e tornozelos) e permite ativar a Malha Point-Cloud 2D.",
     "profile_item2_title": "2. Preferências de estilo",
     "profile_item2_desc": "Indique ao Estilista os seus estilos favoritos, cores preferidas, peças a evitar e o nível de discrição desejado.",
     "profile_item3_title": "3. Dados pessoais e de contacto",
@@ -3932,7 +3932,7 @@
     "planner_title": "Planejador de roupas",
     "planner_p1": "O Outfit Planner ajuda você a criar camadas, organizar e avaliar suas seleções de estilo:",
     "planner_item1_title": "Tela de roupa",
-    "planner_item1_desc": "Coloque e combine roupas dinamicamente no avatar personalizado do seu personagem para criar o layout do seu traje.",
+    "planner_item1_desc": "Selecione blusas, calças, vestidos, calçados e acessórios do seu guarda-roupa para experimentá-los no seu avatar. As blusas ajustam-se aos ombros e decote mantendo o corte original; as calças vestem a cintura e a pelve preservando o corte das pernas; e os calçados posicionam um pé em cada lado.",
     "planner_item2_title": "Tela dupla (camadas)",
     "planner_item2_desc": "Se você estiver vestindo uma jaqueta ou agasalho sobre uma camisa, a interface renderizará uma visualização lado a lado (um avatar mostrando o agasalho e outro sem) para que você possa revisar as duas camadas simultaneamente.",
     "planner_item3_title": "Mapeamento corporal interativo",
@@ -4093,7 +4093,7 @@
       "profile_title": "Gerir o seu perfil",
       "profile_p1": "A página de Perfil permite personalizar as suas medidas, preferências de estilo e voz na DressApp:",
       "profile_item1_title": "1. Fotos e avatar pessoal",
-      "profile_item1_desc": "Carregue uma foto de corpo inteiro para provas realistas ou personalize a silhueta e o tom de pele do seu manequim virtual. A DressApp remove automaticamente o fundo da sua foto.",
+      "profile_item1_desc": "Envie uma foto de corpo inteiro para provas realistas ou personalize o formato do corpo e o tom de pele do seu manequim virtual. O DressApp remove automaticamente o fundo, detecta seus pontos anatômicos exatos (ombros, cintura, pelve e tornozelos) e permite ativar a Malha Point-Cloud 2D.",
       "profile_item2_title": "2. Preferências de estilo",
       "profile_item2_desc": "Indique ao Estilista os seus estilos favoritos, cores preferidas, peças a evitar e o nível de discrição desejado.",
       "profile_item3_title": "3. Dados pessoais e de contacto",
@@ -4123,7 +4123,7 @@
       "planner_title": "Planejador de roupas",
       "planner_p1": "O Outfit Planner ajuda você a criar camadas, organizar e avaliar suas seleções de estilo:",
       "planner_item1_title": "Tela de roupa",
-      "planner_item1_desc": "Coloque camadas e combine roupas dinamicamente em seu avatar de personagem personalizado para criar o layout de sua roupa.",
+      "planner_item1_desc": "Selecione blusas, calças, vestidos, calçados e acessórios do seu guarda-roupa para experimentá-los no seu avatar. As blusas ajustam-se aos ombros e decote mantendo o corte original; as calças vestem a cintura e a pelve preservando o corte das pernas; e os calçados posicionam um pé em cada lado.",
       "planner_item2_title": "Tela dupla (camadas)",
       "planner_item2_desc": "Se você estiver vestindo uma jaqueta ou agasalho sobre uma camisa, a interface renderizará uma visualização lado a lado (um avatar mostrando o agasalho e outro sem) para que você possa revisar as duas camadas simultaneamente.",
       "planner_item3_title": "Mapeamento corporal interativo",
@@ -4243,7 +4243,21 @@
     "tableOfContents": "Índice",
     "backToSummary": "Voltar ao resumo",
     "whyItMatters": "Porque é importante:",
-    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in."
+    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
+    "best_practice_title": "Melhores Práticas",
+    "best_practice_p1": "Siga estes hábitos simples para construir um armário digital preciso, aproveitar ao máximo seus créditos diários e receber recomendações de looks sob medida todos os dias.",
+    "best_practice_step1": "**Complete seu Perfil Primeiro**: Defina suas medidas corporais, cores favoritas, preferências de estilo e nível de modéstia no **Perfil** antes de enviar roupas.",
+    "best_practice_step2": "**Tire Fotos Nítidas**: Envie uma peça única estendida, uma foto de look completo no espelho ou várias peças lado a lado — o DressApp detecta automaticamente o tipo de foto e separa cada item.",
+    "best_practice_step3": "**Monte seu Armário em 5 Dias**: Use seus 10 créditos diários gratuitos para adicionar 10 peças por dia (calças do dia a dia, blusas, sobreposições, calçados e roupas de ocasião).",
+    "best_practice_step4": "**Revise o Cartão da Peça (10 Segundos)**: Confirme rapidamente a categoria, cor, nível de aquecimento e código de vestimenta — incluindo trajes tradicionais e culturais.",
+    "best_practice_step5": "**Dê 4 Pistas ao Stylist**: Mencione a **ocasião**, o **local**, o **clima** e o **visual desejado** ao pedir um look ao Stylist IA.",
+    "qa_title": "Perguntas Frequentes (FAQ)",
+    "qa_p1": "Respostas rápidas para as dúvidas mais comuns sobre como começar, gerenciar seus créditos, digitalizar seu guarda-roupa e montar looks.",
+    "qa_step1": "**Como começo no Dia 1?** Preencha primeiro suas medidas e preferências no **Perfil** e depois adicione as 10 peças que você mais usa no dia a dia.",
+    "qa_step2": "**Como funcionam os créditos gratuitos?** Contas gratuitas recebem **10 créditos diários** (renovados a cada 24 horas, acumuláveis até 50) para adicionar roupas e conversar com o stylist, além de **5 créditos mensais de Reconstrução de Estúdio**.",
+    "qa_step3": "**Como posso expandir meu armário gratuito?** Compartilhe seu link em **Perfil → Convidar Amigos** para ganhar **+10 espaços permanentes no armário** por amigo (expandindo de 50 para até 150 peças gratuitas).",
+    "qa_step4": "**Posso enviar looks completos ou várias peças de uma vez?** Sim — envie uma única peça, uma foto de look completo ou várias peças dispostas juntas, ou importe de uma loja online ou de outro aplicativo.",
+    "qa_step5": "**Meu guarda-roupa é privado?** Sim. Suas fotos e medidas são privadas da sua conta, e o **modelo de IA local do DressApp** processa seu guarda-roupa diretamente em nosso ambiente privado."
   },
   "campaigns": {
     "status": {
@@ -5087,7 +5101,9 @@
     "dppApiSpecs": "Ponte de extensão do navegador",
     "privacyPolicy": "política de Privacidade",
     "termsOfUse": "Termos de Uso",
-    "rights": "Todos os direitos reservados. Projetado de acordo com especificações ecológicas luxuosas."
+    "rights": "Todos os direitos reservados. Projetado de acordo com especificações ecológicas luxuosas.",
+    "bestPractices": "Melhores Práticas",
+    "qaFaq": "Perguntas Frequentes (FAQ)"
   },
   "scanner": {
     "tabFile": "Carregar imagem"

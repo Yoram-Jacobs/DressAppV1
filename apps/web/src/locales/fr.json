@@ -3885,7 +3885,7 @@
     "profile_title": "Gérer votre profil",
     "profile_p1": "Votre page Profil vous permet de personnaliser vos mensurations, vos préférences de style et la voix de DressApp :",
     "profile_item1_title": "1. Photos et avatar personnel",
-    "profile_item1_desc": "Importez une photo en pied pour des essayages réalistes ou personnalisez la silhouette et le teint de votre mannequin virtuel. DressApp supprime automatiquement l'arrière-plan de votre photo.",
+    "profile_item1_desc": "Importez une photo en pied pour des essayages réalistes ou personnalisez la morphologie et le teint de votre mannequin virtuel. DressApp supprime automatiquement l'arrière-plan, détecte vos repères anatomiques exacts (épaules, taille, bassin et chevilles) et affiche le maillage d'ajustement 2D.",
     "profile_item2_title": "2. Préférences de style",
     "profile_item2_desc": "Indiquez au Styliste vos styles favoris, vos couleurs préférées, les pièces à éviter et votre niveau de modestie souhaité.",
     "profile_item3_title": "3. Coordonnées personnelles",
@@ -3925,7 +3925,7 @@
     "planner_title": "Planificateur de tenues",
     "planner_p1": "Le planificateur de tenues vous aide à superposer, organiser et évaluer vos sélections de style :",
     "planner_item1_title": "Toile de tenue",
-    "planner_item1_desc": "Superposez et combinez des vêtements de manière dynamique sur l'avatar de votre personnage personnalisé pour créer la disposition de votre tenue.",
+    "planner_item1_desc": "Sélectionnez des hauts, bas, robes, chaussures et accessoires de votre garde-robe pour les essayer sur votre avatar. Les hauts s'ajustent aux épaules et à l'encolure en gardant leur coupe d'origine ; les pantalons épousent la taille et le bassin en préservant la coupe des jambes ; et chaque pied reçoit une chaussure.",
     "planner_item2_title": "Double toile (superposition)",
     "planner_item2_desc": "Si vous portez une veste ou des vêtements d'extérieur par-dessus une chemise, l'interface affiche une vue côte à côte (un avatar montrant les vêtements d'extérieur, un sans) afin que vous puissiez examiner les deux calques simultanément.",
     "planner_item3_title": "Mapping corporel interactif",
@@ -4086,7 +4086,7 @@
       "profile_title": "Gérer votre profil",
       "profile_p1": "Votre page Profil vous permet de personnaliser vos mensurations, vos préférences de style et la voix de DressApp :",
       "profile_item1_title": "1. Photos et avatar personnel",
-      "profile_item1_desc": "Importez une photo en pied pour des essayages réalistes ou personnalisez la silhouette et le teint de votre mannequin virtuel. DressApp supprime automatiquement l'arrière-plan de votre photo.",
+      "profile_item1_desc": "Importez une photo en pied pour des essayages réalistes ou personnalisez la morphologie et le teint de votre mannequin virtuel. DressApp supprime automatiquement l'arrière-plan, détecte vos repères anatomiques exacts (épaules, taille, bassin et chevilles) et affiche le maillage d'ajustement 2D.",
       "profile_item2_title": "2. Préférences de style",
       "profile_item2_desc": "Indiquez au Styliste vos styles favoris, vos couleurs préférées, les pièces à éviter et votre niveau de modestie souhaité.",
       "profile_item3_title": "3. Coordonnées personnelles",
@@ -4116,7 +4116,7 @@
       "planner_title": "Planificateur de tenues",
       "planner_p1": "Le planificateur de tenues vous aide à superposer, organiser et évaluer vos sélections de style :",
       "planner_item1_title": "Toile de tenue",
-      "planner_item1_desc": "Superposez et combinez des vêtements de manière dynamique sur l'avatar de votre personnage personnalisé pour créer la disposition de votre tenue.",
+      "planner_item1_desc": "Sélectionnez des hauts, bas, robes, chaussures et accessoires de votre garde-robe pour les essayer sur votre avatar. Les hauts s'ajustent aux épaules et à l'encolure en gardant leur coupe d'origine ; les pantalons épousent la taille et le bassin en préservant la coupe des jambes ; et chaque pied reçoit une chaussure.",
       "planner_item2_title": "Double toile (superposition)",
       "planner_item2_desc": "Si vous portez une veste ou des vêtements d'extérieur par-dessus une chemise, l'interface affiche une vue côte à côte (un avatar montrant les vêtements d'extérieur, un sans) afin que vous puissiez examiner les deux calques simultanément.",
       "planner_item3_title": "Cartographie corporelle interactive",
@@ -4236,7 +4236,21 @@
     "tableOfContents": "Table des matières",
     "backToSummary": "Retour au résumé",
     "whyItMatters": "Pourquoi c'est important :",
-    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in."
+    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
+    "best_practice_title": "Bonnes Pratiques",
+    "best_practice_p1": "Adoptez ces habitudes simples pour bâtir une garde-robe numérique précise, tirer le meilleur parti de vos crédits quotidiens et recevoir des idées de tenues sur mesure chaque jour.",
+    "best_practice_step1": "**Complétez d'abord votre Profil** : Renseignez vos mensurations, couleurs préférées, préférences de style et niveau de pudeur dans votre **Profil** avant d'ajouter des vêtements.",
+    "best_practice_step2": "**Prenez des photos nettes** : Importez un vêtement posé à plat, une photo de tenue complète dans le miroir ou plusieurs pièces disposées côte à côte — DressApp détecte automatiquement le type de photo et sépare chaque article.",
+    "best_practice_step3": "**Créez votre dressing en 5 jours** : Utilisez vos 10 crédits quotidiens gratuits pour ajouter 10 pièces par jour (pantalons du quotidien, hauts, vestes, chaussures et tenues d'occasion).",
+    "best_practice_step4": "**Vérifiez la fiche vêtement (10 secondes)** : Confirmez rapidement la catégorie, la couleur, le niveau de chaleur et le code vestimentaire — y compris pour les tenues traditionnelles et culturelles.",
+    "best_practice_step5": "**Donnez 4 indices au Styliste** : Précisez l'**occasion**, le **lieu**, la **météo** et le **style souhaité** lorsque vous demandez une tenue au Styliste IA.",
+    "qa_title": "Questions Fréquentes (FAQ)",
+    "qa_p1": "Réponses rapides aux questions les plus fréquentes sur le démarrage, la gestion des crédits, la numérisation de votre dressing et la création de tenues.",
+    "qa_step1": "**Comment bien démarrer le 1er jour ?** Complétez d'abord vos mensurations et préférences dans votre **Profil**, puis ajoutez vos 10 vêtements les plus portés.",
+    "qa_step2": "**Comment fonctionnent les crédits gratuits ?** Les comptes gratuits reçoivent **10 crédits quotidiens** (renouvelés toutes les 24 h, cumulables jusqu'à 50) pour ajouter des vêtements et discuter avec le styliste, plus **5 crédits mensuels de Reconstruction Studio**.",
+    "qa_step3": "**Comment agrandir mon dressing gratuit ?** Partagez votre lien depuis **Profil → Inviter des amis** pour gagner **+10 places permanentes** par ami inscrit (de 50 jusqu'à 150 vêtements gratuits).",
+    "qa_step4": "**Puis-je importer des tenues complètes ou plusieurs articles à la fois ?** Oui — importez un article seul, une tenue complète ou plusieurs pièces posées ensemble, ou importez depuis une boutique en ligne ou une autre application.",
+    "qa_step5": "**Ma garde-robe est-elle privée ?** Oui. Vos photos et mensurations restent privées, et le **modèle d'IA local de DressApp** traite votre garde-robe directement dans notre environnement privé."
   },
   "campaigns": {
     "status": {
@@ -5080,7 +5094,9 @@
     "dppApiSpecs": "Pont d'extension de navigateur",
     "privacyPolicy": "politique de confidentialité",
     "termsOfUse": "Conditions d'utilisation",
-    "rights": "Tous droits réservés. Conçu selon des spécifications écologiques luxueuses."
+    "rights": "Tous droits réservés. Conçu selon des spécifications écologiques luxueuses.",
+    "bestPractices": "Bonnes Pratiques",
+    "qaFaq": "Questions Fréquentes (FAQ)"
   },
   "scanner": {
     "tabFile": "Télécharger une image"

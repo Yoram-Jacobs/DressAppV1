@@ -5,7 +5,8 @@ Your **Profile** page lets you personalize how DressApp fits your body, matches 
 ## Profile Sections
 
 1. **Photos & Personal Avatar**:
-   - Upload a full-body photo for realistic virtual try-ons, or customize your virtual mannequin's body shape and skin tone. DressApp automatically removes the background from your photo.
+   - Upload a full-body photo for realistic virtual try-ons, or customize your virtual mannequin's body shape and skin tone. DressApp automatically removes the background from your photo and detects your exact shoulder, waist, hip, and leg landmarks so every garment in your closet fits your real body proportions.
+   - Toggle the **2D Point-Cloud Fit Mesh** on your avatar stage to inspect your anatomical landmarks and garment fit anchors in real time.
 
 2. **Style Preferences**:
    - Choose your favorite style aesthetics, preferred colors, items you prefer to avoid, and your modesty level (Casual, Moderate, or Conservative). Your AI Stylist follows these preferences on every outfit suggestion.
@@ -15,7 +16,7 @@ Your **Profile** page lets you personalize how DressApp fits your body, matches 
    - If you sign in with Google, you can quickly fill in your basic contact details with one click.
 
 4. **Body Measurements & Sizes**:
-   - Enter just four basic measurements—**Height**, **Weight**, **Waist**, and **Foot Length**—and DressApp automatically estimates your remaining body measurements (**Shoulders**, **Chest**, **Hips**, **Sleeve Length**, **Inseam**, and **Outseam**) to help you find clothes that fit.
+   - Enter just four basic measurements—**Height**, **Weight**, **Waist**, and **Foot Length**—and DressApp automatically estimates your remaining body measurements (**Shoulders**, **Chest**, **Hips**, **Sleeve Length**, **Inseam**, and **Outseam**) to help you find clothes that fit and calibrate your 2D Avatar's proportions.
    - You can also fine-tune any individual measurement manually at any time.
 
 5. **Lifestyle & Occupation**:

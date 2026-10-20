@@ -1,159 +1,38 @@
-# Profile, Sizing & Configuration (`/me`)
+# Managing Your Profile
 
-Manage physical measurements, skin tone, body photo cutouts, styling preferences, AI model credentials, and system integrations on your personal profile dashboard.
+Your **Profile** page lets you personalize how DressApp fits your body, matches your style, and communicates with you.
 
-## Overview
-The **Profile & Settings** page (`https://dressapp.co/me`) serves as the central control hub for your DressApp ecosystem. It houses your physical anthropometric parameters, digital try-on avatar stage, style constraints, localized preferences, AI model keys, and push notification schedules.
+## Profile Sections
 
----
+1. **Photos & Personal Avatar**:
+   - Upload a full-body photo for realistic virtual try-ons, or customize your virtual mannequin's body shape and skin tone. DressApp automatically removes the background from your photo and detects your exact shoulder, waist, hip, and leg landmarks so every garment in your closet fits your real body proportions.
+   - Toggle the **2D Point-Cloud Fit Mesh** on your avatar stage to inspect your anatomical landmarks and garment fit anchors in real time.
 
-## Prerequisites
-- An active DressApp account.
-- (Optional) Device camera permissions for full-body photo upload.
-- (Optional) Location permissions for local stylist campaign targeting, cultural restrictions and weather forecasting.
+2. **Style Preferences**:
+   - Choose your favorite style aesthetics, preferred colors, items you prefer to avoid, and your modesty level (Casual, Moderate, or Conservative). Your AI Stylist follows these preferences on every outfit suggestion.
 
----
+3. **Personal & Contact Details**:
+   - Save your name, email, date of birth, phone number for notifications, and home address with automatic street and city lookup.
+   - If you sign in with Google, you can quickly fill in your basic contact details with one click.
 
-## Step-by-Step Guide: Top-to-Bottom Page Overview
+4. **Body Measurements & Sizes**:
+   - Enter just four basic measurements—**Height**, **Weight**, **Waist**, and **Foot Length**—and DressApp automatically estimates your remaining body measurements (**Shoulders**, **Chest**, **Hips**, **Sleeve Length**, **Inseam**, and **Outseam**) to help you find clothes that fit and calibrate your 2D Avatar's proportions.
+   - You can also fine-tune any individual measurement manually at any time.
 
-### 1. Page Header & Explore Navigation Bar
-Located at the top of the `/me` dashboard:
-- **Header**: Displays your account status and title.
-- **Explore Cards**: Quick shortcuts to main app sections:
-  - **Trend Scout** (`/trends`): View daily AI-curated fashion news feeds.
-  - **Outfits** (`/outfits`): Access your saved outfit calendar.
-  - **Experts** (`/experts`): Browse local fashion stylists and tailors.
-  - **Unpacked / Stats** (`/me/stats`): View wardrobe valuation, cost-per-wear metrics, and color breakdowns.
+5. **Lifestyle & Occupation**:
+   - Share your daily routine and occupation so outfit recommendations and **Trend Scout** articles match your everyday life.
 
-### 2. Language & Voice Selection Card
-Prominently displayed for immediate accessibility:
-- **Language Selector**: Choose from 12 supported languages (*English, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Arabic, Hindi, Hebrew*). Selecting a language automatically updates the UI locale and binds the default regional Text-to-Speech (TTS) voice model.
+6. **Measurement Units**:
+   - Switch anytime between metric (**cm / kg**) and imperial (**in / lb**) units.
 
----
+7. **Professional Stylist Directory & Payouts**:
+   - Professional stylists, tailors, and designers can register to appear in the **Stylist Directory** and add a PayPal email to receive earnings from Marketplace sales.
 
-### 3. Identity & Personal Details Card (`ProfileDetailsCard`)
+8. **Built-In AI Experience**:
+   - No technical setup is needed. Free accounts run on **DressApp's on-premises AI model**, while **Manager** ($10/mo) and **Professional** ($15/mo) plans unlock our faster **cutting-edge AI model** with automatic on-premises backup.
 
-Contains 9 expandable accordion panels managing your personal identity, sizing, and avatar rendering:
+9. **Subscription & Closet Space**:
+   - View your current plan and closet usage, or copy your personal invite link to earn **+10 free item slots** for every friend who signs up (up to 150 items on the Free plan).
 
-#### Panel A: Identity
-- **First Name & Last Name**: Personal identification fields.
-- **Email Address**: Read-only display of your registered email.
-- **Date of Birth**: Used to personalize demographic trend scoring.
-- *Google Autofill Badge*: Displays automatically if your profile was seeded via Google OAuth.
-
-#### Panel B: Contact & Delivery Address
-- **Phone Number**: Required to receive SMS/Push alerts for daily scheduler proposals and local expert campaigns.
-- **Address Line 1**: Features OpenStreetMap (Nominatim) street-level autocomplete. Selecting a suggestion automatically populates Line 1, City, Region, Zip Code, and Country.
-- **Address Line 2, City, Region, Postal Code**: Manual address fields for marketplace shipping.
-- **Country**: Offline combobox searchable by country name or ISO-2 code.
-
-#### Panel C: Demographics
-- **Sex**: Select *Female* or *Male* to configure base body measurements and clothing taxonomy.
-- **Personal Status**: Select *Single*, *Married*, *Divorced*, or *Widowed*.
-- **Occupation**: Free-text entry (e.g. *Student*, *Marketing Manager*, *Barista*). Feeds the Trend Scout personalization ranker to prioritize relevant style news.
-
-#### Summarized Guide: Syncing Missing Google Profile Data (People API Re-Consent)
-If you signed in with Google before DressApp requested access to your **People API** profile details (phone, address, gender, date of birth), those fields may remain empty. You can sync them in one click:
-
-1. **Open the Contact or Demographics accordion** — you'll see a **"Sync from Google"** button (refresh icon) next to the section title.
-2. **Click "Sync from Google"** — if the required People API scopes weren't granted during your original sign-in, DressApp detects this and shows an info toast: *"Google needs your permission to access profile details. You will be redirected to Google to grant access."*
-3. **Grant consent on Google's screen** — you're redirected to Google's OAuth consent screen. Check the boxes for **Profile info** (name, email, photo) and **Contact info** (phone, address, gender, birthday).
-4. **Automatic return & auto-fill** — after consent, Google redirects you back to DressApp. The `syncGoogleProfile()` function runs automatically, calling the backend `/auth/google/sync-profile` endpoint which:
-   - Fetches your phone, address, gender, and date of birth from Google People API
-   - Populates the empty fields in the **Contact** (phone, address) and **Demographics** (sex, date of birth) panels
-   - Saves the updates to your profile instantly
-5. **Done** — your profile is now complete without manual typing.
-
-> **Note**: The "Sync from Google" button also appears in the page header (next to the main "Sync Google Profile" button) and works the same way — it syncs all available Google profile data at once.
-
-#### Panel D: Preferences & Measurement Units
-- **Weight Unit**: Toggle between Kilograms (`kg`) and Pounds (`lb`).
-- **Length Unit**: Toggle between Centimeters (`cm`) and Inches (`in`).
-
-#### Panel E: Photos & Digital Avatar Stage
-- **Left Column — Photo Pickers**:
-  - *Face Photo*: Upload a avatar thumbnail.
-  - *Full-body Photo*: Upload a full-body photograph. The system automatically executes local U2-Net (`rembg`) matting to strip the background.
-  - *Remove Photo Button*: Single-click removal of your photo cutout, instantly switching the try-on stage back to the 2D SVG vector mannequin with zero UI lag.
-- **Right Column — Digital Avatar & Try-On Stage**:
-  - **Skin Tone Picker**: Interactive color palette to select your mannequin skin tone.
-  - **Avatar Try-On Canvas**: Renders garments on top of your photo cutout or dynamic Bezier vector mannequin (`DynamicAvatar.jsx`) using calibrated landmark offsets (`top-[14.5%]` collar-to-neckline and `top-[36.5%]` waistband-to-waistline).
-
-#### Panel F: Style Profile
-- **Aesthetics**: Comma-separated style keywords (e.g. *Minimalist, Streetwear, Vintage*).
-- **Color Palette**: Preferred color tones (e.g. *Pastels, Earth Tones, Monochrome*).
-- **Avoid**: Colors or garment types to strictly exclude from AI recommendations (e.g. *Yellow, Crop Tops*).
-- **Cultural Dress Conservativeness**: Select modesty level (*Casual/Relaxed*, *Moderate*, *Conservative*) to guide AI Stylist outfit coverage.
-
-#### Panel G: Body Measurements & Sizing (ANSUR II Sizing Predictor)
-- **Onboarding / Fresh Start Mode**: Enter 4 basic inputs: **Height**, **Weight**, **Waist Circumference**, and **Foot Length**. The built-in scikit-learn ANSUR II multi-output regression model automatically predicts 6 structural measurements:
-  - *Shoulders*, *Chest / Bust*, *Hip*, *Sleeve Length*, *Inseam*, and *Outseam*.
-- **Automatic Size Translation**: Once the structural measurements are predicted, deterministic sizing algorithms instantly populate **all standard retail sizes** down to the shoe size:
-  - *Casual Shirt Size* (XS–XXL based on chest circumference)
-  - *Pants Waist Size* (inches, converted from waist cm)
-  - *US Shoe Size* (Men's/Women's formulas from foot length)
-  - *Women's Dress Size* (US 0–14+ based on waist)
-  - *Women's Bra Size* (band + cup calculated from bust/underbust)
-- **Detailed Edit Mode**: After the auto-fill, fine-tune all 15 sizing parameters (including Shirt Size, Pants Size, Shoe Size, Bra Size, Dress Size) and Hair attributes (*Length, Type, Color, Style*).
-- **Live Unit Toggle**: Switch between *kg/cm* and *lb/in* — all values convert instantly without re-prediction.
-
-#### Panel H: Professional & Expert Directory Registration
-- **Professional Stylist Toggle**: Register as a verified fashion professional (stylist, tailor, designer).
-- **Business Details**: Input Business Name, Address, Phone, Email, Website, and Description to appear in the `/experts` directory and regional campaign ticker.
-
-#### Panel I: PayPal Payout Settings
-- **PayPal Receiver Email**: Enter your PayPal email to receive payouts for marketplace sales and active expert campaigns.
-
----
-
-### 4. System Preferences Accordion Card
-
-Manages system-level settings, subscriptions, and AI integrations:
-
-- **AI Model Routing (Tiered Architecture — Zero BYOK)**:
-  - *Free Tier (On-Premises Eyes)*: Free-tier users are powered by DressApp's self-hosted, on-premises **Eyes** engine (currently a fine-tuned **Qwen 2.5 VL 3B** model) on port 7860 with zero personal API keys required.
-  - *Manager & Professional Plans (Fast Cloud Model)*: Subscribers on the **Manager** and **Professional** plans enjoy priority routing to the fast Cloud AI model (currently **Google Gemini 3.5 Flash** via `llm_gateway.py`).
-  - *On-Premises Quota Safety Net*: If external cloud rate limits (`429` / `RESOURCE_EXHAUSTED`) are encountered, queries automatically fall back to the self-hosted **Eyes** (`Qwen 2.5 VL 3B`) container on port 7860, ensuring your styling conversation is never interrupted.
-- **Subscription & Closet Limits**:
-  - View current account tier (**Free**: 150-item limit baseline vs **Manager** ($10/mo) or **Professional** ($15/mo): Unlimited items + fast Cloud AI model).
-  - Access the **Pricing page** (`/pricing` or click on your plan card) to view the tier comparison table, select a plan, or purchase non-expiring prepaid credit packs.
-  - Upgrade via PayPal Subscriptions or the Atzmai Gateway for local Israeli ILS (Bit / credit card) transactions.
-  - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers (up to 150 items max).
-- **Scheduler & Push Reminders**:
-  - Toggle morning outfit proposal notifications.
-  - Set frequency (*Everyday*, *Every Other Day*, *Twice a Week*, *On Weekday*), time (e.g., *07:00*), and dress-code style demands (*Casual*, *Formal*, *Athletic*, *Custom*).
-  - Enable browser VAPID push alerts.
-- **Campaign Notification Preferences**:
-  - Granular toggles for *Local Fashion Push/Email*, *Sale Alerts*, *Sustainable Fashion*, *Luxury Promos*, and *Personal Stylist*.
-  - Adjust **Max Campaign Distance** slider (5km to 50km).
-- **Google Calendar Connect**: OAuth button to sync personal calendar events with the AI Stylist.
-- **Location Services Card**: Toggle GPS location permissions for distance-matched expert feeds and hyper-local weather.
-- **Invite Friends Button**: Copy shareable referral link.
-- **Shopping Assistant**: Access Chrome Web Store extension details or generate a **Universal Bookmarklet** (`javascript:...`) for instant e-commerce size comparisons.
-
----
-
-### 5. Account Actions & Diagnostics
-- **Sign Out**: Log out of your current session.
-- **Delete my Account**: Link to permanently purge account data.
-- **Developer Panel**: Diagnostic view for environment testing. Authenticated via Google OAuth (`dressappdeveloper@gmail.com`).
-
----
-
-## Expected Results
-- Instant synchronization of physical metrics, skin tone, and photo cutouts across the 2D Avatar Try-On Canvas.
-- Zero idle network requests when navigating between settings panels.
-- Customized AI Stylist outfit proposals aligned with your modesty rules and schedule.
-
----
-
-## Troubleshooting
-- **Photo background not removed**: Ensure your uploaded photo is full-body with contrasting background lighting.
-- **Push alerts not arriving**: Confirm browser notification permissions are enabled and a phone number is saved under *Contact*.
-- **Address autocomplete unresponsive**: Check that internet connection is active for OpenStreetMap Nominatim queries.
-
----
-
-## Limitations
-- Free tier account space is capped at 150 items and uses the on-premises Eyes (`Qwen 2.5 VL 3B`) model unless upgraded to the **Manager** or **Professional** plan for unlimited storage and the fast Cloud model (`Gemini 3.5 Flash`).
-- If cloud quotas are temporarily reached, requests gracefully fall back to the built-in on-premises Eyes (`Qwen 2.5 VL 3B`) engine without interrupting the session.
+10. **Language, Voice & Location**:
+    - Choose from **13 supported languages**, select your preferred voice for the AI Stylist, and enable location access for local weather and nearby offers.

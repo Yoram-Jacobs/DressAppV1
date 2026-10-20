@@ -3887,7 +3887,7 @@
     "profile_title": "Managing Your Profile",
     "profile_p1": "Your Profile lets you personalize how DressApp fits, styles, and speaks to you:",
     "profile_item1_title": "1. Photos & Personal Avatar",
-    "profile_item1_desc": "Upload a full-body photo for realistic try-ons or customize your virtual mannequin's body shape and skin tone. DressApp automatically removes the background from your photo.",
+    "profile_item1_desc": "Upload a full-body photo for realistic try-ons or customize your virtual mannequin's body shape and skin tone. DressApp automatically removes the background, detects your exact anatomical landmarks (shoulders, waist, pelvis, and ankles), and lets you toggle the 2D Point-Cloud Fit Mesh.",
     "profile_item2_title": "2. Style Preferences",
     "profile_item2_desc": "Tell the Stylist your favorite styles, preferred colors, items you want to avoid, and your modesty preference so every suggestion feels comfortable for you.",
     "profile_item3_title": "3. Personal & Contact Details",
@@ -3927,7 +3927,7 @@
     "planner_title": "Outfit Planner",
     "planner_p1": "Mix, match, and layer your clothes visually on your personal avatar:",
     "planner_item1_title": "Visual Dressing Room",
-    "planner_item1_desc": "Select tops, bottoms, dresses, shoes, and accessories from your closet to try them on your avatar.",
+    "planner_item1_desc": "Select tops, bottoms, dresses, shoes, and accessories from your closet to try them on your avatar. Tops fit your shoulders and neckline while keeping their original cut; pants fit your waist and pelvis while preserving their leg silhouette; and paired shoes map one shoe per foot.",
     "planner_item2_title": "Side-by-Side Layer View",
     "planner_item2_desc": "When you add a jacket or coat over a top, DressApp shows your outfit both with and without the outer layer.",
     "planner_item3_title": "Tap to Inspect",
@@ -4088,7 +4088,7 @@
       "profile_title": "Managing Your Profile",
       "profile_p1": "Your Profile lets you personalize how DressApp fits, styles, and speaks to you:",
       "profile_item1_title": "1. Photos & Personal Avatar",
-      "profile_item1_desc": "Upload a full-body photo for realistic try-ons or customize your virtual mannequin's body shape and skin tone. DressApp automatically removes the background from your photo.",
+      "profile_item1_desc": "Upload a full-body photo for realistic try-ons or customize your virtual mannequin's body shape and skin tone. DressApp automatically removes the background, detects your exact anatomical landmarks (shoulders, waist, pelvis, and ankles), and lets you toggle the 2D Point-Cloud Fit Mesh.",
       "profile_item2_title": "2. Style Preferences",
       "profile_item2_desc": "Tell the Stylist your favorite styles, preferred colors, items you want to avoid, and your modesty preference so every suggestion feels comfortable for you.",
       "profile_item3_title": "3. Personal & Contact Details",
@@ -4120,7 +4120,7 @@
       "planner_title": "Outfit Planner",
       "planner_p1": "Mix, match, and layer your clothes visually on your personal avatar:",
       "planner_item1_title": "Visual Dressing Room",
-      "planner_item1_desc": "Select tops, bottoms, dresses, shoes, and accessories from your closet to try them on your avatar.",
+      "planner_item1_desc": "Select tops, bottoms, dresses, shoes, and accessories from your closet to try them on your avatar. Tops fit your shoulders and neckline while keeping their original cut; pants fit your waist and pelvis while preserving their leg silhouette; and paired shoes map one shoe per foot.",
       "planner_item2_title": "Side-by-Side Layer View",
       "planner_item2_desc": "When you add a jacket or coat over a top, DressApp shows your outfit both with and without the outer layer.",
       "planner_item3_title": "Tap to Inspect",
@@ -4271,7 +4271,21 @@
     "tableOfContents": "Table of Contents",
     "backToSummary": "Back to Summary",
     "whyItMatters": "Why it matters:",
-    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in."
+    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
+    "best_practice_title": "Best Practices",
+    "best_practice_p1": "Follow these simple habits to build an accurate digital closet, make the most of your daily credits, and get tailored outfit recommendations every day.",
+    "best_practice_step1": "**Complete Your Profile First**: Set your body measurements, favorite colors, style preferences, and modesty level in your **Profile** before uploading clothes.",
+    "best_practice_step2": "**Capture Clear Photos**: Upload a single item laid flat, a full-outfit mirror photo, or several items arranged side-by-side — DressApp automatically detects the photo type and separates each piece.",
+    "best_practice_step3": "**Build Your Closet in 5 Days**: Use your 10 free daily credits to add 10 items a day (Everyday Pants, Tops, Layering Pieces, Shoes, and Occasion Wear) without feeling overwhelmed.",
+    "best_practice_step4": "**Review Your Item Card (10 Seconds)**: Quickly verify the detected category, color, warmth, and dress code — including traditional and cultural garments — so your stylist always has accurate details.",
+    "best_practice_step5": "**Give the Stylist 4 Clues**: Mention your **occasion**, **setting**, **weather**, and **desired look** when asking the AI Stylist for an outfit.",
+    "qa_title": "Q&A & FAQ",
+    "qa_p1": "Quick answers to the most common questions about getting started, managing your credits, digitizing your wardrobe, and styling outfits.",
+    "qa_step1": "**How do I start on Day 1?** Complete your **Profile** measurements and style preferences first, then add your 10 most-worn everyday items.",
+    "qa_step2": "**How do free credits work?** Free accounts receive **10 daily credits** (refreshed every 24 hours, stackable up to 50) for adding clothes and chatting with the stylist, plus **5 monthly Studio Reconstruction credits**.",
+    "qa_step3": "**How can I expand my free closet?** Share your referral link from **Profile → Invite Friends** to earn **+10 permanent closet slots** per friend (expanding your free closet from 50 up to 150 items).",
+    "qa_step4": "**Can I upload full outfits or multiple items at once?** Yes — upload a single item, a full outfit photo, or multiple items laid out together, or import from an online store link or another wardrobe app.",
+    "qa_step5": "**Is my wardrobe private?** Yes. Your photos and measurements are private to your account, and **DressApp's on-premises AI model** processes your wardrobe directly within our private environment."
   },
   "campaigns": {
     "status": {
@@ -5108,7 +5122,9 @@
     "dppApiSpecs": "Browser Extension Bridge",
     "privacyPolicy": "Privacy Policy",
     "termsOfUse": "Terms of Use",
-    "rights": "All rights reserved. Designed to luxurious ecological specifications."
+    "rights": "All rights reserved. Designed to luxurious ecological specifications.",
+    "bestPractices": "Best Practices",
+    "qaFaq": "Q&A & FAQ"
   },
   "scanner": {
     "tabFile": "Upload image"

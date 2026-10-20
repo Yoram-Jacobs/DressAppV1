@@ -1,33 +1,33 @@
 # Planificador de Atuendos y Lienzo 2D
 
-Combina, superpone y previsualiza conjuntos coordinados en tu avatar virtual antes de vestirte.
+Combina, superpón en capas y previsualiza conjuntos coordinados en tu avatar virtual antes de vestirte.
 
-## Resumen
-El Planificador de Atuendos ofrece un lienzo interactivo con un avatar 2D donde puedes probarte la ropa. Puedes ver cómo combinan camisetas, pantalones, zapatos y accesorios, activar o desactivar prendas de abrigo y consultar puntuaciones de compatibilidad en tiempo real.
+## Descripción general
+El Planificador de Atuendos ofrece un lienzo interactivo con avatar 2D donde puedes probar cómo quedan tus prendas juntas. Puedes visualizar partes superiores, pantalones, calzado y accesorios sobre tu avatar, activar o desactivar abrigos y comprobar puntuaciones de compatibilidad.
 
 ## Requisitos previos
-- Ropa digitalizada en tu armario.
-- (Opcional) Una foto de cuerpo entero en tu perfil si prefieres probarte prendas sobre tu silueta real.
+- Prendas digitalizadas en tu armario.
+- *(Opcional)* Una foto de cuerpo entero en tu perfil si prefieres probarte la ropa sobre tu silueta real.
 
-## Paso a paso
-1. **Abre el Lienzo**: Toca la pestaña **Outfit Canvas** en la app.
-2. **Viste a tu avatar**: Arrastra o pulsa prendas para colocarlas sobre el maniquí:
-   - Las prendas superiores se ajustan naturalmente al cuello.
-   - Los pantalones y faldas se alinean cómodamente con la cintura.
-   - Los zapatos se colocan con precisión en la base.
-3. **Superposición de prendas de abrigo ("Con / Sin abrigo")**:
+## Instrucciones paso a paso
+1. **Abrir el lienzo**: Toca la pestaña **Lienzo de Atuendos** en la aplicación.
+2. **Vestir a tu avatar**: Arrastra y suelta o toca las prendas para colocarlas sobre el maniquí o tu foto de cuerpo entero:
+   - **Partes superiores, abrigos y vestidos** se ajustan automáticamente a los hombros y al escote de tu avatar manteniendo intacto su corte original de mangas y torso.
+   - **Pantalones y faldas** sitúan la cintura entre tu cintura natural y tus caderas según su tiro (alto, medio, relajado o bajo), se adaptan a tu cintura y pelvis, y conservan intacto el corte original de la pierna (ancho, recto, acampanado, cargo o ajustado).
+   - **Zapatos y botas** dividen automáticamente las fotos de pares de calzado para colocar un zapato en cada pie.
+3. **Capas de abrigo ("Con / Sin abrigo")**:
    - Añade una chaqueta, cárdigan o abrigo.
-   - Usa el selector para ver tu conjunto **Con abrigo** (chaqueta abrochada) o **Sin abrigo** (dejando visible la camiseta y el pantalón).
-4. **Toca para ver detalles**: Pulsa cualquier prenda en el avatar para abrir su ficha o cambiarla por otra.
-5. **Comprueba las puntuaciones**: Revisa las barras de armonía que indican compatibilidad de colores, tejidos, clima y formalidad.
-6. **Guarda en tu diario**: Pulsa **Guardar look** para programar el conjunto en tu calendario.
+   - Usa el interruptor para ver tu conjunto **Con abrigo** o **Sin abrigo** (mostrando la camisa y el pantalón debajo).
+4. **Tocar para ver detalles**: Toca cualquier prenda directamente sobre el cuerpo de tu avatar para abrir su ficha de detalles o cambiarla por otra.
+5. **Comprobar puntuaciones de compatibilidad**: Revisa las barras de armonía que indican qué tan bien combinan colores, tejidos, clima y formalidad.
+6. **Guardar en el calendario**: Toca **Guardar look** para programar el atuendo para hoy o cualquier fecha futura.
 
 ## Resultados esperados
-Una vista previa atractiva y realista de tu look que evita dudas y cambios de ropa apresurados por la mañana.
+Una vista previa realista y por capas de tu atuendo que elimina las dudas matutinas frente al armario.
 
 ## Solución de problemas
-- **El abrigo queda detrás de la camiseta**: Comprueba que la chaqueta esté categorizada como "Prendas de abrigo" para que el sistema la coloque siempre por encima.
-- **El avatar se ve desproporcionado**: Ajusta tu altura y peso en el Perfil o pulsa "Restablecer avatar".
+- **El abrigo aparece detrás de la camisa**: Asegúrate de que tu chaqueta esté categorizada como "Ropa de abrigo" para que se superponga automáticamente sobre las camisas.
+- **El avatar se ve desproporcionado**: Abre tu Perfil para verificar tu altura y peso, o toca "Restablecer avatar".
 
 ## Limitaciones
-- Las prendas de abrigo se superponen automáticamente a las camisetas; combinaciones inusuales no se pueden reorganizar manualmente por ahora.
+- La ropa de abrigo se coloca automáticamente sobre las partes superiores; los órdenes de capas personalizados poco comunes (como llevar una camisa sobre una sudadera) aún no se pueden arrastrar manualmente.

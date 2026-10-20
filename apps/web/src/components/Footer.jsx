@@ -1,8 +1,14 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import HelpMenu from "@/components/HelpMenu";
+
 export const Footer = () => {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [helpTab, setHelpTab] = useState("best-practice");
 
   return (
     <footer className="bg-black text-white">
@@ -243,6 +249,38 @@ export const Footer = () => {
 
             <ul className="m-0 list-none space-y-3 p-0">
               <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHelpTab("best-practice");
+                    setHelpOpen(true);
+                  }}
+                  data-testid="footer-best-practices"
+                  className="bg-transparent border-0 p-0 text-start cursor-pointer text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("footer.bestPractices", {
+                    defaultValue: "Best Practices",
+                  })}
+                </button>
+              </li>
+
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHelpTab("qa");
+                    setHelpOpen(true);
+                  }}
+                  data-testid="footer-qa-faq"
+                  className="bg-transparent border-0 p-0 text-start cursor-pointer text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
+                >
+                  {t("footer.qaFaq", {
+                    defaultValue: "Q&A & FAQ",
+                  })}
+                </button>
+              </li>
+
+              <li>
                 <Link
                   to="/extension/connect"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
@@ -321,6 +359,12 @@ export const Footer = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent className="rounded-[12px] !max-w-6xl max-h-[85vh] overflow-y-auto p-5">
+          <HelpMenu initialTab={helpTab} />
+        </DialogContent>
+      </Dialog>
     </footer>
   );
 };

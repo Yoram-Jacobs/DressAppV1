@@ -25,16 +25,23 @@ import {
   Loader2,
   Bell,
   Megaphone,
+  CheckCircle2,
 } from 'lucide-react';
 import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
-export default function HelpMenu() {
+export default function HelpMenu({ initialTab = "overview" }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(initialTab || "overview");
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   const isRtl = i18n.language === "he" || i18n.language === "ar";
   const viewerIsPro = !!user?.professional?.is_professional;
@@ -45,6 +52,18 @@ export default function HelpMenu() {
       label: t("help.overview_title"),
       icon: BookOpen,
       wiki: "overview",
+    },
+    {
+      id: "best-practice",
+      label: t("help.best_practice_title", { defaultValue: "Best Practices" }),
+      icon: CheckCircle2,
+      wiki: "best-practice",
+    },
+    {
+      id: "qa",
+      label: t("help.qa_title", { defaultValue: "Q&A & FAQ" }),
+      icon: HelpCircle,
+      wiki: "Q&A",
     },
     {
       id: "prerequisites",
@@ -214,8 +233,46 @@ export default function HelpMenu() {
     const lines = mdText.split("\n");
     const elements = [];
     let listItems = [];
+    let tableRows = [];
+
+    const flushTable = (key) => {
+      if (tableRows.length > 0) {
+        const headerCells = tableRows[0];
+        const bodyRows = tableRows.slice(1).filter(
+          (row) => !row.every((cell) => /^[-:\s]+$/.test(cell))
+        );
+        elements.push(
+          <div key={`table-${key}`} className="my-4 overflow-x-auto rounded-lg border border-border">
+            <table className="w-full border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-secondary/50 border-b border-border">
+                  {headerCells.map((cell, cIdx) => (
+                    <th key={cIdx} className="px-3 py-2 font-bold text-foreground text-start">
+                      {parseInline(cell)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {bodyRows.map((row, rIdx) => (
+                  <tr key={rIdx} className="hover:bg-secondary/20">
+                    {row.map((cell, cIdx) => (
+                      <td key={cIdx} className="px-3 py-2 text-muted-foreground align-top">
+                        {parseInline(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>,
+        );
+        tableRows = [];
+      }
+    };
 
     const flushList = (key) => {
+      flushTable(key);
       if (listItems.length > 0) {
         elements.push(
           <ul
@@ -323,6 +380,30 @@ export default function HelpMenu() {
       if (inCode) {
         codeLines.push(lines[idx]);
         continue;
+      }
+
+      if (line.startsWith("|") && line.endsWith("|")) {
+        if (listItems.length > 0) {
+          elements.push(
+            <ul
+              key={`list-pre-tbl-${idx}`}
+              className="list-disc pl-5 space-y-1.5 my-3 text-muted-foreground text-sm"
+            >
+              {listItems.map((item, i) => (
+                <li key={i}>{parseInline(item)}</li>
+              ))}
+            </ul>,
+          );
+          listItems = [];
+        }
+        const cells = line
+          .slice(1, -1)
+          .split("|")
+          .map((c) => c.trim());
+        tableRows.push(cells);
+        continue;
+      } else if (tableRows.length > 0) {
+        flushTable(idx);
       }
 
       if (line.startsWith("# ")) {
@@ -526,6 +607,126 @@ export default function HelpMenu() {
                           "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
                       })}
                     </p>
+                  </div>
+                )}
+                {activeTab === "best-practice" && (
+                  <div className="space-y-4">
+                    <h2 className="text-[16px] font-bold flex items-center gap-2 text-dark-brand">
+                      <CheckCircle2 className="h-5 w-5" />{" "}
+                      {t("help.best_practice_title", {
+                        defaultValue: "Best Practices",
+                      })}
+                    </h2>
+                    <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
+                      {t("help.best_practice_p1", {
+                        defaultValue:
+                          "Follow these simple habits to build an accurate digital closet, make the most of your daily credits, and get tailored outfit recommendations every day.",
+                      })}
+                    </p>
+                    <ul className="space-y-3 pl-1 pr-1">
+                      {[
+                        t("help.best_practice_step1", {
+                          defaultValue:
+                            "**Complete Your Profile First**: Set your body measurements, favorite colors, style preferences, and modesty level in your **Profile** before uploading clothes.",
+                        }),
+                        t("help.best_practice_step2", {
+                          defaultValue:
+                            "**Capture Clear Photos**: Upload a single item laid flat, a full-outfit mirror photo, or several items arranged side-by-side — DressApp automatically detects the photo type and separates each piece.",
+                        }),
+                        t("help.best_practice_step3", {
+                          defaultValue:
+                            "**Build Your Closet in 5 Days**: Use your 10 free daily credits to add 10 items a day (Everyday Pants, Tops, Layering Pieces, Shoes, and Occasion Wear) without feeling overwhelmed.",
+                        }),
+                        t("help.best_practice_step4", {
+                          defaultValue:
+                            "**Review Your Item Card (10 Seconds)**: Quickly verify the detected category, color, warmth, and dress code — including traditional and cultural garments — so your stylist always has accurate details.",
+                        }),
+                        t("help.best_practice_step5", {
+                          defaultValue:
+                            "**Give the Stylist 4 Clues**: Mention your **occasion**, **setting**, **weather**, and **desired look** when asking the AI Stylist for an outfit.",
+                        }),
+                      ].map((text, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
+                            {idx + 1}
+                          </span>
+                          <span className="text-[14px] text-text-brand font-semibold">
+                            {text.split("**").map((part, i) =>
+                              i % 2 === 1 ? (
+                                <strong
+                                  key={i}
+                                  className="text-foreground font-semibold"
+                                >
+                                  {part}
+                                </strong>
+                              ) : (
+                                part
+                              ),
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {activeTab === "qa" && (
+                  <div className="space-y-4">
+                    <h2 className="text-[16px] font-bold flex items-center gap-2 text-dark-brand">
+                      <HelpCircle className="h-5 w-5" />{" "}
+                      {t("help.qa_title", {
+                        defaultValue: "Q&A & FAQ",
+                      })}
+                    </h2>
+                    <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
+                      {t("help.qa_p1", {
+                        defaultValue:
+                          "Quick answers to the most common questions about getting started, managing your credits, digitizing your wardrobe, and styling outfits.",
+                      })}
+                    </p>
+                    <ul className="space-y-3 pl-1 pr-1">
+                      {[
+                        t("help.qa_step1", {
+                          defaultValue:
+                            "**How do I start on Day 1?** Complete your **Profile** measurements and style preferences first, then add your 10 most-worn everyday items.",
+                        }),
+                        t("help.qa_step2", {
+                          defaultValue:
+                            "**How do free credits work?** Free accounts receive **10 daily credits** (refreshed every 24 hours, stackable up to 50) for adding clothes and chatting with the stylist, plus **5 monthly Studio Reconstruction credits**.",
+                        }),
+                        t("help.qa_step3", {
+                          defaultValue:
+                            "**How can I expand my free closet?** Share your referral link from **Profile → Invite Friends** to earn **+10 permanent closet slots** per friend (expanding your free closet from 50 up to 150 items).",
+                        }),
+                        t("help.qa_step4", {
+                          defaultValue:
+                            "**Can I upload full outfits or multiple items at once?** Yes — upload a single item, a full outfit photo, or multiple items laid out together, or import from an online store link or another wardrobe app.",
+                        }),
+                        t("help.qa_step5", {
+                          defaultValue:
+                            "**Is my wardrobe private?** Yes. Your photos and measurements are private to your account, and **DressApp's on-premises AI model** processes your wardrobe directly within our private environment.",
+                        }),
+                      ].map((text, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
+                            {idx + 1}
+                          </span>
+                          <span className="text-[14px] text-text-brand font-semibold">
+                            {text.split("**").map((part, i) =>
+                              i % 2 === 1 ? (
+                                <strong
+                                  key={i}
+                                  className="text-foreground font-semibold"
+                                >
+                                  {part}
+                                </strong>
+                              ) : (
+                                part
+                              ),
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
                 {activeTab === "prerequisites" && (

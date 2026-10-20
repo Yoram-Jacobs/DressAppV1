@@ -1,15 +1,38 @@
-# Gestionar tu perfil
+# Gestión de tu Perfil
 
-La página **Perfil** te permite personalizar cómo DressApp calcula tus tallas, se adapta a tu estilo y se comunica contigo.
+Tu página de **Perfil** te permite personalizar cómo DressApp se adapta a tu cuerpo, refleja tu estilo y se comunica contigo.
 
-## Secciones del perfil
-1. **Fotos y avatar personal**: Sube una foto de cuerpo entero para pruebas virtuales realistas o personaliza la silueta y el tono de piel de tu maniquí virtual. DressApp elimina el fondo automáticamente.
-2. **Preferencias de estilo**: Elige tus estilos favoritos, colores preferidos, prendas a evitar y nivel de recato.
-3. **Datos personales y de contacto**: Guarda tu nombre, teléfono para alertas y dirección con autocompletado automático de calle y ciudad.
-4. **Medidas corporales y tallas**: Introduce solo cuatro medidas básicas (**Altura**, **Peso**, **Cintura** y **Longitud del pie**) y DressApp estimará automáticamente el resto (**Hombros**, **Pecho**, **Cadera**, **Manga**, **Tiro interior** y **Largo exterior**).
-5. **Estilo de vida y profesión**: Comparte tu rutina y ocupación para personalizar tus sugerencias y noticias de moda.
-6. **Unidades de medida**: Cambia entre sistema métrico (**cm / kg**) e imperial (**in / lb**).
-7. **Directorio de estilistas y cobros**: Regístrate como estilista profesional y añade tu correo de PayPal para recibir ingresos del Mercado.
-8. **Modelos de IA integrados**: Sin configuración técnica. Las cuentas gratuitas usan el **modelo de IA local de DressApp**, mientras que los planes **Manager** (10 $/mes) y **Professional** (15 $/mes) desbloquean nuestro **modelo de IA de última generación**.
-9. **Suscripción y espacio del armario**: Consulta tu plan o comparte tu enlace de invitación para ganar **+10 espacios gratis** por cada amigo registrado (hasta 150 prendas en el plan Gratuito).
-10. **Idioma, voz y ubicación**: Elige entre **13 idiomas**, selecciona la voz del Estilista IA y activa la ubicación para el clima local.
+## Secciones del Perfil
+
+1. **Fotos y Avatar Personal**:
+   - Sube una foto de cuerpo entero para pruebas virtuales realistas o personaliza la silueta y el tono de piel de tu maniquí virtual. DressApp elimina automáticamente el fondo de tu foto y detecta con precisión tus puntos de hombros, cintura, cadera y piernas para que cada prenda de tu armario se ajuste a tus proporciones reales.
+   - Activa la **Malla de Ajuste de Nube de Puntos 2D** en el escenario del avatar para inspeccionar tus puntos anatómicos en tiempo real.
+
+2. **Preferencias de Estilo**:
+   - Elige tus estéticas favoritas, colores preferidos, prendas que prefieres evitar y tu nivel de modestia (Casual, Moderado o Conservador). Tu Estilista IA sigue estas preferencias en cada sugerencia.
+
+3. **Datos Personales y de Contacto**:
+   - Guarda tu nombre, correo electrónico, fecha de nacimiento, número de teléfono para notificaciones y dirección postal con autocompletado de calle y ciudad.
+   - Si inicias sesión con Google, puedes rellenar tus datos básicos con un solo clic.
+
+4. **Medidas Corporales y Tallas**:
+   - Introduce solo cuatro medidas básicas (**Altura**, **Peso**, **Cintura** y **Longitud del pie**) y DressApp estimará automáticamente el resto de tus medidas (**Hombros**, **Pecho**, **Caderas**, **Largo de manga**, **Entrepierna** y **Costura exterior**) para calibrar las proporciones de tu Avatar 2D y ayudarte a encontrar tu talla ideal.
+   - También puedes ajustar cualquier medida individual manualmente en cualquier momento.
+
+5. **Estilo de Vida y Ocupación**:
+   - Comparte tu rutina diaria y ocupación para que las recomendaciones de atuendos y los artículos de **Trend Scout** encajen con tu día a día.
+
+6. **Unidades de Medida**:
+   - Cambia en cualquier momento entre unidades métricas (**cm / kg**) e imperiales (**in / lb**).
+
+7. **Directorio de Estilistas Profesionales y Pagos**:
+   - Los estilistas, sastres y diseñadores profesionales pueden registrarse para aparecer en el **Directorio de Estilistas** y añadir un correo de PayPal para recibir ganancias del Marketplace.
+
+8. **Experiencia de IA Integrada**:
+   - No requiere configuración técnica. Las cuentas gratuitas funcionan con el **modelo de IA local de DressApp**, mientras que los planes **Manager** ($10/mes) y **Professional** ($15/mes) desbloquean nuestro **modelo de IA de última generación** con respaldo local automático.
+
+9. **Suscripción y Espacio en el Armario**:
+   - Consulta tu plan actual y el uso de tu armario, o copia tu enlace de invitación personal para ganar **+10 espacios gratis** por cada amigo que se registre (hasta 150 prendas en el plan Gratuito).
+
+10. **Idioma, Voz y Ubicación**:
+    - Elige entre **13 idiomas disponibles**, selecciona tu voz preferida para el Estilista IA y activa el acceso a la ubicación para el clima local y ofertas cercanas.

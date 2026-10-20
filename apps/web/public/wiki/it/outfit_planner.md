@@ -1,33 +1,33 @@
-# Pianificatore di Outfit e Manichino 2D
+# Pianificatore di Outfit e Canvas 2D
 
-Componi, sovrapponi e visualizza outfit coordinati sul tuo avatar virtuale prima di vestirti.
+Componi, sovrapponi a strati e visualizza in anteprima gli outfit coordinati sul tuo avatar virtuale prima di vestirti.
 
 ## Panoramica
-Il Pianificatore di Outfit mette a disposizione un avatar 2D sul quale puoi provare comodamente i tuoi vestiti. Puoi scoprire come si abbinano maglie, pantaloni, scarpe e accessori, visualizzare giacche e cappotti accesi o spenti e controllare i punteggi di armonia cromatica e stagionale.
+Il Pianificatore di Outfit offre una tela interattiva con avatar 2D in cui puoi provare i capi insieme. Puoi visualizzare top, pantaloni, scarpe e accessori sul tuo avatar, attivare o disattivare i capispalla e controllare i punteggi di compatibilità.
 
 ## Prerequisiti
-- Capi digitalizzati nel tuo armadio.
-- (Opzionale) Una foto a figura intera nel tuo profilo se preferisci provare i vestiti sulla tua silhouette reale.
+- Capi digitalizzati nel tuo guardaroba.
+- *(Opzionale)* Una foto a figura intera nel tuo profilo se preferisci provare i vestiti sulla tua silhouette reale.
 
-## Istruzioni dettagliate
-1. **Apri il Manichino**: Tocca la scheda **Outfit Canvas** nell'app.
-2. **Vesti il tuo avatar**: Trascina o tocca i vestiti per posizionarli:
-   - I top si allineano perfettamente al collo.
-   - I pantaloni e le gonne aderiscono al punto vita.
-   - Le scarpe si posizionano sui piedi.
-3. **Sovrapposizione di giacche e cappotti ("Con / Senza giacca")**:
-   - Aggiungi una giacca, cardigan o cappotto.
-   - Usa il selettore per vedere il look **Con giacca** o **Senza giacca** (lasciando visibile la maglia sotto).
-4. **Tocca per i dettagli**: Tocca qualsiasi capo sul manichino per aprire la scheda o cambiarlo.
-5. **Verifica l'armonia**: Controlla le barre di affinità per colori, tessuti, meteo e formalità.
-6. **Salva sul calendario**: Tocca **Salva look** per pianificare l'outfit.
+## Istruzioni passo dopo passo
+1. **Apri il Canvas**: Tocca la scheda **Canvas Outfit** nell'app.
+2. **Vesti il tuo avatar**: Trascina o tocca i capi per posizionarli sul manichino o sulla tua foto a figura intera:
+   - **Top, capispalla e abiti** si adattano automaticamente alle spalle e allo scollo del tuo avatar mantenendo intatto il taglio originale di maniche e busto.
+   - **Pantaloni e gonne** posizionano il girovita tra la vita naturale e i fianchi in base allo stile della vita (alta, media, morbida o bassa), si adattano al punto vita e al bacino e mantengono inalterato il taglio originale della gamba (ampio, dritto, svasato, cargo o slim).
+   - **Scarpe e stivali** separano automaticamente le foto delle paia di calzature in modo che una scarpa venga posizionata con precisione su ciascun piede.
+3. **Livelli capispalla ("Con / Senza capispalla")**:
+   - Aggiungi una giacca, un cardigan o un cappotto.
+   - Usa il selettore per visualizzare l'outfit **Con capispalla** o **Senza capispalla** (camicia e pantaloni visibili sotto).
+4. **Tocca per i dettagli**: Tocca qualsiasi capo direttamente sul corpo dell'avatar per aprirne la scheda dettagli o sostituirlo.
+5. **Controlla i punteggi di compatibilità**: Esamina le barre di armonia per colori, tessuti, meteo e formalità.
+6. **Salva nel calendario**: Tocca **Salva look** per pianificare l'outfit per oggi o per una data futura.
 
 ## Risultati attesi
-Un'anteprima realistica del tuo look che cancella ogni dubbio e ti fa risparmiare tempo la mattina.
+Un'anteprima realistica e ben stratificata del tuo outfit che elimina i dubbi mattutini davanti all'armadio.
 
 ## Risoluzione dei problemi
-- **La giacca appare dietro la maglia**: Verifica che sia classificata nella categoria "Capispalla".
-- **Avatar sproporzionato**: Modifica altezza e peso nel tuo Profilo o tocca "Reimposta avatar".
+- **Il cappotto appare dietro la camicia**: Assicurati che la giacca sia categorizzata come "Capispalla" affinché il sistema la sovrapponga automaticamente alle camicie.
+- **L'avatar appare disallineato**: Apri il Profilo per verificare altezza e peso, oppure tocca "Reimposta avatar".
 
 ## Limitazioni
-- I capispalla si sovrappongono automaticamente sopra i top; sequenze di sovrapposizione insolite non sono al momento modificabili a mano.
+- I capispalla vengono sovrapposti automaticamente ai top; ordini di stratificazione insoliti (ad es. indossare una camicia sopra una felpa con cappuccio) non sono ancora trascinabili manualmente.

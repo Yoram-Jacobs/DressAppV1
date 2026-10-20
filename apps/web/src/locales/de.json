@@ -3885,7 +3885,7 @@
     "profile_title": "Ihr Profil verwalten",
     "profile_p1": "Auf Ihrer Profilseite passen Sie Maße, Stilvorlieben und Spracheinstellungen an:",
     "profile_item1_title": "1. Fotos & persönlicher Avatar",
-    "profile_item1_desc": "Laden Sie ein Ganzkörperfoto für realistische Anproben hoch oder passen Sie Körperform und Hautton Ihres virtuellen Avatars an. DressApp entfernt den Hintergrund Ihres Fotos automatisch.",
+    "profile_item1_desc": "Laden Sie ein Ganzkörperfoto für realistische Anproben hoch oder passen Sie Körperform und Hautton Ihrer virtuellen Puppe an. DressApp entfernt automatisch den Hintergrund, erkennt Ihre anatomischen Punkte (Schultern, Taille, Becken und Knöchel) und bietet ein 2D-Punktwolken-Passformnetz.",
     "profile_item2_title": "2. Stilprofil & Vorlieben",
     "profile_item2_desc": "Teilen Sie dem Stylisten Ihre Lieblingsstile, bevorzugten Farben, unerwünschte Schnitte und Ihren gewünschten Bedeckungsgrad mit.",
     "profile_item3_title": "3. Persönliche Daten & Kontakt",
@@ -3925,7 +3925,7 @@
     "planner_title": "Outfit-Planer",
     "planner_p1": "Der Outfit-Planer hilft Ihnen, Ihre Styling-Auswahl zu schichten, anzuordnen und zu bewerten:",
     "planner_item1_title": "Outfit-Leinwand",
-    "planner_item1_desc": "Lagen und kombinieren Sie Kleidung dynamisch auf Ihrem benutzerdefinierten Charakter-Avatar, um Ihr Outfit-Layout zu erstellen.",
+    "planner_item1_desc": "Wählen Sie Oberteile, Hosen, Kleider, Schuhe und Accessoires aus Ihrem Kleiderschrank, um sie an Ihrem Avatar anzuprobieren. Oberteile passen sich Schultern und Ausschnitt unter Erhalt des Originalschnitts an, Hosen sitzen an Taille und Becken bei unverändertem Beinschnitt, und Paarschuhe werden einzeln pro Fuß platziert.",
     "planner_item2_title": "Duale Leinwand (Schichtung)",
     "planner_item2_desc": "Wenn Sie eine Jacke oder Oberbekleidung über einem Hemd tragen, stellt die Benutzeroberfläche eine Ansicht nebeneinander dar (ein Avatar zeigt die Oberbekleidung, einer ohne), sodass Sie beide Schichten gleichzeitig überprüfen können.",
     "planner_item3_title": "Interaktives Bodymapping",
@@ -4086,7 +4086,7 @@
       "profile_title": "Ihr Profil verwalten",
       "profile_p1": "Auf Ihrer Profilseite passen Sie Maße, Stilvorlieben und Spracheinstellungen an:",
       "profile_item1_title": "1. Fotos & persönlicher Avatar",
-      "profile_item1_desc": "Laden Sie ein Ganzkörperfoto für realistische Anproben hoch oder passen Sie Körperform und Hautton Ihres virtuellen Avatars an. DressApp entfernt den Hintergrund Ihres Fotos automatisch.",
+      "profile_item1_desc": "Laden Sie ein Ganzkörperfoto für realistische Anproben hoch oder passen Sie Körperform und Hautton Ihrer virtuellen Puppe an. DressApp entfernt automatisch den Hintergrund, erkennt Ihre anatomischen Punkte (Schultern, Taille, Becken und Knöchel) und bietet ein 2D-Punktwolken-Passformnetz.",
       "profile_item2_title": "2. Stilprofil & Vorlieben",
       "profile_item2_desc": "Teilen Sie dem Stylisten Ihre Lieblingsstile, bevorzugten Farben, unerwünschte Schnitte und Ihren gewünschten Bedeckungsgrad mit.",
       "profile_item3_title": "3. Persönliche Daten & Kontakt",
@@ -4116,7 +4116,7 @@
       "planner_title": "Outfit-Planer",
       "planner_p1": "Der Outfit-Planer hilft Ihnen, Ihre Styling-Auswahl zu schichten, zu ordnen und zu bewerten:",
       "planner_item1_title": "Outfit-Leinwand",
-      "planner_item1_desc": "Überlagern und kombinieren Sie Kleidung dynamisch auf Ihrem benutzerdefinierten Charakter-Avatar, um Ihr Outfit-Layout zu erstellen.",
+      "planner_item1_desc": "Wählen Sie Oberteile, Hosen, Kleider, Schuhe und Accessoires aus Ihrem Kleiderschrank, um sie an Ihrem Avatar anzuprobieren. Oberteile passen sich Schultern und Ausschnitt unter Erhalt des Originalschnitts an, Hosen sitzen an Taille und Becken bei unverändertem Beinschnitt, und Paarschuhe werden einzeln pro Fuß platziert.",
       "planner_item2_title": "Duale Leinwand (Schichtung)",
       "planner_item2_desc": "Wenn Sie eine Jacke oder Oberbekleidung über einem Hemd tragen, zeigt die Benutzeroberfläche eine Ansicht nebeneinander an (ein Avatar zeigt die Oberbekleidung, einer ohne), sodass Sie beide Schichten gleichzeitig betrachten können.",
       "planner_item3_title": "Interaktives Bodymapping",
@@ -4236,7 +4236,21 @@
     "tableOfContents": "Inhaltsverzeichnis",
     "backToSummary": "Zurück zur Übersicht",
     "whyItMatters": "Warum das wichtig ist:",
-    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in."
+    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
+    "best_practice_title": "Best Practices & Tipps",
+    "best_practice_p1": "Mit diesen einfachen Gewohnheiten bauen Sie einen präzisen digitalen Kleiderschrank auf, nutzen Ihre täglichen Credits optimal und erhalten jeden Tag passende Outfit-Ideen.",
+    "best_practice_step1": "**Zuerst das Profil ausfüllen**: Tragen Sie Körpermaße, Lieblingsfarben, Stilvorlieben und Bedeckungsgrad im **Profil** ein, bevor Sie Kleidung hochladen.",
+    "best_practice_step2": "**Klare Fotos aufnehmen**: Laden Sie ein einzelnes flach liegendes Teil, ein Ganzkörper-Spiegelfoto oder mehrere nebeneinander gelegte Teile hoch — DressApp erkennt den Fototyp automatisch und trennt jedes Stück.",
+    "best_practice_step3": "**Kleiderschrank in 5 Tagen aufbauen**: Nutzen Sie Ihre 10 kostenlosen Tages-Credits für 10 Teile pro Tag (Alltagshosen, Oberteile, Jacken, Schuhe und besondere Anlässe).",
+    "best_practice_step4": "**Artikelkarte kurz prüfen (10 Sekunden)**: Bestätigen Sie kurz Kategorie, Farbe, Wärmestufe und Dresscode — auch bei traditioneller und kultureller Kleidung.",
+    "best_practice_step5": "**Dem Stylisten 4 Hinweise geben**: Nennen Sie **Anlass**, **Ort**, **Wetter** und **gewünschten Stil**, wenn Sie den KI-Stylisten nach einem Outfit fragen.",
+    "qa_title": "Häufige Fragen (FAQ)",
+    "qa_p1": "Schnelle Antworten auf die wichtigsten Fragen zum Einstieg, zu Ihren Credits, zum Digitalisieren Ihrer Garderobe und zum Styling.",
+    "qa_step1": "**Wie starte ich am 1. Tag?** Vervollständigen Sie zuerst Ihr **Profil** mit Maßen und Stilvorlieben und fügen Sie dann Ihre 10 meistgetragenen Alltagsteile hinzu.",
+    "qa_step2": "**Wie funktionieren kostenlose Credits?** Kostenlose Konten erhalten **10 tägliche Credits** (alle 24 Stunden neu, ansparbar bis 50) zum Hinzufügen von Kleidung und für den Stylisten sowie **5 monatliche Studio-Rekonstruktions-Credits**.",
+    "qa_step3": "**Wie erweitere ich meinen kostenlosen Schrank?** Teilen Sie Ihren Einladungslink unter **Profil → Freunde einladen** und erhalten Sie **+10 dauerhafte Schrankplätze** pro Freund (von 50 auf bis zu 150 Teile).",
+    "qa_step4": "**Kann ich ganze Outfits oder mehrere Teile gleichzeitig hochladen?** Ja — laden Sie Einzelteile, Ganzkörper-Outfits oder mehrere ausgelegte Teile hoch oder importieren Sie aus Online-Shops und anderen Apps.",
+    "qa_step5": "**Bleibt meine Garderobe privat?** Ja. Ihre Fotos und Maße sind privat, und das **lokale KI-Modell von DressApp** verarbeitet Ihre Garderobe direkt in unserer geschützten Umgebung."
   },
   "campaigns": {
     "status": {
@@ -5080,7 +5094,9 @@
     "dppApiSpecs": "Browser-Erweiterungsbrücke",
     "privacyPolicy": "Datenschutzrichtlinie",
     "termsOfUse": "Nutzungsbedingungen",
-    "rights": "Alle Rechte vorbehalten. Entworfen nach luxuriösen ökologischen Spezifikationen."
+    "rights": "Alle Rechte vorbehalten. Entworfen nach luxuriösen ökologischen Spezifikationen.",
+    "bestPractices": "Best Practices & Tipps",
+    "qaFaq": "Häufige Fragen (FAQ)"
   },
   "scanner": {
     "tabFile": "Bild hochladen"
