@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 
+export const DEFAULT_SKIN_TONE = '#E0AC69';
+
 export const SKIN_TONE_PALETTE = [
-  { id: 'default', color: '#9CA3AF' }, // Default Gray
   { id: 'fair', color: '#FDF0EA' },
   { id: 'light', color: '#F5D0A9' },
   { id: 'medium', color: '#E0AC69' },
@@ -11,11 +12,18 @@ export const SKIN_TONE_PALETTE = [
   { id: 'dark', color: '#3C2E28' },
 ];
 
-export default function SkinTonePicker({ value = '#9CA3AF', onChange, className = '' }) {
+export function normalizeSkinTone(color) {
+  if (!color || typeof color !== 'string') return DEFAULT_SKIN_TONE;
+  const lower = color.trim().toLowerCase();
+  if (lower === '#9ca3af' || lower === '#4b5563') return DEFAULT_SKIN_TONE;
+  return color;
+}
+
+export default function SkinTonePicker({ value = DEFAULT_SKIN_TONE, onChange, className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const activeColor = value || '#9CA3AF';
+  const activeColor = normalizeSkinTone(value);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

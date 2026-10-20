@@ -1129,7 +1129,7 @@ function PointCloudMeshOverlay({ garments = {}, liveAnatomy }) {
 export default function AvatarViewer2D({
   shapeParams = {},
   measurements: providedMeasurements,
-  skinColor = '#9CA3AF',
+  skinColor,
   sex = 'female',
   outfitItems = {},
   onItemClick,
@@ -1140,7 +1140,8 @@ export default function AvatarViewer2D({
   const { user } = useAuth();
 
   const activeBodyPhotoUrl = resolveMediaUrl(bodyPhotoUrl !== undefined ? (bodyPhotoUrl || null) : (user?.body_photo_url || null));
-  const activeSkinColor = skinColor !== '#9CA3AF' ? skinColor : (user?.skin_tone || '#9CA3AF');
+  const rawSkinColor = (skinColor && skinColor.toLowerCase() !== '#9ca3af') ? skinColor : (user?.skin_tone || '#E0AC69');
+  const activeSkinColor = rawSkinColor.toLowerCase() === '#9ca3af' ? '#E0AC69' : rawSkinColor;
 
   // Normalize params between 0 and 1
   const params = useMemo(() => {

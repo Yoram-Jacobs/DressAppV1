@@ -487,7 +487,8 @@ export default function DynamicAvatar({
     [height, shoulders, chest, waist, hip, armLength, inseam, isMale, shapeParams]
   );
 
-  const activeSkinColor = skinColor || '#D9A17C';
+  const rawSkinColor = skinColor || '#E0AC69';
+  const activeSkinColor = String(rawSkinColor).trim().toLowerCase() === '#9ca3af' ? '#E0AC69' : rawSkinColor;
   const canUseWebGL = typeof window !== 'undefined' && typeof WebGLRenderingContext !== 'undefined';
 
   return (

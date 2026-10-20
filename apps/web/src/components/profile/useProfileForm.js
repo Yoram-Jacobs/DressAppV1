@@ -24,7 +24,7 @@ export function useProfileForm(user) {
       },
       face_photo_url: user?.face_photo_url || '',
       body_photo_url: user?.body_photo_url || '',
-      skin_tone: user?.skin_tone || '#9CA3AF',
+      skin_tone: (!user?.skin_tone || user.skin_tone.toLowerCase() === '#9ca3af') ? '#E0AC69' : user.skin_tone,
       body_measurements: {
         height: user?.body_measurements?.height || '',
         weight: user?.body_measurements?.weight || '',

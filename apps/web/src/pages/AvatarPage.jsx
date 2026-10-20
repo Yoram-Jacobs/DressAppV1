@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Save, Camera, Image as ImgIcon, Trash2, Sliders, CheckCircle2, UserCheck, Palette } from 'lucide-react';
 import DynamicAvatar from '../components/DynamicAvatar';
-import { SKIN_TONE_PALETTE } from '../components/SkinTonePicker';
+import { SKIN_TONE_PALETTE, DEFAULT_SKIN_TONE, normalizeSkinTone } from '../components/SkinTonePicker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -59,7 +59,7 @@ export default function AvatarPage() {
   });
 
   // Selected skin color state
-  const [skinColor, setSkinColor] = useState('#9CA3AF');
+  const [skinColor, setSkinColor] = useState(DEFAULT_SKIN_TONE);
 
   useEffect(() => {
     fetchParams();
@@ -86,7 +86,7 @@ export default function AvatarPage() {
       }
 
       if (res.skin_tone) {
-        setSkinColor(res.skin_tone);
+        setSkinColor(normalizeSkinTone(res.skin_tone));
       }
 
       if (res.body_photo_url) {

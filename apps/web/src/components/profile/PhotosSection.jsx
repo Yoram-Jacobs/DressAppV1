@@ -2,7 +2,7 @@ import { Camera } from 'lucide-react';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { PhotoSlot } from './primitives.jsx';
 import AvatarViewer from '../AvatarViewer.jsx';
-import SkinTonePicker from '../SkinTonePicker.jsx';
+import SkinTonePicker, { normalizeSkinTone } from '../SkinTonePicker.jsx';
 
 export function PhotosSection({ form, setField, t, user }) {
   return (
@@ -48,7 +48,7 @@ export function PhotosSection({ form, setField, t, user }) {
                   {t('profile.skinTone', { defaultValue: 'Skin Tone' })}
                 </span>
                 <SkinTonePicker
-                  value={form.skin_tone || '#9CA3AF'}
+                  value={normalizeSkinTone(form.skin_tone)}
                   onChange={(v) => setField('skin_tone', v)}
                 />
               </div>
@@ -60,7 +60,7 @@ export function PhotosSection({ form, setField, t, user }) {
                 measurements={form.body_measurements}
                 sex={form.sex || 'female'}
                 bodyPhotoUrl={form.body_photo_url}
-                skinColor={form.skin_tone || '#9CA3AF'}
+                skinColor={normalizeSkinTone(form.skin_tone)}
               />
             </div>
 

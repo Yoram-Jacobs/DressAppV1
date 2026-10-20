@@ -253,7 +253,7 @@ function DynamicAvatarSvg({
   armLength   = 60,
   inseam      = 78,
   gender      = 'female',
-  skinColor   = '#9CA3AF',
+  skinColor   = '#E0AC69',
   width       = 200,
   showGuideLines = true,
   bodyPhotoUrl   = null,
@@ -266,7 +266,7 @@ function DynamicAvatarSvg({
     [height, shoulders, chest, waist, hip, armLength, inseam, gender],
   );
 
-  const activeSkin = skinColor || '#9CA3AF';
+  const activeSkin = (!skinColor || skinColor.toLowerCase() === '#9ca3af') ? '#E0AC69' : skinColor;
 
   // Hair / shading overlay colours — fixed translucent tints (no CSS class tokens in SVG)
   const hairFill       = 'rgba(0,0,0,0.14)';

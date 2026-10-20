@@ -38,7 +38,7 @@ import { Modal } from 'react-native';
 const SKIN_TONE_PALETTE = [
   '#FDDBB4', '#F1C27D', '#E0AC69', '#C68642',
   '#8D5524', '#F2C398', '#D4956A', '#A96232',
-  '#6D3B1F', '#ECC9A0', '#9CA3AF', '#4B5563',
+  '#6D3B1F', '#ECC9A0',
 ];
 
 interface AvatarSectionProps {
