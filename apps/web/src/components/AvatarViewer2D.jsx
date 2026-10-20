@@ -1702,8 +1702,10 @@ export default function AvatarViewer2D({
             hip={computedMeasurements.hip || computedMeasurements.hips}
             armLength={computedMeasurements.armLength || computedMeasurements.arm_length}
             inseam={computedMeasurements.inseam}
+            footLength={computedMeasurements.footLength}
             gender={computedMeasurements.gender || sex}
             skinColor={activeSkinColor}
+            shapeParams={params}
             showGuideLines={false}
             className="w-full h-full"
           >

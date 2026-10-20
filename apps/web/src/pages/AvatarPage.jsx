@@ -102,10 +102,31 @@ export default function AvatarPage() {
   };
 
   const handleMeasurementChange = (key, value) => {
-    setMeasurements(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    setMeasurements(prev => {
+      if (key === 'gender') {
+        const isMale = String(value).toLowerCase() === 'male';
+        // If still on opposite gender defaults, update to the selected gender's defaults
+        const wasDefault =
+          (prev.height === 168 && prev.shoulders === 38 && prev.chest === 88) ||
+          (prev.height === 178 && prev.shoulders === 44 && prev.chest === 98);
+        if (wasDefault) {
+          return {
+            height: isMale ? 178 : 168,
+            shoulders: isMale ? 44 : 38,
+            chest: isMale ? 98 : 88,
+            waist: isMale ? 82 : 68,
+            hip: isMale ? 96 : 94,
+            armLength: isMale ? 64 : 58,
+            inseam: isMale ? 82 : 76,
+            gender: isMale ? 'male' : 'female'
+          };
+        }
+      }
+      return {
+        ...prev,
+        [key]: value
+      };
+    });
   };
 
   const handlePhotoSelected = async (file) => {
@@ -185,7 +206,7 @@ export default function AvatarPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight">{t('pages.avatarPage.my_digital_avatar', { defaultValue: 'My Digital Avatar' })}</h1>
             <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5" /> 2D Parametric Double
+              <Sparkles className="w-3.5 h-3.5" /> 3D Parametric Double
             </span>
           </div>
           <p className="text-slate-500 dark:text-slate-400 mt-1">
