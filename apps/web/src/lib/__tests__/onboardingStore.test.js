@@ -446,6 +446,42 @@ describe('onboardingDataset & onboardingStore', () => {
     const detectedCrotchV = detectPantsCrotchRatio(pantsMask, maskW, maskH, false);
     expect(detectedCrotchV).toBeCloseTo(0.32, 2);
   });
+
+  test('analyzeFootwearCutout splits paired shoes into left and right single-shoe boxes so one shoe maps per foot', () => {
+    const { analyzeFootwearCutout } = require('../closetGarmentFitter');
+
+    // 1. Pair of Chelsea boots standing side-by-side with a narrow 4px gap in a tall 80x96 crop
+    const pairW = 80;
+    const pairH = 96;
+    const pairMask = new Uint8ClampedArray(pairW * pairH);
+    for (let y = 4; y < 92; y++) {
+      // Left boot in x=[6..37], Right boot in x=[42..73]
+      for (let x = 6; x <= 37; x++) pairMask[y * pairW + x] = 255;
+      for (let x = 42; x <= 73; x++) pairMask[y * pairW + x] = 255;
+    }
+    const pairResult = analyzeFootwearCutout(pairMask, pairW, pairH);
+    expect(pairResult.isPaired).toBe(true);
+    expect(pairResult.splitX).toBeGreaterThanOrEqual(38);
+    expect(pairResult.splitX).toBeLessThanOrEqual(42);
+    expect(pairResult.leftBox.x).toBe(6);
+    expect(pairResult.leftBox.x + pairResult.leftBox.w - 1).toBe(37);
+    expect(pairResult.rightBox.x).toBe(42);
+    expect(pairResult.rightBox.x + pairResult.rightBox.w - 1).toBe(73);
+
+    // 2. Single side-profile sneaker (ankle collar on left y=[6..56], low toe box on right y=[34..56], no central gap)
+    const singleW = 90;
+    const singleH = 60;
+    const singleMask = new Uint8ClampedArray(singleW * singleH);
+    for (let x = 8; x <= 82; x++) {
+      const t = (x - 8) / 74;
+      const topY = Math.round(6 + t * 32); // slopes down from ankle collar (y=6) to toe tip (y=38)
+      for (let y = topY; y <= 55; y++) {
+        singleMask[y * singleW + x] = 255;
+      }
+    }
+    const singleResult = analyzeFootwearCutout(singleMask, singleW, singleH);
+    expect(singleResult.isPaired).toBe(false);
+  });
 });
 
 

@@ -339,8 +339,8 @@ export function getGarmentAnatomicalEnvelope(
     }
   } else if (roleKey === 'shoes') {
     const isBoot = /\b(boot|chelsea|ankle\s*boot|מגפיים|מגפי|מגפונים|بوت)\b/i.test(text);
-    yTop0 = g.yAnkles - (isBoot ? 4.5 : 1.0);
-    yBot0 = g.yFeet + 2.5;
+    yTop0 = g.yAnkles - (isBoot ? 6.5 : 2.5);
+    yBot0 = g.yFeet + 2.8;
   } else {
     // 'top'
     yTop0 = isStrapless ? g.yChest - 7.5 : g.yChin - 0.6;
@@ -735,6 +735,228 @@ export function detectPantsCrotchRatio(croppedAlpha, cropW, cropH, isShort = fal
 }
 
 /**
+ * Analyzes a cropped footwear alpha mask (`croppedAlpha`, `cropW`, `cropH`) to determine
+ * whether the image shows a **pair of shoes** side-by-side (`isPaired = true`) or a
+ * **single shoe** (`isPaired = false`).
+ *
+ * When `isPaired === true`, finds the exact vertical split column `splitX` separating
+ * the left shoe from the right shoe and returns each individual shoe's tight bounding box
+ * (`leftBox`, `rightBox`) so exactly ONE shoe is mapped onto each of the avatar's feet.
+ */
+export function analyzeFootwearCutout(croppedAlpha, cropW, cropH) {
+  const fullBox = { x: 0, y: 0, w: Math.max(1, cropW), h: Math.max(1, cropH) };
+  if (!croppedAlpha || cropW < 8 || cropH < 8) {
+    return { isPaired: false, splitX: Math.floor(cropW * 0.5), leftBox: fullBox, rightBox: fullBox };
+  }
+
+  const minRunWidth = Math.max(2, Math.floor(cropW * 0.035));
+  const splitGapMidpoints = [];
+
+  // 1. Scan rows for 2+ horizontal opaque islands separated by a gap near the center
+  for (let y = 0; y < cropH; y++) {
+    const rowOff = y * cropW;
+    const runs = [];
+    let inRun = false;
+    let runStart = 0;
+    for (let x = 0; x < cropW; x++) {
+      if (croppedAlpha[rowOff + x] > 40) {
+        if (!inRun) {
+          inRun = true;
+          runStart = x;
+        }
+      } else if (inRun) {
+        if (x - runStart >= minRunWidth) {
+          runs.push({ start: runStart, end: x - 1 });
+        }
+        inRun = false;
+      }
+    }
+    if (inRun && cropW - runStart >= minRunWidth) {
+      runs.push({ start: runStart, end: cropW - 1 });
+    }
+
+    if (runs.length >= 2) {
+      // Find the gap between consecutive runs closest to the horizontal center (0.5 * cropW)
+      let bestGapMid = null;
+      let bestDist = Infinity;
+      for (let i = 0; i < runs.length - 1; i++) {
+        const gapStart = runs[i].end + 1;
+        const gapEnd = runs[i + 1].start - 1;
+        const gapMid = 0.5 * (gapStart + gapEnd);
+        if (gapMid >= cropW * 0.25 && gapMid <= cropW * 0.75) {
+          const dist = Math.abs(gapMid - cropW * 0.5);
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestGapMid = gapMid;
+          }
+        }
+      }
+      if (bestGapMid !== null) {
+        splitGapMidpoints.push(bestGapMid);
+      }
+    }
+  }
+
+  // 2. Compute column opacity profiles (full height, upper 45% collar zone, lower 35% toe zone)
+  const colCount = new Float64Array(cropW);
+  const topColCount = new Float64Array(cropW);
+  const botColCount = new Float64Array(cropW);
+  const topH = Math.max(1, Math.floor(cropH * 0.45));
+  const botStartY = Math.min(cropH - 1, Math.floor(cropH * 0.65));
+
+  for (let x = 0; x < cropW; x++) {
+    let allC = 0;
+    let topC = 0;
+    let botC = 0;
+    for (let y = 0; y < cropH; y++) {
+      if (croppedAlpha[y * cropW + x] > 40) {
+        allC++;
+        if (y < topH) topC++;
+        if (y >= botStartY) botC++;
+      }
+    }
+    colCount[x] = allC / cropH;
+    topColCount[x] = topC / topH;
+    botColCount[x] = botC / Math.max(1, cropH - botStartY);
+  }
+
+  const lStart = Math.max(0, Math.floor(cropW * 0.10));
+  const lEnd = Math.max(lStart + 1, Math.floor(cropW * 0.44));
+  const rStart = Math.min(cropW - 2, Math.ceil(cropW * 0.56));
+  const rEnd = Math.min(cropW - 1, Math.ceil(cropW * 0.90));
+
+  let leftPeakX = Math.floor(cropW * 0.25);
+  let leftPeakVal = 0;
+  let topLeftPeak = 0;
+  for (let x = lStart; x <= lEnd; x++) {
+    if (colCount[x] > leftPeakVal) {
+      leftPeakVal = colCount[x];
+      leftPeakX = x;
+    }
+    if (topColCount[x] > topLeftPeak) topLeftPeak = topColCount[x];
+  }
+
+  let rightPeakX = Math.floor(cropW * 0.75);
+  let rightPeakVal = 0;
+  let topRightPeak = 0;
+  for (let x = rStart; x <= rEnd; x++) {
+    if (colCount[x] > rightPeakVal) {
+      rightPeakVal = colCount[x];
+      rightPeakX = x;
+    }
+    if (topColCount[x] > topRightPeak) topRightPeak = topColCount[x];
+  }
+
+  const searchX0 = Math.max(Math.floor(cropW * 0.32), Math.min(leftPeakX + 1, Math.floor(cropW * 0.45)));
+  const searchX1 = Math.min(Math.ceil(cropW * 0.68), Math.max(rightPeakX - 1, Math.ceil(cropW * 0.55)));
+  let valleyX = Math.floor(cropW * 0.5);
+  let valleyScore = Infinity;
+  for (let x = searchX0; x <= searchX1; x++) {
+    const score = colCount[x] + 0.75 * topColCount[x] + 0.45 * botColCount[x];
+    if (score < valleyScore) {
+      valleyScore = score;
+      valleyX = x;
+    }
+  }
+
+  // 3. Measure vertical span symmetry between left half [8%..44%] and right half [56%..92%]
+  let leftMinY = cropH;
+  let leftMaxY = 0;
+  let rightMinY = cropH;
+  let rightMaxY = 0;
+  for (let y = 0; y < cropH; y++) {
+    const rowOff = y * cropW;
+    for (let x = lStart; x <= lEnd; x++) {
+      if (croppedAlpha[rowOff + x] > 40) {
+        if (y < leftMinY) leftMinY = y;
+        if (y > leftMaxY) leftMaxY = y;
+      }
+    }
+    for (let x = rStart; x <= rEnd; x++) {
+      if (croppedAlpha[rowOff + x] > 40) {
+        if (y < rightMinY) rightMinY = y;
+        if (y > rightMaxY) rightMaxY = y;
+      }
+    }
+  }
+
+  const splitRowRatio = splitGapMidpoints.length / Math.max(1, cropH);
+  const minPeak = Math.min(leftPeakVal, rightPeakVal);
+  const minTopPeak = Math.min(topLeftPeak, topRightPeak);
+  const hasFullValley = minPeak > 0.2 && colCount[valleyX] <= minPeak * 0.84;
+  const hasTopCollarValley = minTopPeak > 0.15 && topColCount[valleyX] <= minTopPeak * 0.78;
+  const bothSidesReachTopAndBottom =
+    leftMinY <= cropH * 0.24 &&
+    rightMinY <= cropH * 0.24 &&
+    leftMaxY >= cropH * 0.76 &&
+    rightMaxY >= cropH * 0.76 &&
+    cropW / Math.max(1, cropH) >= 0.48;
+
+  const isPaired =
+    splitGapMidpoints.length >= Math.max(2, Math.floor(cropH * 0.05)) ||
+    splitRowRatio >= 0.05 ||
+    hasFullValley ||
+    hasTopCollarValley ||
+    bothSidesReachTopAndBottom;
+
+  let splitX = valleyX;
+  if (splitGapMidpoints.length >= 2) {
+    const sorted = [...splitGapMidpoints].sort((a, b) => a - b);
+    const medianGap = sorted[Math.floor(sorted.length * 0.5)];
+    splitX = Math.round(0.65 * medianGap + 0.35 * valleyX);
+  }
+  splitX = Math.max(Math.floor(cropW * 0.32), Math.min(Math.ceil(cropW * 0.68), splitX));
+
+  if (!isPaired) {
+    return { isPaired: false, splitX, leftBox: fullBox, rightBox: fullBox };
+  }
+
+  const computeHalfBox = (xStart, xEndInclusive) => {
+    let bx0 = xEndInclusive;
+    let by0 = cropH - 1;
+    let bx1 = xStart;
+    let by1 = 0;
+    let found = false;
+    for (let y = 0; y < cropH; y++) {
+      const rowOff = y * cropW;
+      for (let x = xStart; x <= xEndInclusive; x++) {
+        if (croppedAlpha[rowOff + x] > 35) {
+          found = true;
+          if (x < bx0) bx0 = x;
+          if (x > bx1) bx1 = x;
+          if (y < by0) by0 = y;
+          if (y > by1) by1 = y;
+        }
+      }
+    }
+    if (!found || bx1 <= bx0 + 2 || by1 <= by0 + 2) {
+      return {
+        x: xStart,
+        y: 0,
+        w: Math.max(1, xEndInclusive - xStart + 1),
+        h: cropH,
+      };
+    }
+    return {
+      x: bx0,
+      y: by0,
+      w: Math.max(1, bx1 - bx0 + 1),
+      h: Math.max(1, by1 - by0 + 1),
+    };
+  };
+
+  const leftBox = computeHalfBox(0, Math.max(0, splitX - 1));
+  const rightBox = computeHalfBox(Math.min(cropW - 1, splitX), cropW - 1);
+
+  return {
+    isPaired: true,
+    splitX,
+    leftBox,
+    rightBox,
+  };
+}
+
+/**
  * Tier 1: Warps a real segmented closet garment cutout (`cropCanvas`, `croppedAlpha`)
  * onto the Default Avatar's `400 x 900` canvas so its collar, shoulders, chest,
  * waist, hips, crotch barrier, and hem align with the Default Avatar's exact landmarks.
@@ -757,33 +979,57 @@ function warpRealGarmentPhotoToDefaultCanvas(
   const ctx = outCanvas.getContext('2d');
   if (!ctx) return null;
 
-  // Special handling for Footwear: if single shoe vs paired shoes
+  // Special handling for Footwear: map exactly ONE shoe per foot
   if (roleKey === 'shoes') {
-    const aspect = cropW / Math.max(1, cropH);
-    const midX0 = Math.floor(cropW * 0.44);
-    const midX1 = Math.ceil(cropW * 0.56);
-    let midOpaque = 0;
-    for (let y = 0; y < cropH; y++) {
-      for (let x = midX0; x < midX1; x++) {
-        if (croppedAlpha[y * cropW + x] > 45) midOpaque++;
-      }
-    }
-    const midDensity = midOpaque / Math.max(1, cropH * (midX1 - midX0));
-    const isPairedShoes = midDensity < 0.22 && aspect >= 0.95;
+    const shoeAnalysis = analyzeFootwearCutout(croppedAlpha, cropW, cropH);
+    const footIn = Math.max(2.0, g.wInnerAnkle - 1.6);
+    const footOut = g.wFootTip + 2.0;
+    const shoeW = (footOut - footIn) * SCALE;
+    const dxLeft = (g.x0 - footOut) * SCALE;
+    const dxRight = (g.x0 + footIn) * SCALE;
 
-    const dy = yTop0 * SCALE;
-    const dh = Math.max(8, (yBot0 - yTop0) * SCALE);
+    // Detect if the individual shoe has a tall boot shaft (height/width > 1.18)
+    const singleW = shoeAnalysis.isPaired
+      ? 0.5 * (shoeAnalysis.leftBox.w + shoeAnalysis.rightBox.w)
+      : cropW;
+    const singleH = shoeAnalysis.isPaired
+      ? 0.5 * (shoeAnalysis.leftBox.h + shoeAnalysis.rightBox.h)
+      : cropH;
+    const isTallShaftPhoto = singleH / Math.max(1, singleW) > 1.18;
+    const effectiveYTop0 = isTallShaftPhoto ? Math.min(yTop0, g.yAnkles - 6.5) : yTop0;
 
-    if (isPairedShoes) {
-      const spanHalf = g.wFootTip + 2.5;
-      const dx = (g.x0 - spanHalf) * SCALE;
-      const dw = spanHalf * 2 * SCALE;
-      ctx.drawImage(cropCanvas, 0, 0, cropW, cropH, dx, dy, dw, dh);
+    const dy = effectiveYTop0 * SCALE;
+    const dh = Math.max(8, (yBot0 - effectiveYTop0) * SCALE);
+
+    if (shoeAnalysis.isPaired) {
+      const { leftBox, rightBox } = shoeAnalysis;
+      // Draw ONLY the left shoe from the pair onto the avatar's left foot
+      ctx.drawImage(
+        cropCanvas,
+        leftBox.x,
+        leftBox.y,
+        leftBox.w,
+        leftBox.h,
+        dxLeft,
+        dy,
+        shoeW,
+        dh
+      );
+      // Draw ONLY the right shoe from the pair onto the avatar's right foot
+      ctx.drawImage(
+        cropCanvas,
+        rightBox.x,
+        rightBox.y,
+        rightBox.w,
+        rightBox.h,
+        dxRight,
+        dy,
+        shoeW,
+        dh
+      );
     } else {
-      const footIn = g.wInnerAnkle - 0.5;
-      const footOut = g.wFootTip + 2.2;
-      const shoeW = (footOut - footIn) * SCALE;
-      ctx.drawImage(cropCanvas, 0, 0, cropW, cropH, (g.x0 + footIn) * SCALE, dy, shoeW, dh);
+      // Single shoe in photo: draw onto right foot and mirror onto left foot
+      ctx.drawImage(cropCanvas, 0, 0, cropW, cropH, dxRight, dy, shoeW, dh);
       ctx.save();
       ctx.translate((g.x0 - footIn) * SCALE, dy);
       ctx.scale(-1, 1);
