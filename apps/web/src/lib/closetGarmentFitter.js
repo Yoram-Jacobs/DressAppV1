@@ -1120,22 +1120,151 @@ function warpRealGarmentPhotoToDefaultCanvas(
     smoothU1[s] = sum1 / cnt;
   }
 
-  // For sleeved upper garments ('top', 'dress', 'outerwear'), measure the lower-torso
-  // body width (slices 55%..88%) so upper slices with sleeves don't squeeze the torso narrower than the chest!
-  let torsoReferenceSpanU = 1.0;
-  if (roleKey === 'top' || roleKey === 'dress' || roleKey === 'full_body' || roleKey === 'outerwear') {
-    const sStart = Math.floor(SLICES * 0.55);
-    const sEnd = Math.floor(SLICES * 0.88);
-    const spans = [];
-    for (let s = sStart; s <= sEnd; s++) {
+  // =========================================================================
+  // 2. TOPS / OUTERWEAR / DRESSES:
+  //    Fit the avatar's shoulders and neckline (`yTop0 = g.yChin - 0.6`,
+  //    shoulder width `2 * (g.wShoulders * easeMult + 2.2)`), leaving the
+  //    garment's original silhouette and cut 100% untouched.
+  // =========================================================================
+  if (
+    roleKey === 'top' ||
+    roleKey === 'outerwear' ||
+    roleKey === 'dress' ||
+    roleKey === 'full_body'
+  ) {
+    const minRunW = Math.max(2, Math.floor(cropW * 0.035));
+    const innerTorsoSpans = [];
+    const scanY0 = Math.floor(cropH * 0.34);
+    const scanY1 = Math.floor(cropH * 0.76);
+    for (let y = scanY0; y <= scanY1; y += Math.max(1, Math.floor((scanY1 - scanY0) / 24))) {
+      const rowOff = y * cropW;
+      const runs = [];
+      let inRun = false;
+      let r0 = 0;
+      for (let x = 0; x < cropW; x++) {
+        if (croppedAlpha[rowOff + x] > 55) {
+          if (!inRun) {
+            inRun = true;
+            r0 = x;
+          }
+        } else if (inRun) {
+          if (x - r0 >= minRunW) runs.push({ start: r0, end: x - 1 });
+          inRun = false;
+        }
+      }
+      if (inRun && cropW - r0 >= minRunW) runs.push({ start: r0, end: cropW - 1 });
+      // Long-sleeve top with visible gaps between [leftSleeve, centerTorso, rightSleeve]
+      if (runs.length === 3) {
+        const midRun = runs[1];
+        const midCenter = 0.5 * (midRun.start + midRun.end) / Math.max(1, cropW - 1);
+        const midSpan = (midRun.end - midRun.start + 1) / Math.max(1, cropW - 1);
+        if (midCenter >= 0.35 && midCenter <= 0.65 && midSpan >= 0.25 && midSpan <= 0.82) {
+          innerTorsoSpans.push(midSpan);
+        }
+      }
+    }
+
+    let upperMaxSpanU = 0;
+    for (let s = Math.floor(SLICES * 0.10); s <= Math.floor(SLICES * 0.44); s++) {
       const sp = smoothU1[s] - smoothU0[s];
-      if (sp > 0.18) spans.push(sp);
+      if (sp > upperMaxSpanU) upperMaxSpanU = sp;
     }
-    if (spans.length > 0) {
-      spans.sort((a, b) => a - b);
-      torsoReferenceSpanU = spans[Math.floor(spans.length * 0.5)];
+
+    const lowerSpans = [];
+    for (let s = Math.floor(SLICES * 0.52); s <= Math.floor(SLICES * 0.86); s++) {
+      const sp = smoothU1[s] - smoothU0[s];
+      if (sp > 0.18) lowerSpans.push(sp);
     }
+    lowerSpans.sort((a, b) => a - b);
+    const lowerBodySpanU =
+      lowerSpans.length > 0 ? lowerSpans[Math.floor(lowerSpans.length * 0.5)] : 0.68;
+
+    let coreShoulderSpanU = lowerBodySpanU;
+    if (innerTorsoSpans.length >= 3) {
+      innerTorsoSpans.sort((a, b) => a - b);
+      coreShoulderSpanU = innerTorsoSpans[Math.floor(innerTorsoSpans.length * 0.5)] * 1.03;
+    } else if (upperMaxSpanU > lowerBodySpanU * 1.12) {
+      // Short/medium sleeves stick out in upper half; lower half is the pure torso body
+      coreShoulderSpanU = lowerBodySpanU * 1.02;
+    } else if (upperMaxSpanU > 0.78 && cropW / Math.max(1, cropH) > 0.76) {
+      // Long sleeves hanging down beside torso without a transparent gap
+      coreShoulderSpanU = upperMaxSpanU * 0.72;
+    } else {
+      // Sleeveless top, tank, vest, or A-line dress
+      coreShoulderSpanU = Math.min(upperMaxSpanU || lowerBodySpanU, lowerBodySpanU);
+    }
+    coreShoulderSpanU = Math.max(0.28, Math.min(0.98, coreShoulderSpanU));
+
+    const centers = [];
+    for (let s = Math.floor(SLICES * 0.08); s <= Math.floor(SLICES * 0.78); s++) {
+      centers.push(0.5 * (smoothU0[s] + smoothU1[s]));
+    }
+    centers.sort((a, b) => a - b);
+    const topCenterU = centers.length > 0 ? centers[Math.floor(centers.length * 0.5)] : 0.5;
+
+    const targetShoulderHalfW = g.wShoulders * env.easeMult + 2.2;
+    const shoulderFullSvgWidth = Math.max(
+      52,
+      Math.min(162, (2 * targetShoulderHalfW) / coreShoulderSpanU)
+    );
+
+    const dxTop = (g.x0 - topCenterU * shoulderFullSvgWidth) * SCALE;
+    const dyTop = yTop0 * SCALE;
+    const dwTop = shoulderFullSvgWidth * SCALE;
+    const dhTop = Math.max(12, (yBot0 - yTop0) * SCALE);
+
+    ctx.drawImage(cropCanvas, 0, 0, cropW, cropH, dxTop, dyTop, dwTop, dhTop);
+    return outCanvas;
   }
+
+  // =========================================================================
+  // 3. BOTTOMS (PANTS / JEANS / TROUSERS / SHORTS / SKIRTS):
+  //    Fit the avatar's waist (`yTop0`) and pelvis (`g.yHip`) with the crotch
+  //    barrier at `yCrotchTarget >= g.yCrotch`, leaving the original leg/skirt
+  //    silhouette and cut below the pelvis (`y > g.yHip`) 100% untouched.
+  // =========================================================================
+  const tHipSvg = Math.max(
+    0.04,
+    Math.min(0.45, (g.yHip - yTop0) / Math.max(1, yBot0 - yTop0))
+  );
+  const sHip = Math.max(1, Math.min(SLICES - 2, Math.round(tHipSvg * (SLICES - 1))));
+
+  let waistSpanSum = 0;
+  let waistSpanCnt = 0;
+  const waistEndSlice = Math.min(3, sHip);
+  for (let s = 0; s <= waistEndSlice; s++) {
+    waistSpanSum += Math.max(0.22, smoothU1[s] - smoothU0[s]);
+    waistSpanCnt++;
+  }
+  const waistPhotoSpanU = waistSpanSum / Math.max(1, waistSpanCnt);
+
+  let pelvisSpanSum = 0;
+  let pelvisSpanCnt = 0;
+  for (let s = Math.max(0, sHip - 2); s <= Math.min(SLICES - 1, sHip + 2); s++) {
+    pelvisSpanSum += Math.max(0.22, smoothU1[s] - smoothU0[s]);
+    pelvisSpanCnt++;
+  }
+  const pelvisPhotoSpanU = pelvisSpanSum / Math.max(1, pelvisSpanCnt);
+
+  const pelvisCenters = [];
+  for (let s = 0; s <= Math.min(SLICES - 1, sHip + 3); s++) {
+    pelvisCenters.push(0.5 * (smoothU0[s] + smoothU1[s]));
+  }
+  pelvisCenters.sort((a, b) => a - b);
+  const pelvisCenterU =
+    pelvisCenters.length > 0 ? pelvisCenters[Math.floor(pelvisCenters.length * 0.5)] : 0.5;
+
+  const waistTargetHalfW = halfWidthAtY(yTop0);
+  const pelvisTargetHalfW = g.wHip + 1.5;
+
+  const waistFullSvgWidth = Math.max(
+    40,
+    Math.min(152, (2 * waistTargetHalfW) / Math.max(0.22, waistPhotoSpanU))
+  );
+  const pelvisFullSvgWidth = Math.max(
+    44,
+    Math.min(156, (2 * pelvisTargetHalfW) / Math.max(0.22, pelvisPhotoSpanU))
+  );
 
   for (let s = 0; s < SLICES; s++) {
     const t0 = s / SLICES;
@@ -1151,93 +1280,17 @@ function warpRealGarmentPhotoToDefaultCanvas(
     const ySvgBot = yTop0 + t1 * (yBot0 - yTop0);
     const ySvgMid = yTop0 + tMid * (yBot0 - yTop0);
 
-    const targetHalfW = halfWidthAtY(ySvgMid);
     const dy = ySvgTop * SCALE;
     const dh = (ySvgBot - ySvgTop) * SCALE + 0.95;
 
-    // For pants/shorts below the Crunch (Crotch) Barrier (`ySvgMid > yCrotchTarget`),
-    // check if the photo slice has separated left & right trouser legs and warp each leg
-    // so both outer leg contour AND inner leg inseam cover the avatar's legs cleanly.
-    if (isPantsOrShorts && ySvgMid > yCrotchTarget) {
-      const syMid = Math.max(0, Math.min(cropH - 1, Math.round(0.5 * (v0 + v1) * (cropH - 1))));
-      const rowOff = syMid * cropW;
-      const midPx = Math.round(0.5 * (smoothU0[s] + smoothU1[s]) * (cropW - 1));
-
-      // Scan left half [0 .. midPx] and right half [midPx .. cropW-1]
-      let lOut = -1;
-      let lIn = -1;
-      for (let x = 0; x <= midPx; x++) {
-        if (croppedAlpha[rowOff + x] > 60) {
-          if (lOut === -1) lOut = x;
-          lIn = x;
-        }
-      }
-      let rIn = -1;
-      let rOut = -1;
-      for (let x = midPx; x < cropW; x++) {
-        if (croppedAlpha[rowOff + x] > 60) {
-          if (rIn === -1) rIn = x;
-          rOut = x;
-        }
-      }
-
-      if (
-        lOut !== -1 &&
-        rOut !== -1 &&
-        lIn - lOut >= 3 &&
-        rOut - rIn >= 3 &&
-        rIn > lIn + 1
-      ) {
-        const wOut = targetHalfW;
-        const wIn = innerLegHalfWidthAtY(ySvgMid);
-        const targetLegW = Math.max(4, wOut - wIn);
-
-        // Draw Left Trouser Leg onto [x0 - wOut, x0 - wIn]
-        const srcLeftW = Math.max(1, lIn - lOut + 1);
-        ctx.drawImage(
-          cropCanvas,
-          lOut,
-          sy,
-          srcLeftW,
-          sh,
-          (g.x0 - wOut) * SCALE,
-          dy,
-          targetLegW * SCALE,
-          dh
-        );
-
-        // Draw Right Trouser Leg onto [x0 + wIn, x0 + wOut]
-        const srcRightW = Math.max(1, rOut - rIn + 1);
-        ctx.drawImage(
-          cropCanvas,
-          rIn,
-          sy,
-          srcRightW,
-          sh,
-          (g.x0 + wIn) * SCALE,
-          dy,
-          targetLegW * SCALE,
-          dh
-        );
-        continue;
-      }
+    let fullSliceSvgWidth = pelvisFullSvgWidth;
+    if (ySvgMid <= g.yHip && g.yHip > yTop0 + 0.5) {
+      const uPelvis = Math.max(0, Math.min(1, (ySvgMid - yTop0) / (g.yHip - yTop0)));
+      const sCurve = uPelvis * uPelvis * (3 - 2 * uPelvis);
+      fullSliceSvgWidth = waistFullSvgWidth + (pelvisFullSvgWidth - waistFullSvgWidth) * sCurve;
     }
 
-    let photoSpanU = Math.max(0.22, smoothU1[s] - smoothU0[s]);
-    // If this is a sleeved top/outerwear/dress slice in the upper arm/chest zone where sleeves stick out,
-    // use the torso body width ratio so the torso covers the avatar's chest/waist while sleeves extend past shoulders
-    if (
-      (roleKey === 'top' || roleKey === 'dress' || roleKey === 'full_body' || roleKey === 'outerwear') &&
-      tMid < 0.56 &&
-      photoSpanU > torsoReferenceSpanU * 1.06
-    ) {
-      photoSpanU = Math.min(photoSpanU, torsoReferenceSpanU * 1.05);
-    }
-
-    const photoCenterU = 0.5 * (smoothU0[s] + smoothU1[s]);
-    const fullSliceSvgWidth = Math.min(148, (2 * targetHalfW) / photoSpanU);
-    const svgLeftX = g.x0 - photoCenterU * fullSliceSvgWidth;
-
+    const svgLeftX = g.x0 - pelvisCenterU * fullSliceSvgWidth;
     const dx = svgLeftX * SCALE;
     const dw = fullSliceSvgWidth * SCALE;
 
@@ -1832,7 +1885,7 @@ export function fitClosetGarmentToDefaultAvatar(garment, loadedImg, roleKey = 't
   }
 
   const hasLoadedImg = Boolean(loadedImg && (loadedImg.naturalWidth || loadedImg.width) > 16);
-  const cacheKey = `${sex}::${roleKey}::img:${hasLoadedImg ? 1 : 0}::${garment.id || ''}::${garment.url || ''}::${garment.category || ''}::${garment.sub_category || ''}::${garment.color || ''}`;
+  const cacheKey = `v2::${sex}::${roleKey}::img:${hasLoadedImg ? 1 : 0}::${garment.id || ''}::${garment.url || ''}::${garment.category || ''}::${garment.sub_category || ''}::${garment.color || ''}`;
   if (fittedClosetGarmentCache.has(cacheKey)) {
     return fittedClosetGarmentCache.get(cacheKey);
   }

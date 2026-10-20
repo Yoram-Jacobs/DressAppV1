@@ -780,19 +780,33 @@ function FittedGarmentLayer({
 
       const pTop = warpDefaultAvatarPoint(100, y0Top, defaultAnatomy, liveAnatomy);
       const pBot = warpDefaultAvatarPoint(100, y0Bot, defaultAnatomy, liveAnatomy);
-      const pLeft = warpDefaultAvatarPoint(vb.x, y0Mid, defaultAnatomy, liveAnatomy);
+
+      let yWidthAnchor = y0Mid;
+      if (
+        roleKey === 'top' ||
+        roleKey === 'outerwear' ||
+        roleKey === 'dress' ||
+        roleKey === 'full_body'
+      ) {
+        yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yShoulders);
+      } else if (roleKey === 'bottom') {
+        yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yHip);
+      }
+
+      const pLeft = warpDefaultAvatarPoint(vb.x, yWidthAnchor, defaultAnatomy, liveAnatomy);
       const pRight = warpDefaultAvatarPoint(
         vb.x + vb.width,
-        y0Mid,
+        yWidthAnchor,
         defaultAnatomy,
         liveAnatomy
       );
 
-      const centerX = pLeft.centerX ?? 100;
-      const halfSpanL = (centerX - pLeft.x) * layerEaseMultiplier;
-      const halfSpanR = (pRight.x - centerX) * layerEaseMultiplier;
+      const anchorCenter = pLeft.centerX ?? 100;
+      const sliceCenter = pTop.centerX ?? anchorCenter;
+      const halfSpanL = (anchorCenter - pLeft.x) * layerEaseMultiplier;
+      const halfSpanR = (pRight.x - anchorCenter) * layerEaseMultiplier;
 
-      const xLeftLive = centerX - halfSpanL;
+      const xLeftLive = sliceCenter - halfSpanL;
       const widthLive = halfSpanL + halfSpanR;
       const yTopLive = pTop.y;
       const heightLive = Math.max(0.4, pBot.y - pTop.y);
@@ -899,15 +913,23 @@ function PointCloudMeshOverlay({ garments = {}, liveAnatomy }) {
         slot === 'outerwear' ? 1.045 : slot === 'top' && garments.outerwear ? 0.965 : 1.0;
 
       const vertices = pc.vertices.map((v) => {
-        const w = warpDefaultAvatarPoint(v.svg_x, v.svg_y, defAnat, liveAnatomy);
-        const cx = w.centerX ?? 100;
-        const xAdj = cx + (w.x - cx) * easeMult;
+        const wVert = warpDefaultAvatarPoint(v.svg_x, v.svg_y, defAnat, liveAnatomy);
+        let yWidthAnchor = v.svg_y;
+        if (slot === 'top' || slot === 'outerwear' || slot === 'dress' || slot === 'full_body') {
+          yWidthAnchor = Math.min(v.svg_y, defAnat.yShoulders);
+        } else if (slot === 'bottom') {
+          yWidthAnchor = Math.min(v.svg_y, defAnat.yHip);
+        }
+        const wHoriz = warpDefaultAvatarPoint(v.svg_x, yWidthAnchor, defAnat, liveAnatomy);
+        const anchorCx = wHoriz.centerX ?? 100;
+        const sliceCx = wVert.centerX ?? anchorCx;
+        const xAdj = sliceCx + (wHoriz.x - anchorCx) * easeMult;
         return {
           ...v,
           wx: xAdj,
-          wy: w.y,
-          scaleX: w.scaleX,
-          scaleY: w.scaleY,
+          wy: wVert.y,
+          scaleX: wHoriz.scaleX,
+          scaleY: wVert.scaleY,
         };
       });
 
