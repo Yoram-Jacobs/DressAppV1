@@ -256,4 +256,196 @@ describe('onboardingDataset & onboardingStore', () => {
     expect(savedFirstOutfit.garments[0].closet_item_id).toBe('existing-abaya-id');
     expect(savedFirstOutfit.garments[0].avatar_fit).toBeDefined();
   });
+
+  test('closetGarmentFitter maps all closet item categories to Default Avatar collar-to-hem envelopes & point-cloud meshes', () => {
+    const {
+      resolveGarmentHexColor,
+      getGarmentAnatomicalEnvelope,
+      assessPhotoContourQuality,
+      fitClosetGarmentToDefaultAvatar,
+    } = require('../closetGarmentFitter');
+
+    expect(resolveGarmentHexColor({ color: 'Emerald Green' })).toBe('#145F37');
+    expect(resolveGarmentHexColor({ colors: [{ name: 'Navy' }] })).toBe('#1E2D4A');
+
+    const defFemale = getDefaultAvatarAnatomy('female');
+    const topEnv = getGarmentAnatomicalEnvelope(
+      { name: 'Silk Blouse', category: 'Top', sub_category: 'Blouse' },
+      'top',
+      'female'
+    );
+    // Collar line starts at yChin - 0.6 and hem lands at yHip + 3.0
+    expect(topEnv.yTop0).toBeCloseTo(defFemale.yChin - 0.6, 2);
+    expect(topEnv.yBot0).toBeCloseTo(defFemale.yHip + 3.0, 2);
+
+    // Assess photo contour quality: clean symmetric cutout vs unsegmented rectangle
+    const w = 40;
+    const h = 60;
+    const symmetricCutout = new Uint8ClampedArray(w * h);
+    for (let y = 4; y < h - 4; y++) {
+      for (let x = 10; x < w - 10; x++) {
+        symmetricCutout[y * w + x] = 255;
+      }
+    }
+    const cleanCheck = assessPhotoContourQuality(symmetricCutout, w, h, 'top');
+    expect(cleanCheck.canWarpPhoto).toBe(true);
+
+    const unsegmentedRect = new Uint8ClampedArray(w * h).fill(255);
+    const rectCheck = assessPhotoContourQuality(unsegmentedRect, w, h, 'top');
+    expect(rectCheck.canWarpPhoto).toBe(false);
+    expect(rectCheck.reason).toBe('unsegmented_rectangle');
+
+    // Fit arbitrary closet items across all 5 avatar slots
+    const sampleClosetSlots = [
+      { slot: 'top', item: { id: 'c-top-1', name: 'Navy Linen Shirt', category: 'Top', color: 'Navy' } },
+      { slot: 'bottom', item: { id: 'c-bot-1', name: 'Pleated Midi Skirt', category: 'Bottom', sub_category: 'Skirt', color: 'Beige' } },
+      { slot: 'dress', item: { id: 'c-drs-1', name: 'Emerald Kaftan Gown', category: 'Full Body', color: 'Emerald' } },
+      { slot: 'outerwear', item: { id: 'c-out-1', name: 'Camel Trench Coat', category: 'Outerwear', color: 'Camel' } },
+      { slot: 'shoes', item: { id: 'c-sho-1', name: 'Black Chelsea Boots', category: 'Footwear', color: 'Black' } },
+    ];
+
+    sampleClosetSlots.forEach(({ slot, item }) => {
+      const fitted = fitClosetGarmentToDefaultAvatar(item, null, slot, 'female');
+      expect(fitted).not.toBeNull();
+      expect(fitted.avatarFit.fitted_to_default_avatar).toBe(true);
+      expect(fitted.avatarFit.default_viewbox.width).toBeGreaterThan(20);
+      expect(fitted.avatarFit.default_viewbox.height).toBeGreaterThan(10);
+      expect(fitted.avatarFit.point_cloud.vertices.length).toBeGreaterThanOrEqual(20);
+      expect(fitted.avatarFit.point_cloud.triangles.length).toBeGreaterThanOrEqual(20);
+    });
+  });
+
+  test('extractBodyPhotoAnatomy & getGarmentAnatomicalEnvelope map closet garments to a Full-Body Photo avatar anatomy and spine centerline', () => {
+    const {
+      extractBodyPhotoAnatomy,
+      getGarmentAnatomicalEnvelope,
+    } = require('../closetGarmentFitter');
+
+    const W = 200;
+    const H = 450;
+    const rgba = new Uint8ClampedArray(W * H * 4);
+    const spineCenter = 106; // Person standing slightly right of center (x=106 vs 100)
+
+    // Paint a full-body silhouette from y=30 (head crown) to y=420 (feet)
+    for (let y = 30; y <= 420; y++) {
+      const rel = (y - 30) / 390;
+      let halfW = 18;
+      if (rel < 0.11) halfW = 14; // head
+      else if (rel < 0.15) halfW = 9; // neck constriction around y=78..88
+      else if (rel < 0.22) halfW = 42; // broad shoulders around y=95..115
+      else if (rel < 0.35) halfW = 36; // chest
+      else if (rel < 0.45) halfW = 24; // narrow waist indentation
+      else if (rel < 0.56) halfW = 41; // wide hips
+      else if (rel < 0.78) halfW = 24; // knees
+      else halfW = 18; // ankles & feet
+
+      const x0 = Math.max(0, Math.round(spineCenter - halfW));
+      const x1 = Math.min(W - 1, Math.round(spineCenter + halfW));
+      for (let x = x0; x <= x1; x++) {
+        const idx = (y * W + x) * 4;
+        rgba[idx] = 60;
+        rgba[idx + 1] = 50;
+        rgba[idx + 2] = 45;
+        rgba[idx + 3] = 255;
+      }
+    }
+
+    const baseAnat = getDefaultAvatarAnatomy('female');
+    const photoAnatomy = extractBodyPhotoAnatomy(
+      { data: rgba, width: W, height: H },
+      baseAnat,
+      'female'
+    );
+
+    expect(photoAnatomy.isPhotoExtracted).toBe(true);
+    expect(photoAnatomy.yHeadTop).toBe(30);
+    expect(photoAnatomy.yFeet).toBe(420);
+    expect(photoAnatomy.centerXAtY(photoAnatomy.yWaist)).toBeCloseTo(spineCenter, 0);
+    expect(photoAnatomy.wShoulders).toBeGreaterThan(photoAnatomy.wWaist + 6);
+    expect(photoAnatomy.wHip).toBeGreaterThan(photoAnatomy.wWaist + 6);
+
+    // Map a maxi abaya and tailored trousers directly to the Full-Body Photo anatomy
+    const abayaEnv = getGarmentAnatomicalEnvelope(
+      { name: 'Black Silk Abaya', category: 'Full Body', sub_category: 'Abaya' },
+      'dress',
+      'female',
+      photoAnatomy
+    );
+    expect(abayaEnv.yTop0).toBeCloseTo(photoAnatomy.yChin - 0.6, 2);
+    expect(abayaEnv.yBot0).toBeCloseTo(photoAnatomy.yAnkles + 3.0, 2);
+    const waistSpan = abayaEnv.spanAtY(photoAnatomy.yWaist);
+    expect(waistSpan.centerX).toBeCloseTo(spineCenter, 0);
+    expect(waistSpan.xRight - waistSpan.xLeft).toBeGreaterThan(50);
+
+    // Verify warpDefaultAvatarPoint shifts the Default Avatar's x=100 centerline onto the photo's spineCenter
+    const warpedWaistCenter = warpDefaultAvatarPoint(100, baseAnat.yWaist, baseAnat, photoAnatomy);
+    expect(warpedWaistCenter.x).toBeCloseTo(spineCenter, 0);
+    expect(warpedWaistCenter.y).toBeCloseTo(photoAnatomy.yWaist, 1);
+  });
+
+  test('pant proportions enforce waist-to-hip top position by style, absolute crotch barrier, and top-hem width fitting', () => {
+    const {
+      getBottomRiseAndCrotchMetrics,
+      detectPantsCrotchRatio,
+      getGarmentAnatomicalEnvelope,
+    } = require('../closetGarmentFitter');
+
+    const g = getDefaultAvatarAnatomy('female');
+
+    // 1. High-waisted trousers sit at yWaist (upper limit) and match avatar waist width
+    const highWaistItem = { name: 'High-Waist Tailored Trousers', category: 'Bottom', sub_category: 'Trousers' };
+    const highEnv = getGarmentAnatomicalEnvelope(highWaistItem, 'bottom', 'female', g);
+    expect(highEnv.riseStyle).toBe('high_rise');
+    expect(highEnv.yTop0).toBeCloseTo(g.yWaist, 2);
+    expect(highEnv.yTop0).toBeGreaterThanOrEqual(g.yWaist);
+    expect(highEnv.yTop0).toBeLessThanOrEqual(g.yHip);
+    expect(highEnv.yCrotchTarget).toBeGreaterThanOrEqual(g.yCrotch);
+    expect(highEnv.halfWidthAtY(highEnv.yTop0)).toBeCloseTo(g.wWaist + 0.35, 1);
+
+    // 2. Classic jeans sit at mid-rise between yWaist and yHip, and top hem interpolates between wWaist and wHip
+    const midRiseItem = { name: 'Blue Straight Jeans', category: 'Bottom', sub_category: 'Jeans' };
+    const midEnv = getGarmentAnatomicalEnvelope(midRiseItem, 'bottom', 'female', g);
+    expect(midEnv.riseStyle).toBe('mid_rise');
+    expect(midEnv.yTop0).toBeGreaterThan(g.yWaist);
+    expect(midEnv.yTop0).toBeLessThan(g.yHip);
+    expect(midEnv.yCrotchTarget).toBeGreaterThanOrEqual(g.yCrotch);
+    expect(midEnv.halfWidthAtY(midEnv.yTop0)).toBeGreaterThan(g.wWaist + 0.35);
+    expect(midEnv.halfWidthAtY(midEnv.yTop0)).toBeLessThan(g.wHip + 0.35);
+
+    // 3. Low-rise / hip-hugger pants approach yHip (lower limit) and never exceed yHip, while crotch stays >= yCrotch
+    const lowRiseItem = { name: 'Low-Rise Hipster Cargo Pants', category: 'Bottom', sub_category: 'Cargo' };
+    const lowEnv = getGarmentAnatomicalEnvelope(lowRiseItem, 'bottom', 'female', g);
+    expect(lowEnv.riseStyle).toBe('low_rise');
+    expect(lowEnv.yTop0).toBeGreaterThan(midEnv.yTop0);
+    expect(lowEnv.yTop0).toBeLessThanOrEqual(g.yHip);
+    expect(lowEnv.yCrotchTarget).toBeGreaterThanOrEqual(g.yCrotch);
+    expect(lowEnv.halfWidthAtY(lowEnv.yTop0)).toBeGreaterThan(midEnv.halfWidthAtY(midEnv.yTop0));
+    expect(lowEnv.halfWidthAtY(g.yHip)).toBeCloseTo(g.wHip + 0.9, 1);
+
+    // 4. Drop-crotch joggers have yCrotchTarget lower than (>=) avatar yCrotch
+    const dropCrotchMetrics = getBottomRiseAndCrotchMetrics(
+      { name: 'Baggy Harem Sweatpants', category: 'Bottom' },
+      g
+    );
+    expect(dropCrotchMetrics.yCrotchTarget).toBeGreaterThan(g.yCrotch);
+
+    // 5. detectPantsCrotchRatio finds the exact leg-split row in a two-legged pants alpha mask
+    const maskW = 60;
+    const maskH = 100;
+    const pantsMask = new Uint8ClampedArray(maskW * maskH);
+    for (let y = 0; y < maskH; y++) {
+      if (y < 32) {
+        // Unified pelvis block above row 32
+        for (let x = 10; x < 50; x++) pantsMask[y * maskW + x] = 255;
+      } else {
+        // Split into left leg (10..26) and right leg (34..50) with gap (26..34)
+        for (let x = 10; x < 26; x++) pantsMask[y * maskW + x] = 255;
+        for (let x = 34; x < 50; x++) pantsMask[y * maskW + x] = 255;
+      }
+    }
+    const detectedCrotchV = detectPantsCrotchRatio(pantsMask, maskW, maskH, false);
+    expect(detectedCrotchV).toBeCloseTo(0.32, 2);
+  });
 });
+
+

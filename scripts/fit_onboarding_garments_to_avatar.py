@@ -89,7 +89,7 @@ def compute_avatar_geometry(
 
     head_height = total_body_svg_height / 7.3
     y_chin = y_head_top + head_height
-    neck_height = total_body_svg_height * 0.045
+    neck_height = total_body_svg_height * 0.032
     y_shoulders = y_chin + neck_height
 
     inseam_svg = total_body_svg_height * (num_ins / num_h)
@@ -252,10 +252,15 @@ def build_smooth_torso_and_sleeves_path(
     w_hip = g["wHip"] + ease_hip
 
     # 1. Build Torso Polygon (never self-intersects)
+    # Stretch top garment collar line (p_neck_r) right up to the avatar's collar line (y_chin - 0.6)
     torso_r: list[tuple[float, float]] = []
-    p_neck_c = (x0, y_sh + neck_depth)
-    p_neck_r = (x0 + w_neck, y_chin + 9.5)
-    p_sh_r = (x0 + w_sh, y_sh + 1.0)
+    neck_height = y_sh - y_chin
+    collar_top_y = y_chin - 0.6
+    w_collar_anchor = max(6.0, g["wNeck"] - 0.5)
+    neck_dip_y = min(y_sh + neck_depth * 0.45, y_chin + 0.8 + neck_depth * 0.35)
+    p_neck_c = (x0, neck_dip_y)
+    p_neck_r = (x0 + w_collar_anchor, collar_top_y)
+    p_sh_r = (x0 + w_sh, y_sh - 0.5)
     p_ch_r = (x0 + w_ch, y_ch)
     p_wa_r = (x0 + w_wa, y_wa)
 
@@ -263,8 +268,8 @@ def build_smooth_torso_and_sleeves_path(
     torso_r.extend(
         cubic_bezier(
             p_neck_c,
-            (x0 + w_neck * 0.55, y_sh + neck_depth),
-            (x0 + w_neck * 0.9, y_chin + 11.5),
+            (x0 + w_collar_anchor * 0.55, neck_dip_y),
+            (x0 + w_collar_anchor * 0.90, collar_top_y + 0.6),
             p_neck_r,
             18,
         )
@@ -272,8 +277,8 @@ def build_smooth_torso_and_sleeves_path(
     torso_r.extend(
         cubic_bezier(
             p_neck_r,
-            (x0 + w_neck + (w_sh - w_neck) * 0.55, y_chin + 12.0),
-            (x0 + w_sh * 0.88, y_sh - 1.5),
+            (x0 + w_collar_anchor + (w_sh - w_collar_anchor) * 0.48, y_chin + neck_height * 0.30),
+            (x0 + w_sh * 0.82, y_sh - 2.5),
             p_sh_r,
             18,
         )
@@ -399,29 +404,38 @@ def build_smooth_trousers_path(
     g: dict[str, float],
     *,
     is_loose: bool = False,
+    rise_ratio: float = 0.0,
 ) -> list[tuple[float, float]]:
     """
     Builds a smooth Cubic Bezier contour for Trousers/Pants/Chinos/Jeans
-    matching `DynamicAvatar.jsx`'s waist->hip->knee->ankle->crotch Bezier curves!
+    where the top hem position varies by style between `yWaist` (upper limit,
+    `rise_ratio=0.0`) and `yHip` (lower limit, `rise_ratio=1.0`), the top hem
+    width fits the avatar's exact body width at `y_top`, and the crunch (crotch)
+    point is never higher than the avatar's `yCrotch`.
     """
     x0 = g["x0"]
     is_male = bool(g["is_male"])
-    y_wa = g["yWaist"] - 2.0
+    rr = max(0.0, min(1.0, float(rise_ratio)))
+    y_wa_base = g["yWaist"]
     y_hip = g["yHip"]
-    y_cr = g["yCrotch"] + 2.5
+    y_top = y_wa_base + rr * (y_hip - y_wa_base)
+    y_cr = max(g["yCrotch"], g["yCrotch"] + (3.2 if is_loose else 1.2))
     y_kn = g["yKnees"]
-    y_an = g["yAnkles"] + 3.5
+    y_an = g["yAnkles"] + 3.0
 
-    w_wa = g["wWaist"] + 2.0
-    w_hip = g["wHip"] + (4.2 if is_loose else 2.4)
-    w_okn = g["wOuterKnee"] + (7.5 if is_loose else 2.6)
-    w_oan = g["wOuterAnkle"] + (7.5 if is_loose else 2.2)
-    w_ikn = max(3.5, g["wInnerKnee"] - (2.8 if is_loose else 1.2))
-    w_ian = max(3.2, g["wInnerAnkle"] - (2.8 if is_loose else 1.0))
+    # Smooth cubic Hermite pelvis width at y_top so top hem fits avatar's exact width at y_top
+    s_pelvis = rr * rr * (3.0 - 2.0 * rr)
+    avatar_w_at_top = g["wWaist"] + (g["wHip"] - g["wWaist"]) * s_pelvis
+    w_top = avatar_w_at_top + 0.5
+    w_hip = g["wHip"] + (2.8 if is_loose else 1.2)
+    w_okn = g["wOuterKnee"] + (6.0 if is_loose else 1.8)
+    w_oan = g["wOuterAnkle"] + (6.5 if is_loose else 1.6)
+    w_ikn = max(2.2, g["wInnerKnee"] - (2.8 if is_loose else 1.5))
+    w_ian = max(2.2, g["wInnerAnkle"] - (2.4 if is_loose else 1.2))
 
     right_pts: list[tuple[float, float]] = []
-    p_wa_c = (x0, y_wa)
-    p_wa_r = (x0 + w_wa, y_wa)
+    p_top_c = (x0, y_top)
+    p_top_r = (x0 + w_top, y_top)
     p_hip_r = (x0 + w_hip, y_hip)
     p_okn_r = (x0 + w_okn, y_kn)
     p_oan_r = (x0 + w_oan, y_an)
@@ -429,18 +443,24 @@ def build_smooth_trousers_path(
     p_ikn_r = (x0 + w_ikn, y_kn)
     p_cr = (x0, y_cr)
 
-    right_pts.append(p_wa_c)
-    right_pts.append(p_wa_r)
-    # Waist -> Hip (exact DynamicAvatar Bezier curve)
-    right_pts.extend(
-        cubic_bezier(
-            p_wa_r,
-            (x0 + w_wa + (1.5 if is_male else 4.2), y_wa + (y_hip - y_wa) * 0.5),
-            (x0 + w_hip + (1.2 if is_male else 2.2), y_hip - 8.0),
-            p_hip_r,
-            20,
+    right_pts.append(p_top_c)
+    right_pts.append(p_top_r)
+    # Top hem -> Hip (exact DynamicAvatar Bezier curve)
+    if y_top < y_hip - 1.0:
+        right_pts.extend(
+            cubic_bezier(
+                p_top_r,
+                (
+                    x0 + w_top + (w_hip - w_top) * (0.45 if is_male else 0.62),
+                    y_top + (y_hip - y_top) * 0.5,
+                ),
+                (x0 + w_hip + (0.6 if is_male else 1.2), y_hip - 5.0),
+                p_hip_r,
+                20,
+            )
         )
-    )
+    else:
+        right_pts.append(p_hip_r)
     # Hip -> Outer Knee
     right_pts.extend(
         cubic_bezier(
@@ -505,10 +525,10 @@ def build_smooth_skirt_path(
     flare: float = 12.0,
 ) -> list[tuple[float, float]]:
     x0 = g["x0"]
-    y_wa = g["yWaist"] - 2.0
+    y_wa = g["yWaist"]
     y_hip = g["yHip"]
-    w_wa = g["wWaist"] + 2.0
-    w_hip = g["wHip"] + 3.2
+    w_wa = g["wWaist"] + 0.5
+    w_hip = g["wHip"] + 1.4
     w_hem = w_hip + flare
 
     right_pts: list[tuple[float, float]] = [(x0, y_wa), (x0 + w_wa, y_wa)]
@@ -697,46 +717,48 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
         x2, y2 = pt(cx + r, cy + r)
         draw.ellipse([x1, y1, x2, y2], fill=(*fill, 255), outline=(*outline, 255) if outline else None, width=2)
 
+    w_collar = max(6.0, w_neck - 0.5)
+
     def draw_collar(style: str, fill_rgb: tuple[int, int, int], accent_rgb: tuple[int, int, int]):
         if style == "mandarin":
             band = [
-                (x0 - w_neck - 2.0, y_chin + 8.5),
-                (x0 + w_neck + 2.0, y_chin + 8.5),
-                (x0 + w_neck + 3.0, y_sh + 1.5),
-                (x0 - w_neck - 3.0, y_sh + 1.5),
+                (x0 - w_collar - 0.6, y_chin - 0.5),
+                (x0 + w_collar + 0.6, y_chin - 0.5),
+                (x0 + w_collar + 1.8, y_chin + 4.2),
+                (x0 - w_collar - 1.8, y_chin + 4.2),
             ]
             poly(band, fill_rgb, outline=accent_rgb, width=3)
-            line([(x0, y_chin + 9.0), (x0, y_ch + 12.0)], accent_rgb, width=3)
+            line([(x0, y_chin + 4.2), (x0, y_ch + 12.0)], accent_rgb, width=3)
         elif style == "shirt":
-            line([(x0, y_sh + 2.5), (x0, y_hip + 2.0)], seam_rgb, width=3)
+            line([(x0, y_chin + 3.5), (x0, y_hip + 2.0)], seam_rgb, width=3)
             left_c = [
-                (x0 - w_neck - 2.0, y_chin + 9.0),
-                (x0, y_sh + 3.5),
-                (x0 - w_neck * 0.82, y_sh + 10.5),
-                (x0 - w_neck - 4.8, y_sh + 1.0),
+                (x0 - w_collar - 0.5, y_chin - 0.5),
+                (x0, y_chin + 3.8),
+                (x0 - w_collar * 0.85, y_chin + 9.0),
+                (x0 - w_collar - 4.0, y_chin + 3.5),
             ]
             right_c = [
-                (x0 + w_neck + 2.0, y_chin + 9.0),
-                (x0, y_sh + 3.5),
-                (x0 + w_neck * 0.82, y_sh + 10.5),
-                (x0 + w_neck + 4.8, y_sh + 1.0),
+                (x0 + w_collar + 0.5, y_chin - 0.5),
+                (x0, y_chin + 3.8),
+                (x0 + w_collar * 0.85, y_chin + 9.0),
+                (x0 + w_collar + 4.0, y_chin + 3.5),
             ]
             poly(left_c, adjust_rgb(fill_rgb, 1.06), outline=seam_rgb, width=2)
             poly(right_c, adjust_rgb(fill_rgb, 1.06), outline=seam_rgb, width=2)
-            for by in np.linspace(y_sh + 9.0, y_wa + 18.0, 5):
+            for by in np.linspace(y_sh + 6.0, y_wa + 18.0, 5):
                 circle(x0, float(by), 1.1, accent_rgb)
         elif style == "shawl":
             shawl_l = [
-                (x0 - w_neck - 3.0, y_chin + 10.0),
-                (x0 - w_neck - 8.5, y_sh + 8.0),
-                (x0, y_ch + 8.0),
-                (x0, y_sh + 4.0),
+                (x0 - w_collar - 0.8, y_chin - 0.5),
+                (x0 - w_collar - 7.5, y_sh + 5.5),
+                (x0, y_ch + 7.5),
+                (x0, y_chin + 3.8),
             ]
             shawl_r = [
-                (x0 + w_neck + 3.0, y_chin + 10.0),
-                (x0 + w_neck + 8.5, y_sh + 8.0),
-                (x0, y_ch + 8.0),
-                (x0, y_sh + 4.0),
+                (x0 + w_collar + 0.8, y_chin - 0.5),
+                (x0 + w_collar + 7.5, y_sh + 5.5),
+                (x0, y_ch + 7.5),
+                (x0, y_chin + 3.8),
             ]
             poly(shawl_l, adjust_rgb(fill_rgb, 0.86), outline=seam_rgb, width=3)
             poly(shawl_r, adjust_rgb(fill_rgb, 0.92), outline=seam_rgb, width=3)
@@ -749,15 +771,15 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
             trouser_pts = build_smooth_trousers_path(g, is_loose=False)
             poly(trouser_pts, dark_rgb, outline=seam_rgb, width=2)
             shirt_v = [
-                (x0 - w_neck - 2.0, y_chin + 9.0),
-                (x0 + w_neck + 2.0, y_chin + 9.0),
-                (x0 + w_neck + 4.0, y_ch + 8.0),
-                (x0 - w_neck - 4.0, y_ch + 8.0),
+                (x0 - w_collar - 1.0, y_chin - 0.5),
+                (x0 + w_collar + 1.0, y_chin - 0.5),
+                (x0 + w_collar + 3.5, y_ch + 8.0),
+                (x0 - w_collar - 3.5, y_ch + 8.0),
             ]
             poly(shirt_v, (245, 247, 250), outline=(200, 205, 215), width=2)
             tie_pts = [
-                (x0 - 2.5, y_sh),
-                (x0 + 2.5, y_sh),
+                (x0 - 2.5, y_chin + 2.5),
+                (x0 + 2.5, y_chin + 2.5),
                 (x0 + 3.8, y_ch + 8.0),
                 (x0, y_ch + 15.0),
                 (x0 - 3.8, y_ch + 8.0),
@@ -773,12 +795,12 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
                 ease_hem=3.2,
                 sleeve_end_y=y_wr,
                 cuff_width=10.5,
-                neck_depth=16.0,
+                neck_depth=12.0,
             )
             poly(jacket_pts, base_rgb, outline=seam_rgb, width=2)
-            poly([(x0 - w_neck - 2.5, y_chin + 10.5), (x0 - w_neck - 10.0, y_sh + 13.0), (x0, y_sh + 16.0)], dark_rgb, outline=seam_rgb, width=2)
-            poly([(x0 + w_neck + 2.5, y_chin + 10.5), (x0 + w_neck + 10.0, y_sh + 13.0), (x0, y_sh + 16.0)], dark_rgb, outline=seam_rgb, width=2)
-            line([(x0, y_sh + 16.0), (x0, y_hip + 10.0)], seam_rgb, width=2)
+            poly([(x0 - w_collar - 0.5, y_chin - 0.4), (x0 - w_collar - 9.0, y_sh + 10.0), (x0, y_sh + 14.0)], dark_rgb, outline=seam_rgb, width=2)
+            poly([(x0 + w_collar + 0.5, y_chin - 0.4), (x0 + w_collar + 9.0, y_sh + 10.0), (x0, y_sh + 14.0)], dark_rgb, outline=seam_rgb, width=2)
+            line([(x0, y_sh + 14.0), (x0, y_hip + 10.0)], seam_rgb, width=2)
 
         elif item_id in ("w_jumpsuit_black", "w_jalabiya_kurta_set", "m_kurta_set_festive"):
             pant_rgb = trim_rgb if item_id == "w_jalabiya_kurta_set" else ((242, 238, 228) if item_id == "m_kurta_set_festive" else base_rgb)
@@ -796,7 +818,7 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
                 ease_hem=3.0 if item_id == "w_jumpsuit_black" else 7.5,
                 sleeve_end_y=y_wr if item_id != "w_jumpsuit_black" else y_sh + 14.0,
                 cuff_width=9.5,
-                neck_depth=10.0 if item_id == "w_jumpsuit_black" else 3.0,
+                neck_depth=5.5 if item_id == "w_jumpsuit_black" else 2.2,
             )
             poly(tunic_pts, base_rgb, outline=seam_rgb, width=2)
             if item_id != "w_jumpsuit_black":
@@ -815,10 +837,10 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
                 ease_hem=3.0,
                 sleeve_end_y=y_sh + 16.0,
                 cuff_width=9.0,
-                neck_depth=5.5,
+                neck_depth=3.5,
             )
             poly(dress_pts, base_rgb, outline=seam_rgb, width=2)
-            line([(x0 - w_neck - 2.0, y_chin + 10.5), (x0, y_sh + 6.0), (x0 + w_neck + 2.0, y_chin + 10.5)], trim_rgb, width=6)
+            line([(x0 - w_collar - 0.4, y_chin - 0.3), (x0, y_chin + 3.5), (x0 + w_collar + 0.4, y_chin - 0.3)], trim_rgb, width=6)
 
         else:
             is_thobe = item_id == "m_thobe_white"
@@ -832,22 +854,22 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
                 ease_hem=8.5 if is_thobe else 16.5,
                 sleeve_end_y=y_wr if item_id != "w_saree_maroon" else y_el - 4.0,
                 cuff_width=10.5 if is_thobe else 13.0,
-                neck_depth=2.5 if is_thobe else 6.5,
+                neck_depth=2.0 if is_thobe else 3.5,
             )
             poly(robe_pts, base_rgb, outline=seam_rgb, width=2)
 
             if item_id == "w_kaftan_emerald":
-                line([(x0 - w_neck - 1.8, y_chin + 10.0), (x0, y_sh + 7.0), (x0 + w_neck + 1.8, y_chin + 10.0)], trim_rgb, width=6)
-                line([(x0, y_sh + 7.0), (x0, y_an + 2.0)], trim_rgb, width=6)
+                line([(x0 - w_collar - 0.4, y_chin - 0.3), (x0, y_chin + 3.8), (x0 + w_collar + 0.4, y_chin - 0.3)], trim_rgb, width=6)
+                line([(x0, y_chin + 3.8), (x0, y_an + 2.0)], trim_rgb, width=6)
                 poly([(x0 - w_wa - 7.8, y_wa - 4.0), (x0 + w_wa + 7.8, y_wa - 4.0), (x0 + w_wa + 7.8, y_wa + 4.0), (x0 - w_wa - 7.8, y_wa + 4.0)], trim_rgb, outline=dark_rgb)
                 circle(x0, y_wa, 5.2, trim_rgb, outline=dark_rgb)
             elif item_id == "w_abaya_black":
-                line([(x0, y_sh + 6.5), (x0, y_an + 2.0)], trim_rgb, width=3)
+                line([(x0, y_chin + 3.2), (x0, y_an + 2.0)], trim_rgb, width=3)
                 line([(x0 - g["wOuterAnkle"] - 14.0, y_an), (x0 + g["wOuterAnkle"] + 14.0, y_an)], trim_rgb, width=4)
             elif item_id == "w_saree_maroon":
                 pallu = [
                     (x0 - w_sh - 2.0, y_sh),
-                    (x0 - w_neck + 2.0, y_sh),
+                    (x0 - w_collar + 0.5, y_chin - 0.3),
                     (x0 + w_hip + 4.5, y_hip + 8.0),
                     (x0 - w_wa - 6.0, y_wa + 10.0),
                 ]
@@ -867,10 +889,10 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
             poly(sk_pts, base_rgb, outline=seam_rgb, width=2)
             poly(
                 [
-                    (x0 - w_wa - 2.0, y_wa - 2.5),
-                    (x0 + w_wa + 2.0, y_wa - 2.5),
-                    (x0 + w_wa + 2.4, y_wa + 3.5),
-                    (x0 - w_wa - 2.4, y_wa + 3.5),
+                    (x0 - w_wa - 0.5, y_wa),
+                    (x0 + w_wa + 0.5, y_wa),
+                    (x0 + w_wa + 1.0, y_wa + 4.5),
+                    (x0 - w_wa - 1.0, y_wa + 4.5),
                 ],
                 dark_rgb,
                 outline=seam_rgb,
@@ -880,7 +902,7 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
                 for px_frac in np.linspace(-0.78, 0.78, 9):
                     line(
                         [
-                            (x0 + px_frac * w_wa, y_wa + 3.5),
+                            (x0 + px_frac * w_wa, y_wa + 4.5),
                             (x0 + px_frac * (w_hip + flare - 2.0), hem_y),
                         ],
                         seam_rgb,
@@ -888,21 +910,30 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
                     )
         else:
             is_loose = "loose" in item_id or "relaxed" in item_id
-            pant_pts = build_smooth_trousers_path(g, is_loose=is_loose)
+            if "tailored" in item_id or "palazzo" in item_id:
+                rise_ratio = 0.0
+            elif "relaxed" in item_id:
+                rise_ratio = 0.62
+            else:
+                rise_ratio = 0.35
+            pant_pts = build_smooth_trousers_path(g, is_loose=is_loose, rise_ratio=rise_ratio)
             poly(pant_pts, base_rgb, outline=seam_rgb, width=2)
+            y_top_pant = y_wa + rise_ratio * (y_hip - y_wa)
+            s_pelvis = rise_ratio * rise_ratio * (3.0 - 2.0 * rise_ratio)
+            w_top_pant = g["wWaist"] + (g["wHip"] - g["wWaist"]) * s_pelvis + 0.5
             poly(
                 [
-                    (x0 - w_wa - 2.0, y_wa - 2.5),
-                    (x0 + w_wa + 2.0, y_wa - 2.5),
-                    (x0 + w_wa + 2.4, y_wa + 3.5),
-                    (x0 - w_wa - 2.4, y_wa + 3.5),
+                    (x0 - w_top_pant, y_top_pant),
+                    (x0 + w_top_pant, y_top_pant),
+                    (x0 + w_top_pant + 0.6, y_top_pant + 4.5),
+                    (x0 - w_top_pant - 0.6, y_top_pant + 4.5),
                 ],
                 dark_rgb,
                 outline=seam_rgb,
                 width=2,
             )
-            line([(x0, y_wa + 3.5), (x0, y_cr + 1.5)], seam_rgb, width=2)
-            circle(x0, y_wa + 0.5, 1.3, trim_rgb)
+            line([(x0, y_top_pant + 4.5), (x0, y_cr + 1.2)], seam_rgb, width=2)
+            circle(x0, y_top_pant + 2.2, 1.3, trim_rgb)
             if "trousers" in item_id or "chinos" in item_id:
                 for sign in (-1.0, 1.0):
                     cx_leg = x0 + sign * ((g["wOuterKnee"] + g["wInnerKnee"]) * 0.5)
@@ -927,7 +958,7 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
             ease_hem=5.0 if is_longline else 2.4,
             sleeve_end_y=(y_el - 4.0) if is_short_sleeve else y_wr,
             cuff_width=9.5,
-            neck_depth=5.5 if ("tshirt" in item_id or "longsleeve" in item_id) else 3.0,
+            neck_depth=4.5 if ("tshirt" in item_id or "longsleeve" in item_id) else 2.5,
         )
         poly(top_pts, base_rgb, outline=seam_rgb, width=2)
 
@@ -941,8 +972,8 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
         if "guayabera" in item_id:
             for sign in (-1.0, 1.0):
                 px = x0 + sign * (w_ch * 0.46)
-                line([(px - 1.5, y_sh + 3.0), (px - 1.5, hem_y - 2.0)], seam_rgb, width=2)
-                line([(px + 1.5, y_sh + 3.0), (px + 1.5, hem_y - 2.0)], seam_rgb, width=2)
+                line([(px - 1.5, y_sh + 2.0), (px - 1.5, hem_y - 2.0)], seam_rgb, width=2)
+                line([(px + 1.5, y_sh + 2.0), (px + 1.5, hem_y - 2.0)], seam_rgb, width=2)
 
     # =========================================================================
     # 4. OUTERWEAR
@@ -962,28 +993,28 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
             ease_hem=7.5 if is_long_coat else 4.2,
             sleeve_end_y=None if is_sleeveless else (y_wr + 1.0),
             cuff_width=11.0,
-            neck_depth=2.5 if ("achkan" in item_id or "waistcoat" in item_id) else 15.0,
+            neck_depth=2.0 if ("achkan" in item_id or "waistcoat" in item_id) else 14.0,
         )
         poly(coat_pts, base_rgb, outline=seam_rgb, width=2)
 
         if "cardigan" in item_id:
             # Cut open center vertical strip on open-front cardigan so underlayer shirt shows through!
             open_strip = [
-                pt(x0 - 6.5, y_chin + 8.0),
-                pt(x0 + 6.5, y_chin + 8.0),
+                pt(x0 - 6.5, y_chin),
+                pt(x0 + 6.5, y_chin),
                 pt(x0 + 7.5, hem_y + 5.0),
                 pt(x0 - 7.5, hem_y + 5.0),
             ]
             draw.polygon(open_strip, fill=(0, 0, 0, 0))
         elif "achkan" in item_id or "waistcoat" in item_id:
             draw_collar("mandarin", base_rgb, trim_rgb)
-            line([(x0, y_sh + 2.0), (x0, hem_y)], trim_rgb, width=3)
-            for by in np.linspace(y_sh + 8.0, y_hip - 2.0, 6):
+            line([(x0, y_chin + 5.2), (x0, hem_y)], trim_rgb, width=3)
+            for by in np.linspace(y_sh + 6.0, y_hip - 2.0, 6):
                 circle(x0, float(by), 1.4, trim_rgb)
         else:
-            poly([(x0 - w_neck - 2.5, y_chin + 10.5), (x0 - w_neck - 10.5, y_sh + 13.0), (x0, y_sh + 15.5)], dark_rgb, outline=seam_rgb, width=2)
-            poly([(x0 + w_neck + 2.5, y_chin + 10.5), (x0 + w_neck + 10.5, y_sh + 13.0), (x0, y_sh + 15.5)], dark_rgb, outline=seam_rgb, width=2)
-            line([(x0, y_sh + 15.5), (x0, hem_y)], seam_rgb, width=2)
+            poly([(x0 - w_collar - 0.5, y_chin - 0.4), (x0 - w_collar - 9.5, y_sh + 10.0), (x0, y_sh + 13.5)], dark_rgb, outline=seam_rgb, width=2)
+            poly([(x0 + w_collar + 0.5, y_chin - 0.4), (x0 + w_collar + 9.5, y_sh + 10.0), (x0, y_sh + 13.5)], dark_rgb, outline=seam_rgb, width=2)
+            line([(x0, y_sh + 13.5), (x0, hem_y)], seam_rgb, width=2)
             if "trench" in item_id:
                 poly([(x0 - w_wa - 4.2, y_wa - 3.0), (x0 + w_wa + 4.2, y_wa - 3.0), (x0 + w_wa + 4.2, y_wa + 3.0), (x0 - w_wa - 4.2, y_wa + 3.0)], dark_rgb, outline=seam_rgb, width=2)
 
@@ -1078,8 +1109,9 @@ def build_point_cloud_mesh(
     for r in range(rows):
         v_norm = r / float(rows - 1)
         py = min(ch - 1, max(0, int(round(v_norm * (ch - 1)))))
-        band_y0 = max(0, py - max(2, ch // 20))
-        band_y1 = min(ch, py + max(3, ch // 20))
+        half_band = 3 if r in (0, rows - 1) else max(2, ch // 45)
+        band_y0 = max(0, py - half_band)
+        band_y1 = min(ch, py + half_band + 1)
         opaque_xs = np.where((alpha_crop[band_y0:band_y1, :] > 25).any(axis=0))[0]
         if len(opaque_xs) >= 2:
             u_min = float(opaque_xs[0]) / max(1, cw - 1)

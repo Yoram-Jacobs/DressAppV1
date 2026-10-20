@@ -35,7 +35,7 @@ export function getFullAvatarAnatomy({
 
   const headHeight = totalBodySvgHeight / 7.3;
   const yChin = yHeadTop + headHeight;
-  const neckHeight = totalBodySvgHeight * 0.045;
+  const neckHeight = totalBodySvgHeight * 0.032;
   const yShoulders = yChin + neckHeight;
 
   const inseamSvg = totalBodySvgHeight * (numIns / numH);
@@ -58,7 +58,8 @@ export function getFullAvatarAnatomy({
   const wChest = isMale ? ((numCh / DIVISOR) * 1.1) : ((numCh / DIVISOR) * 0.95);
   const wWaist = isMale ? ((numW / DIVISOR) * 1.02) : ((numW / DIVISOR) * 0.82);
   const wHip = isMale ? ((numHip / DIVISOR) * 0.92) : ((numHip / DIVISOR) * 1.08);
-  const wNeck = isMale ? 14 : 9.5;
+  const shScale = numSh / (isMale ? 44.0 : 38.0);
+  const wNeck = (isMale ? 14 : 9.5) * Math.max(0.85, Math.min(1.22, shScale));
 
   const wOuterKnee = isMale ? (wHip * 0.65) : (wHip * 0.58);
   const wInnerKnee = isMale ? 10.5 : 9.5;
@@ -219,8 +220,15 @@ export function warpDefaultAvatarPoint(x0, y0, defaultAnatomy, liveAnatomy) {
   const r1 = WL[seg + 1] / Math.max(1, W0[seg + 1]);
   const scaleX = Math.max(0.68, Math.min(1.48, r0 + t * (r1 - r0)));
 
-  const xLive = 100 + (Number(x0) - 100) * scaleX;
-  return { x: xLive, y: yLive, scaleX, scaleY };
+  const center0 = Number.isFinite(defaultAnatomy.X0) ? defaultAnatomy.X0 : 100;
+  const centerLive =
+    typeof liveAnatomy.centerXAtY === 'function'
+      ? liveAnatomy.centerXAtY(yLive)
+      : Number.isFinite(liveAnatomy.X0)
+      ? liveAnatomy.X0
+      : 100;
+  const xLive = centerLive + (Number(x0) - center0) * scaleX;
+  return { x: xLive, y: yLive, scaleX, scaleY, centerX: centerLive };
 }
 
 export function getAvatarGeometry({
@@ -277,7 +285,7 @@ export default function DynamicAvatar({
     // Head & Neck
     const headHeight = totalBodySvgHeight / 7.3;
     const yChin = yHeadTop + headHeight;
-    const neckHeight = totalBodySvgHeight * 0.045;
+    const neckHeight = totalBodySvgHeight * 0.032;
     const yShoulders = yChin + neckHeight;
 
     // Inseam & Legs
@@ -305,7 +313,8 @@ export default function DynamicAvatar({
     const wChest = isMale ? ((numCh / DIVISOR) * 1.1) : ((numCh / DIVISOR) * 0.95);
     const wWaist = isMale ? ((numW / DIVISOR) * 1.02) : ((numW / DIVISOR) * 0.82);
     const wHip = isMale ? ((numHip / DIVISOR) * 0.92) : ((numHip / DIVISOR) * 1.08);
-    const wNeck = isMale ? 14 : 9.5;
+    const shScale = numSh / (isMale ? 44.0 : 38.0);
+    const wNeck = (isMale ? 14 : 9.5) * Math.max(0.85, Math.min(1.22, shScale));
 
     // Leg widths (thicker legs, realistic proportions)
     const wOuterKnee = isMale ? (wHip * 0.65) : (wHip * 0.58);
@@ -352,7 +361,7 @@ export default function DynamicAvatar({
     // Path string assembling Bezier curves
     const bodyPath = [
       `M ${pNeckR}`,
-      `C ${X0 + wNeck + (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.5} ${X0 + wShoulders * 0.8},${yShoulders - 2} ${pShoulderR}`,
+      `C ${X0 + wNeck + (wShoulders - wNeck) * 0.45},${yChin + neckHeight * 0.55} ${X0 + wShoulders * 0.82},${yShoulders - 0.5} ${pShoulderR}`,
       `C ${X0 + wShoulders + 2},${yShoulders + 10} ${X0 + wChest + 2},${yChest - 5} ${pChestR}`,
       `C ${X0 + wChest - (isMale ? 1 : 3)},${yChest + (yWaist - yChest) * 0.5} ${X0 + wWaist + (isMale ? 2 : -2)},${yWaist - 8} ${pWaistR}`,
       `C ${X0 + wWaist + (isMale ? 1 : 4)},${yWaist + (yHip - yWaist) * 0.5} ${X0 + wHip + (isMale ? 1 : 2)},${yHip - 8} ${pHipR}`,
@@ -370,7 +379,7 @@ export default function DynamicAvatar({
       `C ${X0 - wHip - (isMale ? 1 : 2)},${yHip - 8} ${X0 - wWaist - (isMale ? 1 : 4)},${yWaist + (yHip - yWaist) * 0.5} ${pWaistL}`,
       `C ${X0 - wWaist - (isMale ? 2 : -2)},${yWaist - 8} ${X0 - wChest + (isMale ? 1 : 3)},${yChest + (yWaist - yChest) * 0.5} ${pChestL}`,
       `C ${X0 - wChest - 2},${yChest - 5} ${X0 - wShoulders - 2},${yShoulders + 10} ${pShoulderL}`,
-      `C ${X0 - wShoulders * 0.8},${yShoulders - 2} ${X0 - wNeck - (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.5} ${pNeckL}`,
+      `C ${X0 - wShoulders * 0.82},${yShoulders - 0.5} ${X0 - wNeck - (wShoulders - wNeck) * 0.45},${yChin + neckHeight * 0.55} ${pNeckL}`,
       `Z`
     ].join(' ');
 
