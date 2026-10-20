@@ -21,6 +21,25 @@ En el plan Gratuito, DressApp pone a tu disposición dos tipos de créditos para
 
 Cuando subes una foto, la IA de DressApp detecta automáticamente si se trata de **una sola prenda**, un **conjunto completo puesto** o **varias prendas extendidas juntas**. Elimina el fondo, identifica los colores y reconoce el corte y el estilo. Tomar fotos claras y bien iluminadas asegura recortes limpios y colores exactos al primer intento, reservando tus **5 créditos de Reconstrucción de Estudio** para prendas realmente difíciles.
 
+### Subida de Conjuntos de Prendas (Planes Manager y Professional)
+
+La subida de conjuntos de prendas (pipeline masivo) es una función revolucionaria que te permite fotografiar tu ropa directamente en tu armario físico, usar muchas menos fotos y digitalizar tu vestuario en muy poco tiempo. Puede identificar y reconstruir:
+- **Prendas colgadas en el armario o en una percha**
+- **Un zapatero o estante de zapatos**
+- **Una pila de camisas o camisetas dobladas**
+- **Varias prendas agrupadas** (¡no solo ropa extendida sobre la cama!)
+
+> **Por qué está prohibida para usuarios del plan Gratis:** La subida de conjuntos utiliza la reconstrucción de estudio con IA **Nano Banana**. Una sola imagen puede consumir toda la cuota de reconstrucción de IA de un usuario Gratis, dejando muchas prendas sin reconstruir. Si un usuario Gratis intenta subir un conjunto de prendas, DressApp muestra un mensaje sugiriendo **omitir la imagen o mejorar su plan**.
+
+**Las 5 limitaciones de la subida de conjuntos:**
+1. **Ideal para colores sólidos y patrones simples**: Funciona muy bien con colores lisos o cuadros y rayas muy sencillos; no puede analizar estampados ocultos ni detalles finos.
+2. **Estado de la prenda**: La imagen reconstruida rara vez refleja el estado físico actual de la prenda.
+3. **Puede omitir algunas prendas**: En grupos muy densos o superpuestos, algunas prendas pueden omitirse.
+4. **Puede alucinar patrones y colores**: Ocasionalmente puede inventar patrones o colores en zonas ocultas; revisa siempre la ficha antes de guardar.
+5. **Consume créditos de reconstrucción**: Cada prenda reconstruida consume créditos de reconstrucción.
+
+> **Nota sobre bajada de plan (Demotion):** Los usuarios Manager o Professional que bajen al plan Gratis perderán sus espacios extra de armario, **conservando únicamente los últimos 50 artículos añadidos**. DressApp te advertirá sobre la pérdida de tus prendas más antiguas y pedirá confirmación antes de aceptar el cambio.
+
 ### Las 4 Reglas de Oro para Fotografiar Ropa Extendida
 
 1. **Usa un Lugar Iluminado y una Superficie que Contraste**

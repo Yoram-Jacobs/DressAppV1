@@ -43,3 +43,68 @@ async def refund_user_credits(
     credit_type: str = "free"
 ) -> bool:
     return await _refund(db_connection, user_id, amount, credit_type)
+
+FREE_CLOSET_LIMIT = 50
+
+
+async def demote_user_to_free_plan(
+    db_connection: Any,
+    user: dict,
+) -> Dict[str, Any]:
+    """Demote a Manager/Professional user to the Free plan and prune their closet
+    to the last 50 added items (ordered by created_at descending).
+    """
+    from datetime import datetime, timezone
+
+    user_id = user["id"]
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    # Fetch all closet items ordered by created_at DESC (newest first)
+    cursor = db_connection.closet_items.find(
+        {"user_id": user_id},
+        {"_id": 0, "id": 1, "created_at": 1},
+    ).sort([("created_at", -1), ("_id", -1)])
+    all_items = await cursor.to_list(length=10000)
+
+    removed_count = 0
+    if len(all_items) > FREE_CLOSET_LIMIT:
+        older_ids = [
+            it["id"] for it in all_items[FREE_CLOSET_LIMIT:] if it.get("id")
+        ]
+        if older_ids:
+            del_res = await db_connection.closet_items.delete_many(
+                {"user_id": user_id, "id": {"$in": older_ids}}
+            )
+            removed_count = int(getattr(del_res, "deleted_count", len(older_ids)))
+
+    remaining_count = min(len(all_items), FREE_CLOSET_LIMIT)
+
+    await db_connection.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                "subscription.plan_type": "free",
+                "subscription.tier": "free",
+                "subscription.is_active": False,
+                "subscription.cancelled_at": now_iso,
+                "ai_configuration.subscription.plan_type": "free",
+                "ai_configuration.subscription.is_active": False,
+                "ai_configuration.ai_monthly_limit": 20,
+                "closet_capacity_bonus": 0,
+                "updated_at": now_iso,
+            }
+        },
+    )
+
+    return {
+        "ok": True,
+        "success": True,
+        "plan_type": "free",
+        "removed_closet_items_count": removed_count,
+        "remaining_closet_items_count": remaining_count,
+        "free_closet_limit": FREE_CLOSET_LIMIT,
+        "message": (
+            f"Demoted to Free plan. Retained the last {remaining_count} added items "
+            f"and removed {removed_count} older closet items."
+        ),
+    }

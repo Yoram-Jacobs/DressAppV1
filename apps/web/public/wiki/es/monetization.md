@@ -1,33 +1,27 @@
-# Suscripciones, Paquetes de Créditos y Facturación
+# Planes de suscripción y créditos
 
-Conozca los límites de su cuenta, amplíe el espacio de su armario y administre sus créditos de estilismo con IA.
+DressApp ofrece un generoso Plan Gratis junto con suscripciones mensuales y anuales flexibles y paquetes de créditos opcionales.
 
-## Descripción general
-DressApp ofrece un modelo de monetización híbrido y flexible diseñado para facilitar la organización diaria del armario y ofrecer herramientas profesionales a entusiastas de la moda, creadores y estilistas certificados:
-- **Nivel Gratuito Base (Free Tier Baseline)**: Almacene hasta 50 prendas de forma gratuita (ampliable hasta un máximo de 150 artículos mediante bonos de recomendación de +10 espacios por cada registro). Funciona directamente con el modelo local DressApp Eyes v1 sin requerir claves de API.
-- **Plan Manager ($10/mes o $100/año)**: Capacidad de armario ilimitada, programador de conjuntos matutinos por notificaciones push, sincronización de calendario, venta en el mercado circular, estadísticas avanzadas y filtros de Trend Scout.
-- **Plan Professional ($15/mes o $150/año)**: Diseñado para estilistas independientes y creadores de moda, incluye creación de campañas publicitarias patrocinadas, listado en el directorio de estilistas expertos, soporte prioritario y 100 créditos mensuales de estilismo.
-- **Paquetes de Créditos Prepagos**: Recargue con paquetes de créditos que nunca caducan ($3 por 10, $12 por 50, $20 por 100 créditos) para estilismo frecuente o reconstrucción de fotos.
+## Resumen de planes
 
-## Requisitos previos
-- Una cuenta registrada en DressApp.
-- Una cuenta de PayPal, tarjeta de crédito/débito o la aplicación Bit (para pagos locales en ILS) para suscripciones o recargas de créditos.
+1. **Plan Gratis**:
+   - Guarda hasta **50 prendas en tu armario** gratis y amplíalo hasta **150 prendas** compartiendo tu enlace de invitación con amigos (**+10 espacios gratis** por cada amigo que se registre).
+   - Funciona desde el primer momento con el **modelo de IA local de DressApp** (**10 créditos diarios**, acumulables hasta **300 créditos en 30 días**) más **5 créditos iniciales de Reconstrucción de Estudio**.
+   - Admite fotos de una sola prenda y fotos de conjuntos puestos. La **carga de grupos de prendas** (armarios, perchas, zapateros o pilas de camisas) está desactivada en el Plan Gratis porque una sola imagen puede consumir todo tu cupo gratuito de reconstrucción de una vez.
 
-## Instrucciones paso a paso
-1. **Explore el nivel base gratuito**: Comience a organizar de inmediato con 50 prendas. Las recomendaciones de conjuntos funcionan de inmediato con DressApp Eyes v1 sin configurar claves API.
-2. **Amplíe gratis mediante invitaciones**: Comparta su enlace de recomendación desde el perfil. Cada amigo que se registre desbloquea +10 espacios permanentes en el armario (hasta un máximo de 150 artículos).
-3. **Actualice a Manager ($10/mes o $100/año)**: Vaya a Configuración de perfil > Preferencias del sistema > Límites de armario y suscripción y pulse en la Página de precios para desbloquear capacidad ilimitada, alertas matutinas y sincronización con el calendario.
-4. **Actualice a Professional ($15/mes o $150/año)**: Seleccione Professional para crear campañas publicitarias de moda, anunciarse en el directorio de expertos y obtener soporte prioritario.
-5. **Compre créditos prepagos (nunca vencen)**: Si necesita créditos adicionales, elija un paquete de 10 ($3), 50 ($12) o 100 ($20) créditos. El sistema consume primero los créditos mensuales de la suscripción, preservando su saldo prepago.
+2. **Plan Manager ($10/mes o $100/año)**:
+   - Desbloquea **espacio de armario ilimitado**, acceso prioritario al **modelo de IA de vanguardia**, **100 créditos mensuales de Reconstrucción de Estudio**, **Carga de grupos de prendas** (armarios, zapateros y pilas de camisas), alertas matutinas de conjuntos, sincronización con calendario, venta en el Marketplace y acceso completo a **Trend Scout**.
 
-## Resultados esperados
-Activación inmediata de los beneficios tras suscribirse. Los límites del armario se actualizan al instante a ilimitados y las insignias de su panel de perfil reflejan su nivel activo.
+3. **Plan Professional ($15/mes o $150/año)**:
+   - Diseñado para estilistas profesionales, sastres y creadores de moda.
+   - Incluye todo lo del plan Manager, además de perfil verificado en el **Directorio de Estilistas**, creación de campañas promocionales, soporte prioritario y **100 créditos mensuales de estilismo y reconstrucción**.
 
-## Solución de problemas
-- **Aviso de "Límite del armario alcanzado"**: Ha llenado sus espacios disponibles (50 base o hasta 150 con invitaciones). Archive prendas que no use, invite amigos (+10 por amigo hasta máx. 150) o actualice a Manager/Professional para capacidad ilimitada.
-- **Créditos no reflejados tras el pago**: Actualice su página de perfil; los webhooks de pago acreditan la compra en pocos segundos.
-- **Gestión de la suscripción**: Puede gestionar o cancelar su suscripción en cualquier momento desde su cuenta de PayPal o configuración de perfil sin perder las prendas añadidas.
+## Cambio al Plan Gratis y conservación de las últimas 50 prendas
+- **Los usuarios Manager y Professional que bajen al Plan Gratis perderán sus espacios adicionales, quedando únicamente las últimas 50 prendas añadidas en su armario.**
+- Cualquier prenda más antigua (más allá de las **50 prendas añadidas más recientemente**) se eliminará de forma permanente al pasar al Plan Gratis.
+- Antes de aceptar la bajada de plan o cancelación, DressApp muestra una advertencia clara sobre la pérdida de prendas antiguas y solicita tu confirmación expresa.
 
-## Limitaciones
-- Los bonos de capacidad por recomendaciones aplican hasta un tope máximo de 150 prendas en el nivel Free.
-- Los créditos mensuales de la suscripción no se acumulan para el siguiente ciclo; los paquetes prepagos comprados nunca caducan.
+## Cómo mejorar o gestionar tu plan
+1. Abre tu página de **Perfil** y desplázate hasta **Suscripción y límites**.
+2. Haz clic en **Ver planes** o **Precios**.
+3. Elige tu plan preferido o confirma el aviso si decides volver al Plan Gratis.

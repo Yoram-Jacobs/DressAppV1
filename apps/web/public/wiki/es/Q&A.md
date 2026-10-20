@@ -74,6 +74,9 @@ Al quinto día tendrás **50 prendas esenciales** digitalizadas, ¡desbloqueando
 - **Comprar Paquetes de Créditos (No Caducan Nunca)**: Adquiere **10 créditos ($3)**, **50 créditos ($12)** o **100 créditos ($20)**. Los créditos comprados no caducan nunca y solo se consumen cuando se agotan tus créditos gratuitos o mensuales.
 - **Mejorar al Plan Gestor de Armario ($10/mes o $100/año)**: Desbloquea **espacio ilimitado en el armario**, **estilismo y escaneos diarios ilimitados** con el **modelo de IA de vanguardia**, **100 créditos mensuales de Reconstrucción de Estudio**, notificaciones matutinas de conjuntos, **Cazador de Tendencias** y el **Marketplace**.
 
+### P: ¿Qué sucede si bajo del plan Manager o Professional al plan Gratis?
+**R:** Los usuarios Manager y Professional que bajen al plan Gratis perderán sus espacios adicionales de armario, **quedando únicamente los últimos 50 artículos añadidos en su armario**. Las prendas más antiguas se eliminarán de forma permanente. Antes de aceptar la bajada de plan, DressApp muestra una advertencia clara y solicita tu confirmación.
+
 ---
 
 ## 3. Fotografiar, Subir y Editar Ropa
@@ -89,6 +92,9 @@ Al quinto día tendrás **50 prendas esenciales** digitalizadas, ¡desbloqueando
 **R:**
 - **Recorte Estándar (Automático)**: Se ejecuta automáticamente al subir la foto (1 crédito de IA propia en el plan Gratuito). Elimina el fondo y extrae todos los detalles conservando tu fotografía original.
 - **Reconstrucción de Estudio (Opcional)**: Se activa al pulsar **Reconstruir** (1 crédito de Reconstrucción de Estudio). Utiliza nuestro modelo de IA de vanguardia para eliminar arrugas profundas, corregir la iluminación y presentar la prenda como una foto de catálogo profesional.
+- **Subida de Conjuntos de Prendas (Planes Manager y Professional)**: Una función revolucionaria que identifica y reconstruye **prendas colgadas en el armario o en perchas, un zapatero, una pila de camisas y más** — ¡no solo prendas extendidas en la cama!
+  - **Prohibida para usuarios Gratis**: Como utiliza Nano Banana, una sola imagen puede agotar toda la cuota de reconstrucción de un usuario Gratis. Si un usuario Gratis sube un conjunto, se le sugiere **omitir la imagen o mejorar su plan**.
+  - **Las 5 limitaciones**: (a) Ideal para colores sólidos o cuadros y rayas simples, no analiza estampados ocultos ni detalles finos; (b) rara vez refleja el estado actual de la prenda; (c) puede omitir algunas prendas; (d) puede alucinar patrones y colores; (e) consume créditos de reconstrucción.
 
 ### P: ¿Por qué conviene revisar una prenda justo después de subirla?
 **R:** Aunque la IA de DressApp es muy precisa, la luz interior cálida puede hacer que el azul marino parezca negro. Dedicar **10 segundos** a confirmar la **Categoría, Color, Temporada, Nivel de abrigo (1–5) y Código de vestimenta** garantiza que el Estilista de IA y el Asistente de Maleta combinen esa prenda a la perfección.

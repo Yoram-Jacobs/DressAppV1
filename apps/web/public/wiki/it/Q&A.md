@@ -74,6 +74,9 @@ Entro il quinto giorno avrai **50 capi essenziali** digitalizzati, sbloccando mi
 - **Acquistare Pacchetti di Crediti (Non Scadono Mai)**: Acquista **10 crediti ($3)**, **50 crediti ($12)** o **100 crediti ($20)**. I crediti acquistati non scadono mai e vengono usati solo dopo aver terminato quelli gratuiti o mensili.
 - **Passare al Piano Gestore Guardaroba ($10/mese o $100/anno)**: Sblocca **spazio illimitato nell'armadio**, **styling e scansioni giornaliere illimitate** con il **modello IA all'avanguardia**, **100 crediti mensili di Ricostruzione Studio**, notifiche mattutine con l'outfit del giorno, **Esploratore di Tendenze** e il **Marketplace**.
 
+### D: Cosa succede se passo dal piano Manager o Professional al piano Free?
+**R:** Gli utenti Manager e Professional che passano al piano Free perdono gli slot extra dell'armadio, **lasciando nel guardaroba solo gli ultimi 50 capi aggiunti**. I capi più vecchi vengono eliminati definitivamente. Prima di accettare il declassamento, DressApp mostra un avviso e chiede la tua conferma.
+
 ---
 
 ## 3. Fotografare, Aggiungere e Modificare i Capi
@@ -89,6 +92,9 @@ Entro il quinto giorno avrai **50 capi essenziali** digitalizzati, sbloccando mi
 **R:**
 - **Scontorno Standard (Automatico)**: Viene eseguito automaticamente al caricamento (1 credito IA interna nel piano Gratuito). Rimuove lo sfondo ed estrae i dettagli mantenendo la tua foto originale.
 - **Ricostruzione Studio (Opzionale)**: Si attiva toccando **Ricostruisci** (1 credito di Ricostruzione Studio). Utilizza il nostro modello IA all'avanguardia per eliminare le pieghe profonde, uniformare la luce e generare un'immagine professionale da catalogo.
+- **Caricamento di Gruppi di Capi (Piani Manager e Professional)**: Una funzione rivoluzionaria che identifica e ricostruisce **capi appesi nell'armadio o su grucce, una scarpiera, una pila di camicie e altro ancora** — non solo vestiti stesi sul letto!
+  - **Vietato agli utenti Free**: Utilizzando Nano Banana, una sola foto può esaurire l'intera quota di ricostruzione di un utente Free. Agli utenti Free viene suggerito di **saltare l'immagine o effettuare l'upgrade del piano**.
+  - **Le 5 limitazioni**: (a) Ottimo per tinte unite o motivi scozzesi e a righe semplici, non analizza stampe nascoste e dettagli fini; (b) raramente riflette le condizioni attuali del capo; (c) può saltare alcuni capi; (d) può allucinare motivi e colori; (e) consuma crediti di ricostruzione.
 
 ### D: Perché conviene controllare i dettagli di un capo subito dopo averlo caricato?
 **R:** Anche se l'IA di DressApp è molto precisa, la luce interna può talvolta far apparire nero il blu scuro. Dedicare **10 secondi** a verificare **Categoria, Colore, Stagione, Calore (1–5) e Codice di abbigliamento** garantisce che lo Stylist IA e l'Assistente Valigia abbinino sempre il capo senza errori.

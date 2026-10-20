@@ -1,14 +1,15 @@
 # ¿Qué es DressApp?
 
-Bienvenido a **DressApp**, tu armario digital inteligente y asistente de estilo personal. DressApp combina reconocimiento inteligente de fotos, un Estilista IA con voz y herramientas prácticas de planificación para que vestirte cada día sea sencillo.
+Bienvenido a **DressApp**, tu armario digital inteligente y asistente personal de estilo. DressApp combina reconocimiento inteligente de fotos, un Estilista IA con voz y herramientas prácticas de planificación para que vestirte cada día sea sencillo.
 
-## Características principales
-- **Estilismo e identificación por IA listos para usar**: Las cuentas gratuitas funcionan desde el primer momento con el **modelo de IA local de DressApp**, mientras que los planes **Manager** (10 $/mes) y **Professional** (15 $/mes) desbloquean nuestro **modelo de IA de última generación** más rápido (con respaldo automático en nuestro modelo de IA local para que tus sesiones nunca se interrumpan).
-- **Digitalización sencilla del armario**: Toma o sube fotos de una sola prenda, de un conjunto completo puesto o de varias prendas colocadas juntas. La IA de DressApp detecta cada pieza automáticamente, las separa en tarjetas individuales y elimina el fondo.
-- **Estilista IA por voz**: Habla con naturalidad con tu estilista personal para recibir sugerencias adaptadas a tu armario, al clima local, a tus eventos del calendario y a tu gusto.
-- **Prueba virtual y planificador de conjuntos**: Combina y superpón tu ropa en tu avatar personal antes de vestirte.
-- **Asistente de maleta de viaje**: Genera listas de equipaje día por día adaptadas al clima de tu destino y a tu itinerario.
-- **Estadísticas del armario**: Consulta el valor total de tu ropa, el coste por uso y la distribución de colores.
-- **Mercado comunitario**: Compra, vende, alquila, intercambia o dona ropa y prueba cómo quedan las prendas de la comunidad con tu propio armario.
-- **Trend Scout y estilistas profesionales**: Explora inspiración diaria de moda o contacta con estilistas certificados para asesorías personalizadas.
-- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.
+## Funciones principales
+
+- **Estilismo con IA y reconocimiento de fotos listos para usar**: Las cuentas gratuitas funcionan al instante con el **modelo de IA local de DressApp**, mientras que los planes **Manager** ($10/mes) y **Professional** ($15/mes) desbloquean nuestro **modelo de IA de vanguardia** más rápido (con respaldo automático al modelo local).
+- **Digitalización sin esfuerzo y carga en grupo**: Fotografía una prenda o un conjunto completo. En los planes **Manager** y **Professional**, también puedes usar la **Carga de grupos de prendas** para fotografiar ropa colgada en tu armario o en perchas, un zapatero o una pila de camisas, usando menos fotos para digitalizar tu armario físico en segundos.
+- **Estilista IA por voz**: Habla con naturalidad con tu estilista personal para recibir sugerencias adaptadas a tu armario, el clima local y tu agenda.
+- **Probador virtual y planificador de conjuntos**: Combina y superpón tus prendas en tu avatar personal antes de vestirte.
+- **Asistente de maleta de viaje**: Genera listas de equipaje día por día según el clima y tu itinerario.
+- **Estadísticas del armario**: Consulta el valor total de tu armario, el coste por uso y la distribución de colores.
+- **Marketplace comunitario**: Compra, vende, alquila, intercambia o dona ropa de segunda mano.
+- **Trend Scout y estilistas certificados**: Explora tendencias diarias o contacta con estilistas profesionales.
+- **Configuración en 60 segundos y cápsula inicial**: Calibra tu ADN de estilo, las medidas de tu avatar y 48 prendas básicas para ver tu primer conjunto antes de iniciar sesión.

@@ -1,18 +1,14 @@
-# Probleemoplossing & snelle hulp
+# Probleemoplossing & Beperkingen
 
-Hier zijn eenvoudige oplossingen voor de meest voorkomende vragen bij het gebruik van DressApp:
+## 1. Cluster Kleding Uploaden Geblokkeerd op het Free-abonnement
+- **Oorzaak:** Cluster kleding uploaden (`mass`-pipeline — kleding hangend in de kast of aan hangers, een schoenenrek, een stapel shirts) gebruikt Nano Banana. Één foto kan het volledige reconstructietegoed van een Free-gebruiker verbruiken; daarom is het verboden voor Free-gebruikers.
+- **Oplossing:** Kies **Afbeelding Overslaan** en upload kledingstukken één voor één (enkele achtergrondverwijdering kost geen reconstructiecredits) of **Upgrade je Abonnement** naar Manager of Professional.
 
-## 1. Mijn kledingkast zit vol en ik kan geen kleding meer toevoegen!
-- **Waarom dit gebeurt**: Gratis accounts beginnen met 50 plekken (en kunnen groeien tot 150 plekken door vrienden uit te nodigen).
-- **Eenvoudige oplossing**: Deel je persoonlijke uitnodigingslink vanaf je **Profiel**-pagina om **+10 gratis plekken** te verdienen voor elke vriend die zich registreert, of stap over op het **Manager**- of **Professional**-abonnement voor onbeperkte ruimte.
+## 2. Beperkingen van Cluster Kleding Uploaden
+- **Verborgen prints en fijne details:** Goed voor effen kleuren en eenvoudige ruit- of streeppatronen, maar kan verborgen prints en fijne details niet analyseren.
+- **Huidige staat:** Het gereconstrueerde beeld weerspiegelt zelden de huidige staat van het kledingstuk.
+- **Overgeslagen items & hallucinaties:** Sterk overlappende items kunnen worden overgeslagen en de AI kan soms patronen of kleuren hallucineren. Fotografeer complexe kledingstukken apart.
 
-## 2. Meerdere foto's tegelijk toevoegen duurt even!
-- **Waarom dit gebeurt**: De AI van DressApp verwijdert zorgvuldig de achtergrond en herkent de categorie, kleuren en details van elk kledingstuk.
-- **Eenvoudige oplossing**: Je foto's worden automatisch op de achtergrond verwerkt — je kunt gewoon verder bladeren terwijl DressApp klaar is met toevoegen! Overstappen op het **Manager**- of **Professional**-abonnement ontgrendelt ook ons snellere, **geavanceerde AI-model**.
-
-## 3. Mijn camera of microfoon werkt niet!
-- **Waarom dit gebeurt**: Je webbrowser heeft toestemming nodig om je camera of microfoon te gebruiken.
-- **Eenvoudige oplossing**: Sta toegang tot camera en microfoon toe in je browserinstellingen en vernieuw de pagina.
-
-## 4. Wat gebeurt er als de cloud-AI erg druk is?
-- DressApp schakelt achter de schermen automatisch over op het **lokale AI-model van DressApp**, zodat je stijlgesprekken en foto-uploads altijd soepel en zonder fouten worden afgerond.
+## 3. Abonnementsdegradatie en Behoud van Laatste 50 Items
+- **Oorzaak:** Bij degradatie van Manager (200 plekken) of Professional (300 plekken) naar Free (50 plekken) vervallen je extra kastplekken.
+- **Gevolg:** Alleen de **laatste 50 toegevoegde items** blijven behouden in je kast; oudere items worden permanent verwijderd. Bevestig de waarschuwing alleen als je hiermee akkoord gaat.

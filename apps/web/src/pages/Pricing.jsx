@@ -6,6 +6,16 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { Loader2, AlertTriangle,Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { closetStore } from '@/lib/closetStore';
+import { useClosetStore } from '@/lib/useClosetStore';
 import { QuotaMonitor } from '@/components/pricing/QuotaMonitor';
 import { PricingDisplay } from '@/components/pricing/PricingDisplay';
 import PricingBanner from '../assets/img/inner6.webp';
@@ -14,13 +24,15 @@ export default function Pricing() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
+  const { total: closetCount } = useClosetStore();
   const [pricingData, setPricingData] = useState(null);
   const [quotaStatus, setQuotaStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAnnual, setIsAnnual] = useState(false);
   const [subBusy, setSubBusy] = useState(false);
+  const [demoteConfirmOpen, setDemoteConfirmOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   // Fetch comprehensive pricing information and quota status on mount
   useEffect(() => {
@@ -128,12 +140,50 @@ export default function Pricing() {
     }
   }, [searchParams, setSearchParams, t]);
 
+  const handleConfirmDemote = async () => {
+    if (subBusy) return;
+    setSubBusy(true);
+    try {
+      const res = await api.cancelSubscription();
+      setDemoteConfirmOpen(false);
+      toast.success(
+        t('pricing.demoteSuccessToast', {
+          removed: res?.removed_closet_items_count ?? 0,
+          defaultValue:
+            'Your plan has been switched to Free. Your last 50 added closet items were retained.',
+        })
+      );
+      try {
+        await refresh?.();
+      } catch (_) {}
+      try {
+        await closetStore.prewarm({ force: true });
+      } catch (_) {}
+      const pricingRes = await api.getPricingInfo();
+      setPricingData(pricingRes);
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.detail?.message ||
+          err?.response?.data?.detail ||
+          t('pricing.demoteFailedToast', {
+            defaultValue: 'Failed to demote to Free plan.',
+          })
+      );
+    } finally {
+      setSubBusy(false);
+    }
+  };
+
   const handleUpgrade = async (tierName) => {
     if (!user) {
       navigate('/login');
       return;
     }
     if (subBusy) return;
+    if (String(tierName || '').toLowerCase() === 'free') {
+      setDemoteConfirmOpen(true);
+      return;
+    }
     setSubBusy(true);
     try {
       const planType = isAnnual ? 'yearly' : 'monthly';
@@ -280,6 +330,75 @@ export default function Pricing() {
             />
           )}
       </section>
+      <Dialog open={demoteConfirmOpen} onOpenChange={setDemoteConfirmOpen}>
+        <DialogContent className="sm:max-w-md" data-testid="demote-plan-confirm-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-700">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <span>
+                {t('pricing.demoteConfirmTitle', {
+                  defaultValue: 'Demote to Free Plan & Prune Closet?',
+                })}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-text-brand pt-2 leading-relaxed">
+              {t('pricing.demoteConfirmBody', {
+                defaultValue:
+                  'Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 50 added items in their closet. Older closet assets beyond the newest 50 items will be permanently removed.',
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-2 rounded-xl border border-rose-200 bg-rose-50/70 p-3.5 text-xs text-rose-900 space-y-1">
+            <div className="font-bold">
+              {t('pricing.demoteClosetSummary', {
+                count: closetCount || 0,
+                limit: 50,
+                defaultValue: `Current closet items: ${closetCount || 0} (Free plan limit: 50 items)`,
+              })}
+            </div>
+            {(closetCount || 0) > 50 ? (
+              <p className="font-semibold text-rose-800">
+                {t('pricing.demoteItemsWillBeLost', {
+                  lostCount: Math.max(0, (closetCount || 0) - 50),
+                  defaultValue: `Warning: Your ${Math.max(0, (closetCount || 0) - 50)} oldest closet items will be permanently deleted, leaving only the last 50 added items.`,
+                })}
+              </p>
+            ) : (
+              <p className="text-rose-800">
+                {t('pricing.demoteUnderLimitNote', {
+                  defaultValue:
+                    'Only the last 50 added items are kept on the Free plan, and unlimited daily AI requests and cluster uploads will be disabled.',
+                })}
+              </p>
+            )}
+          </div>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDemoteConfirmOpen(false)}
+              disabled={subBusy}
+              data-testid="demote-plan-cancel-btn"
+              className="rounded-full px-6"
+            >
+              {t('pricing.demoteCancelBtn', { defaultValue: 'Keep My Plan' })}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDemote}
+              disabled={subBusy}
+              data-testid="demote-plan-confirm-btn"
+              className="rounded-full px-6"
+            >
+              {subBusy && <Loader2 className="h-4 w-4 animate-spin me-1.5" />}
+              {t('pricing.demoteConfirmBtn', {
+                defaultValue: 'Confirm Demotion',
+              })}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

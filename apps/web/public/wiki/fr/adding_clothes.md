@@ -1,44 +1,47 @@
-# Ajout et Numérisation de Vêtements
+# Ajouter des vêtements à votre garde-robe
 
-Numérisez votre garde-robe physique en quelques secondes grâce au routage automatique à 3 pipelines, au détourage intelligent et à la complétion générative d'images.
+Importez votre garde-robe physique dans DressApp en quelques secondes — que vous photographiiez un seul vêtement, une tenue complète portée ou tout un groupe de vêtements directement dans votre placard.
 
 ## Aperçu
-Ajoutez vos vêtements via des photos en direct, des importations multiples depuis la galerie (y compris des lots mixtes de pièces uniques, de tenues portées et de piles de vêtements), des QR codes de Passeports Numériques des Produits (DPP) ou des reçus numériques (OCR de factures). L'IA locale intégrée détecte automatiquement les caractéristiques de chaque photo, supprime l'arrière-plan, étiquette plus de 20 attributs de mode (y compris les sweats à capuche/hoodies et plus de 60 vêtements traditionnels et culturels) et génère des visuels studio sans aucune clé API requise.
+Vous pouvez ajouter des vêtements en prenant des photos avec votre appareil photo, en important des images de votre galerie, en scannant des étiquettes numériques ou en important des liens de boutiques en ligne et des reçus. L'IA de DressApp identifie chaque pièce, supprime l'arrière-plan et renseigne automatiquement les détails.
 
-## Prérequis
-- Des photos claires et bien éclairées des vêtements (pièces isolées, selfies miroir en pied, mannequins ou vêtements disposés à plat).
-- Accès à la caméra pour scanner les articles physiques et les QR codes.
-- Reçus numériques ou captures d'écran de factures (PDF / PNG / JPEG) pour les achats en ligne.
+## Instructions étape par étape
 
-## Instructions Étape par Étape
+1. **Ouvrir l'écran Ajouter un article** :
+   - Appuyez sur le bouton **Ajouter un article** dans la barre de navigation principale.
 
-1. **Import Interactif et Lots Mixtes**:
-   - Appuyez sur **Ajouter un article** → sélectionnez **Prendre une photo** ou **Importer des photos** pour choisir une ou plusieurs photos depuis votre appareil. Vous pouvez mélanger librement des photos d'articles uniques, des tenues complètes portées et des piles de vêtements dans le même lot sans choisir d'onglet de mode !
-   - La détection de doublons intégrée vérifie instantanément si vous avez déjà importé le même vêtement.
-2. **Routage Automatique à 3 Pipelines (`GarmentVision`)**:
-   - **GarmentVision** analyse automatiquement chaque photo et l'oriente vers le bon pipeline :
-     - **Pièce Unique (`Single`)**: Isole un seul vêtement avec un détourage alpha de qualité studio.
-     - **Tenue Multi-Pièces (`Multi-Garment`)**: Découpe les tenues complètes portées par une personne ou un mannequin en fiches distinctes (haut, bas, veste/manteau, chaussures et accessoires).
-     - **Lot Groupé (`Mass Cluster`)**: Sépare les groupes de vêtements non portés disposés côte à côte ou suspendus à des patères en articles individuels.
-3. **Détourage IA et Photos Studio Propres**:
-   - Le pipeline de vision intégré supprime automatiquement les arrière-plans pour produire des images PNG transparentes et nettes pour tous les comptes.
-4. **Étiquetage Automatique, Sweats à Capuche et Tenues Traditionnelles**:
-   - Les comptes du forfait Gratuit utilisent le moteur local **Eyes** de DressApp (`Qwen 2.5 VL 3B` affiné), tandis que les abonnés **Manager** (10 $/mois) et **Professional** (15 $/mois) bénéficient du modèle Cloud rapide (`Google Gemini 3.5 Flash`) pour extraire plus de 20 attributs de mode — en distinguant précisément les **Sweats & Hoodies** des **T-shirts** et en reconnaissant plus de 60 **vêtements traditionnels et culturels** (Sari, Kimono, Thobe, Caftan, Hanbok, Cheongsam, Ao Dai, Dirndl, Kilt, etc.) dans les 13 langues.
-5. **Réparation Générative Avancée (Nano Banana)**:
-   - Nano Banana inspecte les articles recadrés pour détecter les occlusions (sacs, mains) et les bords coupés, reconstruisant automatiquement le tissu manquant en photos studio complètes sans clé API externe.
-6. **Reçus Numériques et Étiquettes DPP**:
-   - Passez à **Import numérique** pour analyser vos e-mails de confirmation de commande ou factures, verrouillant le prix d'achat et les tailles vérifiées.
-   - Appuyez sur **Scanner QR (DPP)** sur l'étiquette pour importer les données de traçabilité et d'entretien du Passeport Numérique des Produits de l'UE.
-7. **Enregistrer dans la Garde-Robe**:
-   - Appuyez sur **Enregistrer**. Les articles apparaissent immédiatement dans la grille de votre garde-robe.
+2. **Prendre ou importer des photos** :
+   - Choisissez **Prendre une photo** ou **Importer des photos** pour sélectionner une ou plusieurs images.
+   - DressApp prend en charge trois modes photo intelligents :
+     - **Un seul vêtement** sur un cintre, une table ou un lit.
+     - **Une tenue complète portée par une personne**, que DressApp sépare automatiquement en fiches distinctes (haut, bas, veste/manteau, chaussures et accessoires).
+     - **Import groupé de vêtements (Forfaits Manager et Professionnel)** : Une fonctionnalité révolutionnaire permettant de photographier directement l'intérieur de votre placard — utilisez moins de photos et numérisez votre garde-robe en un rien de temps. Elle identifie et reconstruit :
+       - Les vêtements suspendus dans le placard ou sur un cintre
+       - Une étagère à chaussures
+       - Une pile de chemises ou de vêtements pliés
+       - Plusieurs vêtements disposés ensemble (et pas seulement étalés sur un lit)
 
-## Résultats Attendus
-Chaque vêtement apparaît dans votre garde-robe numérique sous la forme d'une photo studio centrée et détourée, avec des sous-catégories précises, des balises culturelles et des attributs de recherche complets.
+3. **Pourquoi l'import groupé est interdit sur le forfait Gratuit** :
+   - L'import groupé (pipeline de masse) utilise la reconstruction IA studio **Nano Banana** pour chaque pièce détectée.
+   - Comme une seule photo groupée peut consommer l'intégralité du quota gratuit de reconstruction d'un utilisateur Gratuit en une seule fois — laissant de nombreux vêtements non reconstruits —, l'import groupé est **interdit aux utilisateurs du forfait Gratuit**.
+   - Si un utilisateur Gratuit tente d'importer un groupe de vêtements, DressApp affiche un message lui suggérant **d'ignorer l'image ou de mettre à niveau son forfait** vers Manager ou Professionnel.
 
-## Dépannage
-- **Vêtements Coupés ou Partiels**: Centrez bien le vêtement sur un fond contrasté. Nano Banana peut reconstruire automatiquement les cols ou ourlets coupés.
-- **Éclairage et Contraste**: Pour de meilleurs résultats sur les vêtements sombres, photographiez-les sur un fond clair et contrasté.
-- **Erreurs OCR sur les Reçus**: Utilisez le sélecteur de zone interactif sur les images de reçus pour désigner manuellement chaque ligne de produit.
+4. **Suppression automatique de l'arrière-plan et étiquetage intelligent** :
+   - L'IA supprime l'arrière-plan et détecte la **Catégorie**, la **Sous-catégorie** (distinguant précisément les sweats à capuche des t-shirts), les **Couleurs**, le **Motif**, la **Matière**, la **Saison** et **l'Occasion**.
+   - Elle reconnaît également plus de 60 vêtements **traditionnels et culturels**.
+   - Les comptes gratuits utilisent le **modèle d'IA local de DressApp**, tandis que les abonnés **Manager** et **Professionnel** bénéficient de notre **modèle d'IA de pointe** plus rapide.
 
-## Limites
-- Les importations par lots haute résolution (>5 articles) sont traitées via des files d'attente asynchrones en arrière-plan afin de garantir une interface fluide sans expiration du navigateur.
+5. **Vérifier et enregistrer** :
+   - Vérifiez les détails détectés, modifiez ce que vous souhaitez et appuyez sur **Enregistrer** !
+
+## Import groupé de vêtements : 5 limites à connaître
+Photographier vos vêtements directement dans le placard, sur une étagère à chaussures ou en pile est le moyen le plus rapide de numériser une grande garde-robe, mais gardez à l'esprit ces cinq limites :
+1. **Idéal pour les couleurs unies et motifs simples** : Fonctionne très bien pour les couleurs unies ou les carreaux et rayures très simples ; ne peut pas analyser les imprimés cachés ni les détails fins.
+2. **État du vêtement** : L'image reconstruite reflète rarement l'état d'usure réel du vêtement.
+3. **Vêtements ignorés** : Peut ignorer certains vêtements lorsque les pièces sont très serrées ou superposées.
+4. **Hallucinations de motifs et de couleurs** : Peut parfois inventer des motifs ou des couleurs lorsqu'un vêtement est partiellement masqué.
+5. **Consommation de crédits de reconstruction** : Chaque vêtement reconstruit consomme des crédits de reconstruction.
+
+## Conseils utiles
+- Prenez vos photos dans une pièce bien éclairée devant un fond simple.
+- Privilégiez une photo individuelle pour les vêtements aux imprimés complexes ou aux détails délicats.

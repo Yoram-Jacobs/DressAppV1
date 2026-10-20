@@ -1287,6 +1287,7 @@ export default function AddItem() {
   // function that the dialog calls once the user has decided
   // skip/add per row. Null when the dialog is closed.
   const [preflight, setPreflight] = useState(null);
+  const [massClusterModal, setMassClusterModal] = useState(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   // Patch 12 (May 2026) — analyzeCard in-flight guard. The user reported
@@ -2317,12 +2318,10 @@ export default function AddItem() {
 
   const handleFiles = async (fileList) => {
     if (pipelineMode === "mass" && !canAccessMassUpload) {
-      toast.error(
-        t("addItem.pipeline.massUpgradeRequired", {
-          defaultValue:
-            "Mass Closet & Pile upload is available on Manager and Professional plans.",
-        }),
-      );
+      setMassClusterModal({
+        previewUrl: null,
+        filename: null,
+      });
       return;
     }
     if (isFree && (closetItems?.length || 0) >= maxClosetSlots) {
@@ -2871,6 +2870,16 @@ export default function AddItem() {
             onDetect: handleDetect,
             onItem: handleItem,
             onItemSkip: handleItemSkip,
+            onMassRestricted: (frame) => {
+              const imgIdx = frame.image_index ?? 0;
+              savedPhotoIndices.add(imgIdx);
+              const photoObj = validPhotos[imgIdx] || validPhotos[0];
+              setMassClusterModal({
+                previewUrl: photoObj?.b64 ? `data:image/jpeg;base64,${photoObj.b64}` : null,
+                filename: photoObj?.sourceMeta?.sourceFilename || null,
+                message: frame.message || null,
+              });
+            },
           },
         );
       } catch (err) {
@@ -3001,6 +3010,7 @@ export default function AddItem() {
       perCardIds[c.id] = [];
     });
     let flatSlotIds = [];
+    const massRestrictedIndices = new Set();
 
     try {
       const requestLang = (i18n.language || "").split("-")[0] || "en";
@@ -3075,6 +3085,10 @@ export default function AddItem() {
 
         const fallbackCards = [];
         cardsToProcess.forEach((origCard, idx) => {
+          if (massRestrictedIndices.has(idx)) {
+            workStore.completeAnalyze(origCard.id);
+            return;
+          }
           const count = counts[idx] || 0;
           if (count > 0) {
             workStore.updateAnalyze(origCard.id, { items: 0, total: count });
@@ -3266,6 +3280,25 @@ export default function AddItem() {
         `[AddItem] analyzeCards: sending ${images_base64.length} images to /closet/analyze (mode=${activeMode})`,
       );
 
+      const handleMassRestricted = (frame) => {
+        const imgIdx = frame.image_index ?? 0;
+        massRestrictedIndices.add(imgIdx);
+        const origCard = cardsToProcess[imgIdx] || cardsToProcess[0];
+        if (origCard) {
+          workStore.completeAnalyze(origCard.id);
+          setCards((prev) =>
+            prev.filter(
+              (c) => c.id !== origCard.id && !c.id.startsWith(`${origCard.id}-`),
+            ),
+          );
+        }
+        setMassClusterModal({
+          previewUrl: origCard?.previewUrl || null,
+          filename: origCard?.sourceFilename || origCard?.file?.name || null,
+          message: frame.message || null,
+        });
+      };
+
       const resp = await api.analyzeItemImage(payload, {
         onDetect: handleDetect,
         onMatte: handleMatte,
@@ -3273,6 +3306,7 @@ export default function AddItem() {
         onItemSkip: handleItemSkip,
         onField: handleField,
         onProgress: handleProgress,
+        onMassRestricted: handleMassRestricted,
       });
       clearInterval(tick);
 
@@ -3310,6 +3344,9 @@ export default function AddItem() {
 
       const finalCount = resp?.count || (resp?.items || []).length;
       if (finalCount === 0) {
+        if (massRestrictedIndices.size > 0) {
+          return;
+        }
         setCards((prev) =>
           prev.map((c) =>
             cardsToProcess.some((cp) => cp.id === c.id)
@@ -3338,6 +3375,21 @@ export default function AddItem() {
       );
     } catch (err) {
       clearInterval(tick);
+      const errDetail = err?.response?.data?.detail;
+      if (
+        errDetail?.code === "mass_pipeline_tier_restricted" ||
+        errDetail?.i18n_key === "addItem.pipeline.massClusterFreeBlocked"
+      ) {
+        const firstOrig = cardsToProcess[0];
+        const removeIds = new Set(cardsToProcess.map((c) => c.id));
+        setCards((prev) => prev.filter((c) => !removeIds.has(c.id)));
+        setMassClusterModal({
+          previewUrl: firstOrig?.previewUrl || null,
+          filename: firstOrig?.sourceFilename || firstOrig?.file?.name || null,
+          message: errDetail?.message || null,
+        });
+        return;
+      }
       const msg = resolveAnalyzeErrorMessage(err);
 
       const erroredIds = new Set();
@@ -4220,6 +4272,80 @@ export default function AddItem() {
               }
             }}
           />
+          <Dialog
+            open={!!massClusterModal}
+            onOpenChange={(open) => {
+              if (!open) setMassClusterModal(null);
+            }}
+          >
+            <DialogContent
+              className="sm:max-w-md"
+              data-testid="mass-cluster-free-blocked-dialog"
+            >
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-dark-brand">
+                  <Sparkles className="h-5 w-5 text-amber-600 shrink-0" />
+                  <span>
+                    {t("addItem.pipeline.massClusterFreeTitle", {
+                      defaultValue: "Cluster Garment Upload Requires an Upgrade",
+                    })}
+                  </span>
+                </DialogTitle>
+                <DialogDescription className="text-sm text-text-brand pt-2 leading-relaxed">
+                  {t("addItem.pipeline.massClusterFreeBlocked", {
+                    defaultValue:
+                      "Cluster garment uploading (closets, hangers, shoe racks, or piles of clothes) uses Nano Banana AI reconstruction. One cluster photo can consume all of your Free AI reconstruction allowance at once, leaving many garments unreconstructed. Please skip this image or upgrade your plan.",
+                  })}
+                </DialogDescription>
+              </DialogHeader>
+              {massClusterModal?.previewUrl && (
+                <div className="my-2 flex items-center gap-3 rounded-lg border border-border bg-accent-beige/50 p-3">
+                  <img
+                    src={massClusterModal.previewUrl}
+                    alt={massClusterModal.filename || "Cluster upload"}
+                    className="h-16 w-16 rounded-md object-cover border border-border shrink-0"
+                  />
+                  <div className="text-xs text-text-brand leading-snug">
+                    <div className="font-bold text-dark-brand mb-0.5">
+                      {t("addItem.pipeline.massClusterCapabilitiesTitle", {
+                        defaultValue: "Unlock Full Closet & Rack Digitization",
+                      })}
+                    </div>
+                    {t("addItem.pipeline.massClusterCapabilitiesNote", {
+                      defaultValue:
+                        "Manager & Professional plans let you photograph garments hanging in your closet, shoe racks, and folded piles to digitize your wardrobe in seconds.",
+                    })}
+                  </div>
+                </div>
+              )}
+              <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMassClusterModal(null)}
+                  data-testid="mass-cluster-skip-button"
+                  className="rounded-full px-6 py-2.5 text-sm font-semibold"
+                >
+                  {t("addItem.pipeline.skipClusterImage", {
+                    defaultValue: "Skip Image",
+                  })}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setMassClusterModal(null);
+                    nav("/pricing");
+                  }}
+                  data-testid="mass-cluster-upgrade-button"
+                  className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2.5 text-sm font-semibold"
+                >
+                  {t("addItem.pipeline.upgradePlanCta", {
+                    defaultValue: "Upgrade Plan",
+                  })}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog
             open={isUrlModalOpen}
             onOpenChange={(open) => {

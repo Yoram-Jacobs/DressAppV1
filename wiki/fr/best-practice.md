@@ -21,6 +21,25 @@ Dans le cadre de l'offre Gratuite, DressApp met à votre disposition deux réser
 
 Lorsque vous importez une photo, l'IA de DressApp détecte automatiquement s'il s'agit d'un **vêtement seul**, d'une **tenue complète portée** ou de **plusieurs pièces disposées ensemble**. Elle supprime l'arrière-plan, identifie les couleurs et reconnaît la coupe ainsi que le style. Des photos nettes et bien éclairées garantissent un détourage précis dès le premier essai, préservant vos **5 crédits de Reconstruction Studio** pour les pièces plus complexes.
 
+### Import de Lots de Vêtements (Forfaits Manager et Professional)
+
+L'import de lots de vêtements (pipeline de masse) est une fonctionnalité révolutionnaire qui vous permet de photographier vos vêtements directement dans votre placard physique, d'utiliser beaucoup moins de photos et de numériser votre garde-robe en un rien de temps. Il peut identifier et reconstruire :
+- **Des vêtements suspendus dans le placard ou sur un cintre**
+- **Une étagère à chaussures**
+- **Une pile de chemises ou de t-shirts pliés**
+- **Plusieurs vêtements regroupés** (et pas seulement des vêtements étalés sur un lit !)
+
+> **Pourquoi l'import de lots est interdit aux utilisateurs Gratuits :** L'import de lots utilise la reconstruction IA **Nano Banana**. Une seule photo de lot peut consommer l'intégralité du quota de reconstruction IA d'un utilisateur Gratuit, laissant de nombreux vêtements non reconstruits. Si un utilisateur Gratuit tente d'importer un lot, DressApp affiche un message suggérant de **passer l'image ou de mettre à niveau son forfait**.
+
+**Les 5 limites de l'import de lots :**
+1. **Idéal pour les couleurs unies et motifs simples** : Parfait pour les tissus unis ou les motifs à carreaux et rayures très simples ; il ne peut pas analyser les imprimés cachés ni les détails fins.
+2. **État du vêtement** : L'image reconstruite reflète rarement l'état d'usure réel du vêtement.
+3. **Peut ignorer certains vêtements** : Certains articles très superposés peuvent être ignorés.
+4. **Peut halluciner des motifs et des couleurs** : L'IA peut parfois inventer des motifs ou des teintes sur les parties cachées — vérifiez toujours la fiche avant d'enregistrer.
+5. **Consomme des crédits de reconstruction** : Chaque pièce reconstruite consomme des crédits de reconstruction.
+
+> **Note sur la rétrogradation de forfait :** Les utilisateurs Manager ou Professional qui repassent au forfait Gratuit perdent leurs emplacements supplémentaires, **ne conservant que les 50 derniers articles ajoutés dans leur garde-robe**. DressApp vous avertit de la suppression des articles plus anciens et demande confirmation avant d'appliquer la rétrogradation.
+
 ### Les 4 Règles d'Or de la Photo à Plat
 
 1. **Choisissez un Endroit Lumineux et une Surface Contrastée**

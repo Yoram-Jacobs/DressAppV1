@@ -1,25 +1,47 @@
 # Kleidung zum Kleiderschrank hinzufügen
 
-Digitalisieren Sie Ihre Garderobe in wenigen Sekunden — egal ob Sie ein einzelnes Teil, ein komplettes getragenes Outfit oder mehrere nebeneinander liegende Kleidungsstücke fotografieren.
+Bringen Sie Ihre physische Garderobe in Sekunden in DressApp – egal ob Sie ein einzelnes Kleidungsstück, ein getragenes Outfit oder eine ganze Gruppe von Kleidungsstücken direkt im Kleiderschrank fotografieren.
+
+## Überblick
+Sie können Kleidung hinzufügen, indem Sie Live-Fotos mit Ihrer Kamera aufnehmen, gespeicherte Fotos hochladen, digitale Produktetiketten scannen oder Online-Shopping-Links und Belege importieren. Die KI von DressApp erkennt jedes Teil automatisch, entfernt den Hintergrund und füllt alle Details für Sie aus.
 
 ## Schritt-für-Schritt-Anleitung
 
-1. **Bereich „Artikel hinzufügen“ öffnen**:
+1. **Artikel-hinzufügen-Ansicht öffnen**:
    - Tippen Sie in der Hauptnavigation auf **Artikel hinzufügen**.
 
 2. **Fotos aufnehmen oder hochladen**:
-   - Wählen Sie **Foto aufnehmen** oder **Fotos hochladen**, um ein oder mehrere Bilder gleichzeitig auszuwählen.
-   - Sie können beliebige Fotos kombinieren:
-     - **Ein einzelnes Kleidungsstück** auf einem Kleiderbügel oder flach ausgelegt.
-     - **Ein komplettes Outfit an einer Person**, das DressApp automatisch in einzelne Karten für Oberteil, Hose/Rock, Jacke, Schuhe und Accessoires aufteilt.
-     - **Mehrere nebeneinander liegende Kleidungsstücke**, die automatisch in einzelne Artikel getrennt werden.
+   - Tippen Sie auf **Foto aufnehmen** oder **Fotos hochladen**, um ein oder mehrere Bilder auszuwählen.
+   - DressApp unterstützt drei intelligente Fotomodi:
+     - **Ein einzelnes Kleidungsstück** auf einem Bügel, Tisch oder Bett.
+     - **Ein komplettes Outfit an einer Person**, das DressApp automatisch in separate Karten für Oberteil, Unterteil, Jacke/Mantel, Schuhe und Accessoires aufteilt.
+     - **Sammel-Upload von Kleidungsstücken (Manager- & Professional-Tarif)**: Eine revolutionäre Funktion, mit der Sie Ihren physischen Kleiderschrank direkt fotografieren können – mit weniger Fotos digitalisieren Sie Ihren gesamten Schrank im Handumdrehen. Erkannt und rekonstruiert werden:
+       - Kleidung, die im Schrank oder auf Kleiderbügeln hängt
+       - Ein Schuhregal
+       - Ein Stapel Hemden oder gefalteter Kleidung
+       - Mehrere zusammenliegende Kleidungsstücke (nicht nur auf dem Bett ausgebreitete Kleidung)
 
-3. **Automatische Hintergrundentfernung & Erkennung**:
-   - Die KI von DressApp entfernt den Hintergrund jedes Artikels und erkennt automatisch **Kategorie**, **Unterkategorie** (mit präziser Unterscheidung zwischen Sweatshirts/Hoodies und T-Shirts), **Farben**, **Muster**, **Material**, **Saison** und **Anlass** sowie über 60 **traditionelle Kleidungsstücke** aus aller Welt.
-   - Kostenlose Konten nutzen das **lokale KI-Modell von DressApp**, während **Manager**- und **Professional**-Abonnenten von der schnelleren Verarbeitung durch unser **hochmodernes KI-Modell** profitieren.
+3. **Warum der Sammel-Upload im Free-Tarif gesperrt ist**:
+   - Der Sammel-Upload (Mass-Pipeline) nutzt für jedes erkannte Teil die Studio-KI-Rekonstruktion **Nano Banana**.
+   - Da ein einziges Sammelfoto das gesamte kostenlose KI-Rekonstruktionskontingent eines Free-Nutzers auf einmal verbrauchen kann und viele Kleidungsstücke unrekonstruiert blieben, ist der Sammel-Upload **für Free-Nutzer verboten**.
+   - Wenn Free-Nutzer versuchen, ein Sammelfoto hochzuladen, erscheint ein Hinweis mit der Empfehlung, **das Bild zu überspringen oder den Tarif auf Manager bzw. Professional upzugraden**.
 
-4. **Automatische Randergänzung**:
-   - Falls ein Ärmel oder Saum auf dem Foto leicht angeschnitten wurde, ergänzt die KI von DressApp den fehlenden Rand automatisch zu einem sauberen Studiobild.
+4. **Automatische Hintergrundentfernung & Smart-Tagging**:
+   - Die KI entfernt den Hintergrund und erkennt **Kategorie**, **Unterkategorie** (mit präziser Unterscheidung zwischen Hoodies, Sweatshirts und T-Shirts), **Farben**, **Muster**, **Material**, **Saison** und **Anlass**.
+   - Zudem werden über 60 **traditionelle & kulturelle** Kleidungsstücke erkannt.
+   - Kostenlose Konten nutzen das **lokale KI-Modell von DressApp**, während **Manager**- und **Professional**-Abonnenten von unserem schnelleren **Hochleistungs-KI-Modell** profitieren.
 
 5. **Prüfen & Speichern**:
-   - Überprüfen Sie die erkannten Details, passen Sie sie bei Bedarf an und tippen Sie auf **Speichern**!
+   - Überprüfen Sie die erkannten Angaben, passen Sie Details nach Wunsch an und tippen Sie auf **Speichern**!
+
+## Sammel-Upload: 5 Einschränkungen & Hinweise
+Das direkte Fotografieren von Kleiderschränken, Schuhregalen oder Kleiderstapeln spart enorm viel Zeit, hat jedoch fünf bekannte Einschränkungen:
+1. **Optimal für Uni-Farben & einfache Muster**: Ideal für einfarbige Teile oder sehr einfache Karo- und Streifenmuster; verdeckte Prints und feine Details können nicht analysiert werden.
+2. **Zustand der Kleidung**: Das rekonstruierte Studiobild spiegelt selten den aktuellen Erhaltungs- oder Abnutzungszustand des Kleidungsstücks wider.
+3. **Übersprungene Teile**: Bei dicht hängenden oder stark überlappenden Kleidungsstücken können einzelne Teile übersprungen werden.
+4. **Halluzinierte Muster & Farben**: Bei teilweise verdeckten Stücken kann die KI gelegentlich Muster oder Farben halluzinieren.
+5. **Verbrauch von Rekonstruktions-Credits**: Jedes rekonstruierte Teil verbraucht Rekonstruktions-Credits.
+
+## Hilfreiche Tipps
+- Fotografieren Sie in einem gut beleuchteten Raum vor einem ruhigen Hintergrund.
+- Nutzen Sie Einzelaufnahmen für Kleidungsstücke mit feinen Mustern oder besonderen Zustandsdetails.

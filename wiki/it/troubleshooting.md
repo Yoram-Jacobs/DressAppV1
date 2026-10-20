@@ -1,18 +1,14 @@
-# Risoluzione dei problemi e soluzioni rapide
+# Risoluzione dei Problemi e Limitazioni
 
-Ecco soluzioni semplici alle domande più frequenti durante l'uso di DressApp:
+## 1. Caricamento di Gruppi di Capi Bloccato sul Piano Free
+- **Causa:** Il caricamento di gruppi di capi (`mass` — vestiti appesi nell'armadio o su grucce, scarpiere, pile di camicie) utilizza Nano Banana. Una singola foto può esaurire l'intera quota di ricostruzione AI di un utente Free, lasciando molti capi incompleti; pertanto è vietato agli utenti Free.
+- **Soluzione:** Clicca su **Salta Immagine** e carica i capi singolarmente (il ritaglio singolo non consuma crediti di ricostruzione), oppure **Effettua l'Upgrade del Piano** a Manager o Professional.
 
-## 1. Il mio guardaroba è pieno e non posso aggiungere altri vestiti!
-- **Perché succede**: Gli account gratuiti iniziano con 50 posti (e possono espandersi fino a 150 posti invitando gli amici).
-- **Soluzione facile**: Condividi il tuo link d'invito personale dalla pagina **Profilo** per guadagnare **+10 posti gratuiti** per ogni amico che si registra, oppure passa al piano **Manager** o **Professional** per avere spazio illimitato.
+## 2. Limitazioni del Caricamento di Gruppi di Capi
+- **Stampe nascoste e dettagli fini:** Ottimo per tinte unite e motivi scozzesi o a righe semplici, ma non può analizzare stampe nascoste o dettagli complessi.
+- **Condizione del capo:** L'immagine ricostruita raramente riflette l'usura o le pieghe attuali del capo.
+- **Capi saltati o allucinazioni:** Alcuni capi molto sovrapposti possono essere saltati e l'AI può talvolta inventare motivi o colori. Per capi complessi, usa una foto singola.
 
-## 2. Aggiungere più foto contemporaneamente richiede qualche istante!
-- **Perché succede**: L'IA di DressApp rimuove con cura lo sfondo e identifica categoria, colori e dettagli di ogni singolo capo.
-- **Soluzione facile**: Le tue foto vengono elaborate automaticamente in background: puoi continuare a sfogliare il guardaroba mentre DressApp termina l'aggiunta! Passando al piano **Manager** o **Professional** sblocchi anche il nostro **modello IA all'avanguardia** più veloce.
-
-## 3. La fotocamera o il microfono non funzionano!
-- **Perché succede**: Il browser web ha bisogno dell'autorizzazione per accedere alla fotocamera o al microfono.
-- **Soluzione facile**: Consenti l'accesso a fotocamera e microfono nelle impostazioni del browser e aggiorna la pagina.
-
-## 4. Cosa succede se il servizio cloud è molto occupato?
-- DressApp passa automaticamente dietro le quinte al **modello IA locale di DressApp**, garantendo che le tue chat di stile e i caricamenti di foto vengano sempre completati senza errori.
+## 3. Declassamento del Piano e Limite degli Ultimi 50 Capi
+- **Causa:** Passando da Manager (200 slot) o Professional (300 slot) al piano Free (50 slot), si perdono gli slot extra dell'armadio.
+- **Risultato:** Rimarranno nel guardaroba solo gli **ultimi 50 capi aggiunti** e i capi più vecchi verranno eliminati definitivamente. Leggi attentamente l'avviso di conferma prima di procedere.

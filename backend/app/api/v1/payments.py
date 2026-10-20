@@ -844,31 +844,19 @@ async def cancel_subscription_endpoint(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     from app.services import paypal_client
-    
+    from app.services.billing_service import demote_user_to_free_plan
+
     sub_info = user.get("subscription") or {}
     sub_id = sub_info.get("atzmai_subscription_id") or sub_info.get("paypal_subscription_id")
-    if not sub_id:
-        raise HTTPException(400, "No active subscription found.")
+    if sub_id:
+        try:
+            if sub_info.get("atzmai_subscription_id"):
+                await atzmai_client.cancel_subscription(sub_id)
+            else:
+                await paypal_client.cancel_subscription(sub_id)
+        except Exception as exc:
+            logger.warning("External subscription cancellation warning for %s: %s", sub_id, exc)
 
-    try:
-        if sub_info.get("atzmai_subscription_id"):
-            await atzmai_client.cancel_subscription(sub_id)
-        else:
-            await paypal_client.cancel_subscription(sub_id)
-    except Exception as exc:
-        raise HTTPException(502, {"error": str(exc)})
-
-    from datetime import datetime, timezone
     db = get_db()
-    await db.users.update_one(
-        {"id": user["id"]},
-        {
-            "$set": {
-                "subscription.cancelled_at": datetime.now(timezone.utc).isoformat(),
-                "subscription.is_active": False,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }
-        },
-    )
-
-    return {"ok": True, "message": "Subscription cancelled successfully."}
+    result = await demote_user_to_free_plan(db, user)
+    return result

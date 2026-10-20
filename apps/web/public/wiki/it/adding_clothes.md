@@ -1,44 +1,30 @@
-# Acquisizione e Aggiunta di Vestiti
-
-Digitalizza il tuo guardaroba fisico in pochi secondi grazie al routing automatico a 3 pipeline, alla rimozione intelligente dello sfondo e al completamento generativo delle immagini.
+# Aggiungere Vestiti (Adding Clothes)
 
 ## Panoramica
-Aggiungi i vestiti usando scatti dal vivo con la fotocamera, caricamenti multipli dalla galleria (inclusi lotti misti di capi singoli, outfit indossati e gruppi di abiti), codici QR del Passaporto Digitale del Prodotto (DPP) o ricevute digitali (OCR fatture). L'IA locale integrata rileva automaticamente le caratteristiche di ogni foto, rimuove gli sfondi, assegna oltre 20 attributi moda (inclusi felpe/hoodie e oltre 60 abiti tradizionali e culturali) e prepara ritagli da studio nitidi senza bisogno di chiavi API.
+Il motore **Aggiungi Vestiti** di DressApp utilizza tre pipeline intelligenti che si adattano automaticamente alla tua foto:
+1. **Ritaglio Capo Singolo (`single`)**: Rimozione rapida dello sfondo per un singolo capo non indossato (non consuma crediti di ricostruzione).
+2. **Scomposizione Outfit Indossato (`worn`)**: Separa ogni capo da una foto a figura intera e ricostruisce ciascuno in uno scatto da studio Nano Banana.
+3. **Caricamento di Gruppi di Capi (`mass`) — Digitalizzazione Massiva Rivoluzionaria *(Solo Manager e Professional)***: Identifica e ricostruisce decine di capi da una singola foto — capi appesi nell'armadio o su grucce, una scarpiera, una pila di camicie o vestiti stesi sul letto.
 
-## Prerequisiti
-- Foto chiare e ben illuminate dei capi (capi singoli, selfie allo specchio a figura intera, manichini o composizioni flat-lay di più capi).
-- Accesso alla fotocamera per scansionare capi fisici e codici QR.
-- Ricevute digitali o screenshot di fatture (PDF / PNG / JPEG) per gli acquisti e-commerce.
+## Cosa Può Identificare il Caricamento di Gruppi (Cluster)
+Non serve stendere ogni capo sul letto! Questa funzione rivoluzionaria ti permette di fotografare i vestiti direttamente nel tuo armadio fisico, usare meno foto e digitalizzare il guardaroba in pochissimo tempo:
+- **Capi appesi nell'armadio o su grucce** (camicie, giacche, cappotti, abiti, pantaloni).
+- **Una scarpiera o scaffale di scarpe** (ogni paio viene catalogato come calzatura separata).
+- **Una pila di camicie, maglioni o pantaloni piegati**.
+- **Più capi disposti su un letto, un tavolo o sul pavimento**.
+
+> **Esclusiva Piani a Pagamento:** Il caricamento di gruppi di capi (`mass`) utilizza la ricostruzione AI Nano Banana. Poiché una sola foto di gruppo può consumare l'intera quota mensile di ricostruzione AI di un utente Free lasciando molti capi incompleti, **il caricamento di gruppi è vietato agli utenti Free**. Se un utente Free carica una foto di gruppo, DressApp mostra un avviso suggerendo di **Saltare l'Immagine** o **Effettuare l'Upgrade del Piano**.
+
+## Limitazioni del Caricamento di Gruppi di Capi
+Quando usi il caricamento di gruppi per digitalizzare rapidamente il tuo guardaroba, tieni presenti queste 5 limitazioni:
+1. **Ottimo per tinte unite e motivi semplici:** Funziona benissimo per tinte unite o motivi scozzesi (plaid) e a righe molto semplici, ma non può analizzare stampe nascoste e dettagli fini.
+2. **Condizione attuale del capo:** L'immagine da studio ricostruita raramente riflette le condizioni fisiche attuali del capo (pieghe, usura o piccole macchie).
+3. **Potrebbe saltare alcuni capi:** I capi fortemente sovrapposti o nascosti nella pila/armadio potrebbero essere ignorati.
+4. **Possibili allucinazioni di motivi e colori:** Quando ricostruisce parti nascoste, l'AI può talvolta inventare motivi o tonalità di colore.
+5. **Consuma crediti di ricostruzione:** Ogni capo ricostruito consuma 1 credito di ricostruzione AI dalla tua quota mensile o dal tuo portafoglio.
 
 ## Istruzioni Passo-Passo
-
-1. **Caricamento Interattivo e Lotti Misti**:
-   - Tocca **Aggiungi capo** → seleziona **Scatta foto** o **Carica foto** per selezionare una o più foto dal dispositivo. Puoi mescolare liberamente nello stesso caricamento foto di capi singoli, outfit completi indossati e pile/gruppi di vestiti senza selezionare alcuna scheda di modalità!
-   - Il rilevamento duplicati integrato controlla all'istante se hai già caricato lo stesso capo in precedenza.
-2. **Routing Automatico a 3 Pipeline (`GarmentVision`)**:
-   - **GarmentVision** ispeziona automaticamente ogni foto e la indirizza alla pipeline corretta:
-     - **Capo Singolo (`Single`)**: Isola un singolo capo con scontorno alfa da studio.
-     - **Outfit Multi-Capo (`Multi-Garment`)**: Suddivide gli outfit completi indossati da una persona o manichino in schede separate per top, pantaloni/gonne, capispalla, calzature e accessori.
-     - **Cluster di Capi (`Mass Cluster`)**: Separa gruppi di vestiti non indossati disposti uno accanto all'altro o appesi a ganci in singoli elementi dell'armadio.
-3. **Scontorno IA e Foto Studio Pulite**:
-   - La pipeline di visione integrata rimuove automaticamente gli sfondi generando immagini PNG trasparenti e nitide per tutti gli account.
-4. **Tagging Automatico di Metadati, Hoodie e Abiti Tradizionali**:
-   - Gli account del Piano Gratuito utilizzano il motore locale **Eyes** di DressApp (`Qwen 2.5 VL 3B` ottimizzato), mentre gli abbonati ai piani **Manager** ($10/mese) e **Professional** ($15/mese) usufruiscono del modello Cloud veloce (`Google Gemini 3.5 Flash`) per estrarre oltre 20 attributi moda—distinguendo con precisione **Felpe e Hoodie** da **T-Shirt** e riconoscendo oltre 60 **capi tradizionali e culturali** (Sari, Kimono, Thobe, Kaftan, Hanbok, Cheongsam, Ao Dai, Dirndl, Kilt e altri) in tutte le 13 lingue.
-5. **Riparazione Fotografica Generativa Avanzata (Nano Banana)**:
-   - Nano Banana ispeziona i capi ritagliati per individuare occlusioni (borse, mani) e bordi tagliati, ricostruendo automaticamente il tessuto mancante in fotografie da studio complete senza chiavi API esterne.
-6. **Ricevute Digitali e Tag DPP**:
-   - Passa a **Importazione digitale** per analizzare email di conferma d'ordine o fatture, bloccando il prezzo d'acquisto e le taglie verificate.
-   - Tocca **Scansiona QR (DPP)** sull'etichetta per importare i dati della filiera e le istruzioni di lavaggio del Passaporto Digitale del Prodotto UE.
-7. **Salva nell'Armadio**:
-   - Tocca **Salva**. I capi appaiono immediatamente nella griglia del tuo Armadio.
-
-## Risultati Attesi
-Ogni capo appare nel tuo guardaroba digitale come una fotografia da studio centrata e pulita, con etichette di categoria/sottocategoria accurate, tag culturali e attributi di ricerca completamente indicizzati.
-
-## Risoluzione dei Problemi
-- **Capi Tagliati o Parziali nelle Foto**: Centra bene il capo su uno sfondo contrastante. Nano Banana può ricostruire automaticamente colletti o orli tagliati.
-- **Illuminazione e Contrasto**: Per risultati ottimali sui capi scuri, fotografali su sfondi chiari a contrasto.
-- **Errori OCR sulle Ricevute**: Usa il selettore a riquadri interattivo sulle immagini delle ricevute per indicare manualmente le singole righe di prodotto.
-
-## Limitazioni
-- I caricamenti in blocco ad alta risoluzione (>5 capi) vengono elaborati tramite code asincrone in background per garantire prestazioni reattive senza timeout del browser.
+1. Tocca il pulsante **+ (Aggiungi Capo)** nella barra di navigazione inferiore.
+2. Scatta o seleziona le tue foto (capo singolo, outfit indossato o foto di gruppo dell'armadio/scarpiera — fino a 10 foto).
+3. Tocca **Avvia Analisi**.
+4. Rivedi i capi estratti e ricostruiti, modifica eventuali tag e tocca **Salva nell'Armadio**.

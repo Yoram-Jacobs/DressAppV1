@@ -1,33 +1,27 @@
-# Abonnements, Guthaben-Pakete & Abrechnung
+# Abonnements & Credits
 
-Verstehen Sie Ihre Kontolimits, erweitern Sie Ihren Kleiderschrank und verwalten Sie Ihre KI-Styling-Credits.
+DressApp bietet einen großzügigen Free-Tarif sowie flexible Monats- und Jahresabonnements und optionale Credit-Pakete.
 
-## Übersicht
-DressApp bietet ein flexibles hybrides Monetarisierungsmodell, das alltägliche Nutzer willkommen heißt und gleichzeitig leistungsstarke Werkzeuge für Modebegeisterte, Kreative und zertifizierte Stylisten bereitstellt:
-- **Kostenloser Basis-Tarif (Free Tier Baseline)**: Bis zu 50 Kleidungsstücke kostenlos speichern (erweiterbar auf maximal 150 Artikel durch Empfehlungsboni mit +10 Plätzen pro Registrierung). Sofort einsatzbereit betrieben durch das lokal optimierte DressApp Eyes v1 Modell ohne jegliche API-Schlüssel-Konfiguration.
-- **Manager-Tarif (10 $/Monat oder 100 $/Jahr)**: Unbegrenzte Kleiderschrankkapazität, morgendliche Outfit-Push-Erinnerungen, Kalendersynchronisation, Verkauf auf dem zirkulären Marktplatz, erweiterte Statistiken und Trend-Scout-Ranking-Filter.
-- **Professional-Tarif (15 $/Monat oder 150 $/Jahr)**: Maßgeschneidert für Solo-Stylisten und Mode-Creators, inklusive Erstellung gesponserter Werbekampagnen, Eintrag im Stylisten-Expertenverzeichnis, Priority-Support und 100 monatlichen Styling-Credits.
-- **Prepaid-Guthabenpakete**: Nicht verfallende Guthabenpakete (3 $ für 10, 12 $ für 50, 20 $ für 100 Credits) für hochvolumiges Styling oder Bildrekonstruktion.
+## Tarifübersicht
 
-## Voraussetzungen
-- Ein registriertes DressApp-Konto.
-- Ein PayPal-Konto, eine Kredit-/Debitkarte oder die israelische Bit-App (für lokale ILS-Zahlungen) für Tarif-Upgrades oder Guthabenkäufe.
+1. **Free-Tarif**:
+   - Speichern Sie bis zu **50 Kleidungsstücke** kostenlos – erweiterbar auf bis zu **150 Teile** durch das Einladen von Freunden (**+10 kostenlose Plätze** pro registriertem Freund).
+   - Sofort einsatzbereit mit dem **lokalen KI-Modell von DressApp** (**10 tägliche Credits**, ansammelbar bis zu **300 Credits über 30 Tage**) sowie **5 Start-Credits für Studio-Rekonstruktionen**.
+   - Unterstützt Einzelaufnahmen und getragene Komplett-Outfits. Der **Sammel-Upload** (Schränke, Bügel, Schuhregale oder Hemdenstapel) ist im Free-Tarif deaktiviert, da ein einziges Sammelfoto das gesamte kostenlose Rekonstruktionskontingent verbrauchen kann.
 
-## Schritt-für-Schritt-Anleitung
-1. **Basis-Tarif erkunden**: Beginnen Sie sofort mit der Organisation von 50 Kleidungsstücken. Outfits werden direkt über DressApp Eyes v1 ohne API-Schlüssel generiert.
-2. **Kostenlos über Empfehlungen erweitern**: Teilen Sie Ihren persönlichen Einladungslink aus den Profileinstellungen. Jeder registrierte Freund schaltet dauerhaft +10 Kleiderschrankplätze frei (bis zu maximal 150 Artikel).
-3. **Upgrade auf Manager (10 $/Monat oder 100 $/Jahr)**: Gehen Sie zu Profileinstellungen > Systemeinstellungen > Kleiderschrank- & Abonnement-Limits und tippen Sie auf die Preisseite, um unbegrenzte Kapazität, Morgenbenachrichtigungen und Kalendersynchronisation freizuschalten.
-4. **Upgrade auf Professional (15 $/Monat oder 150 $/Jahr)**: Wählen Sie Professional, um Modekampagnen zu erstellen, sich im Stylisten-Verzeichnis listen zu lassen und Priority-Support zu erhalten.
-5. **Prepaid-Credits kaufen (verfallen nie)**: Wählen Sie ein Paket mit 10 (3 $), 50 (12 $) oder 100 (20 $) Credits. Das System verbraucht zuerst die monatlichen Abonnement-Credits und schützt Ihr dauerhaftes Prepaid-Guthaben.
+2. **Manager-Tarif ($10/Monat oder $100/Jahr)**:
+   - Schaltet **unbegrenzten Platz im Kleiderschrank**, bevorzugten Zugriff auf das **Hochleistungs-KI-Modell**, **100 monatliche Studio-Rekonstruktions-Credits**, den **Sammel-Upload** (Kleiderschrank, Schuhregale, Hemdenstapel), morgendliche Outfit-Benachrichtigungen, Kalender-Synchronisierung, Marketplace-Verkauf und vollen **Trend Scout**-Zugriff frei.
 
-## Erwartete Ergebnisse
-Sofortige Aktivierung der Tarifvorteile nach dem Abschluss. Das Kleiderschranklimit wird unverzüglich auf unbegrenzt gesetzt und Ihr Profil-Dashboard zeigt den aktiven Tarifstatus an.
+3. **Professional-Tarif ($15/Monat oder $150/Jahr)**:
+   - Entwickelt für professionelle Stylisten, Schneider und Mode-Creator.
+   - Enthält alle Funktionen des Manager-Tarifs sowie einen verifizierten Eintrag im **Stylisten-Verzeichnis**, Werbekampagnen, Priority-Support und **100 monatliche Styling- und Rekonstruktions-Credits**.
 
-## Fehlerbehebung
-- **Benachrichtigung „Kleiderschranklimit erreicht“**: Sie haben Ihre verfügbaren Plätze belegt (50 Basis-Plätze oder bis zu 150 mit Empfehlungen). Archivieren Sie ungenutzte Kleidung, laden Sie Freunde ein (+10 pro Freund bis max. 150) oder führen Sie ein Upgrade auf Manager/Professional durch.
-- **Guthaben nach Zahlung nicht sichtbar**: Aktualisieren Sie Ihre Profilseite; Webhooks schreiben das Guthaben innerhalb weniger Sekunden gut.
-- **Abonnementverwaltung**: Sie können Ihr Abonnement jederzeit direkt in Ihrem PayPal-Konto oder in den Profileinstellungen verwalten oder kündigen, ohne hochgeladene Kleidungsstücke zu verlieren.
+## Tarif-Herabstufung & Aufbewahrung der letzten 50 Artikel
+- **Manager- und Professional-Nutzer, die auf den Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass nur die letzten 50 hinzugefügten Artikel in ihrem Kleiderschrank verbleiben.**
+- Ältere Kleidungsstücke über die **50 zuletzt hinzugefügten Artikel** hinaus werden beim Wechsel auf den Free-Tarif dauerhaft gelöscht.
+- Vor einer geplanten Herabstufung oder Kündigung zeigt DressApp eine deutliche Warnmeldung an und bittet um Ihre ausdrückliche Bestätigung.
 
-## Einschränkungen
-- Empfehlungsboni gelten im Free-Tarif bis zu einer Obergrenze von maximal 150 Artikeln.
-- Monatliche Abonnement-Credits werden nicht in Folgemonate übertragen; gekaufte Prepaid-Credits verfallen nie.
+## So führen Sie ein Upgrade durch
+1. Öffnen Sie Ihr **Profil** und scrollen Sie zu **Abonnement & Limits**.
+2. Klicken Sie auf **Tarife ansehen** oder **Preise**.
+3. Wählen Sie Ihren gewünschten Tarif aus oder bestätigen Sie den Warnhinweis bei einem Wechsel zurück zum Free-Tarif.

@@ -1,15 +1,15 @@
 # Was ist DressApp?
 
-Willkommen bei **DressApp** — Ihrem intelligenten digitalen Kleiderschrank und persönlichen Stilberater. DressApp kombiniert smarte Bilderkennung, einen sprachgesteuerten KI-Stylisten und praktische Planungswerkzeuge, damit die tägliche Outfitwahl mühelos gelingt.
+Willkommen bei **DressApp** – Ihrem intelligenten digitalen Kleiderschrank und persönlichen Stil-Assistenten. DressApp kombiniert smarte Bilderkennung, einen sprachgesteuerten KI-Stylisten und praktische Planungstools für müheloses Ankleiden jeden Tag.
 
 ## Hauptfunktionen
 
-- **Sofort einsatzbereite KI-Beratung & Bilderkennung**: Kostenlose Konten nutzen direkt das **lokale KI-Modell von DressApp**, während die Tarife **Manager** (10 $/Monat) und **Professional** (15 $/Monat) unser schnelleres, **hochmodernes KI-Modell** freischalten (mit automatischer Ausweichfunktion auf das lokale KI-Modell, damit Ihre Beratung nie unterbrochen wird).
-- **Mühelose Digitalisierung Ihrer Garderobe**: Fotografieren Sie ein einzelnes Kleidungsstück, ein komplettes getragenes Outfit oder mehrere nebeneinander liegende Teile. Die KI von DressApp erkennt jedes Stück automatisch, trennt es in eigene Karten und entfernt den Hintergrund.
-- **Sprachgesteuerter KI-Stylist**: Sprechen Sie ganz natürlich mit Ihrem persönlichen Stylisten und erhalten Sie Outfit-Vorschläge passend zu Ihrem Kleiderschrank, dem lokalen Wetter und Ihrem Kalender.
-- **Virtuelle Anprobe & Outfit-Planer**: Kombinieren Sie Ihre Kleidung visuell an Ihrem persönlichen Avatar.
-- **Reisekoffer-Assistent**: Erstellen Sie komplette Packlisten für Ihre Reisen, abgestimmt auf das Wetter am Zielort und Ihre geplanten Aktivitäten.
-- **Kleiderschrank-Statistiken**: Verfolgen Sie den Gesamtwert Ihrer Garderobe, die Kosten pro Tragen und die Farbverteilung.
-- **Community-Marktplatz**: Kaufen, verkaufen, mieten, tauschen oder spenden Sie Kleidung und probieren Sie Artikel aus der Community virtuell mit Ihrer eigenen Garderobe an.
-- **Trend Scout & professionelle Stylisten**: Entdecken Sie tägliche Mode-Inspirationen oder kontaktieren Sie zertifizierte Stylisten für eine persönliche Beratung.
-- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.
+- **Sofort einsatzbereites KI-Styling & Bilderkennung**: Kostenlose Konten nutzen direkt das **lokale KI-Modell von DressApp**, während der **Manager**- ($10/Monat) und **Professional**-Tarif ($15/Monat) unser schnelleres **Hochleistungs-KI-Modell** freischalten (mit automatischem Fallback auf das lokale Modell).
+- **Mühelose Schrank-Digitalisierung & Sammel-Upload**: Fotografieren Sie Einzelteile oder getragene Outfits. Im **Manager**- und **Professional**-Tarif können Sie mit dem **Sammel-Upload** außerdem Kleidung direkt im Schrank oder auf Bügeln, ein Schuhregal oder einen Hemdenstapel fotografieren – für eine blitzschnelle Digitalisierung mit weniger Fotos.
+- **Sprachgesteuerter KI-Stylist**: Sprechen Sie natürlich mit Ihrem Stylisten für Outfit-Vorschläge passend zu Ihrem Schrank, dem lokalen Wetter und Ihrem Kalender.
+- **Virtuelle Anprobe & Outfit-Planer**: Kombinieren Sie Ihre Kleidung vorab an Ihrem persönlichen Avatar.
+- **Reisekoffer-Assistent**: Erstellen Sie wetter- und reiseplanbasierte Packlisten.
+- **Garderoben-Statistiken**: Verfolgen Sie Gesamtwert, Kosten pro Tragen (Cost-Per-Wear) und Farbverteilung.
+- **Community-Marketplace**: Kaufen, verkaufen, vermieten, tauschen oder spenden Sie Kleidung.
+- **Trend Scout & zertifizierte Stylisten**: Entdecken Sie tägliche Modetrends oder buchen Sie professionelle Stylisten.
+- **Personalisiertes 60-Sekunden-Onboarding & Starter-Kapsel**: Kalibrieren Sie Stil-DNA, Avatar-Maße und 48 Starter-Teile für Ihr erstes KI-Outfit noch vor der Anmeldung.

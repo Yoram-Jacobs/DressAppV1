@@ -21,6 +21,25 @@ Con il piano Gratuito, DressApp ti mette a disposizione due riserve di crediti d
 
 Quando carichi una foto, l'IA di DressApp rileva automaticamente se l'immagine mostra un **singolo capo**, un **outfit completo indossato** o **più capi disposti insieme**. Rimuove lo sfondo, identifica i colori e riconosce il taglio e lo stile. Scattare foto nitide e ben illuminate assicura scontorni perfetti e colori fedeli al primo tentativo, risparmiando i tuoi **5 crediti di Ricostruzione Studio** per i capi più complessi.
 
+### Caricamento di Gruppi di Capi (Piani Manager e Professional)
+
+Il caricamento di gruppi di capi (pipeline massiva) è una funzione rivoluzionaria che ti permette di fotografare i vestiti direttamente nel tuo armadio fisico, usare meno foto e digitalizzare il guardaroba in pochissimo tempo. Può identificare e ricostruire:
+- **Capi appesi nell'armadio o su una gruccia**
+- **Una scarpiera**
+- **Una pila di camicie o maglie piegate**
+- **Più capi raggruppati** (non solo vestiti stesi sul letto!)
+
+> **Perché è vietato agli utenti Free:** Il caricamento di gruppi utilizza la ricostruzione AI **Nano Banana**. Una sola immagine può consumare l'intera quota di ricostruzione AI di un utente Free, lasciando molti capi non ricostruiti. Se un utente Free prova a caricare un gruppo di capi, DressApp mostra un messaggio suggerendo di **saltare l'immagine o effettuare l'upgrade del piano**.
+
+**Le 5 limitazioni del caricamento di gruppi:**
+1. **Ottimo per tinte unite e motivi semplici**: Ideale per tinte unite o motivi scozzesi e a righe molto semplici; non può analizzare stampe nascoste e dettagli fini.
+2. **Condizione del capo**: L'immagine ricostruita raramente riflette le condizioni attuali del capo.
+3. **Potrebbe saltare alcuni capi**: Nei gruppi molto fitti o sovrapposti alcuni capi possono essere ignorati.
+4. **Può allucinare motivi e colori**: L'AI può talvolta inventare motivi e colori sulle parti nascoste.
+5. **Consuma crediti di ricostruzione**: Ogni capo ricostruito consuma crediti di ricostruzione.
+
+> **Nota sul declassamento del piano:** Gli utenti Manager o Professional che passano al piano Free perdono gli slot extra dell'armadio, **mantenendo solo gli ultimi 50 capi aggiunti**. DressApp mostra un avviso sulla perdita dei capi più vecchi e chiede conferma prima di procedere.
+
 ### Le 4 Regole d'Oro per le Foto in Piano
 
 1. **Usa una Stanza Luminosa e una Superficie a Contrasto**

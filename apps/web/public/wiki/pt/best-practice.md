@@ -21,6 +21,25 @@ No plano Gratuito, o DressApp oferece duas reservas de créditos dedicadas para 
 
 Ao enviar uma foto, a IA do DressApp identifica automaticamente se a imagem mostra **uma única peça**, um **look completo no corpo** ou **várias peças dispostas juntas**. Ela remove o fundo, identifica as cores e reconhece o corte e o estilo. Tirar fotos bem iluminadas garante recortes limpos e cores fiéis já na primeira tentativa, economizando seus **5 créditos de Reconstrução de Estúdio** para peças realmente difíceis.
 
+### Upload de Conjunto de Peças (Planos Manager e Professional)
+
+O upload de conjunto de peças (pipeline em massa) é um recurso revolucionário que permite fotografar suas roupas diretamente no seu armário físico, usar muito menos fotos e digitalizar seu guarda-roupa rapidamente. Ele identifica e reconstrói:
+- **Roupas penduradas no armário ou em cabides**
+- **Uma sapateira ou prateleira de calçados**
+- **Uma pilha de camisas ou roupas dobradas**
+- **Várias peças agrupadas** (não apenas roupas espalhadas na cama!)
+
+> **Por que é proibido para usuários do plano Grátis:** O upload de conjuntos utiliza a reconstrução de IA **Nano Banana**. Uma única foto pode consumir toda a franquia de reconstrução de IA de um usuário Grátis, deixando muitas peças sem reconstrução. Se um usuário Grátis tentar enviar um conjunto, o DressApp mostrará uma mensagem sugerindo **pular a imagem ou fazer upgrade do plano**.
+
+**As 5 limitações do upload de conjuntos:**
+1. **Ideal para cores sólidas e padrões simples**: Funciona muito bem para peças lisas ou xadrez e listras simples, mas não analisa estampas ocultas e detalhes finos.
+2. **Estado atual da peça**: A imagem reconstruída raramente reflete a condição física atual da roupa.
+3. **Pode pular algumas peças**: Peças muito sobrepostas podem não ser detectadas.
+4. **Pode alucinar padrões e cores**: A IA pode ocasionalmente inventar padrões e cores em áreas cobertas.
+5. **Consome créditos de reconstrução**: Cada peça reconstruída consome créditos de reconstrução.
+
+> **Nota sobre rebaixamento de plano:** Usuários Manager ou Professional que rebaixarem para o plano Grátis perderão seus espaços extras no armário, **restando apenas os últimos 50 itens adicionados**. O DressApp exibe um aviso sobre a perda das peças mais antigas e pede confirmação antes de concluir o rebaixamento.
+
 ### As 4 Regras de Ouro da Fotografia em Superfície Plana
 
 1. **Use um Ambiente Iluminado e uma Superfície Contrastante**

@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -32,19 +33,200 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
-export default function HelpMenu({ initialTab = "overview" }) {
+export function resolveHelpTabForLocation(location, viewerIsPro = false) {
+  const rawPath = (
+    location?.pathname ||
+    (typeof window !== "undefined" ? window.location.pathname : "/") ||
+    "/"
+  ).toLowerCase();
+  const path = rawPath.replace(/\/+$/, "") || "/";
+  const search =
+    location?.search ??
+    (typeof window !== "undefined" ? window.location.search : "") ??
+    "";
+  const params = new URLSearchParams(search);
+
+  // 1. Adding Clothes vs. Import Wardrobe vs. Closet Page
+  if (path === "/closet/add") {
+    if (params.get("mode") === "import" || params.get("tab") === "import") {
+      return "import-wardrobe";
+    }
+    return "adding-clothes";
+  }
+  if (path === "/closet" || path.startsWith("/closet/")) {
+    return "closet-page";
+  }
+
+  // 2. Outfit Planner (Dress Up / Match) vs. AI Stylist Chat
+  if (path === "/outfits") {
+    return "dress-up";
+  }
+  if (path === "/stylist" || path.startsWith("/stylist/")) {
+    const urlTab = params.get("tab");
+    if (urlTab === "match" || urlTab === "planner" || urlTab === "outfits") {
+      return "dress-up";
+    }
+    if (!urlTab && typeof window !== "undefined") {
+      try {
+        const stored = window.localStorage.getItem("dressapp.stylist.activeTab");
+        if (stored && stored.replace(/^"|"$/g, "") === "match") {
+          return "dress-up";
+        }
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return "ai-stylist";
+  }
+
+  // 3. Suitcase Packing
+  if (path === "/suitcase" || path.startsWith("/suitcase/")) {
+    return "suitcase";
+  }
+
+  // 4. Marketplace & Transactions
+  if (
+    path === "/market" ||
+    path.startsWith("/market/") ||
+    path === "/transactions" ||
+    path.startsWith("/transactions/")
+  ) {
+    return "marketplace";
+  }
+
+  // 5. Trend Scout
+  if (path === "/trends" || path.startsWith("/trends/")) {
+    return "trend-scout";
+  }
+
+  // 6. Certified Experts Directory
+  if (path === "/experts" || path.startsWith("/experts/")) {
+    return "experts";
+  }
+
+  // 7. Campaigns & Ads
+  if (path === "/campaigns/create") {
+    return viewerIsPro ? "create-campaign" : "campaigns";
+  }
+  if (
+    path === "/campaigns" ||
+    path.startsWith("/campaigns/") ||
+    path === "/ads" ||
+    path.startsWith("/ads/")
+  ) {
+    return viewerIsPro ? "expert-campaigns" : "campaigns";
+  }
+
+  // 8. Wardrobe Insights / Statistics
+  if (path === "/me/stats" || path.startsWith("/me/stats/")) {
+    return "wardrobe-stats";
+  }
+
+  // 9. Profile, Avatar & Scheduler
+  if (
+    path === "/me" ||
+    path.startsWith("/me/") ||
+    path === "/avatar" ||
+    path === "/delete-account"
+  ) {
+    if (params.get("section") === "scheduler" || location?.hash === "#scheduler") {
+      return "scheduler-push";
+    }
+    return "profile-matters";
+  }
+
+  // 10. Shopping Assistant / Browser Extension
+  if (path === "/extension/connect" || path.startsWith("/extension/")) {
+    return "shopping-assistant";
+  }
+
+  // 11. Subscription Tiers & Pricing
+  if (path === "/pricing" || path.startsWith("/pricing/")) {
+    return "tiers";
+  }
+
+  // 12. Auth / Prerequisites
+  if (path === "/login" || path === "/register" || path === "/auth/callback") {
+    return "prerequisites";
+  }
+
+  // 13. Admin / Troubleshooting
+  if (path === "/admin" || path.startsWith("/admin/")) {
+    return "troubleshooting";
+  }
+
+  // Default (/home, /, /about, /onboarding, etc.)
+  return "overview";
+}
+
+export default function HelpMenu({ initialTab }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(initialTab || "overview");
+  const location = useLocation();
+  const viewerIsPro = !!user?.professional?.is_professional;
+  const activeTabRef = useRef(null);
+
+  const [activeTab, setActiveTab] = useState(
+    () => initialTab || resolveHelpTabForLocation(location, viewerIsPro),
+  );
 
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
+    } else {
+      setActiveTab(resolveHelpTabForLocation(location, viewerIsPro));
     }
-  }, [initialTab]);
+  }, [initialTab, location.pathname, location.search, location.hash, viewerIsPro]);
 
-  const isRtl = i18n.language === "he" || i18n.language === "ar";
-  const viewerIsPro = !!user?.professional?.is_professional;
+  useEffect(() => {
+    if (activeTabRef.current) {
+      try {
+        activeTabRef.current.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      } catch {
+        // ignore scrollIntoView errors in older browsers
+      }
+    }
+  }, [activeTab]);
+
+  const langCode = String(i18n.language || "en").split("-")[0].toLowerCase();
+  const isRtl = langCode === "he" || langCode === "ar" || i18n.dir?.() === "rtl";
+
+  const isolateBidiSegment = (str, baseKey = "bdi") => {
+    if (!isRtl || typeof str !== "string" || !str) return str;
+    const tokenRegex = /([A-Za-z0-9$€£₪¥+%/@._-]+(?:\s+[A-Za-z0-9$€£₪¥+%/@._-]+)*)/g;
+    const out = [];
+    let last = 0;
+    let m;
+    let k = 0;
+    while ((m = tokenRegex.exec(str)) !== null) {
+      if (m.index > last) {
+        out.push(str.slice(last, m.index));
+      }
+      out.push(
+        <bdi key={`${baseKey}-${k++}`} dir="ltr" className="[unicode-bidi:isolate]">
+          {m[0]}
+        </bdi>,
+      );
+      last = tokenRegex.lastIndex;
+    }
+    if (last < str.length) {
+      out.push(str.slice(last));
+    }
+    return out.length > 0 ? out : str;
+  };
+
+  const renderFormattedText = (rawStr, strongClassName = "text-foreground font-semibold") => {
+    const str = String(rawStr ?? "");
+    return str.split("**").map((part, i) =>
+      i % 2 === 1 ? (
+        <strong key={i} className={strongClassName}>
+          {isolateBidiSegment(part, `b-${i}`)}
+        </strong>
+      ) : (
+        <span key={i}>{isolateBidiSegment(part, `t-${i}`)}</span>
+      ),
+    );
+  };
 
   const SECTIONS = [
     {
@@ -277,10 +459,16 @@ export default function HelpMenu({ initialTab = "overview" }) {
         elements.push(
           <ul
             key={`list-${key}`}
-            className="list-disc pl-5 space-y-1.5 my-3 text-muted-foreground text-sm"
+            dir={isRtl ? "rtl" : "ltr"}
+            className={cn(
+              "list-disc space-y-1.5 my-3 text-muted-foreground text-sm",
+              isRtl ? "pr-5 text-right" : "pl-5 text-left",
+            )}
           >
             {listItems.map((item, i) => (
-              <li key={i}>{parseInline(item)}</li>
+              <li key={i} dir={isRtl ? "rtl" : "ltr"}>
+                {parseInline(item)}
+              </li>
             ))}
           </ul>,
         );
@@ -304,13 +492,13 @@ export default function HelpMenu({ initialTab = "overview" }) {
         const matchIndex = match.index;
 
         if (matchIndex > lastIndex) {
-          parts.push(text.substring(lastIndex, matchIndex));
+          parts.push(isolateBidiSegment(text.substring(lastIndex, matchIndex), `pi-${keyIdx++}`));
         }
 
         if (matchText.startsWith("**") && matchText.endsWith("**")) {
           parts.push(
             <strong key={keyIdx++} className="font-semibold text-foreground">
-              {matchText.slice(2, -2)}
+              {isolateBidiSegment(matchText.slice(2, -2), `pib-${keyIdx}`)}
             </strong>,
           );
         } else if (matchText.startsWith("`") && matchText.endsWith("`")) {
@@ -346,10 +534,10 @@ export default function HelpMenu({ initialTab = "overview" }) {
       }
 
       if (lastIndex < text.length) {
-        parts.push(text.substring(lastIndex));
+        parts.push(isolateBidiSegment(text.substring(lastIndex), `pie-${keyIdx++}`));
       }
 
-      return parts.length > 0 ? parts : text;
+      return parts.length > 0 ? parts : isolateBidiSegment(text, "pi-all");
     };
 
     let inCode = false;
@@ -387,10 +575,16 @@ export default function HelpMenu({ initialTab = "overview" }) {
           elements.push(
             <ul
               key={`list-pre-tbl-${idx}`}
-              className="list-disc pl-5 space-y-1.5 my-3 text-muted-foreground text-sm"
+              dir={isRtl ? "rtl" : "ltr"}
+              className={cn(
+                "list-disc space-y-1.5 my-3 text-muted-foreground text-sm",
+                isRtl ? "pr-5 text-right" : "pl-5 text-left",
+              )}
             >
               {listItems.map((item, i) => (
-                <li key={i}>{parseInline(item)}</li>
+                <li key={i} dir={isRtl ? "rtl" : "ltr"}>
+                  {parseInline(item)}
+                </li>
               ))}
             </ul>,
           );
@@ -456,12 +650,18 @@ export default function HelpMenu({ initialTab = "overview" }) {
         elements.push(
           <div
             key={`num-${idx}`}
-            className="flex gap-3 my-2 text-sm text-muted-foreground"
+            dir={isRtl ? "rtl" : "ltr"}
+            className={cn(
+              "flex gap-3 my-2 text-sm text-muted-foreground",
+              isRtl ? "text-right" : "text-left",
+            )}
           >
-            <span className="font-bold text-primary shrink-0">
+            <span dir="ltr" className="font-bold text-primary shrink-0 [unicode-bidi:isolate]">
               {line.match(/^\d+/)[0]}.
             </span>
-            <p className="pt-0.5">{parseInline(match[1])}</p>
+            <p dir={isRtl ? "rtl" : "ltr"} className="pt-0.5">
+              {parseInline(match[1])}
+            </p>
           </div>,
         );
         continue;
@@ -485,7 +685,11 @@ export default function HelpMenu({ initialTab = "overview" }) {
         elements.push(
           <blockquote
             key={`quote-${idx}`}
-            className="pl-4 border-l-4 border-primary/50 text-muted-foreground text-sm italic my-4"
+            dir={isRtl ? "rtl" : "ltr"}
+            className={cn(
+              "border-primary/50 text-muted-foreground text-sm italic my-4",
+              isRtl ? "pr-4 border-r-4 text-right" : "pl-4 border-l-4 text-left",
+            )}
           >
             {parseInline(line.slice(2))}
           </blockquote>,
@@ -497,6 +701,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
       elements.push(
         <p
           key={`p-${idx}`}
+          dir={isRtl ? "rtl" : "ltr"}
           className="text-sm text-muted-foreground leading-relaxed my-3"
         >
           {parseInline(line)}
@@ -516,7 +721,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
       <div className="flex flex-col md:flex-row gap-4">
         {/* Sidebar Navigation */}
         <div className="w-full md:w-1/3 max-[480px]:hidden">
-          <div className="border-r border-border md:pr-4">
+          <div className={cn("border-border", isRtl ? "md:border-l md:pl-4" : "md:border-r md:pr-4")}>
             <div>
               <h6 className="text-base font-extrabold text-foreground mb-2.5">
                 {t("help.tableOfContents", {
@@ -532,6 +737,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
                   return (
                     <button
                       key={sec.id}
+                      ref={isActive ? activeTabRef : null}
                       onClick={() => setActiveTab(sec.id)}
                       className={cn(
                         "group flex w-full items-center gap-2 border-0 text-[13px] font-bold leading-[23px] my-[10px] transition-colors",
@@ -593,13 +799,13 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       {t("help.overview_title")}
                     </h2>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.overview_p1")}
+                      {renderFormattedText(t("help.overview_p1"))}
                     </p>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.overview_p2")}
+                      {renderFormattedText(t("help.overview_p2"))}
                     </p>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.overview_p3")}
+                      {renderFormattedText(t("help.overview_p3"))}
                     </p>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
                       {t("help.overview_onboarding", {
@@ -618,10 +824,12 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       })}
                     </h2>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.best_practice_p1", {
-                        defaultValue:
-                          "Follow these simple habits to build an accurate digital closet, make the most of your daily credits, and get tailored outfit recommendations every day.",
-                      })}
+                      {renderFormattedText(
+                        t("help.best_practice_p1", {
+                          defaultValue:
+                            "Follow these simple habits to build an accurate digital closet, make the most of your daily credits, and get tailored outfit recommendations every day.",
+                        }),
+                      )}
                     </p>
                     <ul className="space-y-3 pl-1 pr-1">
                       {[
@@ -631,41 +839,36 @@ export default function HelpMenu({ initialTab = "overview" }) {
                         }),
                         t("help.best_practice_step2", {
                           defaultValue:
-                            "**Capture Clear Photos**: Upload a single item laid flat, a full-outfit mirror photo, or several items arranged side-by-side — DressApp automatically detects the photo type and separates each piece.",
+                            "**Capture Clear Photos**: Upload a single item laid flat, a full-outfit mirror photo, or — on Manager and Professional plans — photograph garments hanging in your closet, on a hanger, on a shoe rack, or in a folded pile.",
                         }),
                         t("help.best_practice_step3", {
                           defaultValue:
-                            "**Build Your Closet in 5 Days**: Use your 10 free daily credits to add 10 items a day (Everyday Pants, Tops, Layering Pieces, Shoes, and Occasion Wear) without feeling overwhelmed.",
+                            "**Know When to Use Cluster Upload**: Cluster garment upload is ideal for solid colors and simple plaid or striped items, but it consumes reconstruction credits, may skip some items, rarely reflects garment wear condition, and can hallucinate fine prints or colors.",
                         }),
                         t("help.best_practice_step4", {
                           defaultValue:
-                            "**Review Your Item Card (10 Seconds)**: Quickly verify the detected category, color, warmth, and dress code — including traditional and cultural garments — so your stylist always has accurate details.",
+                            "**Build Your Closet in 5 Days**: Free users can use their 10 daily credits (accumulating up to 300 over 30 days) to add 10 items a day and digitize a 50-item core wardrobe in 5 days.",
                         }),
                         t("help.best_practice_step5", {
                           defaultValue:
+                            "**Review Your Item Card (10 Seconds)**: Quickly verify the detected category, color, warmth, and dress code — especially after cluster reconstruction — so your stylist always has accurate details.",
+                        }),
+                        t("help.best_practice_step6", {
+                          defaultValue:
                             "**Give the Stylist 4 Clues**: Mention your **occasion**, **setting**, **weather**, and **desired look** when asking the AI Stylist for an outfit.",
                         }),
-                      ].map((text, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
-                            {idx + 1}
-                          </span>
-                          <span className="text-[14px] text-text-brand font-semibold">
-                            {text.split("**").map((part, i) =>
-                              i % 2 === 1 ? (
-                                <strong
-                                  key={i}
-                                  className="text-foreground font-semibold"
-                                >
-                                  {part}
-                                </strong>
-                              ) : (
-                                part
-                              ),
-                            )}
-                          </span>
-                        </li>
-                      ))}
+                      ]
+                        .filter(Boolean)
+                        .map((text, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
+                              {idx + 1}
+                            </span>
+                            <span className="text-[14px] text-text-brand font-semibold">
+                              {renderFormattedText(text)}
+                            </span>
+                          </li>
+                        ))}
                     </ul>
                   </div>
                 )}
@@ -678,10 +881,12 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       })}
                     </h2>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.qa_p1", {
-                        defaultValue:
-                          "Quick answers to the most common questions about getting started, managing your credits, digitizing your wardrobe, and styling outfits.",
-                      })}
+                      {renderFormattedText(
+                        t("help.qa_p1", {
+                          defaultValue:
+                            "Quick answers to the most common questions about getting started, managing your credits, digitizing your wardrobe, and styling outfits.",
+                        }),
+                      )}
                     </p>
                     <ul className="space-y-3 pl-1 pr-1">
                       {[
@@ -691,41 +896,36 @@ export default function HelpMenu({ initialTab = "overview" }) {
                         }),
                         t("help.qa_step2", {
                           defaultValue:
-                            "**How do free credits work?** Free accounts receive **10 daily credits** (refreshed every 24 hours, stackable up to 50) for adding clothes and chatting with the stylist, plus **5 monthly Studio Reconstruction credits**.",
+                            "**How do free credits work?** Free accounts receive **10 daily credits** (accumulating up to 300 over 30 days) for single-item and outfit scans plus stylist chats, along with **5 starter Studio Reconstruction credits**.",
                         }),
                         t("help.qa_step3", {
                           defaultValue:
-                            "**How can I expand my free closet?** Share your referral link from **Profile → Invite Friends** to earn **+10 permanent closet slots** per friend (expanding your free closet from 50 up to 150 items).",
+                            "**Why is cluster garment uploading unavailable on the Free plan?** Cluster uploading (closets, hangers, shoe racks, or shirt piles) uses Nano Banana AI reconstruction — a single cluster photo can consume your entire Free reconstruction allowance at once, leaving many garments unreconstructed. Free users are prompted to skip the cluster photo or upgrade their plan.",
                         }),
                         t("help.qa_step4", {
                           defaultValue:
-                            "**Can I upload full outfits or multiple items at once?** Yes — upload a single item, a full outfit photo, or multiple items laid out together, or import from an online store link or another wardrobe app.",
+                            "**What can Cluster Upload digitize, and what are its limitations?** On Manager and Professional plans, you can photograph clothes hanging in your closet, a rack of shoes, or a pile of shirts to digitize your closet in no time. Note that it works best on solid or simple plaid/striped items, cannot read hidden prints or fine details, rarely reflects wear condition, may skip some items, can hallucinate patterns or colors, and consumes reconstruction credits.",
                         }),
                         t("help.qa_step5", {
                           defaultValue:
+                            "**What happens to my closet if I demote from Manager or Professional to the Free plan?** Demoting to the Free plan removes extra closet slots, **leaving only the last 50 added items** in your closet and permanently deleting older closet assets after you confirm the demotion warning.",
+                        }),
+                        t("help.qa_step6", {
+                          defaultValue:
                             "**Is my wardrobe private?** Yes. Your photos and measurements are private to your account, and **DressApp's on-premises AI model** processes your wardrobe directly within our private environment.",
                         }),
-                      ].map((text, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
-                            {idx + 1}
-                          </span>
-                          <span className="text-[14px] text-text-brand font-semibold">
-                            {text.split("**").map((part, i) =>
-                              i % 2 === 1 ? (
-                                <strong
-                                  key={i}
-                                  className="text-foreground font-semibold"
-                                >
-                                  {part}
-                                </strong>
-                              ) : (
-                                part
-                              ),
-                            )}
-                          </span>
-                        </li>
-                      ))}
+                      ]
+                        .filter(Boolean)
+                        .map((text, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
+                              {idx + 1}
+                            </span>
+                            <span className="text-[14px] text-text-brand font-semibold">
+                              {renderFormattedText(text)}
+                            </span>
+                          </li>
+                        ))}
                     </ul>
                   </div>
                 )}
@@ -764,7 +964,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       {t("help.add_clothes_title")}
                     </h2>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.add_clothes_p1")}
+                      {renderFormattedText(t("help.add_clothes_p1"))}
                     </p>
                     <ul className="space-y-3 pl-1 pr-1">
                       {[
@@ -781,18 +981,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
                           </span>
 
                           <span className="text-[14px] text-text-brand font-semibold">
-                            {text.split("**").map((part, i) =>
-                              i % 2 === 1 ? (
-                                <strong
-                                  key={i}
-                                  className="text-foreground font-semibold"
-                                >
-                                  {part}
-                                </strong>
-                              ) : (
-                                part
-                              ),
-                            )}
+                            {renderFormattedText(text)}
                           </span>
                         </li>
                       ))}
@@ -847,7 +1036,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       <Mic className="h-5 w-5" /> {t("help.stylist_title")}
                     </h6>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.stylist_p1")}
+                      {renderFormattedText(t("help.stylist_p1"))}
                     </p>
                     <ul className="space-y-3 pl-1 pr-1">
                       {[
@@ -888,7 +1077,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       {t("help.scheduler_push_title")}
                     </h6>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.scheduler_push_p1")}
+                      {renderFormattedText(t("help.scheduler_push_p1"))}
                     </p>
                     <ul className="space-y-3 pl-1 pr-1">
                       {[
@@ -926,7 +1115,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       {t("help.profile_title")}
                     </h6>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.profile_p1")}
+                      {renderFormattedText(t("help.profile_p1"))}
                     </p>
                     <div className="flex flex-col gap-4">
                       {Array.from({ length: 16 }, (_, i) => i + 1)
@@ -1385,54 +1574,54 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       <div className="p-4 rounded-[12px] border border-yellow-border bg-yellow-shadow space-y-2">
                         <h4 className="font-bold text-[14px] flex items-center gap-2 text-amber-600 dark:text-amber-400">
                           <ShieldAlert className="h-4 w-4 shrink-0" />
-                          {t("help.trouble_full_q")}
+                          {renderFormattedText(t("help.trouble_full_q"))}
                         </h4>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.trouble_full_why")}
+                          {renderFormattedText(t("help.trouble_full_why"))}
                         </p>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.trouble_full_fix")}
+                          {renderFormattedText(t("help.trouble_full_fix"))}
                         </p>
                       </div>
                       <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-1">
                         <h4 className="font-bold text-[14px] text-text-brand flex items-center gap-2">
                           <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-                          {t("help.trouble_cam_q")}
+                          {renderFormattedText(t("help.trouble_cam_q"))}
                         </h4>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.trouble_cam_why")}
+                          {renderFormattedText(t("help.trouble_cam_why"))}
                         </p>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.trouble_cam_fix")}
+                          {renderFormattedText(t("help.trouble_cam_fix"))}
                         </p>
                       </div>
                       <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-1">
                         <h4 className="font-bold text-[14px] text-text-brand flex items-center gap-2">
                           <HelpCircle className="h-4 w-4 text-primary shrink-0" />
-                          {t("help.trouble_slow_q")}
+                          {renderFormattedText(t("help.trouble_slow_q"))}
                         </h4>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.trouble_slow_why")}
+                          {renderFormattedText(t("help.trouble_slow_why"))}
                         </p>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.trouble_slow_fix")}
+                          {renderFormattedText(t("help.trouble_slow_fix"))}
                         </p>
                       </div>
                       <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-1">
                         <h3 className="text-[16px] font-bold flex items-center gap-2 text-dark-brand">
-                          {t("help.limit_title")}
+                          {renderFormattedText(t("help.limit_title"))}
                         </h3>
                         <ul className="space-y-2 pl-1 pr-1">
                           <li className="flex items-start gap-3">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary-brand mt-2 shrink-0"></span>
                             <span className="text-[12px] text-text-brand font-semibold">
-                              {t("help.limit_item1")}
+                              {renderFormattedText(t("help.limit_item1"))}
                             </span>
                           </li>
                           <li className="flex items-start gap-3">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary-brand mt-2 shrink-0"></span>
                             <span className="text-[12px] text-text-brand font-semibold">
-                              {t("help.limit_item2")}
+                              {renderFormattedText(t("help.limit_item2"))}
                             </span>
                           </li>
                         </ul>
@@ -1449,10 +1638,12 @@ export default function HelpMenu({ initialTab = "overview" }) {
                       })}
                     </h2>
                     <p className="text-[14px] leading-relaxed text-text-brand font-semibold">
-                      {t("help.tiers_p1", {
-                        defaultValue:
-                          "DressApp offers flexible subscription tiers tailored to your closet size and styling needs. Upgrade on the Pricing page to unlock unlimited features.",
-                      })}
+                      {renderFormattedText(
+                        t("help.tiers_p1", {
+                          defaultValue:
+                            "DressApp offers flexible subscription tiers tailored to your closet size and styling needs. Upgrade on the Pricing page to unlock unlimited features.",
+                        }),
+                      )}
                     </p>
                     <div className="grid grid-cols-1 gap-4">
                       <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-1">
@@ -1462,10 +1653,12 @@ export default function HelpMenu({ initialTab = "overview" }) {
                           })}
                         </h3>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.tiers_free_desc", {
-                            defaultValue:
-                              "Baseline limit of 50 items. Expandable up to 150 items by sharing your invite code with friends (+10 capacity slots per friend).",
-                          })}
+                          {renderFormattedText(
+                            t("help.tiers_free_desc", {
+                              defaultValue:
+                                "Baseline limit of 50 items. Expandable up to 150 items by sharing your invite code with friends (+10 capacity slots per friend).",
+                            }),
+                          )}
                         </p>
                       </div>
                       <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-1">
@@ -1475,10 +1668,12 @@ export default function HelpMenu({ initialTab = "overview" }) {
                           })}
                         </h3>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.tiers_manager_desc", {
-                            defaultValue:
-                              "Costs $10/mo (or $100/yr). Removes closet size limits entirely, unlocks morning outfit push scheduler, calendar synchronization, circular marketplace selling, and Trend Scout ranking filters.",
-                          })}
+                          {renderFormattedText(
+                            t("help.tiers_manager_desc", {
+                              defaultValue:
+                                "Costs $10/mo (or $100/yr). Removes closet size limits entirely, unlocks morning outfit push scheduler, calendar synchronization, circular marketplace selling, and Trend Scout ranking filters.",
+                            }),
+                          )}
                         </p>
                       </div>
                       <div className="p-3 rounded-[12px] border border-yellow-border bg-yellow-shadow space-y-1">
@@ -1488,10 +1683,27 @@ export default function HelpMenu({ initialTab = "overview" }) {
                           })}
                         </h3>
                         <p className="text-[12px] text-text-brand font-semibold">
-                          {t("help.tiers_pro_desc", {
-                            defaultValue:
-                              "Costs $15/mo (or $150/yr). Built for style experts and fashion creators. Allows registration in the stylist directory, creation of fashion campaigns, priority support, and 100 monthly styling credits.",
+                          {renderFormattedText(
+                            t("help.tiers_pro_desc", {
+                              defaultValue:
+                                "Costs $15/mo (or $150/yr). Built for style experts and fashion creators. Allows registration in the stylist directory, creation of fashion campaigns, priority support, and 100 monthly styling credits.",
+                            }),
+                          )}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-[12px] border border-rose-200 bg-rose-50/70 space-y-1">
+                        <h3 className="font-bold text-[14px] text-rose-800">
+                          {t("help.tiers_demotion_title", {
+                            defaultValue: "Plan Demotion & Closet Retention Warning",
                           })}
+                        </h3>
+                        <p className="text-[12px] text-rose-900 font-semibold leading-relaxed">
+                          {renderFormattedText(
+                            t("help.tiers_demotion_desc", {
+                              defaultValue:
+                                "Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 50 added items in their closet. Older closet assets beyond the 50 most recently added items are permanently removed after you confirm the demotion warning.",
+                            }),
+                          )}
                         </p>
                       </div>
                       <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-1">
@@ -1500,7 +1712,7 @@ export default function HelpMenu({ initialTab = "overview" }) {
                             defaultValue: "How to upgrade:",
                           })}
                         </h4>
-                        <ol className="list-decimal pl-4 text-[12px] text-text-brand font-semibold space-y-1">
+                        <ol className={cn("list-decimal text-[12px] text-text-brand font-semibold space-y-1", isRtl ? "pr-5" : "pl-4")}>
                           <li>
                             {t("help.tiers_step1", {
                               defaultValue: "Go to your Profile settings page.",

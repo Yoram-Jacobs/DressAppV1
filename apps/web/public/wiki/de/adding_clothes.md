@@ -1,44 +1,47 @@
-# Kleidung erfassen & hinzufügen
+# Kleidung zum Kleiderschrank hinzufügen
 
-Digitalisiere deinen physischen Kleiderschrank in Sekunden – mit automatischem 3-Pipeline-Foto-Routing, intelligenter Hintergrundentfernung und generativer Bildvervollständigung.
+Bringen Sie Ihre physische Garderobe in Sekunden in DressApp – egal ob Sie ein einzelnes Kleidungsstück, ein getragenes Outfit oder eine ganze Gruppe von Kleidungsstücken direkt im Kleiderschrank fotografieren.
 
-## Übersicht
-Erfasse Kleidung per Live-Kameraschnappschuss, Mehrfach-Upload aus der Galerie (einschließlich gemischter Stapel aus Einzelteilen, getragenen Outfits und Kleiderhaufen), QR-Codes des Digitalen Produktpasses (DPP) oder digitalen Kaufbelegen (Rechnungs-OCR). Die integrierte lokale KI erkennt automatisch die Eigenschaften jedes Fotos, entfernt Hintergründe, vergibt über 20 Mode-Attribute (inklusive Sweatshirts/Hoodies sowie über 60 traditioneller & kultureller Kleidungsstücke) und erstellt saubere Studio-Freisteller ganz ohne API-Schlüssel.
-
-## Voraussetzungen
-- Klare, gut beleuchtete Fotos von Kleidungsstücken (Einzelteile, Ganzkörper-Spiegelselfies, Schaufensterpuppen oder Flat-Lays mehrerer Kleidungsstücke).
-- Kamerazugriff zum Scannen physischer Artikel und QR-Codes.
-- Digitale Quittungen oder Rechnungs-Screenshots (PDF / PNG / JPEG) für Online-Einkäufe.
+## Überblick
+Sie können Kleidung hinzufügen, indem Sie Live-Fotos mit Ihrer Kamera aufnehmen, gespeicherte Fotos hochladen, digitale Produktetiketten scannen oder Online-Shopping-Links und Belege importieren. Die KI von DressApp erkennt jedes Teil automatisch, entfernt den Hintergrund und füllt alle Details für Sie aus.
 
 ## Schritt-für-Schritt-Anleitung
 
-1. **Interaktiver Upload & Gemischte Stapelverarbeitung**:
-   - Tippe auf **Artikel hinzufügen** → wähle **Foto aufnehmen** oder **Fotos hochladen**, um ein oder mehrere Fotos von deinem Gerät auszuwählen. Du kannst Fotos einzelner Kleidungsstücke, komplette Outfits am Körper und Kleiderstapel frei in einem einzigen Upload mischen, ohne Modus-Tabs auswählen zu müssen!
-   - Die integrierte Duplikaterkennung prüft sofort, ob du dasselbe Kleidungsstück bereits hochgeladen hast.
-2. **Automatisches 3-Pipeline-Routing (`GarmentVision`)**:
-   - **GarmentVision** analysiert jedes Foto automatisch und leitet es an die passende Pipeline weiter:
-     - **Einzelteil (`Single`)**: Isoliert ein einzelnes Kleidungsstück mit präzisem Studio-Alpha-Matting.
-     - **Mehrteiliges Outfit (`Multi-Garment`)**: Teilt Kopf-bis-Fuß-Outfits an einer Person oder Puppe in separate Karten für Oberteil, Unterteil, Jacke/Mantel, Schuhe und Accessoires auf.
-     - **Kleider-Cluster (`Mass Cluster`)**: Trennt Gruppen ungetragener Kleidung (nebeneinander ausgelegt oder an Wandhaken hängend) in einzelne Kleiderschrank-Elemente.
-3. **KI-Freistellung & Saubere Studiofotos**:
-   - Die integrierte Vision-Pipeline entfernt Hintergründe automatisch und erzeugt gestochen scharfe, transparente PNG-Bilder für alle Konten.
-4. **Automatisches Tagging für Metadaten, Hoodies & Traditionelle Kleidung**:
-   - Kostenlose Konten nutzen die lokale **Eyes**-Engine von DressApp (feinabgestimmtes `Qwen 2.5 VL 3B`), während **Manager**- ($10/Monat) und **Professional**-Nutzer ($15/Monat) vom schnellen Cloud-Modell (`Google Gemini 3.5 Flash`) profitieren, um über 20 Mode-Attribute zu extrahieren – mit präziser Unterscheidung zwischen **Sweatshirts & Hoodies** und **T-Shirts** sowie Erkennung von über 60 **traditionellen & kulturellen Kleidungsstücken** (Sari, Kimono, Thobe, Kaftan, Hanbok, Cheongsam, Ao Dai, Dirndl, Kilt u. v. m.) in allen 13 Sprachen.
-5. **Generative Fotoreparatur (Nano Banana)**:
-   - Nano Banana prüft freigestellte Artikel auf Verdeckungen (Taschen, Hände) und Bildränder und vervollständigt fehlende Stoffpartien automatisch zu vollständigen Studiofotos – ohne externe API-Schlüssel.
-6. **Digitale Belege & DPP-Tags**:
-   - Wechsle zu **Digitaler Import**, um Bestellbestätigungen oder Rechnungen auszulesen und Kaufpreis sowie verifizierte Größen zu sperren.
-   - Tippe auf **QR scannen (DPP)** am Etikett, um Lieferkettendaten und Pflegehinweise des EU-Digitalen Produktpasses zu importieren.
-7. **Im Kleiderschrank speichern**:
-   - Tippe auf **Speichern**. Die Artikel erscheinen sofort in deinem Kleiderschrank-Raster.
+1. **Artikel-hinzufügen-Ansicht öffnen**:
+   - Tippen Sie in der Hauptnavigation auf **Artikel hinzufügen**.
 
-## Erwartete Ergebnisse
-Jedes Kleidungsstück erscheint in deiner digitalen Garderobe als zentriertes, sauberes Studiofoto mit präzisen Kategorie-/Unterkategorie-Labels, kulturellen Heritage-Tags und vollständig indexierten Suchattributen.
+2. **Fotos aufnehmen oder hochladen**:
+   - Tippen Sie auf **Foto aufnehmen** oder **Fotos hochladen**, um ein oder mehrere Bilder auszuwählen.
+   - DressApp unterstützt drei intelligente Fotomodi:
+     - **Ein einzelnes Kleidungsstück** auf einem Bügel, Tisch oder Bett.
+     - **Ein komplettes Outfit an einer Person**, das DressApp automatisch in separate Karten für Oberteil, Unterteil, Jacke/Mantel, Schuhe und Accessoires aufteilt.
+     - **Sammel-Upload von Kleidungsstücken (Manager- & Professional-Tarif)**: Eine revolutionäre Funktion, mit der Sie Ihren physischen Kleiderschrank direkt fotografieren können – mit weniger Fotos digitalisieren Sie Ihren gesamten Schrank im Handumdrehen. Erkannt und rekonstruiert werden:
+       - Kleidung, die im Schrank oder auf Kleiderbügeln hängt
+       - Ein Schuhregal
+       - Ein Stapel Hemden oder gefalteter Kleidung
+       - Mehrere zusammenliegende Kleidungsstücke (nicht nur auf dem Bett ausgebreitete Kleidung)
 
-## Fehlerbehebung
-- **Abgeschnittene / Unvollständige Kleidung auf Fotos**: Zentriere das Kleidungsstück vor einem kontrastreichen Hintergrund. Nano Banana kann abgeschnittene Kragen oder Säume automatisch rekonstruieren.
-- **Beleuchtung & Kontrast**: Fotografiere dunkle Kleidung für beste Ergebnisse vor einem hellen, kontrastreichen Hintergrund.
-- **Beleg-OCR-Abweichungen**: Nutze die interaktive Rahmenauswahl auf Rechnungsbildern, um einzelne Produktzeilen manuell zu markieren.
+3. **Warum der Sammel-Upload im Free-Tarif gesperrt ist**:
+   - Der Sammel-Upload (Mass-Pipeline) nutzt für jedes erkannte Teil die Studio-KI-Rekonstruktion **Nano Banana**.
+   - Da ein einziges Sammelfoto das gesamte kostenlose KI-Rekonstruktionskontingent eines Free-Nutzers auf einmal verbrauchen kann und viele Kleidungsstücke unrekonstruiert blieben, ist der Sammel-Upload **für Free-Nutzer verboten**.
+   - Wenn Free-Nutzer versuchen, ein Sammelfoto hochzuladen, erscheint ein Hinweis mit der Empfehlung, **das Bild zu überspringen oder den Tarif auf Manager bzw. Professional upzugraden**.
 
-## Einschränkungen
-- Hochauflösende Stapel-Uploads (>5 Artikel) werden über asynchrone Hintergrund-Warteschlangen verarbeitet, um eine flüssige Bedienung ohne Browser-Timeouts zu gewährleisten.
+4. **Automatische Hintergrundentfernung & Smart-Tagging**:
+   - Die KI entfernt den Hintergrund und erkennt **Kategorie**, **Unterkategorie** (mit präziser Unterscheidung zwischen Hoodies, Sweatshirts und T-Shirts), **Farben**, **Muster**, **Material**, **Saison** und **Anlass**.
+   - Zudem werden über 60 **traditionelle & kulturelle** Kleidungsstücke erkannt.
+   - Kostenlose Konten nutzen das **lokale KI-Modell von DressApp**, während **Manager**- und **Professional**-Abonnenten von unserem schnelleren **Hochleistungs-KI-Modell** profitieren.
+
+5. **Prüfen & Speichern**:
+   - Überprüfen Sie die erkannten Angaben, passen Sie Details nach Wunsch an und tippen Sie auf **Speichern**!
+
+## Sammel-Upload: 5 Einschränkungen & Hinweise
+Das direkte Fotografieren von Kleiderschränken, Schuhregalen oder Kleiderstapeln spart enorm viel Zeit, hat jedoch fünf bekannte Einschränkungen:
+1. **Optimal für Uni-Farben & einfache Muster**: Ideal für einfarbige Teile oder sehr einfache Karo- und Streifenmuster; verdeckte Prints und feine Details können nicht analysiert werden.
+2. **Zustand der Kleidung**: Das rekonstruierte Studiobild spiegelt selten den aktuellen Erhaltungs- oder Abnutzungszustand des Kleidungsstücks wider.
+3. **Übersprungene Teile**: Bei dicht hängenden oder stark überlappenden Kleidungsstücken können einzelne Teile übersprungen werden.
+4. **Halluzinierte Muster & Farben**: Bei teilweise verdeckten Stücken kann die KI gelegentlich Muster oder Farben halluzinieren.
+5. **Verbrauch von Rekonstruktions-Credits**: Jedes rekonstruierte Teil verbraucht Rekonstruktions-Credits.
+
+## Hilfreiche Tipps
+- Fotografieren Sie in einem gut beleuchteten Raum vor einem ruhigen Hintergrund.
+- Nutzen Sie Einzelaufnahmen für Kleidungsstücke mit feinen Mustern oder besonderen Zustandsdetails.

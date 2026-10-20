@@ -1,12 +1,27 @@
 # Planes de suscripción y créditos
 
-DressApp ofrece un amplio Plan Gratuito junto con suscripciones mensuales flexibles y paquetes de créditos opcionales.
+DressApp ofrece un generoso Plan Gratis junto con suscripciones mensuales y anuales flexibles y paquetes de créditos opcionales.
 
 ## Resumen de planes
-1. **Plan Gratuito**:
-   - Guarda hasta **50 prendas** gratis (ampliable hasta **150 prendas** invitando a amigos, con **+10 espacios gratis** por cada amigo registrado).
-   - Funciona desde el primer momento con el **modelo de IA local de DressApp** sin configuración técnica.
-2. **Plan Manager (10 $/mes o 100 $/año)**:
-   - Desbloquea **espacio ilimitado en el armario**, acceso prioritario al **modelo de IA de última generación** de DressApp, alertas matutinas, sincronización de calendario, ventas en el Mercado y acceso completo a **Trend Scout**.
-3. **Plan Professional (15 $/mes o 150 $/año)**:
-   - Diseñado para estilistas profesionales, sastres y creadores de moda. Incluye todo lo del plan Manager más presencia en el **Directorio de Estilistas**, campañas promocionales locales, soporte prioritario y **100 créditos mensuales de estilismo**.
+
+1. **Plan Gratis**:
+   - Guarda hasta **50 prendas en tu armario** gratis y amplíalo hasta **150 prendas** compartiendo tu enlace de invitación con amigos (**+10 espacios gratis** por cada amigo que se registre).
+   - Funciona desde el primer momento con el **modelo de IA local de DressApp** (**10 créditos diarios**, acumulables hasta **300 créditos en 30 días**) más **5 créditos iniciales de Reconstrucción de Estudio**.
+   - Admite fotos de una sola prenda y fotos de conjuntos puestos. La **carga de grupos de prendas** (armarios, perchas, zapateros o pilas de camisas) está desactivada en el Plan Gratis porque una sola imagen puede consumir todo tu cupo gratuito de reconstrucción de una vez.
+
+2. **Plan Manager ($10/mes o $100/año)**:
+   - Desbloquea **espacio de armario ilimitado**, acceso prioritario al **modelo de IA de vanguardia**, **100 créditos mensuales de Reconstrucción de Estudio**, **Carga de grupos de prendas** (armarios, zapateros y pilas de camisas), alertas matutinas de conjuntos, sincronización con calendario, venta en el Marketplace y acceso completo a **Trend Scout**.
+
+3. **Plan Professional ($15/mes o $150/año)**:
+   - Diseñado para estilistas profesionales, sastres y creadores de moda.
+   - Incluye todo lo del plan Manager, además de perfil verificado en el **Directorio de Estilistas**, creación de campañas promocionales, soporte prioritario y **100 créditos mensuales de estilismo y reconstrucción**.
+
+## Cambio al Plan Gratis y conservación de las últimas 50 prendas
+- **Los usuarios Manager y Professional que bajen al Plan Gratis perderán sus espacios adicionales, quedando únicamente las últimas 50 prendas añadidas en su armario.**
+- Cualquier prenda más antigua (más allá de las **50 prendas añadidas más recientemente**) se eliminará de forma permanente al pasar al Plan Gratis.
+- Antes de aceptar la bajada de plan o cancelación, DressApp muestra una advertencia clara sobre la pérdida de prendas antiguas y solicita tu confirmación expresa.
+
+## Cómo mejorar o gestionar tu plan
+1. Abre tu página de **Perfil** y desplázate hasta **Suscripción y límites**.
+2. Haz clic en **Ver planes** o **Precios**.
+3. Elige tu plan preferido o confirma el aviso si decides volver al Plan Gratis.

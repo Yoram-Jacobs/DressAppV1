@@ -478,8 +478,12 @@ async def analyze_item_image(
                 status_code=403,
                 detail={
                     "code": "mass_pipeline_tier_restricted",
-                    "i18n_key": "addItem.pipeline.massUpgradeRequired",
-                    "message": "The Mass Closet & Pile pipeline is available exclusively to Manager and Professional plan members.",
+                    "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                    "message": (
+                        "Cluster garment uploading (mass pipeline) uses Nano Banana AI reconstruction. "
+                        "One image can consume all of your AI reconstruction allowance, leaving many garments unreconstructed. "
+                        "Please skip this image or upgrade to a Manager or Professional plan."
+                    ),
                 },
             )
         nb_state = compute_nano_banana_monthly_state(user)
@@ -507,8 +511,9 @@ async def analyze_item_image(
     if cost > 0 and not await deduct_user_credits(db, user, cost=cost):
         raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
-    async def try_refund():
-        if cost <= 0:
+    async def try_refund(refund_amount: int | None = None):
+        amt = cost if refund_amount is None else min(cost, max(0, int(refund_amount)))
+        if amt <= 0:
             return
         try:
             latest_usage = await db.token_usage.find_one(
@@ -520,8 +525,8 @@ async def analyze_item_image(
                 credit_type = "paid"
             
             from app.services.billing_service import refund_user_credits
-            await refund_user_credits(db, user["id"], amount=cost, credit_type=credit_type)
-            logger.info("Refunded %d %s credits to user %s due to analysis failure", cost, credit_type, user["id"])
+            await refund_user_credits(db, user["id"], amount=amt, credit_type=credit_type)
+            logger.info("Refunded %d %s credits to user %s due to analysis failure/skip", amt, credit_type, user["id"])
         except Exception as refund_err:
             logger.error("Failed to refund credits: %s", refund_err)
 
@@ -541,6 +546,7 @@ async def analyze_item_image(
 
         async def _run_analysis_pipeline() -> None:
             analyzed_items_count = 0
+            mass_restricted_count = 0
             try:
                 streamer = active_vision.analyze_outfits_stream(
                     raw_list,
@@ -716,7 +722,12 @@ async def analyze_item_image(
                             await queue.put(out_frame)
                     elif ftype == "item_skip":
                         await queue.put(frame)
+                    elif ftype == "mass_restricted":
+                        mass_restricted_count += 1
+                        await queue.put(frame)
                     elif ftype == "done":
+                        if mass_restricted_count > 0 and cost > 0:
+                            await try_refund(mass_restricted_count)
                         recon_count = int(
                             frame.get("reconstructed_count")
                             or (analyzed_items_count if eff_mode == "mass" else 0)
@@ -735,8 +746,9 @@ async def analyze_item_image(
                             except Exception:
                                 pass
                         non_mass_items = max(0, analyzed_items_count - recon_count)
-                        if not payload.cutout_only and eff_mode != "mass" and non_mass_items > cost:
-                            extra_garments = non_mass_items - cost
+                        effective_paid_cost = max(0, cost - mass_restricted_count)
+                        if not payload.cutout_only and eff_mode != "mass" and non_mass_items > effective_paid_cost:
+                            extra_garments = non_mass_items - effective_paid_cost
                             try:
                                 await deduct_user_credits(
                                     db, user, cost=extra_garments, operation="analyze_multi_garment"
@@ -809,6 +821,7 @@ async def analyze_item_image(
         try:
             items_out: list[dict[str, Any]] = []
             items_meta: list[dict[str, Any]] = []
+            mass_restricted_frames: list[dict[str, Any]] = []
             streamer = active_vision.analyze_outfits_stream(
                 raw_list,
                 language=user_lang,
@@ -972,11 +985,28 @@ async def analyze_item_image(
                                 ),
                             }
                         )
+                elif ftype == "mass_restricted":
+                    mass_restricted_frames.append(frame)
                 elif ftype == "error":
                     raise HTTPException(
                         frame.get("status", 503),
                         frame.get("message", "Garment analyzer is temporarily unavailable."),
                     )
+
+            if not items_out and mass_restricted_frames:
+                await try_refund()
+                first_mr = mass_restricted_frames[0]
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": first_mr.get("code", "mass_pipeline_tier_restricted"),
+                        "i18n_key": first_mr.get("i18n_key", "addItem.pipeline.massClusterFreeBlocked"),
+                        "message": first_mr.get(
+                            "message",
+                            "Cluster garment uploading uses Nano Banana AI reconstruction and is unavailable on the Free plan. Please skip this image or upgrade your plan.",
+                        ),
+                    },
+                )
 
             if not items_out:
                 raise HTTPException(

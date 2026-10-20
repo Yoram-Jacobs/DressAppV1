@@ -74,6 +74,9 @@ Op dag 5 heeft u **50 basisitems** gedigitaliseerd — goed voor duizenden outfi
 - **Losse Creditpakketten Kopen (Verlopen Nooit)**: Koop **10 credits ($3)**, **50 credits ($12)** of **100 credits ($20)**. Gekochte credits verlopen nooit en worden pas aangesproken nadat uw gratis of maandelijkse credits zijn gebruikt.
 - **Upgraden naar Garderobebeheerder ($10/mnd of $100/jr)**: Ontgrendelt **onbeperkte kastruimte**, **onbeperkt dagelijks stylen en scannen** met ons **geavanceerde AI-model**, **100 maandelijkse Studio-reconstructiecredits**, dagelijkse outfitmeldingen in de ochtend, **Trendverkenner** en de **Marktplaats**.
 
+### V: Wat gebeurt er als ik van Manager of Professional terugga naar het Free-abonnement?
+**A:** Manager- en Professional-gebruikers die degraderen naar het Free-abonnement verliezen hun extra kastplekken, waardoor **alleen de laatste 50 toegevoegde items in hun kast behouden blijven**. Oudere items worden definitief verwijderd. Voordat de degradatie wordt uitgevoerd, toont DressApp een waarschuwing en vraagt om uw bevestiging.
+
 ---
 
 ## 3. Kleding Fotograferen, Toevoegen & Bewerken
@@ -89,6 +92,9 @@ Op dag 5 heeft u **50 basisitems** gedigitaliseerd — goed voor duizenden outfi
 **A:**
 - **Standaard Uitsnede (Automatisch)**: Draait automatisch bij het uploaden (1 interne AI-credit in het Gratis-abonnement). Verwijdert de achtergrond en herkent alle details met behoud van uw echte foto.
 - **Studio-reconstructie (Optioneel)**: Wordt uitgevoerd wanneer u op **Reconstrueren** tikt (1 Studio-reconstructiecredit). Ons geavanceerde AI-model verwijdert diepe kreukels, corrigeert harde schaduwen en maakt er een strakke studio-productfoto van.
+- **Cluster Kleding Uploaden (Manager- & Professional-abonnementen)**: Een revolutionaire functie die **kleding hangend in de kast of aan hangers, een schoenenrek, een stapel shirts en meer** herkent en reconstrueert — niet alleen kleding uitgespreid op een bed!
+  - **Verboden voor Free-gebruikers**: Omdat het Nano Banana gebruikt, kan één foto het volledige reconstructietegoed van een Free-gebruiker verbruiken. Free-gebruikers krijgen het voorstel om **de afbeelding over te slaan of hun abonnement te upgraden**.
+  - **De 5 beperkingen**: (a) Goed voor effen kleuren of eenvoudige ruit-/streeppatronen, analyseert geen verborgen prints en fijne details; (b) weerspiegelt zelden de huidige staat van het kledingstuk; (c) kan kledingstukken overslaan; (d) kan patronen en kleuren hallucineren; (e) verbruikt reconstructiecredits.
 
 ### V: Waarom is het slim om een kledingstuk direct na het toevoegen even te controleren?
 **A:** Hoewel de AI van DressApp zeer nauwkeurig is, kan warm kamerlicht donkerblauw soms op zwart laten lijken. Door **10 seconden** de **Categorie, Kleur, het Seizoen, de Warmte (1–5) en de Kledingstijl** te controleren, weet u zeker dat de AI-stylist en Koffer-assistent het kledingstuk altijd foutloos combineren.

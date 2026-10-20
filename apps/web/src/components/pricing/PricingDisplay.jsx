@@ -278,7 +278,7 @@ export function PricingDisplay({
                           <>
                             {tier.price > 0
                               ? t('pricing.upgradePlan', { defaultValue: 'Upgrade Plan' })
-                              : t('pricing.selectPlan', { defaultValue: 'Select This Plan' })}
+                              : t('pricing.demoteToFree', { defaultValue: 'Demote to Free Plan' })}
                           </>
                         )}
                       </Button>

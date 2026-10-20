@@ -1,24 +1,47 @@
 # Añadir ropa a tu armario
 
-Digitaliza tu ropa en segundos, ya sea que fotografíes una prenda individual, un conjunto completo puesto o varias prendas colocadas juntas.
+Lleva tu armario físico a DressApp en segundos, ya sea fotografiando una sola prenda, un conjunto completo que lleves puesto o un grupo entero de ropa directamente en tu armario físico.
+
+## Descripción general
+Puedes añadir ropa tomando fotos en vivo con tu cámara, subiendo fotos guardadas, escaneando etiquetas digitales o importando enlaces de tiendas y recibos. La IA de DressApp identifica cada prenda automáticamente, elimina el fondo y completa todos los detalles por ti.
 
 ## Instrucciones paso a paso
 
-1. **Abrir Añadir prenda**:
+1. **Abre la pantalla Añadir prenda**:
    - Pulsa el botón **Añadir prenda** en la barra de navegación principal.
 
-2. **Tomar o subir fotos**:
-   - Elige **Tomar foto** o **Subir fotos** para seleccionar una o varias imágenes a la vez:
-     - **Una prenda individual** en una percha o superficie plana.
-     - **Un conjunto completo en una persona**, que DressApp divide automáticamente en tarjetas separadas para parte superior, parte inferior, abrigo, calzado y accesorios.
-     - **Varias prendas colocadas una al lado de la otra**, que se separan automáticamente en prendas individuales.
+2. **Toma o sube fotos**:
+   - Elige **Tomar foto** o **Subir fotos** para seleccionar una o más imágenes de tu dispositivo.
+   - DressApp admite tres modos inteligentes de fotografía:
+     - **Una sola prenda** en una percha, mesa o cama.
+     - **Un conjunto completo llevado por una persona**, que DressApp divide automáticamente en fichas separadas para parte superior, parte inferior, abrigo, calzado y accesorios.
+     - **Carga de grupos de prendas (Planes Manager y Professional)**: Una función revolucionaria que te permite fotografiar tu armario físico directamente, usando menos fotos para digitalizar tu ropa en tiempo récord. Puede identificar y reconstruir:
+       - Prendas colgadas en el armario o en perchas
+       - Un zapatero o estante de zapatos
+       - Una pila de camisas o ropa doblada
+       - Varias prendas dispuestas juntas (no solo ropa extendida sobre una cama)
 
-3. **Eliminación automática del fondo y etiquetado inteligente**:
-   - La IA de DressApp elimina el fondo de cada prenda y detecta su **Categoría**, **Subcategoría** (distinguiendo con precisión sudaderas y capuchas de camisetas), **Colores**, **Estampado**, **Material**, **Temporada** y **Ocasión**, además de más de 60 **prendas tradicionales y culturales** de todo el mundo.
-   - Las cuentas gratuitas utilizan el **modelo de IA local de DressApp**, mientras que los suscriptores **Manager** y **Professional** disfrutan de un procesamiento más rápido con nuestro **modelo de IA de última generación**.
+3. **Por qué la carga en grupo está prohibida en el Plan Gratis**:
+   - La carga de grupos de prendas utiliza la reconstrucción por IA de estudio **Nano Banana** para cada pieza detectada.
+   - Dado que una sola foto en grupo puede consumir toda la asignación gratuita de reconstrucción por IA de un usuario del Plan Gratis de una sola vez —dejando muchas prendas sin reconstruir—, la carga en grupo está **prohibida para usuarios gratuitos**.
+   - Si un usuario del Plan Gratis intenta subir un grupo de prendas, DressApp muestra un mensaje sugiriendo **omitir la imagen o mejorar su plan** a Manager o Professional.
 
-4. **Completado automático de bordes**:
-   - Si una manga o dobladillo aparece ligeramente cortado en la foto, la IA de DressApp completa automáticamente el borde faltante para lograr una imagen limpia de estudio.
+4. **Eliminación automática de fondo y etiquetado inteligente**:
+   - La IA elimina el fondo de cada prenda y detecta su **Categoría**, **Subcategoría** (distinguiendo con precisión sudaderas con capucha y suéteres de camisetas), **Colores**, **Patrón**, **Material**, **Temporada** y **Ocasión**.
+   - También reconoce más de 60 prendas **tradicionales y culturales** de todo el mundo.
+   - Las cuentas gratuitas utilizan el **modelo de IA local de DressApp**, mientras que los suscriptores **Manager** y **Professional** disfrutan de mayor velocidad y reconstrucción en grupo con nuestro **modelo de IA de vanguardia**.
 
 5. **Revisar y guardar**:
-   - Comprueba los detalles detectados, edita lo que quieras y pulsa **Guardar**.
+   - Comprueba los detalles detectados, edita lo que desees y pulsa **Guardar** para añadir las prendas a tu armario.
+
+## Carga de grupos de prendas: 5 limitaciones a tener en cuenta
+Fotografiar prendas directamente en el armario, en un zapatero o en una pila es la forma más rápida de digitalizar un armario grande, pero ten en cuenta estas cinco limitaciones:
+1. **Ideal para colores lisos y patrones sencillos**: Funciona muy bien con colores sólidos o cuadros y rayas muy simples; no puede analizar estampados ocultos ni detalles finos.
+2. **Estado de la prenda**: La imagen reconstruida rara vez refleja el estado físico o desgaste actual de la prenda.
+3. **Prendas omitidas**: Puede omitir algunas prendas cuando están muy juntas o superpuestas.
+4. **Alucinación de patrones y colores**: Puede alucinar patrones o colores cuando una prenda está parcialmente oculta.
+5. **Consumo de créditos de reconstrucción**: Cada prenda reconstruida consume créditos de reconstrucción.
+
+## Consejos útiles
+- Toma fotos en una habitación bien iluminada frente a un fondo sencillo.
+- Utiliza fotos individuales para prendas con estampados complejos o detalles de estado que quieras conservar exactamente.

@@ -1,12 +1,27 @@
-# Abonnement-Tarife & Guthaben
+# Abonnements & Credits
 
-DressApp bietet einen großzügigen kostenlosen Tarif sowie flexible Monatsabonnements und optionale Guthabenpakete.
+DressApp bietet einen großzügigen Free-Tarif sowie flexible Monats- und Jahresabonnements und optionale Credit-Pakete.
 
 ## Tarifübersicht
-1. **Kostenloser Tarif**:
-   - Speichern Sie bis zu **50 Kleidungsstücke** kostenlos — erweiterbar auf bis zu **150 Artikel** durch das Einladen von Freunden (**+10 kostenlose Plätze** pro registriertem Freund).
-   - Unterstützt durch das **lokale KI-Modell von DressApp** ohne jede technische Einrichtung.
-2. **Manager-Tarif (10 $/Monat oder 100 $/Jahr)**:
-   - Schaltet **unbegrenzten Platz im Kleiderschrank**, unser schnelleres, **hochmodernes KI-Modell**, morgendliche Outfit-Erinnerungen, Kalender-Synchronisierung, Verkäufe auf dem Marktplatz und vollen Zugriff auf **Trend Scout** frei.
-3. **Professional-Tarif (15 $/Monat oder 150 $/Jahr)**:
-   - Entwickelt für professionelle Stylisten, Schneider und Mode-Creator. Enthält alle Vorteile des Manager-Tarifs sowie einen Eintrag im **Stylisten-Verzeichnis**, lokale Werbekampagnen, bevorzugten Support und **100 monatliche Styling-Punkte**.
+
+1. **Free-Tarif**:
+   - Speichern Sie bis zu **50 Kleidungsstücke** kostenlos – erweiterbar auf bis zu **150 Teile** durch das Einladen von Freunden (**+10 kostenlose Plätze** pro registriertem Freund).
+   - Sofort einsatzbereit mit dem **lokalen KI-Modell von DressApp** (**10 tägliche Credits**, ansammelbar bis zu **300 Credits über 30 Tage**) sowie **5 Start-Credits für Studio-Rekonstruktionen**.
+   - Unterstützt Einzelaufnahmen und getragene Komplett-Outfits. Der **Sammel-Upload** (Schränke, Bügel, Schuhregale oder Hemdenstapel) ist im Free-Tarif deaktiviert, da ein einziges Sammelfoto das gesamte kostenlose Rekonstruktionskontingent verbrauchen kann.
+
+2. **Manager-Tarif ($10/Monat oder $100/Jahr)**:
+   - Schaltet **unbegrenzten Platz im Kleiderschrank**, bevorzugten Zugriff auf das **Hochleistungs-KI-Modell**, **100 monatliche Studio-Rekonstruktions-Credits**, den **Sammel-Upload** (Kleiderschrank, Schuhregale, Hemdenstapel), morgendliche Outfit-Benachrichtigungen, Kalender-Synchronisierung, Marketplace-Verkauf und vollen **Trend Scout**-Zugriff frei.
+
+3. **Professional-Tarif ($15/Monat oder $150/Jahr)**:
+   - Entwickelt für professionelle Stylisten, Schneider und Mode-Creator.
+   - Enthält alle Funktionen des Manager-Tarifs sowie einen verifizierten Eintrag im **Stylisten-Verzeichnis**, Werbekampagnen, Priority-Support und **100 monatliche Styling- und Rekonstruktions-Credits**.
+
+## Tarif-Herabstufung & Aufbewahrung der letzten 50 Artikel
+- **Manager- und Professional-Nutzer, die auf den Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass nur die letzten 50 hinzugefügten Artikel in ihrem Kleiderschrank verbleiben.**
+- Ältere Kleidungsstücke über die **50 zuletzt hinzugefügten Artikel** hinaus werden beim Wechsel auf den Free-Tarif dauerhaft gelöscht.
+- Vor einer geplanten Herabstufung oder Kündigung zeigt DressApp eine deutliche Warnmeldung an und bittet um Ihre ausdrückliche Bestätigung.
+
+## So führen Sie ein Upgrade durch
+1. Öffnen Sie Ihr **Profil** und scrollen Sie zu **Abonnement & Limits**.
+2. Klicken Sie auf **Tarife ansehen** oder **Preise**.
+3. Wählen Sie Ihren gewünschten Tarif aus oder bestätigen Sie den Warnhinweis bei einem Wechsel zurück zum Free-Tarif.

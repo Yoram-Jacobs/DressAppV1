@@ -1,44 +1,47 @@
-# Ingesta y Adición de Ropa
+# Añadir ropa a tu armario
 
-Digitaliza tu armario físico en segundos con enrutamiento automático de 3 flujos de visión, eliminación inteligente de fondo y completado generativo de imágenes.
+Lleva tu armario físico a DressApp en segundos, ya sea fotografiando una sola prenda, un conjunto completo que lleves puesto o un grupo entero de ropa directamente en tu armario físico.
 
-## Descripción General
-Añade ropa mediante fotos con la cámara en vivo, cargas múltiples desde la galería (incluyendo lotes mixtos de prendas sueltas, conjuntos puestos y montones de ropa), códigos QR de Pasaportes Digitales de Productos (DPP) o recibos digitales (OCR de facturas). La IA local integrada detecta automáticamente las características de cada foto, recorta el fondo, etiqueta más de 20 atributos de moda (incluyendo sudaderas/hoodies y más de 60 prendas tradicionales y culturales) y prepara recortes de estudio sin necesidad de claves API.
+## Descripción general
+Puedes añadir ropa tomando fotos en vivo con tu cámara, subiendo fotos guardadas, escaneando etiquetas digitales o importando enlaces de tiendas y recibos. La IA de DressApp identifica cada prenda automáticamente, elimina el fondo y completa todos los detalles por ti.
 
-## Requisitos Previos
-- Fotos claras y bien iluminadas de las prendas (prendas individuales, selfies de cuerpo entero en el espejo, maniquíes o composiciones planas de varias prendas).
-- Acceso a la cámara para escanear prendas físicas y códigos QR.
-- Recibos digitales o capturas de pantalla de facturas (PDF / PNG / JPEG) de compras online.
+## Instrucciones paso a paso
 
-## Instrucciones Paso a Paso
+1. **Abre la pantalla Añadir prenda**:
+   - Pulsa el botón **Añadir prenda** en la barra de navegación principal.
 
-1. **Carga Interactiva y Lotes Mixtos**:
-   - Toca **Añadir Prenda** → selecciona **Tomar Foto** o **Subir Fotos** para elegir una o varias fotos de tu dispositivo. ¡Puedes mezclar libremente fotos de una sola prenda, conjuntos completos en una persona y pilas/grupos de ropa en el mismo lote sin seleccionar pestañas de modo!
-   - La detección integrada de duplicados comprueba al instante si ya subiste la misma prenda anteriormente.
-2. **Enrutamiento Automático de 3 Flujos (`GarmentVision`)**:
-   - **GarmentVision** inspecciona automáticamente cada foto y la dirige al flujo adecuado:
-     - **Prenda Única (`Single`)**: Aísla una sola prenda con recorte alfa de estudio.
-     - **Conjunto Múltiple (`Multi-Garment`)**: Divide conjuntos de pies a cabeza en una persona o maniquí en tarjetas separadas de parte superior, inferior, abrigo, calzado y accesorios.
-     - **Grupo Masivo (`Mass Cluster`)**: Separa grupos de ropa no vestida dispuesta una al lado de otra o colgada en percheros en artículos individuales.
-3. **Recorte con IA y Fotos Limpias de Estudio**:
-   - El flujo de visión integrado elimina automáticamente los fondos generando imágenes PNG transparentes y nítidas para todas las cuentas.
-4. **Etiquetado Automático de Metadatos, Hoodies y Ropa Tradicional**:
-   - Las cuentas del Plan Gratuito utilizan el motor local **Eyes** de DressApp (`Qwen 2.5 VL 3B` optimizado), mientras que los usuarios de los planes **Manager** ($10/mes) y **Professional** ($15/mes) disfrutan del modelo rápido en la nube (`Google Gemini 3.5 Flash`) para extraer más de 20 atributos de moda, distinguiendo con precisión **Sudaderas y Hoodies** de **Camisetas** y reconociendo más de 60 **prendas tradicionales y culturales** (Sari, Kimono, Thobe, Kaftan, Hanbok, Cheongsam, Ao Dai, Dirndl, Kilt y más) en los 13 idiomas.
-5. **Reparación Generativa Avanzada de Fotos (Nano Banana)**:
-   - Nano Banana inspecciona las prendas recortadas en busca de oclusiones (bolsos, manos) y bordes cortados, reconstruyendo automáticamente la tela faltante en fotografías de estudio completas sin requerir claves API externas.
-6. **Recibos Digitales y Etiquetas DPP**:
-   - Cambia a **Importación Digital** para analizar correos de confirmación de pedidos o facturas, bloqueando el precio de compra y las tallas verificadas.
-   - Toca **Escanear QR (DPP)** en la etiqueta para importar datos de la cadena de suministro e instrucciones de cuidado del Pasaporte Digital de Producto de la UE.
-7. **Guardar en el Armario**:
-   - Toca **Guardar**. Los artículos aparecen inmediatamente en la cuadrícula de tu Armario.
+2. **Toma o sube fotos**:
+   - Elige **Tomar foto** o **Subir fotos** para seleccionar una o más imágenes de tu dispositivo.
+   - DressApp admite tres modos inteligentes de fotografía:
+     - **Una sola prenda** en una percha, mesa o cama.
+     - **Un conjunto completo llevado por una persona**, que DressApp divide automáticamente en fichas separadas para parte superior, parte inferior, abrigo, calzado y accesorios.
+     - **Carga de grupos de prendas (Planes Manager y Professional)**: Una función revolucionaria que te permite fotografiar tu armario físico directamente, usando menos fotos para digitalizar tu ropa en tiempo récord. Puede identificar y reconstruir:
+       - Prendas colgadas en el armario o en perchas
+       - Un zapatero o estante de zapatos
+       - Una pila de camisas o ropa doblada
+       - Varias prendas dispuestas juntas (no solo ropa extendida sobre una cama)
 
-## Resultados Esperados
-Cada prenda aparece en tu armario digital como una fotografía de estudio limpia y centrada, con categorías/subcategorías precisas, etiquetas de herencia cultural y atributos de búsqueda indexados.
+3. **Por qué la carga en grupo está prohibida en el Plan Gratis**:
+   - La carga de grupos de prendas utiliza la reconstrucción por IA de estudio **Nano Banana** para cada pieza detectada.
+   - Dado que una sola foto en grupo puede consumir toda la asignación gratuita de reconstrucción por IA de un usuario del Plan Gratis de una sola vez —dejando muchas prendas sin reconstruir—, la carga en grupo está **prohibida para usuarios gratuitos**.
+   - Si un usuario del Plan Gratis intenta subir un grupo de prendas, DressApp muestra un mensaje sugiriendo **omitir la imagen o mejorar su plan** a Manager o Professional.
 
-## Solución de Problemas
-- **Prendas Cortadas o Parciales**: Centra bien la prenda sobre un fondo contrastado. Nano Banana puede reconstruir cuellos o dobladillos cortados automáticamente.
-- **Iluminación y Contraste**: Para obtener mejores resultados con prendas oscuras, fotografíalas sobre fondos claros y contrastados.
-- **Errores de OCR en Recibos**: Usa el selector de cuadros interactivo sobre las imágenes de recibos para señalar manualmente las líneas de producto individuales.
+4. **Eliminación automática de fondo y etiquetado inteligente**:
+   - La IA elimina el fondo de cada prenda y detecta su **Categoría**, **Subcategoría** (distinguiendo con precisión sudaderas con capucha y suéteres de camisetas), **Colores**, **Patrón**, **Material**, **Temporada** y **Ocasión**.
+   - También reconoce más de 60 prendas **tradicionales y culturales** de todo el mundo.
+   - Las cuentas gratuitas utilizan el **modelo de IA local de DressApp**, mientras que los suscriptores **Manager** y **Professional** disfrutan de mayor velocidad y reconstrucción en grupo con nuestro **modelo de IA de vanguardia**.
 
-## Limitaciones
-- Las cargas por lotes de alta resolución (>5 artículos) se procesan mediante colas asíncronas en segundo plano para garantizar un rendimiento fluido sin tiempos de espera en el navegador.
+5. **Revisar y guardar**:
+   - Comprueba los detalles detectados, edita lo que desees y pulsa **Guardar** para añadir las prendas a tu armario.
+
+## Carga de grupos de prendas: 5 limitaciones a tener en cuenta
+Fotografiar prendas directamente en el armario, en un zapatero o en una pila es la forma más rápida de digitalizar un armario grande, pero ten en cuenta estas cinco limitaciones:
+1. **Ideal para colores lisos y patrones sencillos**: Funciona muy bien con colores sólidos o cuadros y rayas muy simples; no puede analizar estampados ocultos ni detalles finos.
+2. **Estado de la prenda**: La imagen reconstruida rara vez refleja el estado físico o desgaste actual de la prenda.
+3. **Prendas omitidas**: Puede omitir algunas prendas cuando están muy juntas o superpuestas.
+4. **Alucinación de patrones y colores**: Puede alucinar patrones o colores cuando una prenda está parcialmente oculta.
+5. **Consumo de créditos de reconstrucción**: Cada prenda reconstruida consume créditos de reconstrucción.
+
+## Consejos útiles
+- Toma fotos en una habitación bien iluminada frente a un fondo sencillo.
+- Utiliza fotos individuales para prendas con estampados complejos o detalles de estado que quieras conservar exactamente.

@@ -74,6 +74,9 @@ No 5º dia, você terá **50 peças essenciais** digitalizadas — liberando mil
 - **Comprar Pacotes de Créditos Avulsos (Nunca Expiram)**: Adquira **10 créditos ($3)**, **50 créditos ($12)** ou **100 créditos ($20)**. Os créditos comprados nunca expiram e só são usados após o término dos seus créditos gratuitos ou mensais.
 - **Fazer Upgrade para o Plano Gestor de Guarda-Roupa ($10/mês ou $100/ano)**: Libera **espaço ilimitado no armário**, **consultoria e digitalizações diárias ilimitadas** no **modelo de IA de ponta**, **100 créditos mensais de Reconstrução de Estúdio**, notificações matinais de looks, **Explorador de Tendências** e o **Marketplace**.
 
+### P: O que acontece se eu rebaixar do plano Manager ou Professional para o plano Grátis?
+**R:** Usuários Manager e Professional que rebaixam para o plano Grátis perdem seus espaços extras no armário, **restando apenas os últimos 50 itens adicionados em seu guarda-roupa**. As peças mais antigas são removidas permanentemente. Antes de aceitar o rebaixamento, o DressApp exibe um aviso claro e solicita sua confirmação.
+
 ---
 
 ## 3. Fotografar, Adicionar e Editar Roupas
@@ -89,6 +92,9 @@ No 5º dia, você terá **50 peças essenciais** digitalizadas — liberando mil
 **R:**
 - **Recorte Padrão (Automático)**: Ocorre automaticamente ao enviar a foto (1 crédito de IA local no plano Gratuito). Remove o fundo e preenche os detalhes mantendo sua foto original.
 - **Reconstrução de Estúdio (Opcional)**: Ativada quando você toca em **Reconstruir** (1 crédito de Reconstrução de Estúdio). Usa nosso modelo de IA de ponta para remover amassados profundos, corrigir sombras e gerar uma foto de produto com iluminação de estúdio.
+- **Upload de Conjunto de Peças (Planos Manager e Professional)**: Um recurso revolucionário que identifica e reconstrói **roupas penduradas no armário ou em cabides, uma sapateira, uma pilha de camisas e muito mais** — não apenas roupas espalhadas na cama!
+  - **Proibido para usuários Grátis**: Como usa o Nano Banana, uma única foto pode consumir toda a franquia de reconstrução de um usuário Grátis. Usuários Grátis recebem a sugestão de **pular a imagem ou fazer upgrade do plano**.
+  - **As 5 limitações**: (a) Bom para cores sólidas ou padrões xadrez e listrados simples, não analisa estampas ocultas e detalhes finos; (b) raramente reflete o estado atual da peça; (c) pode pular algumas peças; (d) pode alucinar padrões e cores; (e) consome créditos de reconstrução.
 
 ### P: Por que devo revisar os detalhes de uma peça logo após adicioná-la?
 **R:** Embora a IA do DressApp seja muito precisa, a iluminação interna pode ocasionalmente fazer o azul-marinho parecer preto. Gastar **10 segundos** para confirmar **Categoria, Cor, Estação, Aquecimento (1–5) e Estilo** garante que o Stylist de IA e o Assistente de Mala nunca errem ao combinar a peça.

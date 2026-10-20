@@ -4,12 +4,21 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { closetStore } from '@/lib/closetStore';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Crown, Cpu, Loader2, Sparkles } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { AlertTriangle, Crown, Cpu, Loader2, Sparkles } from 'lucide-react';
 
 function computeBucketCredits(user) {
   if (typeof user?.total_credits === 'number') return user.total_credits;
@@ -42,6 +51,7 @@ export function SubscriptionSettings() {
   const { user, refresh } = useAuth();
   const { total: closetCount } = useClosetStore();
   const [busy, setBusy] = useState(false);
+  const [demoteConfirmOpen, setDemoteConfirmOpen] = useState(false);
   const [liveCredits, setLiveCredits] = useState(null);
   const [liveOnPremCredits, setLiveOnPremCredits] = useState(null);
   const [onPremMaxCredits, setOnPremMaxCredits] = useState(300);
@@ -107,14 +117,27 @@ export function SubscriptionSettings() {
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancel = () => {
     if (busy) return;
-    if (!window.confirm(t('profile.cancelConfirm', { defaultValue: 'Are you sure you want to cancel your subscription? You will lose premium features.' }))) return;
+    setDemoteConfirmOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (busy) return;
     setBusy(true);
     try {
       await api.cancelSubscription();
-      toast.success(t('profile.cancelSuccess', { defaultValue: 'Subscription cancelled successfully.' }));
+      setDemoteConfirmOpen(false);
+      toast.success(
+        t('profile.cancelSuccess', {
+          defaultValue:
+            'Subscription cancelled. Your account is now on the Free plan and your last 50 added items were retained.',
+        })
+      );
       await refresh();
+      try {
+        await closetStore.prewarm({ force: true });
+      } catch (_) {}
     } catch (err) {
       toast.error(t('profile.cancelFailed', { defaultValue: 'Failed to cancel subscription.' }));
     } finally {
@@ -339,6 +362,75 @@ export function SubscriptionSettings() {
           </div>
         )}
       </AccordionContent>
+      <Dialog open={demoteConfirmOpen} onOpenChange={setDemoteConfirmOpen}>
+        <DialogContent className="sm:max-w-md" data-testid="profile-demote-confirm-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-rose-700">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <span>
+                {t('pricing.demoteConfirmTitle', {
+                  defaultValue: 'Demote to Free Plan & Prune Closet?',
+                })}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-text-brand pt-2 leading-relaxed">
+              {t('pricing.demoteConfirmBody', {
+                defaultValue:
+                  'Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 50 added items in their closet. Older closet assets beyond the newest 50 items will be permanently removed.',
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="my-2 rounded-xl border border-rose-200 bg-rose-50/70 p-3.5 text-xs text-rose-900 space-y-1">
+            <div className="font-bold">
+              {t('pricing.demoteClosetSummary', {
+                count: closetCount || 0,
+                limit: 50,
+                defaultValue: `Current closet items: ${closetCount || 0} (Free plan limit: 50 items)`,
+              })}
+            </div>
+            {(closetCount || 0) > 50 ? (
+              <p className="font-semibold text-rose-800">
+                {t('pricing.demoteItemsWillBeLost', {
+                  lostCount: Math.max(0, (closetCount || 0) - 50),
+                  defaultValue: `Warning: Your ${Math.max(0, (closetCount || 0) - 50)} oldest closet items will be permanently deleted, leaving only the last 50 added items.`,
+                })}
+              </p>
+            ) : (
+              <p className="text-rose-800">
+                {t('pricing.demoteUnderLimitNote', {
+                  defaultValue:
+                    'Only the last 50 added items are kept on the Free plan, and unlimited daily AI requests and cluster uploads will be disabled.',
+                })}
+              </p>
+            )}
+          </div>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDemoteConfirmOpen(false)}
+              disabled={busy}
+              data-testid="profile-demote-cancel-btn"
+              className="rounded-full px-6"
+            >
+              {t('pricing.demoteCancelBtn', { defaultValue: 'Keep My Plan' })}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmCancel}
+              disabled={busy}
+              data-testid="profile-demote-confirm-btn"
+              className="rounded-full px-6"
+            >
+              {busy && <Loader2 className="h-4 w-4 animate-spin me-1.5" />}
+              {t('pricing.demoteConfirmBtn', {
+                defaultValue: 'Confirm Demotion',
+              })}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AccordionItem>
   );
 }

@@ -74,6 +74,9 @@ Nach 5 Tagen haben Sie **50 Grundteile** digitalisiert – die Basis für tausen
 - **Zusatz-Credit-Pakete kaufen (verfallen nie)**: Kaufen Sie **10 Credits ($3)**, **50 Credits ($12)** oder **100 Credits ($20)**. Gekaufte Credits verfallen nie und werden erst genutzt, wenn Ihre kostenlosen oder monatlichen Credits aufgebraucht sind.
 - **Upgrade auf Garderoben-Manager ($10/Monat oder $100/Jahr)**: Schaltet **unbegrenzten Platz im Kleiderschrank**, **unbegrenztes tägliches Styling und Scannen** mit unserem **hochmodernen KI-Modell**, **100 monatliche Studio-Rekonstruktions-Credits**, morgendliche Outfit-Benachrichtigungen, **Trend-Entdecker** und den **Marktplatz** frei.
 
+### F: Was passiert, wenn ich von Manager oder Professional zurück in den Free-Tarif wechsle?
+**A:** Manager- und Professional-Nutzer, die in den Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass **nur die letzten 50 hinzugefügten Artikel im Kleiderschrank verbleiben**. Ältere Kleidungsstücke werden dauerhaft entfernt. Vor der Durchführung zeigt DressApp eine Warnmeldung an und bittet um Ihre Bestätigung.
+
 ---
 
 ## 3. Kleidung fotografieren, hinzufügen & bearbeiten
@@ -89,6 +92,9 @@ Nach 5 Tagen haben Sie **50 Grundteile** digitalisiert – die Basis für tausen
 **A:**
 - **Standard-Freistellung (Automatisch)**: Läuft automatisch beim Hochladen (1 interner KI-Credit im kostenlosen Tarif). Entfernt den Hintergrund und erkennt alle Details unter Beibehaltung Ihres Originalfotos.
 - **Studio-Rekonstruktion (Optional)**: Wird beim Tippen auf **Rekonstruieren** ausgeführt (1 Studio-Rekonstruktions-Credit). Unser hochmodernes KI-Modell glättet starke Falten, gleicht Lichtschatten aus und erstellt eine makellose Studio-Produktaufnahme.
+- **Kleider-Cluster hochladen (Manager- & Professional-Tarife)**: Eine revolutionäre Funktion, die **Kleidung im Schrank oder auf Bügeln, ein Schuhregal, einen Stapel Hemden und mehr** erkennt und rekonstruiert — nicht nur auf dem Bett ausgebreitete Kleidung!
+  - **Für Free-Nutzer verboten**: Da Cluster-Uploads Nano Banana verwenden, kann ein einziges Bild das gesamte Rekonstruktionskontingent eines Free-Nutzers verbrauchen. Free-Nutzer erhalten den Hinweis, **das Bild zu überspringen oder ihren Tarif hochzustufen**.
+  - **Die 5 Einschränkungen beim Cluster-Upload**: (a) Gut für Unifarben oder einfache Karo-/Streifenmuster, analysiert keine verdeckten Prints und feinen Details; (b) spiegelt selten den aktuellen Zustand wider; (c) kann Teile überspringen; (d) kann Muster und Farben halluzinieren; (e) verbraucht Rekonstruktions-Credits.
 
 ### F: Warum sollte ich die Angaben eines Kleidungsstücks direkt nach dem Hochladen kurz prüfen?
 **A:** Warmes Zimmerlicht kann Dunkelblau gelegentlich wie Schwarz wirken lassen. Wenn Sie **10 Sekunden** investieren, um **Kategorie, Farbe, Saison, Wärmegrad (1–5) und Dresscode** zu bestätigen, arbeitet der KI-Stylist bei jedem künftigen Outfit-Vorschlag absolut fehlerfrei.

@@ -1,6 +1,6 @@
 # Adding Clothes to Your Closet
 
-Bring your physical wardrobe into DressApp in seconds—whether you photograph one item at a time, a full outfit you are wearing, or several clothes laid out together.
+Bring your physical wardrobe into DressApp in seconds—whether you photograph a single garment, a full outfit you are wearing, or an entire cluster of clothes directly in your physical closet.
 
 ## Overview
 You can add clothes by taking live photos with your camera, uploading saved photos from your gallery, scanning digital product tags, or importing online shopping links and receipts. DressApp's AI automatically identifies every garment, removes the background, and fills in the details for you.
@@ -12,22 +12,36 @@ You can add clothes by taking live photos with your camera, uploading saved phot
 
 2. **Take or Upload Photos**:
    - Tap **Take Photo** to use your camera, or **Upload Photos** to select one or more pictures from your device.
-   - You can upload any combination of photos at once:
+   - DressApp supports three smart photo modes:
      - **A single piece of clothing** on a hanger, table, or bed.
      - **A full outfit worn by a person**, which DressApp automatically splits into separate cards for the top, bottom, outerwear, shoes, and accessories.
-     - **Several items laid out side by side**, which DressApp separates into individual closet items.
+     - **Cluster Garment Uploading (Manager & Professional Plans)**: A revolutionary feature that lets you photograph your physical closet directly—using fewer photos to digitize your wardrobe in no time. It can identify and reconstruct:
+       - Garments hanging in the closet or on hangers
+       - A rack of shoes
+       - A pile of shirts or folded clothes
+       - Multiple garments arranged together (not just clothes spread on a bed)
 
-3. **Automatic Background Removal & Smart Tagging**:
+3. **Why Cluster Uploading Is Restricted on the Free Plan**:
+   - Cluster garment uploading (mass pipeline) uses **Nano Banana** studio AI reconstruction for every detected piece.
+   - Because a single cluster photo can consume all of a Free user's AI reconstruction allowance at once—leaving many garments unreconstructed—cluster uploading is **forbidden for Free users**.
+   - If a Free user tries to upload a cluster of garments, DressApp displays a message suggesting they **skip the image or upgrade their plan** to Manager or Professional.
+
+4. **Automatic Background Removal & Smart Tagging**:
    - DressApp's AI removes the background from each item and detects its **Category**, **Subcategory** (accurately distinguishing sweatshirts and hoodies from T-shirts), **Colors**, **Pattern**, **Material**, **Season**, and **Occasion**.
    - It also recognizes over 60 **Traditional & Cultural** garments from around the world.
-   - Free accounts use **DressApp's on-premises AI model**, while **Manager** and **Professional** subscribers enjoy faster processing with our **cutting-edge AI model**.
-
-4. **Automatic Edge Completion**:
-   - If part of a sleeve or hem was slightly cut off in the photo, DressApp's AI can automatically fill in the missing edge to create a clean studio-style image.
+   - Free accounts use **DressApp's on-premises AI model**, while **Manager** and **Professional** subscribers enjoy faster processing and cluster reconstruction with our **cutting-edge AI model**.
 
 5. **Review & Save**:
    - Check the detected details, make any edits you like, and tap **Save** to add the items to your closet!
 
+## Cluster Garment Uploading: Fallbacks & Limitations
+While photographing garments directly in your closet, on a shoe rack, or in a pile is the fastest way to digitize a large wardrobe, keep these five limitations in mind:
+1. **Best for Solid Colors & Simple Patterns**: It works well for solid colors or very simple plaid or striped patterns, and cannot analyze hidden prints or fine details.
+2. **Garment Condition**: The reconstructed studio image rarely reflects the current physical condition or wear of the garment.
+3. **Skipped Garments**: It may skip some garments when pieces are tightly packed or heavily overlapping.
+4. **Pattern & Color Hallucinations**: It can occasionally hallucinate patterns or colors when a garment is only partially visible.
+5. **Consumes Reconstruction Credits**: Every garment reconstructed from a cluster photo consumes AI reconstruction credits.
+
 ## Helpful Tips
 - Take photos in a well-lit room against a simple background for the cleanest results.
-- When photographing several items together, leave a small gap between each piece so they are easy to separate.
+- Use single flat-lay photos for garments with intricate prints, delicate embroidery, or specific condition details you want preserved exactly as photographed.

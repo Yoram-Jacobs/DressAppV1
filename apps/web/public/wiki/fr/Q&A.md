@@ -74,6 +74,9 @@ Dès le 5e jour, vous aurez **50 pièces clés** numérisées — ouvrant la por
 - **Acheter des Packs de Crédits (Sans Date d'Expiration)** : Choisissez **10 crédits (3 $)**, **50 crédits (12 $)** ou **100 crédits (20 $)**. Les crédits achetés n'expirent jamais et ne sont utilisés qu'une fois vos crédits gratuits ou mensuels épuisés.
 - **Passer à l'offre Gestionnaire de Garde-Robe (10 $/mois ou 100 $/an)** : Débloque une **capacité de dressing illimitée**, des **conseils et scans quotidiens illimités** avec notre **modèle d'IA de pointe**, **100 crédits mensuels de Reconstruction Studio**, les notifications de tenue chaque matin, **Découvreur de Tendances** et la **Marketplace**.
 
+### Q : Que se passe-t-il si je rétrograde du forfait Manager ou Professional vers le forfait Gratuit ?
+**R :** Les utilisateurs Manager et Professional qui passent au forfait Gratuit perdent leurs emplacements supplémentaires, **ne laissant que les 50 derniers articles ajoutés dans leur garde-robe**. Les articles plus anciens sont définitivement supprimés. Avant de valider la rétrogradation, DressApp affiche un avertissement et demande votre confirmation.
+
 ---
 
 ## 3. Photographier, Ajouter et Modifier des Vêtements
@@ -89,6 +92,9 @@ Dès le 5e jour, vous aurez **50 pièces clés** numérisées — ouvrant la por
 **R :**
 - **Détourage Standard (Automatique)** : S'exécute automatiquement lors de l'ajout (1 crédit d'IA interne dans l'offre Gratuite). Il supprime l'arrière-plan et détecte toutes les caractéristiques tout en conservant votre photo d'origine.
 - **Reconstruction Studio (Optionnelle)** : S'active lorsque vous appuyez sur **Reconstruire** (1 crédit de Reconstruction Studio). Elle fait appel à notre modèle d'IA de pointe pour effacer les plis marqués, harmoniser l'éclairage et générer un visuel digne d'un catalogue professionnel.
+- **Import de Lots de Vêtements (Forfaits Manager et Professional)** : Une fonctionnalité révolutionnaire qui identifie et reconstruit **les vêtements suspendus dans le placard ou sur un cintre, une étagère à chaussures, une pile de chemises et plus encore** — pas seulement des vêtements étalés sur un lit !
+  - **Interdit aux utilisateurs Gratuits** : Utilisant Nano Banana, une seule image peut consommer tout le quota de reconstruction d'un utilisateur Gratuit. Les utilisateurs Gratuits sont invités à **passer l'image ou mettre à niveau leur forfait**.
+  - **Les 5 limites** : (a) Idéal pour les unis et motifs à carreaux ou rayures simples, n'analyse pas les imprimés cachés ni les détails fins ; (b) reflète rarement l'état actuel du vêtement ; (c) peut ignorer certains vêtements ; (d) peut halluciner des motifs et couleurs ; (e) consomme des crédits de reconstruction.
 
 ### Q : Pourquoi est-il conseillé de vérifier la fiche d'un vêtement juste après son ajout ?
 **R :** Un éclairage intérieur tamisé peut parfois faire paraître du bleu marine noir. Prendre **10 secondes** pour vérifier la **Catégorie, la Couleur, la Saison, le Niveau de chaleur (1 à 5) et le Style** garantit que le Styliste IA et l'Assistant Valise utiliseront toujours cette pièce à bon escient.

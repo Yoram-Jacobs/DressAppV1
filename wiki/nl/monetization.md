@@ -1,12 +1,23 @@
-# Abonnementen & tegoed
+# Abonnementen, Credits & Abonnementsdegradatie
 
-DressApp biedt een uitgebreid Gratis abonnement naast flexibele maandabonnementen en optionele tegoedbundels.
+## Overzicht
+DressApp biedt een transparant abonnementsmodel met drie niveaus (**Free**, **Manager** en **Professional**), aangevuld met losse opwaardeerpakketten (Pay-As-You-Go).
 
-## Overzicht van abonnementen
-1. **Gratis abonnement**:
-   - Bewaar gratis tot **50 kledingstukken** — uitbreidbaar tot **150 items** door vrienden uit te nodigen (**+10 gratis plekken** per aangemelde vriend).
-   - Direct aangedreven door het **lokale AI-model van DressApp** zonder technische installatie.
-2. **Manager-abonnement ($10/maand of $100/jaar)**:
-   - Ontgrendelt **onbeperkte kastruimte**, voorrang op het **geavanceerde AI-model** van DressApp, ochtendmeldingen voor outfits, Google Agenda-synchronisatie, verkopen op de Marktplaats en volledige toegang tot **Trend Scout**.
-3. **Professional-abonnement ($15/maand of $150/jaar)**:
-   - Ontworpen voor professionele stylisten, kleermakers en mode-creators. Bevat alles uit het Manager-abonnement plus een geverifieerde vermelding in de **Stylistengids**, lokale promotiecampagnes, prioriteitsondersteuning en **100 maandelijkse stylingpunten**.
+## Abonnementsniveaus
+| Functie | Free ($0) | Manager ($10/mnd of $100/jr) | Professional ($15/mnd of $150/jr) |
+| :--- | :--- | :--- | :--- |
+| **Maximale Kastcapaciteit** | 50 items | 200 items | 300 items |
+| **AI Kledingreconstructies** | 5 / maand | 50 / maand | 100 / maand |
+| **Cluster Kleding Uploaden (`mass`)** | Verboden | Inbegrepen | Inbegrepen |
+| **AI Outfitsuggesties** | 5 / maand | 30 / maand | 100 / maand |
+| **AI Virtuele Try-Ons** | 1 / maand | 15 / maand | 50 / maand |
+
+## Waarom Cluster Uploaden Verboden is voor Free-gebruikers
+Cluster kleding uploaden (`mass`-pipeline) gebruikt Nano Banana om meerdere kledingstukken uit één foto te reconstrueren. Omdat één enkele foto direct het volledige maandelijkse reconstructietegoed van een Free-gebruiker kan verbruiken en veel kledingstukken onvoltooid laat, is deze functie exclusief voor **Manager**- en **Professional**-gebruikers.
+
+## Waarschuwing bij Abonnementsdegradatie (Downgrade naar Free)
+Als een **Manager**- (200 plekken) of **Professional**-gebruiker (300 plekken) teruggaat naar het **Free-abonnement**:
+- **Verlies van extra kastplekken:** Je maximale kastcapaciteit wordt teruggezet naar **50 items**.
+- **Alleen de laatste 50 toegevoegde items blijven behouden:** Het systeem bewaart uitsluitend de **50 meest recent toegevoegde kledingstukken** in je kast.
+- **Oudere kastitems worden definitief verwijderd:** Alle oudere kledingstukken buiten de laatste 50 toegevoegde items worden permanent gewist.
+- **Bevestiging vereist:** Voordat de degradatie wordt uitgevoerd, toont DressApp een duidelijke waarschuwing en vraagt om je expliciete bevestiging.

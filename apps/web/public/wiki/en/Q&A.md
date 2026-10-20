@@ -72,7 +72,10 @@ By Day 5, you will have **50 core items** in your digital closet — unlocking t
 ### Q: What happens if I run out of Studio Reconstruction credits or want unlimited daily AI?
 **A:** You have two flexible options on the **Pricing** page:
 - **Add-On Credit Packs (Never Expire)**: Purchase **10 credits ($3)**, **50 credits ($12)**, or **100 credits ($20)**. Purchased credits never expire and are only used after your included credits are spent.
-- **Upgrade to Wardrobe Manager ($10/mo or $100/yr)**: Unlocks **unlimited closet space**, **unlimited daily styling and scans** powered by our **cutting-edge AI model**, **100 monthly Studio Reconstruction credits**, morning outfit notifications, **Trend Scout**, and the **Marketplace**.
+- **Upgrade to Wardrobe Manager ($10/mo or $100/yr)**: Unlocks **unlimited closet space**, **unlimited daily styling and scans** powered by our **cutting-edge AI model**, **100 monthly Studio Reconstruction credits**, **Cluster Garment Uploading** (closets, hangers, shoe racks, and shirt piles), morning outfit notifications, **Trend Scout**, and the **Marketplace**.
+
+### Q: What happens if I demote from Manager or Professional back to the Free plan?
+**A:** Manager and Professional users who demote to the Free plan lose their extra closet slots, **leaving only the last 50 added items in their closet**. Older closet assets beyond the 50 most recently added items are permanently removed. Before accepting a planned demotion, DressApp displays a clear warning about losing older closet assets and asks for your confirmation.
 
 ---
 
@@ -85,10 +88,18 @@ By Day 5, you will have **50 core items** in your digital closet — unlocking t
 3. Smooth out wrinkles and **spread the sleeves** slightly so the AI can clearly see the sleeve length and neckline.
 4. Make sure neither your body nor your phone casts a shadow across the fabric, hold your phone steady, and take the photo.
 
-### Q: What is the difference between automatic background removal and "Reconstruct"?
+### Q: What is the difference between automatic background removal, "Reconstruct", and Cluster Garment Uploading?
 **A:**
-- **Automatic Background Removal**: Runs automatically whenever you add a photo (1 On-Premises AI Credit on the Free plan). It removes the background and fills in item details while keeping your real photo.
-- **Studio Reconstruction (Optional)**: Runs when you tap **Reconstruct** (1 Studio Reconstruction Credit). It uses our cutting-edge AI model to smooth out deep wrinkles, balance lighting, and generate a crisp studio-style product image.
+- **Automatic Background Removal**: Runs automatically whenever you add a single garment or worn outfit photo (1 On-Premises AI Credit per garment on the Free plan). It removes the background and fills in item details while keeping your real photo.
+- **Studio Reconstruction (Optional)**: Runs when you tap **Reconstruct** (1 Studio Reconstruction Credit). It uses our **Nano Banana** AI model to smooth out deep wrinkles, balance lighting, and generate a crisp studio-style product image.
+- **Cluster Garment Uploading (Manager & Professional Plans)**: A revolutionary feature that identifies and reconstructs **garments hanging in your closet or on a hanger, a rack of shoes, a pile of shirts, and more**—not just garments spread on a bed! You can photograph your physical closet directly, use fewer photos, and digitize your wardrobe in no time.
+  - **Forbidden for Free Users**: Because cluster uploading uses Nano Banana AI reconstruction, a single cluster photo can consume all of a Free user's AI reconstruction allowance at once, leaving many garments unreconstructed. If a Free user uploads a cluster photo, DressApp prompts them to **skip the image or upgrade their plan**.
+  - **5 Fallbacks of Cluster Uploading**:
+    1. It is good for solid colors or very simple plaid or striped patterns, and cannot analyze hidden prints and fine details.
+    2. The reconstructed image rarely reflects the current garment condition.
+    3. It may skip some garments.
+    4. It can hallucinate patterns and colors.
+    5. It consumes reconstruction credits.
 
 ### Q: Why should I check an item's details right after adding it?
 **A:** Warm indoor lighting can occasionally make navy blue look black, or an angle might hide a garment's exact fabric weight. Taking **10 seconds** to verify the **Category, Color, Season, Warmth (1–5), and Dress Code** ensures your AI Stylist and Suitcase Planner always use the item accurately.

@@ -1,24 +1,30 @@
-# Kleding toevoegen aan je kast
+# Kleding Toevoegen (Adding Clothes)
 
-Digitaliseer je garderobe in enkele seconden — of je nu één kledingstuk fotografeert, een volledige outfit die je draagt of meerdere kledingstukken naast elkaar.
+## Overzicht
+De **Kleding Toevoegen**-engine van DressApp gebruikt drie slimme pipelines die zich automatisch aanpassen aan je foto:
+1. **Enkel Kledingstuk Uitknippen (`single`)**: Snelle achtergrondverwijdering voor één ongedragen kledingstuk (verbruikt geen reconstructiecredits).
+2. **Gedragen Outfit Splitsen (`worn`)**: Scheidt elk kledingstuk uit een volledige outfitfoto en reconstrueert elk item tot een Nano Banana-studioproductfoto.
+3. **Cluster Kleding Uploaden (`mass`) — Revolutionaire Bulkdigitalisering *(Alleen Manager & Professional)***: Herkent en reconstrueert tientallen kledingstukken uit één enkele foto — kleding hangend in de kast of aan een kledinghanger, een schoenenrek, een stapel shirts of kleding verspreid op een bed.
 
-## Stapsgewijze instructies
+## Wat Cluster Kleding Uploaden Kan Herkennen
+Je hoeft niet elk kledingstuk apart op een bed uit te spreiden! Met deze revolutionaire functie kun je direct foto's maken van je kleding in je fysieke kledingkast, minder foto's gebruiken en je garderobe in een handomdraai digitaliseren:
+- **Kleding hangend in de kast of aan een hanger** (overhemden, jassen, jurken, broeken).
+- **Een schoenenrek of schoenenplank** (elk paar schoenen wordt als apart schoeisel gecatalogiseerd).
+- **Een stapel opgevouwen shirts, truien of broeken**.
+- **Meerdere kledingstukken op een bed, tafel of vloer**.
 
-1. **Scherm 'Item toevoegen' openen**:
-   - Tik op de knop **Item toevoegen** in de hoofdnavigatie.
+> **Exclusief voor Betaalde Abonnementen:** Cluster kleding uploaden (`mass`-pipeline) maakt gebruik van Nano Banana AI-reconstructie. Omdat één clusterfoto het volledige maandelijkse AI-reconstructietegoed van een Free-gebruiker in één keer kan verbruiken waardoor veel kledingstukken onvoltooid blijven, **is cluster uploaden verboden voor Free-gebruikers**. Als een Free-gebruiker een clusterfoto uploadt, toont DressApp een melding met het voorstel om **de afbeelding over te slaan** of **het abonnement te upgraden**.
 
-2. **Foto's maken of uploaden**:
-   - Kies **Foto maken** of **Foto's uploaden** om één of meer afbeeldingen tegelijk te selecteren:
-     - **Één enkel kledingstuk** aan een hanger of plat neergelegd.
-     - **Een volledige outfit gedragen door een persoon**, die DressApp automatisch opsplitst in aparte kaarten voor bovenkleding, broek/rok, jas, schoenen en accessoires.
-     - **Meerdere kledingstukken naast elkaar**, die automatisch worden gescheiden in losse items.
+## Kanttekeningen en Beperkingen van Cluster Uploaden
+Houd bij het snel digitaliseren van je kast rekening met deze 5 beperkingen:
+1. **Geschikt voor effen kleuren en eenvoudige patronen:** Het werkt uitstekend voor effen stoffen of zeer eenvoudige ruit- (plaid) en streeppatronen, maar kan geen verborgen prints en fijne details analyseren.
+2. **Huidige staat van het kledingstuk:** De gereconstrueerde studioafbeelding weerspiegelt zelden de huidige fysieke staat van het kledingstuk (zoals kreukels, slijtage of vlekjes).
+3. **Kan sommige kledingstukken overslaan:** Sterk overlappende of deels verborgen kledingstukken kunnen worden overgeslagen.
+4. **Kan patronen en kleuren hallucineren:** Bij het invullen van verborgen delen kan de AI soms patronen of kleurtinten verzinnen.
+5. **Verbruikt reconstructiecredits:** Elk gereconstrueerd kledingstuk verbruikt 1 AI-reconstructiecredit.
 
-3. **Automatische achtergrondverwijdering & slimme labels**:
-   - De AI van DressApp verwijdert de achtergrond van elk item en herkent **Categorie**, **Subcategorie** (met nauwkeurig onderscheid tussen hoodies/sweaters en T-shirts), **Kleuren**, **Patroon**, **Materiaal**, **Seizoen** en **Gelegenheid**, plus meer dan 60 **traditionele en culturele kledingstukken** van over de hele wereld.
-   - Gratis accounts gebruiken het **lokale AI-model van DressApp**, terwijl **Manager**- en **Professional**-abonnees profiteren van snellere verwerking met ons **geavanceerde AI-model**.
-
-4. **Automatisch aanvullen van randen**:
-   - Als een mouw of zoom op de foto iets is afgesneden, vult de AI van DressApp de ontbrekende rand automatisch aan tot een nette studiofoto.
-
-5. **Controleren & opslaan**:
-   - Controleer de herkende details, pas ze indien gewenst aan en tik op **Opslaan**!
+## Stapsgewijze Instructies
+1. Tik op de knop **+ (Item Toevoegen)** in de onderste navigatiebalk.
+2. Maak of selecteer je foto's (enkel kledingstuk, gedragen outfit of een clusterfoto van je kast/schoenenrek — tot 10 foto's).
+3. Tik op **Start Analyse**.
+4. Controleer de gedetecteerde en gereconstrueerde items, pas indien nodig tags aan en tik op **Opslaan in Kast**.

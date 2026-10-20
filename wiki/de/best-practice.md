@@ -21,6 +21,25 @@ Im kostenlosen Tarif stellt Ihnen DressApp zwei spezielle Credits-Kontingente zu
 
 Wenn Sie ein Foto hochladen, erkennt die KI von DressApp automatisch, ob es sich um ein **einzelnes Kleidungsstück**, ein **komplettes Outfit am Körper** oder **mehrere nebeneinander gelegte Teile** handelt. Sie entfernt den Hintergrund, bestimmt die Farben und erkennt Schnitt sowie Stil. Klare, gut beleuchtete Fotos sorgen auf Anhieb für saubere Freisteller und präzise Farberkennung – so sparen Sie Ihre **5 Studio-Rekonstruktions-Credits** für besonders schwierige Aufnahmen.
 
+### Kleider-Cluster hochladen (Manager- & Professional-Tarife)
+
+Das Hochladen von Kleider-Clustern (Mass-Pipeline) ist eine revolutionäre Funktion: Sie können Ihre Kleidung direkt im physischen Kleiderschrank fotografieren, benötigen deutlich weniger Fotos und digitalisieren Ihre Garderobe im Handumdrehen. Erkannt und rekonstruiert werden:
+- **Kleidung, die im Schrank oder auf Kleiderbügeln hängt**
+- **Ein Schuhregal**
+- **Ein Stapel Hemden oder gefalteter Shirts**
+- **Mehrere zusammenliegende Kleidungsstücke** (nicht nur auf dem Bett ausgebreitete Kleidung!)
+
+> **Warum das Hochladen von Clustern für Free-Nutzer verboten ist:** Das Hochladen von Kleider-Clustern nutzt **Nano Banana** KI-Studiorekonstruktion. Ein einziges Cluster-Foto kann das gesamte KI-Rekonstruktionskontingent eines Free-Nutzers auf einmal verbrauchen und viele Kleidungsstücke unvollendet lassen. Versucht ein Free-Nutzer ein Cluster-Foto hochzuladen, schlägt DressApp vor, **das Bild zu überspringen oder den Tarif hochzustufen**.
+
+**Die 5 Einschränkungen beim Cluster-Upload:**
+1. **Optimal für Unifarben & einfache Muster**: Ideal für einfarbige Stoffe sowie sehr einfache Karo- oder Streifenmuster. Verdeckte Prints und feine Details können nicht analysiert werden.
+2. **Aktueller Zustand**: Das rekonstruierte Studiobild spiegelt selten den aktuellen Zustand oder Gebrauchsspuren des Kleidungsstücks wider.
+3. **Übersprungene Kleidungsstücke**: Bei stark überlappenden Stapeln können einzelne Teile übersprungen werden.
+4. **Halluzinierte Muster und Farben**: Die KI kann bei verdeckten Bereichen gelegentlich Muster oder Farben hinzuerfinden — prüfen Sie die Artikelkarte vor dem Speichern.
+5. **Verbraucht Rekonstruktions-Credits**: Jedes rekonstruierte Teil verbraucht Rekonstruktions-Credits.
+
+> **Hinweis zur Tarif-Herabstufung (Downgrade):** Wenn Manager- oder Professional-Nutzer in den Free-Tarif wechseln, verlieren sie ihre zusätzlichen Schrankplätze, sodass **nur die letzten 50 hinzugefügten Artikel im Kleiderschrank verbleiben**. DressApp warnt Sie vor dem Verlust älterer Kleidungsstücke und bittet vorab um Ihre Bestätigung.
+
 ### Die 4 goldenen Regeln für flach ausgelegte Fotos
 
 1. **Heller Raum & kontrastreicher Untergrund**

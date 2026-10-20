@@ -1,20 +1,8 @@
-# 欢迎使用 DressApp
+# DressApp 概览 (Overview)
 
-**DressApp** 是您的智能衣橱助手与私人造型师。它将您的日常衣物整理为井井有条的数字衣橱，并根据天气、日程和个人风格为您量身定制每日穿搭。
-
----
+DressApp 是您的 AI 智能数字衣橱与私人造型师。
 
 ## 核心功能
-
-### 1. 智能衣物扫描
-拍摄任何衣物照片——无论是挂在衣架上的单件衣物、镜子前的全身穿搭，还是平铺在一起的多件衣物。系统会自动识别照片类型、去除背景，并准确提取每件衣物的品类、颜色、季节与风格。
-
-### 2. 数字衣橱与智能搜索
-浏览全部衣物，按品类或颜色筛选，或直接使用自然语言搜索（例如*“保暖冬日大衣”*或*“晚宴衬衫”*）。您还可以将多件单品组合为固定套装。
-
-### 3. 私人造型师（文字与语音）
-通过文字或实时语音与造型师交流，用衣橱里现有的衣服搭配完整造型——并支持在您本人或匹配您身材的模特身上生成逼真的上身预览。
-
-### 4. 穿搭日历、旅行打包与衣橱分析
-提前规划每周穿搭，生成高利用率的旅行打包清单，并直观了解哪些衣物常穿、哪些衣物被闲置。
-- **60-Second Personalized Onboarding & Starter Capsule**: Calibrate your style DNA, 3D/2D avatar measurements, and select from 48 pre-cataloged womenswear and menswear staples (covering trousers, skirts, dresses, abayas, kaftans, jalabiyas, sarees, thobes, kurtas, and tailored suits) to assemble your first weather-aware AI outfit before signing in.
+- **智能衣橱数字化：** 支持单件衣物快速抠图、全身穿搭拆分，以及革命性的**成簇衣物批量上传** *（Manager 与 Professional 专属）*——直接拍摄挂在衣柜或衣架上的衣服、鞋架或叠放的衬衫堆，用更少的照片瞬间完成衣橱数字化。
+- **AI 造型师与虚拟试穿：** 根据天气、场合与身材数据提供专属穿搭推荐与虚拟试穿。
+- **灵活的订阅套餐：** 提供 Free 免费版（50 件）、Manager 管理版（200 件）与 Professional 专业版（300 件）。*（注：降级至免费版将仅保留最后添加的 50 件单品）。*

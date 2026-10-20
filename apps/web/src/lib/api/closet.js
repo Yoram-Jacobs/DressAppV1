@@ -168,6 +168,9 @@ export const closet = {
                 case 'item_skip':
                   await callbacks.onItemSkip?.(frame);
                   break;
+                case 'mass_restricted':
+                  await callbacks.onMassRestricted?.(frame);
+                  break;
                 case 'field':
                   await callbacks.onField?.(frame);
                   break;

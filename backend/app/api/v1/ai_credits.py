@@ -494,7 +494,12 @@ async def upgrade_subscription(
         if not new_plan:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Plan type required")
         
-        if new_plan not in ["pro", "business"]:
+        if new_plan == "free":
+            from app.services.billing_service import demote_user_to_free_plan
+            db = get_db()
+            return await demote_user_to_free_plan(db, user)
+
+        if new_plan not in ["pro", "business", "manager", "professional"]:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Invalid plan: {new_plan}")
         
         db = get_db()

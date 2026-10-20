@@ -786,7 +786,7 @@ class GarmentVisionService:
             return []
 
         shrunk = _shrink_for_vision(image_bytes, max_side=1024, q=80)
-        gem = self._get_gemini()
+        gem = self._get_gemini() if self.api_key else GeminiClient(api_key=settings.GEMINI_API_KEY)
         t0 = time.perf_counter()
         ok = False
         last_err: str | None = None
@@ -1133,7 +1133,7 @@ class GarmentVisionService:
                     )
             else:
                 gemini_model = model or self.model
-                gem = self._get_gemini()
+                gem = self._get_gemini() if self.api_key else GeminiClient(api_key=settings.GEMINI_API_KEY)
                 t0 = time.perf_counter()
                 ok = False
                 last_err: str | None = None
@@ -1318,7 +1318,7 @@ class GarmentVisionService:
             else language_prefix + GROUP_ANALYZE_SYSTEM_PROMPT
         )
         
-        gem = self._get_gemini()
+        gem = self._get_gemini() if self.api_key else GeminiClient(api_key=settings.GEMINI_API_KEY)
         t0 = time.perf_counter()
         ok = False
         last_err: str | None = None
@@ -2240,7 +2240,7 @@ class GarmentVisionService:
         for b in crops_bytes:
             user_parts.append(_shrink_for_vision(b))
 
-        gem = self._get_gemini()
+        gem = self._get_gemini() if self.api_key else GeminiClient(api_key=settings.GEMINI_API_KEY)
         t0 = time.perf_counter()
         ok = False
         last_err: str | None = None
@@ -2369,7 +2369,7 @@ class GarmentVisionService:
             user_parts.append(f"Image {i + 1} of {n} (index [{i}]{hint_txt}):")
             user_parts.append(_shrink_for_vision(b))
 
-        gem = self._get_gemini()
+        gem = self._get_gemini() if self.api_key else GeminiClient(api_key=settings.GEMINI_API_KEY)
 
         t0 = time.perf_counter()
         emitted = 0
@@ -2754,7 +2754,8 @@ class GarmentVisionService:
         if detections and any(d.get("_unworn_cluster_hint") for d in detections):
             return "mass"
 
-        if self.api_key:
+        router_api_key = self.api_key or settings.GEMINI_API_KEY
+        if router_api_key:
             try:
                 import io
                 from PIL import Image, ImageOps
@@ -2768,12 +2769,12 @@ class GarmentVisionService:
                     img.save(out, format="JPEG", quality=80)
                     small_bytes = out.getvalue()
 
-                client = self._get_gemini()
+                client = self._get_gemini() if self.api_key else GeminiClient(api_key=router_api_key)
                 system_prompt = (
                     "You are a fashion vision router. Classify this clothing photo into one of three pipelines:\n"
                     "- 'single': Exactly ONE standalone garment, ONE pair of shoes, or ONE accessory (e.g. 1 hoodie, 1 shirt on a hanger, 1 pair of pants laid flat, 1 dress, 1 jacket, 1 pair of boots) with no human wearer.\n"
                     "- 'multi': A human model, person, or dressed full-body mannequin wearing an outfit of 2 or more garments.\n"
-                    "- 'mass': TWO OR MORE unworn garments/accessories in the same photo WITHOUT a human wearer — including multiple items hanging on wall-mounted hooks or door hooks (e.g. two pairs of pants and a belt on wall hooks), clothes hanging on a closet rod/rack, a pile/stack of clothes on a bed/floor/chair, or multiple separate unworn garments arranged together."
+                    "- 'mass': A cluster of TWO OR MORE unworn garments, shoe pairs, or accessories in the same photo WITHOUT a human wearer — including garments hanging in a closet or on hangers/wall hooks, a rack or shelf of shoes (2+ pairs of shoes), a pile/stack of shirts or clothes, or multiple separate unworn garments arranged on a bed/floor/surface."
                 )
                 schema = {
                     "type": "object",
@@ -2866,6 +2867,8 @@ class GarmentVisionService:
 
         cap = 1 if eff_mode == "single" else (max_items if max_items is not None else self.max_items)
         remaining_mass_budget = max(0, int(max_reconstructions or 0)) if not cutout_only else 0
+        from app.services.credit_manager import get_user_tier
+        user_tier = get_user_tier(user) if user else ("manager" if remaining_mass_budget > 0 else "free")
 
         # 1. Detect and route each photo sequentially to avoid OOM on large batches
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
@@ -2903,7 +2906,6 @@ class GarmentVisionService:
                     )
                     has_masc_cue = any(
                         is_distinctly_masculine_garment(d.get("category"), d.get("label"), d.get("label"), name=d.get("label"), full_text=d.get("label"))
-                        for d in detections
                     ) or any(k in cat_labels for k in ("boxers", "tuxedo", "kurta", "sherwani", "thobe", "dishdasha")) or any(
                         w in str(d.get("label", "")).lower() for d in detections for w in ("kurta", "sherwani", "thobe", "dishdasha", "tuxedo", "boxer")
                     )
@@ -2956,7 +2958,7 @@ class GarmentVisionService:
                     )
                 )
 
-                # Auto-route unworn clusters (wall hooks, closet racks, garment piles) to the Mass pipeline
+                # Auto-route unworn clusters (wall hooks, closet racks, shoe racks, garment piles) to the Mass pipeline
                 unworn_cluster_hint = bool(
                     not has_explicit_head
                     and any(d.get("_unworn_cluster_hint") for d in (detections or []))
@@ -2965,16 +2967,15 @@ class GarmentVisionService:
                 force_single_from_router = False
                 if (
                     (not has_human_wearer or (not has_explicit_head and not shoe_dets and len(detections) >= 2))
-                    and not is_footwear_only
                     and not unworn_cluster_hint
                     and eff_mode == "auto"
-                    and remaining_mass_budget > 0
                     and not cutout_only
                 ):
                     routed_pipe = await self._detect_unworn_pipeline_mode(img_bytes, detections=detections)
                     if routed_pipe == "mass":
                         unworn_cluster_hint = True
                         has_human_wearer = False
+                        is_footwear_only = False
                     elif routed_pipe == "multi":
                         force_multi_from_router = True
                         has_human_wearer = True
@@ -2982,6 +2983,24 @@ class GarmentVisionService:
                         force_single_from_router = True
                         has_human_wearer = False
                         has_multi_body_zones = False
+
+                if unworn_cluster_hint and not cutout_only and user_tier not in ("manager", "professional"):
+                    logger.info(
+                        "analyze_outfits_stream: blocking cluster upload for free user on photo idx=%d",
+                        idx,
+                    )
+                    return idx, [(
+                        {
+                            "_mass_restricted": True,
+                            "image_index": idx,
+                            "pipeline_mode": "mass",
+                            "bbox": [0, 0, 1000, 1000],
+                            "kind": "garment",
+                            "label": "cluster",
+                        },
+                        img_bytes,
+                        "image/jpeg",
+                    )]
 
                 if unworn_cluster_hint and remaining_mass_budget > 0 and not cutout_only:
                     try:
@@ -3139,9 +3158,13 @@ class GarmentVisionService:
 
         # Flatten crops and keep track of image indices
         flat_crops: list[tuple[int, dict[str, Any], bytes, str]] = []
+        mass_restricted_indices: list[int] = []
         for idx, crops in results:
             for det, c_bytes, c_mime in crops:
-                flat_crops.append((idx, det, c_bytes, c_mime))
+                if det.get("_mass_restricted"):
+                    mass_restricted_indices.append(idx)
+                else:
+                    flat_crops.append((idx, det, c_bytes, c_mime))
         if (
             len(flat_crops) == 1
             and not flat_crops[0][1].get("_is_mass_slot")
@@ -3153,7 +3176,29 @@ class GarmentVisionService:
         del results
         gc.collect()
 
+        for r_idx in mass_restricted_indices:
+            yield {
+                "type": "mass_restricted",
+                "image_index": r_idx,
+                "code": "mass_pipeline_tier_restricted",
+                "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                "message": (
+                    "Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                    "uses Nano Banana AI studio reconstruction. One cluster photo can consume your entire free AI reconstruction "
+                    "allowance and leave many garments unreconstructed, so it is not available on the Free plan. "
+                    "Please skip this image or upgrade your plan."
+                ),
+            }
+
         if not flat_crops:
+            if mass_restricted_indices:
+                yield {
+                    "type": "done",
+                    "count": 0,
+                    "reconstructed_count": 0,
+                    "mass_restricted_count": len(mass_restricted_indices),
+                }
+                return
             yield {
                 "type": "error",
                 "status": 422,
@@ -4300,7 +4345,7 @@ class GarmentVisionService:
             max_items=max_items,
         )
 
-        gem = self._get_gemini()
+        gem = self._get_gemini() if self.api_key else GeminiClient(api_key=settings.GEMINI_API_KEY)
         t0 = time.perf_counter()
         raw: str | None = None
         used_model = "gemini-3.5-flash"

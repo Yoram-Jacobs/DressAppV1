@@ -21,6 +21,25 @@ Als gebruiker van het Gratis-abonnement geeft DressApp u twee aparte credittegoe
 
 Wanneer u een foto uploadt, herkent de AI van DressApp automatisch of het gaat om **één kledingstuk**, een **complete outfit die u draagt**, of **meerdere kledingstukken die naast elkaar liggen**. De achtergrond wordt verwijderd en de kleuren, pasvorm en stijl worden direct herkend. Heldere, goed belichte foto's zorgen meteen voor een strakke uitsnede en nauwkeurige kleurherkenning, zodat u uw **5 Studio-reconstructiecredits** bewaart voor echt lastige kledingstukken.
 
+### Cluster Kleding Uploaden (Manager- & Professional-abonnementen)
+
+Cluster kleding uploaden (mass-pipeline) is een revolutionaire functie waarmee je direct foto's kunt maken in je fysieke kledingkast, minder foto's nodig hebt en je garderobe in een handomdraai digitaliseert. Het herkent en reconstrueert:
+- **Kleding hangend in de kast of aan een kledinghanger**
+- **Een schoenenrek**
+- **Een stapel opgevouwen shirts of kleding**
+- **Meerdere gegroepeerde kledingstukken** (niet alleen kleding uitgespreid op een bed!)
+
+> **Waarom cluster uploaden verboden is voor Free-gebruikers:** Cluster uploaden gebruikt **Nano Banana** AI-reconstructie. Één foto kan het volledige reconstructietegoed van een Free-gebruiker in één keer verbruiken, waardoor veel kledingstukken onvoltooid blijven. Als een Free-gebruiker een cluster uploadt, stelt DressApp voor om **de afbeelding over te slaan of het abonnement te upgraden**.
+
+**De 5 beperkingen van cluster uploaden:**
+1. **Geschikt voor effen kleuren en eenvoudige patronen**: Werkt uitstekend voor effen stoffen of eenvoudige ruit- en streeppatronen, maar kan geen verborgen prints en fijne details analyseren.
+2. **Staat van het kledingstuk**: De gereconstrueerde afbeelding weerspiegelt zelden de huidige staat van het kledingstuk.
+3. **Kan kledingstukken overslaan**: Bij sterke overlapping kunnen sommige items worden overgeslagen.
+4. **Kan patronen en kleuren hallucineren**: De AI kan soms patronen en kleuren verzinnen op deels bedekte delen.
+5. **Verbruikt reconstructiecredits**: Elk gereconstrueerd item verbruikt reconstructiecredits.
+
+> **Opmerking over abonnementsdegradatie:** Manager- en Professional-gebruikers die teruggaan naar het Free-abonnement verliezen hun extra kastplekken, waardoor **alleen de laatste 50 toegevoegde items in de kast behouden blijven**. DressApp waarschuwt je vooraf en vraagt om bevestiging.
+
 ### De 4 Gouden Regels voor Vlakke Kledingfoto's
 
 1. **Gebruik een Lichte Ruimte en een Contrasterende Ondergrond**
