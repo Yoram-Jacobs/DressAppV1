@@ -5,6 +5,7 @@ export const users = {
   patchMe: (body) => client.patch('/users/me', body).then((r) => r.data),
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
   saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
+  uploadMigrationScreenshots: (body) => client.post('/closet/migration/upload-screenshots', body, { timeout: 180000 }).then((r) => r.data),
   deleteAccount: (body) => client.post('/users/me/delete', body).then((r) => r.data),
   validateApiKey: (body) => client.post('/users/validate-api-key', body).then((r) => r.data),
   recordFunnelEvent: (event, metadata = {}) =>
@@ -12,4 +13,3 @@ export const users = {
   startManagerTrial: () =>
     client.post('/ai-credits/trial/manager/start').then((r) => r.data),
 };
-

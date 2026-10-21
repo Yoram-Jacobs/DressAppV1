@@ -1,14 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp, Key, CreditCard as Coins, Info, ExternalLink, Save, Globe, Bookmark, Sparkles, Crown, Shirt } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
+import { LogOut, Loader2, Languages, Newspaper, Calendar, Users, TrendingUp, Save, Shirt } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -18,14 +14,17 @@ import { LocationCard } from '@/components/LocationCard';
 import { InviteFriendsButton } from '@/components/InviteFriendsButton';
 import { ProfileDetailsCard } from '@/components/ProfileDetailsCard';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
-import { labelForDressCode } from '@/lib/taxonomy';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { useClosetStore } from '@/lib/useClosetStore';
 import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
-import { SchedulerSettings, AIConfiguration, SubscriptionSettings, ShoppingAssistant } from '@/components/profile/index.js';
+import {
+  SchedulerSettings,
+  AIConfiguration,
+  SubscriptionSettings,
+  ShoppingAssistant,
+  ImportWardrobeSection,
+} from '@/components/profile/index.js';
 import PricingBanner from '../assets/img/inner6.webp';
 import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
+
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal, logout } = useAuth();
@@ -40,6 +39,8 @@ export default function Profile() {
   const [langBusy, setLangBusy] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
+  const [migrationInitialApp, setMigrationInitialApp] = useState(null);
+  const [migrationInitialStep, setMigrationInitialStep] = useState(null);
 
   const isDirty = useMemo(() => {
     if (!user) return false;
@@ -52,6 +53,7 @@ export default function Profile() {
       (key) => String(form[key]) !== String(initial[key])
     );
   }, [user, form, i18n.language]);
+  void isDirty;
 
   const isTester = Boolean(
     user?.subscription?.is_tester ||
@@ -149,6 +151,17 @@ export default function Profile() {
     } finally { setBusy(false); }
   };
 
+  const handleOpenMigrationForApp = (app) => {
+    if (app) {
+      setMigrationInitialApp(app);
+      setMigrationInitialStep('web_login');
+    } else {
+      setMigrationInitialApp(null);
+      setMigrationInitialStep(null);
+    }
+    setIsMigrationModalOpen(true);
+  };
+
   return (
     <>
       {/* Banner Section */}
@@ -163,8 +176,6 @@ export default function Profile() {
                 "
           >
             <div className="max-w-[520px]">
-              {/* <span>{t('profile.accountLabel')}</span> */}
-              {/* Title */}
               <h1
                 className="
                       m-0 mb-0
@@ -179,7 +190,6 @@ export default function Profile() {
               >
                 {t('profile.title')}
               </h1>
-              {/* Description */}
               <p
                 className="
                       my-5
@@ -213,7 +223,7 @@ export default function Profile() {
       </PageHeroBanner>
       <section className="bg-accent-beige px-[40px] py-[40px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
         max-[480px]:px-[15px] max-[480px]:py-[30px]">
-        <div className='bg-white rounded-[12px] p-4 shadow-sm border border-border mb-5'>
+        <div className="bg-white rounded-[12px] p-4 shadow-sm border border-border mb-5">
           <h3 className="text-[16px] text-dark-brand font-bold mb-4">{t('profile.exploreTitle', { defaultValue: 'Explore DressApp' })}</h3>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-center">
             {/* Explore Section (Secondary Nav) */}
@@ -252,7 +262,7 @@ export default function Profile() {
                   <span className="flex items-center justify-center h-10 w-10 rounded-full bg-primary-shadow">
                     <Languages className="h-5 w-5 text-primary-brand" aria-hidden="true" />
                   </span>
-                  <div className='text-center'>
+                  <div className="text-center">
                     <div className="text-[12px] text-text-brand font-semibold">{t('profile.voiceLanguage')}</div>
                     <div className="font-bold text-[14px] text-dark-brand">{t('profile.language')}</div>
                   </div>
@@ -291,7 +301,7 @@ export default function Profile() {
           <div>
             <Card className="rounded-[12px] border border-border bg-white shadow-sm h-full" data-testid="profile-settings-card">
               <CardContent className="p-5 space-y-4">
-                <div className=''>
+                <div className="">
                   <div className="text-[12px] text-text-brand font-semibold">
                     {t('profile.sections.settings', { defaultValue: 'Settings & Integrations' })}
                   </div>
@@ -310,6 +320,7 @@ export default function Profile() {
                   <LocationCard />
                   <InviteFriendsButton />
                   <ShoppingAssistant />
+                  <ImportWardrobeSection onSelectAppForMigration={handleOpenMigrationForApp} />
                 </Accordion>
                 <div className="flex">
                   <Button
@@ -325,13 +336,7 @@ export default function Profile() {
                 <div className="flex justify-center items-center gap-3">
                   <Button
                     type="button"
-                    onClick={() => {
-                      if ('ontouchstart' in window) {
-                        toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
-                      } else {
-                        setIsMigrationModalOpen(true);
-                      }
-                    }}
+                    onClick={() => handleOpenMigrationForApp(null)}
                     className=""
                     data-testid="profile-import-wardrobe-pill"
                   >
@@ -353,7 +358,13 @@ export default function Profile() {
         </div>
         <OnboardingMigrationModal
           isOpen={isMigrationModalOpen}
-          onClose={() => setIsMigrationModalOpen(false)}
+          onClose={() => {
+            setIsMigrationModalOpen(false);
+            setMigrationInitialApp(null);
+            setMigrationInitialStep(null);
+          }}
+          initialApp={migrationInitialApp}
+          initialStep={migrationInitialStep}
         />
       </section>
     </>

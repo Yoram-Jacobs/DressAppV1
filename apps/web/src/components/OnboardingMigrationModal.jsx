@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTierLimits } from '@/hooks/useTierLimits';
 import { isRtl } from '@/lib/i18n';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,9 @@ import {
   Search,
   Shirt,
   ExternalLink,
+  ImagePlus,
+  Video,
+  Trash2,
 } from 'lucide-react';
 
 const PRESET_APPS = [
@@ -27,7 +30,103 @@ const PRESET_APPS = [
   { name: 'BeautyAI', domain: 'beautyai.app', loginUrl: 'https://beautyai.app', icon: '💄', defaultItems: 25, defaultOutfits: 3 },
 ];
 
-export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
+async function fileImageToBase64Jpeg(file, maxDim = 1080) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        if (Math.max(w, h) > maxDim) {
+          const r = maxDim / Math.max(w, h);
+          w = Math.max(1, Math.round(w * r));
+          h = Math.max(1, Math.round(h * r));
+        }
+        const cvs = document.createElement('canvas');
+        cvs.width = w;
+        cvs.height = h;
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = cvs.toDataURL('image/jpeg', 0.85);
+        URL.revokeObjectURL(url);
+        resolve(dataUrl);
+      } catch (err) {
+        URL.revokeObjectURL(url);
+        reject(err);
+      }
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(url);
+      reject(err);
+    };
+    img.src = url;
+  });
+}
+
+async function extractVideoFramesInBrowser(file, intervalSec = 0.8, maxFrames = 30, maxDim = 1080) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    video.playsInline = true;
+    video.src = url;
+
+    const frames = [];
+    const cleanup = () => {
+      try {
+        URL.revokeObjectURL(url);
+        video.removeAttribute('src');
+        video.load();
+      } catch {
+        // ignore
+      }
+    };
+
+    video.onloadedmetadata = async () => {
+      const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 15;
+      let w = video.videoWidth || 720;
+      let h = video.videoHeight || 1280;
+      if (Math.max(w, h) > maxDim) {
+        const r = maxDim / Math.max(w, h);
+        w = Math.max(1, Math.round(w * r));
+        h = Math.max(1, Math.round(h * r));
+      }
+      const cvs = document.createElement('canvas');
+      cvs.width = w;
+      cvs.height = h;
+      const ctx = cvs.getContext('2d');
+
+      const step = Math.max(intervalSec, duration / maxFrames);
+      for (let t = 0.1; t < duration && frames.length < maxFrames; t += step) {
+        await new Promise((resSeek) => {
+          const onSeeked = () => {
+            video.removeEventListener('seeked', onSeeked);
+            resSeek();
+          };
+          video.addEventListener('seeked', onSeeked);
+          video.currentTime = Math.min(t, duration - 0.05);
+        });
+        try {
+          ctx.drawImage(video, 0, 0, w, h);
+          frames.push(cvs.toDataURL('image/jpeg', 0.84));
+        } catch {
+          // ignore frame error
+        }
+      }
+      cleanup();
+      resolve(frames);
+    };
+
+    video.onerror = () => {
+      cleanup();
+      resolve([]);
+    };
+  });
+}
+
+export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated, initialApp, initialStep }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -48,6 +147,30 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [appDomain, setAppDomain] = useState('app.whering.co.uk');
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
+
+  const isCapacitorNative = typeof window !== 'undefined' && Boolean(window.Capacitor?.isNativePlatform?.());
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0 || isCapacitorNative);
+  const [importMode, setImportMode] = useState(() => (isTouchDevice ? 'screenshots' : 'bookmarklet'));
+  const [uploadedFrames, setUploadedFrames] = useState([]);
+  const [parsingMedia, setParsingMedia] = useState(false);
+  const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
+  const [capacitorWebScanning, setCapacitorWebScanning] = useState(false);
+  const mediaInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialApp) {
+        setAppName(initialApp.name || 'Whering');
+        setAppDomain(initialApp.domain || 'app.whering.co.uk');
+        setCustomLoginUrl(initialApp.loginUrl || `https://${initialApp.domain || 'app.whering.co.uk'}`);
+      }
+      if (initialStep) {
+        setStep(initialStep);
+      } else if (!initialApp) {
+        setStep('ask');
+      }
+    }
+  }, [isOpen, initialApp, initialStep]);
 
   const isCurrentRtl = isRtl(i18n.language || 'en');
 
@@ -96,7 +219,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             },
             body: JSON.stringify({
               app_name: APP_NAME || document.title || 'Competitor App',
-              cards: cardsToUpload.map(c => ({ crop_base64: c.crop_base64, title: c.title || '' })),
+              cards: cardsToUpload.map(c => ({
+                crop_base64: c.crop_base64 || undefined,
+                image_url: c.image_url || undefined,
+                title: c.title || '',
+              })),
             }),
           });
           const json = await resp.json();
@@ -109,15 +236,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       // Clean up Chrome extension widgets that conflict with migration
       document.querySelectorAll('.dressapp-importer-widget, #dressapp-fab, .dressapp-fab, .dressapp-anchor-btn').forEach(el => el.remove());
       document.querySelectorAll('[data-testid="dressapp-fab"], [data-testid="dressapp-anchor-btn"]').forEach(el => el.remove());
-      // Remove any extension-injected styles
       document.querySelectorAll('style').forEach(st => {
         const txt = st.textContent || '';
         if (txt.includes('dressapp-importer-widget') || txt.includes('dressapp-fab') || txt.includes('dressapp-anchor')) st.remove();
       });
-      // Tell the extension to suppress its widget while we scan
       window.postMessage({ type: 'DRESSAPP_WIDGET_TOGGLE', enabled: false }, '*');
 
-      // Inject heartbeat animation style
       const s = document.createElement('style');
       s.innerHTML = '@keyframes da-hb { 0% { transform: scale(1); } 14% { transform: scale(1.08); } 28% { transform: scale(1); } 42% { transform: scale(1.12); } 70% { transform: scale(1); } } .da-pulse-badge { animation: da-hb 1.5s infinite ease-in-out; display: inline-block; }';
       document.head.appendChild(s);
@@ -131,9 +255,90 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       const st = document.getElementById('da-status');
       const btn = document.getElementById('da-start-btn');
 
+      // Mobile / fallback DOM harvester when getDisplayMedia is unavailable
+      const runDomFallbackHarvester = async () => {
+        st.innerText = MSGS.scanningCloset;
+        const seenSrcs = new Set();
+        const harvested = [];
+        let uploadedCount = 0;
+        let idlePasses = 0;
+
+        const tryImgToBase64 = (imgEl) => {
+          try {
+            const cvs = document.createElement('canvas');
+            const w = Math.min(640, imgEl.naturalWidth || imgEl.width || 300);
+            const h = Math.min(640, imgEl.naturalHeight || imgEl.height || 300);
+            if (w < 40 || h < 40) return null;
+            cvs.width = w;
+            cvs.height = h;
+            const ctx = cvs.getContext('2d');
+            ctx.drawImage(imgEl, 0, 0, w, h);
+            return cvs.toDataURL('image/jpeg', 0.85).split(',')[1];
+          } catch (_) {
+            return null;
+          }
+        };
+
+        for (let step = 0; step < 35; step++) {
+          let foundInPass = 0;
+          const imgs = Array.from(document.querySelectorAll('img'));
+          for (const img of imgs) {
+            const r = img.getBoundingClientRect();
+            if (r.width < 55 || r.height < 55) continue;
+            const src = img.currentSrc || img.src || '';
+            if (!src || seenSrcs.has(src)) continue;
+            let p = img.parentElement;
+            let inChrome = false;
+            while (p && p !== document.body) {
+              const tag = p.tagName.toLowerCase();
+              if (tag === 'header' || tag === 'nav' || tag === 'footer') { inChrome = true; break; }
+              p = p.parentElement;
+            }
+            if (inChrome) continue;
+            seenSrcs.add(src);
+            const b64 = tryImgToBase64(img);
+            harvested.push({
+              crop_base64: b64 || undefined,
+              image_url: src.startsWith('http') ? src : undefined,
+              title: img.alt || '',
+            });
+            foundInPass++;
+          }
+
+          if (harvested.length - uploadedCount >= 12) {
+            const batch = harvested.slice(uploadedCount, uploadedCount + 12);
+            uploadedCount += batch.length;
+            st.innerText = MSGS.uploading.replace('{{uploaded}}', uploadedCount).replace('{{total}}', harvested.length);
+            await uploadBatch(batch);
+          } else {
+            st.innerText = MSGS.scanningCount.replace('{{count}}', harvested.length);
+          }
+
+          if (foundInPass === 0) {
+            idlePasses++;
+            if (idlePasses >= 3) break;
+          } else {
+            idlePasses = 0;
+          }
+          window.scrollBy({ top: Math.round(window.innerHeight * 0.7), behavior: 'smooth' });
+          await new Promise(r => setTimeout(r, 900));
+        }
+
+        if (uploadedCount < harvested.length) {
+          const rem = harvested.slice(uploadedCount);
+          st.innerText = MSGS.savingRemaining.replace('{{count}}', rem.length);
+          await uploadBatch(rem);
+        }
+        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> ' + MSGS.title + '</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">' + MSGS.savedSuccess.replace('{{count}}', harvested.length) + '</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + MSGS.completionNotice + '</div>';
+      };
+
       btn.onclick = async () => {
         btn.disabled = true;
         btn.innerText = MSGS.requestingStream;
+        if (!navigator.mediaDevices || typeof navigator.mediaDevices.getDisplayMedia !== 'function') {
+          await runDomFallbackHarvester();
+          return;
+        }
         let stream;
         try {
           stream = await navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: 'browser' }, preferCurrentTab: true });
@@ -164,20 +369,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         document.body.appendChild(video);
         await video.play();
 
-        // Wait for video to have actual playable frames (readyState >= 3 = HAVE_FUTURE_DATA)
         await new Promise(r => {
           if (video.readyState >= 3) { r(); return; }
           const onReady = () => { video.removeEventListener('canplay', onReady); r(); };
           video.addEventListener('canplay', onReady);
         });
-        // Extra settle time for first frame decode
         await new Promise(r => setTimeout(r, 1500));
-        // Verify video dimensions are initialized before proceeding
         if (!video.videoWidth || !video.videoHeight) {
           await new Promise(r => setTimeout(r, 2000));
         }
 
-        // Scroll to top of page before starting scan
         const getScrollEl = () => {
           if (window.pageYOffset > 0) return window;
           window.scrollTo(0, 1);
@@ -201,7 +402,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         };
 
         const scrollEl = getScrollEl();
-        // Always start scanning from the top of the page
         if (scrollEl && scrollEl !== window && scrollEl !== document.body && scrollEl !== document.documentElement) {
           scrollEl.scrollTop = 0;
         }
@@ -211,12 +411,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         await new Promise(r => setTimeout(r, 500));
         let scrollPos = 0;
 
-        // --- Card detection function ---
-        // Returns only cards that are FULLY visible in the viewport (no clipping at edges)
         const getVisibleGarmentRects = () => {
           const vpTop = 0;
           const vpBottom = window.innerHeight;
-
           const rects = [];
 
           const imgCandidates = Array.from(document.querySelectorAll('img')).filter(img => {
@@ -251,7 +448,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             if (cardEl) {
               const r = cardEl.getBoundingClientRect();
               if (imgRect.width < r.width / 2 || imgRect.height < r.height / 2) continue;
-              // Only accept fully visible cards (entire card within viewport)
               if (r.top < vpTop || r.bottom > vpBottom) continue;
               rects.push({ left: r.left, top: r.top, width: r.width, height: r.height });
             } else {
@@ -261,20 +457,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               const cx = imgRect.left + imgRect.width / 2;
               const cy = imgRect.top + imgRect.height / 2;
               const cardRect = { left: cx - cardW / 2, top: cy - cardH / 2, width: cardW, height: cardH };
-              // Only accept fully visible cards
               if (cardRect.top < vpTop || cardRect.top + cardRect.height > vpBottom) continue;
               rects.push(cardRect);
             }
           }
 
-          // Strategy 2: If no <img> cards found, look for card-shaped <div> elements
           if (rects.length === 0) {
             const allEls = document.querySelectorAll('div, li, a, section');
             for (const el of allEls) {
               const r = el.getBoundingClientRect();
               if (r.width < 80 || r.width > 600 || r.height < 80 || r.height > 800) continue;
               if (r.bottom < 40 || r.top > window.innerHeight - 20) continue;
-              // Only accept fully visible cards
               if (r.top < vpTop || r.bottom > vpBottom) continue;
               const ratio = r.height / r.width;
               if (ratio < 0.7 || ratio > 2.5) continue;
@@ -286,7 +479,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             }
           }
 
-          // Coordinate-based near-duplicate rejection
           const uniqueRects = [];
           for (const r of rects) {
             const isDup = uniqueRects.some(u =>
@@ -301,7 +493,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           return uniqueRects;
         };
 
-        // Group cards into rows by Y position (within 30px tolerance)
         const groupIntoRows = (cardRects) => {
           if (cardRects.length === 0) return [];
           const sorted = [...cardRects].sort((a, b) => a.top - b.top);
@@ -322,7 +513,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           return rows;
         };
 
-        // --- Scroll state helpers ---
         const getScrollState = () => {
           return {
             window: window.scrollY || window.pageYOffset,
@@ -332,9 +522,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           };
         };
 
-        // ======================================================================
-        // PHASE 1: Scan-All-First — autonomous scroll + crop loop
-        // ======================================================================
         const harvestedCards = [];
         let uploadedCount = 0;
         let noChangeCount = 0;
@@ -400,12 +587,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         st.innerText = MSGS.scanningCloset;
 
         while (!reachedBottom) {
-          // Hide widget for clean capture
           o.style.display = 'none';
           await new Promise(r => setTimeout(r, 300));
           await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-          // Detect fully visible cards and crop each one
           const cardRects = getVisibleGarmentRects();
 
           for (const rect of cardRects) {
@@ -422,7 +607,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             }
           }
 
-          // Upload stream batches directly to DressApp DB
           if (harvestedCards.length - uploadedCount >= 15) {
             const batch = harvestedCards.slice(uploadedCount, uploadedCount + 15);
             uploadedCount += 15;
@@ -449,19 +633,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             ? scrollEl.scrollTop
             : (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
 
-          // Calculate scroll: detect rows, scroll to center the next row
           const rows = groupIntoRows(cardRects);
           let scrollAmount;
           if (rows.length >= 2) {
-            // We have at least 2 rows visible — scroll by the height of one row
             const rowHeight = rows[0].reduce((s, c) => s + c.height, 0) / rows[0].length;
             scrollAmount = Math.round(rowHeight);
           } else if (rows.length === 1) {
-            // Only one row visible — scroll by the row height + gap
             const rowHeight = rows[0].reduce((s, c) => s + c.height, 0) / rows[0].length;
             scrollAmount = Math.round(rowHeight * 1.2);
           } else {
-            // Fallback: scroll by 60% of viewport
             scrollAmount = Math.round((scrollEl && scrollEl !== window && scrollEl.clientHeight) ? scrollEl.clientHeight * 0.6 : window.innerHeight * 0.6);
           }
 
@@ -473,11 +653,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           document.documentElement.scrollTop = targetScroll;
           document.body.scrollTop = targetScroll;
 
-          // Wait for layout to settle
           await new Promise(r => setTimeout(r, 400));
           await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-          // Center the visible row on screen if possible
           const freshCards = getVisibleGarmentRects();
           const freshRows = groupIntoRows(freshCards);
           if (freshRows.length > 0) {
@@ -502,7 +680,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             }
           }
 
-          // Adaptive wait for lazy images
           st.innerText = MSGS.waitingLazy.replace('{{count}}', harvestedCards.length);
           const pollStart = Date.now();
           const POLL_TIMEOUT = 12000;
@@ -559,13 +736,9 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           reachedBottom = (!changed && !newRectsFound && noChangeCount >= 3) || isShort;
         }
 
-        // Stop the media stream
         stream.getTracks().forEach(t => t.stop());
         video.remove();
 
-        // ======================================================================
-        // PHASE 1 COMPLETE — Upload remaining cards + signal done
-        // ======================================================================
         const totalCaptured = harvestedCards.length;
         if (uploadedCount < totalCaptured) {
           const remaining = harvestedCards.slice(uploadedCount);
@@ -595,7 +768,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         }
         harvestedCards.length = 0;
 
-        // Show green completion badge
         o.style.display = 'block';
         o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> ' + MSGS.title + '</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">' + MSGS.savedSuccess.replace('{{count}}', totalCaptured) + '</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + MSGS.completionNotice + '</div>';
       };
@@ -650,8 +822,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   };
 
   const handleOpenPopupWindow = async () => {
-    // Open the competitor site in a new tab — the bookmarklet handles
-    // crop capture and posts results to MigrationMessageListener.
     const win = window.open(targetLoginUrl, '_blank');
     if (win) {
       win.opener = window;
@@ -659,6 +829,92 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
     toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} tab. Log in, go to your closet, then click the "DressApp Agent" bookmarklet.` }));
     onClose();
+  };
+
+  const handleSelectScreenshotsOrVideo = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setParsingMedia(true);
+    try {
+      const extracted = [];
+      for (const file of files) {
+        if (file.type.startsWith('video/')) {
+          const vFrames = await extractVideoFramesInBrowser(file, 0.8, 30, 1080);
+          extracted.push(...vFrames);
+        } else if (file.type.startsWith('image/')) {
+          const b64 = await fileImageToBase64Jpeg(file, 1080);
+          if (b64) extracted.push(b64);
+        }
+      }
+      if (extracted.length > 0) {
+        setUploadedFrames((prev) => [...prev, ...extracted].slice(0, 40));
+      } else {
+        toast.error(t('migration.noFramesExtracted', { defaultValue: 'Could not read frames from the selected file.' }));
+      }
+    } catch {
+      toast.error(t('common.errorOccurred', { defaultValue: 'An error occurred.' }));
+    } finally {
+      setParsingMedia(false);
+      if (mediaInputRef.current) mediaInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadScreenshotsMigration = async () => {
+    if (!uploadedFrames.length) return;
+    setUploadingScreenshots(true);
+    try {
+      const res = await api.uploadMigrationScreenshots({
+        app_name: appName || 'Competitor App',
+        frames_base64: uploadedFrames,
+      });
+      const savedCount = res?.items_saved ?? 0;
+      await api.updateMigrationFlag({ migration_flag: 'Migrated' }).catch(() => {});
+      if (onFlagUpdated) onFlagUpdated('Migrated');
+      toast.success(
+        t('migration.screenshotsImportedSuccess', {
+          count: savedCount,
+          appName,
+          defaultValue: `Imported ${savedCount} garments from ${appName}! AI analysis is running in the background.`,
+        })
+      );
+      setUploadedFrames([]);
+      onClose();
+      if (location.pathname !== '/closet') {
+        navigate('/closet');
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('common.errorOccurred', { defaultValue: 'An error occurred.' }));
+    } finally {
+      setUploadingScreenshots(false);
+    }
+  };
+
+  const handleStartCapacitorWebViewScan = async () => {
+    const capBrowser = window.Capacitor?.Plugins?.InAppBrowser;
+    if (!capBrowser || typeof capBrowser.openWebView !== 'function') {
+      toast.info(t('migration.screenshotsInstructions', {
+        appName,
+        defaultValue: `Take screenshots of your ${appName} closet grid (or record your screen while scrolling through your closet) and upload them below. DressApp will automatically slice and deduplicate every garment card.`,
+      }));
+      setImportMode('screenshots');
+      return;
+    }
+
+    setCapacitorWebScanning(true);
+    try {
+      const injectCode = decodeURIComponent(harvesterBookmarkletCode.replace(/^javascript:/, ''));
+      await capBrowser.openWebView({
+        url: targetLoginUrl,
+        title: `${appName} — ${t('migration.scanAndImportClosetBtn', { defaultValue: 'Scan & Import Closet' })}`,
+      });
+      if (typeof capBrowser.executeScript === 'function') {
+        await capBrowser.executeScript({ code: injectCode });
+      }
+    } catch (err) {
+      toast.error(err?.message || t('common.errorOccurred', { defaultValue: 'An error occurred.' }));
+    } finally {
+      setCapacitorWebScanning(false);
+    }
   };
 
   const handleCancelForm = () => {
@@ -740,7 +996,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             <DialogDescription>
               {t('migration.selectAppSub', { defaultValue: 'Pick an application to import your wardrobe structure, items list, and layouts.' })}
             </DialogDescription>
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[300px]">
+            <div className="flex-1 overflow-y-auto space-y-3 pe-1 max-h-[300px]">
               {/* Presets List */}
               <div className="grid grid-cols-1 gap-2">
                 {PRESET_APPS.map((app) => (
@@ -811,7 +1067,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             </div>
           </form>
         )}
-        {/* STEP 3: SCREENSHOT-SCROLLER & GARMENTVISION AI PIPELINE */}
+        {/* STEP 3: SCREENSHOT / VIDEO SLICER OR BROWSER BOOKMARKLET */}
         {step === 'web_login' && (
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
             <DialogTitle className="flex items-center gap-2">
@@ -821,89 +1077,250 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             <DialogDescription>
               {t('migration.screenshotPipelineSub', { defaultValue: "DressApp will capture garment cards from your competitor's wardrobe via screen capture." })}
             </DialogDescription>
-            {/* Content area */}
-            <div className="flex-1 relative bg-primary-shadow rounded-[12px] border border-border overflow-y-auto p-3 h-[200px]">
-              <div className="flex flex-col text-start space-y-2 py-2">
-                <div className="flex items-center gap-2 shrink-0">
-                  <Globe className="!w-4 !h-4 text-primary-brand" />
-                  <h3 className="text-[14px] font-bold text-dark-brand">
-                    {t('migration.connectToAppTitle', { appName, defaultValue: `Connect to ${appName}` })}
-                  </h3>
-                </div>
-                <p className='text-text-brand text-[12px] font-semibold'>
-                  {('ontouchstart' in window)
-                    ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: `Tap the button below to copy the bookmarklet script, then create a new bookmark and paste it as the URL:` })
-                    : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the DressApp Agent bookmarklet below to your browser's Bookmarks Bar, then log in to ${appName} and navigate to your closet page.` })}
-                </p>
-                <div className="flex flex-col items-center justify-center p-3 bg-white border border-border rounded-[12px] gap-2">
-                  <a
-                    ref={bookmarkletRef}
-                    href={harvesterBookmarkletCode}
-                    title={`👗 ${t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      if (!harvesterBookmarkletCode) return;
-                      if ('ontouchstart' in window) {
-                        const ta = document.createElement('textarea');
-                        ta.value = harvesterBookmarkletCode;
-                        ta.setAttribute('readonly', '');
-                        ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0;';
-                        document.body.appendChild(ta);
-                        ta.focus();
-                        ta.select();
-                        try {
-                          document.execCommand('copy');
-                          toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
-                        } catch (err) {
-                          toast.error(t('migration.copyFailed', { defaultValue: 'Copy failed. Please try again.' }));
-                        } finally {
-                          document.body.removeChild(ta);
-                        }
-                      } else {
-                        toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
-                      }
-                    }}
-                    className="inline-flex items-center gap-1.5 justify-center px-5 py-2.5 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90 cursor-grab active:cursor-grabbing select-none transition-all duration-200"
-                  >
-                    <span className="pointer-events-none">👗</span>
-                    <span className="pointer-events-none">{t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}</span>
-                  </a>
-                  <span className="text-[10px] text-text-brand font-semibold">
-                    {('ontouchstart' in window)
-                      ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
-                      : t('migration.dragTip', { defaultValue: 'Drag this to your Bookmarks Bar' })}
-                  </span>
-                </div>
-                <p className='text-text-brand text-[12px] font-semibold'>
-                  {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
-                </p>
-                <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-[12px] border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
-                  <div>{t('migration.tabSleepAlert', { defaultValue: 'Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Browsers may sleep or throttle the background scroller).' })}</div>
-                  <div>{t('migration.proTip', { defaultValue: 'Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!' })}</div>
-                </div>
-              </div>
-            </div>
-            {/* Actions */}
-            <div className="bg-white border border-border rounded-[12px] p-3 flex items-center justify-between shrink-0 gap-2">
-              <div className="flex items-center gap-1">
-                <Shirt className="w-4 h-4 text-primary-brand shrink-0" />
-                <span className="text-[12px] font-semibold text-text-brand">
-                  {t('migration.garmentVisionReady', { defaultValue: 'Agentic Ingestion Ready' })}
-                </span>
-              </div>
 
-              <Button
+            {/* Mode Selector Tabs (#2 Screenshots/Video vs Browser Agent) */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-primary-shadow rounded-[10px] border border-border shrink-0">
+              <button
                 type="button"
-                onClick={handleOpenPopupWindow}
-                className="!gap-1 hover:opacity-95"
-                data-testid="migration-weblogin-proceed-btn"
+                onClick={() => setImportMode('screenshots')}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-[8px] text-[12px] font-bold transition-all ${
+                  importMode === 'screenshots'
+                    ? 'bg-white text-primary-brand shadow-sm'
+                    : 'text-text-brand hover:text-dark-brand'
+                }`}
+                data-testid="migration-tab-screenshots"
               >
-                <span>
-                  {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
+                <ImagePlus className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">
+                  {t('migration.modeScreenshotsTab', { defaultValue: 'Screenshots / Video' })}
                 </span>
-                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
-              </Button>
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportMode('bookmarklet')}
+                className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-[8px] text-[12px] font-bold transition-all ${
+                  importMode === 'bookmarklet'
+                    ? 'bg-white text-primary-brand shadow-sm'
+                    : 'text-text-brand hover:text-dark-brand'
+                }`}
+                data-testid="migration-tab-bookmarklet"
+              >
+                <Globe className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">
+                  {isCapacitorNative
+                    ? t('migration.modeWebViewScannerTab', { defaultValue: 'In-App Web Scanner' })
+                    : t('migration.modeBookmarkletTab', { defaultValue: 'Browser Agent' })}
+                </span>
+              </button>
             </div>
+
+            {importMode === 'screenshots' ? (
+              <>
+                <div className="flex-1 relative bg-primary-shadow rounded-[12px] border border-border overflow-y-auto p-3 space-y-3 text-start">
+                  <p className="text-[12px] font-semibold text-text-brand leading-relaxed">
+                    {t('migration.screenshotsInstructions', {
+                      appName,
+                      defaultValue: `Take screenshots of your ${appName} closet grid (or record your screen while scrolling through your closet) and upload them below. DressApp will automatically slice and deduplicate every garment card.`,
+                    })}
+                  </p>
+
+                  <input
+                    ref={mediaInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    multiple
+                    onChange={handleSelectScreenshotsOrVideo}
+                    className="hidden"
+                    data-testid="migration-screenshots-input"
+                  />
+
+                  <div className="flex flex-col items-center justify-center p-4 bg-white border border-dashed border-primary-brand/40 rounded-[12px] gap-2">
+                    <div className="flex items-center gap-2 text-primary-brand">
+                      <ImagePlus className="w-5 h-5" />
+                      <Video className="w-5 h-5" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={parsingMedia || uploadingScreenshots}
+                      onClick={() => mediaInputRef.current?.click()}
+                      className="rounded-full text-[12px] h-9 font-bold border-primary-brand/40 text-primary-brand"
+                      data-testid="migration-pick-media-btn"
+                    >
+                      {parsingMedia ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin me-1.5" />
+                          <span>{t('migration.extractingFrames', { defaultValue: 'Extracting frames...' })}</span>
+                        </>
+                      ) : (
+                        <span>{t('migration.selectScreenshotsOrVideoBtn', { defaultValue: 'Select Screenshots or Screen Recording' })}</span>
+                      )}
+                    </Button>
+                    <span className="text-[10px] text-text-brand font-semibold text-center">
+                      {t('migration.screenshotsSupportHint', { defaultValue: 'Works on iOS & Android with any wardrobe app (PNG, JPG, MP4, MOV)' })}
+                    </span>
+                  </div>
+
+                  {uploadedFrames.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-dark-brand">
+                          {t('migration.framesReadyBadge', {
+                            count: uploadedFrames.length,
+                            defaultValue: `${uploadedFrames.length} closet frames ready to slice`,
+                          })}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setUploadedFrames([])}
+                          className="inline-flex items-center gap-1 text-[11px] text-red-600 font-semibold hover:underline"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>{t('common.clear', { defaultValue: 'Clear' })}</span>
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                        {uploadedFrames.slice(0, 12).map((src, idx) => (
+                          <img
+                            key={idx}
+                            src={src}
+                            alt={`Frame ${idx + 1}`}
+                            className="w-14 h-20 object-cover rounded-[8px] border border-border shrink-0"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-white border border-border rounded-[12px] p-3 flex items-center justify-between shrink-0 gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Shirt className="w-4 h-4 text-primary-brand shrink-0" />
+                    <span className="text-[12px] font-semibold text-text-brand">
+                      {t('migration.garmentVisionReady', { defaultValue: 'Agentic Ingestion Ready' })}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    disabled={uploadedFrames.length === 0 || uploadingScreenshots || parsingMedia}
+                    onClick={handleUploadScreenshotsMigration}
+                    className="!gap-1.5 hover:opacity-95"
+                    data-testid="migration-slice-import-btn"
+                  >
+                    {uploadingScreenshots ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>{t('migration.slicingAndImporting', { defaultValue: 'Slicing & Importing...' })}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{t('migration.sliceAndImportBtn', { defaultValue: 'Slice & Import Closet' })}</span>
+                        <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Content area */}
+                <div className="flex-1 relative bg-primary-shadow rounded-[12px] border border-border overflow-y-auto p-3 h-[200px]">
+                  <div className="flex flex-col text-start space-y-2 py-2">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Globe className="!w-4 !h-4 text-primary-brand" />
+                      <h3 className="text-[14px] font-bold text-dark-brand">
+                        {t('migration.connectToAppTitle', { appName, defaultValue: `Connect to ${appName}` })}
+                      </h3>
+                    </div>
+                    <p className="text-text-brand text-[12px] font-semibold">
+                      {isTouchDevice
+                        ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: 'Tap the button below to copy the bookmarklet script, then create a new bookmark and paste it as the URL:' })
+                        : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the DressApp Agent bookmarklet below to your browser's Bookmarks Bar, then log in to ${appName} and navigate to your closet page.` })}
+                    </p>
+                    <div className="flex flex-col items-center justify-center p-3 bg-white border border-border rounded-[12px] gap-2">
+                      <a
+                        ref={bookmarkletRef}
+                        href={harvesterBookmarkletCode}
+                        title={`👗 ${t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (!harvesterBookmarkletCode) return;
+                          if (isTouchDevice) {
+                            const ta = document.createElement('textarea');
+                            ta.value = harvesterBookmarkletCode;
+                            ta.setAttribute('readonly', '');
+                            ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0;';
+                            document.body.appendChild(ta);
+                            ta.focus();
+                            ta.select();
+                            try {
+                              document.execCommand('copy');
+                              toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
+                            } catch {
+                              toast.error(t('migration.copyFailed', { defaultValue: 'Copy failed. Please try again.' }));
+                            } finally {
+                              document.body.removeChild(ta);
+                            }
+                          } else {
+                            toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 justify-center px-5 py-2.5 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90 cursor-grab active:cursor-grabbing select-none transition-all duration-200"
+                      >
+                        <span className="pointer-events-none">👗</span>
+                        <span className="pointer-events-none">{t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}</span>
+                      </a>
+                      <span className="text-[10px] text-text-brand font-semibold">
+                        {isTouchDevice
+                          ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
+                          : t('migration.dragTip', { defaultValue: 'Drag this to your Bookmarks Bar' })}
+                      </span>
+                    </div>
+                    <p className="text-text-brand text-[12px] font-semibold">
+                      {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to ${appName}, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
+                    </p>
+                    <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-[12px] border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
+                      <div>{t('migration.tabSleepAlert', { defaultValue: 'Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Browsers may sleep or throttle the background scroller).' })}</div>
+                      <div>{t('migration.proTip', { defaultValue: 'Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!' })}</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Actions */}
+                <div className="bg-white border border-border rounded-[12px] p-3 flex items-center justify-between shrink-0 gap-2">
+                  <div className="flex items-center gap-1">
+                    <Shirt className="w-4 h-4 text-primary-brand shrink-0" />
+                    <span className="text-[12px] font-semibold text-text-brand">
+                      {t('migration.garmentVisionReady', { defaultValue: 'Agentic Ingestion Ready' })}
+                    </span>
+                  </div>
+
+                  <Button
+                    type="button"
+                    disabled={capacitorWebScanning}
+                    onClick={isCapacitorNative ? handleStartCapacitorWebViewScan : handleOpenPopupWindow}
+                    className="!gap-1 hover:opacity-95"
+                    data-testid="migration-weblogin-proceed-btn"
+                  >
+                    {capacitorWebScanning ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>{t('migration.scanningInProgressBtn', { defaultValue: 'Scanning...' })}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          {isCapacitorNative
+                            ? t('migration.scanAndImportClosetBtn', { defaultValue: 'Scan & Import Closet' })
+                            : t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+
             {/* Bottom Navigation */}
             <div className="flex items-center justify-between shrink-0">
               <Button

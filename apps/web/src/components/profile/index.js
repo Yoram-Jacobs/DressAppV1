@@ -19,5 +19,4 @@ export { SchedulerSettings } from './SchedulerSettings.jsx';
 export { AIConfiguration } from './AIConfiguration.jsx';
 export { SubscriptionSettings } from './SubscriptionSettings.jsx';
 export { ShoppingAssistant } from './ShoppingAssistant.jsx';
-
-
+export { ImportWardrobeSection } from './ImportWardrobeSection.jsx';
