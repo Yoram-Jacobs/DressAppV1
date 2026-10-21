@@ -47,7 +47,7 @@ O DressApp elimina o cadastro manual e a indecisão matinal por meio de reconhec
 No 5º dia, você terá **50 peças essenciais** digitalizadas — liberando milhares de combinações de looks!
 
 ### P: Posso importar minhas roupas de outro aplicativo de guarda-roupa?
-**R:** Sim! Se você tiver fotos ou capturas de tela de outro aplicativo, acesse **Perfil → Importar Guarda-Roupa** (ou **Adicionar Peça**) para importar seu acervo com separação automática das peças, remoção de fundo e identificação de detalhes.
+**R:** Sim! Assinantes **Manager e Professional** podem usar o **Agente de Migração de Guarda-Roupa** em **Perfil → Importar Guarda-Roupa** (ou **Adicionar Peça**) para importar acervos de 50+ peças de outros aplicativos com remoção automática de fundo. Usuários do plano Grátis (limitados a 50 peças no modelo local) não podem usar o Agente de Migração, mas podem importar links individuais de lojas ou desbloquear o **Upload de Conjunto de Peças** mantendo **15 ou mais créditos de reconstrução de IA**.
 
 ---
 
@@ -92,8 +92,8 @@ No 5º dia, você terá **50 peças essenciais** digitalizadas — liberando mil
 **R:**
 - **Recorte Padrão (Automático)**: Ocorre automaticamente ao enviar a foto (1 crédito de IA local no plano Gratuito). Remove o fundo e preenche os detalhes mantendo sua foto original.
 - **Reconstrução de Estúdio (Opcional)**: Ativada quando você toca em **Reconstruir** (1 crédito de Reconstrução de Estúdio). Usa nosso modelo de IA de ponta para remover amassados profundos, corrigir sombras e gerar uma foto de produto com iluminação de estúdio.
-- **Upload de Conjunto de Peças (Planos Manager e Professional)**: Um recurso revolucionário que identifica e reconstrói **roupas penduradas no armário ou em cabides, uma sapateira, uma pilha de camisas e muito mais** — não apenas roupas espalhadas na cama!
-  - **Proibido para usuários Grátis**: Como usa o Nano Banana, uma única foto pode consumir toda a franquia de reconstrução de um usuário Grátis. Usuários Grátis recebem a sugestão de **pular a imagem ou fazer upgrade do plano**.
+- **Upload de Conjunto de Peças (Planos Manager e Professional, ou Plano Grátis com 15+ créditos de reconstrução de IA)**: Um recurso revolucionário que identifica e reconstrói **roupas penduradas no armário ou em cabides, uma sapateira, uma pilha de camisas e muito mais** — não apenas roupas espalhadas na cama!
+  - **Desbloqueio no plano Grátis (15+ créditos de reconstrução)**: Como usa o Nano Banana, usuários Grátis precisam de **15 ou mais créditos de reconstrução de IA** (adquirindo pacotes de créditos na página de Preços). Com menos de 15 créditos, recebem a sugestão de **pular a imagem, comprar um pacote de créditos de IA ou fazer upgrade do plano**.
   - **As 5 limitações**: (a) Bom para cores sólidas ou padrões xadrez e listrados simples, não analisa estampas ocultas e detalhes finos; (b) raramente reflete o estado atual da peça; (c) pode pular algumas peças; (d) pode alucinar padrões e cores; (e) consome créditos de reconstrução.
 
 ### P: Por que devo revisar os detalhes de uma peça logo após adicioná-la?

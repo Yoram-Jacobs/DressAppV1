@@ -31,7 +31,6 @@ export function useTierLimits() {
   const canAccessTrendScout = !isFree;
   const canAccessScheduler = !isFree;
   const canAccessMigration = !isFree;
-  const canAccessMassUpload = !isFree;
 
   const nanoBananaMonthlyLimit =
     user?.nano_banana_monthly?.nano_banana_monthly_limit ??
@@ -45,6 +44,29 @@ export function useTierLimits() {
     user?.nano_banana_monthly?.nano_banana_monthly_remaining ??
     user?.ai_configuration?.nano_banana_monthly_remaining ??
     Math.max(0, nanoBananaMonthlyLimit - nanoBananaMonthlyUsed);
+
+  const rawBucketCredits = (() => {
+    if (typeof user?.total_credits === 'number') return user.total_credits;
+    if (typeof user?.ai_credits === 'number') return user.ai_credits;
+    if (Array.isArray(user?.credit_buckets)) {
+      const now = Date.now();
+      return user.credit_buckets.reduce((sum, b) => {
+        if (!b || typeof b.amount !== 'number') return sum;
+        if (b.type === 'free' && b.expires_at) {
+          const exp = Date.parse(b.expires_at);
+          if (!Number.isNaN(exp) && now > exp) return sum;
+        }
+        return sum + b.amount;
+      }, 0);
+    }
+    return Number(user?.ai_configuration?.current_credits || 0);
+  })();
+
+  const minClusterCredits = 15;
+  const aiReconstructionCredits = isFree
+    ? Math.max(0, Math.min(rawBucketCredits, nanoBananaMonthlyRemaining))
+    : nanoBananaMonthlyRemaining;
+  const canAccessMassUpload = !isFree || aiReconstructionCredits >= minClusterCredits;
 
   const closetCapacityBonus = user?.closet_capacity_bonus || 0;
   const maxClosetSlots = isFree ? Math.min(150, 50 + closetCapacityBonus) : Infinity;
@@ -75,6 +97,8 @@ export function useTierLimits() {
     canAccessScheduler,
     canAccessMigration,
     canAccessMassUpload,
+    aiReconstructionCredits,
+    minClusterCredits,
     nanoBananaMonthlyLimit,
     nanoBananaMonthlyUsed,
     nanoBananaMonthlyRemaining,

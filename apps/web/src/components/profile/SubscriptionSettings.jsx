@@ -399,7 +399,7 @@ export function SubscriptionSettings() {
               <p className="text-rose-800">
                 {t('pricing.demoteUnderLimitNote', {
                   defaultValue:
-                    'Only the last 50 added items are kept on the Free plan, and unlimited daily AI requests and cluster uploads will be disabled.',
+                    'Only the last 50 added items are kept on the Free plan, unlimited daily AI requests are disabled, and cluster uploads require at least 15 AI reconstruction credits.',
                 })}
               </p>
             )}

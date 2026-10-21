@@ -13,6 +13,7 @@ import {
   MapPin,
   Wand2,
   ArrowRightLeft,
+  Crown,
   ShieldCheck,
   Loader2,
 } from 'lucide-react';
@@ -1305,24 +1306,28 @@ export default function Onboarding() {
                 })}
               </div>
 
-              {/* Power-User Competitor Migration Pill (Mode C) */}
-              <div className="rounded-[14px] border border-border bg-accent-beige/40 p-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 text-xs text-dark-brand">
-                  <ArrowRightLeft className="w-4 h-4 text-primary-brand shrink-0" />
+              {/* Power-User Competitor Migration Notice (Paid Tiers Only) */}
+              <div
+                className="rounded-[14px] border border-amber-500/30 bg-amber-50/70 p-3 flex flex-wrap items-center justify-between gap-3"
+                data-testid="onboarding-migration-pro-badge"
+              >
+                <div className="flex items-center gap-2.5 text-xs text-dark-brand flex-1 min-w-[220px]">
+                  <ArrowRightLeft className="w-4 h-4 text-amber-600 shrink-0" />
                   <span>
-                    {t('onboarding.step3.migrationPrompt', {
+                    {t('onboarding.step3.migrationProPrompt', {
                       defaultValue:
-                        'Already have a digital closet on Whering, Acloset, Indyx, or Stylebook? Enable 1-click bulk import after sign-in.',
+                        'Already have a digital closet on Whering, Acloset, Indyx, or Stylebook? Bulk AI wardrobe migration (50+ items) is available on Manager & Professional plans after sign-in.',
                     })}
                   </span>
                 </div>
-                <Switch
-                  checked={draft.migration_flag === 'Migrate'}
-                  onCheckedChange={(checked) =>
-                    updateDraft({ migration_flag: checked ? 'Migrate' : null })
-                  }
-                  data-testid="onboarding-migration-switch"
-                />
+                <Badge className="bg-amber-500/15 text-amber-800 border border-amber-500/30 px-2.5 py-1 text-[11px] font-bold shrink-0 inline-flex items-center gap-1">
+                  <Crown className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>
+                    {t('onboarding.step3.migrationProBadge', {
+                      defaultValue: 'Manager / Pro',
+                    })}
+                  </span>
+                </Badge>
               </div>
             </div>
           )}

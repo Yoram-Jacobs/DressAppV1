@@ -20,7 +20,8 @@
     "outfits": "Conjuntos",
     "pricing": "Preços",
     "trend_scout": "Explorador de tendências",
-    "insights": "Estatísticas do guarda-roupa"
+    "insights": "Estatísticas do guarda-roupa",
+    "gettingStartedTour": "Tour de introdução"
   },
   "common": {
     "savePrompt": "Pressione Salvar para manter as alterações.",
@@ -891,20 +892,22 @@
       "multiDesc": "Foto de look completo — separa e analisa cada peça vestida.",
       "massTitle": "Armário e pilha em massa",
       "massDesc": "Cabideiro ou pilha de roupas — cataloga cada peça e reconstrói cartões de estúdio com fundo transparente.",
-      "massBadgePro": "PRO / MANAGER",
+      "massBadgePro": "MANAGER / PRO OU 15+ CRÉDITOS",
       "massQuotaBadge": "{{remaining}} / {{limit}} reconstruções de estúdio restantes este mês",
-      "massUpgradeRequired": "O envio de conjuntos de peças (armários, cabides, sapateiras e pilhas de roupas) está disponível exclusivamente nos planos Manager e Professional.",
+      "massUpgradeRequired": "O envio em lote (armários, cabides, sapateiras e pilhas) está disponível nos planos Manager e Profissional, ou no plano Gratuito com 15+ créditos de reconstrução IA.",
       "massMonthlyLimitReached": "Limite mensal de reconstrução de estúdio ({{limit}}/mês) atingido. Será redefinido no próximo ciclo de faturação.",
       "stageCataloging": "Catalogando peças na foto…",
       "stageReconstructing": "Reconstruindo cartões de estúdio ({{completed}}/{{total}})…",
       "autoTitle": "Deteção automática (mista)",
       "autoDesc": "Encaminha automaticamente peças únicas, visuais completos e armários em simultâneo.",
-      "massClusterFreeTitle": "O envio em grupo requer upgrade de plano",
-      "massClusterFreeBlocked": "O envio de grupos de peças (armários, cabides, sapateiras ou pilhas de camisas) usa a reconstrução por IA Nano Banana. Uma única foto pode consumir toda a sua franquia gratuita de reconstrução, deixando muitas peças sem reconstruir. Pule esta imagem ou faça upgrade do seu plano.",
-      "massClusterCapabilitiesTitle": "Digitalize seu armário e sapateira rapidamente",
-      "massClusterCapabilitiesNote": "Os planos Manager e Professional permitem fotografar roupas penduradas no armário, uma sapateira ou uma pilha de camisas para digitalizar seu guarda-roupa em instantes usando menos fotos.",
+      "massClusterFreeTitle": "O envio de conjunto requer 15+ créditos IA ou upgrade",
+      "massClusterFreeBlocked": "O envio de conjuntos de roupas (armários, cabides, sapateiras ou pilhas) usa a reconstrução de estúdio IA Nano Banana. Usuários gratuitos desbloqueiam essa função ao possuir 15 ou mais créditos de reconstrução IA (via pacotes de créditos) ou fazendo upgrade para o plano Manager ou Profissional.",
+      "massClusterCapabilitiesTitle": "Digitalize todo o seu armário e sapateiras",
+      "massClusterCapabilitiesNote": "Os planos Manager e Profissional — ou contas Gratuitas com 15+ créditos de reconstrução IA — permitem fotografar roupas penduradas, sapateiras e pilhas dobradas em segundos.",
       "skipClusterImage": "Pular imagem",
-      "upgradePlanCta": "Fazer upgrade"
+      "upgradePlanCta": "Obter créditos IA ou fazer upgrade",
+      "massClusterCreditsRequiredLabel": "Mínimo de créditos de reconstrução IA: 15",
+      "massClusterCurrentCreditsLabel": "Seu saldo: {{available}}"
     }
   },
   "itemDetail": {
@@ -3883,8 +3886,8 @@
     "add_clothes_title": "Adicionar roupa ao seu armário",
     "add_clothes_p1": "Traga seu guarda-roupa para o DressApp em poucos toques — fotografando uma única peça, um look no corpo ou um conjunto inteiro de roupas direto no seu armário físico.",
     "add_clothes_step1": "Abra a DressApp e toque no botão **Adicionar peça**.",
-    "add_clothes_step2": "Escolha **Tirar foto** ou **Enviar fotos** para adicionar uma peça única, um look vestido ou (nos planos **Manager** e **Professional**) uma **foto de grupo** de roupas penduradas no armário ou em cabides, uma sapateira ou uma pilha de camisas.",
-    "add_clothes_step3": "O envio em grupo usa a reconstrução por IA **Nano Banana**. Como uma única imagem pode consumir toda a franquia gratuita de reconstrução, é proibido para usuários do Plano Gratuito (que recebem a sugestão de pular a imagem ou fazer upgrade).",
+    "add_clothes_step2": "Escolha **Tirar foto** ou **Enviar fotos** para adicionar uma peça única, um look completo ou — nos planos **Manager** e **Profissional**, ou com **15+ créditos de reconstrução IA** — uma **foto de conjunto** de cabides, sapateiras ou pilhas.",
+    "add_clothes_step3": "O envio em conjunto usa reconstrução de estúdio Nano Banana IA (até 15 peças por foto). Usuários gratuitos desbloqueiam a função ao ter **15 ou mais créditos de reconstrução IA** (via pacotes de créditos) ou fazendo upgrade para Manager ou Profissional.",
     "add_clothes_step4": "Lembre-se das 5 limitações do envio em grupo: (a) ótimo para cores sólidas ou xadrez/listras simples, não analisa estampas ocultas nem detalhes finos, (b) raramente reflete o estado atual da peça, (c) pode pular algumas peças, (d) pode alucinar padrões e cores, e (e) consome créditos de reconstrução.",
     "add_clothes_step5": "Reveja os detalhes detetados — como categoria, cor, estação e estilo (incluindo camisolas com capuz e trajes tradicionais) — e ajuste o que quiser.",
     "add_clothes_step6": "Toque em **Guardar** para adicionar as peças ao seu armário digital!",
@@ -4049,7 +4052,7 @@
     "tiers_title": "Planos de Assinatura",
     "tiers_p1": "O DressApp oferece planos de assinatura flexíveis e sob medida para o tamanho do seu guarda-roupa e necessidades de estilo. Atualize na página de preços para desbloquear recursos ilimitados.",
     "tiers_free_title": "Plano Gratuito",
-    "tiers_free_desc": "Inclui até 50 peças no armário (expansível até 150 convidando amigos, +10 lugares por amigo) e acesso ao modelo de IA local da DressApp.",
+    "tiers_free_desc": "Limite base de 50 peças (expansível até 150 convidando amigos), 10 créditos IA diários (até 300 em 30 dias) e 5 créditos iniciais de reconstrução IA. Compre pacotes de créditos IA (15+ créditos) para liberar o Envio em Conjunto.",
     "tiers_manager_title": "Plano Manager",
     "tiers_manager_desc": "10 $/mês (ou 100 $/ano). Desbloqueia espaço ilimitado no armário, o modelo de IA de ponta da DressApp, alertas matinais de conjuntos, sincronização de calendário, vendas no Marketplace e acesso completo ao Trend Scout.",
     "tiers_pro_title": "Plano Professional",
@@ -4236,7 +4239,7 @@
       "profile_item15_title": "",
       "profile_item16_title": "",
       "profile_item16_desc": "",
-      "tiers_free_desc": "Inclui até 50 peças no armário (expansível até 150 convidando amigos, +10 lugares por amigo) e acesso ao modelo de IA local da DressApp.",
+      "tiers_free_desc": "Limite base de 50 peças (expansível até 150 convidando amigos), 10 créditos IA diários (até 300 em 30 dias) e 5 créditos iniciais de reconstrução IA. Compre pacotes de créditos IA (15+ créditos) para liberar o Envio em Conjunto.",
       "tiers_manager_desc": "10 $/mês (ou 100 $/ano). Desbloqueia espaço ilimitado no armário, o modelo de IA de ponta da DressApp, alertas matinais de conjuntos, sincronização de calendário, vendas no Marketplace e acesso completo ao Trend Scout.",
       "reanalyze_title": "Reanálise de Foto e Assistente de IA",
       "reanalyze_p1": "Converse diretamente com o assistente de IA para ajustar fotos de peças em linguagem natural:",
@@ -4255,7 +4258,7 @@
     "best_practice_title": "Melhores Práticas",
     "best_practice_p1": "Siga estes hábitos simples para construir um armário digital preciso, aproveitar ao máximo seus créditos diários e receber recomendações de looks sob medida todos os dias.",
     "best_practice_step1": "**Complete seu Perfil Primeiro**: Defina suas medidas corporais, cores favoritas, preferências de estilo e nível de modéstia no **Perfil** antes de enviar roupas.",
-    "best_practice_step2": "**Tire fotos nítidas ou do seu armário**: Envie uma peça estendida, uma foto no espelho ou — nos planos **Manager** e **Professional** — fotografe roupas penduradas no armário, uma sapateira ou uma pilha de camisas com menos fotos.",
+    "best_practice_step2": "**Tire fotos nítidas**: Envie uma peça única estendida, uma foto de corpo inteiro no espelho ou — nos planos **Manager** e **Profissional**, ou contas **Gratuitas** com **15+ créditos de reconstrução IA** — fotografe roupas penduradas no armário, em uma sapateira ou em uma pilha dobrada.",
     "best_practice_step3": "**Conheça as limitações do envio em grupo**: Proibido para usuários gratuitos. Ideal para peças lisas ou xadrez/listras simples; não analisa detalhes finos, raramente mostra o desgaste real, pode pular peças ou alucinar cores/padrões e consome créditos de reconstrução.",
     "best_practice_step4": "**Monte seu guarda-roupa em 5 dias**: Use seus 10 créditos diários gratuitos (acumuláveis até 300 em 30 dias) para adicionar 10 peças por dia.",
     "best_practice_step5": "**Revise o cartão da peça (10 segundos)**: Confira categoria, cor, nível de aquecimento e código de vestimenta.",
@@ -4263,13 +4266,16 @@
     "qa_p1": "Respostas rápidas para as dúvidas mais comuns sobre como começar, gerenciar seus créditos, digitalizar seu guarda-roupa e montar looks.",
     "qa_step1": "**Como começo no Dia 1?** Preencha primeiro suas medidas e preferências no **Perfil** e depois adicione as 10 peças que você mais usa no dia a dia.",
     "qa_step2": "**Como funcionam os créditos gratuitos?** Contas gratuitas recebem **10 créditos diários** (renovados a cada 24 horas, acumuláveis até 50) para adicionar roupas e conversar com o stylist, além de **5 créditos mensais de Reconstrução de Estúdio**.",
-    "qa_step3": "**Por que o envio em grupo é proibido no Plano Gratuito?** Porque usa a reconstrução Nano Banana e uma única foto pode consumir toda a franquia gratuita de uma só vez. Usuários gratuitos são orientados a pular a imagem ou fazer upgrade.",
-    "qa_step4": "**O que o envio em grupo identifica e quais são suas limitações?** Identifica e reconstrói roupas penduradas no armário ou em cabides, sapateiras, pilhas de camisas e mais (não apenas roupas espalhadas na cama). Limitações: (a) bom para lisos e xadrez/listras simples, sem detalhes finos, (b) raramente reflete o estado real, (c) pode pular peças, (d) pode alucinar padrões e cores, (e) consome créditos de reconstrução.",
+    "qa_step3": "**Como os usuários gratuitos desbloqueiam o Envio em Conjunto?** O envio em conjunto (armários, cabides, sapateiras ou pilhas) usa reconstrução de estúdio Nano Banana IA (até 15 peças por foto). Usuários gratuitos desbloqueiam a função sempre que tiverem **15 ou mais créditos de reconstrução IA** (comprando um pacote de créditos na página Preços) ou fazendo upgrade para **Manager** ou **Profissional**.",
+    "qa_step4": "**O que o Envio em Conjunto pode digitalizar e quais são suas limitações?** Com **15+ créditos de reconstrução IA** ou um plano **Manager / Profissional**, você pode fotografar roupas penduradas, sapateiras ou pilhas de camisas rapidamente. Funciona melhor em cores sólidas ou xadrez/listras simples, não lê estampas ocultas, raramente reflete o desgaste, pode pular peças sobrepostas, pode imaginar padrões/cores e consome 1 crédito de reconstrução por peça.",
     "qa_step5": "**O que acontece se eu mudar do plano Manager ou Professional para o Plano Gratuito?** Você perderá os espaços extras, **restando apenas os últimos 50 itens adicionados** no seu guarda-roupa após confirmar o aviso.",
     "best_practice_step6": "**Dê 4 dicas ao Estilista**: Informe **ocasião**, **local**, **clima** e **visual desejado**.",
     "qa_step6": "**Meu guarda-roupa é privado?** Sim. Suas fotos e medidas são privadas e processadas pelo **modelo de IA local do DressApp**.",
     "tiers_demotion_title": "Aviso de rebaixamento de plano e retenção dos últimos 50 itens",
-    "tiers_demotion_desc": "Usuários Manager e Professional que mudam para o Plano Gratuito perdem seus espaços extras, mantendo apenas os últimos 50 itens adicionados no guarda-roupa após confirmar o aviso."
+    "tiers_demotion_desc": "Usuários Manager e Professional que mudam para o Plano Gratuito perdem seus espaços extras, mantendo apenas os últimos 50 itens adicionados no guarda-roupa após confirmar o aviso.",
+    "launchGrandTourTitle": "Tour interativo de primeiros passos",
+    "launchGrandTourDesc": "Faça um tour guiado de 4 etapas sobre Recorte IA e Envio em Conjunto, Estilista com Agenda, Busca Inteligente e Perfil.",
+    "launchGrandTourBtn": "Iniciar tour guiado"
   },
   "campaigns": {
     "status": {
@@ -4721,7 +4727,7 @@
     "agentSavingRemaining": "Salvando {{count}} peças restantes no DressApp...",
     "agentSavedSuccess": "✓ {{count}} peças salvas no guarda-roupa!",
     "agentCompletionNotice": "Todas as peças foram enviadas diretamente para o banco de dados do seu guarda-roupa DressApp.<br><br><b>Agora você pode voltar ao DressApp para ver seu guarda-roupa!</b>",
-    "upgradePrompt": "A migração de guarda-roupa de outros aplicativos está disponível nos planos Manager e Professional.",
+    "upgradePrompt": "A migração de guarda-roupa de outros aplicativos está disponível nos planos Manager e Profissional.",
     "bookmarkletInstruction": "Toque no menu de três pontos ⋮ no seu navegador e selecione \"Favoritos\" para salvar esta página.",
     "modeScreenshotsTab": "Capturas / Vídeo",
     "modeBookmarkletTab": "Agente do navegador",
@@ -4740,7 +4746,8 @@
     "webviewInstructions": "Faça login no {{appName}} abaixo, abra seu guarda-roupa e toque em \"Escanear e importar\".",
     "webviewScanCompleteDesc": "Escaneamento do {{appName}} concluído ({{count}} peças detectadas). Seu guarda-roupa está sendo atualizado!",
     "scanningInProgressBtn": "Escaneando...",
-    "scanAndImportClosetBtn": "Escanear e importar"
+    "scanAndImportClosetBtn": "Escanear e importar",
+    "itemsCountLabel": "{{count}}+ peças"
   },
   "login_reminder": {
     "newTitle": "Seu armário está vazio — Adicione sua primeira peça!",
@@ -4985,7 +4992,7 @@
     "demoteConfirmBody": "Usuários Manager e Professional que mudam para o Plano Gratuito perdem seus espaços extras no guarda-roupa, mantendo apenas os últimos 50 itens adicionados. As peças mais antigas serão removidas permanentemente.",
     "demoteClosetSummary": "Itens atuais no guarda-roupa: {{count}} (limite do Plano Gratuito: {{limit}} itens)",
     "demoteItemsWillBeLost": "Aviso: Seus {{lostCount}} itens mais antigos serão excluídos permanentemente, restando apenas os últimos 50 itens adicionados.",
-    "demoteUnderLimitNote": "Apenas os últimos 50 itens adicionados são mantidos no Plano Gratuito, e as solicitações diárias ilimitadas e o envio em grupo serão desativados.",
+    "demoteUnderLimitNote": "No plano Gratuito, apenas as últimas 50 peças adicionadas são mantidas, solicitações diárias ilimitadas são desativadas e envios em conjunto exigem pelo menos 15 créditos de reconstrução IA.",
     "demoteCancelBtn": "Manter meu plano",
     "demoteConfirmBtn": "Confirmar mudança para Gratuito",
     "demoteSuccessToast": "Seu plano foi alterado para Gratuito. Seus últimos 50 itens adicionados foram mantidos.",
@@ -5348,7 +5355,9 @@
         "womenOuterwear": "Blazers, trench coats e cardigãs",
         "menOuterwear": "Paletós, bandhgalas, achkans e sobretudos",
         "footwear": "Calçados"
-      }
+      },
+      "migrationProPrompt": "Tem um guarda-roupa no Whering, Acloset, Indyx ou Stylebook? A migração em massa com IA (50+ peças) está disponível nos planos Manager e Profissional após entrar.",
+      "migrationProBadge": "Manager / Pro"
     },
     "step4": {
       "badge": "Seu primeiro look IA e seu avatar calibrado estão prontos!",
@@ -5430,6 +5439,77 @@
       "m_loafers_leather_brown": "Mocassim clássico de couro marrom",
       "m_boots_chelsea_brown": "Bota Chelsea de couro marrom",
       "m_sneakers_navy_white": "Tênis cano baixo azul-marinho e branco"
+    }
+  },
+  "closetTour": {
+    "skipTour": "Pular tour",
+    "finishBtn": "Concluir",
+    "calendarError": "Não foi possível iniciar a conexão com o Google Agenda.",
+    "googleSyncedSuccess": "Dados do perfil sincronizados da sua conta Google!",
+    "googleSyncNoNewFields": "Nenhuma data de nascimento, telefone ou endereço público encontrado no Google. Preencha abaixo.",
+    "googleSyncError": "Não foi possível sincronizar do Google. Preencha os campos abaixo.",
+    "profileSavedToast": "Perfil atualizado! Seu Stylist IA agora tem todo o seu contexto.",
+    "profileSaveError": "Não foi possível salvar os detalhes do perfil. Tente novamente.",
+    "step1": {
+      "badge": "Passo 1 de 4 • Digitalize seu guarda-roupa",
+      "title": "Adicione suas roupas reais com recorte IA",
+      "desc": "Tire uma foto ou envie da sua galeria. O DressApp remove o fundo automaticamente, detecta 12 atributos de estilo e coloca cada peça no seu guarda-roupa. Usuários gratuitos com 15+ créditos de reconstrução IA (via pacotes de créditos) e membros Manager e Pro também podem usar o Envio em Conjunto para fotografar uma prateleira ou arara inteira de uma só vez!",
+      "actionBtn": "Adicionar primeira peça"
+    },
+    "step2": {
+      "badge": "Passo 2 de 4 • Stylist IA diário",
+      "title": "Looks baseados no clima e na sua agenda",
+      "desc": "Seu Stylist IA veste seu avatar calibrado dos pés à cabeça. Conecte seu Google Agenda para receber looks automáticos para reuniões, jantares, treinos e viagens!",
+      "connectCalendarBtn": "Conectar Google Agenda",
+      "calendarConnectedBtn": "Agenda conectada ✓"
+    },
+    "step3": {
+      "badge": "Passo 3 de 4 • Busca inteligente e Migração Pro",
+      "title": "Busca semântica IA, Mala e Importação em massa",
+      "descPro": "Busque em linguagem natural, monte malas inteligentes ou use o Agente de Migração para importar mais de 50 peças do Whering, Acloset, Stylebook ou Indyx.",
+      "descFree": "Busque em linguagem natural e crie listas de viagem. Nota: Contas gratuitas usam nosso modelo local Eyes (até 50 peças). A migração em massa de outros apps é desbloqueada nos planos Manager e Professional.",
+      "openMigrationBtn": "Abrir Agente de Migração",
+      "viewProPlansBtn": "Desbloquear Migração Pro (50+ peças)"
+    },
+    "step4": {
+      "badge": "Passo 4 de 4 • Complete seu perfil em 30 segundos",
+      "title": "Complete seu perfil para um estilo hiperlocal",
+      "desc": "Adicione seu endereço (para previsão do tempo local), data de nascimento e telefone — ou preencha automaticamente pelo Google em 1 clique.",
+      "completeProfileBtn": "Completar perfil agora"
+    },
+    "setupBar": {
+      "title": "Conclua a configuração do seu perfil e Stylist IA",
+      "stepsCount": "{{done}}/{{total}} concluído",
+      "subtitle": "Desbloqueie estilo por clima local, looks da agenda e alertas do Marketplace em 30 segundos.",
+      "chipStyleDna": "DNA de Estilo e Avatar",
+      "chipCalendarDone": "Agenda sincronizada",
+      "chipCalendarConnect": "+ Conectar agenda",
+      "chipProfileDone": "Endereço, telefone e aniversário",
+      "chipProfileAdd": "+ Adicionar endereço, telefone e aniversário",
+      "tourBtn": "Tour guiado",
+      "completeProfileCompact": "Completar perfil ({{pct}}%)"
+    },
+    "modal": {
+      "badge": "Perfil {{pct}}% concluído",
+      "title": "Complete seu perfil em 30 segundos",
+      "subtitle": "Esses dados ativam looks diários conforme o clima local, estilo adequado à idade, eventos da agenda e envios do Marketplace.",
+      "googleSyncTitle": "Preenchimento automático via Google",
+      "googleSyncSub": "Importe sua data de nascimento, telefone e endereço do Google em um clique.",
+      "googleSyncBtn": "Sincronizar do Google",
+      "calendarTitle": "Looks para eventos do Google Agenda",
+      "calendarSub": "Vista-se automaticamente para reuniões, casamentos, treinos e voos.",
+      "calendarConnected": "Conectado",
+      "connectCalendarBtn": "Conectar agenda",
+      "dobLabel": "Data de nascimento",
+      "dobHint": "Para looks calibrados por idade e créditos de aniversário.",
+      "phoneLabel": "Celular",
+      "phoneHint": "Para alertas do Marketplace e do Stylist.",
+      "addressLabel": "Cidade e endereço (Clima e Marketplace)",
+      "cityPlaceholder": "Digite sua cidade (ex. São Paulo, Lisboa, Rio de Janeiro)...",
+      "streetPlaceholder": "Rua e número",
+      "countryPlaceholder": "País",
+      "addressHint": "Ativa a previsão do tempo local diária para seus looks e envios do Marketplace.",
+      "saveBtn": "Salvar e turbinar Stylist"
     }
   }
 }

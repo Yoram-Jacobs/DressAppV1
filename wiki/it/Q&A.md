@@ -47,7 +47,7 @@ DressApp elimina il lavoro manuale e l'indecisione mattutina grazie al riconosci
 Entro il quinto giorno avrai **50 capi essenziali** digitalizzati, sbloccando migliaia di combinazioni!
 
 ### D: Posso importare i miei vestiti da un'altra app di guardaroba?
-**R:** Sì! Se hai foto o screenshot da un'altra applicazione, vai su **Profilo → Importa Guardaroba** (o da **Aggiungi Capo**) per importare il tuo catalogo con separazione automatica dei capi, rimozione dello sfondo e riconoscimento dei dettagli.
+**R:** Sì! Gli abbonati **Manager e Professional** possono usare l'**Agente di Migrazione del Guardaroba** da **Profilo → Importa Guardaroba** (o da **Aggiungi Capo**) per importare 50+ capi da altre app con ritaglio automatico. Gli utenti Free (limitati a 50 capi con il modello locale) non possono usare l'Agente di Migrazione, ma possono importare singoli link di negozi o sbloccare il **Caricamento di Gruppi di Capi** possedendo **15 o più crediti di ricostruzione IA**.
 
 ---
 
@@ -92,8 +92,8 @@ Entro il quinto giorno avrai **50 capi essenziali** digitalizzati, sbloccando mi
 **R:**
 - **Scontorno Standard (Automatico)**: Viene eseguito automaticamente al caricamento (1 credito IA interna nel piano Gratuito). Rimuove lo sfondo ed estrae i dettagli mantenendo la tua foto originale.
 - **Ricostruzione Studio (Opzionale)**: Si attiva toccando **Ricostruisci** (1 credito di Ricostruzione Studio). Utilizza il nostro modello IA all'avanguardia per eliminare le pieghe profonde, uniformare la luce e generare un'immagine professionale da catalogo.
-- **Caricamento di Gruppi di Capi (Piani Manager e Professional)**: Una funzione rivoluzionaria che identifica e ricostruisce **capi appesi nell'armadio o su grucce, una scarpiera, una pila di camicie e altro ancora** — non solo vestiti stesi sul letto!
-  - **Vietato agli utenti Free**: Utilizzando Nano Banana, una sola foto può esaurire l'intera quota di ricostruzione di un utente Free. Agli utenti Free viene suggerito di **saltare l'immagine o effettuare l'upgrade del piano**.
+- **Caricamento di Gruppi di Capi (Piani Manager e Professional, o Piano Free con 15+ crediti di ricostruzione IA)**: Una funzione rivoluzionaria che identifica e ricostruisce **capi appesi nell'armadio o su grucce, una scarpiera, una pila di camicie e altro ancora** — non solo vestiti stesi sul letto!
+  - **Sblocco nel piano Free (15+ crediti di ricostruzione)**: Utilizzando Nano Banana, gli utenti Free necessitano di **15 o più crediti di ricostruzione IA** (acquistando pacchetti crediti nella pagina Prezzi). Con meno di 15 crediti, agli utenti Free viene suggerito di **saltare l'immagine, acquistare un pacchetto crediti IA o effettuare l'upgrade del piano**.
   - **Le 5 limitazioni**: (a) Ottimo per tinte unite o motivi scozzesi e a righe semplici, non analizza stampe nascoste e dettagli fini; (b) raramente riflette le condizioni attuali del capo; (c) può saltare alcuni capi; (d) può allucinare motivi e colori; (e) consuma crediti di ricostruzione.
 
 ### D: Perché conviene controllare i dettagli di un capo subito dopo averlo caricato?

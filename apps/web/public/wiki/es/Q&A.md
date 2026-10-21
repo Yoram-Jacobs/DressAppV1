@@ -23,7 +23,7 @@ DressApp elimina el trabajo manual y la indecisión matutina mediante reconocimi
 | **Modelo de IA** | **Modelo de IA propio de DressApp** | **Modelo de IA de vanguardia** + respaldo local automático | **Modelo de IA de vanguardia** + respaldo local automático |
 | **Créditos Diarios** | **10/día** (acumulables hasta **300 / 30 días**) | **Ilimitados** para estilismo y escaneo diario | **Ilimitados** para estilismo y escaneo diario |
 | **Reconstrucción de Estudio** | **5 créditos gratis** de bienvenida | **100 créditos mensuales** de Reconstrucción de Estudio | **100 créditos mensuales** de Reconstrucción de Estudio |
-| **Funciones Incluidas** | Armario Digital, Estilista, Planificador, Maleta | + Importación Rápida, Cazador de Tendencias, Marketplace | + Directorio de Expertos Certificados y Campañas |
+| **Funciones Incluidas** | Armario Digital, Estilista, Planificador, Maleta (y Subida en Grupo con 15+ créditos) | + Subida en Grupo, Agente de Migración, Cazador de Tendencias, Marketplace | + Directorio de Expertos Certificados y Campañas |
 
 ---
 
@@ -47,7 +47,7 @@ DressApp elimina el trabajo manual y la indecisión matutina mediante reconocimi
 Al quinto día tendrás **50 prendas esenciales** digitalizadas, ¡desbloqueando miles de combinaciones posibles!
 
 ### P: ¿Puedo importar mi ropa desde otra aplicación de armario?
-**R:** ¡Sí! Si tienes fotos o capturas de pantalla de otra aplicación de vestuario, ve a **Perfil → Importar Armario** (o desde **Añadir Prenda**) para importar tu catálogo con recorte automático de prendas, eliminación de fondo y detección de detalles.
+**R:** ¡Sí! Los suscriptores **Manager y Professional** pueden usar el **Agente de Migración de Armario** desde **Perfil → Importar Armario** (o desde **Añadir Prenda**) para importar catálogos de 50+ prendas desde otras aplicaciones con recorte automático y eliminación de fondo. Los usuarios del plan Gratis (limitados a 50 prendas con el modelo local) no pueden usar el Agente de Migración, pero pueden importar enlaces de tiendas individuales o desbloquear la **Subida de Conjuntos de Prendas** manteniendo **15 o más créditos de reconstrucción con IA**.
 
 ---
 
@@ -92,8 +92,8 @@ Al quinto día tendrás **50 prendas esenciales** digitalizadas, ¡desbloqueando
 **R:**
 - **Recorte Estándar (Automático)**: Se ejecuta automáticamente al subir la foto (1 crédito de IA propia en el plan Gratuito). Elimina el fondo y extrae todos los detalles conservando tu fotografía original.
 - **Reconstrucción de Estudio (Opcional)**: Se activa al pulsar **Reconstruir** (1 crédito de Reconstrucción de Estudio). Utiliza nuestro modelo de IA de vanguardia para eliminar arrugas profundas, corregir la iluminación y presentar la prenda como una foto de catálogo profesional.
-- **Subida de Conjuntos de Prendas (Planes Manager y Professional)**: Una función revolucionaria que identifica y reconstruye **prendas colgadas en el armario o en perchas, un zapatero, una pila de camisas y más** — ¡no solo prendas extendidas en la cama!
-  - **Prohibida para usuarios Gratis**: Como utiliza Nano Banana, una sola imagen puede agotar toda la cuota de reconstrucción de un usuario Gratis. Si un usuario Gratis sube un conjunto, se le sugiere **omitir la imagen o mejorar su plan**.
+- **Subida de Conjuntos de Prendas (Planes Manager y Professional, o Plan Gratis con 15+ créditos de reconstrucción con IA)**: Una función revolucionaria que identifica y reconstruye **prendas colgadas en el armario o en perchas, un zapatero, una pila de camisas y más** — ¡no solo prendas extendidas en la cama!
+  - **Cómo desbloquearla en el Plan Gratis (15+ créditos de reconstrucción)**: Como utiliza Nano Banana y una sola imagen puede contener muchas prendas, los usuarios Gratis necesitan **15 o más créditos de reconstrucción con IA** (comprando paquetes de créditos en Precios). Si tienen menos de 15 créditos, se les sugiere **omitir la imagen, comprar un paquete de créditos de IA o mejorar su plan**.
   - **Las 5 limitaciones**: (a) Ideal para colores sólidos o cuadros y rayas simples, no analiza estampados ocultos ni detalles finos; (b) rara vez refleja el estado actual de la prenda; (c) puede omitir algunas prendas; (d) puede alucinar patrones y colores; (e) consume créditos de reconstrucción.
 
 ### P: ¿Por qué conviene revisar una prenda justo después de subirla?

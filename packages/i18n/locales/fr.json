@@ -20,7 +20,8 @@
     "outfits": "Tenues",
     "pricing": "Tarifs",
     "trend_scout": "Éclaireur de tendances",
-    "insights": "Aperçus du dressing"
+    "insights": "Aperçus du dressing",
+    "gettingStartedTour": "Visite guidée"
   },
   "common": {
     "savePrompt": "Appuyez sur Enregistrer pour conserver les modifications.",
@@ -891,20 +892,22 @@
       "multiDesc": "Photo de tenue complète — sépare et analyse chaque pièce portée.",
       "massTitle": "Placard et pile en masse",
       "massDesc": "Penderie ou pile de linge — catalogue chaque pièce et génère des fiches studio détourées.",
-      "massBadgePro": "PRO / MANAGER",
+      "massBadgePro": "MANAGER / PRO OU 15+ CRÉDITS",
       "massQuotaBadge": "{{remaining}} / {{limit}} reconstructions studio restantes ce mois-ci",
-      "massUpgradeRequired": "L'import groupé de vêtements (placards, cintres, étagères à chaussures et piles de linge) est réservé aux forfaits Manager et Professionnel.",
+      "massUpgradeRequired": "L'import groupé (placards, cintres, étagères à chaussures et piles) est disponible avec les forfaits Manager et Professionnel, ou avec le forfait Gratuit dès 15 crédits de reconstruction IA.",
       "massMonthlyLimitReached": "Limite mensuelle de reconstruction studio ({{limit}}/mois) atteinte. Réinitialisation au prochain cycle de facturation.",
       "stageCataloging": "Catalogage des vêtements sur la photo…",
       "stageReconstructing": "Reconstruction des fiches studio ({{completed}}/{{total}})…",
       "autoTitle": "Détection automatique (mixte)",
       "autoDesc": "Achemine automatiquement les pièces uniques, tenues portées et armoires simultanément.",
-      "massClusterFreeTitle": "L'import groupé nécessite une mise à niveau",
-      "massClusterFreeBlocked": "L'import groupé de vêtements (placards, cintres, étagères à chaussures ou piles de chemises) utilise la reconstruction IA Nano Banana. Une seule photo peut consommer la totalité de votre quota gratuit et laisser de nombreux vêtements non reconstruits. Veuillez ignorer cette image ou mettre à niveau votre forfait.",
-      "massClusterCapabilitiesTitle": "Numérisez tout votre placard et vos chaussures",
-      "massClusterCapabilitiesNote": "Les forfaits Manager et Professionnel vous permettent de photographier vos vêtements suspendus dans le placard, une étagère à chaussures ou une pile de chemises pour numériser votre garde-robe en un rien de temps.",
+      "massClusterFreeTitle": "L'import groupé nécessite 15+ crédits IA ou un forfait supérieur",
+      "massClusterFreeBlocked": "L'import groupé de vêtements (placards, cintres, étagères à chaussures ou piles de linge) utilise la reconstruction studio IA Nano Banana. Les utilisateurs gratuits débloquent l'import groupé dès qu'ils disposent de 15 crédits de reconstruction IA ou plus (via les packs de crédits), ou en passant au forfait Manager ou Professionnel.",
+      "massClusterCapabilitiesTitle": "Numérisez tout votre placard et vos étagères",
+      "massClusterCapabilitiesNote": "Les forfaits Manager et Professionnel — ou les comptes Gratuits avec 15+ crédits de reconstruction IA — permettent de photographier vos vêtements suspendus, vos étagères à chaussures et vos piles pliées en quelques secondes.",
       "skipClusterImage": "Ignorer l'image",
-      "upgradePlanCta": "Mettre à niveau"
+      "upgradePlanCta": "Obtenir des crédits IA ou mettre à niveau",
+      "massClusterCreditsRequiredLabel": "Crédits de reconstruction IA requis : 15",
+      "massClusterCurrentCreditsLabel": "Votre solde : {{available}}"
     }
   },
   "itemDetail": {
@@ -3876,8 +3879,8 @@
     "add_clothes_title": "Ajouter des vêtements à votre garde-robe",
     "add_clothes_p1": "Numérisez votre garde-robe en quelques gestes — qu'il s'agisse d'un seul vêtement, d'une tenue portée ou d'un ensemble de vêtements directement dans votre placard.",
     "add_clothes_step1": "Ouvrez DressApp et appuyez sur le bouton **Ajouter un article**.",
-    "add_clothes_step2": "Choisissez **Prendre une photo** ou **Importer des photos** pour ajouter un vêtement, une tenue portée ou (avec les forfaits **Manager** et **Professionnel**) une **photo groupée** de vêtements suspendus dans votre placard ou sur des cintres, une étagère à chaussures ou une pile de chemises.",
-    "add_clothes_step3": "L'import groupé utilise la reconstruction IA **Nano Banana**. Comme une seule image peut épuiser tout le quota gratuit de reconstruction, il est interdit aux utilisateurs gratuits (qui sont invités à ignorer l'image ou à mettre à niveau leur forfait).",
+    "add_clothes_step2": "Choisissez **Prendre une photo** ou **Importer des photos** pour ajouter un article seul, une tenue complète ou — avec les forfaits **Manager** et **Professionnel**, ou dès **15+ crédits de reconstruction IA** — une **photo groupée** de votre penderie, étagère à chaussures ou pile de vêtements.",
+    "add_clothes_step3": "L'import groupé utilise la reconstruction studio Nano Banana IA (jusqu'à 15 articles par photo). Les utilisateurs gratuits débloquent cette fonction dès **15 crédits de reconstruction IA** (via les packs de crédits) ou en passant à Manager ou Professionnel.",
     "add_clothes_step4": "Gardez à l'esprit les 5 limites de l'import groupé : (a) adapté aux couleurs unies ou aux motifs à carreaux et rayures simples, sans analyse des imprimés cachés ni des détails fins, (b) reflète rarement l'état d'usure réel, (c) peut ignorer certains vêtements, (d) peut halluciner des motifs et des couleurs, et (e) consomme des crédits de reconstruction.",
     "add_clothes_step5": "Vérifiez les détails détectés — catégorie, couleur, saison et style — et ajustez-les à votre guise.",
     "add_clothes_step6": "Appuyez sur **Enregistrer** pour ajouter les articles à votre garde-robe numérique !",
@@ -4042,7 +4045,7 @@
     "tiers_title": "Niveaux d'abonnement",
     "tiers_p1": "DressApp propose des niveaux d'abonnement flexibles adaptés à la taille de votre garde-robe et à vos besoins de style. Mettez à niveau sur la page des tarifs pour débloquer des fonctionnalités illimitées.",
     "tiers_free_title": "Plan gratuit",
-    "tiers_free_desc": "Inclut jusqu'à 50 articles (extensible jusqu'à 150 en invitant des amis, +10 emplacements par ami) et l'accès au modèle d'IA local de DressApp.",
+    "tiers_free_desc": "Limite de base de 50 articles (extensible à 150 via parrainage), 10 crédits IA quotidiens (jusqu’à 300 sur 30 jours) et 5 crédits initiaux de reconstruction IA. Achetez un pack de crédits IA (15+ crédits) pour débloquer l’Import Groupé.",
     "tiers_manager_title": "Plan Manager",
     "tiers_manager_desc": "10 $/mois (ou 100 $/an). Débloque un dressing illimité, le modèle d'IA de pointe de DressApp, les alertes tenues du matin, la synchronisation du calendrier, la vente sur la Marketplace et l'accès complet à Trend Scout.",
     "tiers_pro_title": "Plan Professional",
@@ -4229,7 +4232,7 @@
       "profile_item15_title": "",
       "profile_item16_title": "",
       "profile_item16_desc": "",
-      "tiers_free_desc": "Inclut jusqu'à 50 articles (extensible jusqu'à 150 en invitant des amis, +10 emplacements par ami) et l'accès au modèle d'IA local de DressApp.",
+      "tiers_free_desc": "Limite de base de 50 articles (extensible à 150 via parrainage), 10 crédits IA quotidiens (jusqu’à 300 sur 30 jours) et 5 crédits initiaux de reconstruction IA. Achetez un pack de crédits IA (15+ crédits) pour débloquer l’Import Groupé.",
       "tiers_manager_desc": "10 $/mois (ou 100 $/an). Débloque un dressing illimité, le modèle d'IA de pointe de DressApp, les alertes tenues du matin, la synchronisation du calendrier, la vente sur la Marketplace et l'accès complet à Trend Scout.",
       "reanalyze_title": "Réanalyse Photo et Assistant IA",
       "reanalyze_p1": "Discutez directement avec l'assistant IA pour retoucher vos photos de vêtements en langage naturel :",
@@ -4248,7 +4251,7 @@
     "best_practice_title": "Bonnes Pratiques",
     "best_practice_p1": "Adoptez ces habitudes simples pour bâtir une garde-robe numérique précise, tirer le meilleur parti de vos crédits quotidiens et recevoir des idées de tenues sur mesure chaque jour.",
     "best_practice_step1": "**Complétez d'abord votre Profil** : Renseignez vos mensurations, couleurs préférées, préférences de style et niveau de pudeur dans votre **Profil** avant d'ajouter des vêtements.",
-    "best_practice_step2": "**Prenez des photos nettes ou photographiez votre placard** : Importez un vêtement à plat, une tenue devant le miroir ou — avec les forfaits **Manager** et **Professionnel** — photographiez vos vêtements suspendus, une étagère à chaussures ou une pile de chemises.",
+    "best_practice_step2": "**Prenez des photos nettes** : Importez un vêtement posé à plat, une tenue complète devant le miroir ou — avec les forfaits **Manager** et **Professionnel**, ou les comptes **Gratuits** disposant de **15+ crédits de reconstruction IA** — photographiez vos vêtements suspendus au placard, sur une étagère à chaussures ou en pile.",
     "best_practice_step3": "**Connaissez les limites de l'import groupé** : Interdit sur le forfait Gratuit. Idéal pour les unis et carreaux/rayures simples ; n'analyse pas les détails fins, reflète rarement l'état réel, peut omettre des articles ou halluciner des motifs/couleurs et consomme des crédits de reconstruction.",
     "best_practice_step4": "**Créez votre garde-robe en 5 jours** : Utilisez vos 10 crédits quotidiens gratuits (cumulables jusqu'à 300 sur 30 jours) pour ajouter 10 articles par jour.",
     "best_practice_step5": "**Vérifiez la fiche article (10 secondes)** : Contrôlez la catégorie, la couleur, la chaleur et le code vestimentaire.",
@@ -4256,13 +4259,16 @@
     "qa_p1": "Réponses rapides aux questions les plus fréquentes sur le démarrage, la gestion des crédits, la numérisation de votre dressing et la création de tenues.",
     "qa_step1": "**Comment bien démarrer le 1er jour ?** Complétez d'abord vos mensurations et préférences dans votre **Profil**, puis ajoutez vos 10 vêtements les plus portés.",
     "qa_step2": "**Comment fonctionnent les crédits gratuits ?** Les comptes gratuits reçoivent **10 crédits quotidiens** (renouvelés toutes les 24 h, cumulables jusqu'à 50) pour ajouter des vêtements et discuter avec le styliste, plus **5 crédits mensuels de Reconstruction Studio**.",
-    "qa_step3": "**Pourquoi l'import groupé est-il interdit aux utilisateurs gratuits ?** Parce qu'il utilise Nano Banana et qu'une seule image peut consommer tout le quota gratuit de reconstruction. Il vous est proposé d'ignorer l'image ou de mettre à niveau votre forfait.",
-    "qa_step4": "**Que peut identifier l'import groupé et quelles sont ses limites ?** Il identifie et reconstruit les vêtements suspendus dans le placard ou sur cintre, les étagères à chaussures, les piles de chemises et plus encore (pas seulement les vêtements étalés sur un lit). Limites : (a) bon pour les unis et motifs simples, pas pour les détails fins, (b) reflète rarement l'état réel, (c) peut omettre des pièces, (d) peut halluciner motifs et couleurs, et (e) consomme des crédits de reconstruction.",
+    "qa_step3": "**Comment les utilisateurs gratuits débloquent-ils l'Import Groupé ?** L'import groupé (placards, cintres, étagères à chaussures ou piles) utilise la reconstruction studio Nano Banana IA et traite jusqu'à 15 pièces par photo. Les utilisateurs gratuits le débloquent dès qu'ils détiennent **15 crédits de reconstruction IA ou plus** (en achetant un pack de crédits sur la page Tarifs), ou en passant au forfait **Manager** ou **Professionnel**.",
+    "qa_step4": "**Que peut numériser l'Import Groupé et quelles sont ses limites ?** Avec **15+ crédits de reconstruction IA** ou un forfait **Manager / Professionnel**, vous pouvez photographier des vêtements suspendus, une étagère à chaussures ou une pile de chemises. Il fonctionne mieux sur les couleurs unies ou motifs simples, ne lit pas les imprimés cachés, reflète rarement l'usure, peut ignorer certaines pièces, peut extrapoler des motifs ou couleurs et consomme 1 crédit de reconstruction par pièce.",
     "qa_step5": "**Que se passe-t-il si je rétrograde du forfait Manager ou Professionnel vers le forfait Gratuit ?** Vous perdrez vos emplacements supplémentaires, **ne laissant que les 50 derniers articles ajoutés** dans votre garde-robe après confirmation de l'avertissement.",
     "best_practice_step6": "**Donnez 4 indices au Styliste** : Précisez **l'occasion**, **le lieu**, **la météo** et **le style souhaité**.",
     "qa_step6": "**Ma garde-robe est-elle privée ?** Oui. Vos photos et mensurations restent privées et sont traitées par le **modèle d'IA local de DressApp**.",
     "tiers_demotion_title": "Avertissement de rétrogradation et conservation des 50 derniers articles",
-    "tiers_demotion_desc": "Les abonnés Manager et Professionnel qui passent au forfait Gratuit perdent leurs emplacements supplémentaires et ne conservent que les 50 derniers articles ajoutés à leur garde-robe après confirmation."
+    "tiers_demotion_desc": "Les abonnés Manager et Professionnel qui passent au forfait Gratuit perdent leurs emplacements supplémentaires et ne conservent que les 50 derniers articles ajoutés à leur garde-robe après confirmation.",
+    "launchGrandTourTitle": "Visite guidée interactive de démarrage",
+    "launchGrandTourDesc": "Suivez une visite guidée en 4 étapes : Détourage IA et Import Groupé, Styliste Calendrier, Recherche Intelligente et Profil.",
+    "launchGrandTourBtn": "Lancer la visite guidée"
   },
   "campaigns": {
     "status": {
@@ -4714,7 +4720,7 @@
     "agentSavingRemaining": "Enregistrement des {{count}} articles restants dans DressApp...",
     "agentSavedSuccess": "✓ {{count}} articles enregistrés dans la garde-robe !",
     "agentCompletionNotice": "Tous les articles ont été directement téléversés dans la base de données de votre garde-robe DressApp.<br><br><b>Vous pouvez maintenant revenir sur DressApp pour voir votre garde-robe !</b>",
-    "upgradePrompt": "L'importation de garde-robe depuis d'autres applications est disponible sur les forfaits Manager et Professional.",
+    "upgradePrompt": "La migration de garde-robe depuis d'autres applications est disponible avec les forfaits Manager et Professionnel.",
     "bookmarkletInstruction": "Appuyez sur le menu à trois points ⋮ de votre navigateur, puis sur « Favoris » pour enregistrer cette page.",
     "modeScreenshotsTab": "Captures / Vidéo",
     "modeBookmarkletTab": "Agent navigateur",
@@ -4733,7 +4739,8 @@
     "webviewInstructions": "Connectez-vous à {{appName}} ci-dessous et ouvrez votre garde-robe, puis appuyez sur « Scanner et importer ».",
     "webviewScanCompleteDesc": "Analyse de {{appName}} terminée ({{count}} vêtements détectés). Votre garde-robe se met à jour !",
     "scanningInProgressBtn": "Analyse...",
-    "scanAndImportClosetBtn": "Scanner et importer"
+    "scanAndImportClosetBtn": "Scanner et importer",
+    "itemsCountLabel": "{{count}}+ articles"
   },
   "login_reminder": {
     "newTitle": "Votre garde-robe est vide — Ajoutez votre premier vêtement !",
@@ -4978,7 +4985,7 @@
     "demoteConfirmBody": "Les utilisateurs Manager et Professionnel qui passent au forfait Gratuit perdent leurs emplacements supplémentaires et ne conservent que les 50 derniers articles ajoutés à leur garde-robe. Les articles plus anciens seront définitivement supprimés.",
     "demoteClosetSummary": "Articles actuels dans la garde-robe : {{count}} (limite du forfait Gratuit : {{limit}} articles)",
     "demoteItemsWillBeLost": "Attention : Vos {{lostCount}} articles les plus anciens seront définitivement supprimés ; seuls les 50 derniers articles ajoutés seront conservés.",
-    "demoteUnderLimitNote": "Seuls les 50 derniers articles ajoutés sont conservés dans le forfait Gratuit, et les requêtes quotidiennes illimitées ainsi que l'import groupé seront désactivés.",
+    "demoteUnderLimitNote": "Seuls les 50 derniers articles ajoutés sont conservés avec le forfait Gratuit, les requêtes IA quotidiennes illimitées sont désactivées et les imports groupés nécessitent au moins 15 crédits de reconstruction IA.",
     "demoteCancelBtn": "Conserver mon forfait",
     "demoteConfirmBtn": "Confirmer la rétrogradation",
     "demoteSuccessToast": "Votre forfait est passé à Gratuit. Vos 50 derniers articles ajoutés ont été conservés.",
@@ -5341,7 +5348,9 @@
         "womenOuterwear": "Blazers, trench-coats et cardigans",
         "menOuterwear": "Vestes de costume, bandhgalas, achkans et manteaux",
         "footwear": "Chaussures"
-      }
+      },
+      "migrationProPrompt": "Vous avez une garde-robe sur Whering, Acloset, Indyx ou Stylebook ? La migration groupée par IA (50+ articles) est disponible avec les forfaits Manager et Professionnel après connexion.",
+      "migrationProBadge": "Manager / Pro"
     },
     "step4": {
       "badge": "Votre première tenue IA et votre avatar calibré sont prêts !",
@@ -5423,6 +5432,77 @@
       "m_loafers_leather_brown": "Mocassins classiques en cuir marron",
       "m_boots_chelsea_brown": "Bottines Chelsea en cuir marron",
       "m_sneakers_navy_white": "Baskets basses bleu marine et blanc"
+    }
+  },
+  "closetTour": {
+    "skipTour": "Passer la visite",
+    "finishBtn": "Terminer",
+    "calendarError": "Impossible de démarrer la connexion à Google Agenda.",
+    "googleSyncedSuccess": "Profil synchronisé depuis votre compte Google !",
+    "googleSyncNoNewFields": "Aucune date de naissance, téléphone ou adresse publique trouvés sur Google. Veuillez les renseigner ci-dessous.",
+    "googleSyncError": "Synchronisation Google impossible. Veuillez remplir les champs ci-dessous.",
+    "profileSavedToast": "Profil mis à jour ! Votre Styliste IA dispose maintenant de tout votre contexte.",
+    "profileSaveError": "Impossible d’enregistrer votre profil. Veuillez réessayer.",
+    "step1": {
+      "badge": "Étape 1 sur 4 • Numérisez votre dressing",
+      "title": "Ajoutez vos vrais vêtements avec détourage IA",
+      "desc": "Prenez une photo ou importez-la depuis votre galerie. DressApp supprime automatiquement l’arrière-plan, détecte 12 attributs de style et place chaque pièce dans votre garde-robe. Les utilisateurs gratuits disposant de 15+ crédits de reconstruction IA (via des packs de crédits) ainsi que les membres Manager et Pro peuvent aussi utiliser l’Import Groupé pour photographier toute une étagère ou une penderie d’un seul coup !",
+      "actionBtn": "Ajouter un premier vêtement"
+    },
+    "step2": {
+      "badge": "Étape 2 sur 4 • Styliste IA quotidien",
+      "title": "Tenues adaptées à la météo et à votre agenda",
+      "desc": "Votre Styliste IA habille votre avatar calibré de la tête aux pieds. Connectez votre Google Agenda pour qu’il prépare automatiquement vos tenues pour vos réunions, dîners et voyages !",
+      "connectCalendarBtn": "Connecter Google Agenda",
+      "calendarConnectedBtn": "Agenda connecté ✓"
+    },
+    "step3": {
+      "badge": "Étape 3 sur 4 • Recherche intelligente & Migration Pro",
+      "title": "Recherche sémantique IA, Valise & Importation en masse",
+      "descPro": "Recherchez en langage naturel, préparez vos valises ou utilisez l’Agent de Migration pour importer plus de 50 articles depuis Whering, Acloset, Stylebook ou Indyx.",
+      "descFree": "Recherchez en langage naturel et préparez vos valises. Note : Les comptes gratuits utilisent le modèle local Eyes (jusqu’à 50 articles). La migration en masse est débloquée avec les forfaits Manager et Professional.",
+      "openMigrationBtn": "Ouvrir l’Agent de Migration",
+      "viewProPlansBtn": "Débloquer la Migration Pro (50+ articles)"
+    },
+    "step4": {
+      "badge": "Étape 4 sur 4 • Profil complet en 30 secondes",
+      "title": "Complétez votre profil pour un stylisme hyper-local",
+      "desc": "Ajoutez votre adresse (pour la météo locale quotidienne), votre date de naissance et votre téléphone (pour les alertes Marketplace) — ou remplissez-les en 1 clic depuis Google.",
+      "completeProfileBtn": "Compléter mon profil"
+    },
+    "setupBar": {
+      "title": "Terminez la configuration de votre profil et Styliste IA",
+      "stepsCount": "{{done}}/{{total}} terminé",
+      "subtitle": "Débloquez la météo locale, les tenues liées à l’agenda et les alertes Marketplace en 30 secondes.",
+      "chipStyleDna": "ADN Style & Avatar",
+      "chipCalendarDone": "Agenda synchronisé",
+      "chipCalendarConnect": "+ Connecter l’agenda",
+      "chipProfileDone": "Adresse, téléphone et anniversaire",
+      "chipProfileAdd": "+ Ajouter adresse, téléphone et anniversaire",
+      "tourBtn": "Visite guidée",
+      "completeProfileCompact": "Compléter le profil ({{pct}}%)"
+    },
+    "modal": {
+      "badge": "Profil complété à {{pct}}%",
+      "title": "Complétez votre profil en 30 secondes",
+      "subtitle": "Ces informations activent les tenues selon la météo locale, le stylisme adapté à l’âge, la préparation d’événements et la livraison Marketplace.",
+      "googleSyncTitle": "Remplissage automatique via Google",
+      "googleSyncSub": "Importez votre date de naissance, téléphone et adresse depuis Google en un clic.",
+      "googleSyncBtn": "Synchroniser via Google",
+      "calendarTitle": "Tenues pour événements Google Agenda",
+      "calendarSub": "Habillez-vous automatiquement pour vos réunions, mariages, séances de sport et vols.",
+      "calendarConnected": "Connecté",
+      "connectCalendarBtn": "Connecter l’agenda",
+      "dobLabel": "Date de naissance",
+      "dobHint": "Pour des tenues adaptées à votre âge et des crédits d’anniversaire.",
+      "phoneLabel": "Téléphone mobile",
+      "phoneHint": "Pour les alertes Marketplace et Styliste.",
+      "addressLabel": "Ville et adresse (Météo & Marketplace)",
+      "cityPlaceholder": "Saisissez votre ville (ex. Paris, Lyon, Montréal)...",
+      "streetPlaceholder": "Rue et numéro",
+      "countryPlaceholder": "Pays",
+      "addressHint": "Active les prévisions météo locales pour vos tenues et les expéditions Marketplace.",
+      "saveBtn": "Enregistrer et activer"
     }
   }
 }

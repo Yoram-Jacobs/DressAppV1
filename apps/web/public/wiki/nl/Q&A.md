@@ -47,7 +47,7 @@ DressApp neemt handmatig invoerwerk en keuzestress in de ochtend weg met slimme 
 Op dag 5 heeft u **50 basisitems** gedigitaliseerd — goed voor duizenden outfitcombinaties!
 
 ### V: Kan ik mijn kleding importeren vanuit een andere kledingkast-app?
-**A:** Ja! Als u foto's of schermafbeeldingen uit een andere garderobe-app heeft, gaat u naar **Profiel → Garderobe Importeren** (of via **Item toevoegen**) om uw bestaande collectie te uploaden met automatische itemscheiding, achtergrondverwijdering en kenmerkherkenning.
+**A:** Ja! **Manager- en Professional-abonnees** kunnen de **Garderobe Migratie-agent** gebruiken via **Profiel → Garderobe Importeren** (of **Item toevoegen**) om 50+ items uit andere apps automatisch te importeren. Free-gebruikers (beperkt tot 50 items op het lokale model) kunnen de Migratie-agent niet gebruiken, maar kunnen wel losse winkellinks importeren of **Cluster Kleding Uploaden** ontgrendelen met **15 of meer AI-reconstructiecredits**.
 
 ---
 
@@ -92,8 +92,8 @@ Op dag 5 heeft u **50 basisitems** gedigitaliseerd — goed voor duizenden outfi
 **A:**
 - **Standaard Uitsnede (Automatisch)**: Draait automatisch bij het uploaden (1 interne AI-credit in het Gratis-abonnement). Verwijdert de achtergrond en herkent alle details met behoud van uw echte foto.
 - **Studio-reconstructie (Optioneel)**: Wordt uitgevoerd wanneer u op **Reconstrueren** tikt (1 Studio-reconstructiecredit). Ons geavanceerde AI-model verwijdert diepe kreukels, corrigeert harde schaduwen en maakt er een strakke studio-productfoto van.
-- **Cluster Kleding Uploaden (Manager- & Professional-abonnementen)**: Een revolutionaire functie die **kleding hangend in de kast of aan hangers, een schoenenrek, een stapel shirts en meer** herkent en reconstrueert — niet alleen kleding uitgespreid op een bed!
-  - **Verboden voor Free-gebruikers**: Omdat het Nano Banana gebruikt, kan één foto het volledige reconstructietegoed van een Free-gebruiker verbruiken. Free-gebruikers krijgen het voorstel om **de afbeelding over te slaan of hun abonnement te upgraden**.
+- **Cluster Kleding Uploaden (Manager- & Professional-abonnementen, of Free met 15+ AI-reconstructiecredits)**: Een revolutionaire functie die **kleding hangend in de kast of aan hangers, een schoenenrek, een stapel shirts en meer** herkent en reconstrueert — niet alleen kleding uitgespreid op een bed!
+  - **Ontgrendelen voor Free-gebruikers (15+ reconstructiecredits)**: Omdat het Nano Banana gebruikt, hebben Free-gebruikers **15 of meer AI-reconstructiecredits** nodig (via creditpakketten op de Prijzen-pagina). Onder de 15 credits krijgen Free-gebruikers het voorstel om **de afbeelding over te slaan, een AI-creditpakket te kopen of hun abonnement te upgraden**.
   - **De 5 beperkingen**: (a) Goed voor effen kleuren of eenvoudige ruit-/streeppatronen, analyseert geen verborgen prints en fijne details; (b) weerspiegelt zelden de huidige staat van het kledingstuk; (c) kan kledingstukken overslaan; (d) kan patronen en kleuren hallucineren; (e) verbruikt reconstructiecredits.
 
 ### V: Waarom is het slim om een kledingstuk direct na het toevoegen even te controleren?

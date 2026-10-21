@@ -6,8 +6,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, CircleHelp as HelpCircle, CreditCard } from 'lucide-react';
+import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, CircleHelp as HelpCircle, CreditCard, Compass } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { ONBOARDING_TOUR_PENDING_KEY } from '@/lib/onboardingStore';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { BrandLogo } from '@/components/BrandLogo';
@@ -65,6 +66,17 @@ export const TopNav = () => {
     if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
     if (window.location.pathname !== '/home') {
       nav('/home');
+    }
+  };
+
+  const handleStartGrandTour = () => {
+    try {
+      localStorage.setItem(ONBOARDING_TOUR_PENDING_KEY, 'true');
+    } catch {}
+    if (window.location.pathname === '/closet') {
+      window.dispatchEvent(new CustomEvent('dressapp:start-grand-tour'));
+    } else {
+      nav('/closet?tour=1');
     }
   };
 
@@ -171,6 +183,14 @@ export const TopNav = () => {
                 </div>
 
                 <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={handleStartGrandTour}
+                  data-testid="topnav-menu-grand-tour"
+                >
+                  <Compass className="h-4 w-4 text-[var(--primary-color)]" />
+                  {t('nav.gettingStartedTour', { defaultValue: 'Getting Started Tour' })}
+                </DropdownMenuItem>
 
                 <DropdownMenuItem
                   onClick={() => nav('/transactions')}
@@ -292,6 +312,10 @@ export const TopNav = () => {
                   <div className="text-text-brand truncate">{user?.email}</div>
                 </div>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleStartGrandTour} data-testid="mobile-menu-grand-tour">
+                  <Compass className="h-4 w-4 text-[var(--primary-color)]" />
+                  {t('nav.gettingStartedTour', { defaultValue: 'Getting Started Tour' })}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => nav('/me')} data-testid="mobile-menu-settings">
                   <Settings className="h-4 w-4" />
                   {t('nav.settings')}
@@ -339,7 +363,7 @@ export const TopNav = () => {
         onOpenChange={setHelpOpen}
       >
         <DialogContent className="rounded-[12px] !max-w-6xl max-h-[85vh] overflow-y-auto p-5">
-          <HelpMenu />
+          <HelpMenu onClose={() => setHelpOpen(false)} />
         </DialogContent>
       </Dialog>
     </header>

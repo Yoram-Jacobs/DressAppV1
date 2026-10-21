@@ -6,6 +6,8 @@ import {
 export const ONBOARDING_DRAFT_KEY = 'dressapp.onboarding_draft';
 export const ONBOARDING_COMPLETED_KEY = 'dressapp.onboarding_completed';
 export const ONBOARDING_FIRST_OUTFIT_KEY = 'dressapp.onboarding_first_outfit';
+export const ONBOARDING_TOUR_PENDING_KEY = 'dressapp.closet_tour_pending';
+export const ONBOARDING_TOUR_COMPLETED_KEY = 'dressapp.closet_tour_completed';
 
 export const DEFAULT_ONBOARDING_DRAFT = {
   step: 1,
@@ -113,6 +115,9 @@ export function markOnboardingCompleted(userId = 'guest') {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(ONBOARDING_COMPLETED_KEY, String(userId || 'done'));
+    if (!window.localStorage.getItem(ONBOARDING_TOUR_COMPLETED_KEY)) {
+      window.localStorage.setItem(ONBOARDING_TOUR_PENDING_KEY, 'true');
+    }
   } catch {
     // ignore
   }
@@ -468,8 +473,10 @@ export async function flushOnboardingDraftToBackend({
     profilePatch.occupation = draft.occupation;
   }
 
+  const sub = currentUser?.subscription || {};
+  const isPaidTier = Boolean(sub.is_active && sub.plan_type && sub.plan_type !== 'free');
   profilePatch.migration_flag =
-    draft.migration_flag === 'Migrate'
+    isPaidTier && draft.migration_flag === 'Migrate'
       ? 'Migrate'
       : currentUser?.migration_flag || 'New';
 

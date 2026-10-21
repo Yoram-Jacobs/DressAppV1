@@ -19,9 +19,9 @@ As a Free plan user, DressApp gives you two dedicated credit pools so you can di
 
 ## 2. Garment Photography Best Practices
 
-When you upload a photo, DressApp's AI automatically detects whether your image shows a **single garment**, a **full outfit you are wearing**, or a **cluster of garments** (available on **Manager** and **Professional** plans). Taking clean, well-lit photos ensures accurate cutouts and color recognition on the first try—saving your **Studio Reconstruction Credits** for when you really need them.
+When you upload a photo, DressApp's AI automatically detects whether your image shows a **single garment**, a **full outfit you are wearing**, or a **cluster of garments** (available on **Manager** and **Professional** plans, as well as to **Free users who possess 15 or more AI reconstruction credits**). Taking clean, well-lit photos ensures accurate cutouts and color recognition on the first try—saving your **Studio Reconstruction Credits** for when you really need them.
 
-### Cluster Garment Uploading (Manager & Professional Plans)
+### Cluster Garment Uploading (Manager & Professional Plans, or Free Users with 15+ AI Reconstruction Credits)
 
 Cluster garment uploading (mass pipeline) is a revolutionary feature that lets you take photos directly in your physical closet, use far fewer photos, and digitize your wardrobe in no time. It can identify and reconstruct:
 - **Garments hanging in the closet or on a hanger**
@@ -29,7 +29,7 @@ Cluster garment uploading (mass pipeline) is a revolutionary feature that lets y
 - **A pile of shirts or folded clothes**
 - **Multiple garments arranged together** (not just garments spread on a bed!)
 
-> **Why Cluster Uploading Is Forbidden for Free Users:** Cluster garment uploading uses **Nano Banana** studio AI reconstruction. A single cluster photo can consume a Free user's entire AI reconstruction allowance at once, leaving many garments unreconstructed. If a Free user uploads a cluster of garments, DressApp shows a prompt suggesting they **skip the image or upgrade their plan**.
+> **How Free Users Unlock Cluster Uploading (15+ AI Reconstruction Credits):** Cluster garment uploading uses **Nano Banana** studio AI reconstruction and can process up to 15 garments from a single photo. Because Free accounts start with 5 onboarding reconstruction credits, a single cluster photo would otherwise exhaust their starter allowance halfway through. Free users can purchase an **AI credit pack** on the Pricing page and immediately unlock the Cluster pipeline whenever their balance is **15 or more AI reconstruction credits**, or upgrade to a **Manager** or **Professional** plan. If a Free user with fewer than 15 AI reconstruction credits uploads a cluster photo, DressApp prompts them to **skip the image, top up AI credits, or upgrade their plan**.
 
 **Cluster Uploading Fallbacks & Best Practices:**
 1. **Stick to Solid Colors & Simple Patterns**: Cluster upload is great for solid colors or very simple plaid or striped patterns. It cannot analyze hidden prints and fine details—photograph intricate prints individually.

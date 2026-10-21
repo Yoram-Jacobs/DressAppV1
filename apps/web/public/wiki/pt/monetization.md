@@ -8,12 +8,12 @@ O DressApp oferece um modelo transparente de assinatura em três níveis (**Grá
 | :--- | :--- | :--- | :--- |
 | **Capacidade Máxima do Armário** | 50 peças | 200 peças | 300 peças |
 | **Reconstruções de Peças com IA** | 5 / mês | 50 / mês | 100 / mês |
-| **Upload de Conjunto de Peças (`mass`)** | Proibido | Incluído | Incluído |
+| **Upload de Conjunto de Peças (`mass`)** | Desbloqueado com 15+ créditos de reconstrução de IA | Incluído | Incluído |
 | **Sugestões de Looks com IA** | 5 / mês | 30 / mês | 100 / mês |
 | **Provador Virtual com IA** | 1 / mês | 15 / mês | 50 / mês |
 
-## Por Que o Upload de Conjunto é Proibido no Plano Grátis
-O upload de conjunto de peças (pipeline `mass`) usa o Nano Banana para reconstruir várias peças de uma só foto. Como uma única imagem pode consumir toda a franquia mensal de reconstrução de um usuário Grátis e deixar muitas peças sem reconstrução, esse recurso é exclusivo dos planos **Manager** e **Professional**.
+## Como Desbloquear o Upload de Conjunto no Plano Grátis (15+ Créditos de Reconstrução de IA)
+O upload de conjunto de peças (pipeline `mass`) usa o Nano Banana para reconstruir várias peças de uma só foto. Usuários do plano Grátis que possuam **15 ou mais créditos de reconstrução de IA** (adquirindo pacotes de 10, 50 ou 100 créditos na página de Preços) desbloqueiam imediatamente o upload de conjuntos. Se tiverem menos de 15 créditos, o DressApp sugere pular a imagem, comprar um pacote de créditos de IA ou fazer upgrade para **Manager** ou **Professional**. O **Agente de Migração de Guarda-Roupa** (importação em massa de 50+ itens de outros apps) é exclusivo dos planos **Manager** e **Professional**.
 
 ## Aviso de Rebaixamento de Plano (Demotion para o Plano Grátis)
 Se um usuário **Manager** (200 espaços) ou **Professional** (300 espaços) rebaixar para o **Plano Grátis (Free)**:

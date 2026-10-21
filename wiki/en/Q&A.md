@@ -22,8 +22,8 @@ DressApp removes manual work and morning decision fatigue with smart visual reco
 | **Closet Capacity** | **50 items** (up to **150** via friend invites) | **Unlimited** | **Unlimited** |
 | **AI Model** | **DressApp's On-Premises AI Model** | **Cutting-Edge AI Model** + Automatic On-Premises Fallback | **Cutting-Edge AI Model** + Automatic On-Premises Fallback |
 | **Daily AI Credits** | **10/day** (accumulates up to **300 / 30 days**) | **Unlimited** daily styling & garment scans | **Unlimited** daily styling & garment scans |
-| **Studio Reconstruction** | **5 free** starter credits | **100 monthly** Studio Reconstruction credits | **100 monthly** Studio Reconstruction credits |
-| **Included Features** | Digital Closet, AI Stylist, Outfit Planner, Suitcase | + Quick Wardrobe Import, Trend Scout, Marketplace | + Certified Experts Directory & Promotional Campaigns |
+| **Studio Reconstruction** | **5 free** starter credits (**15+ credits** via credit packs unlocks Cluster Upload) | **100 monthly** Studio Reconstruction credits | **100 monthly** Studio Reconstruction credits |
+| **Included Features** | Digital Closet, AI Stylist, Outfit Planner, Suitcase (+ Cluster Upload with 15+ AI credits) | + Cluster Upload, Wardrobe Migration Agent, Trend Scout, Marketplace | + Certified Experts Directory & Promotional Campaigns |
 
 ---
 
@@ -47,7 +47,7 @@ DressApp removes manual work and morning decision fatigue with smart visual reco
 By Day 5, you will have **50 core items** in your digital closet — unlocking thousands of outfit combinations!
 
 ### Q: Can I import my clothes from another wardrobe app?
-**A:** Yes! If you have photos or screenshots from another closet app, go to **Profile → Import Wardrobe** (or **Add Item**) to upload your existing catalog with automatic item separation, background removal, and detail recognition.
+**A:** Yes! On **Manager** and **Professional** plans, the **Wardrobe Migration Agent** in **Profile → Import Wardrobe** lets you bulk-import 50+ items and outfits from Whering, Acloset, Stylebook, or Indyx with automatic item separation, background removal, and detail recognition. (Free accounts use our on-premises Eyes AI model with a 50-item closet cap, so bulk Wardrobe Migration requires a Manager or Professional plan.)
 
 ---
 
@@ -71,8 +71,8 @@ By Day 5, you will have **50 core items** in your digital closet — unlocking t
 
 ### Q: What happens if I run out of Studio Reconstruction credits or want unlimited daily AI?
 **A:** You have two flexible options on the **Pricing** page:
-- **Add-On Credit Packs (Never Expire)**: Purchase **10 credits ($3)**, **50 credits ($12)**, or **100 credits ($20)**. Purchased credits never expire and are only used after your included credits are spent.
-- **Upgrade to Wardrobe Manager ($10/mo or $100/yr)**: Unlocks **unlimited closet space**, **unlimited daily styling and scans** powered by our **cutting-edge AI model**, **100 monthly Studio Reconstruction credits**, **Cluster Garment Uploading** (closets, hangers, shoe racks, and shirt piles), morning outfit notifications, **Trend Scout**, and the **Marketplace**.
+- **Add-On Credit Packs (Never Expire)**: Purchase **10 credits ($3)**, **50 credits ($12)**, or **100 credits ($20)**. Purchased credits never expire, are only used after your included credits are spent, and **holding 15 or more AI reconstruction credits unlocks the Cluster Garment Upload pipeline on the Free plan**!
+- **Upgrade to Wardrobe Manager ($10/mo or $100/yr)**: Unlocks **unlimited closet space**, **unlimited daily styling and scans** powered by our **cutting-edge AI model**, **100 monthly Studio Reconstruction credits**, **Cluster Garment Uploading** (closets, hangers, shoe racks, and shirt piles), the **Wardrobe Migration Agent**, morning outfit notifications, **Trend Scout**, and the **Marketplace**.
 
 ### Q: What happens if I demote from Manager or Professional back to the Free plan?
 **A:** Manager and Professional users who demote to the Free plan lose their extra closet slots, **leaving only the last 50 added items in their closet**. Older closet assets beyond the 50 most recently added items are permanently removed. Before accepting a planned demotion, DressApp displays a clear warning about losing older closet assets and asks for your confirmation.
@@ -92,8 +92,8 @@ By Day 5, you will have **50 core items** in your digital closet — unlocking t
 **A:**
 - **Automatic Background Removal**: Runs automatically whenever you add a single garment or worn outfit photo (1 On-Premises AI Credit per garment on the Free plan). It removes the background and fills in item details while keeping your real photo.
 - **Studio Reconstruction (Optional)**: Runs when you tap **Reconstruct** (1 Studio Reconstruction Credit). It uses our **Nano Banana** AI model to smooth out deep wrinkles, balance lighting, and generate a crisp studio-style product image.
-- **Cluster Garment Uploading (Manager & Professional Plans)**: A revolutionary feature that identifies and reconstructs **garments hanging in your closet or on a hanger, a rack of shoes, a pile of shirts, and more**—not just garments spread on a bed! You can photograph your physical closet directly, use fewer photos, and digitize your wardrobe in no time.
-  - **Forbidden for Free Users**: Because cluster uploading uses Nano Banana AI reconstruction, a single cluster photo can consume all of a Free user's AI reconstruction allowance at once, leaving many garments unreconstructed. If a Free user uploads a cluster photo, DressApp prompts them to **skip the image or upgrade their plan**.
+- **Cluster Garment Uploading (Manager & Professional Plans, or Free Users with 15+ AI Reconstruction Credits)**: A revolutionary feature that identifies and reconstructs **garments hanging in your closet or on a hanger, a rack of shoes, a pile of shirts, and more**—not just garments spread on a bed! You can photograph your physical closet directly, use fewer photos, and digitize your wardrobe in no time.
+  - **How Free Users Unlock Cluster Upload**: Because cluster uploading uses Nano Banana AI reconstruction (up to 15 garments per photo), Free users unlock the Cluster pipeline whenever they hold **15 or more AI reconstruction credits** (by purchasing an AI credit pack on the Pricing page), or by upgrading to a Manager or Professional plan. If a Free user with fewer than 15 AI reconstruction credits uploads a cluster photo, DressApp prompts them to **skip the image, purchase AI credits, or upgrade their plan**.
   - **5 Fallbacks of Cluster Uploading**:
     1. It is good for solid colors or very simple plaid or striped patterns, and cannot analyze hidden prints and fine details.
     2. The reconstructed image rarely reflects the current garment condition.

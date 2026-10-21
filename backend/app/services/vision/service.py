@@ -2867,8 +2867,19 @@ class GarmentVisionService:
 
         cap = 1 if eff_mode == "single" else (max_items if max_items is not None else self.max_items)
         remaining_mass_budget = max(0, int(max_reconstructions or 0)) if not cutout_only else 0
-        from app.services.credit_manager import get_user_tier
+        from app.services.credit_manager import (
+            MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+            can_use_cluster_pipeline,
+            get_available_reconstruction_credits,
+            get_user_tier,
+        )
         user_tier = get_user_tier(user) if user else ("manager" if remaining_mass_budget > 0 else "free")
+        can_use_cluster = (
+            can_use_cluster_pipeline(user)
+            if user
+            else (user_tier in ("manager", "professional") or remaining_mass_budget >= MIN_CLUSTER_RECONSTRUCTION_CREDITS)
+        )
+        avail_recon_credits = get_available_reconstruction_credits(user) if user else remaining_mass_budget
 
         # 1. Detect and route each photo sequentially to avoid OOM on large batches
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
@@ -2984,9 +2995,9 @@ class GarmentVisionService:
                         has_human_wearer = False
                         has_multi_body_zones = False
 
-                if unworn_cluster_hint and not cutout_only and user_tier not in ("manager", "professional"):
+                if unworn_cluster_hint and not cutout_only and not can_use_cluster:
                     logger.info(
-                        "analyze_outfits_stream: blocking cluster upload for free user on photo idx=%d",
+                        "analyze_outfits_stream: blocking cluster upload for free user (<15 recon credits) on photo idx=%d",
                         idx,
                     )
                     return idx, [(
@@ -3182,11 +3193,13 @@ class GarmentVisionService:
                 "image_index": r_idx,
                 "code": "mass_pipeline_tier_restricted",
                 "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                "available_credits": avail_recon_credits,
                 "message": (
-                    "Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
-                    "uses Nano Banana AI studio reconstruction. One cluster photo can consume your entire free AI reconstruction "
-                    "allowance and leave many garments unreconstructed, so it is not available on the Free plan. "
-                    "Please skip this image or upgrade your plan."
+                    f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                    f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                    f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan. "
+                    f"Purchase an AI credit pack or upgrade your plan to unlock Cluster Upload."
                 ),
             }
 

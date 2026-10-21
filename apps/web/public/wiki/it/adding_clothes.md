@@ -4,7 +4,7 @@
 Il motore **Aggiungi Vestiti** di DressApp utilizza tre pipeline intelligenti che si adattano automaticamente alla tua foto:
 1. **Ritaglio Capo Singolo (`single`)**: Rimozione rapida dello sfondo per un singolo capo non indossato (non consuma crediti di ricostruzione).
 2. **Scomposizione Outfit Indossato (`worn`)**: Separa ogni capo da una foto a figura intera e ricostruisce ciascuno in uno scatto da studio Nano Banana.
-3. **Caricamento di Gruppi di Capi (`mass`) — Digitalizzazione Massiva Rivoluzionaria *(Solo Manager e Professional)***: Identifica e ricostruisce decine di capi da una singola foto — capi appesi nell'armadio o su grucce, una scarpiera, una pila di camicie o vestiti stesi sul letto.
+3. **Caricamento di Gruppi di Capi (`mass`) — Digitalizzazione Massiva Rivoluzionaria *(Piani Manager e Professional, o Piano Free con 15+ Crediti di Ricostruzione IA)***: Identifica e ricostruisce decine di capi da una singola foto — capi appesi nell'armadio o su grucce, una scarpiera, una pila di camicie o vestiti stesi sul letto.
 
 ## Cosa Può Identificare il Caricamento di Gruppi (Cluster)
 Non serve stendere ogni capo sul letto! Questa funzione rivoluzionaria ti permette di fotografare i vestiti direttamente nel tuo armadio fisico, usare meno foto e digitalizzare il guardaroba in pochissimo tempo:
@@ -13,7 +13,7 @@ Non serve stendere ogni capo sul letto! Questa funzione rivoluzionaria ti permet
 - **Una pila di camicie, maglioni o pantaloni piegati**.
 - **Più capi disposti su un letto, un tavolo o sul pavimento**.
 
-> **Esclusiva Piani a Pagamento:** Il caricamento di gruppi di capi (`mass`) utilizza la ricostruzione AI Nano Banana. Poiché una sola foto di gruppo può consumare l'intera quota mensile di ricostruzione AI di un utente Free lasciando molti capi incompleti, **il caricamento di gruppi è vietato agli utenti Free**. Se un utente Free carica una foto di gruppo, DressApp mostra un avviso suggerendo di **Saltare l'Immagine** o **Effettuare l'Upgrade del Piano**.
+> **Requisito per il Piano Free (15+ Crediti di Ricostruzione IA):** Il caricamento di gruppi di capi (`mass`) utilizza la ricostruzione AI Nano Banana. Poiché una sola foto di gruppo può contenere molti capi, gli utenti Free necessitano di **15 o più crediti di ricostruzione IA** (acquistabili tramite pacchetti crediti nella pagina Prezzi) per utilizzare il caricamento di gruppi. Se un utente Free ha meno di 15 crediti, DressApp mostra un avviso suggerendo di **Saltare l'Immagine**, **Acquistare un Pacchetto Crediti IA** o **Effettuare l'Upgrade del Piano**.
 
 ## Limitazioni del Caricamento di Gruppi di Capi
 Quando usi il caricamento di gruppi per digitalizzare rapidamente il tuo guardaroba, tieni presenti queste 5 limitazioni:

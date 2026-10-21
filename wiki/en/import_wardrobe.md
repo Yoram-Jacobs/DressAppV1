@@ -4,9 +4,9 @@ Already use another digital closet app or have online shopping receipts? You can
 
 ## Ways to Import Your Clothes
 
-1. **Import from Another Closet App**:
-   - Open the wardrobe import tool from your **Profile** or the **Add Item** menu.
-   - Choose the closet app you are moving from and follow the guided steps on screen to transfer your clothes and saved outfits.
+1. **Import from Another Closet App (Manager & Professional Plans)**:
+   - Open the **Wardrobe Migration Agent** from your **Profile** settings.
+   - Available on **Manager** and **Professional** plans (which include unlimited closet capacity and high-throughput AI processing), the Migration Agent lets you bulk-transfer 50+ items and outfits from Whering, Acloset, Stylebook, or Indyx in minutes.
 
 2. **Import from Online Store Links or Digital Receipts**:
    - Paste a product link from an online clothing store, or upload an order confirmation screenshot or PDF receipt.

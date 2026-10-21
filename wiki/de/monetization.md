@@ -7,7 +7,7 @@ DressApp bietet einen großzügigen Free-Tarif sowie flexible Monats- und Jahres
 1. **Free-Tarif**:
    - Speichern Sie bis zu **50 Kleidungsstücke** kostenlos – erweiterbar auf bis zu **150 Teile** durch das Einladen von Freunden (**+10 kostenlose Plätze** pro registriertem Freund).
    - Sofort einsatzbereit mit dem **lokalen KI-Modell von DressApp** (**10 tägliche Credits**, ansammelbar bis zu **300 Credits über 30 Tage**) sowie **5 Start-Credits für Studio-Rekonstruktionen**.
-   - Unterstützt Einzelaufnahmen und getragene Komplett-Outfits. Der **Sammel-Upload** (Schränke, Bügel, Schuhregale oder Hemdenstapel) ist im Free-Tarif deaktiviert, da ein einziges Sammelfoto das gesamte kostenlose Rekonstruktionskontingent verbrauchen kann.
+   - Unterstützt Einzelaufnahmen und getragene Komplett-Outfits. Der **Sammel-Upload** (Schränke, Bügel, Schuhregale oder Hemdenstapel) wird im Free-Tarif freigeschaltet, sobald Sie über **mindestens 15 KI-Rekonstruktions-Credits** verfügen (Credit-Pakete mit 10, 50 oder 100 Credits sind auf der Preisseite erhältlich). Bei weniger als 15 Credits schlägt DressApp vor, das Bild zu überspringen, ein Credit-Paket zu kaufen oder den Tarif upzugraden. Der **Garderoben-Migrations-Agent** (Massenimport von 50+ Teilen aus anderen Apps) ist den Tarifen **Manager** und **Professional** vorbehalten.
 
 2. **Manager-Tarif ($10/Monat oder $100/Jahr)**:
    - Schaltet **unbegrenzten Platz im Kleiderschrank**, bevorzugten Zugriff auf das **Hochleistungs-KI-Modell**, **100 monatliche Studio-Rekonstruktions-Credits**, den **Sammel-Upload** (Kleiderschrank, Schuhregale, Hemdenstapel), morgendliche Outfit-Benachrichtigungen, Kalender-Synchronisierung, Marketplace-Verkauf und vollen **Trend Scout**-Zugriff frei.

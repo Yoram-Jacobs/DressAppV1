@@ -4,7 +4,7 @@
 O motor **Adicionar Roupas** do DressApp utiliza três pipelines inteligentes que se adaptam automaticamente à sua foto:
 1. **Recorte de Peça Única (`single`)**: Remoção rápida de fundo para uma única peça não vestida (não consome créditos de reconstrução).
 2. **Divisão de Look Vestido (`worn`)**: Separa cada peça de uma foto de corpo inteiro e reconstrói cada item em uma foto de estúdio Nano Banana.
-3. **Upload de Conjunto de Peças (`mass`) — Digitalização em Massa Revolucionária *(Apenas Manager e Professional)***: Identifica e reconstrói dezenas de peças a partir de uma única foto — roupas penduradas no armário ou em cabides, uma sapateira, uma pilha de camisas ou peças espalhadas na cama.
+3. **Upload de Conjunto de Peças (`mass`) — Digitalização em Massa Revolucionária *(Planos Manager e Professional, ou Plano Grátis com 15+ Créditos de Reconstrução de IA)***: Identifica e reconstrói dezenas de peças a partir de uma única foto — roupas penduradas no armário ou em cabides, uma sapateira, uma pilha de camisas ou peças espalhadas na cama.
 
 ## O Que o Upload de Conjunto (Cluster) Pode Identificar
 Você não precisa espalhar cada peça na cama! Este recurso revolucionário permite fotografar suas roupas diretamente no seu guarda-roupa físico, usar menos fotos e digitalizar seu armário em pouquíssimo tempo:
@@ -13,7 +13,7 @@ Você não precisa espalhar cada peça na cama! Este recurso revolucionário per
 - **Uma pilha de camisas, suéteres ou calças dobradas**.
 - **Várias peças dispostas na cama, mesa ou chão**.
 
-> **Exclusivo para Planos Pagos:** O upload de conjunto de peças (pipeline `mass`) utiliza a reconstrução de IA Nano Banana. Como uma única foto de conjunto pode consumir toda a franquia mensal de reconstrução de IA de um usuário Grátis (Free), deixando muitas peças sem reconstrução, **o upload de conjuntos é proibido para usuários do plano Grátis**. Se um usuário Grátis tentar enviar uma foto de conjunto, o DressApp exibirá uma mensagem sugerindo **Pular a Imagem** ou **Fazer Upgrade do Plano**.
+> **Requisito no Plano Grátis (15+ Créditos de Reconstrução de IA):** O upload de conjunto de peças (pipeline `mass`) utiliza a reconstrução de IA Nano Banana. Como uma única foto de conjunto pode conter muitas peças, usuários do plano Grátis precisam de **15 ou mais créditos de reconstrução de IA** (adquirindo pacotes de créditos na página de Preços) para usar o upload de conjuntos. Se tiverem menos de 15 créditos, o DressApp sugerirá **Pular a Imagem**, **Comprar um Pacote de Créditos de IA** ou **Fazer Upgrade do Plano**.
 
 ## Limitações do Upload de Conjunto de Peças
 Ao usar o upload de conjunto para digitalizar seu armário rapidamente, tenha em mente estas 5 limitações:

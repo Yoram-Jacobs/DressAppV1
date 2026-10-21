@@ -23,6 +23,15 @@ export function useTierLimits() {
   const canAccessScheduler = !isFree;
   const canAccessMigration = !isFree;
 
+  const minClusterCredits = 15;
+  const rawBucketCredits =
+    typeof (user as any)?.total_credits === 'number'
+      ? (user as any).total_credits
+      : typeof (user as any)?.ai_credits === 'number'
+      ? (user as any).ai_credits
+      : 0;
+  const canAccessMassUpload = !isFree || rawBucketCredits >= minClusterCredits;
+
   const closetCapacityBonus = user?.closet_capacity_bonus || 0;
   const maxClosetSlots = isFree ? Math.min(150, 50 + closetCapacityBonus) : Infinity;
   const maxAiActionsPerDay = isFree ? 10 : Infinity;
@@ -67,6 +76,8 @@ export function useTierLimits() {
     canAccessTrendScout,
     canAccessScheduler,
     canAccessMigration,
+    canAccessMassUpload,
+    minClusterCredits,
     maxClosetSlots,
     maxAiActionsPerDay,
     getUpgradeMessage,

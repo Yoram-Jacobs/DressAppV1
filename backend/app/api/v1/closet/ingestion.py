@@ -464,30 +464,37 @@ async def analyze_item_image(
     from app.db.database import get_db
     from app.services.billing_service import deduct_user_credits
     from app.services.credit_manager import (
+        MIN_CLUSTER_RECONSTRUCTION_CREDITS,
         NANO_BANANA_MONTHLY_LIMIT,
+        can_use_cluster_pipeline,
         compute_nano_banana_monthly_state,
+        get_available_reconstruction_credits,
         get_user_tier,
+        migrate_legacy_credits_if_needed,
     )
     db = get_db()
+    user = await migrate_legacy_credits_if_needed(user, db)
 
     nb_remaining = NANO_BANANA_MONTHLY_LIMIT
     if eff_mode == "mass" and not payload.cutout_only:
-        user_tier = get_user_tier(user)
-        if user_tier not in ("manager", "professional"):
+        if not can_use_cluster_pipeline(user):
+            avail_recon = get_available_reconstruction_credits(user)
             raise HTTPException(
                 status_code=403,
                 detail={
                     "code": "mass_pipeline_tier_restricted",
                     "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                    "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                    "available_credits": avail_recon,
                     "message": (
-                        "Cluster garment uploading (mass pipeline) uses Nano Banana AI reconstruction. "
-                        "One image can consume all of your AI reconstruction allowance, leaving many garments unreconstructed. "
-                        "Please skip this image or upgrade to a Manager or Professional plan."
+                        f"Cluster garment uploading (mass pipeline) requires a Manager or Professional plan, "
+                        f"or at least {MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan "
+                        f"(you currently have {avail_recon}). Purchase an AI credit pack or upgrade your plan to unlock Cluster Upload."
                     ),
                 },
             )
         nb_state = compute_nano_banana_monthly_state(user)
-        nb_remaining = nb_state["nano_banana_monthly_remaining"]
+        nb_remaining = get_available_reconstruction_credits(user)
         if nb_remaining <= 0:
             raise HTTPException(
                 status_code=429,
@@ -500,10 +507,8 @@ async def analyze_item_image(
                 },
             )
     elif eff_mode in ("auto", "multi") and not payload.cutout_only:
-        user_tier = get_user_tier(user)
-        if user_tier in ("manager", "professional"):
-            nb_state = compute_nano_banana_monthly_state(user)
-            nb_remaining = max(0, nb_state["nano_banana_monthly_remaining"])
+        if can_use_cluster_pipeline(user):
+            nb_remaining = get_available_reconstruction_credits(user)
         else:
             nb_remaining = 0
 

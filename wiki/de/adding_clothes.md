@@ -15,16 +15,16 @@ Sie können Kleidung hinzufügen, indem Sie Live-Fotos mit Ihrer Kamera aufnehme
    - DressApp unterstützt drei intelligente Fotomodi:
      - **Ein einzelnes Kleidungsstück** auf einem Bügel, Tisch oder Bett.
      - **Ein komplettes Outfit an einer Person**, das DressApp automatisch in separate Karten für Oberteil, Unterteil, Jacke/Mantel, Schuhe und Accessoires aufteilt.
-     - **Sammel-Upload von Kleidungsstücken (Manager- & Professional-Tarif)**: Eine revolutionäre Funktion, mit der Sie Ihren physischen Kleiderschrank direkt fotografieren können – mit weniger Fotos digitalisieren Sie Ihren gesamten Schrank im Handumdrehen. Erkannt und rekonstruiert werden:
+     - **Sammel-Upload von Kleidungsstücken (Manager- & Professional-Tarif oder Free-Tarif mit 15+ KI-Rekonstruktions-Credits)**: Eine revolutionäre Funktion, mit der Sie Ihren physischen Kleiderschrank direkt fotografieren können – mit weniger Fotos digitalisieren Sie Ihren gesamten Schrank im Handumdrehen. Erkannt und rekonstruiert werden:
        - Kleidung, die im Schrank oder auf Kleiderbügeln hängt
        - Ein Schuhregal
        - Ein Stapel Hemden oder gefalteter Kleidung
        - Mehrere zusammenliegende Kleidungsstücke (nicht nur auf dem Bett ausgebreitete Kleidung)
 
-3. **Warum der Sammel-Upload im Free-Tarif gesperrt ist**:
+3. **So schalten Sie den Sammel-Upload im Free-Tarif frei (15+ KI-Rekonstruktions-Credits)**:
    - Der Sammel-Upload (Mass-Pipeline) nutzt für jedes erkannte Teil die Studio-KI-Rekonstruktion **Nano Banana**.
-   - Da ein einziges Sammelfoto das gesamte kostenlose KI-Rekonstruktionskontingent eines Free-Nutzers auf einmal verbrauchen kann und viele Kleidungsstücke unrekonstruiert blieben, ist der Sammel-Upload **für Free-Nutzer verboten**.
-   - Wenn Free-Nutzer versuchen, ein Sammelfoto hochzuladen, erscheint ein Hinweis mit der Empfehlung, **das Bild zu überspringen oder den Tarif auf Manager bzw. Professional upzugraden**.
+   - Da ein einziges Sammelfoto viele Kleidungsstücke enthalten und ein kleines Guthaben sofort aufbrauchen kann, benötigen Free-Nutzer **mindestens 15 KI-Rekonstruktions-Credits**, um die Sammel-Pipeline zu nutzen.
+   - Free-Nutzer können auf der **Preisseite** KI-Credit-Pakete (10, 50 oder 100 Credits) erwerben, um 15+ Credits zu erreichen. Hat ein Free-Nutzer weniger als 15 Rekonstruktions-Credits, empfiehlt DressApp, **das Bild zu überspringen, ein KI-Credit-Paket zu kaufen oder den Tarif auf Manager bzw. Professional upzugraden**.
 
 4. **Automatische Hintergrundentfernung & Smart-Tagging**:
    - Die KI entfernt den Hintergrund und erkennt **Kategorie**, **Unterkategorie** (mit präziser Unterscheidung zwischen Hoodies, Sweatshirts und T-Shirts), **Farben**, **Muster**, **Material**, **Saison** und **Anlass**.

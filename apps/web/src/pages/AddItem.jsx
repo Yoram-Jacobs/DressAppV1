@@ -1178,6 +1178,8 @@ export default function AddItem() {
     maxClosetSlots,
     isFree,
     canAccessMassUpload,
+    aiReconstructionCredits,
+    minClusterCredits,
     nanoBananaMonthlyLimit,
     nanoBananaMonthlyRemaining,
   } = useTierLimits();
@@ -4293,8 +4295,10 @@ export default function AddItem() {
                 </DialogTitle>
                 <DialogDescription className="text-sm text-text-brand pt-2 leading-relaxed">
                   {t("addItem.pipeline.massClusterFreeBlocked", {
+                    required: minClusterCredits || 15,
+                    available: aiReconstructionCredits ?? 0,
                     defaultValue:
-                      "Cluster garment uploading (closets, hangers, shoe racks, or piles of clothes) uses Nano Banana AI reconstruction. One cluster photo can consume all of your Free AI reconstruction allowance at once, leaving many garments unreconstructed. Please skip this image or upgrade your plan.",
+                      "Cluster garment uploading (closets, hangers, shoe racks, or piles of clothes) uses Nano Banana AI studio reconstruction. Free users unlock Cluster Upload when holding 15 or more AI reconstruction credits (via AI credit packs), or by upgrading to a Manager or Professional plan.",
                   })}
                 </DialogDescription>
               </DialogHeader>
@@ -4313,11 +4317,25 @@ export default function AddItem() {
                     </div>
                     {t("addItem.pipeline.massClusterCapabilitiesNote", {
                       defaultValue:
-                        "Manager & Professional plans let you photograph garments hanging in your closet, shoe racks, and folded piles to digitize your wardrobe in seconds.",
+                        "Manager & Professional plans—or Free accounts with 15+ AI reconstruction credits—let you photograph garments hanging in your closet, shoe racks, and folded piles to digitize your wardrobe in seconds.",
                     })}
                   </div>
                 </div>
               )}
+              <div className="my-1 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/70 px-3 py-2 text-xs text-amber-900">
+                <span className="font-semibold">
+                  {t("addItem.pipeline.massClusterCreditsRequiredLabel", {
+                    required: minClusterCredits || 15,
+                    defaultValue: "Minimum AI Reconstruction Credits: 15",
+                  })}
+                </span>
+                <span className="font-bold">
+                  {t("addItem.pipeline.massClusterCurrentCreditsLabel", {
+                    available: aiReconstructionCredits ?? 0,
+                    defaultValue: `Your Balance: ${aiReconstructionCredits ?? 0}`,
+                  })}
+                </span>
+              </div>
               <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
                 <Button
                   type="button"
@@ -4334,13 +4352,13 @@ export default function AddItem() {
                   type="button"
                   onClick={() => {
                     setMassClusterModal(null);
-                    nav("/pricing");
+                    nav("/pricing#pricing-credit-packs-section");
                   }}
                   data-testid="mass-cluster-upgrade-button"
                   className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2.5 text-sm font-semibold"
                 >
                   {t("addItem.pipeline.upgradePlanCta", {
-                    defaultValue: "Upgrade Plan",
+                    defaultValue: "Get AI Credits or Upgrade",
                   })}
                 </Button>
               </DialogFooter>

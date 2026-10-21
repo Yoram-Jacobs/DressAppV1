@@ -1,28 +1,28 @@
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { TopNav } from '@/components/TopNav';
 import { BottomTabs } from '@/components/BottomTabs';
 import { LanguageSync } from '@/components/LanguageSync';
 import { LocationBanner } from '@/components/LocationBanner';
 import { useAuth } from '@/lib/auth';
 import { closetStore } from '@/lib/closetStore';
-import { prewarmMarketplace, resetMarketplace, myListingsStore } from '@/lib/marketplaceStore';
+import { prewarmMarketplace, resetMarketplace } from '@/lib/marketplaceStore';
 import { prewarmExperts, resetExperts } from '@/lib/expertsStore';
 import { prewarmSuitcase, resetSuitcase } from '@/lib/suitcaseStore';
 import { outfitStore } from '@/lib/outfitStore';
 import { Loader2, ArrowUp } from 'lucide-react';
-import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
 import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Footer } from '@/components/Footer';
 import { hasCompletedOnboarding } from '@/lib/onboardingStore';
+import { useTierLimits } from '@/hooks/useTierLimits';
+
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
+    .replace(/-/g, '+')
     .replace(/_/g, '/');
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
@@ -33,9 +33,9 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export const AppLayout = () => {
-  const { t } = useTranslation();
   const location = useLocation();
   const { user, loading, refresh } = useAuth();
+  const { canAccessMigration } = useTierLimits();
   const [show, setShow] = useState(false);
   const { items, total, isLoaded, error: closetError } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
@@ -176,12 +176,6 @@ export const AppLayout = () => {
 
   const hasClosetItems = (items && items.length > 0) || (total > 0);
 
-  useEffect(() => {
-    if (isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems && 'ontouchstart' in window) {
-      toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
-    }
-  }, [user, isLoaded, closetError, hasClosetItems, t]);
-
   if (loading) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center">
@@ -191,6 +185,7 @@ export const AppLayout = () => {
   }
 
   const isPricingPage = location.pathname === '/pricing';
+  const isClosetPage = location.pathname === '/closet';
   const isPublicBrowsePage =
     location.pathname === '/' ||
     location.pathname === '/home' ||
@@ -212,8 +207,28 @@ export const AppLayout = () => {
     return <Navigate to="/onboarding" state={{ from: location }} replace />;
   }
 
-  const showOnboardingMigration = !dismissedMigration && !isPricingPage && isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems;
-  const showLoginReminder = isLoaded && !closetError && user && user.migration_flag && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
+  // Only show migration auto-prompt for paid users (Manager/Professional) outside /closet
+  // (on /closet, the interactive ClosetGuidedTour handles onboarding and discovery)
+  const showOnboardingMigration =
+    canAccessMigration &&
+    !isClosetPage &&
+    !dismissedMigration &&
+    !isPricingPage &&
+    isLoaded &&
+    !closetError &&
+    user &&
+    !user.migration_flag &&
+    !hasClosetItems;
+
+  const showLoginReminder =
+    !isClosetPage &&
+    isLoaded &&
+    !closetError &&
+    user &&
+    user.migration_flag &&
+    !hasClosetItems &&
+    !dismissedLoginReminder &&
+    !showOnboardingMigration;
 
   return (
     <div className="page-shell">
@@ -225,8 +240,8 @@ export const AppLayout = () => {
       </main>
       <BottomTabs />
       <Footer />
-      {/* Onboarding Migration Question Modal — desktop only */}
-      {showOnboardingMigration && !('ontouchstart' in window) && (
+      {/* Onboarding Migration Question Modal — Paid Tiers only */}
+      {showOnboardingMigration && (
         <OnboardingMigrationModal
           isOpen={true}
           onClose={() => handleDismissMigration('New')}
@@ -260,4 +275,3 @@ export const AppLayout = () => {
     </div>
   );
 };
-

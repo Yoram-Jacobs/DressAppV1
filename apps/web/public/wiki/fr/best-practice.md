@@ -21,7 +21,7 @@ Dans le cadre de l'offre Gratuite, DressApp met à votre disposition deux réser
 
 Lorsque vous importez une photo, l'IA de DressApp détecte automatiquement s'il s'agit d'un **vêtement seul**, d'une **tenue complète portée** ou de **plusieurs pièces disposées ensemble**. Elle supprime l'arrière-plan, identifie les couleurs et reconnaît la coupe ainsi que le style. Des photos nettes et bien éclairées garantissent un détourage précis dès le premier essai, préservant vos **5 crédits de Reconstruction Studio** pour les pièces plus complexes.
 
-### Import de Lots de Vêtements (Forfaits Manager et Professional)
+### Import de Lots de Vêtements (Forfaits Manager et Professional, ou Forfait Gratuit avec 15+ Crédits de Reconstruction IA)
 
 L'import de lots de vêtements (pipeline de masse) est une fonctionnalité révolutionnaire qui vous permet de photographier vos vêtements directement dans votre placard physique, d'utiliser beaucoup moins de photos et de numériser votre garde-robe en un rien de temps. Il peut identifier et reconstruire :
 - **Des vêtements suspendus dans le placard ou sur un cintre**
@@ -29,7 +29,7 @@ L'import de lots de vêtements (pipeline de masse) est une fonctionnalité révo
 - **Une pile de chemises ou de t-shirts pliés**
 - **Plusieurs vêtements regroupés** (et pas seulement des vêtements étalés sur un lit !)
 
-> **Pourquoi l'import de lots est interdit aux utilisateurs Gratuits :** L'import de lots utilise la reconstruction IA **Nano Banana**. Une seule photo de lot peut consommer l'intégralité du quota de reconstruction IA d'un utilisateur Gratuit, laissant de nombreux vêtements non reconstruits. Si un utilisateur Gratuit tente d'importer un lot, DressApp affiche un message suggérant de **passer l'image ou de mettre à niveau son forfait**.
+> **Comment débloquer l'import de lots sur le forfait Gratuit (15+ crédits de reconstruction IA) :** L'import de lots utilise la reconstruction IA **Nano Banana**. Comme une seule photo peut contenir de nombreuses pièces, les utilisateurs du forfait Gratuit ont besoin d'**au moins 15 crédits de reconstruction IA** (disponibles via les packs de crédits sur la page Tarifs) pour débloquer l'import de lots. Si un utilisateur Gratuit a moins de 15 crédits, DressApp suggère de **passer l'image, d'acheter un pack de crédits IA ou de mettre à niveau son forfait**.
 
 **Les 5 limites de l'import de lots :**
 1. **Idéal pour les couleurs unies et motifs simples** : Parfait pour les tissus unis ou les motifs à carreaux et rayures très simples ; il ne peut pas analyser les imprimés cachés ni les détails fins.

@@ -8,12 +8,12 @@ DressApp biedt een transparant abonnementsmodel met drie niveaus (**Free**, **Ma
 | :--- | :--- | :--- | :--- |
 | **Maximale Kastcapaciteit** | 50 items | 200 items | 300 items |
 | **AI Kledingreconstructies** | 5 / maand | 50 / maand | 100 / maand |
-| **Cluster Kleding Uploaden (`mass`)** | Verboden | Inbegrepen | Inbegrepen |
+| **Cluster Kleding Uploaden (`mass`)** | Ontgrendeld met 15+ AI-reconstructiecredits | Inbegrepen | Inbegrepen |
 | **AI Outfitsuggesties** | 5 / maand | 30 / maand | 100 / maand |
 | **AI Virtuele Try-Ons** | 1 / maand | 15 / maand | 50 / maand |
 
-## Waarom Cluster Uploaden Verboden is voor Free-gebruikers
-Cluster kleding uploaden (`mass`-pipeline) gebruikt Nano Banana om meerdere kledingstukken uit één foto te reconstrueren. Omdat één enkele foto direct het volledige maandelijkse reconstructietegoed van een Free-gebruiker kan verbruiken en veel kledingstukken onvoltooid laat, is deze functie exclusief voor **Manager**- en **Professional**-gebruikers.
+## Hoe Cluster Uploaden Wordt Ontgrendeld voor Free-gebruikers (15+ AI-reconstructiecredits)
+Cluster kleding uploaden (`mass`-pipeline) gebruikt Nano Banana om meerdere kledingstukken uit één foto te reconstrueren. Free-gebruikers die **15 of meer AI-reconstructiecredits** bezitten (door een pakket van 10, 50 of 100 credits te kopen op de Prijzen-pagina) ontgrendelen direct de cluster-pipeline. Heb je minder dan 15 credits, dan stelt DressApp voor om de afbeelding over te slaan, een creditpakket te kopen of te upgraden naar **Manager** of **Professional**. De **Garderobe Migratie-agent** (bulkimport van 50+ items uit andere apps) blijft exclusief voor **Manager** en **Professional**.
 
 ## Waarschuwing bij Abonnementsdegradatie (Downgrade naar Free)
 Als een **Manager**- (200 plekken) of **Professional**-gebruiker (300 plekken) teruggaat naar het **Free-abonnement**:

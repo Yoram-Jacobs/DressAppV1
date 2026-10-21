@@ -4,7 +4,7 @@
 De **Kleding Toevoegen**-engine van DressApp gebruikt drie slimme pipelines die zich automatisch aanpassen aan je foto:
 1. **Enkel Kledingstuk Uitknippen (`single`)**: Snelle achtergrondverwijdering voor één ongedragen kledingstuk (verbruikt geen reconstructiecredits).
 2. **Gedragen Outfit Splitsen (`worn`)**: Scheidt elk kledingstuk uit een volledige outfitfoto en reconstrueert elk item tot een Nano Banana-studioproductfoto.
-3. **Cluster Kleding Uploaden (`mass`) — Revolutionaire Bulkdigitalisering *(Alleen Manager & Professional)***: Herkent en reconstrueert tientallen kledingstukken uit één enkele foto — kleding hangend in de kast of aan een kledinghanger, een schoenenrek, een stapel shirts of kleding verspreid op een bed.
+3. **Cluster Kleding Uploaden (`mass`) — Revolutionaire Bulkdigitalisering *(Manager & Professional, of Free met 15+ AI-reconstructiecredits)***: Herkent en reconstrueert tientallen kledingstukken uit één enkele foto — kleding hangend in de kast of aan een kledinghanger, een schoenenrek, een stapel shirts of kleding verspreid op een bed.
 
 ## Wat Cluster Kleding Uploaden Kan Herkennen
 Je hoeft niet elk kledingstuk apart op een bed uit te spreiden! Met deze revolutionaire functie kun je direct foto's maken van je kleding in je fysieke kledingkast, minder foto's gebruiken en je garderobe in een handomdraai digitaliseren:
@@ -13,7 +13,7 @@ Je hoeft niet elk kledingstuk apart op een bed uit te spreiden! Met deze revolut
 - **Een stapel opgevouwen shirts, truien of broeken**.
 - **Meerdere kledingstukken op een bed, tafel of vloer**.
 
-> **Exclusief voor Betaalde Abonnementen:** Cluster kleding uploaden (`mass`-pipeline) maakt gebruik van Nano Banana AI-reconstructie. Omdat één clusterfoto het volledige maandelijkse AI-reconstructietegoed van een Free-gebruiker in één keer kan verbruiken waardoor veel kledingstukken onvoltooid blijven, **is cluster uploaden verboden voor Free-gebruikers**. Als een Free-gebruiker een clusterfoto uploadt, toont DressApp een melding met het voorstel om **de afbeelding over te slaan** of **het abonnement te upgraden**.
+> **Vereiste voor Free-gebruikers (15+ AI-reconstructiecredits):** Cluster kleding uploaden (`mass`-pipeline) maakt gebruik van Nano Banana AI-reconstructie. Omdat één clusterfoto veel items kan bevatten, hebben Free-gebruikers **15 of meer AI-reconstructiecredits** nodig (verkrijgbaar via creditpakketten op de Prijzen-pagina) om cluster uploaden te gebruiken. Als een Free-gebruiker minder dan 15 credits heeft, stelt DressApp voor om **de afbeelding over te slaan**, **een AI-creditpakket te kopen** of **het abonnement te upgraden**.
 
 ## Kanttekeningen en Beperkingen van Cluster Uploaden
 Houd bij het snel digitaliseren van je kast rekening met deze 5 beperkingen:

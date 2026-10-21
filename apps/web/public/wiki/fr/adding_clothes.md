@@ -15,16 +15,16 @@ Vous pouvez ajouter des vêtements en prenant des photos avec votre appareil pho
    - DressApp prend en charge trois modes photo intelligents :
      - **Un seul vêtement** sur un cintre, une table ou un lit.
      - **Une tenue complète portée par une personne**, que DressApp sépare automatiquement en fiches distinctes (haut, bas, veste/manteau, chaussures et accessoires).
-     - **Import groupé de vêtements (Forfaits Manager et Professionnel)** : Une fonctionnalité révolutionnaire permettant de photographier directement l'intérieur de votre placard — utilisez moins de photos et numérisez votre garde-robe en un rien de temps. Elle identifie et reconstruit :
+     - **Import groupé de vêtements (Forfaits Manager et Professionnel, ou Forfait Gratuit avec 15+ crédits de reconstruction IA)** : Une fonctionnalité révolutionnaire permettant de photographier directement l'intérieur de votre placard — utilisez moins de photos et numérisez votre garde-robe en un rien de temps. Elle identifie et reconstruit :
        - Les vêtements suspendus dans le placard ou sur un cintre
        - Une étagère à chaussures
        - Une pile de chemises ou de vêtements pliés
        - Plusieurs vêtements disposés ensemble (et pas seulement étalés sur un lit)
 
-3. **Pourquoi l'import groupé est interdit sur le forfait Gratuit** :
+3. **Comment débloquer l'import groupé sur le forfait Gratuit (15+ crédits de reconstruction IA)** :
    - L'import groupé (pipeline de masse) utilise la reconstruction IA studio **Nano Banana** pour chaque pièce détectée.
-   - Comme une seule photo groupée peut consommer l'intégralité du quota gratuit de reconstruction d'un utilisateur Gratuit en une seule fois — laissant de nombreux vêtements non reconstruits —, l'import groupé est **interdit aux utilisateurs du forfait Gratuit**.
-   - Si un utilisateur Gratuit tente d'importer un groupe de vêtements, DressApp affiche un message lui suggérant **d'ignorer l'image ou de mettre à niveau son forfait** vers Manager ou Professionnel.
+   - Comme une seule photo groupée peut contenir de nombreuses pièces et épuiser un petit solde d'un seul coup, les utilisateurs du forfait Gratuit doivent posséder **15 crédits de reconstruction IA ou plus** pour utiliser le pipeline groupé.
+   - Les utilisateurs Gratuits peuvent acheter des packs de crédits IA (10, 50 ou 100 crédits) sur la page **Tarifs** pour atteindre 15+ crédits. Si un utilisateur Gratuit dispose de moins de 15 crédits de reconstruction, DressApp lui suggère **d'ignorer l'image, d'acheter un pack de crédits IA ou de mettre à niveau son forfait** vers Manager ou Professionnel.
 
 4. **Suppression automatique de l'arrière-plan et étiquetage intelligent** :
    - L'IA supprime l'arrière-plan et détecte la **Catégorie**, la **Sous-catégorie** (distinguant précisément les sweats à capuche des t-shirts), les **Couleurs**, le **Motif**, la **Matière**, la **Saison** et **l'Occasion**.

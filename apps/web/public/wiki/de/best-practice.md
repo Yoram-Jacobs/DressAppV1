@@ -21,7 +21,7 @@ Im kostenlosen Tarif stellt Ihnen DressApp zwei spezielle Credits-Kontingente zu
 
 Wenn Sie ein Foto hochladen, erkennt die KI von DressApp automatisch, ob es sich um ein **einzelnes Kleidungsstück**, ein **komplettes Outfit am Körper** oder **mehrere nebeneinander gelegte Teile** handelt. Sie entfernt den Hintergrund, bestimmt die Farben und erkennt Schnitt sowie Stil. Klare, gut beleuchtete Fotos sorgen auf Anhieb für saubere Freisteller und präzise Farberkennung – so sparen Sie Ihre **5 Studio-Rekonstruktions-Credits** für besonders schwierige Aufnahmen.
 
-### Kleider-Cluster hochladen (Manager- & Professional-Tarife)
+### Kleider-Cluster hochladen (Manager- & Professional-Tarife oder Free-Tarif mit 15+ KI-Rekonstruktions-Credits)
 
 Das Hochladen von Kleider-Clustern (Mass-Pipeline) ist eine revolutionäre Funktion: Sie können Ihre Kleidung direkt im physischen Kleiderschrank fotografieren, benötigen deutlich weniger Fotos und digitalisieren Ihre Garderobe im Handumdrehen. Erkannt und rekonstruiert werden:
 - **Kleidung, die im Schrank oder auf Kleiderbügeln hängt**
@@ -29,7 +29,7 @@ Das Hochladen von Kleider-Clustern (Mass-Pipeline) ist eine revolutionäre Funkt
 - **Ein Stapel Hemden oder gefalteter Shirts**
 - **Mehrere zusammenliegende Kleidungsstücke** (nicht nur auf dem Bett ausgebreitete Kleidung!)
 
-> **Warum das Hochladen von Clustern für Free-Nutzer verboten ist:** Das Hochladen von Kleider-Clustern nutzt **Nano Banana** KI-Studiorekonstruktion. Ein einziges Cluster-Foto kann das gesamte KI-Rekonstruktionskontingent eines Free-Nutzers auf einmal verbrauchen und viele Kleidungsstücke unvollendet lassen. Versucht ein Free-Nutzer ein Cluster-Foto hochzuladen, schlägt DressApp vor, **das Bild zu überspringen oder den Tarif hochzustufen**.
+> **So schalten Sie den Cluster-Upload im Free-Tarif frei (15+ KI-Rekonstruktions-Credits):** Das Hochladen von Kleider-Clustern nutzt **Nano Banana** KI-Studiorekonstruktion. Da ein einziges Cluster-Foto viele Teile enthalten kann, benötigen Free-Nutzer **mindestens 15 KI-Rekonstruktions-Credits** (erhältlich über Credit-Pakete auf der Preisseite), um den Cluster-Upload zu nutzen. Hat ein Free-Nutzer weniger als 15 Credits, schlägt DressApp vor, **das Bild zu überspringen, ein KI-Credit-Paket zu kaufen oder den Tarif hochzustufen**.
 
 **Die 5 Einschränkungen beim Cluster-Upload:**
 1. **Optimal für Unifarben & einfache Muster**: Ideal für einfarbige Stoffe sowie sehr einfache Karo- oder Streifenmuster. Verdeckte Prints und feine Details können nicht analysiert werden.

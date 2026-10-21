@@ -20,7 +20,8 @@
     "ads": "我的广告",
     "pricing": "价格",
     "trend_scout": "潮流探索",
-    "insights": "衣橱洞察"
+    "insights": "衣橱洞察",
+    "gettingStartedTour": "新手导览之旅"
   },
   "common": {
     "savePrompt": "点击保存以保留更改。",
@@ -891,20 +892,22 @@
       "multiDesc": "全身穿搭照片 — 自动拆分并分析所穿的每一件单品。",
       "massTitle": "衣橱挂架与衣物堆批量识别",
       "massDesc": "衣架挂放或成堆衣物 — 自动编目每件单品并重建透明背景影棚卡片。",
-      "massBadgePro": "专业版 / 管理版",
+      "massBadgePro": "管理员版 / 专业版 或 15+ 积分",
       "massQuotaBadge": "本月剩余影棚重建次数：{{remaining}} / {{limit}}",
-      "massUpgradeRequired": "批量衣物簇上传（衣柜挂衣、衣架、鞋架及叠放衣物堆）仅限 Manager 和 Professional 套餐用户使用。",
+      "massUpgradeRequired": "集群衣物上传（衣柜挂杆、衣架、鞋架及衣物堆）适用于管理员版和专业版计划，或持有 15 个以上 AI 重建积分的免费版用户。",
       "massMonthlyLimitReached": "已达到每月影棚重建上限（{{limit}}次/月），将在下一个计费周期重置。",
       "stageCataloging": "正在编目照片中的衣物…",
       "stageReconstructing": "正在重建影棚卡片 ({{completed}}/{{total}})…",
       "autoTitle": "自动识别（混合）",
       "autoDesc": "同时自动分类并处理单件衣物、真人穿搭及整柜/衣物堆。",
-      "massClusterFreeTitle": "批量衣物簇上传需要升级套餐",
-      "massClusterFreeBlocked": "批量衣物簇上传（衣柜挂衣、衣架、鞋架或叠放的衬衫堆）使用 Nano Banana AI 重建技术。单张照片就可能耗尽您的全部免费 AI 重建额度，导致许多衣物无法完成重建。请跳过此图片或升级您的套餐。",
-      "massClusterCapabilitiesTitle": "解锁整个衣柜与鞋架的极速数字化",
-      "massClusterCapabilitiesNote": "Manager 与 Professional 套餐支持直接拍摄衣柜中悬挂的衣服、鞋架或一摞衬衫，用更少的照片在短时间内完成整个衣橱的数字化。",
+      "massClusterFreeTitle": "集群衣物上传需要 15+ AI 重建积分或升级计划",
+      "massClusterFreeBlocked": "集群衣物上传（衣柜、衣架、鞋架或折叠衣物堆）使用 Nano Banana AI 影棚重建。免费用户只要持有 15 个或以上 AI 重建积分（可通过购买 AI 积分包获取），或升级至管理员版 / 专业版计划，即可解锁集群上传。",
+      "massClusterCapabilitiesTitle": "一键数字化整个衣柜与鞋架",
+      "massClusterCapabilitiesNote": "管理员版与专业版计划——或拥有 15+ AI 重建积分的免费账户——让您直接拍摄衣柜挂衣、鞋架与叠放衣物，几秒内完成衣橱数字化。",
       "skipClusterImage": "跳过此图片",
-      "upgradePlanCta": "升级套餐"
+      "upgradePlanCta": "获取 AI 积分或升级计划",
+      "massClusterCreditsRequiredLabel": "最低 AI 重建积分要求：15",
+      "massClusterCurrentCreditsLabel": "您当前的余额：{{available}}"
     }
   },
   "itemDetail": {
@@ -3883,8 +3886,8 @@
     "add_clothes_title": "将衣物添加到衣橱",
     "add_clothes_p1": "只需轻点几下即可将衣物录入 DressApp——无论是单件衣物、穿着在身的完整穿搭，还是直接拍摄实体衣柜中的成簇衣物。",
     "add_clothes_step1": "打开 DressApp 并点击**添加单品**按钮。",
-    "add_clothes_step2": "选择**拍照**或**上传照片**，可添加单件衣物、全身穿搭，或（在 **Manager** 与 **Professional** 套餐下）直接拍摄悬挂在衣柜或衣架上的衣物、鞋架或一摞衬衫的**成簇照片**（不仅限于平铺在床上的衣物）。",
-    "add_clothes_step3": "批量衣物簇上传使用 **Nano Banana** AI 重建技术。由于一张照片就可能耗尽免费用户的全部 AI 重建额度并导致大量衣物无法重建，免费套餐禁止使用该功能（系统会提示跳过图片或升级套餐）。",
+    "add_clothes_step2": "选择**拍照**或**上传照片**添加单件衣物、全身穿搭，或在**管理员版**、**专业版**及**持有 15+ AI 重建积分的免费账户**下上传衣柜挂衣、鞋架或衣物堆的**集群照片**。",
+    "add_clothes_step3": "集群衣物上传使用 Nano Banana AI 影棚重建（每张照片最多 15 件）。免费用户只要拥有 **15 个或以上 AI 重建积分**（通过购买积分包）或升级至管理员版 / 专业版即可使用。",
     "add_clothes_step4": "请注意批量衣物簇上传的 5 项局限性：(a) 适合纯色或简单的格纹/条纹图案，无法分析隐藏印花和精细细节；(b) 重建图像很少反映衣物的当前新旧状况；(c) 可能会遗漏部分衣物；(d) 可能会对图案和颜色产生幻觉偏差；(e) 会消耗重建积分。",
     "add_clothes_step5": "核对识别出的详情——例如类别、颜色、季节与款式（包括连帽衫、卫衣及传统服饰）——并按需微调。",
     "add_clothes_step6": "点击**保存**，衣物即可立即加入您的数字衣橱！",
@@ -4049,7 +4052,7 @@
     "tiers_title": "订阅方案",
     "tiers_p1": "DressApp 提供了灵活的订阅方案，可根据您的衣橱容量和穿搭需求量身定制。在价格页面升级以解锁无限功能。",
     "tiers_free_title": "免费方案",
-    "tiers_free_desc": "包含最多 50 件衣橱容量（通过邀请好友可扩展至 150 件，每位好友 +10 件）并可使用 DressApp 本地部署的 AI 模型。",
+    "tiers_free_desc": "基础容量 50 件（邀请好友最高可扩展至 150 件），每日 10 个本地 AI 积分（30 天最多累积 300 个）以及 5 个初始 AI 重建积分。购买 AI 积分包（15+ 积分）即可解锁集群衣物上传。",
     "tiers_manager_title": "Manager 方案",
     "tiers_manager_desc": "$10/月（或 $100/年）。解锁无限衣橱容量、DressApp 最前沿的 AI 模型、早间穿搭提醒、日历同步、闲置市场售卖以及完整的 Trend Scout 潮流资讯。",
     "tiers_pro_title": "Professional 方案",
@@ -4236,7 +4239,7 @@
       "profile_item15_title": "",
       "profile_item16_title": "",
       "profile_item16_desc": "",
-      "tiers_free_desc": "包含最多 50 件衣橱容量（通过邀请好友可扩展至 150 件，每位好友 +10 件）并可使用 DressApp 本地部署的 AI 模型。",
+      "tiers_free_desc": "基础容量 50 件（邀请好友最高可扩展至 150 件），每日 10 个本地 AI 积分（30 天最多累积 300 个）以及 5 个初始 AI 重建积分。购买 AI 积分包（15+ 积分）即可解锁集群衣物上传。",
       "tiers_manager_desc": "$10/月（或 $100/年）。解锁无限衣橱容量、DressApp 最前沿的 AI 模型、早间穿搭提醒、日历同步、闲置市场售卖以及完整的 Trend Scout 潮流资讯。",
       "reanalyze_title": "照片重新分析与 AI 助手",
       "reanalyze_p1": "直接与 AI 助手对话，用自然语言调整或修复衣物照片：",
@@ -4255,7 +4258,7 @@
     "best_practice_title": "最佳实践指南",
     "best_practice_p1": "遵循以下简单习惯，轻松建立精准的数字衣橱、充分利用每日积分，并每天获得量身定制的穿搭推荐。",
     "best_practice_step1": "**先完善个人资料**：在上传衣物前，请先在**个人资料**中设置您的身体尺码、偏爱色彩、风格偏好与端庄度级别。",
-    "best_practice_step2": "**拍摄清晰照片或衣柜成簇照片**：上传平铺单品、全身镜穿搭，或在 **Manager** 与 **Professional** 套餐下直接拍摄衣柜挂衣、鞋架或一摞衬衫，用更少照片快速完成数字化。",
+    "best_practice_step2": "**拍摄清晰照片**：上传单件平铺照片、全身镜自拍，或在**管理员版**、**专业版**以及**持有 15+ AI 重建积分的免费账户**下直接拍摄衣柜挂衣、鞋架或叠放的衣物堆。",
     "best_practice_step3": "**了解批量上传的局限性**：免费用户禁用。最适合纯色或简单格纹/条纹单品，无法识别精细印花或反映衣物新旧磨损，可能遗漏单品或虚构颜色图案，且消耗重建积分。",
     "best_practice_step4": "**5 天建立数字衣橱**：免费用户可使用每日 10 个免费积分（30 天内最多累计至 300 个），每天添加 10 件单品，5 天即可录入 50 件核心衣物。",
     "best_practice_step5": "**花 10 秒核对单品卡片**：快速检查识别出的品类、颜色、保暖度和着装规范。",
@@ -4263,13 +4266,16 @@
     "qa_p1": "关于新手入门、积分机制、衣橱数字化与智能穿搭的最常见问题快速解答。",
     "qa_step1": "**第一天该如何开始？** 请先在**个人资料**中完善尺码与风格偏好，然后上传您最常穿的 10 件日常单品。",
     "qa_step2": "**免费积分如何使用？** 免费账户享有**每日 10 个日常积分**（每 24 小时刷新，最高可累积至 50 个）用于添加衣物和造型师对话，以及**每月 5 个影棚重建积分**。",
-    "qa_step3": "**为什么免费用户禁止使用批量衣物簇上传？** 因为该功能使用 Nano Banana AI 重建，一张照片即可耗尽免费用户的全部重建额度，导致许多衣物无法重建。免费用户上传时会收到跳过图片或升级套餐的提示。",
-    "qa_step4": "**批量衣物簇上传能识别什么？有哪些局限？** 在 Manager 和 Professional 套餐下，它能识别并重建衣柜或衣架上悬挂的衣物、鞋架、一摞衬衫等（不仅限于平铺在床上的衣服）。局限性：(a) 适合纯色或简单格纹/条纹，无法分析隐藏印花和精细细节；(b) 很少反映衣物当前新旧状态；(c) 可能遗漏部分衣物；(d) 可能出现图案和颜色幻觉；(e) 消耗重建积分。",
+    "qa_step3": "**免费用户如何解锁集群衣物上传？** 集群上传（衣柜、衣架、鞋架或衬衫堆）使用 Nano Banana AI 影棚重建，单张照片最多可处理 15 件衣物。免费用户只需持有 **15 个或以上 AI 重建积分**（可在定价页面购买 AI 积分包）或升级至**管理员版 / 专业版**，即可解锁集群上传通道。",
+    "qa_step4": "**集群上传能识别什么？有哪些限制？** 持有 **15+ AI 重建积分**或订阅**管理员版 / 专业版**时，您可以直接拍摄衣柜里挂着的衣服、鞋架或叠放的衬衫堆。注意：它最适合纯色或简单格纹/条纹衣物，无法分析隐藏印花和精细细节，极少反映衣物新旧磨损，可能漏掉部分重叠衣物，偶尔会产生图案或颜色幻觉，且每件重建衣物消耗 1 个重建积分。",
     "qa_step5": "**如果我从 Manager 或 Professional 降级到免费套餐会怎样？** 您将失去额外的衣橱槽位，衣橱中**仅保留最后添加的 50 件单品**，系统会在降级前弹出警告并请您确认。",
     "best_practice_step6": "**向造型师提供 4 个线索**：提问时说明**场合**、**地点**、**天气**和**理想风格**。",
     "qa_step6": "**我的衣橱是私密的吗？** 是的，您的照片和身材数据仅对您本人可见，并由 **DressApp 本地 AI 模型**安全处理。",
     "tiers_demotion_title": "套餐降级与保留最后 50 件单品警告",
-    "tiers_demotion_desc": "Manager 和 Professional 用户降级到免费套餐后将失去额外衣橱槽位，确认警告后衣橱中仅保留最后添加的 50 件单品，更早的单品将被永久移除。"
+    "tiers_demotion_desc": "Manager 和 Professional 用户降级到免费套餐后将失去额外衣橱槽位，确认警告后衣橱中仅保留最后添加的 50 件单品，更早的单品将被永久移除。",
+    "launchGrandTourTitle": "互动式新手入门导览",
+    "launchGrandTourDesc": "通过 4 步聚光灯互动导览，快速掌握 AI 抠图与集群上传、日历穿搭师、智能搜索及个人资料完善。",
+    "launchGrandTourBtn": "开始互动导览"
   },
   "campaigns": {
     "status": {
@@ -4721,7 +4727,7 @@
     "agentSavingRemaining": "正在将剩余的 {{count}} 件物品保存到 DressApp...",
     "agentSavedSuccess": "✓ 已将 {{count}} 件物品保存到衣橱！",
     "agentCompletionNotice": "所有物品已直接上传至您的 DressApp 衣橱数据库。<br><br><b>您现在可以返回 DressApp 查看您的衣橱！</b>",
-    "upgradePrompt": "从其他应用导入衣橱仅在管理者和专业版方案中可用。",
+    "upgradePrompt": "从其他应用迁移衣橱的功能仅在管理员版和专业版计划中提供。",
     "bookmarkletInstruction": "点击浏览器右上角的三个点菜单 ⋮，然后点击“书签”以保存此页面。",
     "modeScreenshotsTab": "截图 / 录屏",
     "modeBookmarkletTab": "浏览器代理",
@@ -4740,7 +4746,8 @@
     "webviewInstructions": "请在下方登录 {{appName}} 并打开您的衣橱页面，然后点击“扫描并导入衣橱”。",
     "webviewScanCompleteDesc": "{{appName}} 扫描完成（检测到 {{count}} 件衣物）。您的衣橱正在更新！",
     "scanningInProgressBtn": "正在扫描...",
-    "scanAndImportClosetBtn": "扫描并导入衣橱"
+    "scanAndImportClosetBtn": "扫描并导入衣橱",
+    "itemsCountLabel": "{{count}}+ 件单品"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",
@@ -4985,7 +4992,7 @@
     "demoteConfirmBody": "Manager 和 Professional 用户降级为免费套餐后将失去额外的衣橱容量，衣橱中仅保留最后添加的 50 件单品，更早添加的衣橱资产将被永久删除。",
     "demoteClosetSummary": "当前衣橱单品数：{{count}} 件（免费套餐上限：{{limit}} 件）",
     "demoteItemsWillBeLost": "警告：您最早添加的 {{lostCount}} 件单品将被永久删除，仅保留最后添加的 50 件单品。",
-    "demoteUnderLimitNote": "免费套餐仅保留最后添加的 50 件单品，无限每日 AI 请求和批量衣物簇上传功能将被停用。",
+    "demoteUnderLimitNote": "降级至免费版后仅保留最近添加的 50 件单品，无限每日 AI 请求将被停用，且集群上传需要至少 15 个 AI 重建积分。",
     "demoteCancelBtn": "保留当前套餐",
     "demoteConfirmBtn": "确认降级",
     "demoteSuccessToast": "您的套餐已切换为免费版，已为您保留最后添加的 50 件衣橱单品。",
@@ -5348,7 +5355,9 @@
         "womenOuterwear": "西装外套、风衣与开衫",
         "menOuterwear": "西装夹克、立领马甲、阿奇坎礼服与大衣",
         "footwear": "鞋履"
-      }
+      },
+      "migrationProPrompt": "在 Whering、Acloset、Indyx 或 Stylebook 上已有数字衣橱？登录后升级至管理员版或专业版即可使用 AI 批量衣橱迁移（50+ 件单品）。",
+      "migrationProBadge": "管理员版 / 专业版"
     },
     "step4": {
       "badge": "您的首套 AI 穿搭与专属虚拟形象已准备就绪！",
@@ -5430,6 +5439,77 @@
       "m_loafers_leather_brown": "经典棕色真皮一脚蹬乐福鞋",
       "m_boots_chelsea_brown": "深棕色真皮切尔西靴",
       "m_sneakers_navy_white": "藏青与白色拼色低帮休闲鞋"
+    }
+  },
+  "closetTour": {
+    "skipTour": "跳过导览",
+    "finishBtn": "完成",
+    "calendarError": "无法启动 Google 日历连接。",
+    "googleSyncedSuccess": "已从您的 Google 账号同步个人资料！",
+    "googleSyncNoNewFields": "未在您的 Google 资料中找到公开的生日、电话或地址，请在下方填写。",
+    "googleSyncError": "无法从 Google 同步，请填写下方字段。",
+    "profileSavedToast": "资料已更新！您的 AI 造型师现已掌握完整背景信息。",
+    "profileSaveError": "无法保存个人资料，请重试。",
+    "step1": {
+      "badge": "第 1 步（共 4 步）• 数字化您的衣橱",
+      "title": "AI 自动抠图添加真实衣物",
+      "desc": "拍照或从相册上传。DressApp 会自动去除背景、识别 12 项风格属性并将每件单品放入衣橱。持有 15+ AI 重建积分（通过购买积分包）的免费用户以及管理员版和专业版会员还可以使用“集群上传”一次拍下整个衣架或鞋架！",
+      "actionBtn": "添加第一件衣物"
+    },
+    "step2": {
+      "badge": "第 2 步（共 4 步）• 每日 AI 造型师",
+      "title": "结合天气与日历的智能穿搭",
+      "desc": "AI 造型师会使用您的真实衣物与胶囊衣橱为校准后的虚拟形象进行全身搭配。连接 Google 日历，即可为即将到来的会议、晚宴、运动和旅行自动生成穿搭！",
+      "connectCalendarBtn": "连接 Google 日历",
+      "calendarConnectedBtn": "日历已连接 ✓"
+    },
+    "step3": {
+      "badge": "第 3 步（共 4 步）• 智能搜索与 Pro 迁移",
+      "title": "AI 语义搜索、旅行行李箱与批量导入",
+      "descPro": "用自然语言搜索衣物、智能打包旅行行李，或使用衣橱迁移助手从 Whering、Acloset、Stylebook 或 Indyx 批量导入 50+ 件单品。",
+      "descFree": "用自然语言搜索衣物并创建智能行李清单。注：免费账户使用本地 Eyes AI 模型（上限 50 件衣物）。跨应用批量衣橱迁移功能在 Manager 与 Professional 计划中解锁。",
+      "openMigrationBtn": "打开衣橱迁移助手",
+      "viewProPlansBtn": "解锁 Pro 批量迁移（50+ 件）"
+    },
+    "step4": {
+      "badge": "第 4 步（共 4 步）• 30 秒完善个人资料",
+      "title": "完善资料以开启本地天气精准穿搭",
+      "desc": "添加您的地址（用于每日当地天气预报）、出生日期（用于年龄匹配穿搭）和手机号（用于市集与造型师通知）——或一键从 Google 自动填充。",
+      "completeProfileBtn": "立即完善资料"
+    },
+    "setupBar": {
+      "title": "完成您的 AI 造型师与个人资料设置",
+      "stepsCount": "已完成 {{done}}/{{total}}",
+      "subtitle": "30 秒解锁当地天气穿搭、日程专属造型与市集通知。",
+      "chipStyleDna": "风格 DNA 与虚拟形象",
+      "chipCalendarDone": "日历已同步",
+      "chipCalendarConnect": "+ 连接日历",
+      "chipProfileDone": "地址、电话与生日",
+      "chipProfileAdd": "+ 添加地址、电话与生日",
+      "tourBtn": "互动导览",
+      "completeProfileCompact": "完善资料 ({{pct}}%)"
+    },
+    "modal": {
+      "badge": "资料已完成 {{pct}}%",
+      "title": "30 秒完善您的个人资料",
+      "subtitle": "这些信息用于提供每日当地天气穿搭、适龄造型建议、日历行程准备以及市集配送。",
+      "googleSyncTitle": "从 Google 账号自动填充",
+      "googleSyncSub": "一键从 Google 导入您的生日、电话号码和地址。",
+      "googleSyncBtn": "从 Google 同步",
+      "calendarTitle": "Google 日历行程专属穿搭",
+      "calendarSub": "为您的会议、婚礼、健身和航班自动推荐得体造型。",
+      "calendarConnected": "已连接",
+      "connectCalendarBtn": "连接日历",
+      "dobLabel": "出生日期",
+      "dobHint": "用于适龄穿搭校准与生日积分奖励。",
+      "phoneLabel": "手机号码",
+      "phoneHint": "用于市集买卖家沟通与造型师提醒。",
+      "addressLabel": "城市与街道地址（天气与市集）",
+      "cityPlaceholder": "输入您所在的城市（如：上海、北京、新加坡）...",
+      "streetPlaceholder": "街道与门牌号",
+      "countryPlaceholder": "国家/地区",
+      "addressHint": "为您的每日穿搭提供精准当地天气预报及市集收发货支持。",
+      "saveBtn": "保存并升级造型师"
     }
   }
 }

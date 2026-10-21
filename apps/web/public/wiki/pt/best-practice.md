@@ -21,7 +21,7 @@ No plano Gratuito, o DressApp oferece duas reservas de créditos dedicadas para 
 
 Ao enviar uma foto, a IA do DressApp identifica automaticamente se a imagem mostra **uma única peça**, um **look completo no corpo** ou **várias peças dispostas juntas**. Ela remove o fundo, identifica as cores e reconhece o corte e o estilo. Tirar fotos bem iluminadas garante recortes limpos e cores fiéis já na primeira tentativa, economizando seus **5 créditos de Reconstrução de Estúdio** para peças realmente difíceis.
 
-### Upload de Conjunto de Peças (Planos Manager e Professional)
+### Upload de Conjunto de Peças (Planos Manager e Professional, ou Plano Grátis com 15+ Créditos de Reconstrução de IA)
 
 O upload de conjunto de peças (pipeline em massa) é um recurso revolucionário que permite fotografar suas roupas diretamente no seu armário físico, usar muito menos fotos e digitalizar seu guarda-roupa rapidamente. Ele identifica e reconstrói:
 - **Roupas penduradas no armário ou em cabides**
@@ -29,7 +29,7 @@ O upload de conjunto de peças (pipeline em massa) é um recurso revolucionário
 - **Uma pilha de camisas ou roupas dobradas**
 - **Várias peças agrupadas** (não apenas roupas espalhadas na cama!)
 
-> **Por que é proibido para usuários do plano Grátis:** O upload de conjuntos utiliza a reconstrução de IA **Nano Banana**. Uma única foto pode consumir toda a franquia de reconstrução de IA de um usuário Grátis, deixando muitas peças sem reconstrução. Se um usuário Grátis tentar enviar um conjunto, o DressApp mostrará uma mensagem sugerindo **pular a imagem ou fazer upgrade do plano**.
+> **Como desbloquear no plano Grátis (15+ créditos de reconstrução de IA):** O upload de conjuntos utiliza a reconstrução de IA **Nano Banana**. Como uma única foto pode conter muitas peças, usuários do plano Grátis precisam de **15 ou mais créditos de reconstrução de IA** (disponíveis comprando pacotes de créditos na página de Preços) para usar o upload de conjuntos. Se tiverem menos de 15 créditos, o DressApp sugerirá **pular a imagem, comprar um pacote de créditos de IA ou fazer upgrade do plano**.
 
 **As 5 limitações do upload de conjuntos:**
 1. **Ideal para cores sólidas e padrões simples**: Funciona muito bem para peças lisas ou xadrez e listras simples, mas não analisa estampas ocultas e detalhes finos.

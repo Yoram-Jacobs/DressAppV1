@@ -21,7 +21,7 @@ Als gebruiker van het Gratis-abonnement geeft DressApp u twee aparte credittegoe
 
 Wanneer u een foto uploadt, herkent de AI van DressApp automatisch of het gaat om **één kledingstuk**, een **complete outfit die u draagt**, of **meerdere kledingstukken die naast elkaar liggen**. De achtergrond wordt verwijderd en de kleuren, pasvorm en stijl worden direct herkend. Heldere, goed belichte foto's zorgen meteen voor een strakke uitsnede en nauwkeurige kleurherkenning, zodat u uw **5 Studio-reconstructiecredits** bewaart voor echt lastige kledingstukken.
 
-### Cluster Kleding Uploaden (Manager- & Professional-abonnementen)
+### Cluster Kleding Uploaden (Manager- & Professional-abonnementen, of Free met 15+ AI-reconstructiecredits)
 
 Cluster kleding uploaden (mass-pipeline) is een revolutionaire functie waarmee je direct foto's kunt maken in je fysieke kledingkast, minder foto's nodig hebt en je garderobe in een handomdraai digitaliseert. Het herkent en reconstrueert:
 - **Kleding hangend in de kast of aan een kledinghanger**
@@ -29,7 +29,7 @@ Cluster kleding uploaden (mass-pipeline) is een revolutionaire functie waarmee j
 - **Een stapel opgevouwen shirts of kleding**
 - **Meerdere gegroepeerde kledingstukken** (niet alleen kleding uitgespreid op een bed!)
 
-> **Waarom cluster uploaden verboden is voor Free-gebruikers:** Cluster uploaden gebruikt **Nano Banana** AI-reconstructie. Één foto kan het volledige reconstructietegoed van een Free-gebruiker in één keer verbruiken, waardoor veel kledingstukken onvoltooid blijven. Als een Free-gebruiker een cluster uploadt, stelt DressApp voor om **de afbeelding over te slaan of het abonnement te upgraden**.
+> **Cluster uploaden ontgrendelen voor Free-gebruikers (15+ AI-reconstructiecredits):** Cluster uploaden gebruikt **Nano Banana** AI-reconstructie. Omdat één foto veel items kan bevatten, hebben Free-gebruikers **15 of meer AI-reconstructiecredits** nodig (via creditpakketten op de Prijzen-pagina) om cluster uploaden te gebruiken. Heeft een Free-gebruiker minder dan 15 credits, dan stelt DressApp voor om **de afbeelding over te slaan, een AI-creditpakket te kopen of het abonnement te upgraden**.
 
 **De 5 beperkingen van cluster uploaden:**
 1. **Geschikt voor effen kleuren en eenvoudige patronen**: Werkt uitstekend voor effen stoffen of eenvoudige ruit- en streeppatronen, maar kan geen verborgen prints en fijne details analyseren.

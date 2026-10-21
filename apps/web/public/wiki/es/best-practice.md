@@ -21,7 +21,7 @@ En el plan Gratuito, DressApp pone a tu disposición dos tipos de créditos para
 
 Cuando subes una foto, la IA de DressApp detecta automáticamente si se trata de **una sola prenda**, un **conjunto completo puesto** o **varias prendas extendidas juntas**. Elimina el fondo, identifica los colores y reconoce el corte y el estilo. Tomar fotos claras y bien iluminadas asegura recortes limpios y colores exactos al primer intento, reservando tus **5 créditos de Reconstrucción de Estudio** para prendas realmente difíciles.
 
-### Subida de Conjuntos de Prendas (Planes Manager y Professional)
+### Subida de Conjuntos de Prendas (Planes Manager y Professional, o Plan Gratis con 15+ Créditos de Reconstrucción con IA)
 
 La subida de conjuntos de prendas (pipeline masivo) es una función revolucionaria que te permite fotografiar tu ropa directamente en tu armario físico, usar muchas menos fotos y digitalizar tu vestuario en muy poco tiempo. Puede identificar y reconstruir:
 - **Prendas colgadas en el armario o en una percha**
@@ -29,7 +29,7 @@ La subida de conjuntos de prendas (pipeline masivo) es una función revolucionar
 - **Una pila de camisas o camisetas dobladas**
 - **Varias prendas agrupadas** (¡no solo ropa extendida sobre la cama!)
 
-> **Por qué está prohibida para usuarios del plan Gratis:** La subida de conjuntos utiliza la reconstrucción de estudio con IA **Nano Banana**. Una sola imagen puede consumir toda la cuota de reconstrucción de IA de un usuario Gratis, dejando muchas prendas sin reconstruir. Si un usuario Gratis intenta subir un conjunto de prendas, DressApp muestra un mensaje sugiriendo **omitir la imagen o mejorar su plan**.
+> **Cómo desbloquearla en el plan Gratis (15+ créditos de reconstrucción con IA):** La subida de conjuntos utiliza la reconstrucción de estudio con IA **Nano Banana**. Como una sola imagen puede contener muchas prendas y consumir un saldo pequeño de una vez, los usuarios del plan Gratis necesitan **15 o más créditos de reconstrucción con IA** (disponibles comprando paquetes de créditos en Precios) para usar la subida de conjuntos. Si un usuario Gratis tiene menos de 15 créditos, DressApp sugiere **omitir la imagen, comprar un paquete de créditos de IA o mejorar su plan**.
 
 **Las 5 limitaciones de la subida de conjuntos:**
 1. **Ideal para colores sólidos y patrones simples**: Funciona muy bien con colores lisos o cuadros y rayas muy sencillos; no puede analizar estampados ocultos ni detalles finos.

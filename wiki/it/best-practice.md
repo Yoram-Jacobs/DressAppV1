@@ -21,7 +21,7 @@ Con il piano Gratuito, DressApp ti mette a disposizione due riserve di crediti d
 
 Quando carichi una foto, l'IA di DressApp rileva automaticamente se l'immagine mostra un **singolo capo**, un **outfit completo indossato** o **più capi disposti insieme**. Rimuove lo sfondo, identifica i colori e riconosce il taglio e lo stile. Scattare foto nitide e ben illuminate assicura scontorni perfetti e colori fedeli al primo tentativo, risparmiando i tuoi **5 crediti di Ricostruzione Studio** per i capi più complessi.
 
-### Caricamento di Gruppi di Capi (Piani Manager e Professional)
+### Caricamento di Gruppi di Capi (Piani Manager e Professional, o Piano Free con 15+ Crediti di Ricostruzione IA)
 
 Il caricamento di gruppi di capi (pipeline massiva) è una funzione rivoluzionaria che ti permette di fotografare i vestiti direttamente nel tuo armadio fisico, usare meno foto e digitalizzare il guardaroba in pochissimo tempo. Può identificare e ricostruire:
 - **Capi appesi nell'armadio o su una gruccia**
@@ -29,7 +29,7 @@ Il caricamento di gruppi di capi (pipeline massiva) è una funzione rivoluzionar
 - **Una pila di camicie o maglie piegate**
 - **Più capi raggruppati** (non solo vestiti stesi sul letto!)
 
-> **Perché è vietato agli utenti Free:** Il caricamento di gruppi utilizza la ricostruzione AI **Nano Banana**. Una sola immagine può consumare l'intera quota di ricostruzione AI di un utente Free, lasciando molti capi non ricostruiti. Se un utente Free prova a caricare un gruppo di capi, DressApp mostra un messaggio suggerendo di **saltare l'immagine o effettuare l'upgrade del piano**.
+> **Come sbloccarlo nel piano Free (15+ crediti di ricostruzione AI):** Il caricamento di gruppi utilizza la ricostruzione AI **Nano Banana**. Poiché una sola immagine può contenere molti capi, gli utenti Free necessitano di **15 o più crediti di ricostruzione AI** (disponibili tramite pacchetti crediti nella pagina Prezzi) per utilizzare il caricamento di gruppi. Se un utente Free ha meno di 15 crediti, DressApp mostra un messaggio suggerendo di **saltare l'immagine, acquistare un pacchetto crediti AI o effettuare l'upgrade del piano**.
 
 **Le 5 limitazioni del caricamento di gruppi:**
 1. **Ottimo per tinte unite e motivi semplici**: Ideale per tinte unite o motivi scozzesi e a righe molto semplici; non può analizzare stampe nascoste e dettagli fini.

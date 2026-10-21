@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { useTierLimits } from '@/hooks/useTierLimits';
-import { Sparkles, Shirt, ArrowRight } from 'lucide-react';
+import { Sparkles, Shirt, ArrowRight, Crown } from 'lucide-react';
 
 const PRESET_APPS = [
-  { name: 'Whering', domain: 'app.whering.co.uk', loginUrl: 'https://app.whering.co.uk/login', icon: '👗', items: '95+ items' },
-  { name: 'Acloset', domain: 'web.acloset.app', loginUrl: 'https://web.acloset.app/login', icon: '📱', items: '48+ items' },
-  { name: 'Stylebook', domain: 'www.stylebookapp.com', loginUrl: 'https://www.stylebookapp.com', icon: '🎨', items: '65+ items' },
-  { name: 'Smartli', domain: 'smartli.app', loginUrl: 'https://smartli.app', icon: '⚡', items: '32+ items' },
-  { name: 'Indyx', domain: 'myindyx.com', loginUrl: 'https://www.myindyx.com', icon: '✨', items: '60+ items' },
+  { name: 'Whering', domain: 'app.whering.co.uk', loginUrl: 'https://app.whering.co.uk/login', icon: '👗', count: 95 },
+  { name: 'Acloset', domain: 'web.acloset.app', loginUrl: 'https://web.acloset.app/login', icon: '📱', count: 48 },
+  { name: 'Stylebook', domain: 'www.stylebookapp.com', loginUrl: 'https://www.stylebookapp.com', icon: '🎨', count: 65 },
+  { name: 'Smartli', domain: 'smartli.app', loginUrl: 'https://smartli.app', icon: '⚡', count: 32 },
+  { name: 'Indyx', domain: 'myindyx.com', loginUrl: 'https://www.myindyx.com', icon: '✨', count: 60 },
 ];
 
 export function ImportWardrobeSection({ onSelectAppForMigration }) {
@@ -20,6 +20,10 @@ export function ImportWardrobeSection({ onSelectAppForMigration }) {
   const { canAccessMigration } = useTierLimits();
 
   const handleStartImport = (app) => {
+    if (!canAccessMigration) {
+      navigate('/pricing');
+      return;
+    }
     if (onSelectAppForMigration) {
       onSelectAppForMigration(app);
     }
@@ -37,8 +41,14 @@ export function ImportWardrobeSection({ onSelectAppForMigration }) {
             <Shirt className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-[13px] font-bold block text-dark-brand">
-              {t('profile.importWardrobeTitle', { defaultValue: 'Import Wardrobe From Other Apps' })}
+            <span className="text-[13px] font-bold flex items-center gap-1.5 text-dark-brand">
+              <span>{t('profile.importWardrobeTitle', { defaultValue: 'Import Wardrobe From Other Apps' })}</span>
+              {!canAccessMigration && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-500/30">
+                  <Crown className="h-3 w-3 text-amber-600" />
+                  <span>{t('onboarding.step3.migrationProBadge', { defaultValue: 'Manager / Pro' })}</span>
+                </span>
+              )}
             </span>
             <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.importWardrobeDesc', { defaultValue: 'Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.' })}
@@ -97,7 +107,9 @@ export function ImportWardrobeSection({ onSelectAppForMigration }) {
                 <span className="text-lg shrink-0">{app.icon}</span>
                 <div className="min-w-0">
                   <span className="text-[12px] font-bold text-dark-brand block truncate">{app.name}</span>
-                  <span className="text-[10.5px] text-text-brand font-semibold block truncate">{app.items}</span>
+                  <span className="text-[10.5px] text-text-brand font-semibold block truncate">
+                    {t('migration.itemsCountLabel', { count: app.count, defaultValue: `${app.count}+ items` })}
+                  </span>
                 </div>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-primary-brand shrink-0 rtl:rotate-180" />

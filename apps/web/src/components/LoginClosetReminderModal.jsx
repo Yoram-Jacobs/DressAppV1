@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CircleHelp as HelpCircle, Sparkles, UploadCloud, ArrowRight, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { CircleHelp as HelpCircle, Sparkles, UploadCloud, ArrowRight } from 'lucide-react';
+import { useTierLimits } from '@/hooks/useTierLimits';
 import OnboardingMigrationModal from './OnboardingMigrationModal';
 
 export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
   const { t } = useTranslation();
   const nav = useNavigate();
+  const { canAccessMigration } = useTierLimits();
   const [showMigrateForm, setShowMigrateForm] = useState(false);
 
-  if (showMigrateForm) {
+  if (showMigrateForm && canAccessMigration) {
     return (
       <OnboardingMigrationModal
         isOpen={true}
@@ -28,7 +29,8 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
     );
   }
 
-  const isMigrateUser = user?.migration_flag === 'Migrate';
+  // Free users are banned from using the Migration Agent
+  const isMigrateUser = canAccessMigration && user?.migration_flag === 'Migrate';
 
   const handleLetsStart = () => {
     onClose();
@@ -38,12 +40,11 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
   const handleOpenHelpDoc = (e) => {
     e.preventDefault();
     onClose();
-    // Open in-app help drawer or navigate to closet page
     nav('/closet');
   };
 
   return (
-   <Dialog open={isOpen ?? true} onOpenChange={(val) => { if (!val) onClose(); }}>
+    <Dialog open={isOpen ?? true} onOpenChange={(val) => { if (!val) onClose(); }}>
       <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border shadow-2xl">
         <div className="space-y-4">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center">
@@ -79,41 +80,19 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
           {/* Action Buttons */}
           <div className="pt-3">
             {isMigrateUser ? (
-              // Case B: Users flagged as 'Migrate' (Let's start, Migrate, Dismiss)
+              // Case B: Paid users flagged as 'Migrate' (Let's start, Migrate, Dismiss)
               <div className="grid grid-cols-3 gap-2">
                 <Button
                   onClick={handleLetsStart}
-                  className=" h-auto
-          rounded-full
-          border-0
-          bg-[var(--primary-color)]
-          px-7
-          py-3.5
-          font-sans
-          text-sm
-          font-medium
-          text-white
-          shadow-none
-          transition-all
-          duration-300
-          hover:-translate-y-0.5
-          hover:bg-[var(--primary-hover)]
-          hover:text-white
-          hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
+                  className="h-auto rounded-full border-0 bg-[var(--primary-color)] px-7 py-3.5 font-sans text-sm font-medium text-white shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
                   data-testid="login-reminder-start-btn"
                 >
                   {t('login_reminder.letsStart', { defaultValue: 'Let\'s start' })}
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    if ('ontouchstart' in window) {
-                      toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
-                    } else {
-                      setShowMigrateForm(true);
-                    }
-                  }}
+                  onClick={() => setShowMigrateForm(true)}
                   className="rounded-xl h-10 text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5 flex items-center justify-center gap-1"
                   data-testid="login-reminder-migrate-btn"
                 >
@@ -130,7 +109,7 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
                 </Button>
               </div>
             ) : (
-              // Case A: Users flagged as 'New' (Let's start, Dismiss)
+              // Case A: Users flagged as 'New' or Free Tier (Let's start, Dismiss)
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   onClick={handleLetsStart}
@@ -138,29 +117,12 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
                   data-testid="login-reminder-start-btn"
                 >
                   {t('login_reminder.letsStart', { defaultValue: 'Let\'s start' })}
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </Button>
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className=" h-auto
-        rounded-full
-        border
-        border-black/10
-        bg-white
-        px-7
-        py-3.5
-        font-sans
-        text-sm
-        font-semibold
-        text-[var(--dark-color)]
-        shadow-none
-        transition-all
-        duration-300
-        hover:-translate-y-0.5
-        hover:bg-white
-        hover:text-[var(--primary-color)]
-        hover:shadow-[var(--shadow-medium)]"
+                  className="h-auto rounded-full border border-black/10 bg-white px-7 py-3.5 font-sans text-sm font-semibold text-[var(--dark-color)] shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:text-[var(--primary-color)] hover:shadow-[var(--shadow-medium)]"
                   data-testid="login-reminder-dismiss-btn"
                 >
                   {t('common.dismiss', { defaultValue: 'Dismiss' })}
@@ -169,7 +131,7 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
             )}
           </div>
         </div>
-    </DialogContent>
-    </Dialog >
+      </DialogContent>
+    </Dialog>
   );
 }

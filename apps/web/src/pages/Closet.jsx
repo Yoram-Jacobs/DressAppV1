@@ -26,6 +26,7 @@ import {
   Grid,
   List,
   Shirt,
+  Crown,
   SearchX,
   RotateCcw,
 } from 'lucide-react';
@@ -56,6 +57,8 @@ import {
 import { SourceTagBadge } from "@/components/SourceTagBadge";
 import { OutfitCompletionSheet } from "@/components/OutfitCompletionSheet";
 import OnboardingMigrationModal from "@/components/OnboardingMigrationModal";
+import ClosetGuidedTour from "@/components/ClosetGuidedTour";
+import { useTierLimits } from "@/hooks/useTierLimits";
 import { HashRepairChip } from "@/components/closet/HashRepairChip";
 import { ThumbRepairChip } from "@/components/closet/ThumbRepairChip";
 import { api } from "@/lib/api";
@@ -158,6 +161,7 @@ const INITIAL_FILTERS = { category: "all", source: "all", search: "" };
 
 export default function Closet() {
   const { t } = useTranslation();
+  const { canAccessMigration } = useTierLimits();
   // Single source of truth: the global closet store. Reading from it
   // means navigating to /closet paints **instantly** (no network) —
   // the prewarm in AppLayout has already populated the snapshot.
@@ -978,34 +982,106 @@ export default function Closet() {
                 })}
               </p>
 
-              {/* suitcase-Buttons */}
-              <Link
-                to="/suitcase"
-                data-testid="closet-suitcase-link"
-                className="
-              inline-flex
-              items-center
-              justify-center
-              rounded-full
-              bg-[var(--primary-color)]
-              px-5 py-3.5
-              text-[14px]
-              font-semibold
-              leading-none
-              text-white
-              no-underline
-              shadow-[var(--primary-shadow)]
-              transition-all duration-300
-              hover:-translate-y-[2px]
-              hover:bg-[var(--primary-hover)]
-              hover:text-white
-            "
+              {/* Hero Action Buttons: Add Item, Suitcase, Import Wardrobe (Pro) */}
+              <div
+                className="flex flex-wrap items-center gap-2.5"
+                data-testid="closet-hero-actions"
               >
-                <Luggage className="h-4 w-4 me-1" />
-                {t("suitcase.title", {
-                  defaultValue: "Suitcase",
-                })}
-              </Link>
+                <Link
+                  to="/closet/add"
+                  data-testid="closet-add-button"
+                  className="
+                inline-flex
+                items-center
+                justify-center
+                rounded-full
+                bg-[var(--primary-color)]
+                px-5 py-3.5
+                text-[14px]
+                font-semibold
+                leading-none
+                text-white
+                no-underline
+                shadow-[var(--primary-shadow)]
+                transition-all duration-300
+                hover:-translate-y-[2px]
+                hover:bg-[var(--primary-hover)]
+                hover:text-white
+              "
+                >
+                  <Plus className="h-4 w-4 me-1.5" />
+                  {t("closet.addItem", {
+                    defaultValue: "Add Item",
+                  })}
+                </Link>
+
+                <Link
+                  to="/suitcase"
+                  data-testid="closet-suitcase-link"
+                  className="
+                inline-flex
+                items-center
+                justify-center
+                rounded-full
+                border border-white/25
+                bg-white/10
+                backdrop-blur-xs
+                px-5 py-3.5
+                text-[14px]
+                font-semibold
+                leading-none
+                text-white
+                no-underline
+                transition-all duration-300
+                hover:-translate-y-[2px]
+                hover:bg-white/20
+                hover:text-white
+              "
+                >
+                  <Luggage className="h-4 w-4 me-1.5" />
+                  {t("suitcase.title", {
+                    defaultValue: "Suitcase",
+                  })}
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setIsMigrationModalOpen(true)}
+                  data-testid="closet-import-wardrobe-btn"
+                  className="
+                inline-flex
+                items-center
+                justify-center
+                gap-1.5
+                rounded-full
+                border border-amber-400/40
+                bg-black/40
+                backdrop-blur-xs
+                px-4 py-3
+                text-[13px]
+                font-semibold
+                leading-none
+                text-white
+                transition-all duration-300
+                hover:-translate-y-[2px]
+                hover:bg-black/60
+                cursor-pointer
+              "
+                >
+                  <Shirt className="h-4 w-4 text-amber-300 shrink-0" />
+                  <span>
+                    {t("profile.importWardrobePill", {
+                      defaultValue: "Import Wardrobe",
+                    })}
+                  </span>
+                  {!canAccessMigration && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-400/30">
+                      <Crown className="h-3 w-3" />
+                      <span>PRO</span>
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1013,6 +1089,11 @@ export default function Closet() {
       <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px]
             max-[767px]:px-[15px] max-[767px]:py-[30px]
             max-[480px]:px-[15px] max-[480px]:py-[30px] pb-safe-tabs">
+        {/* Interactive Guided Tour & Progressive Profile Setup Bar */}
+        <ClosetGuidedTour
+          itemCount={store.items?.length || 0}
+          onOpenMigration={() => setIsMigrationModalOpen(true)}
+        />
         {/* Phase Z2.3 + Z2.6 — two ambient progress chips, side-by-side.
               ``HashRepairChip`` ticks during the duplicate-detector
               tune-up (fires first after prewarm). ``ThumbRepairChip``
@@ -1588,17 +1669,14 @@ export default function Closet() {
                           hover:text-[var(--primary-color)]
                           hover:shadow-[var(--shadow-medium)]
                       "
-                      onClick={() => {
-                        if ('ontouchstart' in window) {
-                          toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
-                        } else {
-                          setIsMigrationModalOpen(true);
-                        }
-                      }}
+                      onClick={() => setIsMigrationModalOpen(true)}
                       data-testid="closet-empty-import-wardrobe-button"
                     >
                       <Shirt className="h-4 w-4" />
                       <span>{t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}</span>
+                      {!canAccessMigration && (
+                        <Crown className="h-3.5 w-3.5 text-amber-600 ms-1" />
+                      )}
                     </Button>
                   </div>
                 </div>

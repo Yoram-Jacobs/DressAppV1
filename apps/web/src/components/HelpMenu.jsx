@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -27,11 +27,13 @@ import {
   Bell,
   Megaphone,
   CheckCircle2,
+  Compass,
 } from 'lucide-react';
 import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { ONBOARDING_TOUR_PENDING_KEY } from "@/lib/onboardingStore";
 
 export function resolveHelpTabForLocation(location, viewerIsPro = false) {
   const rawPath = (
@@ -159,12 +161,27 @@ export function resolveHelpTabForLocation(location, viewerIsPro = false) {
   return "overview";
 }
 
-export default function HelpMenu({ initialTab }) {
+export default function HelpMenu({ initialTab, onClose }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const viewerIsPro = !!user?.professional?.is_professional;
   const activeTabRef = useRef(null);
+
+  const handleLaunchGrandTour = () => {
+    try {
+      localStorage.setItem(ONBOARDING_TOUR_PENDING_KEY, "true");
+    } catch {}
+    if (typeof onClose === "function") {
+      onClose();
+    }
+    if (window.location.pathname === "/closet") {
+      window.dispatchEvent(new CustomEvent("dressapp:start-grand-tour"));
+    } else {
+      navigate("/closet?tour=1");
+    }
+  };
 
   const [activeTab, setActiveTab] = useState(
     () => initialTab || resolveHelpTabForLocation(location, viewerIsPro),
@@ -813,6 +830,38 @@ export default function HelpMenu({ initialTab }) {
                           "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
                       })}
                     </p>
+                    {user && (
+                      <div className="p-3.5 rounded-[12px] border border-[var(--primary-color)]/30 bg-[var(--primary-color)]/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="space-y-0.5">
+                          <div className="text-[13px] font-bold text-dark-brand flex items-center gap-1.5">
+                            <Compass className="h-4 w-4 text-[var(--primary-color)] shrink-0" />
+                            <span>
+                              {t("help.launchGrandTourTitle", {
+                                defaultValue: "Interactive Getting Started Grand Tour",
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-[12px] text-text-brand font-semibold">
+                            {t("help.launchGrandTourDesc", {
+                              defaultValue:
+                                "Take a 4-step guided spotlight tour of AI Cutout & Cluster Upload, Calendar Stylist, Smart Search, and Profile Power-Up.",
+                            })}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleLaunchGrandTour}
+                          data-testid="help-launch-grand-tour-btn"
+                          className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white text-xs font-semibold shrink-0"
+                        >
+                          <Compass className="h-3.5 w-3.5 me-1.5" />
+                          {t("help.launchGrandTourBtn", {
+                            defaultValue: "Start Grand Tour",
+                          })}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
                 {activeTab === "best-practice" && (
@@ -839,7 +888,7 @@ export default function HelpMenu({ initialTab }) {
                         }),
                         t("help.best_practice_step2", {
                           defaultValue:
-                            "**Capture Clear Photos**: Upload a single item laid flat, a full-outfit mirror photo, or — on Manager and Professional plans — photograph garments hanging in your closet, on a hanger, on a shoe rack, or in a folded pile.",
+                            "**Capture Clear Photos**: Upload a single item laid flat, a full-outfit mirror photo, or — on Manager and Professional plans, or Free accounts with 15+ AI reconstruction credits — photograph garments hanging in your closet, on a hanger, on a shoe rack, or in a folded pile.",
                         }),
                         t("help.best_practice_step3", {
                           defaultValue:
@@ -900,11 +949,11 @@ export default function HelpMenu({ initialTab }) {
                         }),
                         t("help.qa_step3", {
                           defaultValue:
-                            "**Why is cluster garment uploading unavailable on the Free plan?** Cluster uploading (closets, hangers, shoe racks, or shirt piles) uses Nano Banana AI reconstruction — a single cluster photo can consume your entire Free reconstruction allowance at once, leaving many garments unreconstructed. Free users are prompted to skip the cluster photo or upgrade their plan.",
+                            "**How do Free users unlock Cluster Upload?** Cluster uploading (closets, hangers, shoe racks, or shirt piles) uses Nano Banana AI studio reconstruction and can process up to 15 garments per photo. Free users unlock the Cluster pipeline whenever they hold **15 or more AI reconstruction credits** (by purchasing an AI credit pack on the Pricing page), or by upgrading to a Manager or Professional plan.",
                         }),
                         t("help.qa_step4", {
                           defaultValue:
-                            "**What can Cluster Upload digitize, and what are its limitations?** On Manager and Professional plans, you can photograph clothes hanging in your closet, a rack of shoes, or a pile of shirts to digitize your closet in no time. Note that it works best on solid or simple plaid/striped items, cannot read hidden prints or fine details, rarely reflects wear condition, may skip some items, can hallucinate patterns or colors, and consumes reconstruction credits.",
+                            "**What can Cluster Upload digitize, and what are its limitations?** With 15+ AI reconstruction credits or a Manager/Professional plan, you can photograph clothes hanging in your closet, a rack of shoes, or a pile of shirts to digitize your closet in no time. Note that it works best on solid or simple plaid/striped items, cannot read hidden prints or fine details, rarely reflects wear condition, may skip some items, can hallucinate patterns or colors, and consumes 1 reconstruction credit per reconstructed item.",
                         }),
                         t("help.qa_step5", {
                           defaultValue:
@@ -1656,7 +1705,7 @@ export default function HelpMenu({ initialTab }) {
                           {renderFormattedText(
                             t("help.tiers_free_desc", {
                               defaultValue:
-                                "Baseline limit of 50 items. Expandable up to 150 items by sharing your invite code with friends (+10 capacity slots per friend).",
+                                "Baseline limit of 50 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 starter AI reconstruction credits. Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
                             }),
                           )}
                         </p>

@@ -20,7 +20,8 @@
     "outfits": "Outfit",
     "pricing": "Prezzi",
     "trend_scout": "Esploratore tendenze",
-    "insights": "Statistiche guardaroba"
+    "insights": "Statistiche guardaroba",
+    "gettingStartedTour": "Tour guidato"
   },
   "common": {
     "savePrompt": "Premi Salva per conservare le modifiche.",
@@ -891,20 +892,22 @@
       "multiDesc": "Foto dell'outfit completo — separa e analizza ogni singolo capo indossato.",
       "massTitle": "Armadio e pila multipla",
       "massDesc": "Appendiabiti o pila di vestiti — cataloga ogni capo e ricrea schede da studio con sfondo trasparente.",
-      "massBadgePro": "PRO / MANAGER",
+      "massBadgePro": "MANAGER / PRO O 15+ CREDITI",
       "massQuotaBadge": "{{remaining}} / {{limit}} ricostruzioni da studio rimanenti questo mese",
-      "massUpgradeRequired": "Il caricamento di gruppi di capi (armadi, grucce, scarpiere e pile di vestiti) è disponibile esclusivamente nei piani Manager e Professional.",
+      "massUpgradeRequired": "Il caricamento multiplo (armadi, grucce, scarpiere e pile) è disponibile nei piani Manager e Professional, o nel piano Gratuito con 15+ crediti di ricostruzione IA.",
       "massMonthlyLimitReached": "Limite mensile di ricostruzione da studio ({{limit}}/mese) raggiunto. Si azzera al prossimo ciclo di fatturazione.",
       "stageCataloging": "Catalogazione dei capi nella foto…",
       "stageReconstructing": "Ricostruzione schede da studio ({{completed}}/{{total}})…",
       "autoTitle": "Rilevamento automatico (misto)",
       "autoDesc": "Indirizza automaticamente capi singoli, outfit completi e pile di vestiti simultaneamente.",
-      "massClusterFreeTitle": "Il caricamento di gruppo richiede un upgrade",
-      "massClusterFreeBlocked": "Il caricamento di gruppi di capi (armadi, grucce, scarpiere o pile di camicie) utilizza la ricostruzione IA Nano Banana. Una sola foto può consumare l'intera quota gratuita di ricostruzione lasciando molti capi non ricostruiti. Salta questa immagine o effettua l'upgrade del piano.",
-      "massClusterCapabilitiesTitle": "Digitalizza l'intero armadio e la scarpiera",
-      "massClusterCapabilitiesNote": "I piani Manager e Professional ti permettono di fotografare i capi appesi nell'armadio, una scarpiera o una pila di camicie per digitalizzare il guardaroba in pochissimo tempo.",
+      "massClusterFreeTitle": "Il caricamento di gruppo richiede 15+ crediti IA o un upgrade",
+      "massClusterFreeBlocked": "Il caricamento di gruppi di capi (armadi, grucce, scarpiere o pile di vestiti) utilizza la ricostruzione studio IA Nano Banana. Gli utenti gratuiti sbloccano questa funzione quando possiedono 15 o più crediti di ricostruzione IA (tramite pacchetti di crediti), oppure passando a un piano Manager o Professional.",
+      "massClusterCapabilitiesTitle": "Digitalizza intero armadio e scarpiere in pochi secondi",
+      "massClusterCapabilitiesNote": "I piani Manager e Professional — o gli account Gratuiti con 15+ crediti di ricostruzione IA — ti permettono di fotografare capi appesi, scarpiere e pile piegate per digitalizzare il guardaroba in pochi secondi.",
       "skipClusterImage": "Salta immagine",
-      "upgradePlanCta": "Effettua l'upgrade"
+      "upgradePlanCta": "Ottieni crediti IA o fai upgrade",
+      "massClusterCreditsRequiredLabel": "Crediti minimi di ricostruzione IA: 15",
+      "massClusterCurrentCreditsLabel": "Il tuo saldo: {{available}}"
     }
   },
   "itemDetail": {
@@ -3883,8 +3886,8 @@
     "add_clothes_title": "Aggiungere vestiti al guardaroba",
     "add_clothes_p1": "Porta il tuo guardaroba in DressApp in pochi tocchi: fotografa un singolo capo, un outfit indossato o un intero gruppo di vestiti direttamente nel tuo armadio.",
     "add_clothes_step1": "Apri DressApp e tocca il pulsante **Aggiungi capo**.",
-    "add_clothes_step2": "Scegli **Scatta foto** o **Carica foto** per aggiungere un capo singolo, un outfit indossato o (nei piani **Manager** e **Professional**) una **foto di gruppo** di capi appesi nell'armadio o sulle grucce, una scarpiera o una pila di camicie.",
-    "add_clothes_step3": "Il caricamento di gruppo usa la ricostruzione IA **Nano Banana**. Poiché una sola foto può esaurire l'intera quota gratuita lasciando molti capi incompleti, è vietato agli utenti Free (che vengono invitati a saltare l'immagine o fare l'upgrade).",
+    "add_clothes_step2": "Scegli **Scatta foto** o **Carica foto** per aggiungere un capo singolo, un outfit indossato oppure — con i piani **Manager** e **Professional**, o con **15+ crediti di ricostruzione IA** — una **foto di gruppo** di capi appesi nell’armadio, scarpiere o pile.",
+    "add_clothes_step3": "Il caricamento multiplo usa la ricostruzione studio Nano Banana IA (fino a 15 capi per foto). Gli utenti gratuiti lo sbloccano mantenendo **15 o più crediti di ricostruzione IA** (tramite pacchetti di crediti) o passando a Manager o Professional.",
     "add_clothes_step4": "Ricorda i 5 limiti del caricamento di gruppo: (a) ottimo per tinte unite o quadri/righe semplici, non analizza stampe nascoste e dettagli fini, (b) riflette raramente lo stato di usura reale, (c) può saltare alcuni capi, (d) può allucinare motivi e colori, (e) consuma crediti di ricostruzione.",
     "add_clothes_step5": "Controlla i dettagli rilevati — come categoria, colore, stagione e stile (inclusi felpe con cappuccio e abiti tradizionali) — e modifica ciò che desideri.",
     "add_clothes_step6": "Tocca **Salva** per aggiungere subito i capi al tuo guardaroba digitale!",
@@ -4049,7 +4052,7 @@
     "tiers_title": "Piani di abbonamento",
     "tiers_p1": "DressApp offre piani di abbonamento flessibili su misura per le dimensioni del tuo guardaroba e le tue esigenze di stile. Esegui l'upgrade nella pagina dei prezzi per sbloccare funzionalità illimitate.",
     "tiers_free_title": "Piano Free",
-    "tiers_free_desc": "Include fino a 50 capi (espandibili fino a 150 invitando amici, +10 posti per amico) e l'accesso al modello IA locale di DressApp.",
+    "tiers_free_desc": "Limite base di 50 capi (espandibile fino a 150 invitando amici), 10 crediti IA giornalieri (fino a 300 in 30 giorni) e 5 crediti iniziali di ricostruzione IA. Acquista pacchetti di crediti IA (15+ crediti) per sbloccare il Caricamento Multiplo.",
     "tiers_manager_title": "Piano Manager",
     "tiers_manager_desc": "10 $/mese (o 100 $/anno). Sblocca spazio illimitato nell'armadio, il modello IA all'avanguardia di DressApp, avvisi outfit mattutini, sincronizzazione calendario, vendita sul Marketplace e accesso completo a Trend Scout.",
     "tiers_pro_title": "Piano Professional",
@@ -4236,7 +4239,7 @@
       "profile_item15_title": "",
       "profile_item16_title": "",
       "profile_item16_desc": "",
-      "tiers_free_desc": "Include fino a 50 capi (espandibili fino a 150 invitando amici, +10 posti per amico) e l'accesso al modello IA locale di DressApp.",
+      "tiers_free_desc": "Limite base di 50 capi (espandibile fino a 150 invitando amici), 10 crediti IA giornalieri (fino a 300 in 30 giorni) e 5 crediti iniziali di ricostruzione IA. Acquista pacchetti di crediti IA (15+ crediti) per sbloccare il Caricamento Multiplo.",
       "tiers_manager_desc": "10 $/mese (o 100 $/anno). Sblocca spazio illimitato nell'armadio, il modello IA all'avanguardia di DressApp, avvisi outfit mattutini, sincronizzazione calendario, vendita sul Marketplace e accesso completo a Trend Scout.",
       "reanalyze_title": "Rianalisi Foto e Assistente IA",
       "reanalyze_p1": "Chatta direttamente con l'assistente IA per modificare o migliorare le foto dei capi in linguaggio naturale:",
@@ -4255,7 +4258,7 @@
     "best_practice_title": "Buone Pratiche",
     "best_practice_p1": "Segui queste semplici abitudini per creare un guardaroba digitale preciso, sfruttare al meglio i crediti giornalieri e ricevere consigli di stile su misura ogni giorno.",
     "best_practice_step1": "**Completa prima il Profilo**: Inserisci misure corporee, colori preferiti, stile e livello di sobrietà nel **Profilo** prima di caricare i vestiti.",
-    "best_practice_step2": "**Scatta foto nitide o del tuo armadio**: Carica un capo steso, una foto allo specchio o — nei piani **Manager** e **Professional** — fotografa capi appesi nell'armadio, una scarpiera o una pila di camicie.",
+    "best_practice_step2": "**Scatta foto nitide**: Carica un capo singolo steso in piano, una foto allo specchio dell’intero outfit oppure — nei piani **Manager** e **Professional**, o negli account **Gratuiti** con **15+ crediti di ricostruzione IA** — fotografa i capi appesi nell’armadio, su una scarpiera o in una pila piegata.",
     "best_practice_step3": "**Conosci i limiti del caricamento di gruppo**: Vietato agli utenti Free. Ideale per tinte unite o quadri/righe semplici; non legge stampe nascoste o dettagli fini, mostra raramente le condizioni reali, può saltare capi o allucinare colori/motivi e consuma crediti di ricostruzione.",
     "best_practice_step4": "**Crea il guardaroba in 5 giorni**: Usa i 10 crediti giornalieri gratuiti (cumulabili fino a 300 in 30 giorni) per aggiungere 10 capi al giorno.",
     "best_practice_step5": "**Controlla la scheda del capo (10 secondi)**: Verifica categoria, colore, pesantezza e dress code.",
@@ -4263,13 +4266,16 @@
     "qa_p1": "Risposte rapide alle domande più comuni su come iniziare, gestire i crediti, digitalizzare il guardaroba e creare i tuoi outfit.",
     "qa_step1": "**Come inizio il Giorno 1?** Completa prima misure e preferenze nel **Profilo**, poi aggiungi i 10 capi quotidiani che indossi più spesso.",
     "qa_step2": "**Come funzionano i crediti gratuiti?** Gli account gratuiti ricevono **10 crediti giornalieri** (ricaricati ogni 24 ore, cumulabili fino a 50) per aggiungere capi e chattare con lo stylist, più **5 crediti mensili di Ricostruzione Studio**.",
-    "qa_step3": "**Perché il caricamento di gruppo è vietato agli utenti Free?** Perché utilizza Nano Banana e una sola immagine può consumare l'intera quota gratuita di ricostruzione. Agli utenti Free viene suggerito di saltare l'immagine o aggiornare il piano.",
-    "qa_step4": "**Cosa riconosce il caricamento di gruppo e quali sono i suoi limiti?** Identifica e ricostruisce capi appesi nell'armadio o su grucce, scarpiere, pile di camicie e altro (non solo vestiti stesi sul letto). Limiti: (a) adatto a tinte unite e quadri/righe semplici, non a dettagli fini, (b) riflette raramente le condizioni reali, (c) può saltare capi, (d) può allucinare motivi e colori, (e) consuma crediti di ricostruzione.",
+    "qa_step3": "**Come fanno gli utenti gratuiti a sbloccare il Caricamento Multiplo?** Il caricamento di gruppo (armadi, grucce, scarpiere o pile di maglie) utilizza la ricostruzione da studio Nano Banana IA (fino a 15 capi per foto). Gli utenti gratuiti lo sbloccano quando possiedono **15 o più crediti di ricostruzione IA** (acquistando un pacchetto di crediti nella pagina Prezzi) o passando al piano **Manager** o **Professional**.",
+    "qa_step4": "**Cosa può digitalizzare il Caricamento Multiplo e quali sono i suoi limiti?** Con **15+ crediti di ricostruzione IA** o un piano **Manager / Professional**, puoi fotografare vestiti appesi, scarpiere o pile di camicie in pochi istanti. Funziona al meglio su tinte unite o righe/quadri semplici, non legge stampe nascoste, raramente riflette l’usura, può saltare alcuni capi, può inventare fantasie o colori e consuma 1 credito di ricostruzione per capo.",
     "qa_step5": "**Cosa succede se passo da Manager o Professional al piano Gratuito?** Perderai gli spazi extra, **lasciando solo gli ultimi 50 capi aggiunti** nell'armadio previa conferma dell'avviso.",
     "best_practice_step6": "**Dai 4 indizi allo Stylist**: Indica **occasione**, **luogo**, **meteo** e **stile desiderato**.",
     "qa_step6": "**Il mio guardaroba è privato?** Sì, foto e misure sono private e vengono elaborate dal **modello IA locale di DressApp**.",
     "tiers_demotion_title": "Avviso di declassamento del piano e conservazione degli ultimi 50 capi",
-    "tiers_demotion_desc": "Gli utenti Manager e Professional che passano al piano Gratuito perdono gli spazi extra, conservando solo gli ultimi 50 capi aggiunti nell'armadio dopo aver confermato l'avviso."
+    "tiers_demotion_desc": "Gli utenti Manager e Professional che passano al piano Gratuito perdono gli spazi extra, conservando solo gli ultimi 50 capi aggiunti nell'armadio dopo aver confermato l'avviso.",
+    "launchGrandTourTitle": "Tour guidato interattivo iniziale",
+    "launchGrandTourDesc": "Segui un tour guidato in 4 passaggi su Ritaglio IA e Caricamento Multiplo, Stylist con Calendario, Ricerca Smart e Profilo.",
+    "launchGrandTourBtn": "Avvia il tour guidato"
   },
   "campaigns": {
     "status": {
@@ -4740,7 +4746,8 @@
     "webviewInstructions": "Accedi a {{appName}} qui sotto, apri la pagina del tuo guardaroba e tocca \"Scansiona e importa\".",
     "webviewScanCompleteDesc": "Scansione di {{appName}} completata ({{count}} capi rilevati). Il tuo guardaroba si sta aggiornando!",
     "scanningInProgressBtn": "Scansione...",
-    "scanAndImportClosetBtn": "Scansiona e importa"
+    "scanAndImportClosetBtn": "Scansiona e importa",
+    "itemsCountLabel": "{{count}}+ capi"
   },
   "login_reminder": {
     "newTitle": "Il tuo armadio è vuoto — Aggiungi il tuo primo capo!",
@@ -4985,7 +4992,7 @@
     "demoteConfirmBody": "Gli utenti Manager e Professional che passano al piano Gratuito perdono gli spazi extra, conservando solo gli ultimi 50 capi aggiunti nell'armadio. I capi più vecchi verranno rimossi definitivamente.",
     "demoteClosetSummary": "Capi attuali nell'armadio: {{count}} (limite piano Gratuito: {{limit}} capi)",
     "demoteItemsWillBeLost": "Attenzione: I tuoi {{lostCount}} capi più vecchi verranno eliminati definitivamente, lasciando solo gli ultimi 50 capi aggiunti.",
-    "demoteUnderLimitNote": "Nel piano Gratuito vengono conservati solo gli ultimi 50 capi aggiunti e le richieste giornaliere illimitate e i caricamenti di gruppo verranno disattivati.",
+    "demoteUnderLimitNote": "Nel piano Gratuito vengono mantenuti solo gli ultimi 50 capi aggiunti, le richieste IA giornaliere illimitate vengono disattivate e i caricamenti multipli richiedono almeno 15 crediti di ricostruzione IA.",
     "demoteCancelBtn": "Mantieni il mio piano",
     "demoteConfirmBtn": "Conferma passaggio a Gratuito",
     "demoteSuccessToast": "Il tuo piano è passato a Gratuito. Gli ultimi 50 capi aggiunti sono stati conservati.",
@@ -5348,7 +5355,9 @@
         "womenOuterwear": "Blazer, trench e cardigan",
         "menOuterwear": "Giacche, bandhgala, achkan e cappotti",
         "footwear": "Calzature"
-      }
+      },
+      "migrationProPrompt": "Hai un guardaroba su Whering, Acloset, Indyx o Stylebook? La migrazione di massa con IA (50+ capi) è disponibile nei piani Manager e Professional dopo l’accesso.",
+      "migrationProBadge": "Manager / Pro"
     },
     "step4": {
       "badge": "Il tuo primo outfit IA e il tuo avatar calibrato sono pronti!",
@@ -5430,6 +5439,77 @@
       "m_loafers_leather_brown": "Mocassini classici in pelle marrone",
       "m_boots_chelsea_brown": "Stivaletti Chelsea in pelle marrone",
       "m_sneakers_navy_white": "Sneaker basse blu navy e bianche"
+    }
+  },
+  "closetTour": {
+    "skipTour": "Salta tour",
+    "finishBtn": "Fatto",
+    "calendarError": "Impossibile avviare la connessione a Google Calendar.",
+    "googleSyncedSuccess": "Dettagli del profilo sincronizzati dal tuo account Google!",
+    "googleSyncNoNewFields": "Nessuna data di nascita, telefono o indirizzo pubblico trovato su Google. Inseriscili qui sotto.",
+    "googleSyncError": "Impossibile sincronizzare da Google. Compila i campi qui sotto.",
+    "profileSavedToast": "Profilo aggiornato! Il tuo Stylist IA ora ha il contesto completo.",
+    "profileSaveError": "Impossibile salvare i dettagli del profilo. Riprova.",
+    "step1": {
+      "badge": "Passo 1 di 4 • Digitalizza il tuo guardaroba",
+      "title": "Aggiungi i tuoi vestiti reali con ritaglio IA",
+      "desc": "Scatta una foto o caricala dalla galleria. DressApp rimuove automaticamente lo sfondo, rileva 12 attributi di stile e inserisce ogni capo nel tuo armadio. Gli utenti gratuiti con 15+ crediti di ricostruzione IA (tramite pacchetti di crediti) e gli abbonati Manager e Pro possono anche usare il Caricamento Multiplo per fotografare un intero scaffale o appendiabiti in una sola volta!",
+      "actionBtn": "Aggiungi il primo capo"
+    },
+    "step2": {
+      "badge": "Passo 2 di 4 • Stylist IA quotidiano",
+      "title": "Outfit basati su meteo e calendario",
+      "desc": "Il tuo Stylist IA veste il tuo avatar calibrato dalla testa ai piedi. Collega Google Calendar per ricevere outfit automatici per riunioni, cene e viaggi!",
+      "connectCalendarBtn": "Collega Google Calendar",
+      "calendarConnectedBtn": "Calendario collegato ✓"
+    },
+    "step3": {
+      "badge": "Passo 3 di 4 • Ricerca smart e Migrazione Pro",
+      "title": "Ricerca semantica IA, Valigia e Importazione massiva",
+      "descPro": "Cerca in linguaggio naturale, prepara valigie intelligenti o usa l’Agente di Migrazione per importare oltre 50 capi da Whering, Acloset, Stylebook o Indyx.",
+      "descFree": "Cerca in linguaggio naturale e crea liste bagaglio. Nota: Gli account gratuiti usano il modello locale Eyes (fino a 50 capi). La migrazione massiva è sbloccata nei piani Manager e Professional.",
+      "openMigrationBtn": "Apri Agente di Migrazione",
+      "viewProPlansBtn": "Sblocca Migrazione Pro (50+ capi)"
+    },
+    "step4": {
+      "badge": "Passo 4 di 4 • Completa il profilo in 30 secondi",
+      "title": "Completa il profilo per uno styling iper-locale",
+      "desc": "Aggiungi il tuo indirizzo (per il meteo locale), data di nascita e telefono — oppure compilali automaticamente da Google in 1 clic.",
+      "completeProfileBtn": "Completa profilo ora"
+    },
+    "setupBar": {
+      "title": "Completa la configurazione del profilo e dello Stylist IA",
+      "stepsCount": "{{done}}/{{total}} completati",
+      "subtitle": "Sblocca styling meteo locale, outfit da calendario e avvisi Marketplace in 30 secondi.",
+      "chipStyleDna": "DNA di Stile e Avatar",
+      "chipCalendarDone": "Calendario sincronizzato",
+      "chipCalendarConnect": "+ Collega calendario",
+      "chipProfileDone": "Indirizzo, telefono e compleanno",
+      "chipProfileAdd": "+ Aggiungi indirizzo, telefono e compleanno",
+      "tourBtn": "Tour guidato",
+      "completeProfileCompact": "Completa profilo ({{pct}}%)"
+    },
+    "modal": {
+      "badge": "Profilo completato al {{pct}}%",
+      "title": "Completa il tuo profilo in 30 secondi",
+      "subtitle": "Questi dati attivano outfit meteo giornalieri, styling adatto all’età, preparazione eventi e spedizioni Marketplace.",
+      "googleSyncTitle": "Compilazione automatica da Google",
+      "googleSyncSub": "Importa data di nascita, telefono e indirizzo da Google con un clic.",
+      "googleSyncBtn": "Sincronizza da Google",
+      "calendarTitle": "Styling per eventi Google Calendar",
+      "calendarSub": "Vestiti automaticamente per riunioni, matrimoni, allenamenti e voli.",
+      "calendarConnected": "Collegato",
+      "connectCalendarBtn": "Collega calendario",
+      "dobLabel": "Data di nascita",
+      "dobHint": "Per look calibrati sull’età e crediti di compleanno.",
+      "phoneLabel": "Cellulare",
+      "phoneHint": "Per avvisi Marketplace e Stylist.",
+      "addressLabel": "Città e indirizzo (Meteo e Marketplace)",
+      "cityPlaceholder": "Scrivi la tua città (es. Milano, Roma, Firenze)...",
+      "streetPlaceholder": "Via e numero civico",
+      "countryPlaceholder": "Paese",
+      "addressHint": "Attiva le previsioni meteo locali per i tuoi outfit e le spedizioni Marketplace.",
+      "saveBtn": "Salva e attiva Stylist"
     }
   }
 }

@@ -339,6 +339,56 @@ def compute_onprem_credit_state(user_record: dict) -> Dict[str, Any]:
 
 NANO_BANANA_MONTHLY_LIMIT = 100
 NANO_BANANA_CYCLE_DAYS = 30
+MIN_CLUSTER_RECONSTRUCTION_CREDITS = 15
+
+
+def get_available_reconstruction_credits(user_record: dict) -> int:
+    """Return the user's available AI reconstruction (Nano Banana) credits.
+
+    - Manager & Professional users: bounded by the 100/month Nano Banana studio reconstruction limit.
+    - Free users: bounded by both their active credit_buckets balance (or legacy credits) and the 100/month cap.
+    """
+    if not user_record:
+        return 0
+    nb_state = compute_nano_banana_monthly_state(user_record)
+    nb_remaining = max(0, int(nb_state.get("nano_banana_monthly_remaining", 0)))
+    tier = get_user_tier(user_record)
+    if tier in ("manager", "professional"):
+        return nb_remaining
+
+    raw_buckets = user_record.get("credit_buckets")
+    bucket_total = 0
+    if isinstance(raw_buckets, list) and raw_buckets:
+        try:
+            parsed = [CreditBucket(**b) if isinstance(b, dict) else b for b in raw_buckets]
+            bucket_total = max(0, int(get_total_credits(parsed)))
+        except Exception:
+            bucket_total = 0
+    else:
+        for fallback_val in (
+            user_record.get("total_credits"),
+            user_record.get("ai_credits"),
+            (user_record.get("ai_configuration") or {}).get("current_credits"),
+        ):
+            if isinstance(fallback_val, (int, float)):
+                bucket_total = max(0, int(fallback_val))
+                break
+
+    return min(bucket_total, nb_remaining)
+
+
+def can_use_cluster_pipeline(user_record: dict) -> bool:
+    """Return True if the user is allowed to run the Mass / Cluster upload pipeline.
+
+    - Manager and Professional tiers have Cluster Upload included (subject to monthly limit).
+    - Free tier users unlock the Cluster pipeline when they possess 15 or more AI reconstruction credits.
+    """
+    if not user_record:
+        return False
+    tier = get_user_tier(user_record)
+    if tier in ("manager", "professional"):
+        return True
+    return get_available_reconstruction_credits(user_record) >= MIN_CLUSTER_RECONSTRUCTION_CREDITS
 
 
 def compute_nano_banana_monthly_state(user_record: dict) -> Dict[str, Any]:

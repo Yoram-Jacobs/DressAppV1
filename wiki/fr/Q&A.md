@@ -47,7 +47,7 @@ DressApp supprime la saisie manuelle et l'hésitation matinale grâce à la reco
 Dès le 5e jour, vous aurez **50 pièces clés** numérisées — ouvrant la porte à des milliers de combinaisons !
 
 ### Q : Puis-je importer mes vêtements depuis une autre application de garde-robe ?
-**R :** Oui ! Si vous possédez des photos ou des captures d'écran provenant d'une autre application, rendez-vous dans **Profil → Importer la garde-robe** (ou **Ajouter un article**) pour importer votre catalogue avec séparation automatique des articles, suppression du fond et détection des détails.
+**R :** Oui ! Les abonnés **Manager et Professional** peuvent utiliser **l'Agent de Migration de Garde-Robe** dans **Profil → Importer la garde-robe** (ou **Ajouter un article**) pour importer 50+ articles depuis une autre application avec détourage automatique. Les utilisateurs du forfait Gratuit (limités à 50 articles sur le modèle local) ne peuvent pas utiliser l'Agent de Migration, mais peuvent importer des liens de boutiques ou débloquer **l'Import de Lots de Vêtements** en détenant **15 crédits de reconstruction IA ou plus**.
 
 ---
 
@@ -92,8 +92,8 @@ Dès le 5e jour, vous aurez **50 pièces clés** numérisées — ouvrant la por
 **R :**
 - **Détourage Standard (Automatique)** : S'exécute automatiquement lors de l'ajout (1 crédit d'IA interne dans l'offre Gratuite). Il supprime l'arrière-plan et détecte toutes les caractéristiques tout en conservant votre photo d'origine.
 - **Reconstruction Studio (Optionnelle)** : S'active lorsque vous appuyez sur **Reconstruire** (1 crédit de Reconstruction Studio). Elle fait appel à notre modèle d'IA de pointe pour effacer les plis marqués, harmoniser l'éclairage et générer un visuel digne d'un catalogue professionnel.
-- **Import de Lots de Vêtements (Forfaits Manager et Professional)** : Une fonctionnalité révolutionnaire qui identifie et reconstruit **les vêtements suspendus dans le placard ou sur un cintre, une étagère à chaussures, une pile de chemises et plus encore** — pas seulement des vêtements étalés sur un lit !
-  - **Interdit aux utilisateurs Gratuits** : Utilisant Nano Banana, une seule image peut consommer tout le quota de reconstruction d'un utilisateur Gratuit. Les utilisateurs Gratuits sont invités à **passer l'image ou mettre à niveau leur forfait**.
+- **Import de Lots de Vêtements (Forfaits Manager et Professional, ou Forfait Gratuit avec 15+ crédits de reconstruction IA)** : Une fonctionnalité révolutionnaire qui identifie et reconstruit **les vêtements suspendus dans le placard ou sur un cintre, une étagère à chaussures, une pile de chemises et plus encore** — pas seulement des vêtements étalés sur un lit !
+  - **Déblocage sur le forfait Gratuit (15+ crédits de reconstruction)** : Utilisant Nano Banana, l'import de lots nécessite **15 crédits de reconstruction IA ou plus** sur le forfait Gratuit (via l'achat d'un pack de crédits sur la page Tarifs). En dessous de 15 crédits, les utilisateurs Gratuits sont invités à **passer l'image, acheter un pack de crédits IA ou mettre à niveau leur forfait**.
   - **Les 5 limites** : (a) Idéal pour les unis et motifs à carreaux ou rayures simples, n'analyse pas les imprimés cachés ni les détails fins ; (b) reflète rarement l'état actuel du vêtement ; (c) peut ignorer certains vêtements ; (d) peut halluciner des motifs et couleurs ; (e) consomme des crédits de reconstruction.
 
 ### Q : Pourquoi est-il conseillé de vérifier la fiche d'un vêtement juste après son ajout ?

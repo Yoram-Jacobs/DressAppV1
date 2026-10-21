@@ -15,16 +15,16 @@ Puedes añadir ropa tomando fotos en vivo con tu cámara, subiendo fotos guardad
    - DressApp admite tres modos inteligentes de fotografía:
      - **Una sola prenda** en una percha, mesa o cama.
      - **Un conjunto completo llevado por una persona**, que DressApp divide automáticamente en fichas separadas para parte superior, parte inferior, abrigo, calzado y accesorios.
-     - **Carga de grupos de prendas (Planes Manager y Professional)**: Una función revolucionaria que te permite fotografiar tu armario físico directamente, usando menos fotos para digitalizar tu ropa en tiempo récord. Puede identificar y reconstruir:
+     - **Carga de grupos de prendas (Planes Manager y Professional, o Plan Gratis con 15+ créditos de reconstrucción con IA)**: Una función revolucionaria que te permite fotografiar tu armario físico directamente, usando menos fotos para digitalizar tu ropa en tiempo récord. Puede identificar y reconstruir:
        - Prendas colgadas en el armario o en perchas
        - Un zapatero o estante de zapatos
        - Una pila de camisas o ropa doblada
        - Varias prendas dispuestas juntas (no solo ropa extendida sobre una cama)
 
-3. **Por qué la carga en grupo está prohibida en el Plan Gratis**:
+3. **Cómo desbloquear la carga en grupo en el Plan Gratis (15+ créditos de reconstrucción con IA)**:
    - La carga de grupos de prendas utiliza la reconstrucción por IA de estudio **Nano Banana** para cada pieza detectada.
-   - Dado que una sola foto en grupo puede consumir toda la asignación gratuita de reconstrucción por IA de un usuario del Plan Gratis de una sola vez —dejando muchas prendas sin reconstruir—, la carga en grupo está **prohibida para usuarios gratuitos**.
-   - Si un usuario del Plan Gratis intenta subir un grupo de prendas, DressApp muestra un mensaje sugiriendo **omitir la imagen o mejorar su plan** a Manager o Professional.
+   - Dado que una sola foto en grupo puede contener muchas prendas y agotar un saldo pequeño de una sola vez, los usuarios del Plan Gratis necesitan **15 o más créditos de reconstrucción con IA** para activar el pipeline en grupo.
+   - Los usuarios gratuitos pueden comprar paquetes de créditos (10, 50 o 100 créditos) en la página de **Precios** para alcanzar 15+ créditos. Si un usuario del Plan Gratis tiene menos de 15 créditos de reconstrucción, DressApp sugiere **omitir la imagen, comprar un paquete de créditos de IA o mejorar su plan** a Manager o Professional.
 
 4. **Eliminación automática de fondo y etiquetado inteligente**:
    - La IA elimina el fondo de cada prenda y detecta su **Categoría**, **Subcategoría** (distinguiendo con precisión sudaderas con capucha y suéteres de camisetas), **Colores**, **Patrón**, **Material**, **Temporada** y **Ocasión**.

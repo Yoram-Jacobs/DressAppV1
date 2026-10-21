@@ -47,7 +47,7 @@ DressApp nimmt Ihnen die manuelle Arbeit und die morgendliche Entscheidungsschwi
 Nach 5 Tagen haben Sie **50 Grundteile** digitalisiert – die Basis für tausende Outfit-Kombinationen!
 
 ### F: Kann ich meine Kleidung aus einer anderen Kleiderschrank-App importieren?
-**A:** Ja! Wenn Sie bereits Fotos oder Screenshots aus einer anderen Garderoben-App haben, öffnen Sie **Profil → Garderobe importieren** (oder **Artikel hinzufügen**), um Ihre bestehenden Aufnahmen mit automatischer Einzelteiltrennung, Hintergrundentfernung und Detailerkennung zu übernehmen.
+**A:** Ja! **Manager- und Professional-Abonnenten** können über **Profil → Garderobe importieren** (oder **Artikel hinzufügen**) den **Garderoben-Migrations-Agenten** nutzen, um 50+ Teile aus anderen Apps automatisch zu übernehmen. Free-Nutzer (begrenzt auf 50 Teile mit dem lokalen Modell) können den Migrations-Agenten nicht nutzen, aber einzelne Shop-Links importieren oder den **Cluster-Upload** freischalten, indem sie **mindestens 15 KI-Rekonstruktions-Credits** besitzen.
 
 ---
 
@@ -92,8 +92,8 @@ Nach 5 Tagen haben Sie **50 Grundteile** digitalisiert – die Basis für tausen
 **A:**
 - **Standard-Freistellung (Automatisch)**: Läuft automatisch beim Hochladen (1 interner KI-Credit im kostenlosen Tarif). Entfernt den Hintergrund und erkennt alle Details unter Beibehaltung Ihres Originalfotos.
 - **Studio-Rekonstruktion (Optional)**: Wird beim Tippen auf **Rekonstruieren** ausgeführt (1 Studio-Rekonstruktions-Credit). Unser hochmodernes KI-Modell glättet starke Falten, gleicht Lichtschatten aus und erstellt eine makellose Studio-Produktaufnahme.
-- **Kleider-Cluster hochladen (Manager- & Professional-Tarife)**: Eine revolutionäre Funktion, die **Kleidung im Schrank oder auf Bügeln, ein Schuhregal, einen Stapel Hemden und mehr** erkennt und rekonstruiert — nicht nur auf dem Bett ausgebreitete Kleidung!
-  - **Für Free-Nutzer verboten**: Da Cluster-Uploads Nano Banana verwenden, kann ein einziges Bild das gesamte Rekonstruktionskontingent eines Free-Nutzers verbrauchen. Free-Nutzer erhalten den Hinweis, **das Bild zu überspringen oder ihren Tarif hochzustufen**.
+- **Kleider-Cluster hochladen (Manager- & Professional-Tarife oder Free-Tarif mit 15+ KI-Rekonstruktions-Credits)**: Eine revolutionäre Funktion, die **Kleidung im Schrank oder auf Bügeln, ein Schuhregal, einen Stapel Hemden und mehr** erkennt und rekonstruiert — nicht nur auf dem Bett ausgebreitete Kleidung!
+  - **Freischaltung im Free-Tarif (15+ Rekonstruktions-Credits)**: Da Cluster-Uploads Nano Banana verwenden, benötigen Free-Nutzer **mindestens 15 KI-Rekonstruktions-Credits** (über Credit-Pakete auf der Preisseite). Bei weniger als 15 Credits erhalten Free-Nutzer den Hinweis, **das Bild zu überspringen, ein KI-Credit-Paket zu kaufen oder ihren Tarif hochzustufen**.
   - **Die 5 Einschränkungen beim Cluster-Upload**: (a) Gut für Unifarben oder einfache Karo-/Streifenmuster, analysiert keine verdeckten Prints und feinen Details; (b) spiegelt selten den aktuellen Zustand wider; (c) kann Teile überspringen; (d) kann Muster und Farben halluzinieren; (e) verbraucht Rekonstruktions-Credits.
 
 ### F: Warum sollte ich die Angaben eines Kleidungsstücks direkt nach dem Hochladen kurz prüfen?

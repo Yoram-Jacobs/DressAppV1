@@ -15,16 +15,17 @@ You can add clothes by taking live photos with your camera, uploading saved phot
    - DressApp supports three smart photo modes:
      - **A single piece of clothing** on a hanger, table, or bed.
      - **A full outfit worn by a person**, which DressApp automatically splits into separate cards for the top, bottom, outerwear, shoes, and accessories.
-     - **Cluster Garment Uploading (Manager & Professional Plans)**: A revolutionary feature that lets you photograph your physical closet directly—using fewer photos to digitize your wardrobe in no time. It can identify and reconstruct:
+     - **Cluster Garment Uploading (Manager & Professional Plans, or Free Users with 15+ AI Reconstruction Credits)**: A revolutionary feature that lets you photograph your physical closet directly—using fewer photos to digitize your wardrobe in no time. It can identify and reconstruct:
        - Garments hanging in the closet or on hangers
        - A rack of shoes
        - A pile of shirts or folded clothes
        - Multiple garments arranged together (not just clothes spread on a bed)
 
-3. **Why Cluster Uploading Is Restricted on the Free Plan**:
-   - Cluster garment uploading (mass pipeline) uses **Nano Banana** studio AI reconstruction for every detected piece.
-   - Because a single cluster photo can consume all of a Free user's AI reconstruction allowance at once—leaving many garments unreconstructed—cluster uploading is **forbidden for Free users**.
-   - If a Free user tries to upload a cluster of garments, DressApp displays a message suggesting they **skip the image or upgrade their plan** to Manager or Professional.
+3. **How Free Users Unlock Cluster Uploading (15+ AI Reconstruction Credits)**:
+   - Cluster garment uploading (mass pipeline) uses **Nano Banana** studio AI reconstruction for every detected piece (up to 15 garments per photo).
+   - Because Free accounts start with 5 free AI reconstruction credits, a single cluster photo would otherwise exhaust their starter allowance and leave many garments unreconstructed.
+   - Free users can purchase an **AI credit pack** on the Pricing page and unlock the Cluster pipeline whenever they hold **15 or more AI reconstruction credits**, or upgrade to a **Manager** or **Professional** plan.
+   - If a Free user with fewer than 15 AI reconstruction credits tries to upload a cluster of garments, DressApp displays a message suggesting they **skip the image, purchase an AI credit pack, or upgrade their plan**.
 
 4. **Automatic Background Removal & Smart Tagging**:
    - DressApp's AI removes the background from each item and detects its **Category**, **Subcategory** (accurately distinguishing sweatshirts and hoodies from T-shirts), **Colors**, **Pattern**, **Material**, **Season**, and **Occasion**.

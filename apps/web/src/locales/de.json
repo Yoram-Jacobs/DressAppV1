@@ -20,7 +20,8 @@
     "outfits": "Outfits",
     "pricing": "Preise",
     "trend_scout": "Trend-Scout",
-    "insights": "Garderoben-Einblicke"
+    "insights": "Garderoben-Einblicke",
+    "gettingStartedTour": "Einführungstour"
   },
   "common": {
     "savePrompt": "Klicken Sie auf Speichern, um die Änderungen zu behalten.",
@@ -891,20 +892,22 @@
       "multiDesc": "Komplettes Outfit-Foto — trennt und analysiert jedes getragene Teil.",
       "massTitle": "Kleiderschrank & Stapel",
       "massDesc": "Kleiderstange oder Wäschestapel — katalogisiert jedes Teil und erstellt freigestellte Studio-Karten.",
-      "massBadgePro": "PRO / MANAGER",
+      "massBadgePro": "MANAGER / PRO ODER 15+ CREDITS",
       "massQuotaBadge": "{{remaining}} / {{limit}} Studio-Rekonstruktionen diesen Monat übrig",
-      "massUpgradeRequired": "Der Sammel-Upload (Kleiderschrank, Kleiderbügel, Schuhregale und Kleiderstapel) ist exklusiv in den Tarifen Manager und Professional verfügbar.",
+      "massUpgradeRequired": "Der Sammel-Upload (Kleiderschränke, Kleiderbügel, Schuhregale und Stapel) ist in den Tarifen Manager und Professional oder im kostenlosen Tarif ab 15 KI-Rekonstruktions-Credits verfügbar.",
       "massMonthlyLimitReached": "Monatliches Limit für Studio-Rekonstruktionen ({{limit}}/Monat) erreicht. Wird im nächsten Abrechnungszeitraum zurückgesetzt.",
       "stageCataloging": "Kleidungsstücke im Foto werden katalogisiert…",
       "stageReconstructing": "Studio-Karten werden erstellt ({{completed}}/{{total}})…",
       "autoTitle": "Automatische Erkennung (Gemischt)",
       "autoDesc": "Erkennt und verarbeitet automatisch Einzelteile, Outfits und volle Schränke gleichzeitig.",
-      "massClusterFreeTitle": "Sammel-Upload erfordert ein Tarif-Upgrade",
-      "massClusterFreeBlocked": "Der Sammel-Upload von Kleidungsstücken (Kleiderschrank, Bügel, Schuhregal oder Kleiderstapel) nutzt die KI-Rekonstruktion von Nano Banana. Ein einziges Sammelfoto kann Ihr gesamtes kostenloses Rekonstruktionskontingent aufbrauchen und viele Teile unrekonstruiert lassen. Bitte überspringen Sie dieses Bild oder führen Sie ein Upgrade durch.",
-      "massClusterCapabilitiesTitle": "Komplette Schrank- & Schuhregal-Digitalisierung freischalten",
-      "massClusterCapabilitiesNote": "Mit den Tarifen Manager & Professional können Sie hängende Kleidung im Schrank, Schuhregale oder Hemdenstapel fotografieren und Ihre Garderobe im Handumdrehen mit weniger Fotos digitalisieren.",
+      "massClusterFreeTitle": "Sammel-Upload erfordert 15+ KI-Credits oder ein Tarif-Upgrade",
+      "massClusterFreeBlocked": "Der Sammel-Upload (Kleiderschränke, Kleiderbügel, Schuhregale oder Kleiderstapel) nutzt die Nano Banana KI-Studiorekonstruktion. Kostenlose Nutzer schalten den Sammel-Upload frei, sobald sie 15 oder mehr KI-Rekonstruktions-Credits besitzen (über KI-Credit-Pakete) oder auf Manager bzw. Professional upgraden.",
+      "massClusterCapabilitiesTitle": "Kompletten Kleiderschrank & Regale digitalisieren",
+      "massClusterCapabilitiesNote": "Mit Manager & Professional — oder im kostenlosen Tarif mit 15+ KI-Rekonstruktions-Credits — kannst du hängende Kleidung, Schuhregale und gefaltete Stapel in Sekunden digitalisieren.",
       "skipClusterImage": "Bild überspringen",
-      "upgradePlanCta": "Tarif upgraden"
+      "upgradePlanCta": "KI-Credits holen oder upgraden",
+      "massClusterCreditsRequiredLabel": "Mindestens erforderliche KI-Rekonstruktions-Credits: 15",
+      "massClusterCurrentCreditsLabel": "Dein Guthaben: {{available}}"
     }
   },
   "itemDetail": {
@@ -3876,8 +3879,8 @@
     "add_clothes_title": "Kleidung zum Kleiderschrank hinzufügen",
     "add_clothes_p1": "Digitalisieren Sie Ihre Garderobe mit wenigen Klicks – egal ob einzelnes Kleidungsstück, getragenes Outfit oder eine ganze Gruppe von Kleidungsstücken direkt im Kleiderschrank.",
     "add_clothes_step1": "Öffnen Sie DressApp und tippen Sie auf **Artikel hinzufügen**.",
-    "add_clothes_step2": "Wählen Sie **Foto aufnehmen** oder **Fotos hochladen** für Einzelteile, getragene Outfits oder (in den Tarifen **Manager** & **Professional**) **Sammelfotos** von Kleidung im Schrank oder auf Bügeln, einem Schuhregal oder einem Hemdenstapel.",
-    "add_clothes_step3": "Der Sammel-Upload nutzt die KI-Rekonstruktion **Nano Banana**. Da ein einziges Bild das gesamte kostenlose Rekonstruktionskontingent verbrauchen kann, ist er für Free-Nutzer gesperrt (Sie werden gebeten, das Bild zu überspringen oder den Tarif zu upgraden).",
+    "add_clothes_step2": "Wähle **Foto aufnehmen** oder **Fotos hochladen** für ein Einzelteil, ein getragenes Outfit oder — mit **Manager**, **Professional** oder **15+ KI-Rekonstruktions-Credits** — ein **Sammelfoto** von Kleiderstangen, Schuhregalen oder Stapeln.",
+    "add_clothes_step3": "Der Sammel-Upload nutzt die Nano Banana KI-Studiorekonstruktion (bis zu 15 Teile pro Foto). Kostenlose Nutzer schalten ihn ab **15 KI-Rekonstruktions-Credits** (über Credit-Pakete) oder durch ein Upgrade auf Manager bzw. Professional frei.",
     "add_clothes_step4": "Beachten Sie die 5 Einschränkungen des Sammel-Uploads: (a) gut für Uni-Farben sowie einfache Karo-/Streifenmuster, erkennt keine verdeckten Prints oder feinen Details, (b) zeigt selten den aktuellen Erhaltungszustand, (c) kann einzelne Teile überspringen, (d) kann Muster und Farben halluzinieren, (e) verbraucht Rekonstruktions-Credits.",
     "add_clothes_step5": "Überprüfen Sie die erkannten Details wie Kategorie, Farbe, Saison und Stil und passen Sie sie bei Bedarf an.",
     "add_clothes_step6": "Tippen Sie auf **Speichern**, um die Artikel Ihrem digitalen Kleiderschrank hinzuzufügen!",
@@ -4042,7 +4045,7 @@
     "tiers_title": "Abonnement-Stufen",
     "tiers_p1": "DressApp bietet flexible Abonnement-Stufen, die auf Ihre Kleiderschrankgröße und Ihre Styling-Bedürfnisse zugeschnitten sind. Führen Sie ein Upgrade auf der Preisseite durch, um unbegrenzte Funktionen freizuschalten.",
     "tiers_free_title": "Kostenloser Plan",
-    "tiers_free_desc": "Bis zu 50 Kleidungsstücke (erweiterbar auf bis zu 150 durch Einladung von Freunden, +10 Plätze pro Freund) sowie Zugriff auf das lokale KI-Modell von DressApp.",
+    "tiers_free_desc": "Basislimit von 50 Teilen (auf bis zu 150 erweiterbar durch Freundeseinladungen), 10 tägliche On-Premises-KI-Credits (bis zu 300 in 30 Tagen) und 5 Starter-Rekonstruktions-Credits. Kaufe KI-Credit-Pakete (15+ Credits), um den Sammel-Upload freizuschalten.",
     "tiers_manager_title": "Manager-Plan",
     "tiers_manager_desc": "10 $/Monat (oder 100 $/Jahr). Unbegrenzter Platz im Kleiderschrank, das hochmoderne KI-Modell von DressApp, morgendliche Outfit-Vorschläge, Kalendersynchronisierung, Verkauf auf dem Marktplatz und voller Zugriff auf Trend Scout.",
     "tiers_pro_title": "Professional-Plan",
@@ -4229,7 +4232,7 @@
       "profile_item15_title": "",
       "profile_item16_title": "",
       "profile_item16_desc": "",
-      "tiers_free_desc": "Bis zu 50 Kleidungsstücke (erweiterbar auf bis zu 150 durch Einladung von Freunden, +10 Plätze pro Freund) sowie Zugriff auf das lokale KI-Modell von DressApp.",
+      "tiers_free_desc": "Basislimit von 50 Teilen (auf bis zu 150 erweiterbar durch Freundeseinladungen), 10 tägliche On-Premises-KI-Credits (bis zu 300 in 30 Tagen) und 5 Starter-Rekonstruktions-Credits. Kaufe KI-Credit-Pakete (15+ Credits), um den Sammel-Upload freizuschalten.",
       "tiers_manager_desc": "10 $/Monat (oder 100 $/Jahr). Unbegrenzter Platz im Kleiderschrank, das hochmoderne KI-Modell von DressApp, morgendliche Outfit-Vorschläge, Kalendersynchronisierung, Verkauf auf dem Marktplatz und voller Zugriff auf Trend Scout.",
       "reanalyze_title": "Foto-Neuanalyse & KI-Assistent",
       "reanalyze_p1": "Chatten Sie direkt mit dem KI-Assistenten, um Kleidungsfotos in natürlicher Sprache anzupassen:",
@@ -4248,7 +4251,7 @@
     "best_practice_title": "Best Practices & Tipps",
     "best_practice_p1": "Mit diesen einfachen Gewohnheiten bauen Sie einen präzisen digitalen Kleiderschrank auf, nutzen Ihre täglichen Credits optimal und erhalten jeden Tag passende Outfit-Ideen.",
     "best_practice_step1": "**Zuerst das Profil ausfüllen**: Tragen Sie Körpermaße, Lieblingsfarben, Stilvorlieben und Bedeckungsgrad im **Profil** ein, bevor Sie Kleidung hochladen.",
-    "best_practice_step2": "**Klare Fotos oder Schrank-Sammelfotos aufnehmen**: Laden Sie ein flach ausgelegtes Einzelteil, ein Spiegel-Outfit oder – im **Manager**- und **Professional**-Tarif – Fotos von hängender Kleidung im Schrank, einem Schuhregal oder einem Hemdenstapel hoch.",
+    "best_practice_step2": "**Klare Fotos aufnehmen**: Lade ein flach ausgelegtes Einzelteil, ein Ganzkörper-Spiegelfoto oder — in den Tarifen **Manager** und **Professional** bzw. im **kostenlosen Tarif mit 15+ KI-Rekonstruktions-Credits** — hängende Kleidung im Schrank, ein Schuhregal oder einen Kleiderstapel hoch.",
     "best_practice_step3": "**Einschränkungen beim Sammel-Upload beachten**: Für Free-Nutzer gesperrt. Ideal für einfarbige oder einfach karierte/gestreifte Teile; keine Analyse feiner Prints, spiegelt selten den Zustand wider, kann Teile überspringen oder Farben/Muster halluzinieren und verbraucht Rekonstruktions-Credits.",
     "best_practice_step4": "**Kleiderschrank in 5 Tagen aufbauen**: Nutzen Sie Ihre 10 kostenlosen täglichen Credits (ansammelbar bis 300 über 30 Tage), um täglich 10 Teile hinzuzufügen.",
     "best_practice_step5": "**Artikelkarte kurz prüfen (10 Sekunden)**: Kontrollieren Sie Kategorie, Farbe, Wärmegrad und Dresscode – besonders nach einer Sammel-Rekonstruktion.",
@@ -4256,13 +4259,16 @@
     "qa_p1": "Schnelle Antworten auf die wichtigsten Fragen zum Einstieg, zu Ihren Credits, zum Digitalisieren Ihrer Garderobe und zum Styling.",
     "qa_step1": "**Wie starte ich am 1. Tag?** Vervollständigen Sie zuerst Ihr **Profil** mit Maßen und Stilvorlieben und fügen Sie dann Ihre 10 meistgetragenen Alltagsteile hinzu.",
     "qa_step2": "**Wie funktionieren kostenlose Credits?** Kostenlose Konten erhalten **10 tägliche Credits** (alle 24 Stunden neu, ansparbar bis 50) zum Hinzufügen von Kleidung und für den Stylisten sowie **5 monatliche Studio-Rekonstruktions-Credits**.",
-    "qa_step3": "**Warum ist der Sammel-Upload für Free-Nutzer gesperrt?** Der Sammel-Upload nutzt Nano Banana – ein einziges Bild kann das gesamte kostenlose Rekonstruktionskontingent verbrauchen. Free-Nutzer erhalten den Hinweis, das Bild zu überspringen oder ihren Tarif zu upgraden.",
-    "qa_step4": "**Was erkennt der Sammel-Upload und was sind seine Grenzen?** Er erkennt Kleidung im Schrank oder auf Bügeln, Schuhregale, Hemdenstapel u. v. m. (nicht nur Kleidung auf dem Bett). Grenzen: (a) gut für Uni-Farben und einfache Karos/Streifen, keine feinen Details/verdeckten Prints, (b) zeigt selten den echten Zustand, (c) kann Teile überspringen, (d) kann Muster/Farben halluzinieren, (e) verbraucht Rekonstruktions-Credits.",
+    "qa_step3": "**Wie schalten kostenlose Nutzer den Sammel-Upload frei?** Der Sammel-Upload (Schränke, Bügel, Schuhregale oder Hemdenstapel) nutzt Nano Banana KI-Studiorekonstruktion (bis zu 15 Teile pro Foto). Kostenlose Nutzer schalten die Funktion frei, sobald sie **15 oder mehr KI-Rekonstruktions-Credits** besitzen (durch Kauf eines Credit-Pakets auf der Preisseite) oder auf **Manager** bzw. **Professional** upgraden.",
+    "qa_step4": "**Was kann der Sammel-Upload digitalisieren und was sind die Grenzen?** Mit **15+ KI-Rekonstruktions-Credits** oder einem **Manager- / Professional-Tarif** kannst du hängende Kleidung, Schuhregale oder Hemdenstapel im Handumdrehen digitalisieren. Er eignet sich am besten für einfarbige Teile oder einfache Karo-/Streifenmuster, erkennt keine verdeckten Drucke, bildet selten den Abnutzungszustand ab, kann verdeckte Teile überspringen, Muster/Farben interpretieren und verbraucht 1 Rekonstruktions-Credit pro Teil.",
     "qa_step5": "**Was passiert bei einer Herabstufung vom Manager- oder Professional-Tarif auf den Free-Tarif?** Sie verlieren Ihre zusätzlichen Schrankplätze, sodass **nur die letzten 50 hinzugefügten Artikel** erhalten bleiben. Ältere Artikel werden nach einer Bestätigungswarnung dauerhaft gelöscht.",
     "best_practice_step6": "**Dem Stylisten 4 Hinweise geben**: Nennen Sie **Anlass**, **Ort**, **Wetter** und **gewünschten Stil**.",
     "qa_step6": "**Ist meine Garderobe privat?** Ja. Ihre Fotos und Maße sind privat und werden über das **lokale KI-Modell von DressApp** geschützt verarbeitet.",
     "tiers_demotion_title": "Warnung zur Tarif-Herabstufung & 50-Artikel-Grenze",
-    "tiers_demotion_desc": "Manager- und Professional-Nutzer, die zum Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass nur die letzten 50 hinzugefügten Artikel im Schrank verbleiben. Ältere Bestände werden nach Ihrer Bestätigung gelöscht."
+    "tiers_demotion_desc": "Manager- und Professional-Nutzer, die zum Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass nur die letzten 50 hinzugefügten Artikel im Schrank verbleiben. Ältere Bestände werden nach Ihrer Bestätigung gelöscht.",
+    "launchGrandTourTitle": "Interaktive Einführungstour",
+    "launchGrandTourDesc": "Starte eine geführte 4-Schritte-Tour zu KI-Freisteller & Sammel-Upload, Kalender-Stylist, Smart-Suche und Profil-Setup.",
+    "launchGrandTourBtn": "Tour starten"
   },
   "campaigns": {
     "status": {
@@ -4714,7 +4720,7 @@
     "agentSavingRemaining": "Verbleibende {{count}} Artikel werden in DressApp gespeichert...",
     "agentSavedSuccess": "✓ {{count}} Artikel im Kleiderschrank gespeichert!",
     "agentCompletionNotice": "Alle Artikel wurden direkt in Ihre DressApp-Garderobendatenbank hochgeladen.<br><br><b>Sie können jetzt zu DressApp zurückwechseln, um Ihren Kleiderschrank anzusehen!</b>",
-    "upgradePrompt": "Die Garderobenmigration aus anderen Apps ist in den Tarifen Manager und Professional verfügbar.",
+    "upgradePrompt": "Der Kleiderschrank-Import aus anderen Apps ist in den Tarifen Manager und Professional verfügbar.",
     "bookmarkletInstruction": "Tippen Sie auf das Drei-Punkte-Menü ⋮ im Browser und wählen Sie „Lesezeichen“, um diese Seite zu speichern.",
     "modeScreenshotsTab": "Screenshots / Video",
     "modeBookmarkletTab": "Browser-Agent",
@@ -4733,7 +4739,8 @@
     "webviewInstructions": "Melden Sie sich unten bei {{appName}} an, öffnen Sie Ihren Kleiderschrank und tippen Sie auf „Scannen & Importieren“.",
     "webviewScanCompleteDesc": "Scan von {{appName}} abgeschlossen ({{count}} Kleidungsstücke erkannt). Ihr Kleiderschrank wird aktualisiert!",
     "scanningInProgressBtn": "Scannen...",
-    "scanAndImportClosetBtn": "Scannen & Importieren"
+    "scanAndImportClosetBtn": "Scannen & Importieren",
+    "itemsCountLabel": "{{count}}+ Teile"
   },
   "login_reminder": {
     "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",
@@ -4978,7 +4985,7 @@
     "demoteConfirmBody": "Manager- und Professional-Nutzer, die zum Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass nur die letzten 50 hinzugefügten Artikel im Kleiderschrank verbleiben. Ältere Kleidungsstücke werden dauerhaft entfernt.",
     "demoteClosetSummary": "Aktuelle Artikel im Schrank: {{count}} (Limit im Free-Tarif: {{limit}} Artikel)",
     "demoteItemsWillBeLost": "Warnung: Ihre {{lostCount}} ältesten Artikel werden dauerhaft gelöscht; es bleiben nur die letzten 50 hinzugefügten Artikel erhalten.",
-    "demoteUnderLimitNote": "Im Free-Tarif bleiben nur die letzten 50 hinzugefügten Artikel erhalten; unbegrenzte tägliche KI-Anfragen und Sammel-Uploads werden deaktiviert.",
+    "demoteUnderLimitNote": "Im kostenlosen Tarif bleiben nur die letzten 50 hinzugefügten Teile erhalten, unbegrenzte tägliche KI-Anfragen werden deaktiviert und Sammel-Uploads erfordern mindestens 15 KI-Rekonstruktions-Credits.",
     "demoteCancelBtn": "Meinen Tarif behalten",
     "demoteConfirmBtn": "Herabstufung bestätigen",
     "demoteSuccessToast": "Ihr Tarif wurde auf Free umgestellt. Ihre letzten 50 hinzugefügten Kleidungsstücke wurden beibehalten.",
@@ -5341,7 +5348,9 @@
         "womenOuterwear": "Blazer, Trenchcoats & Cardigans",
         "menOuterwear": "Sakkos, Bandhgalas, Achkans & Mäntel",
         "footwear": "Schuhe"
-      }
+      },
+      "migrationProPrompt": "Hast du einen Kleiderschrank bei Whering, Acloset, Indyx oder Stylebook? Der KI-Massenimport (50+ Teile) ist nach der Anmeldung in den Tarifen Manager & Professional verfügbar.",
+      "migrationProBadge": "Manager / Pro"
     },
     "step4": {
       "badge": "Ihr erstes KI-Outfit & Ihr kalibrierter Avatar sind bereit!",
@@ -5423,6 +5432,77 @@
       "m_loafers_leather_brown": "Klassische braune Leder-Loafer",
       "m_boots_chelsea_brown": "Edle braune Leder-Chelsea-Boots",
       "m_sneakers_navy_white": "Dunkelblaue & weiße Low-Top-Sneaker"
+    }
+  },
+  "closetTour": {
+    "skipTour": "Tour überspringen",
+    "finishBtn": "Fertig",
+    "calendarError": "Verbindung zum Google Kalender konnte nicht gestartet werden.",
+    "googleSyncedSuccess": "Profildaten erfolgreich aus deinem Google-Konto synchronisiert!",
+    "googleSyncNoNewFields": "Kein öffentliches Geburtsdatum, Telefon oder Adresse im Google-Konto gefunden. Bitte unten eintragen.",
+    "googleSyncError": "Synchronisierung mit Google fehlgeschlagen. Bitte fülle die Felder unten aus.",
+    "profileSavedToast": "Profil aktualisiert! Dein KI-Stylist kennt nun deinen gesamten Kontext.",
+    "profileSaveError": "Profildaten konnten nicht gespeichert werden. Bitte erneut versuchen.",
+    "step1": {
+      "badge": "Schritt 1 von 4 • Kleiderschrank digitalisieren",
+      "title": "Echte Kleidung mit KI-Freistellung hinzufügen",
+      "desc": "Mach ein Foto oder lade eines aus deiner Galerie hoch. DressApp entfernt automatisch den Hintergrund, erkennt 12 Stilmerkmale und legt jedes Teil in deinen Schrank. Kostenlose Nutzer mit 15+ KI-Rekonstruktions-Credits (über Credit-Pakete) sowie Manager- & Pro-Mitglieder können auch den Sammel-Upload nutzen, um ein ganzes Regal oder eine Kleiderstange auf einmal zu fotografieren!",
+      "actionBtn": "Erstes Kleidungsstück hinzufügen"
+    },
+    "step2": {
+      "badge": "Schritt 2 von 4 • Täglicher KI-Stylist",
+      "title": "Wetter- & kalenderbasiertes Outfit-Styling",
+      "desc": "Dein KI-Stylist kleidet deinen kalibrierten Avatar von Kopf bis Fuß ein. Verbinde deinen Google Kalender, damit er dich automatisch für Meetings, Abendessen und Reisen stylt!",
+      "connectCalendarBtn": "Google Kalender verbinden",
+      "calendarConnectedBtn": "Kalender verbunden ✓"
+    },
+    "step3": {
+      "badge": "Schritt 3 von 4 • Smarte Suche & Pro-Migration",
+      "title": "Semantische KI-Suche, Koffer & Massenimport",
+      "descPro": "Suche in natürlicher Sprache, packe smarte Koffer oder nutze den Migrations-Agenten, um 50+ Teile aus Whering, Acloset, Stylebook oder Indyx zu importieren.",
+      "descFree": "Suche in natürlicher Sprache und erstelle Packlisten. Hinweis: Kostenlose Konten nutzen unser lokales Eyes-KI-Modell (bis zu 50 Teile). Der Massenimport aus anderen Apps ist in den Tarifen Manager & Professional freigeschaltet.",
+      "openMigrationBtn": "Migrations-Agent öffnen",
+      "viewProPlansBtn": "Pro-Migration freischalten (50+ Teile)"
+    },
+    "step4": {
+      "badge": "Schritt 4 von 4 • Profil-Power-Up in 30 Sekunden",
+      "title": "Vervollständige dein Profil für lokales Styling",
+      "desc": "Füge deine Adresse (für lokale Wettervorhersagen), dein Geburtsdatum und deine Telefonnummer hinzu — oder fülle sie mit 1 Klick über Google aus.",
+      "completeProfileBtn": "Profil jetzt vervollständigen"
+    },
+    "setupBar": {
+      "title": "KI-Stylist & Profil-Einrichtung abschließen",
+      "stepsCount": "{{done}}/{{total}} abgeschlossen",
+      "subtitle": "Schalte lokales Wetter-Styling, Kalender-Outfits und Marktplatz-Benachrichtigungen in 30 Sekunden frei.",
+      "chipStyleDna": "Stil-DNA & Avatar",
+      "chipCalendarDone": "Kalender synchronisiert",
+      "chipCalendarConnect": "+ Kalender verbinden",
+      "chipProfileDone": "Adresse, Telefon & Geburtstag",
+      "chipProfileAdd": "+ Adresse, Telefon & Geburtstag hinzufügen",
+      "tourBtn": "Geführte Tour",
+      "completeProfileCompact": "Profil vervollständigen ({{pct}}%)"
+    },
+    "modal": {
+      "badge": "Profil zu {{pct}}% vollständig",
+      "title": "Vervollständige dein Profil in 30 Sekunden",
+      "subtitle": "Diese Angaben ermöglichen tägliche Wetter-Outfits, altersgerechtes Styling, Kalender-Vorbereitung und Marktplatz-Versand.",
+      "googleSyncTitle": "Automatisch aus Google-Konto ausfüllen",
+      "googleSyncSub": "Importiere Geburtsdatum, Telefonnummer und Adresse mit einem Klick aus Google.",
+      "googleSyncBtn": "Mit Google synchronisieren",
+      "calendarTitle": "Google Kalender Event-Styling",
+      "calendarSub": "Automatisch passend gekleidet für Meetings, Hochzeiten, Workouts und Flüge.",
+      "calendarConnected": "Verbunden",
+      "connectCalendarBtn": "Kalender verbinden",
+      "dobLabel": "Geburtsdatum",
+      "dobHint": "Für altersgerechte Looks & Geburtstags-Credits.",
+      "phoneLabel": "Mobiltelefon",
+      "phoneHint": "Für Marktplatz- und Stylist-Benachrichtigungen.",
+      "addressLabel": "Stadt & Straße (Wetter & Marktplatz)",
+      "cityPlaceholder": "Stadt eingeben (z. B. Berlin, München, Wien, Zürich)...",
+      "streetPlaceholder": "Straße und Hausnummer",
+      "countryPlaceholder": "Land",
+      "addressHint": "Aktiviert lokale Wettervorhersagen für deine Outfits und den Marktplatz-Versand.",
+      "saveBtn": "Speichern & Stylist aktivieren"
     }
   }
 }
