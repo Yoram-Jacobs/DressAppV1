@@ -7,7 +7,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Ruler,
-  Shirt,
   CloudSun,
   Briefcase,
   Globe,
@@ -28,7 +27,11 @@ import AvatarViewer from '@/components/AvatarViewer';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { closetStore } from '@/lib/closetStore';
-import { ONBOARDING_STATIC_DATASET } from '@/lib/onboardingDataset';
+import {
+  labelForSubCategory,
+  labelForColor,
+  labelForMaterial,
+} from '@/lib/taxonomy';
 import {
   DEFAULT_ONBOARDING_DRAFT,
   getOnboardingDraft,
@@ -371,14 +374,29 @@ export default function Onboarding() {
 
   const formatLength = (cmVal) => {
     const v = Number(cmVal) || 0;
-    if (!isImperial) return `${Math.round(v * 10) / 10} cm`;
-    return `${Math.round((v / 2.54) * 10) / 10} in`;
+    if (!isImperial) {
+      return `${Math.round(v * 10) / 10} ${t('onboarding.units.cm', { defaultValue: 'cm' })}`;
+    }
+    return `${Math.round((v / 2.54) * 10) / 10} ${t('onboarding.units.in', { defaultValue: 'in' })}`;
   };
 
   const formatWeight = (kgVal) => {
     const v = Number(kgVal) || 0;
-    if (!isImperial) return `${Math.round(v * 10) / 10} kg`;
-    return `${Math.round(v * 2.20462 * 10) / 10} lb`;
+    if (!isImperial) {
+      return `${Math.round(v * 10) / 10} ${t('onboarding.units.kg', { defaultValue: 'kg' })}`;
+    }
+    return `${Math.round(v * 2.20462 * 10) / 10} ${t('onboarding.units.lb', { defaultValue: 'lb' })}`;
+  };
+
+  const getItemTitle = (item) =>
+    item?.id
+      ? t(`onboarding.items.${item.id}`, { defaultValue: item.title || item.name || '' })
+      : item?.title || item?.name || '';
+
+  const getLocalizedWeatherCondition = (cond) => {
+    const raw = String(cond || 'Clear & Mild').trim();
+    const key = raw.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    return t(`onboarding.weather.${key}`, { defaultValue: raw });
   };
 
   const intendedFrom = location.state?.from?.pathname;
@@ -491,7 +509,10 @@ export default function Onboarding() {
               })}
             </span>
             <span className="text-primary-brand font-bold" data-testid="onboarding-progress-pct">
-              {progressPct}% {t('onboarding.progress.complete', { defaultValue: 'Complete' })}
+              {t('onboarding.progress.percentComplete', {
+                pct: progressPct,
+                defaultValue: `${progressPct}% Complete`,
+              })}
             </span>
           </div>
           <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-border p-0.5">
@@ -646,7 +667,7 @@ export default function Onboarding() {
                           <span className="text-xs font-semibold text-dark-brand truncate">
                             {t(pal.labelKey, { defaultValue: pal.defaultLabel })}
                           </span>
-                          <span className="flex items-center -space-x-1 shrink-0">
+                          <span className="flex items-center -space-x-1 rtl:space-x-reverse shrink-0">
                             {pal.swatches.map((hex) => (
                               <span
                                 key={hex}
@@ -883,8 +904,14 @@ export default function Onboarding() {
                 {/* Metric / Imperial Unit Toggle */}
                 <div className="inline-flex rounded-full border border-border bg-accent-beige p-1">
                   {[
-                    { id: 'metric', label: 'cm / kg' },
-                    { id: 'imperial', label: 'in / lb' },
+                    {
+                      id: 'metric',
+                      label: t('onboarding.step2.unitMetric', { defaultValue: 'cm / kg' }),
+                    },
+                    {
+                      id: 'imperial',
+                      label: t('onboarding.step2.unitImperial', { defaultValue: 'in / lb' }),
+                    },
                   ].map((u) => (
                     <button
                       key={u.id}
@@ -1090,7 +1117,7 @@ export default function Onboarding() {
                   <p className="text-xs text-text-brand text-center mt-2">
                     {t('onboarding.step2.avatarLiveCaption', {
                       defaultValue:
-                        'Both your avatar and fitted garments dynamically warp via the AI point-cloud mesh as you slide your measurements.',
+                        'Both your avatar and fitted garments dynamically warp as you slide your measurements.',
                     })}
                   </p>
                 </div>
@@ -1105,12 +1132,6 @@ export default function Onboarding() {
             <div className="space-y-5" data-testid="onboarding-step-3">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-1">
-                  <Badge className="bg-accent-beige text-primary-brand border-none px-3 py-1 text-xs font-semibold">
-                    <Shirt className="w-3.5 h-3.5 me-1.5 inline" />
-                    {t('onboarding.step3.badge', {
-                      defaultValue: 'Curated from DressApp’s 5,000+ Cataloged AI Dataset',
-                    })}
-                  </Badge>
                   <h1 className="text-2xl md:text-3xl font-bold text-dark-brand">
                     {t('onboarding.step3.title', {
                       defaultValue: 'Seed Your Starter Closet with 4+ Everyday Staples',
@@ -1270,13 +1291,13 @@ export default function Onboarding() {
 
                       <div>
                         <div className="text-[10px] font-bold uppercase tracking-wider text-primary-brand truncate">
-                          {item.sub_category}
+                          {labelForSubCategory(item.sub_category, t)}
                         </div>
                         <div className="text-xs font-bold text-dark-brand line-clamp-2 leading-snug mt-0.5">
-                          {item.title}
+                          {getItemTitle(item)}
                         </div>
                         <div className="text-[10px] text-text-brand truncate mt-1">
-                          {item.color} · {item.material}
+                          {labelForColor(item.color, t)} · {labelForMaterial(item.material, t)}
                         </div>
                       </div>
                     </button>
@@ -1338,7 +1359,8 @@ export default function Onboarding() {
                   <div className="w-full flex flex-wrap items-center justify-between gap-2 mb-3">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-border text-xs font-bold text-dark-brand">
                       <CloudSun className="w-4 h-4 text-primary-brand" />
-                      {weatherInfo.tempC}°C · {weatherInfo.condition}
+                      <span dir="ltr">{weatherInfo.tempC}°C</span> ·{' '}
+                      {getLocalizedWeatherCondition(weatherInfo.condition)}
                       {weatherInfo.city ? ` (${weatherInfo.city})` : ''}
                     </span>
                     <button
@@ -1394,11 +1416,11 @@ export default function Onboarding() {
                         >
                           <img
                             src={piece.image_url}
-                            alt={piece.title}
+                            alt={getItemTitle(piece)}
                             className="w-12 h-12 object-contain"
                           />
                           <span className="text-[10px] font-bold text-dark-brand line-clamp-1 mt-1">
-                            {piece.title}
+                            {getItemTitle(piece)}
                           </span>
                         </div>
                       ))}
@@ -1582,7 +1604,7 @@ export default function Onboarding() {
                 onClick={() => updateDraft({ step: step - 1 })}
                 data-testid="onboarding-back-btn"
               >
-                <ChevronLeft className="w-4 h-4 me-1" />
+                <ChevronLeft className="w-4 h-4 me-1 rtl:rotate-180" />
                 {t('onboarding.nav.back', { defaultValue: 'Back' })}
               </Button>
             ) : (
@@ -1601,7 +1623,7 @@ export default function Onboarding() {
                       defaultValue: 'Reveal My First AI Outfit',
                     })
                   : t('onboarding.nav.continue', { defaultValue: 'Continue' })}
-                <ChevronRight className="w-4 h-4 ms-1" />
+                <ChevronRight className="w-4 h-4 ms-1 rtl:rotate-180" />
               </Button>
             )}
           </div>

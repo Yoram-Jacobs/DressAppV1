@@ -190,6 +190,11 @@ const CANONICAL_COLORS = {
   'fuchsia': 'pink',
   'magenta': 'pink',
   'plum': 'purple',
+  'plum_purple': 'purple',
+  'emerald_green': 'green',
+  'dark_green': 'green',
+  'crimson_red': 'burgundy',
+  'royal_blue': 'blue',
   'indigo': 'indigo',
   'maroon': 'burgundy',
   
@@ -585,8 +590,10 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('overcoat') || normalized.includes('coat') || normalized.includes('parka') || normalized.includes('מעיל') || normalized.includes('пальто') || normalized.includes('плащ') || normalized.includes('معطف') || normalized.includes('mantel') || normalized.includes('abrigo') || normalized.includes('manteau') || normalized.includes('cappotto') || normalized.includes('casaco') || normalized.includes('कोट') || normalized.includes('コート') || normalized.includes('大衣')) return 'coats';
   if (normalized.includes('jacket') || normalized.includes('bomber') || normalized.includes('moto') || normalized.includes('זקט') || normalized.includes('куртк') || normalized.includes('جاكيت') || normalized.includes('سترة') || normalized.includes('jacke') || normalized.includes('chaqueta') || normalized.includes('veste') || normalized.includes('giacca') || normalized.includes('jaqueta') || normalized.includes('जैकेट') || normalized.includes('ジャケット') || normalized.includes('夹克')) return 'jackets';
   if (normalized.includes('performance_gear') || normalized.includes('windbreaker') || normalized.includes('ביגוד_טכני') || normalized.includes('ветров')) return 'performance_gear';
+  if (normalized === 'suit' || normalized === 'suits' || normalized.includes('business_suit')) return 'suit';
+  if (normalized.includes('polo_shirt') || normalized.includes('polo') || normalized.includes('פולו') || normalized.includes('поло')) return 'polo_shirt';
   if (normalized.includes('blazer') || normalized.includes('בלייזר') || normalized.includes('пиджак') || normalized.includes('блейзер')) return 'blazers';
-  if (normalized.includes('vest') || normalized.includes('gilet') || normalized.includes('ווסט') || normalized.includes('жилет')) return 'vests';
+  if (normalized.includes('vest') || normalized.includes('waistcoat') || normalized.includes('gilet') || normalized.includes('ווסט') || normalized.includes('жилет')) return 'vests';
   if (normalized.includes('cape') || normalized.includes('poncho') || normalized.includes('שכמי') || normalized.includes('פונצו') || normalized.includes('пончо')) return 'capes_and_ponchos';
   if (normalized.includes('shrug') || normalized.includes('bolero') || normalized.includes('עליונית_קצרה') || normalized.includes('болеро')) return 'shrugs';
 
@@ -684,6 +691,8 @@ export const labelForSubCategory = (raw, t) => {
   const key = `taxonomy.sub_category.${canonical}`;
   const translated = fallback(t, key, '');
   if (translated && translated !== key) return translated;
+  const itemTypeFallback = fallback(t, `taxonomy.item_type.${canonical}`, '');
+  if (itemTypeFallback && itemTypeFallback !== `taxonomy.item_type.${canonical}`) return itemTypeFallback;
   if (canonical === 'oxfords') {
     const alt = fallback(t, 'taxonomy.item_type.oxford_shoes', '');
     if (alt && alt !== 'taxonomy.item_type.oxford_shoes') return alt;
