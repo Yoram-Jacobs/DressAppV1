@@ -506,9 +506,30 @@ export function buildPointCloudMeshFromAlpha(alphaData, cw, ch, defaultViewbox, 
     return 'feet';
   };
 
+  let minOpaqueY = -1;
+  let maxOpaqueY = -1;
+  if (alphaData && cw > 1 && ch > 1) {
+    for (let y = 0; y < ch; y++) {
+      const rowOff = y * cw;
+      for (let x = 0; x < cw; x++) {
+        if (alphaData[rowOff + x] > 25) {
+          if (minOpaqueY === -1) minOpaqueY = y;
+          maxOpaqueY = y;
+          break;
+        }
+      }
+    }
+  }
+  const pyStart = minOpaqueY !== -1 && maxOpaqueY > minOpaqueY + 2 ? minOpaqueY + 1 : 0;
+  const pyEnd =
+    minOpaqueY !== -1 && maxOpaqueY > minOpaqueY + 2
+      ? Math.max(pyStart + 1, maxOpaqueY - 1)
+      : Math.max(1, ch - 1);
+
   for (let r = 0; r < rows; r++) {
-    const vNorm = r / (rows - 1);
-    const py = Math.min(ch - 1, Math.max(0, Math.round(vNorm * (ch - 1))));
+    const tRow = r / (rows - 1);
+    const py = Math.min(ch - 1, Math.max(0, Math.round(pyStart + tRow * (pyEnd - pyStart))));
+    const vNorm = ch > 1 ? py / (ch - 1) : tRow;
     const halfBand = r === 0 || r === rows - 1 ? 3 : Math.max(2, Math.floor(ch / 45));
     const bandY0 = Math.max(0, py - halfBand);
     const bandY1 = Math.min(ch, py + halfBand + 1);
@@ -531,8 +552,8 @@ export function buildPointCloudMeshFromAlpha(alphaData, cw, ch, defaultViewbox, 
       }
     }
 
-    const uMin = minOpaqueX !== -1 && maxOpaqueX > minOpaqueX ? minOpaqueX / Math.max(1, cw - 1) : 0.15;
-    const uMax = minOpaqueX !== -1 && maxOpaqueX > minOpaqueX ? maxOpaqueX / Math.max(1, cw - 1) : 0.85;
+    const uMin = minOpaqueX !== -1 && maxOpaqueX > minOpaqueX ? minOpaqueX / Math.max(1, cw - 1) : 0.25;
+    const uMax = minOpaqueX !== -1 && maxOpaqueX > minOpaqueX ? maxOpaqueX / Math.max(1, cw - 1) : 0.75;
     const svgY = vy + vNorm * vh;
     const zone = classifyZone(svgY);
 
@@ -981,7 +1002,7 @@ function warpRealGarmentPhotoToDefaultCanvas(
   sex = 'female'
 ) {
   const env = getGarmentAnatomicalEnvelope(garment, roleKey, sex);
-  const { g, yTop0, yBot0, yCrotchTarget, bottomMetrics, halfWidthAtY, innerLegHalfWidthAtY } = env;
+  const { g, yTop0, yBot0, yCrotchTarget, bottomMetrics, halfWidthAtY } = env;
 
   const outCanvas = document.createElement('canvas');
   outCanvas.width = CANVAS_W;
@@ -1212,10 +1233,10 @@ function warpRealGarmentPhotoToDefaultCanvas(
     centers.sort((a, b) => a - b);
     const topCenterU = centers.length > 0 ? centers[Math.floor(centers.length * 0.5)] : 0.5;
 
-    const targetShoulderHalfW = g.wShoulders * env.easeMult + 2.2;
+    const targetShoulderHalfW = (g.wShoulders + 4.0) * env.easeMult + 2.2;
     const shoulderFullSvgWidth = Math.max(
       52,
-      Math.min(162, (2 * targetShoulderHalfW) / coreShoulderSpanU)
+      Math.min(168, (2 * targetShoulderHalfW) / coreShoulderSpanU)
     );
 
     const dxTop = (g.x0 - topCenterU * shoulderFullSvgWidth) * SCALE;
@@ -1298,23 +1319,53 @@ function warpRealGarmentPhotoToDefaultCanvas(
       const uPelvis = Math.max(0, Math.min(1, (ySvgMid - yTop0) / (g.yHip - yTop0)));
       const sCurve = uPelvis * uPelvis * (3 - 2 * uPelvis);
       fullSliceSvgWidth = waistFullSvgWidth + (pelvisFullSvgWidth - waistFullSvgWidth) * sCurve;
-    } else if (ySvgMid > g.yHip && yBot0 > g.yHip + 1.0) {
-      const uLeg = Math.max(0, Math.min(1, (ySvgMid - g.yHip) / (yBot0 - g.yHip)));
-      const slicePhotoSpanU = Math.max(0.24, smoothU1[s] - smoothU0[s]);
-      const targetLegHalfW = halfWidthAtY(ySvgMid);
-      const legFullSvgWidth = Math.max(
-        48,
-        Math.min(168, (2 * targetLegHalfW) / slicePhotoSpanU)
-      );
-      const sLeg = uLeg * uLeg * (3 - 2 * uLeg);
-      fullSliceSvgWidth = pelvisFullSvgWidth + (legFullSvgWidth - pelvisFullSvgWidth) * sLeg;
     }
 
     const svgLeftX = g.x0 - pelvisCenterU * fullSliceSvgWidth;
     const dx = svgLeftX * SCALE;
     const dw = fullSliceSvgWidth * SCALE;
 
-    ctx.drawImage(cropCanvas, 0, sy, cropW, sh, dx, dy, dw, dh);
+    if (
+      isPantsOrShorts &&
+      ySvgMid > yCrotchTarget &&
+      yBot0 > yCrotchTarget + 2.0
+    ) {
+      // Translate each trouser leg's center slightly outward along the 3D A-stance leg axis
+      // while leaving the original pant leg width, cut, and silhouette 100% untouched!
+      const uLeg = Math.max(0, Math.min(1, (ySvgMid - yCrotchTarget) / (yBot0 - yCrotchTarget)));
+      const stanceShiftSvg = uLeg * (g.isMale ? 5.5 : 7.5);
+      const midPhotoX = Math.max(1, Math.min(cropW - 1, Math.round(pelvisCenterU * cropW)));
+      const midSvgX = svgLeftX + pelvisCenterU * fullSliceSvgWidth;
+      const leftDestW = (midSvgX - svgLeftX) * SCALE;
+      const rightDestW = (svgLeftX + fullSliceSvgWidth - midSvgX) * SCALE;
+
+      // Left leg (shifted left by stanceShiftSvg)
+      ctx.drawImage(
+        cropCanvas,
+        0,
+        sy,
+        midPhotoX,
+        sh,
+        (svgLeftX - stanceShiftSvg) * SCALE,
+        dy,
+        leftDestW,
+        dh
+      );
+      // Right leg (shifted right by stanceShiftSvg)
+      ctx.drawImage(
+        cropCanvas,
+        midPhotoX,
+        sy,
+        cropW - midPhotoX,
+        sh,
+        (midSvgX + stanceShiftSvg) * SCALE,
+        dy,
+        rightDestW,
+        dh
+      );
+    } else {
+      ctx.drawImage(cropCanvas, 0, sy, cropW, sh, dx, dy, dw, dh);
+    }
   }
 
   return outCanvas;
@@ -1388,7 +1439,7 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
     const yCh = g.yChest;
     const yWa = g.yWaist;
     const yHip = g.yHip;
-    const wSh = g.wShoulders + easeSh;
+    const wSh = g.wShoulders + easeSh + (sleeveEndY !== null ? 4.2 : 0.0);
     const wCh = g.wChest + easeCh;
     let wWa = g.wWaist + easeWa;
     if (easeHem >= 10.0) wWa = Math.max(wWa, wCh * 0.95);
@@ -1499,13 +1550,13 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
       const elFrac = Math.max(0.25, Math.min(0.75, (yEl - ySh) / armSpan));
       const frac = Math.min(1.08, Math.max(0.15, (sleeveEndY - ySh) / armSpan));
 
-      const armpitOff = wCh - 1.5;
-      const armpitY = yCh + 6.5;
+      const armpitOff = Math.min(wCh, wWa) - 3.5;
+      const armpitY = Math.min(hemY - 4.0, yCh + 16.0);
 
-      const outElOff = g.wElbowOut + easeSh + (easeHem >= 10.0 ? 1.8 : 0.6);
-      const inElOff = g.wElbowIn - (easeHem >= 10.0 ? 2.4 : 1.2);
-      const outWrOff = g.wWristOut + easeSh * 0.85 + (easeHem >= 10.0 ? 2.8 : 0.8);
-      const inWrOff = Math.min(outWrOff - cuffWidth, g.wWristIn - (easeHem >= 10.0 ? 3.2 : 1.4));
+      const outElOff = g.wElbowOut + easeSh + (easeHem >= 10.0 ? 2.2 : 1.2);
+      const inElOff = g.wElbowIn - (easeHem >= 10.0 ? 3.5 : 2.6);
+      const outWrOff = g.wWristOut + easeSh * 0.85 + (easeHem >= 10.0 ? 3.2 : 1.4);
+      const inWrOff = Math.min(outWrOff - cuffWidth, g.wWristIn - (easeHem >= 10.0 ? 3.6 : 2.2));
 
       let outEndOff;
       let inEndOff;
@@ -1518,18 +1569,18 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
         const tU = frac / elFrac;
         outEndOff = wSh + (outElOff - wSh) * tU;
         inEndOff = Math.min(outEndOff - cuffWidth, armpitOff + (inElOff - armpitOff) * tU);
-        ctrlOut1Off = wSh + 3.5;
-        ctrlOut2Off = outEndOff - 1.2;
-        ctrlIn1Off = inEndOff - 1.0;
-        ctrlIn2Off = armpitOff + 0.8;
+        ctrlOut1Off = wSh + 3.2;
+        ctrlOut2Off = outEndOff + 0.5;
+        ctrlIn1Off = inEndOff - 1.5;
+        ctrlIn2Off = armpitOff;
       } else {
         const tF = (frac - elFrac) / Math.max(0.05, 1.0 - elFrac);
         outEndOff = outElOff + (outWrOff - outElOff) * tF;
         inEndOff = inElOff + (inWrOff - inElOff) * tF;
-        ctrlOut1Off = outElOff - 1.0;
-        ctrlOut2Off = outEndOff + 0.8;
-        ctrlIn1Off = inElOff - 1.2;
-        ctrlIn2Off = armpitOff + 1.5;
+        ctrlOut1Off = outElOff + 0.8;
+        ctrlOut2Off = outEndOff + 1.0;
+        ctrlIn1Off = inElOff - 2.2;
+        ctrlIn2Off = armpitOff - 1.0;
       }
 
       for (const sign of [1, -1]) {
@@ -1538,11 +1589,11 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
         const innerEndX = x0 + sign * inEndOff;
         const innerArmpitX = x0 + sign * armpitOff;
         const sleevePoly = [
-          [x0 + sign * (wSh - Math.min(10.0, cuffWidth * 0.72)), ySh + 1.2],
+          [x0 + sign * (wSh - Math.min(14.0, cuffWidth * 0.95)), ySh],
           [outerShX, ySh - 0.5],
           ...evalCubicBezier(
             [outerShX, ySh - 0.5],
-            [x0 + sign * ctrlOut1Off, ySh + (sleeveEndY - ySh) * 0.42],
+            [x0 + sign * ctrlOut1Off, ySh + (sleeveEndY - ySh) * 0.38],
             [x0 + sign * ctrlOut2Off, sleeveEndY - 6.0],
             [outerEndX, sleeveEndY],
             16
@@ -1556,8 +1607,8 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
           ),
           ...evalCubicBezier(
             [innerEndX, sleeveEndY + 1.5],
-            [x0 + sign * ctrlIn1Off, armpitY + (sleeveEndY - armpitY) * 0.52],
-            [x0 + sign * ctrlIn2Off, armpitY + 6.0],
+            [x0 + sign * ctrlIn1Off, armpitY + (sleeveEndY - armpitY) * 0.45],
+            [x0 + sign * ctrlIn2Off, armpitY + 4.0],
             [innerArmpitX, armpitY],
             14
           ),
@@ -1571,22 +1622,19 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
   const buildTrousersPoly = (isLoose = false) => {
     const bm = getBottomRiseAndCrotchMetrics(garment, g);
     const x0 = g.x0;
-    // Top position varies by style between yWaist (upper limit) and yHip (lower limit)
     const yTop = bm.yTop0;
     const yHip = g.yHip;
-    // Crunch (crotch) barrier: never higher than avatar's g.yCrotch
     const yCr = bm.yCrotchTarget;
     const yKn = g.yKnees;
     const yAn = g.yAnkles + 3.0;
 
-    // Top hem width fits avatar's exact body width at yTop (waist width at yWaist -> hip width at yHip)
     const wTop = bm.avatarPelvisHalfWidthAtY(yTop) + 1.2;
-    const wHip = g.wHip + (isLoose ? 3.4 : 1.8);
-    const wOutKn = g.wOuterKnee + (isLoose ? 5.5 : 2.4);
-    const wOutAn = g.wOuterAnkle + (isLoose ? 5.5 : 2.2);
-    const wInKn = Math.max(2.2, g.wInnerKnee - (isLoose ? 3.4 : 2.0));
-    const wInAn = Math.max(2.2, g.wInnerAnkle - (isLoose ? 3.6 : 2.2));
-    const wCalfOut = Math.max(wOutKn, 44.2) + (isLoose ? 4.5 : 2.6);
+    const isChino = /\b(chino|slim|tapered)\b/i.test(text);
+    const wHip = g.wHip + (isLoose ? 3.6 : isChino ? 2.0 : 2.4);
+    const wOutKn = isLoose ? 46.8 : isChino ? 44.6 : 45.2;
+    const wOutAn = isLoose ? 47.2 : isChino ? (g.isMale ? 43.2 : 43.8) : 44.8;
+    const wInKn = isLoose ? (g.isMale ? 11.5 : 12.5) : isChino ? (g.isMale ? 14.0 : 15.2) : (g.isMale ? 13.2 : 14.5);
+    const wInAn = isLoose ? (g.isMale ? 14.5 : 18.5) : isChino ? (g.isMale ? 18.2 : 23.2) : (g.isMale ? 16.8 : 21.5);
 
     const ptsR = [[x0, yTop], [x0 + wTop, yTop]];
     if (yTop < yHip - 1.0) {
@@ -1605,30 +1653,30 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
     ptsR.push(
       ...evalCubicBezier(
         [x0 + wHip, yHip],
-        [x0 + wHip + 1.0, yHip + (yKn - yHip) * 0.38],
-        [x0 + wOutKn - 0.5, yKn - 12.0],
+        [x0 + wHip + (wOutKn - wHip) * 0.38, yHip + (yKn - yHip) * 0.36],
+        [x0 + wOutKn - (wOutKn - wHip) * 0.15, yKn - (yKn - yHip) * 0.28],
         [x0 + wOutKn, yKn],
         16
       ),
       ...evalCubicBezier(
         [x0 + wOutKn, yKn],
-        [x0 + wCalfOut, yKn + (yAn - yKn) * 0.34],
-        [x0 + Math.max(wOutAn + 2.5, wCalfOut - 2.0), yAn - (yAn - yKn) * 0.28],
+        [x0 + wOutKn + (wOutAn - wOutKn) * 0.32, yKn + (yAn - yKn) * 0.34],
+        [x0 + wOutKn + (wOutAn - wOutKn) * 0.68, yAn - (yAn - yKn) * 0.32],
         [x0 + wOutAn, yAn],
         16
       ),
       [x0 + wInAn, yAn],
       ...evalCubicBezier(
         [x0 + wInAn, yAn],
-        [x0 + wInAn - 1.5, yAn - (yAn - yKn) * 0.32],
-        [x0 + wInKn - 1.2, yKn + (yAn - yKn) * 0.32],
+        [x0 + wInKn + (wInAn - wInKn) * 0.60, yAn - (yAn - yKn) * 0.34],
+        [x0 + wInKn + (wInAn - wInKn) * 0.18, yKn + (yAn - yKn) * 0.34],
         [x0 + wInKn, yKn],
         16
       ),
       ...evalCubicBezier(
         [x0 + wInKn, yKn],
-        [x0 + wInKn * 0.55, yKn - (yKn - yCr) * 0.38],
-        [x0 + 1.2, yCr + (yKn - yCr) * 0.28],
+        [x0 + wInKn * 0.52, yKn - (yKn - yCr) * 0.42],
+        [x0 + 0.6, yCr + (yKn - yCr) * 0.22],
         [x0, yCr],
         16
       )
@@ -1948,7 +1996,7 @@ export function fitClosetGarmentToDefaultAvatar(garment, loadedImg, roleKey = 't
   }
 
   const hasLoadedImg = Boolean(loadedImg && (loadedImg.naturalWidth || loadedImg.width) > 16);
-  const cacheKey = `v3::${sex}::${roleKey}::img:${hasLoadedImg ? 1 : 0}::${garment.id || ''}::${garment.url || ''}::${garment.category || ''}::${garment.sub_category || ''}::${garment.color || ''}`;
+  const cacheKey = `v4::${sex}::${roleKey}::img:${hasLoadedImg ? 1 : 0}::${garment.id || ''}::${garment.url || ''}::${garment.category || ''}::${garment.sub_category || ''}::${garment.color || ''}`;
   if (fittedClosetGarmentCache.has(cacheKey)) {
     return fittedClosetGarmentCache.get(cacheKey);
   }

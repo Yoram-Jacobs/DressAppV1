@@ -204,8 +204,9 @@ export function getFullAvatarAnatomy({
   const numHip = Math.max(68, Math.min(148, Number(hip) || 96));
   const numArm = Math.max(42, Math.min(85, Number(armLength) || 60));
   const numIns = Math.max(52, Math.min(100, Number(inseam) || 78));
-  const numFoot = Math.max(19, Math.min(33, Number(footLength) || (String(gender).toLowerCase() === 'male' ? 27.0 : 24.5)));
   const isMale = String(gender).toLowerCase() === 'male';
+  const _numFoot = Math.max(19, Math.min(33, Number(footLength) || (isMale ? 27.0 : 24.5)));
+  void _numFoot;
 
   const X0 = 100;
   const viewBoxHeight = 450;
@@ -235,28 +236,46 @@ export function getFullAvatarAnatomy({
   const yWrist = yShoulders + armSvg * 0.81;
   const yHandTip = yShoulders + armSvg;
 
+  const morph = computeMorphInfluences({
+    height: numH,
+    shoulders: numSh,
+    chest: numCh,
+    waist: numW,
+    hip: numHip,
+    armLength: numArm,
+    inseam: numIns,
+    isMale,
+  });
+
   const DIVISOR = 2.65;
   const wShoulders = isMale ? (numSh * 1.00) : (numSh * 0.99);
   const wChest = isMale ? ((numCh / DIVISOR) * 0.91) : ((numCh / DIVISOR) * 0.83);
-  const wWaist = isMale ? ((numW / DIVISOR) * 0.985) : ((numW / DIVISOR) * 0.99);
-  const wHip = isMale ? ((numHip / DIVISOR) * 1.063) : ((numHip / DIVISOR) * 1.088);
+  const wWaist = isMale
+    ? Math.max((numW / DIVISOR) * 0.985, 30.80 + 4.35 * morph.heavy - 2.83 * morph.thin + 0.82 * morph.waist_thick - 3.30 * morph.waist_thin + 2.72 * morph.shoulders_narrow)
+    : Math.max((numW / DIVISOR) * 0.99, 25.60 + 1.80 * morph.heavy - 1.50 * morph.thin);
+  const wHip = isMale
+    ? Math.max((numHip / DIVISOR) * 1.063, 38.51 + 5.99 * morph.heavy - 2.65 * morph.thin + 5.46 * morph.hips_wide - 5.58 * morph.hips_narrow + 5.98 * morph.shoulders_narrow)
+    : Math.max((numHip / DIVISOR) * 1.088, 38.60 + 7.50 * morph.heavy - 1.99 * morph.thin + 4.26 * morph.hips_wide - 4.10 * morph.hips_narrow + 6.95 * morph.shoulders_narrow);
   const shScale = numSh / (isMale ? 44.0 : 38.0);
   const wNeck = (isMale ? 12.5 : 10.2) * Math.max(0.85, Math.min(1.22, shScale));
 
-  const hipScale = wHip / (isMale ? 38.51 : 38.60);
-  const wOuterKnee = isMale ? (wHip * 1.078) : (wHip * 1.057);
-  const wInnerKnee = isMale ? 16.8 : 16.5;
-  const wOuterAnkle = (isMale ? 38.2 : 41.5) * Math.max(0.90, Math.min(1.12, 0.7 + 0.3 * hipScale));
-  const wInnerAnkle = isMale ? 23.0 : 28.5;
+  const wOuterKnee = isMale
+    ? (41.60 + 1.30 * morph.heavy - 1.25 * morph.thin + 1.20 * morph.hips_wide)
+    : (40.81 + 1.00 * morph.heavy - 1.74 * morph.thin + 2.54 * morph.hips_wide - 1.59 * morph.hips_narrow);
+  const wInnerKnee = isMale ? 15.8 : 16.5;
+  const wOuterAnkle = isMale
+    ? (38.20 + 0.42 * morph.heavy + 0.50 * morph.hips_wide)
+    : (41.80 + 2.55 * morph.hips_wide - 1.59 * morph.hips_narrow);
+  const wInnerAnkle = isMale ? 22.2 : 28.2;
 
-  const refFoot = isMale ? 27.0 : 24.5;
-  const footScale = Math.max(0.88, Math.min(1.18, numFoot / refFoot));
-  const wFootTip = (isMale ? 42.5 : 45.8) * footScale;
+  const wFootTip = isMale
+    ? (42.50 + 0.35 * morph.heavy + 0.50 * morph.hips_wide)
+    : (45.80 + 2.50 * morph.hips_wide - 1.55 * morph.hips_narrow);
   const wFootHeel = isMale ? 20.0 : 26.2;
 
-  const wElbowOut = wShoulders + (isMale ? 13.0 : 11.4);
+  const wElbowOut = wShoulders + (isMale ? 13.4 : 11.6) + 2.5 * morph.heavy;
   const wElbowIn = wShoulders - (isMale ? 7.8 : 7.4);
-  const wWristOut = wShoulders + (isMale ? 17.0 : 18.4);
+  const wWristOut = wShoulders + (isMale ? 17.2 : 18.4) + 2.0 * morph.heavy;
   const wWristIn = wShoulders + (isMale ? 6.2 : 9.6);
 
   const shoulderYPercent = (yShoulders / viewBoxHeight) * 100;
@@ -438,7 +457,7 @@ export function getAvatarGeometry({
   };
 }
 
-function computeMorphInfluences({
+export function computeMorphInfluences({
   height,
   shoulders,
   chest,

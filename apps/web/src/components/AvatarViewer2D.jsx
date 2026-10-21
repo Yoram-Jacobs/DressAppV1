@@ -642,21 +642,40 @@ const loadedOnboardingImageCache = new Map();
 
 export function resolveOnboardingAvatarFit(garment) {
   if (!garment) return null;
-  if (garment.avatar_fit && garment.avatar_fit.default_viewbox) {
-    return garment.avatar_fit;
-  }
   if (garment.id && ONBOARDING_DATASET_BY_ID[garment.id]?.avatar_fit) {
     return ONBOARDING_DATASET_BY_ID[garment.id].avatar_fit;
   }
-  const urlStr = String(garment.url || '');
+  const urlStr = String(garment.url || garment.image_url || '');
   const match = urlStr.match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg)/i);
   if (match && match[1] && ONBOARDING_DATASET_BY_ID[match[1]]?.avatar_fit) {
     return ONBOARDING_DATASET_BY_ID[match[1]].avatar_fit;
   }
+  const cleanUrl = urlStr.split('?')[0];
   const byTitle = ONBOARDING_STATIC_DATASET.find(
-    (it) => it.image_url === urlStr || (garment.name && it.name === garment.name)
+    (it) =>
+      String(it.image_url || '').split('?')[0] === cleanUrl ||
+      (garment.name && it.name === garment.name)
   );
-  return byTitle?.avatar_fit || null;
+  if (byTitle?.avatar_fit) {
+    return byTitle.avatar_fit;
+  }
+  if (garment.avatar_fit && garment.avatar_fit.default_viewbox) {
+    return garment.avatar_fit;
+  }
+  return null;
+}
+
+function resolveEffectiveGarmentUrl(garment) {
+  const rawUrl = String(garment?.url || garment?.image_url || '');
+  if (!rawUrl) return '';
+  if (garment?.id && ONBOARDING_DATASET_BY_ID[garment.id]?.image_url) {
+    return ONBOARDING_DATASET_BY_ID[garment.id].image_url;
+  }
+  const match = rawUrl.match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg)/i);
+  if (match && match[1] && ONBOARDING_DATASET_BY_ID[match[1]]?.image_url) {
+    return ONBOARDING_DATASET_BY_ID[match[1]].image_url;
+  }
+  return rawUrl;
 }
 
 /**
@@ -671,18 +690,18 @@ function FittedGarmentLayer({
   avatarFit,
   liveAnatomy,
   roleKey,
-  hasOuterwear = false,
   clickable = false,
   onClick,
   zIndexClass = 'z-[20]',
   altText = 'Garment',
 }) {
   const canvasRef = useRef(null);
+  const effectiveUrl = useMemo(() => resolveEffectiveGarmentUrl(garment), [garment]);
   const [loadedImg, setLoadedImg] = useState(
-    () => (garment?.url && loadedOnboardingImageCache.get(garment.url)) || null
+    () => (effectiveUrl && loadedOnboardingImageCache.get(effectiveUrl)) || null
   );
   const [imgDone, setImgDone] = useState(
-    () => Boolean(garment?.url && loadedOnboardingImageCache.has(garment.url))
+    () => Boolean(effectiveUrl && loadedOnboardingImageCache.has(effectiveUrl))
   );
 
   const defaultSex = useMemo(
@@ -697,7 +716,7 @@ function FittedGarmentLayer({
 
   useEffect(() => {
     let mounted = true;
-    const src = garment?.url;
+    const src = effectiveUrl;
     if (!src) {
       setImgDone(true);
       return;
@@ -726,7 +745,7 @@ function FittedGarmentLayer({
     return () => {
       mounted = false;
     };
-  }, [garment?.url]);
+  }, [effectiveUrl]);
 
   const dynamicClosetFit = useMemo(() => {
     if (avatarFit?.default_viewbox) return null;
@@ -743,10 +762,9 @@ function FittedGarmentLayer({
     : dynamicClosetFit?.imageSource || loadedImg;
 
   const layerEaseMultiplier = useMemo(() => {
-    if (roleKey === 'outerwear') return 1.045;
-    if (roleKey === 'top' && hasOuterwear) return 0.965;
+    if (roleKey === 'outerwear') return 1.02;
     return 1.0;
-  }, [roleKey, hasOuterwear]);
+  }, [roleKey]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -820,7 +838,7 @@ function FittedGarmentLayer({
 
       ctx.drawImage(activeImageSource, 0, sy, natW, sh, dx, dy, dw, dh);
     }
-  }, [activeImageSource, activeAvatarFit, defaultAnatomy, liveAnatomy, layerEaseMultiplier]);
+  }, [activeImageSource, activeAvatarFit, defaultAnatomy, liveAnatomy, layerEaseMultiplier, roleKey]);
 
   const fallbackBox = useMemo(() => {
     const vb = activeAvatarFit?.default_viewbox || { x: 55, y: 75, width: 90, height: 150 };
@@ -856,9 +874,9 @@ function FittedGarmentLayer({
         className="w-full h-full overflow-visible"
         style={{ maxHeight: '100%' }}
       >
-        {!activeImageSource && garment?.url && (
+        {!activeImageSource && effectiveUrl && (
           <image
-            href={garment.url}
+            href={effectiveUrl}
             x={fallbackBox.x}
             y={fallbackBox.y}
             width={fallbackBox.width}
@@ -898,12 +916,13 @@ function PointCloudMeshOverlay({ garments = {}, liveAnatomy }) {
 
     slots.forEach((slot) => {
       const g = garments[slot];
-      if (!g || !g.url) return;
+      if (!g || (!g.url && !g.image_url)) return;
+      const effUrl = resolveEffectiveGarmentUrl(g);
       const fit =
         resolveOnboardingAvatarFit(g) ||
         fitClosetGarmentToDefaultAvatar(
           g,
-          loadedOnboardingImageCache.get(g.url) || null,
+          loadedOnboardingImageCache.get(effUrl) || null,
           slot,
           defaultSex
         )?.avatarFit;
@@ -911,8 +930,7 @@ function PointCloudMeshOverlay({ garments = {}, liveAnatomy }) {
       if (!pc || !Array.isArray(pc.vertices) || pc.vertices.length === 0) return;
 
       const defAnat = getDefaultAvatarAnatomy(fit.default_sex || defaultSex);
-      const easeMult =
-        slot === 'outerwear' ? 1.045 : slot === 'top' && garments.outerwear ? 0.965 : 1.0;
+      const easeMult = slot === 'outerwear' ? 1.02 : 1.0;
 
       const vertices = pc.vertices.map((v) => {
         const wVert = warpDefaultAvatarPoint(v.svg_x, v.svg_y, defAnat, liveAnatomy);

@@ -242,7 +242,7 @@ def build_smooth_torso_and_sleeves_path(
     """
     Builds non-self-intersecting, butter-smooth Cubic Bezier polygons covering
     the torso + resting left/right sleeves matching `DynamicAvatar.jsx`'s exact
-    Bezier body and arm curves. Returning separate torso and sleeve polygons
+    3D MB-Lab body and arm contours. Returning separate torso and sleeve polygons
     prevents PIL's even-odd polygon fill rule from creating transparent cutouts
     where the lower sleeve overlaps the hip contour.
     """
@@ -254,7 +254,7 @@ def build_smooth_torso_and_sleeves_path(
     y_wa = g["yWaist"]
     y_hip = g["yHip"]
     w_neck = g["wNeck"] + neck_width_extra
-    w_sh = g["wShoulders"] + ease_sh
+    w_sh = g["wShoulders"] + ease_sh + (4.2 if sleeve_end_y is not None else 0.0)
     w_ch = g["wChest"] + ease_ch
     w_wa = g["wWaist"] + ease_wa
     # Flowing robes (abaya, kaftan, thobe) drape smoothly without a tight waist pinch
@@ -288,8 +288,8 @@ def build_smooth_torso_and_sleeves_path(
     torso_r.extend(
         cubic_bezier(
             p_neck_r,
-            (x0 + w_collar_anchor + (w_sh - w_collar_anchor) * 0.48, y_chin + neck_height * 0.30),
-            (x0 + w_sh * 0.82, y_sh - 2.5),
+            (x0 + w_collar_anchor + (w_sh - w_collar_anchor) * 0.48, y_chin + neck_height * 0.25),
+            (x0 + w_sh * 0.86, y_sh - 3.5),
             p_sh_r,
             18,
         )
@@ -297,8 +297,8 @@ def build_smooth_torso_and_sleeves_path(
     torso_r.extend(
         cubic_bezier(
             p_sh_r,
-            (x0 + w_sh + 1.0, y_sh + 9.0),
-            (x0 + w_ch + 1.2, y_ch - 5.0),
+            (x0 + w_sh + 1.5, y_sh + 10.0),
+            (x0 + w_ch + 1.5, y_ch - 5.0),
             p_ch_r,
             18,
         )
@@ -306,8 +306,8 @@ def build_smooth_torso_and_sleeves_path(
     torso_r.extend(
         cubic_bezier(
             p_ch_r,
-            (x0 + w_ch - (1.0 if is_male else 2.2), y_ch + (y_wa - y_ch) * 0.5),
-            (x0 + w_wa + (1.2 if is_male else -1.2), y_wa - 7.0),
+            (x0 + w_ch - (0.6 if is_male else 1.2), y_ch + (y_wa - y_ch) * 0.5),
+            (x0 + w_wa + (1.2 if is_male else 0.0), y_wa - 7.0),
             p_wa_r,
             20,
         )
@@ -319,8 +319,8 @@ def build_smooth_torso_and_sleeves_path(
         torso_r.extend(
             cubic_bezier(
                 p_wa_r,
-                (x0 + w_wa + (1.0 if is_male else 3.5), y_wa + (hem_y - y_wa) * 0.45),
-                (x0 + w_hem + 0.8, hem_y - 6.0),
+                (x0 + w_wa + (1.2 if is_male else 3.5), y_wa + (hem_y - y_wa) * 0.45),
+                (x0 + w_hem + 1.0, hem_y - 6.0),
                 p_hem_r,
                 20,
             )
@@ -330,7 +330,7 @@ def build_smooth_torso_and_sleeves_path(
         torso_r.extend(
             cubic_bezier(
                 p_wa_r,
-                (x0 + w_wa + (1.0 if is_male else 3.5), y_wa + (y_hip - y_wa) * 0.5),
+                (x0 + w_wa + (1.2 if is_male else 3.5), y_wa + (y_hip - y_wa) * 0.5),
                 (x0 + w_hip + 1.5, y_hip - 7.0),
                 p_hip_r,
                 18,
@@ -374,32 +374,33 @@ def build_smooth_torso_and_sleeves_path(
         el_frac = max(0.25, min(0.75, (y_el - y_sh) / arm_span))
         frac = min(1.08, max(0.15, (sleeve_end_y - y_sh) / arm_span))
 
-        armpit_x = x0 + w_ch - 1.5
-        armpit_y = y_ch + 6.5
+        # Anchor armpit deep inside the torso side-seam down near y_wa - 4 so zero bare skin shows in armpit
+        armpit_x = x0 + min(w_ch, w_wa) - 3.5
+        armpit_y = min(hem_y - 4.0, y_ch + 16.0)
 
-        out_el_x = x0 + g["wElbowOut"] + ease_sh + (1.8 if ease_hem >= 10.0 else 0.6)
-        in_el_x = x0 + g["wElbowIn"] - (2.4 if ease_hem >= 10.0 else 1.2)
-        out_wr_x = x0 + g["wWristOut"] + ease_sh * 0.85 + (2.8 if ease_hem >= 10.0 else 0.8)
-        in_wr_x = min(out_wr_x - cuff_width, x0 + g["wWristIn"] - (3.2 if ease_hem >= 10.0 else 1.4))
+        out_el_x = x0 + g["wElbowOut"] + ease_sh + (2.2 if ease_hem >= 10.0 else 1.2)
+        in_el_x = x0 + g["wElbowIn"] - (3.5 if ease_hem >= 10.0 else 2.6)
+        out_wr_x = x0 + g["wWristOut"] + ease_sh * 0.85 + (3.2 if ease_hem >= 10.0 else 1.4)
+        in_wr_x = min(out_wr_x - cuff_width, x0 + g["wWristIn"] - (3.6 if ease_hem >= 10.0 else 2.2))
 
         if frac <= el_frac:
             t_u = frac / el_frac
             out_end_x = (x0 + w_sh) + (out_el_x - (x0 + w_sh)) * t_u
             in_end_x = min(out_end_x - cuff_width, armpit_x + (in_el_x - armpit_x) * t_u)
-            ctrl_out_1 = (x0 + w_sh + 3.5, y_sh + (sleeve_end_y - y_sh) * 0.38)
-            ctrl_out_2 = (out_end_x - 1.2, sleeve_end_y - 5.0)
-            ctrl_in_1 = (in_end_x - 1.0, armpit_y + (sleeve_end_y - armpit_y) * 0.55)
-            ctrl_in_2 = (armpit_x + 0.8, armpit_y + 4.0)
+            ctrl_out_1 = (x0 + w_sh + 3.2, y_sh + (sleeve_end_y - y_sh) * 0.35)
+            ctrl_out_2 = (out_end_x + 0.5, sleeve_end_y - 4.0)
+            ctrl_in_1 = (in_end_x - 1.5, armpit_y + (sleeve_end_y - armpit_y) * 0.55)
+            ctrl_in_2 = (armpit_x, armpit_y + 2.0)
         else:
             t_f = (frac - el_frac) / max(0.05, 1.0 - el_frac)
             out_end_x = out_el_x + (out_wr_x - out_el_x) * t_f
             in_end_x = in_el_x + (in_wr_x - in_el_x) * t_f
-            ctrl_out_1 = (out_el_x - 1.0, y_sh + (sleeve_end_y - y_sh) * 0.45)
-            ctrl_out_2 = (out_end_x + 0.8, sleeve_end_y - 8.0)
-            ctrl_in_1 = (in_el_x - 1.2, armpit_y + (sleeve_end_y - armpit_y) * 0.52)
-            ctrl_in_2 = (armpit_x + 1.5, armpit_y + 8.0)
+            ctrl_out_1 = (out_el_x + 0.8, y_sh + (sleeve_end_y - y_sh) * 0.38)
+            ctrl_out_2 = (out_end_x + 1.0, sleeve_end_y - 8.0)
+            ctrl_in_1 = (in_el_x - 2.2, armpit_y + (sleeve_end_y - armpit_y) * 0.45)
+            ctrl_in_2 = (armpit_x - 1.0, armpit_y + 4.0)
 
-        p_sh_inner = (x0 + w_sh - min(10.0, cuff_width * 0.72), y_sh + 1.2)
+        p_sh_inner = (x0 + w_sh - min(14.0, cuff_width * 0.95), y_sh)
         p_sleeve_out = (out_end_x, sleeve_end_y)
         p_sleeve_in = (in_end_x, sleeve_end_y + 1.5)
         p_armpit = (armpit_x, armpit_y)
@@ -443,22 +444,26 @@ def build_smooth_trousers_path(
     g: dict[str, float],
     *,
     is_loose: bool = False,
+    cut_style: str | None = None,
     rise_ratio: float = 0.0,
 ) -> list[tuple[float, float]]:
     """
     Builds a smooth Cubic Bezier contour for Trousers/Pants/Chinos/Jeans
     where the top hem position varies by style between `yWaist` (upper limit,
     `rise_ratio=0.0`) and `yHip` (lower limit, `rise_ratio=1.0`), the top hem
-    width fits the avatar's exact body width at `y_top`, and the crunch (crotch)
-    point is never higher than the avatar's `yCrotch`.
+    width fits the avatar's exact body width at `y_top`, the crunch (crotch)
+    point is never higher than the avatar's `yCrotch`, and the legs preserve
+    their authentic tailored/straight/wide/chino silhouette without wrapping
+    around the calf like leggings.
     """
     x0 = g["x0"]
     is_male = bool(g["is_male"])
+    style = cut_style or ("wide" if is_loose else "straight")
     rr = max(0.0, min(1.0, float(rise_ratio)))
     y_wa_base = g["yWaist"]
     y_hip = g["yHip"]
     y_top = y_wa_base + rr * (y_hip - y_wa_base)
-    y_cr = max(g["yCrotch"], g["yCrotch"] + (3.2 if is_loose else 1.2))
+    y_cr = max(g["yCrotch"], g["yCrotch"] + (3.2 if style == "wide" else 1.2))
     y_kn = g["yKnees"]
     y_an = g["yAnkles"] + 3.0
 
@@ -466,12 +471,26 @@ def build_smooth_trousers_path(
     s_pelvis = rr * rr * (3.0 - 2.0 * rr)
     avatar_w_at_top = g["wWaist"] + (g["wHip"] - g["wWaist"]) * s_pelvis
     w_top = avatar_w_at_top + 1.2
-    w_hip = g["wHip"] + (3.4 if is_loose else 1.8)
-    w_okn = g["wOuterKnee"] + (5.5 if is_loose else 2.4)
-    w_oan = g["wOuterAnkle"] + (5.5 if is_loose else 2.2)
-    w_ikn = max(2.2, g["wInnerKnee"] - (3.4 if is_loose else 2.0))
-    w_ian = max(2.2, g["wInnerAnkle"] - (3.6 if is_loose else 2.2))
-    w_calf_out = max(w_okn, 44.2) + (4.5 if is_loose else 2.6)
+
+    if style == "wide":
+        w_hip = g["wHip"] + 3.6
+        w_okn = 46.8
+        w_oan = 47.2
+        w_ikn = 11.5 if is_male else 12.5
+        w_ian = 14.5 if is_male else 18.5
+    elif style == "chino":
+        w_hip = g["wHip"] + 2.0
+        w_okn = 44.6
+        w_oan = 43.2 if is_male else 43.8
+        w_ikn = 14.0 if is_male else 15.2
+        w_ian = 18.2 if is_male else 23.2
+    else:
+        # "straight" / tailored trousers / classic jeans
+        w_hip = g["wHip"] + 2.4
+        w_okn = 45.2
+        w_oan = 44.8
+        w_ikn = 13.2 if is_male else 14.5
+        w_ian = 16.8 if is_male else 21.5
 
     right_pts: list[tuple[float, float]] = []
     p_top_c = (x0, y_top)
@@ -501,22 +520,22 @@ def build_smooth_trousers_path(
         )
     else:
         right_pts.append(p_hip_r)
-    # Hip -> Outer Knee
+    # Hip -> Outer Knee (straight tailored drape)
     right_pts.extend(
         cubic_bezier(
             p_hip_r,
-            (x0 + w_hip + 1.0, y_hip + (y_kn - y_hip) * 0.38),
-            (x0 + w_okn - 0.5, y_kn - 12.0),
+            (x0 + w_hip + (w_okn - w_hip) * 0.38, y_hip + (y_kn - y_hip) * 0.36),
+            (x0 + w_okn - (w_okn - w_hip) * 0.15, y_kn - (y_kn - y_hip) * 0.28),
             p_okn_r,
             22,
         )
     )
-    # Outer Knee -> Outer Ankle (curving out around 3D gastrocnemius/calf)
+    # Outer Knee -> Outer Ankle (clean straight trouser line, no bulbous calf wrap)
     right_pts.extend(
         cubic_bezier(
             p_okn_r,
-            (x0 + w_calf_out, y_kn + (y_an - y_kn) * 0.34),
-            (x0 + max(w_oan + 2.5, w_calf_out - 2.0), y_an - (y_an - y_kn) * 0.28),
+            (x0 + w_okn + (w_oan - w_okn) * 0.32, y_kn + (y_an - y_kn) * 0.34),
+            (x0 + w_okn + (w_oan - w_okn) * 0.68, y_an - (y_an - y_kn) * 0.32),
             p_oan_r,
             22,
         )
@@ -531,22 +550,22 @@ def build_smooth_trousers_path(
             10,
         )
     )
-    # Inner Ankle -> Inner Knee
+    # Inner Ankle -> Inner Knee (clean straight inner trouser seam clearing the 15.67 male calf)
     right_pts.extend(
         cubic_bezier(
             p_ian_r,
-            (x0 + w_ian - 1.5, y_an - (y_an - y_kn) * 0.32),
-            (x0 + w_ikn - 1.2, y_kn + (y_an - y_kn) * 0.32),
+            (x0 + w_ikn + (w_ian - w_ikn) * 0.60, y_an - (y_an - y_kn) * 0.34),
+            (x0 + w_ikn + (w_ian - w_ikn) * 0.18, y_kn + (y_an - y_kn) * 0.34),
             p_ikn_r,
             20,
         )
     )
-    # Inner Knee -> Crotch (hugging 3D inner thigh)
+    # Inner Knee -> Crotch (covering the 3D upper inner thigh at y=258..288)
     right_pts.extend(
         cubic_bezier(
             p_ikn_r,
-            (x0 + w_ikn * 0.55, y_kn - (y_kn - y_cr) * 0.38),
-            (x0 + 1.2, y_cr + (y_kn - y_cr) * 0.28),
+            (x0 + w_ikn * 0.52, y_kn - (y_kn - y_cr) * 0.42),
+            (x0 + 0.6, y_cr + (y_kn - y_cr) * 0.22),
             p_cr,
             18,
         )
@@ -951,13 +970,20 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
                     )
         else:
             is_loose = "loose" in item_id or "relaxed" in item_id
-            if "tailored" in item_id or "palazzo" in item_id:
+            if is_loose:
+                cut_style = "wide"
+            elif "chinos" in item_id:
+                cut_style = "chino"
+            else:
+                cut_style = "straight"
+
+            if "tailored" in item_id or "palazzo" in item_id or "dress" in item_id:
                 rise_ratio = 0.0
             elif "relaxed" in item_id:
                 rise_ratio = 0.62
             else:
                 rise_ratio = 0.35
-            pant_pts = build_smooth_trousers_path(g, is_loose=is_loose, rise_ratio=rise_ratio)
+            pant_pts = build_smooth_trousers_path(g, is_loose=is_loose, cut_style=cut_style, rise_ratio=rise_ratio)
             poly(pant_pts, base_rgb, outline=seam_rgb, width=2)
             y_top_pant = y_wa + rise_ratio * (y_hip - y_wa)
             s_pelvis = rise_ratio * rise_ratio * (3.0 - 2.0 * rise_ratio)
@@ -976,9 +1002,18 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
             line([(x0, y_top_pant + 4.5), (x0, y_cr + 1.2)], seam_rgb, width=2)
             circle(x0, y_top_pant + 2.2, 1.3, trim_rgb)
             if "trousers" in item_id or "chinos" in item_id:
+                is_m = bool(g["is_male"])
+                if cut_style == "chino":
+                    w_okn_c, w_ikn_c = 44.6, (14.0 if is_m else 15.2)
+                    w_oan_c, w_ian_c = (43.2 if is_m else 43.8), (18.2 if is_m else 23.2)
+                else:
+                    w_okn_c, w_ikn_c = 45.2, (13.2 if is_m else 14.5)
+                    w_oan_c, w_ian_c = 44.8, (16.8 if is_m else 21.5)
                 for sign in (-1.0, 1.0):
-                    cx_leg = x0 + sign * ((g["wOuterKnee"] + g["wInnerKnee"]) * 0.5)
-                    line([(cx_leg, y_hip + 4.0), (cx_leg, y_an + 2.0)], seam_rgb, width=1)
+                    cx_hip = x0 + sign * (g["wHip"] * 0.52)
+                    cx_kn = x0 + sign * ((w_okn_c + w_ikn_c) * 0.5)
+                    cx_an = x0 + sign * ((w_oan_c + w_ian_c) * 0.5)
+                    line([(cx_hip, y_hip + 4.0), (cx_kn, y_kn), (cx_an, y_an + 2.0)], seam_rgb, width=1)
 
     # =========================================================================
     # 3. TOPS
@@ -1130,6 +1165,15 @@ def build_point_cloud_mesh(
     rows = 8 if spec["category"] != "Footwear" else 4
     cols = 5
 
+    # Find vertical range of actual opaque pixels (skipping 4px transparent crop padding)
+    opaque_ys = np.where((alpha_crop > 25).any(axis=1))[0]
+    if len(opaque_ys) >= 2:
+        py_start = int(opaque_ys[0]) + 1
+        py_end = max(py_start + 1, int(opaque_ys[-1]) - 1)
+    else:
+        py_start = 0
+        py_end = max(1, ch - 1)
+
     vertices: list[dict[str, Any]] = []
     grid_idx: dict[tuple[int, int], int] = {}
 
@@ -1149,8 +1193,9 @@ def build_point_cloud_mesh(
         return "feet"
 
     for r in range(rows):
-        v_norm = r / float(rows - 1)
-        py = min(ch - 1, max(0, int(round(v_norm * (ch - 1)))))
+        t_row = r / float(rows - 1)
+        py = min(ch - 1, max(0, int(round(py_start + t_row * (py_end - py_start)))))
+        v_norm = py / float(max(1, ch - 1))
         half_band = 3 if r in (0, rows - 1) else max(2, ch // 45)
         band_y0 = max(0, py - half_band)
         band_y1 = min(ch, py + half_band + 1)
@@ -1159,7 +1204,7 @@ def build_point_cloud_mesh(
             u_min = float(opaque_xs[0]) / max(1, cw - 1)
             u_max = float(opaque_xs[-1]) / max(1, cw - 1)
         else:
-            u_min, u_max = 0.15, 0.85
+            u_min, u_max = 0.25, 0.75
 
         svg_y = vy + v_norm * vh
         zone = classify_zone(svg_y)
@@ -1243,9 +1288,10 @@ def main() -> None:
             alpha_crop=np.array(cropped)[:, :, 3],
         )
 
-        item["image_url"] = f"/assets/onboarding/{item_id}.png"
+        item["image_url"] = f"/assets/onboarding/{item_id}.png?v=3d2"
         item["avatar_fit"] = {
             "fitted_to_default_avatar": True,
+            "avatar_version": "3d_v2",
             "default_sex": item["sex"],
             "default_viewbox": default_viewbox,
             "point_cloud": point_cloud,
