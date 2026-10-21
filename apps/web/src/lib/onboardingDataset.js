@@ -74,10 +74,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 53.0,
-        "y": 103.0,
-        "width": 94.0,
-        "height": 299.0
+        "x": 37.0,
+        "y": 100.5,
+        "width": 126.5,
+        "height": 301.5
       },
       "point_cloud": {
         "rows": 8,
@@ -86,8 +86,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 67.1,
-            "svg_y": 103.0,
+            "svg_x": 55.97,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -95,8 +95,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 83.55,
-            "svg_y": 103.0,
+            "svg_x": 78.11,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -104,8 +104,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_x": 100.25,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -113,8 +113,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 116.45,
-            "svg_y": 103.0,
+            "svg_x": 122.39,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -122,26 +122,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 132.9,
-            "svg_y": 103.0,
+            "svg_x": 144.52,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0856,
+            "u": 0.123,
             "v": 0.1429,
-            "svg_x": 61.04,
-            "svg_y": 145.71,
+            "svg_x": 52.56,
+            "svg_y": 143.57,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2928,
+            "u": 0.3115,
             "v": 0.1429,
-            "svg_x": 80.52,
-            "svg_y": 145.71,
+            "svg_x": 76.41,
+            "svg_y": 143.57,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -149,44 +149,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.1429,
-            "svg_x": 100.0,
-            "svg_y": 145.71,
+            "svg_x": 100.25,
+            "svg_y": 143.57,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7072,
+            "u": 0.6885,
             "v": 0.1429,
-            "svg_x": 119.48,
-            "svg_y": 145.71,
+            "svg_x": 124.09,
+            "svg_y": 143.57,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9144,
+            "u": 0.877,
             "v": 0.1429,
-            "svg_x": 138.96,
-            "svg_y": 145.71,
+            "svg_x": 147.94,
+            "svg_y": 143.57,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0749,
+            "u": 0.0595,
             "v": 0.2857,
-            "svg_x": 60.04,
-            "svg_y": 188.43,
+            "svg_x": 44.53,
+            "svg_y": 186.64,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2874,
+            "u": 0.2798,
             "v": 0.2857,
-            "svg_x": 80.02,
-            "svg_y": 188.43,
+            "svg_x": 72.39,
+            "svg_y": 186.64,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -194,44 +194,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.2857,
-            "svg_x": 100.0,
-            "svg_y": 188.43,
+            "svg_x": 100.25,
+            "svg_y": 186.64,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7126,
+            "u": 0.7202,
             "v": 0.2857,
-            "svg_x": 119.98,
-            "svg_y": 188.43,
+            "svg_x": 128.11,
+            "svg_y": 186.64,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9251,
+            "u": 0.9405,
             "v": 0.2857,
-            "svg_x": 139.96,
-            "svg_y": 188.43,
+            "svg_x": 155.97,
+            "svg_y": 186.64,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0321,
+            "u": 0.0159,
             "v": 0.4286,
-            "svg_x": 56.02,
-            "svg_y": 231.14,
+            "svg_x": 39.01,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.266,
+            "u": 0.2579,
             "v": 0.4286,
-            "svg_x": 78.01,
-            "svg_y": 231.14,
+            "svg_x": 69.63,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -239,161 +239,161 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 231.14,
+            "svg_x": 100.25,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.734,
+            "u": 0.7421,
             "v": 0.4286,
-            "svg_x": 121.99,
-            "svg_y": 231.14,
+            "svg_x": 130.87,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9679,
+            "u": 0.9841,
             "v": 0.4286,
-            "svg_x": 143.98,
-            "svg_y": 231.14,
+            "svg_x": 161.49,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0214,
+            "u": 0.1151,
             "v": 0.5714,
-            "svg_x": 55.01,
-            "svg_y": 273.86,
+            "svg_x": 51.56,
+            "svg_y": 272.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2607,
+            "u": 0.3065,
             "v": 0.5714,
-            "svg_x": 77.51,
-            "svg_y": 273.86,
+            "svg_x": 75.78,
+            "svg_y": 272.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 273.86,
+            "svg_y": 272.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7393,
+            "u": 0.6895,
             "v": 0.5714,
-            "svg_x": 122.49,
-            "svg_y": 273.86,
+            "svg_x": 124.22,
+            "svg_y": 272.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9786,
+            "u": 0.881,
             "v": 0.5714,
-            "svg_x": 144.99,
-            "svg_y": 273.86,
+            "svg_x": 148.44,
+            "svg_y": 272.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0428,
+            "u": 0.0833,
             "v": 0.7143,
-            "svg_x": 57.02,
-            "svg_y": 316.57,
+            "svg_x": 47.54,
+            "svg_y": 315.86,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2714,
+            "u": 0.2907,
             "v": 0.7143,
-            "svg_x": 78.51,
-            "svg_y": 316.57,
+            "svg_x": 73.77,
+            "svg_y": 315.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 316.57,
+            "svg_y": 315.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7286,
+            "u": 0.7054,
             "v": 0.7143,
-            "svg_x": 121.49,
-            "svg_y": 316.57,
+            "svg_x": 126.23,
+            "svg_y": 315.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9572,
+            "u": 0.9127,
             "v": 0.7143,
-            "svg_x": 142.98,
-            "svg_y": 316.57,
+            "svg_x": 152.46,
+            "svg_y": 315.86,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0802,
+            "u": 0.0476,
             "v": 0.8571,
-            "svg_x": 60.54,
-            "svg_y": 359.29,
+            "svg_x": 43.02,
+            "svg_y": 358.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2901,
+            "u": 0.2728,
             "v": 0.8571,
-            "svg_x": 80.27,
-            "svg_y": 359.29,
+            "svg_x": 71.51,
+            "svg_y": 358.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 359.29,
+            "svg_y": 358.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7099,
+            "u": 0.7232,
             "v": 0.8571,
-            "svg_x": 119.73,
-            "svg_y": 359.29,
+            "svg_x": 128.49,
+            "svg_y": 358.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9198,
+            "u": 0.9484,
             "v": 0.8571,
-            "svg_x": 139.46,
-            "svg_y": 359.29,
+            "svg_x": 156.97,
+            "svg_y": 358.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -401,7 +401,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 67.1,
+            "svg_x": 55.97,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -410,7 +410,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 83.55,
+            "svg_x": 78.11,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -419,7 +419,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
+            "svg_x": 100.25,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -428,7 +428,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 116.45,
+            "svg_x": 122.39,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -437,7 +437,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 132.9,
+            "svg_x": 144.52,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -793,10 +793,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 53.0,
-        "y": 102.5,
-        "width": 94.0,
-        "height": 299.5
+        "x": 37.0,
+        "y": 100.0,
+        "width": 126.5,
+        "height": 302.0
       },
       "point_cloud": {
         "rows": 8,
@@ -805,8 +805,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 67.1,
-            "svg_y": 102.5,
+            "svg_x": 55.97,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -814,8 +814,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 83.55,
-            "svg_y": 102.5,
+            "svg_x": 78.11,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -823,8 +823,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 102.5,
+            "svg_x": 100.25,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -832,8 +832,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 116.45,
-            "svg_y": 102.5,
+            "svg_x": 122.39,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -841,26 +841,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 132.9,
-            "svg_y": 102.5,
+            "svg_x": 144.52,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0856,
+            "u": 0.127,
             "v": 0.1429,
-            "svg_x": 61.04,
-            "svg_y": 145.29,
+            "svg_x": 53.06,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2928,
+            "u": 0.3135,
             "v": 0.1429,
-            "svg_x": 80.52,
-            "svg_y": 145.29,
+            "svg_x": 76.66,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -868,44 +868,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.1429,
-            "svg_x": 100.0,
-            "svg_y": 145.29,
+            "svg_x": 100.25,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7072,
+            "u": 0.6865,
             "v": 0.1429,
-            "svg_x": 119.48,
-            "svg_y": 145.29,
+            "svg_x": 123.84,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9144,
+            "u": 0.873,
             "v": 0.1429,
-            "svg_x": 138.96,
-            "svg_y": 145.29,
+            "svg_x": 147.44,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0749,
+            "u": 0.0595,
             "v": 0.2857,
-            "svg_x": 60.04,
-            "svg_y": 188.07,
+            "svg_x": 44.53,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2874,
+            "u": 0.2798,
             "v": 0.2857,
-            "svg_x": 80.02,
-            "svg_y": 188.07,
+            "svg_x": 72.39,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -913,44 +913,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.2857,
-            "svg_x": 100.0,
-            "svg_y": 188.07,
+            "svg_x": 100.25,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7126,
+            "u": 0.7202,
             "v": 0.2857,
-            "svg_x": 119.98,
-            "svg_y": 188.07,
+            "svg_x": 128.11,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9251,
+            "u": 0.9405,
             "v": 0.2857,
-            "svg_x": 139.96,
-            "svg_y": 188.07,
+            "svg_x": 155.97,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0321,
+            "u": 0.0159,
             "v": 0.4286,
-            "svg_x": 56.02,
-            "svg_y": 230.86,
+            "svg_x": 39.01,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.266,
+            "u": 0.2579,
             "v": 0.4286,
-            "svg_x": 78.01,
-            "svg_y": 230.86,
+            "svg_x": 69.63,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -958,161 +958,161 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 230.86,
+            "svg_x": 100.25,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.734,
+            "u": 0.7421,
             "v": 0.4286,
-            "svg_x": 121.99,
-            "svg_y": 230.86,
+            "svg_x": 130.87,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9679,
+            "u": 0.9841,
             "v": 0.4286,
-            "svg_x": 143.98,
-            "svg_y": 230.86,
+            "svg_x": 161.49,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0214,
+            "u": 0.1151,
             "v": 0.5714,
-            "svg_x": 55.01,
-            "svg_y": 273.64,
+            "svg_x": 51.56,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2607,
+            "u": 0.3065,
             "v": 0.5714,
-            "svg_x": 77.51,
-            "svg_y": 273.64,
+            "svg_x": 75.78,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 273.64,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7393,
+            "u": 0.6895,
             "v": 0.5714,
-            "svg_x": 122.49,
-            "svg_y": 273.64,
+            "svg_x": 124.22,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9786,
+            "u": 0.881,
             "v": 0.5714,
-            "svg_x": 144.99,
-            "svg_y": 273.64,
+            "svg_x": 148.44,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0428,
+            "u": 0.0833,
             "v": 0.7143,
-            "svg_x": 57.02,
-            "svg_y": 316.43,
+            "svg_x": 47.54,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2714,
+            "u": 0.2907,
             "v": 0.7143,
-            "svg_x": 78.51,
-            "svg_y": 316.43,
+            "svg_x": 73.77,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 316.43,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7286,
+            "u": 0.7054,
             "v": 0.7143,
-            "svg_x": 121.49,
-            "svg_y": 316.43,
+            "svg_x": 126.23,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9572,
+            "u": 0.9127,
             "v": 0.7143,
-            "svg_x": 142.98,
-            "svg_y": 316.43,
+            "svg_x": 152.46,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0802,
+            "u": 0.0476,
             "v": 0.8571,
-            "svg_x": 60.54,
-            "svg_y": 359.21,
+            "svg_x": 43.02,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2901,
+            "u": 0.2728,
             "v": 0.8571,
-            "svg_x": 80.27,
-            "svg_y": 359.21,
+            "svg_x": 71.51,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 359.21,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7099,
+            "u": 0.7232,
             "v": 0.8571,
-            "svg_x": 119.73,
-            "svg_y": 359.21,
+            "svg_x": 128.49,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9198,
+            "u": 0.9484,
             "v": 0.8571,
-            "svg_x": 139.46,
-            "svg_y": 359.21,
+            "svg_x": 156.97,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -1120,7 +1120,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 67.1,
+            "svg_x": 55.97,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -1129,7 +1129,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 83.55,
+            "svg_x": 78.11,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -1138,7 +1138,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
+            "svg_x": 100.25,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -1147,7 +1147,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 116.45,
+            "svg_x": 122.39,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -1156,7 +1156,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 132.9,
+            "svg_x": 144.52,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -1506,10 +1506,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 53.0,
-        "y": 103.0,
-        "width": 94.0,
-        "height": 298.5
+        "x": 39.0,
+        "y": 100.0,
+        "width": 122.0,
+        "height": 301.0
       },
       "point_cloud": {
         "rows": 8,
@@ -1518,8 +1518,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 67.1,
-            "svg_y": 103.0,
+            "svg_x": 57.3,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -1527,8 +1527,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 83.55,
-            "svg_y": 103.0,
+            "svg_x": 78.65,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -1537,7 +1537,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -1545,8 +1545,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 116.45,
-            "svg_y": 103.0,
+            "svg_x": 121.35,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -1554,71 +1554,71 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 132.9,
-            "svg_y": 103.0,
+            "svg_x": 142.7,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0963,
+            "u": 0.1235,
             "v": 0.1429,
-            "svg_x": 62.05,
-            "svg_y": 145.64,
+            "svg_x": 54.06,
+            "svg_y": 143.0,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2981,
+            "u": 0.3128,
             "v": 0.1429,
-            "svg_x": 81.02,
-            "svg_y": 145.64,
+            "svg_x": 77.16,
+            "svg_y": 143.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5021,
             "v": 0.1429,
-            "svg_x": 100.0,
-            "svg_y": 145.64,
+            "svg_x": 100.25,
+            "svg_y": 143.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7019,
+            "u": 0.6914,
             "v": 0.1429,
-            "svg_x": 118.98,
-            "svg_y": 145.64,
+            "svg_x": 123.35,
+            "svg_y": 143.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9037,
+            "u": 0.8807,
             "v": 0.1429,
-            "svg_x": 137.95,
-            "svg_y": 145.64,
+            "svg_x": 146.44,
+            "svg_y": 143.0,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0963,
+            "u": 0.0576,
             "v": 0.2857,
-            "svg_x": 62.05,
-            "svg_y": 188.29,
+            "svg_x": 46.03,
+            "svg_y": 186.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2981,
+            "u": 0.2788,
             "v": 0.2857,
-            "svg_x": 81.02,
-            "svg_y": 188.29,
+            "svg_x": 73.01,
+            "svg_y": 186.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -1627,43 +1627,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 188.29,
+            "svg_y": 186.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7019,
+            "u": 0.7212,
             "v": 0.2857,
-            "svg_x": 118.98,
-            "svg_y": 188.29,
+            "svg_x": 126.99,
+            "svg_y": 186.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9037,
+            "u": 0.9424,
             "v": 0.2857,
-            "svg_x": 137.95,
-            "svg_y": 188.29,
+            "svg_x": 153.97,
+            "svg_y": 186.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0214,
+            "u": 0.0165,
             "v": 0.4286,
-            "svg_x": 55.01,
-            "svg_y": 230.93,
+            "svg_x": 41.01,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2607,
+            "u": 0.2582,
             "v": 0.4286,
-            "svg_x": 77.51,
-            "svg_y": 230.93,
+            "svg_x": 70.5,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -1672,133 +1672,133 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 230.93,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7393,
+            "u": 0.7418,
             "v": 0.4286,
-            "svg_x": 122.49,
-            "svg_y": 230.93,
+            "svg_x": 129.5,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9786,
+            "u": 0.9835,
             "v": 0.4286,
-            "svg_x": 144.99,
-            "svg_y": 230.93,
+            "svg_x": 158.99,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0481,
+            "u": 0.0947,
             "v": 0.5714,
-            "svg_x": 57.52,
-            "svg_y": 273.57,
+            "svg_x": 50.55,
+            "svg_y": 272.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2741,
+            "u": 0.2973,
             "v": 0.5714,
-            "svg_x": 78.76,
-            "svg_y": 273.57,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 273.57,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7259,
-            "v": 0.5714,
-            "svg_x": 121.24,
-            "svg_y": 273.57,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9519,
-            "v": 0.5714,
-            "svg_x": 142.48,
-            "svg_y": 273.57,
-            "zone": "knee",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.1497,
-            "v": 0.7143,
-            "svg_x": 67.07,
-            "svg_y": 316.21,
-            "zone": "knee",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3249,
-            "v": 0.7143,
-            "svg_x": 83.54,
-            "svg_y": 316.21,
+            "svg_x": 75.27,
+            "svg_y": 272.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.7143,
+            "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 316.21,
+            "svg_y": 272.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6751,
-            "v": 0.7143,
-            "svg_x": 116.46,
-            "svg_y": 316.21,
+            "u": 0.7027,
+            "v": 0.5714,
+            "svg_x": 124.73,
+            "svg_y": 272.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8503,
-            "v": 0.7143,
-            "svg_x": 132.93,
-            "svg_y": 316.21,
+            "u": 0.9053,
+            "v": 0.5714,
+            "svg_x": 149.45,
+            "svg_y": 272.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1925,
+            "u": 0.0658,
+            "v": 0.7143,
+            "svg_x": 47.03,
+            "svg_y": 315.0,
+            "zone": "knee",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2829,
+            "v": 0.7143,
+            "svg_x": 73.52,
+            "svg_y": 315.0,
+            "zone": "knee",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.7143,
+            "svg_x": 100.0,
+            "svg_y": 315.0,
+            "zone": "knee",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7171,
+            "v": 0.7143,
+            "svg_x": 126.48,
+            "svg_y": 315.0,
+            "zone": "knee",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9342,
+            "v": 0.7143,
+            "svg_x": 152.97,
+            "svg_y": 315.0,
+            "zone": "knee",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0905,
             "v": 0.8571,
-            "svg_x": 71.1,
-            "svg_y": 358.86,
+            "svg_x": 50.05,
+            "svg_y": 358.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3463,
+            "u": 0.2953,
             "v": 0.8571,
-            "svg_x": 85.55,
-            "svg_y": 358.86,
+            "svg_x": 75.02,
+            "svg_y": 358.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -1807,25 +1807,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 358.86,
+            "svg_y": 358.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6537,
+            "u": 0.7047,
             "v": 0.8571,
-            "svg_x": 114.45,
-            "svg_y": 358.86,
+            "svg_x": 124.98,
+            "svg_y": 358.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8075,
+            "u": 0.9095,
             "v": 0.8571,
-            "svg_x": 128.9,
-            "svg_y": 358.86,
+            "svg_x": 149.95,
+            "svg_y": 358.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -1833,8 +1833,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 67.1,
-            "svg_y": 401.5,
+            "svg_x": 57.3,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -1842,8 +1842,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 83.55,
-            "svg_y": 401.5,
+            "svg_x": 78.65,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -1852,7 +1852,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 401.5,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -1860,8 +1860,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 116.45,
-            "svg_y": 401.5,
+            "svg_x": 121.35,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -1869,8 +1869,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 132.9,
-            "svg_y": 401.5,
+            "svg_x": 142.7,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -2222,10 +2222,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 53.0,
-        "y": 102.5,
-        "width": 94.0,
-        "height": 299.5
+        "x": 37.0,
+        "y": 100.0,
+        "width": 126.0,
+        "height": 302.0
       },
       "point_cloud": {
         "rows": 8,
@@ -2234,8 +2234,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 67.1,
-            "svg_y": 102.5,
+            "svg_x": 55.9,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -2243,8 +2243,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 83.55,
-            "svg_y": 102.5,
+            "svg_x": 77.95,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -2253,7 +2253,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 102.5,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -2261,8 +2261,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 116.45,
-            "svg_y": 102.5,
+            "svg_x": 122.05,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -2270,71 +2270,71 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 132.9,
-            "svg_y": 102.5,
+            "svg_x": 144.1,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0749,
+            "u": 0.1394,
             "v": 0.1429,
-            "svg_x": 60.04,
-            "svg_y": 145.29,
+            "svg_x": 54.57,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2888,
+            "u": 0.3207,
             "v": 0.1429,
-            "svg_x": 80.14,
-            "svg_y": 145.29,
+            "svg_x": 77.41,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5027,
+            "u": 0.502,
             "v": 0.1429,
             "svg_x": 100.25,
-            "svg_y": 145.29,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7166,
+            "u": 0.6833,
             "v": 0.1429,
-            "svg_x": 120.36,
-            "svg_y": 145.29,
+            "svg_x": 123.09,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9305,
+            "u": 0.8645,
             "v": 0.1429,
-            "svg_x": 140.47,
-            "svg_y": 145.29,
+            "svg_x": 145.93,
+            "svg_y": 143.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1444,
+            "u": 0.0797,
             "v": 0.2857,
-            "svg_x": 66.57,
-            "svg_y": 188.07,
+            "svg_x": 47.04,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3222,
+            "u": 0.2898,
             "v": 0.2857,
-            "svg_x": 83.29,
-            "svg_y": 188.07,
+            "svg_x": 73.52,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -2343,43 +2343,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 188.07,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6778,
+            "u": 0.7102,
             "v": 0.2857,
-            "svg_x": 116.71,
-            "svg_y": 188.07,
+            "svg_x": 126.48,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8556,
+            "u": 0.9203,
             "v": 0.2857,
-            "svg_x": 133.43,
-            "svg_y": 188.07,
+            "svg_x": 152.96,
+            "svg_y": 186.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0321,
+            "u": 0.1434,
             "v": 0.4286,
-            "svg_x": 56.02,
-            "svg_y": 230.86,
+            "svg_x": 55.07,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.266,
+            "u": 0.3217,
             "v": 0.4286,
-            "svg_x": 78.01,
-            "svg_y": 230.86,
+            "svg_x": 77.54,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -2388,43 +2388,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 230.86,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.734,
+            "u": 0.6783,
             "v": 0.4286,
-            "svg_x": 121.99,
-            "svg_y": 230.86,
+            "svg_x": 122.46,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9679,
+            "u": 0.8566,
             "v": 0.4286,
-            "svg_x": 143.98,
-            "svg_y": 230.86,
+            "svg_x": 144.93,
+            "svg_y": 229.43,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0214,
+            "u": 0.1155,
             "v": 0.5714,
-            "svg_x": 55.01,
-            "svg_y": 273.64,
+            "svg_x": 51.56,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2607,
+            "u": 0.3078,
             "v": 0.5714,
-            "svg_x": 77.51,
-            "svg_y": 273.64,
+            "svg_x": 75.78,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -2433,43 +2433,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 273.64,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7393,
+            "u": 0.6922,
             "v": 0.5714,
-            "svg_x": 122.49,
-            "svg_y": 273.64,
+            "svg_x": 124.22,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9786,
+            "u": 0.8845,
             "v": 0.5714,
-            "svg_x": 144.99,
-            "svg_y": 273.64,
+            "svg_x": 148.44,
+            "svg_y": 272.57,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0428,
+            "u": 0.0837,
             "v": 0.7143,
-            "svg_x": 57.02,
-            "svg_y": 316.43,
+            "svg_x": 47.54,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2714,
+            "u": 0.2918,
             "v": 0.7143,
-            "svg_x": 78.51,
-            "svg_y": 316.43,
+            "svg_x": 73.77,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -2478,43 +2478,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 316.43,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7286,
+            "u": 0.7082,
             "v": 0.7143,
-            "svg_x": 121.49,
-            "svg_y": 316.43,
+            "svg_x": 126.23,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9572,
+            "u": 0.9163,
             "v": 0.7143,
-            "svg_x": 142.98,
-            "svg_y": 316.43,
+            "svg_x": 152.46,
+            "svg_y": 315.71,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0802,
+            "u": 0.0478,
             "v": 0.8571,
-            "svg_x": 60.54,
-            "svg_y": 359.21,
+            "svg_x": 43.02,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2901,
+            "u": 0.2739,
             "v": 0.8571,
-            "svg_x": 80.27,
-            "svg_y": 359.21,
+            "svg_x": 71.51,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -2523,25 +2523,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 359.21,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7099,
+            "u": 0.7261,
             "v": 0.8571,
-            "svg_x": 119.73,
-            "svg_y": 359.21,
+            "svg_x": 128.49,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9198,
+            "u": 0.9522,
             "v": 0.8571,
-            "svg_x": 139.46,
-            "svg_y": 359.21,
+            "svg_x": 156.98,
+            "svg_y": 358.86,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -2549,7 +2549,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 67.1,
+            "svg_x": 55.9,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -2558,7 +2558,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 83.55,
+            "svg_x": 77.95,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -2576,7 +2576,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 116.45,
+            "svg_x": 122.05,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -2585,7 +2585,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 132.9,
+            "svg_x": 144.1,
             "svg_y": 402.0,
             "zone": "feet",
             "is_edge": true,
@@ -2939,10 +2939,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 56.5,
-        "y": 102.5,
-        "width": 87.0,
-        "height": 237.0
+        "x": 53.0,
+        "y": 100.0,
+        "width": 94.0,
+        "height": 227.0
       },
       "point_cloud": {
         "rows": 8,
@@ -2951,8 +2951,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 69.55,
-            "svg_y": 102.5,
+            "svg_x": 67.1,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -2960,8 +2960,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.77,
-            "svg_y": 102.5,
+            "svg_x": 83.55,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -2970,7 +2970,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 102.5,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -2978,8 +2978,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.22,
-            "svg_y": 102.5,
+            "svg_x": 116.45,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -2987,71 +2987,71 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 130.45,
-            "svg_y": 102.5,
+            "svg_x": 132.9,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.0481,
             "v": 0.1429,
-            "svg_x": 62.03,
-            "svg_y": 136.36,
+            "svg_x": 57.52,
+            "svg_y": 132.43,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2832,
+            "u": 0.2754,
             "v": 0.1429,
-            "svg_x": 81.14,
-            "svg_y": 136.36,
+            "svg_x": 78.89,
+            "svg_y": 132.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5029,
+            "u": 0.5027,
             "v": 0.1429,
             "svg_x": 100.25,
-            "svg_y": 136.36,
+            "svg_y": 132.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7225,
+            "u": 0.7299,
             "v": 0.1429,
-            "svg_x": 119.36,
-            "svg_y": 136.36,
+            "svg_x": 121.61,
+            "svg_y": 132.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9422,
+            "u": 0.9572,
             "v": 0.1429,
-            "svg_x": 138.47,
-            "svg_y": 136.36,
+            "svg_x": 142.98,
+            "svg_y": 132.43,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1329,
+            "u": 0.1872,
             "v": 0.2857,
-            "svg_x": 68.07,
-            "svg_y": 170.21,
+            "svg_x": 70.59,
+            "svg_y": 164.86,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3165,
+            "u": 0.3436,
             "v": 0.2857,
-            "svg_x": 84.03,
-            "svg_y": 170.21,
+            "svg_x": 85.3,
+            "svg_y": 164.86,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -3060,43 +3060,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 170.21,
+            "svg_y": 164.86,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6835,
+            "u": 0.6564,
             "v": 0.2857,
-            "svg_x": 115.97,
-            "svg_y": 170.21,
+            "svg_x": 114.7,
+            "svg_y": 164.86,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8671,
+            "u": 0.8128,
             "v": 0.2857,
-            "svg_x": 131.93,
-            "svg_y": 170.21,
+            "svg_x": 129.41,
+            "svg_y": 164.86,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1792,
+            "u": 0.139,
             "v": 0.4286,
-            "svg_x": 72.09,
-            "svg_y": 204.07,
+            "svg_x": 66.07,
+            "svg_y": 197.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3396,
+            "u": 0.3195,
             "v": 0.4286,
-            "svg_x": 86.04,
-            "svg_y": 204.07,
+            "svg_x": 83.03,
+            "svg_y": 197.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -3105,43 +3105,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 204.07,
+            "svg_y": 197.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6604,
+            "u": 0.6805,
             "v": 0.4286,
-            "svg_x": 113.96,
-            "svg_y": 204.07,
+            "svg_x": 116.97,
+            "svg_y": 197.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8208,
+            "u": 0.861,
             "v": 0.4286,
-            "svg_x": 127.91,
-            "svg_y": 204.07,
+            "svg_x": 133.93,
+            "svg_y": 197.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0231,
+            "u": 0.0535,
             "v": 0.5714,
-            "svg_x": 58.51,
-            "svg_y": 237.93,
+            "svg_x": 58.03,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2616,
+            "u": 0.2767,
             "v": 0.5714,
-            "svg_x": 79.26,
-            "svg_y": 237.93,
+            "svg_x": 79.01,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -3150,43 +3150,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 237.93,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7384,
+            "u": 0.7233,
             "v": 0.5714,
-            "svg_x": 120.74,
-            "svg_y": 237.93,
+            "svg_x": 120.99,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9769,
+            "u": 0.9465,
             "v": 0.5714,
-            "svg_x": 141.49,
-            "svg_y": 237.93,
+            "svg_x": 141.97,
+            "svg_y": 229.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.052,
+            "u": 0.0428,
             "v": 0.7143,
-            "svg_x": 61.03,
-            "svg_y": 271.79,
+            "svg_x": 57.02,
+            "svg_y": 262.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.276,
+            "u": 0.2714,
             "v": 0.7143,
-            "svg_x": 80.51,
-            "svg_y": 271.79,
+            "svg_x": 78.51,
+            "svg_y": 262.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -3195,43 +3195,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 271.79,
+            "svg_y": 262.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.724,
+            "u": 0.7286,
             "v": 0.7143,
-            "svg_x": 119.49,
-            "svg_y": 271.79,
+            "svg_x": 121.49,
+            "svg_y": 262.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.948,
+            "u": 0.9572,
             "v": 0.7143,
-            "svg_x": 138.97,
-            "svg_y": 271.79,
+            "svg_x": 142.98,
+            "svg_y": 262.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1214,
+            "u": 0.0374,
             "v": 0.8571,
-            "svg_x": 67.06,
-            "svg_y": 305.64,
+            "svg_x": 56.52,
+            "svg_y": 294.57,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3107,
+            "u": 0.2687,
             "v": 0.8571,
-            "svg_x": 83.53,
-            "svg_y": 305.64,
+            "svg_x": 78.26,
+            "svg_y": 294.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -3240,25 +3240,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 305.64,
+            "svg_y": 294.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6893,
+            "u": 0.7313,
             "v": 0.8571,
-            "svg_x": 116.47,
-            "svg_y": 305.64,
+            "svg_x": 121.74,
+            "svg_y": 294.57,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8786,
+            "u": 0.9626,
             "v": 0.8571,
-            "svg_x": 132.94,
-            "svg_y": 305.64,
+            "svg_x": 143.48,
+            "svg_y": 294.57,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -3266,8 +3266,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 69.55,
-            "svg_y": 339.5,
+            "svg_x": 67.1,
+            "svg_y": 327.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -3275,8 +3275,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.77,
-            "svg_y": 339.5,
+            "svg_x": 83.55,
+            "svg_y": 327.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -3285,7 +3285,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 339.5,
+            "svg_y": 327.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": true
@@ -3293,8 +3293,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.22,
-            "svg_y": 339.5,
+            "svg_x": 116.45,
+            "svg_y": 327.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -3302,8 +3302,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 130.45,
-            "svg_y": 339.5,
+            "svg_x": 132.9,
+            "svg_y": 327.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -3651,10 +3651,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 56.0,
-        "y": 103.0,
-        "width": 88.0,
-        "height": 298.5
+        "x": 48.0,
+        "y": 100.5,
+        "width": 104.0,
+        "height": 300.5
       },
       "point_cloud": {
         "rows": 8,
@@ -3663,8 +3663,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 69.2,
-            "svg_y": 103.0,
+            "svg_x": 63.6,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -3672,8 +3672,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.6,
-            "svg_y": 103.0,
+            "svg_x": 81.8,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -3682,7 +3682,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -3690,8 +3690,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.4,
-            "svg_y": 103.0,
+            "svg_x": 118.2,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -3699,26 +3699,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 130.8,
-            "svg_y": 103.0,
+            "svg_x": 136.4,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.08,
+            "u": 0.1449,
             "v": 0.1429,
-            "svg_x": 63.04,
-            "svg_y": 145.64,
+            "svg_x": 63.07,
+            "svg_y": 143.43,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.29,
+            "u": 0.3225,
             "v": 0.1429,
-            "svg_x": 81.52,
-            "svg_y": 145.64,
+            "svg_x": 81.54,
+            "svg_y": 143.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -3727,43 +3727,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 145.64,
+            "svg_y": 143.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.71,
+            "u": 0.6775,
             "v": 0.1429,
-            "svg_x": 118.48,
-            "svg_y": 145.64,
+            "svg_x": 118.46,
+            "svg_y": 143.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.92,
+            "u": 0.8551,
             "v": 0.1429,
-            "svg_x": 136.96,
-            "svg_y": 145.64,
+            "svg_x": 136.93,
+            "svg_y": 143.43,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1943,
+            "u": 0.1932,
             "v": 0.2857,
-            "svg_x": 73.1,
-            "svg_y": 188.29,
+            "svg_x": 68.1,
+            "svg_y": 186.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3471,
+            "u": 0.3466,
             "v": 0.2857,
-            "svg_x": 86.55,
-            "svg_y": 188.29,
+            "svg_x": 84.05,
+            "svg_y": 186.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -3772,43 +3772,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 188.29,
+            "svg_y": 186.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6529,
+            "u": 0.6534,
             "v": 0.2857,
-            "svg_x": 113.45,
-            "svg_y": 188.29,
+            "svg_x": 115.95,
+            "svg_y": 186.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8057,
+            "u": 0.8068,
             "v": 0.2857,
-            "svg_x": 126.9,
-            "svg_y": 188.29,
+            "svg_x": 131.9,
+            "svg_y": 186.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0229,
+            "u": 0.087,
             "v": 0.4286,
-            "svg_x": 58.01,
-            "svg_y": 230.93,
+            "svg_x": 57.04,
+            "svg_y": 229.29,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2614,
+            "u": 0.2935,
             "v": 0.4286,
-            "svg_x": 79.01,
-            "svg_y": 230.93,
+            "svg_x": 78.52,
+            "svg_y": 229.29,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -3817,43 +3817,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 230.93,
+            "svg_y": 229.29,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7386,
+            "u": 0.7065,
             "v": 0.4286,
-            "svg_x": 120.99,
-            "svg_y": 230.93,
+            "svg_x": 121.48,
+            "svg_y": 229.29,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9771,
+            "u": 0.913,
             "v": 0.4286,
-            "svg_x": 141.99,
-            "svg_y": 230.93,
+            "svg_x": 142.96,
+            "svg_y": 229.29,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0514,
+            "u": 0.0676,
             "v": 0.5714,
-            "svg_x": 60.53,
-            "svg_y": 273.57,
+            "svg_x": 55.03,
+            "svg_y": 272.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2757,
+            "u": 0.2838,
             "v": 0.5714,
-            "svg_x": 80.26,
-            "svg_y": 273.57,
+            "svg_x": 77.52,
+            "svg_y": 272.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -3862,43 +3862,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 273.57,
+            "svg_y": 272.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7243,
+            "u": 0.7162,
             "v": 0.5714,
-            "svg_x": 119.74,
-            "svg_y": 273.57,
+            "svg_x": 122.48,
+            "svg_y": 272.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9486,
+            "u": 0.9324,
             "v": 0.5714,
-            "svg_x": 139.47,
-            "svg_y": 273.57,
+            "svg_x": 144.97,
+            "svg_y": 272.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1257,
+            "u": 0.0386,
             "v": 0.7143,
-            "svg_x": 67.06,
-            "svg_y": 316.21,
+            "svg_x": 52.02,
+            "svg_y": 315.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3129,
+            "u": 0.2693,
             "v": 0.7143,
-            "svg_x": 83.53,
-            "svg_y": 316.21,
+            "svg_x": 76.01,
+            "svg_y": 315.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -3907,43 +3907,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 316.21,
+            "svg_y": 315.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6871,
+            "u": 0.7307,
             "v": 0.7143,
-            "svg_x": 116.47,
-            "svg_y": 316.21,
+            "svg_x": 123.99,
+            "svg_y": 315.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8743,
+            "u": 0.9614,
             "v": 0.7143,
-            "svg_x": 132.94,
-            "svg_y": 316.21,
+            "svg_x": 147.98,
+            "svg_y": 315.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1714,
+            "u": 0.0193,
             "v": 0.8571,
-            "svg_x": 71.09,
-            "svg_y": 358.86,
+            "svg_x": 50.01,
+            "svg_y": 358.07,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3357,
+            "u": 0.2597,
             "v": 0.8571,
-            "svg_x": 85.54,
-            "svg_y": 358.86,
+            "svg_x": 75.0,
+            "svg_y": 358.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -3952,25 +3952,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 358.86,
+            "svg_y": 358.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6643,
+            "u": 0.7403,
             "v": 0.8571,
-            "svg_x": 114.46,
-            "svg_y": 358.86,
+            "svg_x": 125.0,
+            "svg_y": 358.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8286,
+            "u": 0.9807,
             "v": 0.8571,
-            "svg_x": 128.91,
-            "svg_y": 358.86,
+            "svg_x": 149.99,
+            "svg_y": 358.07,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -3978,8 +3978,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 69.2,
-            "svg_y": 401.5,
+            "svg_x": 63.6,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -3987,8 +3987,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.6,
-            "svg_y": 401.5,
+            "svg_x": 81.8,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -3997,7 +3997,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 401.5,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -4005,8 +4005,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.4,
-            "svg_y": 401.5,
+            "svg_x": 118.2,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -4014,8 +4014,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 130.8,
-            "svg_y": 401.5,
+            "svg_x": 136.4,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -4362,10 +4362,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 43.5,
-        "y": 193.0,
-        "width": 113.0,
-        "height": 167.0
+        "x": 43.0,
+        "y": 179.0,
+        "width": 114.0,
+        "height": 168.0
       },
       "point_cloud": {
         "rows": 8,
@@ -4374,8 +4374,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 60.45,
-            "svg_y": 193.0,
+            "svg_x": 60.1,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -4383,8 +4383,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 80.22,
-            "svg_y": 193.0,
+            "svg_x": 80.05,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -4393,7 +4393,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 193.0,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -4401,8 +4401,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 119.77,
-            "svg_y": 193.0,
+            "svg_x": 119.95,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -4410,27 +4410,27 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 139.55,
-            "svg_y": 193.0,
+            "svg_x": 139.9,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2044,
+            "u": 0.1938,
             "v": 0.1429,
-            "svg_x": 66.6,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_x": 65.1,
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3522,
+            "u": 0.3469,
             "v": 0.1429,
-            "svg_x": 83.3,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_x": 82.55,
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
@@ -4438,43 +4438,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6478,
+            "u": 0.6531,
             "v": 0.1429,
-            "svg_x": 116.7,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_x": 117.45,
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7956,
+            "u": 0.8062,
             "v": 0.1429,
-            "svg_x": 133.4,
-            "svg_y": 216.86,
+            "svg_x": 134.9,
+            "svg_y": 203.0,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1366,
+            "v": 0.2857,
+            "svg_x": 58.57,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1378,
+            "u": 0.3183,
             "v": 0.2857,
-            "svg_x": 59.07,
-            "svg_y": 240.71,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3189,
-            "v": 0.2857,
-            "svg_x": 79.53,
-            "svg_y": 240.71,
+            "svg_x": 79.28,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -4483,43 +4483,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 240.71,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6811,
+            "u": 0.6817,
             "v": 0.2857,
-            "svg_x": 120.47,
-            "svg_y": 240.71,
+            "svg_x": 120.72,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8622,
+            "u": 0.8634,
             "v": 0.2857,
-            "svg_x": 140.93,
-            "svg_y": 240.71,
+            "svg_x": 141.43,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1111,
+            "u": 0.1145,
             "v": 0.4286,
             "svg_x": 56.06,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3056,
+            "u": 0.3073,
             "v": 0.4286,
             "svg_x": 78.03,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -4528,43 +4528,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6944,
+            "u": 0.6927,
             "v": 0.4286,
             "svg_x": 121.97,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8889,
+            "u": 0.8855,
             "v": 0.4286,
             "svg_x": 143.94,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0889,
+            "u": 0.0881,
             "v": 0.5714,
-            "svg_x": 53.54,
-            "svg_y": 288.43,
+            "svg_x": 53.04,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2944,
+            "u": 0.2941,
             "v": 0.5714,
-            "svg_x": 76.77,
-            "svg_y": 288.43,
+            "svg_x": 76.52,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -4573,43 +4573,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 288.43,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7056,
+            "u": 0.7059,
             "v": 0.5714,
-            "svg_x": 123.23,
-            "svg_y": 288.43,
+            "svg_x": 123.48,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9111,
+            "u": 0.9119,
             "v": 0.5714,
-            "svg_x": 146.46,
-            "svg_y": 288.43,
+            "svg_x": 146.96,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0667,
+            "u": 0.0617,
             "v": 0.7143,
-            "svg_x": 51.03,
-            "svg_y": 312.29,
+            "svg_x": 50.03,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2833,
+            "u": 0.2808,
             "v": 0.7143,
-            "svg_x": 75.52,
-            "svg_y": 312.29,
+            "svg_x": 75.02,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -4618,43 +4618,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 312.29,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7167,
+            "u": 0.7192,
             "v": 0.7143,
-            "svg_x": 124.48,
-            "svg_y": 312.29,
+            "svg_x": 124.98,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9333,
+            "u": 0.9383,
             "v": 0.7143,
-            "svg_x": 148.97,
-            "svg_y": 312.29,
+            "svg_x": 149.97,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0356,
+            "u": 0.0352,
             "v": 0.8571,
-            "svg_x": 47.52,
-            "svg_y": 336.14,
+            "svg_x": 47.02,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2678,
+            "u": 0.2676,
             "v": 0.8571,
-            "svg_x": 73.76,
-            "svg_y": 336.14,
+            "svg_x": 73.51,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -4663,25 +4663,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 336.14,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7322,
+            "u": 0.7324,
             "v": 0.8571,
-            "svg_x": 126.24,
-            "svg_y": 336.14,
+            "svg_x": 126.49,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9644,
+            "u": 0.9648,
             "v": 0.8571,
-            "svg_x": 152.48,
-            "svg_y": 336.14,
+            "svg_x": 152.98,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -4689,8 +4689,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 60.45,
-            "svg_y": 360.0,
+            "svg_x": 60.1,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -4698,8 +4698,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 80.22,
-            "svg_y": 360.0,
+            "svg_x": 80.05,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -4708,7 +4708,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 360.0,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -4716,8 +4716,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 119.77,
-            "svg_y": 360.0,
+            "svg_x": 119.95,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -4725,8 +4725,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 139.55,
-            "svg_y": 360.0,
+            "svg_x": 139.9,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -5075,10 +5075,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 49.5,
-        "y": 193.0,
-        "width": 101.0,
-        "height": 159.0
+        "x": 49.0,
+        "y": 179.0,
+        "width": 102.0,
+        "height": 160.0
       },
       "point_cloud": {
         "rows": 8,
@@ -5087,8 +5087,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.65,
-            "svg_y": 193.0,
+            "svg_x": 64.3,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -5096,8 +5096,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.32,
-            "svg_y": 193.0,
+            "svg_x": 82.15,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -5106,7 +5106,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 193.0,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -5114,8 +5114,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 117.67,
-            "svg_y": 193.0,
+            "svg_x": 117.85,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -5123,27 +5123,27 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 135.35,
-            "svg_y": 193.0,
+            "svg_x": 135.7,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1791,
+            "u": 0.1626,
             "v": 0.1429,
-            "svg_x": 67.59,
-            "svg_y": 215.71,
-            "zone": "hip",
+            "svg_x": 65.58,
+            "svg_y": 201.86,
+            "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3396,
+            "u": 0.3313,
             "v": 0.1429,
-            "svg_x": 83.79,
-            "svg_y": 215.71,
-            "zone": "hip",
+            "svg_x": 82.79,
+            "svg_y": 201.86,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
@@ -5151,43 +5151,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 215.71,
-            "zone": "hip",
+            "svg_y": 201.86,
+            "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6604,
+            "u": 0.6687,
             "v": 0.1429,
-            "svg_x": 116.21,
-            "svg_y": 215.71,
-            "zone": "hip",
+            "svg_x": 117.21,
+            "svg_y": 201.86,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8209,
+            "u": 0.8374,
             "v": 0.1429,
-            "svg_x": 132.41,
-            "svg_y": 215.71,
-            "zone": "hip",
+            "svg_x": 134.42,
+            "svg_y": 201.86,
+            "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0945,
+            "u": 0.0985,
             "v": 0.2857,
             "svg_x": 59.05,
-            "svg_y": 238.43,
+            "svg_y": 224.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2973,
+            "u": 0.2993,
             "v": 0.2857,
             "svg_x": 79.52,
-            "svg_y": 238.43,
+            "svg_y": 224.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -5196,43 +5196,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 238.43,
+            "svg_y": 224.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7027,
+            "u": 0.7007,
             "v": 0.2857,
             "svg_x": 120.48,
-            "svg_y": 238.43,
+            "svg_y": 224.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9055,
+            "u": 0.9015,
             "v": 0.2857,
             "svg_x": 140.95,
-            "svg_y": 238.43,
+            "svg_y": 224.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0846,
+            "u": 0.0837,
             "v": 0.4286,
-            "svg_x": 58.04,
-            "svg_y": 261.14,
+            "svg_x": 57.54,
+            "svg_y": 247.57,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2923,
+            "u": 0.2919,
             "v": 0.4286,
-            "svg_x": 79.02,
-            "svg_y": 261.14,
+            "svg_x": 78.77,
+            "svg_y": 247.57,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -5241,43 +5241,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 261.14,
+            "svg_y": 247.57,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7077,
+            "u": 0.7081,
             "v": 0.4286,
-            "svg_x": 120.98,
-            "svg_y": 261.14,
+            "svg_x": 121.23,
+            "svg_y": 247.57,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9154,
+            "u": 0.9163,
             "v": 0.4286,
-            "svg_x": 141.96,
-            "svg_y": 261.14,
+            "svg_x": 142.46,
+            "svg_y": 247.57,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0697,
+            "u": 0.069,
             "v": 0.5714,
-            "svg_x": 56.53,
-            "svg_y": 283.86,
+            "svg_x": 56.03,
+            "svg_y": 270.43,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2848,
+            "u": 0.2845,
             "v": 0.5714,
-            "svg_x": 78.27,
-            "svg_y": 283.86,
+            "svg_x": 78.02,
+            "svg_y": 270.43,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -5286,43 +5286,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 283.86,
+            "svg_y": 270.43,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7152,
+            "u": 0.7155,
             "v": 0.5714,
-            "svg_x": 121.73,
-            "svg_y": 283.86,
+            "svg_x": 121.98,
+            "svg_y": 270.43,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9303,
+            "u": 0.931,
             "v": 0.5714,
-            "svg_x": 143.47,
-            "svg_y": 283.86,
+            "svg_x": 143.97,
+            "svg_y": 270.43,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0498,
+            "u": 0.0493,
             "v": 0.7143,
-            "svg_x": 54.52,
-            "svg_y": 306.57,
+            "svg_x": 54.02,
+            "svg_y": 293.29,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2749,
+            "u": 0.2746,
             "v": 0.7143,
-            "svg_x": 77.26,
-            "svg_y": 306.57,
+            "svg_x": 77.01,
+            "svg_y": 293.29,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -5331,43 +5331,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 306.57,
+            "svg_y": 293.29,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7251,
+            "u": 0.7254,
             "v": 0.7143,
-            "svg_x": 122.74,
-            "svg_y": 306.57,
+            "svg_x": 122.99,
+            "svg_y": 293.29,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9502,
+            "u": 0.9507,
             "v": 0.7143,
-            "svg_x": 145.48,
-            "svg_y": 306.57,
+            "svg_x": 145.98,
+            "svg_y": 293.29,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0348,
+            "u": 0.0296,
             "v": 0.8571,
-            "svg_x": 53.02,
-            "svg_y": 329.29,
+            "svg_x": 52.01,
+            "svg_y": 316.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2674,
+            "u": 0.2648,
             "v": 0.8571,
-            "svg_x": 76.51,
-            "svg_y": 329.29,
+            "svg_x": 76.01,
+            "svg_y": 316.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -5376,25 +5376,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 329.29,
+            "svg_y": 316.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7326,
+            "u": 0.7352,
             "v": 0.8571,
-            "svg_x": 123.49,
-            "svg_y": 329.29,
+            "svg_x": 123.99,
+            "svg_y": 316.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9652,
+            "u": 0.9704,
             "v": 0.8571,
-            "svg_x": 146.98,
-            "svg_y": 329.29,
+            "svg_x": 147.99,
+            "svg_y": 316.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -5402,8 +5402,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.65,
-            "svg_y": 352.0,
+            "svg_x": 64.3,
+            "svg_y": 339.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -5411,8 +5411,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.32,
-            "svg_y": 352.0,
+            "svg_x": 82.15,
+            "svg_y": 339.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -5421,7 +5421,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 352.0,
+            "svg_y": 339.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -5429,8 +5429,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 117.67,
-            "svg_y": 352.0,
+            "svg_x": 117.85,
+            "svg_y": 339.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -5438,8 +5438,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 135.35,
-            "svg_y": 352.0,
+            "svg_x": 135.7,
+            "svg_y": 339.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -5786,10 +5786,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 43.5,
-        "y": 193.0,
-        "width": 113.0,
-        "height": 167.0
+        "x": 43.0,
+        "y": 179.0,
+        "width": 114.0,
+        "height": 168.0
       },
       "point_cloud": {
         "rows": 8,
@@ -5798,8 +5798,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 60.45,
-            "svg_y": 193.0,
+            "svg_x": 60.1,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -5807,8 +5807,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 80.22,
-            "svg_y": 193.0,
+            "svg_x": 80.05,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -5817,7 +5817,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 193.0,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -5825,8 +5825,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 119.77,
-            "svg_y": 193.0,
+            "svg_x": 119.95,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -5834,27 +5834,27 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 139.55,
-            "svg_y": 193.0,
+            "svg_x": 139.9,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2044,
+            "u": 0.1938,
             "v": 0.1429,
-            "svg_x": 66.6,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_x": 65.1,
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3522,
+            "u": 0.3469,
             "v": 0.1429,
-            "svg_x": 83.3,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_x": 82.55,
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
@@ -5862,43 +5862,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6478,
+            "u": 0.6531,
             "v": 0.1429,
-            "svg_x": 116.7,
-            "svg_y": 216.86,
-            "zone": "hip",
+            "svg_x": 117.45,
+            "svg_y": 203.0,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7956,
+            "u": 0.8062,
             "v": 0.1429,
-            "svg_x": 133.4,
-            "svg_y": 216.86,
+            "svg_x": 134.9,
+            "svg_y": 203.0,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1366,
+            "v": 0.2857,
+            "svg_x": 58.57,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1378,
+            "u": 0.3183,
             "v": 0.2857,
-            "svg_x": 59.07,
-            "svg_y": 240.71,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3189,
-            "v": 0.2857,
-            "svg_x": 79.53,
-            "svg_y": 240.71,
+            "svg_x": 79.28,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -5907,43 +5907,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 240.71,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6811,
+            "u": 0.6817,
             "v": 0.2857,
-            "svg_x": 120.47,
-            "svg_y": 240.71,
+            "svg_x": 120.72,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8622,
+            "u": 0.8634,
             "v": 0.2857,
-            "svg_x": 140.93,
-            "svg_y": 240.71,
+            "svg_x": 141.43,
+            "svg_y": 227.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1111,
+            "u": 0.1145,
             "v": 0.4286,
             "svg_x": 56.06,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3056,
+            "u": 0.3073,
             "v": 0.4286,
             "svg_x": 78.03,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -5952,43 +5952,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6944,
+            "u": 0.6927,
             "v": 0.4286,
             "svg_x": 121.97,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8889,
+            "u": 0.8855,
             "v": 0.4286,
             "svg_x": 143.94,
-            "svg_y": 264.57,
+            "svg_y": 251.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0889,
+            "u": 0.0881,
             "v": 0.5714,
-            "svg_x": 53.54,
-            "svg_y": 288.43,
+            "svg_x": 53.04,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2944,
+            "u": 0.2941,
             "v": 0.5714,
-            "svg_x": 76.77,
-            "svg_y": 288.43,
+            "svg_x": 76.52,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -5997,43 +5997,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 288.43,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7056,
+            "u": 0.7059,
             "v": 0.5714,
-            "svg_x": 123.23,
-            "svg_y": 288.43,
+            "svg_x": 123.48,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9111,
+            "u": 0.9119,
             "v": 0.5714,
-            "svg_x": 146.46,
-            "svg_y": 288.43,
+            "svg_x": 146.96,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0667,
+            "u": 0.0617,
             "v": 0.7143,
-            "svg_x": 51.03,
-            "svg_y": 312.29,
+            "svg_x": 50.03,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2833,
+            "u": 0.2808,
             "v": 0.7143,
-            "svg_x": 75.52,
-            "svg_y": 312.29,
+            "svg_x": 75.02,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -6042,43 +6042,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 312.29,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7167,
+            "u": 0.7192,
             "v": 0.7143,
-            "svg_x": 124.48,
-            "svg_y": 312.29,
+            "svg_x": 124.98,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9333,
+            "u": 0.9383,
             "v": 0.7143,
-            "svg_x": 148.97,
-            "svg_y": 312.29,
+            "svg_x": 149.97,
+            "svg_y": 299.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0356,
+            "u": 0.0352,
             "v": 0.8571,
-            "svg_x": 47.52,
-            "svg_y": 336.14,
+            "svg_x": 47.02,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2678,
+            "u": 0.2676,
             "v": 0.8571,
-            "svg_x": 73.76,
-            "svg_y": 336.14,
+            "svg_x": 73.51,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -6087,25 +6087,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 336.14,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7322,
+            "u": 0.7324,
             "v": 0.8571,
-            "svg_x": 126.24,
-            "svg_y": 336.14,
+            "svg_x": 126.49,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9644,
+            "u": 0.9648,
             "v": 0.8571,
-            "svg_x": 152.48,
-            "svg_y": 336.14,
+            "svg_x": 152.98,
+            "svg_y": 323.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -6113,8 +6113,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 60.45,
-            "svg_y": 360.0,
+            "svg_x": 60.1,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -6122,8 +6122,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 80.22,
-            "svg_y": 360.0,
+            "svg_x": 80.05,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -6132,7 +6132,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 360.0,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -6140,8 +6140,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 119.77,
-            "svg_y": 360.0,
+            "svg_x": 119.95,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -6149,8 +6149,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 139.55,
-            "svg_y": 360.0,
+            "svg_x": 139.9,
+            "svg_y": 347.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -6498,10 +6498,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 58.0,
-        "y": 193.0,
-        "width": 84.0,
-        "height": 208.5
+        "x": 51.5,
+        "y": 179.0,
+        "width": 97.0,
+        "height": 222.0
       },
       "point_cloud": {
         "rows": 8,
@@ -6510,8 +6510,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 70.6,
-            "svg_y": 193.0,
+            "svg_x": 66.05,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -6519,8 +6519,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 85.3,
-            "svg_y": 193.0,
+            "svg_x": 83.02,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -6529,7 +6529,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 193.0,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -6537,8 +6537,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 114.7,
-            "svg_y": 193.0,
+            "svg_x": 116.97,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -6546,26 +6546,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 129.4,
-            "svg_y": 193.0,
+            "svg_x": 133.95,
+            "svg_y": 179.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0419,
+            "u": 0.0933,
             "v": 0.1429,
-            "svg_x": 61.52,
-            "svg_y": 222.79,
+            "svg_x": 60.55,
+            "svg_y": 210.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.271,
+            "u": 0.2966,
             "v": 0.1429,
-            "svg_x": 80.76,
-            "svg_y": 222.79,
+            "svg_x": 80.27,
+            "svg_y": 210.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -6574,43 +6574,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 222.79,
+            "svg_y": 210.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.729,
+            "u": 0.7034,
             "v": 0.1429,
-            "svg_x": 119.24,
-            "svg_y": 222.79,
+            "svg_x": 119.73,
+            "svg_y": 210.71,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9581,
+            "u": 0.9067,
             "v": 0.1429,
-            "svg_x": 138.48,
-            "svg_y": 222.79,
+            "svg_x": 139.45,
+            "svg_y": 210.71,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0299,
+            "u": 0.0725,
             "v": 0.2857,
-            "svg_x": 60.51,
-            "svg_y": 252.57,
+            "svg_x": 58.54,
+            "svg_y": 242.43,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.265,
+            "u": 0.2863,
             "v": 0.2857,
-            "svg_x": 80.26,
-            "svg_y": 252.57,
+            "svg_x": 79.27,
+            "svg_y": 242.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -6619,43 +6619,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 252.57,
+            "svg_y": 242.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.735,
+            "u": 0.7137,
             "v": 0.2857,
-            "svg_x": 119.74,
-            "svg_y": 252.57,
+            "svg_x": 120.73,
+            "svg_y": 242.43,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9701,
+            "u": 0.9275,
             "v": 0.2857,
-            "svg_x": 139.49,
-            "svg_y": 252.57,
+            "svg_x": 141.46,
+            "svg_y": 242.43,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0778,
+            "u": 0.0622,
             "v": 0.4286,
-            "svg_x": 64.54,
-            "svg_y": 282.36,
+            "svg_x": 57.53,
+            "svg_y": 274.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2889,
+            "u": 0.2811,
             "v": 0.4286,
-            "svg_x": 82.27,
-            "svg_y": 282.36,
+            "svg_x": 78.77,
+            "svg_y": 274.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -6664,43 +6664,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 282.36,
+            "svg_y": 274.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7111,
+            "u": 0.7189,
             "v": 0.4286,
-            "svg_x": 117.73,
-            "svg_y": 282.36,
+            "svg_x": 121.23,
+            "svg_y": 274.14,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9222,
+            "u": 0.9378,
             "v": 0.4286,
-            "svg_x": 135.46,
-            "svg_y": 282.36,
+            "svg_x": 142.47,
+            "svg_y": 274.14,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1497,
+            "u": 0.0518,
             "v": 0.5714,
-            "svg_x": 70.57,
-            "svg_y": 312.14,
+            "svg_x": 56.53,
+            "svg_y": 305.86,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3249,
+            "u": 0.2759,
             "v": 0.5714,
-            "svg_x": 85.29,
-            "svg_y": 312.14,
+            "svg_x": 78.26,
+            "svg_y": 305.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -6709,115 +6709,115 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 312.14,
+            "svg_y": 305.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6751,
+            "u": 0.7241,
             "v": 0.5714,
-            "svg_x": 114.71,
-            "svg_y": 312.14,
+            "svg_x": 121.74,
+            "svg_y": 305.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8503,
+            "u": 0.9482,
             "v": 0.5714,
-            "svg_x": 129.43,
-            "svg_y": 312.14,
+            "svg_x": 143.47,
+            "svg_y": 305.86,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2036,
+            "u": 0.0259,
             "v": 0.7143,
-            "svg_x": 75.1,
-            "svg_y": 341.93,
-            "zone": "knee",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3518,
-            "v": 0.7143,
-            "svg_x": 87.55,
-            "svg_y": 341.93,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.7143,
-            "svg_x": 100.0,
-            "svg_y": 341.93,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.6482,
-            "v": 0.7143,
-            "svg_x": 112.45,
-            "svg_y": 341.93,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.7964,
-            "v": 0.7143,
-            "svg_x": 124.9,
-            "svg_y": 341.93,
-            "zone": "knee",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2156,
-            "v": 0.8571,
-            "svg_x": 76.11,
-            "svg_y": 371.71,
+            "svg_x": 54.01,
+            "svg_y": 337.57,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3578,
-            "v": 0.8571,
-            "svg_x": 88.05,
-            "svg_y": 371.71,
+            "u": 0.263,
+            "v": 0.7143,
+            "svg_x": 77.01,
+            "svg_y": 337.57,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.8571,
+            "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 371.71,
+            "svg_y": 337.57,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6422,
-            "v": 0.8571,
-            "svg_x": 111.95,
-            "svg_y": 371.71,
+            "u": 0.737,
+            "v": 0.7143,
+            "svg_x": 122.99,
+            "svg_y": 337.57,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7844,
+            "u": 0.9741,
+            "v": 0.7143,
+            "svg_x": 145.99,
+            "svg_y": 337.57,
+            "zone": "ankle",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0259,
             "v": 0.8571,
-            "svg_x": 123.89,
-            "svg_y": 371.71,
+            "svg_x": 54.01,
+            "svg_y": 369.29,
+            "zone": "ankle",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.263,
+            "v": 0.8571,
+            "svg_x": 77.01,
+            "svg_y": 369.29,
+            "zone": "ankle",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.8571,
+            "svg_x": 100.0,
+            "svg_y": 369.29,
+            "zone": "ankle",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.737,
+            "v": 0.8571,
+            "svg_x": 122.99,
+            "svg_y": 369.29,
+            "zone": "ankle",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9741,
+            "v": 0.8571,
+            "svg_x": 145.99,
+            "svg_y": 369.29,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -6825,8 +6825,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 70.6,
-            "svg_y": 401.5,
+            "svg_x": 66.05,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -6834,8 +6834,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 85.3,
-            "svg_y": 401.5,
+            "svg_x": 83.02,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -6844,7 +6844,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 401.5,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -6852,8 +6852,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 114.7,
-            "svg_y": 401.5,
+            "svg_x": 116.97,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -6861,8 +6861,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 129.4,
-            "svg_y": 401.5,
+            "svg_x": 133.95,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -7210,10 +7210,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 56.0,
-        "y": 207.0,
-        "width": 88.0,
-        "height": 194.5
+        "x": 48.0,
+        "y": 194.5,
+        "width": 104.0,
+        "height": 206.5
       },
       "point_cloud": {
         "rows": 8,
@@ -7222,8 +7222,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 69.2,
-            "svg_y": 207.0,
+            "svg_x": 63.6,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -7231,8 +7231,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.6,
-            "svg_y": 207.0,
+            "svg_x": 81.8,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -7241,7 +7241,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 207.0,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -7249,8 +7249,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.4,
-            "svg_y": 207.0,
+            "svg_x": 118.2,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -7258,26 +7258,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 130.8,
-            "svg_y": 207.0,
+            "svg_x": 136.4,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0229,
+            "u": 0.087,
             "v": 0.1429,
-            "svg_x": 58.01,
-            "svg_y": 234.79,
+            "svg_x": 57.04,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2614,
+            "u": 0.2935,
             "v": 0.1429,
-            "svg_x": 79.01,
-            "svg_y": 234.79,
+            "svg_x": 78.52,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -7286,43 +7286,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 234.79,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7386,
+            "u": 0.7065,
             "v": 0.1429,
-            "svg_x": 120.99,
-            "svg_y": 234.79,
+            "svg_x": 121.48,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9771,
+            "u": 0.913,
             "v": 0.1429,
-            "svg_x": 141.99,
-            "svg_y": 234.79,
+            "svg_x": 142.96,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.04,
+            "u": 0.0773,
             "v": 0.2857,
-            "svg_x": 59.52,
-            "svg_y": 262.57,
+            "svg_x": 56.04,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.27,
+            "u": 0.2886,
             "v": 0.2857,
-            "svg_x": 79.76,
-            "svg_y": 262.57,
+            "svg_x": 78.02,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -7331,43 +7331,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 262.57,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.73,
+            "u": 0.7114,
             "v": 0.2857,
-            "svg_x": 120.24,
-            "svg_y": 262.57,
+            "svg_x": 121.98,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.96,
+            "u": 0.9227,
             "v": 0.2857,
-            "svg_x": 140.48,
-            "svg_y": 262.57,
+            "svg_x": 143.96,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.08,
+            "u": 0.0628,
             "v": 0.4286,
-            "svg_x": 63.04,
-            "svg_y": 290.36,
+            "svg_x": 54.53,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.29,
+            "u": 0.2814,
             "v": 0.4286,
-            "svg_x": 81.52,
-            "svg_y": 290.36,
+            "svg_x": 77.27,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -7376,43 +7376,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 290.36,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.71,
+            "u": 0.7186,
             "v": 0.4286,
-            "svg_x": 118.48,
-            "svg_y": 290.36,
+            "svg_x": 122.73,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.92,
+            "u": 0.9372,
             "v": 0.4286,
-            "svg_x": 136.96,
-            "svg_y": 290.36,
+            "svg_x": 145.47,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1371,
+            "u": 0.0483,
             "v": 0.5714,
-            "svg_x": 68.07,
-            "svg_y": 318.14,
+            "svg_x": 53.02,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3186,
+            "u": 0.2742,
             "v": 0.5714,
-            "svg_x": 84.03,
-            "svg_y": 318.14,
+            "svg_x": 76.51,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -7421,43 +7421,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 318.14,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6814,
+            "u": 0.7258,
             "v": 0.5714,
-            "svg_x": 115.97,
-            "svg_y": 318.14,
+            "svg_x": 123.49,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8629,
+            "u": 0.9517,
             "v": 0.5714,
-            "svg_x": 131.93,
-            "svg_y": 318.14,
+            "svg_x": 146.98,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1714,
+            "u": 0.0193,
             "v": 0.7143,
-            "svg_x": 71.09,
-            "svg_y": 345.93,
+            "svg_x": 50.01,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3357,
+            "u": 0.2597,
             "v": 0.7143,
-            "svg_x": 85.54,
-            "svg_y": 345.93,
+            "svg_x": 75.0,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -7466,43 +7466,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 345.93,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6643,
+            "u": 0.7403,
             "v": 0.7143,
-            "svg_x": 114.46,
-            "svg_y": 345.93,
+            "svg_x": 125.0,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8286,
+            "u": 0.9807,
             "v": 0.7143,
-            "svg_x": 128.91,
-            "svg_y": 345.93,
+            "svg_x": 149.99,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1829,
+            "u": 0.0193,
             "v": 0.8571,
-            "svg_x": 72.09,
-            "svg_y": 373.71,
+            "svg_x": 50.01,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3414,
+            "u": 0.2597,
             "v": 0.8571,
-            "svg_x": 86.05,
-            "svg_y": 373.71,
+            "svg_x": 75.0,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -7511,25 +7511,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 373.71,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6586,
+            "u": 0.7403,
             "v": 0.8571,
-            "svg_x": 113.95,
-            "svg_y": 373.71,
+            "svg_x": 125.0,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8171,
+            "u": 0.9807,
             "v": 0.8571,
-            "svg_x": 127.91,
-            "svg_y": 373.71,
+            "svg_x": 149.99,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -7537,8 +7537,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 69.2,
-            "svg_y": 401.5,
+            "svg_x": 63.6,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -7546,8 +7546,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.6,
-            "svg_y": 401.5,
+            "svg_x": 81.8,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -7556,7 +7556,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 401.5,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -7564,8 +7564,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.4,
-            "svg_y": 401.5,
+            "svg_x": 118.2,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -7573,8 +7573,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 130.8,
-            "svg_y": 401.5,
+            "svg_x": 136.4,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -7921,10 +7921,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 58.0,
-        "y": 207.0,
-        "width": 84.0,
-        "height": 194.5
+        "x": 51.5,
+        "y": 194.5,
+        "width": 97.0,
+        "height": 206.5
       },
       "point_cloud": {
         "rows": 8,
@@ -7933,8 +7933,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 70.6,
-            "svg_y": 207.0,
+            "svg_x": 66.05,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -7942,8 +7942,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 85.3,
-            "svg_y": 207.0,
+            "svg_x": 83.02,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -7952,7 +7952,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 207.0,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -7960,8 +7960,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 114.7,
-            "svg_y": 207.0,
+            "svg_x": 116.97,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -7969,26 +7969,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 129.4,
-            "svg_y": 207.0,
+            "svg_x": 133.95,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.024,
+            "u": 0.0777,
             "v": 0.1429,
-            "svg_x": 60.01,
-            "svg_y": 234.79,
+            "svg_x": 59.04,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.262,
+            "u": 0.2889,
             "v": 0.1429,
-            "svg_x": 80.01,
-            "svg_y": 234.79,
+            "svg_x": 79.52,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -7997,43 +7997,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 234.79,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.738,
+            "u": 0.7111,
             "v": 0.1429,
-            "svg_x": 119.99,
-            "svg_y": 234.79,
+            "svg_x": 120.48,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.976,
+            "u": 0.9223,
             "v": 0.1429,
-            "svg_x": 139.99,
-            "svg_y": 234.79,
+            "svg_x": 140.96,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0479,
+            "u": 0.0674,
             "v": 0.2857,
-            "svg_x": 62.02,
-            "svg_y": 262.57,
+            "svg_x": 58.03,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.274,
+            "u": 0.2837,
             "v": 0.2857,
-            "svg_x": 81.01,
-            "svg_y": 262.57,
+            "svg_x": 79.02,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -8042,43 +8042,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 262.57,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.726,
+            "u": 0.7163,
             "v": 0.2857,
-            "svg_x": 118.99,
-            "svg_y": 262.57,
+            "svg_x": 120.98,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9521,
+            "u": 0.9326,
             "v": 0.2857,
-            "svg_x": 137.98,
-            "svg_y": 262.57,
+            "svg_x": 141.97,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0958,
+            "u": 0.057,
             "v": 0.4286,
-            "svg_x": 66.05,
-            "svg_y": 290.36,
+            "svg_x": 57.03,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2979,
+            "u": 0.2785,
             "v": 0.4286,
-            "svg_x": 83.02,
-            "svg_y": 290.36,
+            "svg_x": 78.51,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -8087,43 +8087,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 290.36,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7021,
+            "u": 0.7215,
             "v": 0.4286,
-            "svg_x": 116.98,
-            "svg_y": 290.36,
+            "svg_x": 121.49,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9042,
+            "u": 0.943,
             "v": 0.4286,
-            "svg_x": 133.95,
-            "svg_y": 290.36,
+            "svg_x": 142.97,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1677,
+            "u": 0.0466,
             "v": 0.5714,
-            "svg_x": 72.08,
-            "svg_y": 318.14,
+            "svg_x": 56.02,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3338,
+            "u": 0.2733,
             "v": 0.5714,
-            "svg_x": 86.04,
-            "svg_y": 318.14,
+            "svg_x": 78.01,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -8132,43 +8132,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 318.14,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6662,
+            "u": 0.7267,
             "v": 0.5714,
-            "svg_x": 113.96,
-            "svg_y": 318.14,
+            "svg_x": 121.99,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8323,
+            "u": 0.9534,
             "v": 0.5714,
-            "svg_x": 127.92,
-            "svg_y": 318.14,
+            "svg_x": 143.98,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2036,
+            "u": 0.0259,
             "v": 0.7143,
-            "svg_x": 75.1,
-            "svg_y": 345.93,
+            "svg_x": 54.01,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3518,
+            "u": 0.263,
             "v": 0.7143,
-            "svg_x": 87.55,
-            "svg_y": 345.93,
+            "svg_x": 77.01,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -8177,43 +8177,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 345.93,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6482,
+            "u": 0.737,
             "v": 0.7143,
-            "svg_x": 112.45,
-            "svg_y": 345.93,
+            "svg_x": 122.99,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7964,
+            "u": 0.9741,
             "v": 0.7143,
-            "svg_x": 124.9,
-            "svg_y": 345.93,
+            "svg_x": 145.99,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2216,
+            "u": 0.0259,
             "v": 0.8571,
-            "svg_x": 76.61,
-            "svg_y": 373.71,
+            "svg_x": 54.01,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3608,
+            "u": 0.263,
             "v": 0.8571,
-            "svg_x": 88.31,
-            "svg_y": 373.71,
+            "svg_x": 77.01,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -8222,25 +8222,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 373.71,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6392,
+            "u": 0.737,
             "v": 0.8571,
-            "svg_x": 111.69,
-            "svg_y": 373.71,
+            "svg_x": 122.99,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7784,
+            "u": 0.9741,
             "v": 0.8571,
-            "svg_x": 123.39,
-            "svg_y": 373.71,
+            "svg_x": 145.99,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -8248,8 +8248,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 70.6,
-            "svg_y": 401.5,
+            "svg_x": 66.05,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -8257,8 +8257,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 85.3,
-            "svg_y": 401.5,
+            "svg_x": 83.02,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -8267,7 +8267,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 401.5,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -8275,8 +8275,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 114.7,
-            "svg_y": 401.5,
+            "svg_x": 116.97,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -8284,8 +8284,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 129.4,
-            "svg_y": 401.5,
+            "svg_x": 133.95,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -8633,10 +8633,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 58.0,
-        "y": 207.0,
-        "width": 84.0,
-        "height": 194.5
+        "x": 51.5,
+        "y": 194.5,
+        "width": 97.0,
+        "height": 206.5
       },
       "point_cloud": {
         "rows": 8,
@@ -8645,8 +8645,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 70.6,
-            "svg_y": 207.0,
+            "svg_x": 66.05,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -8654,8 +8654,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 85.3,
-            "svg_y": 207.0,
+            "svg_x": 83.02,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -8664,7 +8664,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 207.0,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -8672,8 +8672,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 114.7,
-            "svg_y": 207.0,
+            "svg_x": 116.97,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -8681,26 +8681,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 129.4,
-            "svg_y": 207.0,
+            "svg_x": 133.95,
+            "svg_y": 194.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.024,
+            "u": 0.0777,
             "v": 0.1429,
-            "svg_x": 60.01,
-            "svg_y": 234.79,
+            "svg_x": 59.04,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.262,
+            "u": 0.2889,
             "v": 0.1429,
-            "svg_x": 80.01,
-            "svg_y": 234.79,
+            "svg_x": 79.52,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -8709,43 +8709,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 234.79,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.738,
+            "u": 0.7111,
             "v": 0.1429,
-            "svg_x": 119.99,
-            "svg_y": 234.79,
+            "svg_x": 120.48,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.976,
+            "u": 0.9223,
             "v": 0.1429,
-            "svg_x": 139.99,
-            "svg_y": 234.79,
+            "svg_x": 140.96,
+            "svg_y": 224.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0479,
+            "u": 0.0674,
             "v": 0.2857,
-            "svg_x": 62.02,
-            "svg_y": 262.57,
+            "svg_x": 58.03,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.274,
+            "u": 0.2837,
             "v": 0.2857,
-            "svg_x": 81.01,
-            "svg_y": 262.57,
+            "svg_x": 79.02,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -8754,43 +8754,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 262.57,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.726,
+            "u": 0.7163,
             "v": 0.2857,
-            "svg_x": 118.99,
-            "svg_y": 262.57,
+            "svg_x": 120.98,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9521,
+            "u": 0.9326,
             "v": 0.2857,
-            "svg_x": 137.98,
-            "svg_y": 262.57,
+            "svg_x": 141.97,
+            "svg_y": 253.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0958,
+            "u": 0.057,
             "v": 0.4286,
-            "svg_x": 66.05,
-            "svg_y": 290.36,
+            "svg_x": 57.03,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2979,
+            "u": 0.2785,
             "v": 0.4286,
-            "svg_x": 83.02,
-            "svg_y": 290.36,
+            "svg_x": 78.51,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -8799,43 +8799,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 290.36,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7021,
+            "u": 0.7215,
             "v": 0.4286,
-            "svg_x": 116.98,
-            "svg_y": 290.36,
+            "svg_x": 121.49,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9042,
+            "u": 0.943,
             "v": 0.4286,
-            "svg_x": 133.95,
-            "svg_y": 290.36,
+            "svg_x": 142.97,
+            "svg_y": 283.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1677,
+            "u": 0.0466,
             "v": 0.5714,
-            "svg_x": 72.08,
-            "svg_y": 318.14,
+            "svg_x": 56.02,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3338,
+            "u": 0.2733,
             "v": 0.5714,
-            "svg_x": 86.04,
-            "svg_y": 318.14,
+            "svg_x": 78.01,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -8844,43 +8844,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 318.14,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6662,
+            "u": 0.7267,
             "v": 0.5714,
-            "svg_x": 113.96,
-            "svg_y": 318.14,
+            "svg_x": 121.99,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8323,
+            "u": 0.9534,
             "v": 0.5714,
-            "svg_x": 127.92,
-            "svg_y": 318.14,
+            "svg_x": 143.98,
+            "svg_y": 312.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2036,
+            "u": 0.0259,
             "v": 0.7143,
-            "svg_x": 75.1,
-            "svg_y": 345.93,
+            "svg_x": 54.01,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3518,
+            "u": 0.263,
             "v": 0.7143,
-            "svg_x": 87.55,
-            "svg_y": 345.93,
+            "svg_x": 77.01,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -8889,43 +8889,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 345.93,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6482,
+            "u": 0.737,
             "v": 0.7143,
-            "svg_x": 112.45,
-            "svg_y": 345.93,
+            "svg_x": 122.99,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7964,
+            "u": 0.9741,
             "v": 0.7143,
-            "svg_x": 124.9,
-            "svg_y": 345.93,
+            "svg_x": 145.99,
+            "svg_y": 342.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2216,
+            "u": 0.0259,
             "v": 0.8571,
-            "svg_x": 76.61,
-            "svg_y": 373.71,
+            "svg_x": 54.01,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3608,
+            "u": 0.263,
             "v": 0.8571,
-            "svg_x": 88.31,
-            "svg_y": 373.71,
+            "svg_x": 77.01,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -8934,25 +8934,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 373.71,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6392,
+            "u": 0.737,
             "v": 0.8571,
-            "svg_x": 111.69,
-            "svg_y": 373.71,
+            "svg_x": 122.99,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7784,
+            "u": 0.9741,
             "v": 0.8571,
-            "svg_x": 123.39,
-            "svg_y": 373.71,
+            "svg_x": 145.99,
+            "svg_y": 371.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -8960,8 +8960,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 70.6,
-            "svg_y": 401.5,
+            "svg_x": 66.05,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -8969,8 +8969,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 85.3,
-            "svg_y": 401.5,
+            "svg_x": 83.02,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -8979,7 +8979,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 401.5,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -8987,8 +8987,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 114.7,
-            "svg_y": 401.5,
+            "svg_x": 116.97,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -8996,8 +8996,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 129.4,
-            "svg_y": 401.5,
+            "svg_x": 133.95,
+            "svg_y": 401.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -9349,10 +9349,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 55.5,
-        "y": 103.0,
-        "width": 89.0,
-        "height": 181.5
+        "x": 39.0,
+        "y": 100.0,
+        "width": 122.0,
+        "height": 173.0
       },
       "point_cloud": {
         "rows": 8,
@@ -9361,8 +9361,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 68.85,
-            "svg_y": 103.0,
+            "svg_x": 57.3,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -9370,8 +9370,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.42,
-            "svg_y": 103.0,
+            "svg_x": 78.65,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -9380,7 +9380,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -9388,8 +9388,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.57,
-            "svg_y": 103.0,
+            "svg_x": 121.35,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -9397,27 +9397,27 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 131.15,
-            "svg_y": 103.0,
+            "svg_x": 142.7,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0734,
+            "u": 0.1564,
             "v": 0.1429,
-            "svg_x": 62.04,
-            "svg_y": 128.93,
-            "zone": "chest",
+            "svg_x": 58.08,
+            "svg_y": 124.71,
+            "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2867,
+            "u": 0.3282,
             "v": 0.1429,
-            "svg_x": 81.02,
-            "svg_y": 128.93,
-            "zone": "chest",
+            "svg_x": 79.04,
+            "svg_y": 124.71,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
@@ -9425,43 +9425,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 128.93,
-            "zone": "chest",
+            "svg_y": 124.71,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7133,
+            "u": 0.6718,
             "v": 0.1429,
-            "svg_x": 118.98,
-            "svg_y": 128.93,
-            "zone": "chest",
+            "svg_x": 120.96,
+            "svg_y": 124.71,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9266,
+            "u": 0.8436,
             "v": 0.1429,
-            "svg_x": 137.96,
-            "svg_y": 128.93,
+            "svg_x": 141.92,
+            "svg_y": 124.71,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1152,
+            "v": 0.2857,
+            "svg_x": 53.06,
+            "svg_y": 149.43,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0734,
+            "u": 0.3076,
             "v": 0.2857,
-            "svg_x": 62.04,
-            "svg_y": 154.86,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2867,
-            "v": 0.2857,
-            "svg_x": 81.02,
-            "svg_y": 154.86,
+            "svg_x": 76.53,
+            "svg_y": 149.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -9470,124 +9470,124 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 154.86,
+            "svg_y": 149.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7133,
+            "u": 0.6924,
             "v": 0.2857,
-            "svg_x": 118.98,
-            "svg_y": 154.86,
+            "svg_x": 123.47,
+            "svg_y": 149.43,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9266,
+            "u": 0.8848,
             "v": 0.2857,
-            "svg_x": 137.96,
-            "svg_y": 154.86,
+            "svg_x": 146.94,
+            "svg_y": 149.43,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0734,
+            "u": 0.0823,
             "v": 0.4286,
-            "svg_x": 62.04,
-            "svg_y": 180.79,
+            "svg_x": 49.04,
+            "svg_y": 174.14,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2867,
+            "u": 0.2922,
             "v": 0.4286,
-            "svg_x": 81.02,
-            "svg_y": 180.79,
+            "svg_x": 74.65,
+            "svg_y": 174.14,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5021,
             "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 180.79,
+            "svg_x": 100.25,
+            "svg_y": 174.14,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7133,
+            "u": 0.7119,
             "v": 0.4286,
-            "svg_x": 118.98,
-            "svg_y": 180.79,
+            "svg_x": 125.86,
+            "svg_y": 174.14,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9266,
+            "u": 0.9218,
             "v": 0.4286,
-            "svg_x": 137.96,
-            "svg_y": 180.79,
+            "svg_x": 151.46,
+            "svg_y": 174.14,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0791,
+            "u": 0.0494,
             "v": 0.5714,
-            "svg_x": 62.54,
-            "svg_y": 206.71,
+            "svg_x": 45.02,
+            "svg_y": 198.86,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.291,
+            "u": 0.2757,
             "v": 0.5714,
-            "svg_x": 81.4,
-            "svg_y": 206.71,
+            "svg_x": 72.64,
+            "svg_y": 198.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.5021,
             "v": 0.5714,
             "svg_x": 100.25,
-            "svg_y": 206.71,
+            "svg_y": 198.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7147,
+            "u": 0.7284,
             "v": 0.5714,
-            "svg_x": 119.11,
-            "svg_y": 206.71,
+            "svg_x": 127.86,
+            "svg_y": 198.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9266,
+            "u": 0.9547,
             "v": 0.5714,
-            "svg_x": 137.96,
-            "svg_y": 206.71,
+            "svg_x": 155.48,
+            "svg_y": 198.86,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0226,
+            "u": 0.0206,
             "v": 0.7143,
-            "svg_x": 57.51,
-            "svg_y": 232.64,
+            "svg_x": 41.51,
+            "svg_y": 223.57,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -9595,80 +9595,80 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.2613,
             "v": 0.7143,
-            "svg_x": 78.76,
-            "svg_y": 232.64,
+            "svg_x": 70.88,
+            "svg_y": 223.57,
+            "zone": "hip",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5021,
+            "v": 0.7143,
+            "svg_x": 100.25,
+            "svg_y": 223.57,
+            "zone": "hip",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7428,
+            "v": 0.7143,
+            "svg_x": 129.62,
+            "svg_y": 223.57,
+            "zone": "hip",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9835,
+            "v": 0.7143,
+            "svg_x": 158.99,
+            "svg_y": 223.57,
+            "zone": "hip",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1235,
+            "v": 0.8571,
+            "svg_x": 54.06,
+            "svg_y": 248.29,
+            "zone": "hip",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.3117,
+            "v": 0.8571,
+            "svg_x": 77.03,
+            "svg_y": 248.29,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.7143,
+            "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 232.64,
+            "svg_y": 248.29,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7387,
-            "v": 0.7143,
-            "svg_x": 121.24,
-            "svg_y": 232.64,
+            "u": 0.6883,
+            "v": 0.8571,
+            "svg_x": 122.97,
+            "svg_y": 248.29,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9774,
-            "v": 0.7143,
-            "svg_x": 142.49,
-            "svg_y": 232.64,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0734,
+            "u": 0.8765,
             "v": 0.8571,
-            "svg_x": 62.04,
-            "svg_y": 258.57,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2867,
-            "v": 0.8571,
-            "svg_x": 81.02,
-            "svg_y": 258.57,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.8571,
-            "svg_x": 100.0,
-            "svg_y": 258.57,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7133,
-            "v": 0.8571,
-            "svg_x": 118.98,
-            "svg_y": 258.57,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9266,
-            "v": 0.8571,
-            "svg_x": 137.96,
-            "svg_y": 258.57,
+            "svg_x": 145.94,
+            "svg_y": 248.29,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -9676,8 +9676,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 68.85,
-            "svg_y": 284.5,
+            "svg_x": 57.3,
+            "svg_y": 273.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -9685,8 +9685,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.42,
-            "svg_y": 284.5,
+            "svg_x": 78.65,
+            "svg_y": 273.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -9695,7 +9695,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 284.5,
+            "svg_y": 273.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": true
@@ -9703,8 +9703,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.57,
-            "svg_y": 284.5,
+            "svg_x": 121.35,
+            "svg_y": 273.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -9712,8 +9712,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 131.15,
-            "svg_y": 284.5,
+            "svg_x": 142.7,
+            "svg_y": 273.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -10066,10 +10066,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 56.5,
-        "y": 103.0,
-        "width": 87.0,
-        "height": 140.0
+        "x": 39.0,
+        "y": 100.0,
+        "width": 122.0,
+        "height": 139.0
       },
       "point_cloud": {
         "rows": 8,
@@ -10078,8 +10078,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 69.55,
-            "svg_y": 103.0,
+            "svg_x": 57.3,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -10087,8 +10087,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.77,
-            "svg_y": 103.0,
+            "svg_x": 78.65,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -10097,7 +10097,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -10105,8 +10105,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.22,
-            "svg_y": 103.0,
+            "svg_x": 121.35,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -10114,26 +10114,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 130.45,
-            "svg_y": 103.0,
+            "svg_x": 142.7,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1646,
             "v": 0.1429,
-            "svg_x": 62.03,
-            "svg_y": 123.0,
+            "svg_x": 59.08,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3323,
             "v": 0.1429,
-            "svg_x": 81.02,
-            "svg_y": 123.0,
+            "svg_x": 79.54,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
@@ -10142,43 +10142,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 123.0,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.6677,
             "v": 0.1429,
-            "svg_x": 118.98,
-            "svg_y": 123.0,
+            "svg_x": 120.46,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.8354,
             "v": 0.1429,
-            "svg_x": 137.97,
-            "svg_y": 123.0,
+            "svg_x": 140.92,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1317,
             "v": 0.2857,
-            "svg_x": 62.03,
-            "svg_y": 143.0,
+            "svg_x": 55.07,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3158,
             "v": 0.2857,
-            "svg_x": 81.02,
-            "svg_y": 143.0,
+            "svg_x": 77.53,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -10187,205 +10187,205 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 143.0,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.6842,
             "v": 0.2857,
-            "svg_x": 118.98,
-            "svg_y": 143.0,
+            "svg_x": 122.47,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.8683,
             "v": 0.2857,
-            "svg_x": 137.97,
-            "svg_y": 143.0,
+            "svg_x": 144.93,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1029,
             "v": 0.4286,
-            "svg_x": 62.03,
-            "svg_y": 163.0,
+            "svg_x": 51.55,
+            "svg_y": 159.57,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3025,
             "v": 0.4286,
-            "svg_x": 81.02,
-            "svg_y": 163.0,
+            "svg_x": 75.9,
+            "svg_y": 159.57,
             "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5021,
+            "v": 0.4286,
+            "svg_x": 100.25,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7016,
+            "v": 0.4286,
+            "svg_x": 124.6,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9012,
+            "v": 0.4286,
+            "svg_x": 148.95,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0741,
+            "v": 0.5714,
+            "svg_x": 48.04,
+            "svg_y": 179.43,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.287,
+            "v": 0.5714,
+            "svg_x": 74.02,
+            "svg_y": 179.43,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7182,
-            "v": 0.4286,
-            "svg_x": 118.98,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9364,
-            "v": 0.4286,
-            "svg_x": 137.97,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0636,
-            "v": 0.5714,
-            "svg_x": 62.03,
-            "svg_y": 183.0,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2818,
-            "v": 0.5714,
-            "svg_x": 81.02,
-            "svg_y": 183.0,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 183.0,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.713,
             "v": 0.5714,
-            "svg_x": 118.98,
-            "svg_y": 183.0,
+            "svg_x": 125.98,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.9259,
             "v": 0.5714,
-            "svg_x": 137.97,
-            "svg_y": 183.0,
+            "svg_x": 151.96,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0694,
+            "u": 0.0494,
             "v": 0.7143,
-            "svg_x": 62.53,
-            "svg_y": 203.0,
+            "svg_x": 45.02,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2861,
+            "u": 0.2757,
             "v": 0.7143,
-            "svg_x": 81.39,
-            "svg_y": 203.0,
+            "svg_x": 72.64,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5029,
+            "u": 0.5021,
             "v": 0.7143,
             "svg_x": 100.25,
-            "svg_y": 203.0,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7197,
+            "u": 0.7284,
             "v": 0.7143,
-            "svg_x": 119.11,
-            "svg_y": 203.0,
+            "svg_x": 127.86,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.9547,
             "v": 0.7143,
-            "svg_x": 137.97,
-            "svg_y": 203.0,
+            "svg_x": 155.48,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0751,
+            "u": 0.0247,
             "v": 0.8571,
-            "svg_x": 63.04,
-            "svg_y": 223.0,
+            "svg_x": 42.01,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.289,
+            "u": 0.2634,
             "v": 0.8571,
-            "svg_x": 81.64,
-            "svg_y": 223.0,
+            "svg_x": 71.13,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5029,
+            "u": 0.5021,
             "v": 0.8571,
             "svg_x": 100.25,
-            "svg_y": 223.0,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7168,
+            "u": 0.7407,
             "v": 0.8571,
-            "svg_x": 118.86,
-            "svg_y": 223.0,
+            "svg_x": 129.37,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9306,
+            "u": 0.9794,
             "v": 0.8571,
-            "svg_x": 137.47,
-            "svg_y": 223.0,
+            "svg_x": 158.49,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -10393,8 +10393,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 69.55,
-            "svg_y": 243.0,
+            "svg_x": 57.3,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -10402,8 +10402,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.77,
-            "svg_y": 243.0,
+            "svg_x": 78.65,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -10412,7 +10412,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 243.0,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -10420,8 +10420,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.22,
-            "svg_y": 243.0,
+            "svg_x": 121.35,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -10429,8 +10429,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 130.45,
-            "svg_y": 243.0,
+            "svg_x": 142.7,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -10777,10 +10777,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 56.5,
-        "y": 103.0,
-        "width": 87.0,
-        "height": 140.0
+        "x": 39.0,
+        "y": 100.0,
+        "width": 122.0,
+        "height": 139.0
       },
       "point_cloud": {
         "rows": 8,
@@ -10789,8 +10789,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 69.55,
-            "svg_y": 103.0,
+            "svg_x": 57.3,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -10798,8 +10798,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.77,
-            "svg_y": 103.0,
+            "svg_x": 78.65,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -10808,7 +10808,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -10816,8 +10816,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.22,
-            "svg_y": 103.0,
+            "svg_x": 121.35,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -10825,26 +10825,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 130.45,
-            "svg_y": 103.0,
+            "svg_x": 142.7,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1646,
             "v": 0.1429,
-            "svg_x": 62.03,
-            "svg_y": 123.0,
+            "svg_x": 59.08,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3323,
             "v": 0.1429,
-            "svg_x": 81.02,
-            "svg_y": 123.0,
+            "svg_x": 79.54,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
@@ -10853,43 +10853,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 123.0,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.6677,
             "v": 0.1429,
-            "svg_x": 118.98,
-            "svg_y": 123.0,
+            "svg_x": 120.46,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.8354,
             "v": 0.1429,
-            "svg_x": 137.97,
-            "svg_y": 123.0,
+            "svg_x": 140.92,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1317,
             "v": 0.2857,
-            "svg_x": 62.03,
-            "svg_y": 143.0,
+            "svg_x": 55.07,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3158,
             "v": 0.2857,
-            "svg_x": 81.02,
-            "svg_y": 143.0,
+            "svg_x": 77.53,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -10898,205 +10898,205 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 143.0,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.6842,
             "v": 0.2857,
-            "svg_x": 118.98,
-            "svg_y": 143.0,
+            "svg_x": 122.47,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.8683,
             "v": 0.2857,
-            "svg_x": 137.97,
-            "svg_y": 143.0,
+            "svg_x": 144.93,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1029,
             "v": 0.4286,
-            "svg_x": 62.03,
-            "svg_y": 163.0,
+            "svg_x": 51.55,
+            "svg_y": 159.57,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3025,
             "v": 0.4286,
-            "svg_x": 81.02,
-            "svg_y": 163.0,
+            "svg_x": 75.9,
+            "svg_y": 159.57,
             "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5021,
+            "v": 0.4286,
+            "svg_x": 100.25,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7016,
+            "v": 0.4286,
+            "svg_x": 124.6,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9012,
+            "v": 0.4286,
+            "svg_x": 148.95,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0741,
+            "v": 0.5714,
+            "svg_x": 48.04,
+            "svg_y": 179.43,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.287,
+            "v": 0.5714,
+            "svg_x": 74.02,
+            "svg_y": 179.43,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7182,
-            "v": 0.4286,
-            "svg_x": 118.98,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9364,
-            "v": 0.4286,
-            "svg_x": 137.97,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0636,
-            "v": 0.5714,
-            "svg_x": 62.03,
-            "svg_y": 183.0,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2818,
-            "v": 0.5714,
-            "svg_x": 81.02,
-            "svg_y": 183.0,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 183.0,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.713,
             "v": 0.5714,
-            "svg_x": 118.98,
-            "svg_y": 183.0,
+            "svg_x": 125.98,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.9259,
             "v": 0.5714,
-            "svg_x": 137.97,
-            "svg_y": 183.0,
+            "svg_x": 151.96,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0694,
+            "u": 0.0494,
             "v": 0.7143,
-            "svg_x": 62.53,
-            "svg_y": 203.0,
+            "svg_x": 45.02,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2861,
+            "u": 0.2757,
             "v": 0.7143,
-            "svg_x": 81.39,
-            "svg_y": 203.0,
+            "svg_x": 72.64,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5029,
+            "u": 0.5021,
             "v": 0.7143,
             "svg_x": 100.25,
-            "svg_y": 203.0,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7197,
+            "u": 0.7284,
             "v": 0.7143,
-            "svg_x": 119.11,
-            "svg_y": 203.0,
+            "svg_x": 127.86,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.9547,
             "v": 0.7143,
-            "svg_x": 137.97,
-            "svg_y": 203.0,
+            "svg_x": 155.48,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0751,
+            "u": 0.0247,
             "v": 0.8571,
-            "svg_x": 63.04,
-            "svg_y": 223.0,
+            "svg_x": 42.01,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.289,
+            "u": 0.2634,
             "v": 0.8571,
-            "svg_x": 81.64,
-            "svg_y": 223.0,
+            "svg_x": 71.13,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5029,
+            "u": 0.5021,
             "v": 0.8571,
             "svg_x": 100.25,
-            "svg_y": 223.0,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7168,
+            "u": 0.7407,
             "v": 0.8571,
-            "svg_x": 118.86,
-            "svg_y": 223.0,
+            "svg_x": 129.37,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9306,
+            "u": 0.9794,
             "v": 0.8571,
-            "svg_x": 137.47,
-            "svg_y": 223.0,
+            "svg_x": 158.49,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11104,8 +11104,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 69.55,
-            "svg_y": 243.0,
+            "svg_x": 57.3,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11113,8 +11113,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.77,
-            "svg_y": 243.0,
+            "svg_x": 78.65,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11123,7 +11123,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 243.0,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -11131,8 +11131,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.22,
-            "svg_y": 243.0,
+            "svg_x": 121.35,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11140,8 +11140,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 130.45,
-            "svg_y": 243.0,
+            "svg_x": 142.7,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11490,10 +11490,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 56.5,
-        "y": 103.0,
-        "width": 87.0,
-        "height": 140.0
+        "x": 39.0,
+        "y": 100.0,
+        "width": 122.0,
+        "height": 139.0
       },
       "point_cloud": {
         "rows": 8,
@@ -11502,8 +11502,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 69.55,
-            "svg_y": 103.0,
+            "svg_x": 57.3,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -11511,8 +11511,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.77,
-            "svg_y": 103.0,
+            "svg_x": 78.65,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -11521,7 +11521,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -11529,8 +11529,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.22,
-            "svg_y": 103.0,
+            "svg_x": 121.35,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -11538,26 +11538,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 130.45,
-            "svg_y": 103.0,
+            "svg_x": 142.7,
+            "svg_y": 100.0,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1646,
             "v": 0.1429,
-            "svg_x": 62.03,
-            "svg_y": 123.0,
+            "svg_x": 59.08,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3323,
             "v": 0.1429,
-            "svg_x": 81.02,
-            "svg_y": 123.0,
+            "svg_x": 79.54,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
@@ -11566,43 +11566,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 123.0,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.6677,
             "v": 0.1429,
-            "svg_x": 118.98,
-            "svg_y": 123.0,
+            "svg_x": 120.46,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.8354,
             "v": 0.1429,
-            "svg_x": 137.97,
-            "svg_y": 123.0,
+            "svg_x": 140.92,
+            "svg_y": 119.86,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1317,
             "v": 0.2857,
-            "svg_x": 62.03,
-            "svg_y": 143.0,
+            "svg_x": 55.07,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3158,
             "v": 0.2857,
-            "svg_x": 81.02,
-            "svg_y": 143.0,
+            "svg_x": 77.53,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -11611,205 +11611,205 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 143.0,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.6842,
             "v": 0.2857,
-            "svg_x": 118.98,
-            "svg_y": 143.0,
+            "svg_x": 122.47,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.8683,
             "v": 0.2857,
-            "svg_x": 137.97,
-            "svg_y": 143.0,
+            "svg_x": 144.93,
+            "svg_y": 139.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0636,
+            "u": 0.1029,
             "v": 0.4286,
-            "svg_x": 62.03,
-            "svg_y": 163.0,
+            "svg_x": 51.55,
+            "svg_y": 159.57,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2818,
+            "u": 0.3025,
             "v": 0.4286,
-            "svg_x": 81.02,
-            "svg_y": 163.0,
+            "svg_x": 75.9,
+            "svg_y": 159.57,
             "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5021,
+            "v": 0.4286,
+            "svg_x": 100.25,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7016,
+            "v": 0.4286,
+            "svg_x": 124.6,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9012,
+            "v": 0.4286,
+            "svg_x": 148.95,
+            "svg_y": 159.57,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0741,
+            "v": 0.5714,
+            "svg_x": 48.04,
+            "svg_y": 179.43,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.287,
+            "v": 0.5714,
+            "svg_x": 74.02,
+            "svg_y": 179.43,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7182,
-            "v": 0.4286,
-            "svg_x": 118.98,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9364,
-            "v": 0.4286,
-            "svg_x": 137.97,
-            "svg_y": 163.0,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0636,
-            "v": 0.5714,
-            "svg_x": 62.03,
-            "svg_y": 183.0,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2818,
-            "v": 0.5714,
-            "svg_x": 81.02,
-            "svg_y": 183.0,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 183.0,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.713,
             "v": 0.5714,
-            "svg_x": 118.98,
-            "svg_y": 183.0,
+            "svg_x": 125.98,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.9259,
             "v": 0.5714,
-            "svg_x": 137.97,
-            "svg_y": 183.0,
+            "svg_x": 151.96,
+            "svg_y": 179.43,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0694,
+            "u": 0.0494,
             "v": 0.7143,
-            "svg_x": 62.53,
-            "svg_y": 203.0,
+            "svg_x": 45.02,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2861,
+            "u": 0.2757,
             "v": 0.7143,
-            "svg_x": 81.39,
-            "svg_y": 203.0,
+            "svg_x": 72.64,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5029,
+            "u": 0.5021,
             "v": 0.7143,
             "svg_x": 100.25,
-            "svg_y": 203.0,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7197,
+            "u": 0.7284,
             "v": 0.7143,
-            "svg_x": 119.11,
-            "svg_y": 203.0,
+            "svg_x": 127.86,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9364,
+            "u": 0.9547,
             "v": 0.7143,
-            "svg_x": 137.97,
-            "svg_y": 203.0,
+            "svg_x": 155.48,
+            "svg_y": 199.29,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0751,
+            "u": 0.0247,
             "v": 0.8571,
-            "svg_x": 63.04,
-            "svg_y": 223.0,
+            "svg_x": 42.01,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.289,
+            "u": 0.2634,
             "v": 0.8571,
-            "svg_x": 81.64,
-            "svg_y": 223.0,
+            "svg_x": 71.13,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5029,
+            "u": 0.5021,
             "v": 0.8571,
             "svg_x": 100.25,
-            "svg_y": 223.0,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7168,
+            "u": 0.7407,
             "v": 0.8571,
-            "svg_x": 118.86,
-            "svg_y": 223.0,
+            "svg_x": 129.37,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9306,
+            "u": 0.9794,
             "v": 0.8571,
-            "svg_x": 137.47,
-            "svg_y": 223.0,
+            "svg_x": 158.49,
+            "svg_y": 219.14,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11817,8 +11817,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 69.55,
-            "svg_y": 243.0,
+            "svg_x": 57.3,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11826,8 +11826,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.77,
-            "svg_y": 243.0,
+            "svg_x": 78.65,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11836,7 +11836,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 243.0,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -11844,8 +11844,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.22,
-            "svg_y": 243.0,
+            "svg_x": 121.35,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -11853,8 +11853,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 130.45,
-            "svg_y": 243.0,
+            "svg_x": 142.7,
+            "svg_y": 239.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -12202,10 +12202,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 55.0,
-        "y": 103.0,
-        "width": 90.0,
-        "height": 146.0
+        "x": 37.5,
+        "y": 100.5,
+        "width": 125.5,
+        "height": 139.5
       },
       "point_cloud": {
         "rows": 8,
@@ -12214,8 +12214,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 68.5,
-            "svg_y": 103.0,
+            "svg_x": 56.33,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -12223,8 +12223,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.25,
-            "svg_y": 103.0,
+            "svg_x": 78.29,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -12232,8 +12232,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_x": 100.25,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -12241,8 +12241,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.75,
-            "svg_y": 103.0,
+            "svg_x": 122.21,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -12250,278 +12250,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 131.5,
-            "svg_y": 103.0,
+            "svg_x": 144.18,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0615,
+            "u": 0.16,
             "v": 0.1429,
-            "svg_x": 60.53,
-            "svg_y": 123.86,
-            "zone": "chest",
+            "svg_x": 57.58,
+            "svg_y": 120.43,
+            "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2807,
+            "u": 0.33,
             "v": 0.1429,
-            "svg_x": 80.27,
-            "svg_y": 123.86,
-            "zone": "chest",
+            "svg_x": 78.91,
+            "svg_y": 120.43,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
             "v": 0.1429,
+            "svg_x": 100.25,
+            "svg_y": 120.43,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.67,
+            "v": 0.1429,
+            "svg_x": 121.59,
+            "svg_y": 120.43,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.84,
+            "v": 0.1429,
+            "svg_x": 142.92,
+            "svg_y": 120.43,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.128,
+            "v": 0.2857,
+            "svg_x": 53.56,
+            "svg_y": 140.36,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.314,
+            "v": 0.2857,
+            "svg_x": 76.91,
+            "svg_y": 140.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.2857,
+            "svg_x": 100.25,
+            "svg_y": 140.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.686,
+            "v": 0.2857,
+            "svg_x": 123.59,
+            "svg_y": 140.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.872,
+            "v": 0.2857,
+            "svg_x": 146.94,
+            "svg_y": 140.36,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1,
+            "v": 0.4286,
+            "svg_x": 50.05,
+            "svg_y": 160.29,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.3,
+            "v": 0.4286,
+            "svg_x": 75.15,
+            "svg_y": 160.29,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.4286,
+            "svg_x": 100.25,
+            "svg_y": 160.29,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7,
+            "v": 0.4286,
+            "svg_x": 125.35,
+            "svg_y": 160.29,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9,
+            "v": 0.4286,
+            "svg_x": 150.45,
+            "svg_y": 160.29,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.068,
+            "v": 0.5714,
+            "svg_x": 46.03,
+            "svg_y": 180.21,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.283,
+            "v": 0.5714,
+            "svg_x": 73.02,
+            "svg_y": 180.21,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.498,
+            "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 123.86,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7193,
-            "v": 0.1429,
-            "svg_x": 119.73,
-            "svg_y": 123.86,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9385,
-            "v": 0.1429,
-            "svg_x": 139.47,
-            "svg_y": 123.86,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0615,
-            "v": 0.2857,
-            "svg_x": 60.53,
-            "svg_y": 144.71,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2821,
-            "v": 0.2857,
-            "svg_x": 80.39,
-            "svg_y": 144.71,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5028,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 144.71,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7235,
-            "v": 0.2857,
-            "svg_x": 120.11,
-            "svg_y": 144.71,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9441,
-            "v": 0.2857,
-            "svg_x": 139.97,
-            "svg_y": 144.71,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0615,
-            "v": 0.4286,
-            "svg_x": 60.53,
-            "svg_y": 165.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2821,
-            "v": 0.4286,
-            "svg_x": 80.39,
-            "svg_y": 165.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5028,
-            "v": 0.4286,
-            "svg_x": 100.25,
-            "svg_y": 165.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7235,
-            "v": 0.4286,
-            "svg_x": 120.11,
-            "svg_y": 165.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9441,
-            "v": 0.4286,
-            "svg_x": 139.97,
-            "svg_y": 165.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0615,
-            "v": 0.5714,
-            "svg_x": 60.53,
-            "svg_y": 186.43,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2821,
-            "v": 0.5714,
-            "svg_x": 80.39,
-            "svg_y": 186.43,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5028,
-            "v": 0.5714,
-            "svg_x": 100.25,
-            "svg_y": 186.43,
+            "svg_y": 180.21,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7235,
+            "u": 0.713,
             "v": 0.5714,
-            "svg_x": 120.11,
-            "svg_y": 186.43,
+            "svg_x": 126.98,
+            "svg_y": 180.21,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9441,
+            "u": 0.928,
             "v": 0.5714,
-            "svg_x": 139.97,
-            "svg_y": 186.43,
+            "svg_x": 153.96,
+            "svg_y": 180.21,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.067,
+            "u": 0.044,
             "v": 0.7143,
-            "svg_x": 61.03,
-            "svg_y": 207.29,
+            "svg_x": 43.02,
+            "svg_y": 200.14,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2849,
+            "u": 0.271,
             "v": 0.7143,
-            "svg_x": 80.64,
-            "svg_y": 207.29,
+            "svg_x": 71.51,
+            "svg_y": 200.14,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.498,
             "v": 0.7143,
-            "svg_x": 100.25,
-            "svg_y": 207.29,
+            "svg_x": 100.0,
+            "svg_y": 200.14,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7207,
+            "u": 0.725,
             "v": 0.7143,
-            "svg_x": 119.86,
-            "svg_y": 207.29,
+            "svg_x": 128.49,
+            "svg_y": 200.14,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9385,
+            "u": 0.952,
             "v": 0.7143,
-            "svg_x": 139.47,
-            "svg_y": 207.29,
+            "svg_x": 156.98,
+            "svg_y": 200.14,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0726,
+            "u": 0.024,
             "v": 0.8571,
-            "svg_x": 61.54,
-            "svg_y": 228.14,
+            "svg_x": 40.51,
+            "svg_y": 220.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2877,
+            "u": 0.262,
             "v": 0.8571,
-            "svg_x": 80.89,
-            "svg_y": 228.14,
+            "svg_x": 70.38,
+            "svg_y": 220.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.25,
-            "svg_y": 228.14,
+            "svg_y": 220.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7179,
+            "u": 0.738,
             "v": 0.8571,
-            "svg_x": 119.61,
-            "svg_y": 228.14,
+            "svg_x": 130.12,
+            "svg_y": 220.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.933,
+            "u": 0.976,
             "v": 0.8571,
-            "svg_x": 138.97,
-            "svg_y": 228.14,
+            "svg_x": 159.99,
+            "svg_y": 220.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -12529,8 +12529,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 68.5,
-            "svg_y": 249.0,
+            "svg_x": 56.33,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -12538,8 +12538,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.25,
-            "svg_y": 249.0,
+            "svg_x": 78.29,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -12547,8 +12547,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 249.0,
+            "svg_x": 100.25,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -12556,8 +12556,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.75,
-            "svg_y": 249.0,
+            "svg_x": 122.21,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -12565,8 +12565,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 131.5,
-            "svg_y": 249.0,
+            "svg_x": 144.18,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -12914,10 +12914,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 54.5,
-        "y": 103.0,
-        "width": 91.0,
-        "height": 244.5
+        "x": 37.5,
+        "y": 100.5,
+        "width": 125.5,
+        "height": 234.5
       },
       "point_cloud": {
         "rows": 8,
@@ -12926,8 +12926,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 68.15,
-            "svg_y": 103.0,
+            "svg_x": 56.33,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -12935,8 +12935,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.07,
-            "svg_y": 103.0,
+            "svg_x": 78.29,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -12944,8 +12944,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_x": 100.25,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -12953,8 +12953,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.92,
-            "svg_y": 103.0,
+            "svg_x": 122.21,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -12962,161 +12962,161 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 131.85,
-            "svg_y": 103.0,
+            "svg_x": 144.18,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0663,
+            "u": 0.136,
             "v": 0.1429,
-            "svg_x": 60.53,
-            "svg_y": 137.93,
+            "svg_x": 54.57,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2845,
+            "u": 0.318,
             "v": 0.1429,
-            "svg_x": 80.39,
-            "svg_y": 137.93,
+            "svg_x": 77.41,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.25,
-            "svg_y": 137.93,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.721,
+            "u": 0.682,
             "v": 0.1429,
-            "svg_x": 120.11,
-            "svg_y": 137.93,
+            "svg_x": 123.09,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9392,
+            "u": 0.864,
             "v": 0.1429,
-            "svg_x": 139.97,
-            "svg_y": 137.93,
+            "svg_x": 145.93,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0663,
+            "u": 0.084,
             "v": 0.2857,
-            "svg_x": 60.53,
-            "svg_y": 172.86,
+            "svg_x": 48.04,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2845,
+            "u": 0.291,
             "v": 0.2857,
-            "svg_x": 80.39,
-            "svg_y": 172.86,
+            "svg_x": 74.02,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.498,
             "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 172.86,
+            "svg_x": 100.0,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.721,
+            "u": 0.705,
             "v": 0.2857,
-            "svg_x": 120.11,
-            "svg_y": 172.86,
+            "svg_x": 125.98,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9392,
+            "u": 0.912,
             "v": 0.2857,
-            "svg_x": 139.97,
-            "svg_y": 172.86,
+            "svg_x": 151.96,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0718,
+            "u": 0.044,
             "v": 0.4286,
-            "svg_x": 61.04,
-            "svg_y": 207.79,
+            "svg_x": 43.02,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2873,
+            "u": 0.272,
             "v": 0.4286,
-            "svg_x": 80.64,
-            "svg_y": 207.79,
+            "svg_x": 71.64,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 207.79,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.728,
             "v": 0.4286,
-            "svg_x": 119.86,
-            "svg_y": 207.79,
+            "svg_x": 128.86,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9337,
+            "u": 0.956,
             "v": 0.4286,
-            "svg_x": 139.47,
-            "svg_y": 207.79,
+            "svg_x": 157.48,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0221,
+            "u": 0.016,
             "v": 0.5714,
-            "svg_x": 56.51,
-            "svg_y": 242.71,
+            "svg_x": 39.51,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.261,
+            "u": 0.258,
             "v": 0.5714,
-            "svg_x": 78.26,
-            "svg_y": 242.71,
+            "svg_x": 69.88,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -13124,116 +13124,116 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 242.71,
+            "svg_x": 100.25,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.739,
+            "u": 0.742,
             "v": 0.5714,
-            "svg_x": 121.74,
-            "svg_y": 242.71,
+            "svg_x": 130.62,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9779,
+            "u": 0.984,
             "v": 0.5714,
-            "svg_x": 143.49,
-            "svg_y": 242.71,
+            "svg_x": 160.99,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0387,
+            "u": 0.128,
             "v": 0.7143,
-            "svg_x": 58.02,
-            "svg_y": 277.64,
+            "svg_x": 53.56,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2693,
+            "u": 0.313,
             "v": 0.7143,
-            "svg_x": 79.01,
-            "svg_y": 277.64,
+            "svg_x": 76.78,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 277.64,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7307,
+            "u": 0.683,
             "v": 0.7143,
-            "svg_x": 120.99,
-            "svg_y": 277.64,
+            "svg_x": 123.22,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9613,
+            "u": 0.868,
             "v": 0.7143,
-            "svg_x": 141.98,
-            "svg_y": 277.64,
+            "svg_x": 146.43,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.105,
+            "u": 0.108,
             "v": 0.8571,
-            "svg_x": 64.05,
-            "svg_y": 312.57,
+            "svg_x": 51.05,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3025,
+            "u": 0.303,
             "v": 0.8571,
-            "svg_x": 82.03,
-            "svg_y": 312.57,
+            "svg_x": 75.53,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 312.57,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6975,
+            "u": 0.693,
             "v": 0.8571,
-            "svg_x": 117.97,
-            "svg_y": 312.57,
+            "svg_x": 124.47,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.895,
+            "u": 0.888,
             "v": 0.8571,
-            "svg_x": 135.95,
-            "svg_y": 312.57,
+            "svg_x": 148.94,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -13241,8 +13241,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 68.15,
-            "svg_y": 347.5,
+            "svg_x": 56.33,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -13250,8 +13250,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.07,
-            "svg_y": 347.5,
+            "svg_x": 78.29,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -13259,8 +13259,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 347.5,
+            "svg_x": 100.25,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -13268,8 +13268,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.92,
-            "svg_y": 347.5,
+            "svg_x": 122.21,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -13277,8 +13277,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 131.85,
-            "svg_y": 347.5,
+            "svg_x": 144.18,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -13625,10 +13625,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 54.5,
-        "y": 103.0,
-        "width": 91.0,
-        "height": 244.5
+        "x": 37.5,
+        "y": 100.5,
+        "width": 125.5,
+        "height": 234.5
       },
       "point_cloud": {
         "rows": 8,
@@ -13637,8 +13637,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 68.15,
-            "svg_y": 103.0,
+            "svg_x": 56.33,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -13646,8 +13646,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 84.07,
-            "svg_y": 103.0,
+            "svg_x": 78.29,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -13655,8 +13655,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 103.0,
+            "svg_x": 100.25,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -13664,8 +13664,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 115.92,
-            "svg_y": 103.0,
+            "svg_x": 122.21,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -13673,161 +13673,161 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 131.85,
-            "svg_y": 103.0,
+            "svg_x": 144.18,
+            "svg_y": 100.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0663,
+            "u": 0.136,
             "v": 0.1429,
-            "svg_x": 60.53,
-            "svg_y": 137.93,
+            "svg_x": 54.57,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2845,
+            "u": 0.318,
             "v": 0.1429,
-            "svg_x": 80.39,
-            "svg_y": 137.93,
+            "svg_x": 77.41,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.25,
-            "svg_y": 137.93,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.721,
+            "u": 0.682,
             "v": 0.1429,
-            "svg_x": 120.11,
-            "svg_y": 137.93,
+            "svg_x": 123.09,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9392,
+            "u": 0.864,
             "v": 0.1429,
-            "svg_x": 139.97,
-            "svg_y": 137.93,
+            "svg_x": 145.93,
+            "svg_y": 134.0,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0663,
+            "u": 0.084,
             "v": 0.2857,
-            "svg_x": 60.53,
-            "svg_y": 172.86,
+            "svg_x": 48.04,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2845,
+            "u": 0.291,
             "v": 0.2857,
-            "svg_x": 80.39,
-            "svg_y": 172.86,
+            "svg_x": 74.02,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.498,
             "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 172.86,
+            "svg_x": 100.0,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.721,
+            "u": 0.705,
             "v": 0.2857,
-            "svg_x": 120.11,
-            "svg_y": 172.86,
+            "svg_x": 125.98,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9392,
+            "u": 0.912,
             "v": 0.2857,
-            "svg_x": 139.97,
-            "svg_y": 172.86,
+            "svg_x": 151.96,
+            "svg_y": 167.5,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0718,
+            "u": 0.044,
             "v": 0.4286,
-            "svg_x": 61.04,
-            "svg_y": 207.79,
+            "svg_x": 43.02,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2873,
+            "u": 0.272,
             "v": 0.4286,
-            "svg_x": 80.64,
-            "svg_y": 207.79,
+            "svg_x": 71.64,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5028,
+            "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 207.79,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7182,
+            "u": 0.728,
             "v": 0.4286,
-            "svg_x": 119.86,
-            "svg_y": 207.79,
+            "svg_x": 128.86,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9337,
+            "u": 0.956,
             "v": 0.4286,
-            "svg_x": 139.47,
-            "svg_y": 207.79,
+            "svg_x": 157.48,
+            "svg_y": 201.0,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0221,
+            "u": 0.016,
             "v": 0.5714,
-            "svg_x": 56.51,
-            "svg_y": 242.71,
+            "svg_x": 39.51,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.261,
+            "u": 0.258,
             "v": 0.5714,
-            "svg_x": 78.26,
-            "svg_y": 242.71,
+            "svg_x": 69.88,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -13835,116 +13835,116 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 242.71,
+            "svg_x": 100.25,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.739,
+            "u": 0.742,
             "v": 0.5714,
-            "svg_x": 121.74,
-            "svg_y": 242.71,
+            "svg_x": 130.62,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9779,
+            "u": 0.984,
             "v": 0.5714,
-            "svg_x": 143.49,
-            "svg_y": 242.71,
+            "svg_x": 160.99,
+            "svg_y": 234.5,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0387,
+            "u": 0.128,
             "v": 0.7143,
-            "svg_x": 58.02,
-            "svg_y": 277.64,
+            "svg_x": 53.56,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2693,
+            "u": 0.313,
             "v": 0.7143,
-            "svg_x": 79.01,
-            "svg_y": 277.64,
+            "svg_x": 76.78,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 277.64,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7307,
+            "u": 0.683,
             "v": 0.7143,
-            "svg_x": 120.99,
-            "svg_y": 277.64,
+            "svg_x": 123.22,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9613,
+            "u": 0.868,
             "v": 0.7143,
-            "svg_x": 141.98,
-            "svg_y": 277.64,
+            "svg_x": 146.43,
+            "svg_y": 268.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.105,
+            "u": 0.108,
             "v": 0.8571,
-            "svg_x": 64.05,
-            "svg_y": 312.57,
+            "svg_x": 51.05,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3025,
+            "u": 0.303,
             "v": 0.8571,
-            "svg_x": 82.03,
-            "svg_y": 312.57,
+            "svg_x": 75.53,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 312.57,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6975,
+            "u": 0.693,
             "v": 0.8571,
-            "svg_x": 117.97,
-            "svg_y": 312.57,
+            "svg_x": 124.47,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.895,
+            "u": 0.888,
             "v": 0.8571,
-            "svg_x": 135.95,
-            "svg_y": 312.57,
+            "svg_x": 148.94,
+            "svg_y": 301.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -13952,8 +13952,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 68.15,
-            "svg_y": 347.5,
+            "svg_x": 56.33,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -13961,8 +13961,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 84.07,
-            "svg_y": 347.5,
+            "svg_x": 78.29,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -13970,8 +13970,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 347.5,
+            "svg_x": 100.25,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -13979,8 +13979,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 115.92,
-            "svg_y": 347.5,
+            "svg_x": 122.21,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -13988,8 +13988,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 131.85,
-            "svg_y": 347.5,
+            "svg_x": 144.18,
+            "svg_y": 335.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -14342,10 +14342,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 74.5,
-        "y": 391.0,
-        "width": 51.5,
-        "height": 27.0
+        "x": 49.0,
+        "y": 390.0,
+        "width": 102.5,
+        "height": 28.0
       },
       "point_cloud": {
         "rows": 4,
@@ -14354,8 +14354,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 82.22,
-            "svg_y": 391.0,
+            "svg_x": 64.38,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -14363,8 +14363,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 91.24,
-            "svg_y": 391.0,
+            "svg_x": 82.31,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -14373,7 +14373,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 391.0,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -14381,8 +14381,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 109.26,
-            "svg_y": 391.0,
+            "svg_x": 118.19,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -14390,26 +14390,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 118.28,
-            "svg_y": 391.0,
+            "svg_x": 136.12,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0686,
+            "u": 0.049,
             "v": 0.3333,
-            "svg_x": 78.03,
-            "svg_y": 400.0,
+            "svg_x": 54.02,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2843,
+            "u": 0.2745,
             "v": 0.3333,
-            "svg_x": 89.14,
-            "svg_y": 400.0,
+            "svg_x": 77.14,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -14418,70 +14418,70 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.3333,
             "svg_x": 100.25,
-            "svg_y": 400.0,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7157,
+            "u": 0.7255,
             "v": 0.3333,
-            "svg_x": 111.36,
-            "svg_y": 400.0,
+            "svg_x": 123.36,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9314,
+            "u": 0.951,
             "v": 0.3333,
-            "svg_x": 122.47,
-            "svg_y": 400.0,
+            "svg_x": 146.48,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0392,
+            "u": 0.0196,
             "v": 0.6667,
-            "svg_x": 76.52,
-            "svg_y": 409.0,
+            "svg_x": 51.01,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2696,
+            "u": 0.2586,
             "v": 0.6667,
-            "svg_x": 88.38,
-            "svg_y": 409.0,
+            "svg_x": 75.5,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4975,
             "v": 0.6667,
-            "svg_x": 100.25,
-            "svg_y": 409.0,
+            "svg_x": 100.0,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7304,
+            "u": 0.7365,
             "v": 0.6667,
-            "svg_x": 112.12,
-            "svg_y": 409.0,
+            "svg_x": 124.49,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9608,
+            "u": 0.9755,
             "v": 0.6667,
-            "svg_x": 123.98,
-            "svg_y": 409.0,
+            "svg_x": 148.99,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -14489,7 +14489,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 82.22,
+            "svg_x": 64.38,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -14498,7 +14498,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 91.24,
+            "svg_x": 82.31,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -14516,7 +14516,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 109.26,
+            "svg_x": 118.19,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -14525,7 +14525,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 118.28,
+            "svg_x": 136.12,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -14713,10 +14713,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 74.5,
-        "y": 391.0,
-        "width": 51.5,
-        "height": 27.0
+        "x": 49.0,
+        "y": 390.0,
+        "width": 102.5,
+        "height": 28.0
       },
       "point_cloud": {
         "rows": 4,
@@ -14725,8 +14725,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 82.22,
-            "svg_y": 391.0,
+            "svg_x": 64.38,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -14734,8 +14734,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 91.24,
-            "svg_y": 391.0,
+            "svg_x": 82.31,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -14744,7 +14744,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 391.0,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -14752,8 +14752,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 109.26,
-            "svg_y": 391.0,
+            "svg_x": 118.19,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -14761,26 +14761,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 118.28,
-            "svg_y": 391.0,
+            "svg_x": 136.12,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0686,
+            "u": 0.049,
             "v": 0.3333,
-            "svg_x": 78.03,
-            "svg_y": 400.0,
+            "svg_x": 54.02,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2843,
+            "u": 0.2745,
             "v": 0.3333,
-            "svg_x": 89.14,
-            "svg_y": 400.0,
+            "svg_x": 77.14,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -14789,70 +14789,70 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.3333,
             "svg_x": 100.25,
-            "svg_y": 400.0,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7157,
+            "u": 0.7255,
             "v": 0.3333,
-            "svg_x": 111.36,
-            "svg_y": 400.0,
+            "svg_x": 123.36,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9314,
+            "u": 0.951,
             "v": 0.3333,
-            "svg_x": 122.47,
-            "svg_y": 400.0,
+            "svg_x": 146.48,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0392,
+            "u": 0.0196,
             "v": 0.6667,
-            "svg_x": 76.52,
-            "svg_y": 409.0,
+            "svg_x": 51.01,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2696,
+            "u": 0.2586,
             "v": 0.6667,
-            "svg_x": 88.38,
-            "svg_y": 409.0,
+            "svg_x": 75.5,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4975,
             "v": 0.6667,
-            "svg_x": 100.25,
-            "svg_y": 409.0,
+            "svg_x": 100.0,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7304,
+            "u": 0.7365,
             "v": 0.6667,
-            "svg_x": 112.12,
-            "svg_y": 409.0,
+            "svg_x": 124.49,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9608,
+            "u": 0.9755,
             "v": 0.6667,
-            "svg_x": 123.98,
-            "svg_y": 409.0,
+            "svg_x": 148.99,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -14860,7 +14860,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 82.22,
+            "svg_x": 64.38,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -14869,7 +14869,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 91.24,
+            "svg_x": 82.31,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -14887,7 +14887,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 109.26,
+            "svg_x": 118.19,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -14896,7 +14896,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 118.28,
+            "svg_x": 136.12,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15089,10 +15089,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 74.5,
-        "y": 391.0,
-        "width": 51.5,
-        "height": 27.0
+        "x": 49.0,
+        "y": 390.0,
+        "width": 102.5,
+        "height": 28.0
       },
       "point_cloud": {
         "rows": 4,
@@ -15101,8 +15101,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 82.22,
-            "svg_y": 391.0,
+            "svg_x": 64.38,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -15110,8 +15110,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 91.24,
-            "svg_y": 391.0,
+            "svg_x": 82.31,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -15120,7 +15120,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 391.0,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -15128,8 +15128,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 109.26,
-            "svg_y": 391.0,
+            "svg_x": 118.19,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -15137,26 +15137,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 118.28,
-            "svg_y": 391.0,
+            "svg_x": 136.12,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0686,
+            "u": 0.049,
             "v": 0.3333,
-            "svg_x": 78.03,
-            "svg_y": 400.0,
+            "svg_x": 54.02,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2843,
+            "u": 0.2745,
             "v": 0.3333,
-            "svg_x": 89.14,
-            "svg_y": 400.0,
+            "svg_x": 77.14,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -15165,70 +15165,70 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.3333,
             "svg_x": 100.25,
-            "svg_y": 400.0,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7157,
+            "u": 0.7255,
             "v": 0.3333,
-            "svg_x": 111.36,
-            "svg_y": 400.0,
+            "svg_x": 123.36,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9314,
+            "u": 0.951,
             "v": 0.3333,
-            "svg_x": 122.47,
-            "svg_y": 400.0,
+            "svg_x": 146.48,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0392,
+            "u": 0.0196,
             "v": 0.6667,
-            "svg_x": 76.52,
-            "svg_y": 409.0,
+            "svg_x": 51.01,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2696,
+            "u": 0.2586,
             "v": 0.6667,
-            "svg_x": 88.38,
-            "svg_y": 409.0,
+            "svg_x": 75.5,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4975,
             "v": 0.6667,
-            "svg_x": 100.25,
-            "svg_y": 409.0,
+            "svg_x": 100.0,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7304,
+            "u": 0.7365,
             "v": 0.6667,
-            "svg_x": 112.12,
-            "svg_y": 409.0,
+            "svg_x": 124.49,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9608,
+            "u": 0.9755,
             "v": 0.6667,
-            "svg_x": 123.98,
-            "svg_y": 409.0,
+            "svg_x": 148.99,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -15236,7 +15236,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 82.22,
+            "svg_x": 64.38,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15245,7 +15245,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 91.24,
+            "svg_x": 82.31,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15263,7 +15263,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 109.26,
+            "svg_x": 118.19,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15272,7 +15272,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 118.28,
+            "svg_x": 136.12,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15461,10 +15461,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "female",
       "default_viewbox": {
-        "x": 74.5,
-        "y": 391.0,
-        "width": 51.5,
-        "height": 27.0
+        "x": 49.0,
+        "y": 390.0,
+        "width": 102.5,
+        "height": 28.0
       },
       "point_cloud": {
         "rows": 4,
@@ -15473,8 +15473,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 82.22,
-            "svg_y": 391.0,
+            "svg_x": 64.38,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -15482,8 +15482,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 91.24,
-            "svg_y": 391.0,
+            "svg_x": 82.31,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -15492,7 +15492,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 391.0,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -15500,8 +15500,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 109.26,
-            "svg_y": 391.0,
+            "svg_x": 118.19,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -15509,26 +15509,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 118.28,
-            "svg_y": 391.0,
+            "svg_x": 136.12,
+            "svg_y": 390.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0686,
+            "u": 0.049,
             "v": 0.3333,
-            "svg_x": 78.03,
-            "svg_y": 400.0,
+            "svg_x": 54.02,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2843,
+            "u": 0.2745,
             "v": 0.3333,
-            "svg_x": 89.14,
-            "svg_y": 400.0,
+            "svg_x": 77.14,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -15537,70 +15537,70 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.3333,
             "svg_x": 100.25,
-            "svg_y": 400.0,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7157,
+            "u": 0.7255,
             "v": 0.3333,
-            "svg_x": 111.36,
-            "svg_y": 400.0,
+            "svg_x": 123.36,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9314,
+            "u": 0.951,
             "v": 0.3333,
-            "svg_x": 122.47,
-            "svg_y": 400.0,
+            "svg_x": 146.48,
+            "svg_y": 399.33,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0392,
+            "u": 0.0196,
             "v": 0.6667,
-            "svg_x": 76.52,
-            "svg_y": 409.0,
+            "svg_x": 51.01,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2696,
+            "u": 0.2586,
             "v": 0.6667,
-            "svg_x": 88.38,
-            "svg_y": 409.0,
+            "svg_x": 75.5,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4975,
             "v": 0.6667,
-            "svg_x": 100.25,
-            "svg_y": 409.0,
+            "svg_x": 100.0,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7304,
+            "u": 0.7365,
             "v": 0.6667,
-            "svg_x": 112.12,
-            "svg_y": 409.0,
+            "svg_x": 124.49,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9608,
+            "u": 0.9755,
             "v": 0.6667,
-            "svg_x": 123.98,
-            "svg_y": 409.0,
+            "svg_x": 148.99,
+            "svg_y": 408.67,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -15608,7 +15608,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 82.22,
+            "svg_x": 64.38,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15617,7 +15617,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 91.24,
+            "svg_x": 82.31,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15635,7 +15635,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 109.26,
+            "svg_x": 118.19,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15644,7 +15644,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 118.28,
+            "svg_x": 136.12,
             "svg_y": 418.0,
             "zone": "feet",
             "is_edge": true,
@@ -15833,10 +15833,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 48.5,
-        "y": 95.0,
-        "width": 103.5,
-        "height": 318.0
+        "x": 34.0,
+        "y": 92.5,
+        "width": 132.5,
+        "height": 318.5
       },
       "point_cloud": {
         "rows": 8,
@@ -15845,8 +15845,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.03,
-            "svg_y": 95.0,
+            "svg_x": 53.88,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -15854,8 +15854,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.14,
-            "svg_y": 95.0,
+            "svg_x": 77.06,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -15864,7 +15864,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -15872,8 +15872,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.36,
-            "svg_y": 95.0,
+            "svg_x": 123.44,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -15881,278 +15881,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.47,
-            "svg_y": 95.0,
+            "svg_x": 146.62,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0194,
+            "u": 0.0909,
             "v": 0.1429,
-            "svg_x": 50.51,
-            "svg_y": 140.43,
+            "svg_x": 46.05,
+            "svg_y": 138.0,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2597,
+            "u": 0.2945,
             "v": 0.1429,
-            "svg_x": 75.38,
-            "svg_y": 140.43,
+            "svg_x": 73.02,
+            "svg_y": 138.0,
             "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.4981,
+            "v": 0.1429,
+            "svg_x": 100.0,
+            "svg_y": 138.0,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7017,
+            "v": 0.1429,
+            "svg_x": 126.98,
+            "svg_y": 138.0,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9053,
+            "v": 0.1429,
+            "svg_x": 153.95,
+            "svg_y": 138.0,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0379,
+            "v": 0.2857,
+            "svg_x": 39.02,
+            "svg_y": 183.5,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.268,
+            "v": 0.2857,
+            "svg_x": 69.51,
+            "svg_y": 183.5,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.4981,
+            "v": 0.2857,
+            "svg_x": 100.0,
+            "svg_y": 183.5,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7282,
+            "v": 0.2857,
+            "svg_x": 130.49,
+            "svg_y": 183.5,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9583,
+            "v": 0.2857,
+            "svg_x": 160.98,
+            "svg_y": 183.5,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0152,
+            "v": 0.4286,
+            "svg_x": 36.01,
+            "svg_y": 229.0,
+            "zone": "hip",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2576,
+            "v": 0.4286,
+            "svg_x": 68.13,
+            "svg_y": 229.0,
+            "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.1429,
+            "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 140.43,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7403,
-            "v": 0.1429,
-            "svg_x": 125.12,
-            "svg_y": 140.43,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9806,
-            "v": 0.1429,
-            "svg_x": 149.99,
-            "svg_y": 140.43,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0194,
-            "v": 0.2857,
-            "svg_x": 50.51,
-            "svg_y": 185.86,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2597,
-            "v": 0.2857,
-            "svg_x": 75.38,
-            "svg_y": 185.86,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 185.86,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7403,
-            "v": 0.2857,
-            "svg_x": 125.12,
-            "svg_y": 185.86,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9806,
-            "v": 0.2857,
-            "svg_x": 149.99,
-            "svg_y": 185.86,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0243,
-            "v": 0.4286,
-            "svg_x": 51.01,
-            "svg_y": 231.29,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2609,
-            "v": 0.4286,
-            "svg_x": 75.51,
-            "svg_y": 231.29,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4976,
-            "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 231.29,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7342,
+            "u": 0.7424,
             "v": 0.4286,
-            "svg_x": 124.49,
-            "svg_y": 231.29,
+            "svg_x": 132.37,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9709,
+            "u": 0.9848,
             "v": 0.4286,
-            "svg_x": 148.99,
-            "svg_y": 231.29,
+            "svg_x": 164.49,
+            "svg_y": 229.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1214,
+            "u": 0.1515,
             "v": 0.5714,
-            "svg_x": 61.06,
-            "svg_y": 276.71,
+            "svg_x": 54.08,
+            "svg_y": 274.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3095,
+            "u": 0.3248,
             "v": 0.5714,
-            "svg_x": 80.53,
-            "svg_y": 276.71,
+            "svg_x": 77.04,
+            "svg_y": 274.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.4981,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 276.71,
+            "svg_y": 274.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6857,
+            "u": 0.6714,
             "v": 0.5714,
-            "svg_x": 119.47,
-            "svg_y": 276.71,
+            "svg_x": 122.96,
+            "svg_y": 274.5,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8738,
+            "u": 0.8447,
             "v": 0.5714,
-            "svg_x": 138.94,
-            "svg_y": 276.71,
+            "svg_x": 145.92,
+            "svg_y": 274.5,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1408,
+            "u": 0.1364,
             "v": 0.7143,
-            "svg_x": 63.07,
-            "svg_y": 322.14,
+            "svg_x": 52.07,
+            "svg_y": 320.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3192,
+            "u": 0.3172,
             "v": 0.7143,
-            "svg_x": 81.53,
-            "svg_y": 322.14,
+            "svg_x": 76.03,
+            "svg_y": 320.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.4981,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 322.14,
+            "svg_y": 320.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.676,
+            "u": 0.679,
             "v": 0.7143,
-            "svg_x": 118.46,
-            "svg_y": 322.14,
+            "svg_x": 123.96,
+            "svg_y": 320.0,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8544,
+            "u": 0.8598,
             "v": 0.7143,
-            "svg_x": 136.93,
-            "svg_y": 322.14,
+            "svg_x": 147.93,
+            "svg_y": 320.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1748,
+            "u": 0.1174,
             "v": 0.8571,
-            "svg_x": 66.59,
-            "svg_y": 367.57,
+            "svg_x": 49.56,
+            "svg_y": 365.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3362,
+            "u": 0.3078,
             "v": 0.8571,
-            "svg_x": 83.29,
-            "svg_y": 367.57,
+            "svg_x": 74.78,
+            "svg_y": 365.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.4981,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 367.57,
+            "svg_y": 365.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.659,
+            "u": 0.6884,
             "v": 0.8571,
-            "svg_x": 116.7,
-            "svg_y": 367.57,
+            "svg_x": 125.22,
+            "svg_y": 365.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8204,
+            "u": 0.8788,
             "v": 0.8571,
-            "svg_x": 133.41,
-            "svg_y": 367.57,
+            "svg_x": 150.44,
+            "svg_y": 365.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -16160,8 +16160,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.03,
-            "svg_y": 413.0,
+            "svg_x": 53.88,
+            "svg_y": 411.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -16169,8 +16169,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.14,
-            "svg_y": 413.0,
+            "svg_x": 77.06,
+            "svg_y": 411.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -16179,7 +16179,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.25,
-            "svg_y": 413.0,
+            "svg_y": 411.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -16187,8 +16187,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.36,
-            "svg_y": 413.0,
+            "svg_x": 123.44,
+            "svg_y": 411.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -16196,8 +16196,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.47,
-            "svg_y": 413.0,
+            "svg_x": 146.62,
+            "svg_y": 411.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -16546,10 +16546,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 49.0,
-        "y": 95.0,
-        "width": 102.5,
-        "height": 317.0
+        "x": 34.0,
+        "y": 92.5,
+        "width": 132.0,
+        "height": 318.0
       },
       "point_cloud": {
         "rows": 8,
@@ -16558,8 +16558,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.38,
-            "svg_y": 95.0,
+            "svg_x": 53.8,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -16567,8 +16567,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.31,
-            "svg_y": 95.0,
+            "svg_x": 76.9,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -16576,8 +16576,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_x": 100.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -16585,8 +16585,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.19,
-            "svg_y": 95.0,
+            "svg_x": 123.1,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -16594,278 +16594,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.12,
-            "svg_y": 95.0,
+            "svg_x": 146.2,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0951,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 140.29,
+            "svg_x": 46.55,
+            "svg_y": 137.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2985,
             "v": 0.1429,
-            "svg_x": 75.63,
-            "svg_y": 140.29,
+            "svg_x": 73.4,
+            "svg_y": 137.93,
             "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5019,
+            "v": 0.1429,
+            "svg_x": 100.25,
+            "svg_y": 137.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7053,
+            "v": 0.1429,
+            "svg_x": 127.1,
+            "svg_y": 137.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9087,
+            "v": 0.1429,
+            "svg_x": 153.95,
+            "svg_y": 137.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0418,
+            "v": 0.2857,
+            "svg_x": 39.52,
+            "svg_y": 183.36,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2719,
+            "v": 0.2857,
+            "svg_x": 69.89,
+            "svg_y": 183.36,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5019,
+            "v": 0.2857,
+            "svg_x": 100.25,
+            "svg_y": 183.36,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7319,
+            "v": 0.2857,
+            "svg_x": 130.62,
+            "svg_y": 183.36,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.962,
+            "v": 0.2857,
+            "svg_x": 160.98,
+            "svg_y": 183.36,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0152,
+            "v": 0.4286,
+            "svg_x": 36.01,
+            "svg_y": 228.79,
+            "zone": "hip",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2576,
+            "v": 0.4286,
+            "svg_x": 68.0,
+            "svg_y": 228.79,
+            "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.1429,
-            "svg_x": 100.25,
-            "svg_y": 140.29,
-            "zone": "chest",
+            "v": 0.4286,
+            "svg_x": 100.0,
+            "svg_y": 228.79,
+            "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
-            "v": 0.1429,
-            "svg_x": 124.87,
-            "svg_y": 140.29,
-            "zone": "chest",
+            "u": 0.7424,
+            "v": 0.4286,
+            "svg_x": 132.0,
+            "svg_y": 228.79,
+            "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
-            "v": 0.1429,
-            "svg_x": 149.49,
-            "svg_y": 140.29,
-            "zone": "chest",
+            "u": 0.9848,
+            "v": 0.4286,
+            "svg_x": 163.99,
+            "svg_y": 228.79,
+            "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
-            "v": 0.2857,
-            "svg_x": 51.01,
-            "svg_y": 185.57,
-            "zone": "waist",
+            "u": 0.1293,
+            "v": 0.5714,
+            "svg_x": 51.06,
+            "svg_y": 274.21,
+            "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
-            "v": 0.2857,
-            "svg_x": 75.63,
-            "svg_y": 185.57,
-            "zone": "waist",
+            "u": 0.3146,
+            "v": 0.5714,
+            "svg_x": 75.53,
+            "svg_y": 274.21,
+            "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 185.57,
-            "zone": "waist",
+            "v": 0.5714,
+            "svg_x": 100.0,
+            "svg_y": 274.21,
+            "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
-            "v": 0.2857,
-            "svg_x": 124.87,
-            "svg_y": 185.57,
-            "zone": "waist",
+            "u": 0.6854,
+            "v": 0.5714,
+            "svg_x": 124.47,
+            "svg_y": 274.21,
+            "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
-            "v": 0.2857,
-            "svg_x": 149.49,
-            "svg_y": 185.57,
-            "zone": "waist",
+            "u": 0.8707,
+            "v": 0.5714,
+            "svg_x": 148.94,
+            "svg_y": 274.21,
+            "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0294,
-            "v": 0.4286,
-            "svg_x": 52.01,
-            "svg_y": 230.86,
-            "zone": "hip",
+            "u": 0.0989,
+            "v": 0.7143,
+            "svg_x": 47.05,
+            "svg_y": 319.64,
+            "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2647,
-            "v": 0.4286,
-            "svg_x": 76.13,
-            "svg_y": 230.86,
-            "zone": "hip",
+            "u": 0.2994,
+            "v": 0.7143,
+            "svg_x": 73.52,
+            "svg_y": 319.64,
+            "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.4286,
-            "svg_x": 100.25,
-            "svg_y": 230.86,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7353,
-            "v": 0.4286,
-            "svg_x": 124.37,
-            "svg_y": 230.86,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9706,
-            "v": 0.4286,
-            "svg_x": 148.49,
-            "svg_y": 230.86,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.1275,
-            "v": 0.5714,
-            "svg_x": 62.06,
-            "svg_y": 276.14,
-            "zone": "knee",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3125,
-            "v": 0.5714,
-            "svg_x": 81.03,
-            "svg_y": 276.14,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4975,
-            "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 276.14,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.6826,
-            "v": 0.5714,
-            "svg_x": 118.97,
-            "svg_y": 276.14,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.8676,
-            "v": 0.5714,
-            "svg_x": 137.93,
-            "svg_y": 276.14,
-            "zone": "knee",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.1961,
-            "v": 0.7143,
-            "svg_x": 69.1,
-            "svg_y": 321.43,
-            "zone": "knee",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3468,
-            "v": 0.7143,
-            "svg_x": 84.55,
-            "svg_y": 321.43,
-            "zone": "knee",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4975,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 321.43,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6483,
+            "u": 0.7006,
             "v": 0.7143,
-            "svg_x": 115.45,
-            "svg_y": 321.43,
+            "svg_x": 126.48,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.799,
+            "u": 0.9011,
             "v": 0.7143,
-            "svg_x": 130.9,
-            "svg_y": 321.43,
+            "svg_x": 152.95,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2549,
+            "u": 0.1521,
             "v": 0.8571,
-            "svg_x": 75.13,
-            "svg_y": 366.71,
+            "svg_x": 54.08,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3762,
+            "u": 0.326,
             "v": 0.8571,
-            "svg_x": 87.56,
-            "svg_y": 366.71,
+            "svg_x": 77.04,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4975,
+            "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 366.71,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6189,
+            "u": 0.674,
             "v": 0.8571,
-            "svg_x": 112.43,
-            "svg_y": 366.71,
+            "svg_x": 122.96,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7402,
+            "u": 0.8479,
             "v": 0.8571,
-            "svg_x": 124.87,
-            "svg_y": 366.71,
+            "svg_x": 145.92,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -16873,8 +16873,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.38,
-            "svg_y": 412.0,
+            "svg_x": 53.8,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -16882,8 +16882,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.31,
-            "svg_y": 412.0,
+            "svg_x": 76.9,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -16891,8 +16891,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
-            "svg_y": 412.0,
+            "svg_x": 100.0,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -16900,8 +16900,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.19,
-            "svg_y": 412.0,
+            "svg_x": 123.1,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -16909,8 +16909,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.12,
-            "svg_y": 412.0,
+            "svg_x": 146.2,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -17262,10 +17262,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 48.0,
-        "y": 95.0,
-        "width": 104.0,
-        "height": 317.0
+        "x": 33.5,
+        "y": 92.5,
+        "width": 133.5,
+        "height": 318.0
       },
       "point_cloud": {
         "rows": 8,
@@ -17274,8 +17274,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 63.6,
-            "svg_y": 95.0,
+            "svg_x": 53.52,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -17283,8 +17283,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 81.8,
-            "svg_y": 95.0,
+            "svg_x": 76.89,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -17292,8 +17292,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 95.0,
+            "svg_x": 100.25,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -17301,8 +17301,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.2,
-            "svg_y": 95.0,
+            "svg_x": 123.61,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -17310,26 +17310,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.4,
-            "svg_y": 95.0,
+            "svg_x": 146.97,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0193,
+            "u": 0.094,
             "v": 0.1429,
-            "svg_x": 50.01,
-            "svg_y": 140.29,
+            "svg_x": 46.05,
+            "svg_y": 137.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2597,
+            "u": 0.297,
             "v": 0.1429,
-            "svg_x": 75.0,
-            "svg_y": 140.29,
+            "svg_x": 73.15,
+            "svg_y": 137.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -17337,44 +17337,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.1429,
-            "svg_x": 100.0,
-            "svg_y": 140.29,
+            "svg_x": 100.25,
+            "svg_y": 137.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7403,
+            "u": 0.703,
             "v": 0.1429,
-            "svg_x": 125.0,
-            "svg_y": 140.29,
+            "svg_x": 127.35,
+            "svg_y": 137.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9807,
+            "u": 0.906,
             "v": 0.1429,
-            "svg_x": 149.99,
-            "svg_y": 140.29,
+            "svg_x": 154.45,
+            "svg_y": 137.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0193,
+            "u": 0.0414,
             "v": 0.2857,
-            "svg_x": 50.01,
-            "svg_y": 185.57,
+            "svg_x": 39.02,
+            "svg_y": 183.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2597,
+            "u": 0.2707,
             "v": 0.2857,
-            "svg_x": 75.0,
-            "svg_y": 185.57,
+            "svg_x": 69.64,
+            "svg_y": 183.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -17382,206 +17382,206 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.2857,
-            "svg_x": 100.0,
-            "svg_y": 185.57,
+            "svg_x": 100.25,
+            "svg_y": 183.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7403,
+            "u": 0.7293,
             "v": 0.2857,
-            "svg_x": 125.0,
-            "svg_y": 185.57,
+            "svg_x": 130.86,
+            "svg_y": 183.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9807,
+            "u": 0.9586,
             "v": 0.2857,
-            "svg_x": 149.99,
-            "svg_y": 185.57,
+            "svg_x": 161.48,
+            "svg_y": 183.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.029,
+            "u": 0.015,
             "v": 0.4286,
-            "svg_x": 51.01,
-            "svg_y": 230.86,
+            "svg_x": 35.51,
+            "svg_y": 228.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2657,
+            "u": 0.2575,
             "v": 0.4286,
-            "svg_x": 75.63,
-            "svg_y": 230.86,
+            "svg_x": 67.88,
+            "svg_y": 228.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5024,
+            "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 230.86,
+            "svg_y": 228.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7391,
+            "u": 0.7425,
             "v": 0.4286,
-            "svg_x": 124.87,
-            "svg_y": 230.86,
+            "svg_x": 132.62,
+            "svg_y": 228.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9758,
+            "u": 0.985,
             "v": 0.4286,
-            "svg_x": 149.49,
-            "svg_y": 230.86,
+            "svg_x": 164.99,
+            "svg_y": 228.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1836,
+            "u": 0.1767,
             "v": 0.5714,
-            "svg_x": 67.09,
-            "svg_y": 276.14,
+            "svg_x": 57.09,
+            "svg_y": 274.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3418,
+            "u": 0.3374,
             "v": 0.5714,
-            "svg_x": 83.55,
-            "svg_y": 276.14,
+            "svg_x": 78.54,
+            "svg_y": 274.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4981,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 276.14,
+            "svg_y": 274.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6582,
+            "u": 0.6588,
             "v": 0.5714,
-            "svg_x": 116.45,
-            "svg_y": 276.14,
+            "svg_x": 121.45,
+            "svg_y": 274.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8164,
+            "u": 0.8195,
             "v": 0.5714,
-            "svg_x": 132.91,
-            "svg_y": 276.14,
+            "svg_x": 142.91,
+            "svg_y": 274.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2415,
+            "u": 0.1617,
             "v": 0.7143,
-            "svg_x": 73.12,
-            "svg_y": 321.43,
+            "svg_x": 55.08,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3708,
+            "u": 0.3299,
             "v": 0.7143,
-            "svg_x": 86.56,
-            "svg_y": 321.43,
+            "svg_x": 77.54,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4981,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 321.43,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6292,
+            "u": 0.6664,
             "v": 0.7143,
-            "svg_x": 113.44,
-            "svg_y": 321.43,
+            "svg_x": 122.46,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7585,
+            "u": 0.8346,
             "v": 0.7143,
-            "svg_x": 126.88,
-            "svg_y": 321.43,
+            "svg_x": 144.92,
+            "svg_y": 319.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2609,
+            "u": 0.1541,
             "v": 0.8571,
-            "svg_x": 75.13,
-            "svg_y": 366.71,
+            "svg_x": 54.08,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3804,
+            "u": 0.3261,
             "v": 0.8571,
-            "svg_x": 87.57,
-            "svg_y": 366.71,
+            "svg_x": 77.04,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4981,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 366.71,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6196,
+            "u": 0.6701,
             "v": 0.8571,
-            "svg_x": 112.43,
-            "svg_y": 366.71,
+            "svg_x": 122.96,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.7391,
+            "u": 0.8421,
             "v": 0.8571,
-            "svg_x": 124.87,
-            "svg_y": 366.71,
+            "svg_x": 145.92,
+            "svg_y": 365.07,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -17589,8 +17589,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 63.6,
-            "svg_y": 412.0,
+            "svg_x": 53.52,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -17598,8 +17598,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 81.8,
-            "svg_y": 412.0,
+            "svg_x": 76.89,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -17607,8 +17607,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 412.0,
+            "svg_x": 100.25,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -17616,8 +17616,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.2,
-            "svg_y": 412.0,
+            "svg_x": 123.61,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -17625,8 +17625,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.4,
-            "svg_y": 412.0,
+            "svg_x": 146.97,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -17971,10 +17971,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 49.0,
-        "y": 95.0,
-        "width": 102.5,
-        "height": 187.0
+        "x": 34.0,
+        "y": 92.5,
+        "width": 132.0,
+        "height": 182.5
       },
       "point_cloud": {
         "rows": 8,
@@ -17983,8 +17983,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.38,
-            "svg_y": 95.0,
+            "svg_x": 53.8,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -17992,8 +17992,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.31,
-            "svg_y": 95.0,
+            "svg_x": 76.9,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -18001,8 +18001,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_x": 100.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -18010,8 +18010,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.19,
-            "svg_y": 95.0,
+            "svg_x": 123.1,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -18019,206 +18019,206 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.12,
-            "svg_y": 95.0,
+            "svg_x": 146.2,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.1293,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 121.71,
+            "svg_x": 51.06,
+            "svg_y": 118.57,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2586,
+            "u": 0.3146,
             "v": 0.1429,
-            "svg_x": 75.5,
-            "svg_y": 121.71,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4975,
-            "v": 0.1429,
-            "svg_x": 100.0,
-            "svg_y": 121.71,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7365,
-            "v": 0.1429,
-            "svg_x": 124.49,
-            "svg_y": 121.71,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9755,
-            "v": 0.1429,
-            "svg_x": 148.99,
-            "svg_y": 121.71,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.2857,
-            "svg_x": 51.01,
-            "svg_y": 148.43,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2598,
-            "v": 0.2857,
-            "svg_x": 75.63,
-            "svg_y": 148.43,
+            "svg_x": 75.53,
+            "svg_y": 118.57,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 148.43,
+            "v": 0.1429,
+            "svg_x": 100.0,
+            "svg_y": 118.57,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
-            "v": 0.2857,
-            "svg_x": 124.87,
-            "svg_y": 148.43,
+            "u": 0.6854,
+            "v": 0.1429,
+            "svg_x": 124.47,
+            "svg_y": 118.57,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
-            "v": 0.2857,
-            "svg_x": 149.49,
-            "svg_y": 148.43,
+            "u": 0.8707,
+            "v": 0.1429,
+            "svg_x": 148.94,
+            "svg_y": 118.57,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0913,
+            "v": 0.2857,
+            "svg_x": 46.05,
+            "svg_y": 144.64,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2966,
+            "v": 0.2857,
+            "svg_x": 73.15,
+            "svg_y": 144.64,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5019,
+            "v": 0.2857,
+            "svg_x": 100.25,
+            "svg_y": 144.64,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7072,
+            "v": 0.2857,
+            "svg_x": 127.35,
+            "svg_y": 144.64,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9125,
+            "v": 0.2857,
+            "svg_x": 154.46,
+            "svg_y": 144.64,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.057,
             "v": 0.4286,
-            "svg_x": 51.01,
-            "svg_y": 175.14,
+            "svg_x": 41.53,
+            "svg_y": 170.71,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2795,
             "v": 0.4286,
-            "svg_x": 75.63,
-            "svg_y": 175.14,
+            "svg_x": 70.89,
+            "svg_y": 170.71,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5019,
+            "v": 0.4286,
+            "svg_x": 100.25,
+            "svg_y": 170.71,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7243,
+            "v": 0.4286,
+            "svg_x": 129.61,
+            "svg_y": 170.71,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9468,
+            "v": 0.4286,
+            "svg_x": 158.97,
+            "svg_y": 170.71,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0304,
+            "v": 0.5714,
+            "svg_x": 38.02,
+            "svg_y": 196.79,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2652,
+            "v": 0.5714,
+            "svg_x": 69.01,
+            "svg_y": 196.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.4286,
-            "svg_x": 100.25,
-            "svg_y": 175.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7402,
-            "v": 0.4286,
-            "svg_x": 124.87,
-            "svg_y": 175.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9804,
-            "v": 0.4286,
-            "svg_x": 149.49,
-            "svg_y": 175.14,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.5714,
-            "svg_x": 51.01,
-            "svg_y": 201.86,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2586,
-            "v": 0.5714,
-            "svg_x": 75.5,
-            "svg_y": 201.86,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4975,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 201.86,
+            "svg_y": 196.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7365,
+            "u": 0.7348,
             "v": 0.5714,
-            "svg_x": 124.49,
-            "svg_y": 201.86,
+            "svg_x": 130.99,
+            "svg_y": 196.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9755,
+            "u": 0.9696,
             "v": 0.5714,
-            "svg_x": 148.99,
-            "svg_y": 201.86,
+            "svg_x": 161.98,
+            "svg_y": 196.79,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0294,
+            "u": 0.0152,
             "v": 0.7143,
-            "svg_x": 52.01,
-            "svg_y": 228.57,
+            "svg_x": 36.01,
+            "svg_y": 222.86,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2647,
+            "u": 0.2576,
             "v": 0.7143,
-            "svg_x": 76.13,
-            "svg_y": 228.57,
+            "svg_x": 68.0,
+            "svg_y": 222.86,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -18226,71 +18226,71 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.7143,
-            "svg_x": 100.25,
-            "svg_y": 228.57,
+            "svg_x": 100.0,
+            "svg_y": 222.86,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7353,
+            "u": 0.7424,
             "v": 0.7143,
-            "svg_x": 124.37,
-            "svg_y": 228.57,
+            "svg_x": 132.0,
+            "svg_y": 222.86,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9706,
+            "u": 0.9848,
             "v": 0.7143,
-            "svg_x": 148.49,
-            "svg_y": 228.57,
+            "svg_x": 163.99,
+            "svg_y": 222.86,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1569,
+            "u": 0.1559,
             "v": 0.8571,
-            "svg_x": 65.08,
-            "svg_y": 255.29,
+            "svg_x": 54.58,
+            "svg_y": 248.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3272,
+            "u": 0.3279,
             "v": 0.8571,
-            "svg_x": 82.54,
-            "svg_y": 255.29,
+            "svg_x": 77.29,
+            "svg_y": 248.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4975,
+            "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 255.29,
+            "svg_y": 248.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6679,
+            "u": 0.6721,
             "v": 0.8571,
-            "svg_x": 117.46,
-            "svg_y": 255.29,
+            "svg_x": 122.71,
+            "svg_y": 248.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8382,
+            "u": 0.8441,
             "v": 0.8571,
-            "svg_x": 134.92,
-            "svg_y": 255.29,
+            "svg_x": 145.42,
+            "svg_y": 248.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -18298,8 +18298,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.38,
-            "svg_y": 282.0,
+            "svg_x": 53.8,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -18307,8 +18307,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.31,
-            "svg_y": 282.0,
+            "svg_x": 76.9,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -18316,8 +18316,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
-            "svg_y": 282.0,
+            "svg_x": 100.0,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": true
@@ -18325,8 +18325,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.19,
-            "svg_y": 282.0,
+            "svg_x": 123.1,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -18334,8 +18334,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.12,
-            "svg_y": 282.0,
+            "svg_x": 146.2,
+            "svg_y": 275.0,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -18682,10 +18682,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 49.0,
-        "y": 95.0,
-        "width": 102.5,
-        "height": 145.5
+        "x": 34.0,
+        "y": 92.5,
+        "width": 132.0,
+        "height": 141.5
       },
       "point_cloud": {
         "rows": 8,
@@ -18694,8 +18694,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.38,
-            "svg_y": 95.0,
+            "svg_x": 53.8,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -18703,8 +18703,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.31,
-            "svg_y": 95.0,
+            "svg_x": 76.9,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -18712,8 +18712,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_x": 100.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -18721,8 +18721,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.19,
-            "svg_y": 95.0,
+            "svg_x": 123.1,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -18730,161 +18730,161 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.12,
-            "svg_y": 95.0,
+            "svg_x": 146.2,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.1407,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 115.79,
+            "svg_x": 52.57,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2586,
+            "u": 0.3213,
             "v": 0.1429,
-            "svg_x": 75.5,
-            "svg_y": 115.79,
+            "svg_x": 76.41,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4975,
+            "u": 0.5019,
             "v": 0.1429,
+            "svg_x": 100.25,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.6825,
+            "v": 0.1429,
+            "svg_x": 124.09,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.8631,
+            "v": 0.1429,
+            "svg_x": 147.93,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1065,
+            "v": 0.2857,
+            "svg_x": 48.05,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.3032,
+            "v": 0.2857,
+            "svg_x": 74.03,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7365,
-            "v": 0.1429,
-            "svg_x": 124.49,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9755,
-            "v": 0.1429,
-            "svg_x": 148.99,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.2857,
-            "svg_x": 51.01,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2598,
-            "v": 0.2857,
-            "svg_x": 75.63,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 136.57,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
+            "u": 0.6968,
             "v": 0.2857,
-            "svg_x": 124.87,
-            "svg_y": 136.57,
+            "svg_x": 125.97,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
+            "u": 0.8935,
             "v": 0.2857,
-            "svg_x": 149.49,
-            "svg_y": 136.57,
+            "svg_x": 151.95,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0798,
             "v": 0.4286,
-            "svg_x": 51.01,
-            "svg_y": 157.36,
+            "svg_x": 44.54,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2909,
             "v": 0.4286,
-            "svg_x": 75.63,
-            "svg_y": 157.36,
+            "svg_x": 72.4,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5019,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 157.36,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
+            "u": 0.7129,
             "v": 0.4286,
-            "svg_x": 124.87,
-            "svg_y": 157.36,
+            "svg_x": 128.11,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
+            "u": 0.924,
             "v": 0.4286,
-            "svg_x": 149.49,
-            "svg_y": 157.36,
+            "svg_x": 155.96,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0532,
             "v": 0.5714,
-            "svg_x": 51.01,
-            "svg_y": 178.14,
+            "svg_x": 41.03,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2766,
             "v": 0.5714,
-            "svg_x": 75.63,
-            "svg_y": 178.14,
+            "svg_x": 70.51,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -18892,116 +18892,116 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.25,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7402,
-            "v": 0.5714,
-            "svg_x": 124.87,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9804,
-            "v": 0.5714,
-            "svg_x": 149.49,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.7143,
-            "svg_x": 51.01,
-            "svg_y": 198.93,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2586,
-            "v": 0.7143,
-            "svg_x": 75.5,
-            "svg_y": 198.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4975,
-            "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 198.93,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7365,
-            "v": 0.7143,
-            "svg_x": 124.49,
-            "svg_y": 198.93,
+            "u": 0.7234,
+            "v": 0.5714,
+            "svg_x": 129.49,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9755,
-            "v": 0.7143,
-            "svg_x": 148.99,
-            "svg_y": 198.93,
+            "u": 0.9468,
+            "v": 0.5714,
+            "svg_x": 158.97,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0245,
+            "u": 0.038,
+            "v": 0.7143,
+            "svg_x": 39.02,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.27,
+            "v": 0.7143,
+            "svg_x": 69.63,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5019,
+            "v": 0.7143,
+            "svg_x": 100.25,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7338,
+            "v": 0.7143,
+            "svg_x": 130.87,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9658,
+            "v": 0.7143,
+            "svg_x": 161.48,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.019,
             "v": 0.8571,
-            "svg_x": 51.51,
-            "svg_y": 219.71,
+            "svg_x": 36.51,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2623,
+            "u": 0.2605,
             "v": 0.8571,
-            "svg_x": 75.88,
-            "svg_y": 219.71,
+            "svg_x": 68.38,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5019,
             "v": 0.8571,
             "svg_x": 100.25,
-            "svg_y": 219.71,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7377,
+            "u": 0.7433,
             "v": 0.8571,
-            "svg_x": 124.62,
-            "svg_y": 219.71,
+            "svg_x": 132.12,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9755,
+            "u": 0.9848,
             "v": 0.8571,
-            "svg_x": 148.99,
-            "svg_y": 219.71,
+            "svg_x": 163.99,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19009,8 +19009,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.38,
-            "svg_y": 240.5,
+            "svg_x": 53.8,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19018,8 +19018,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.31,
-            "svg_y": 240.5,
+            "svg_x": 76.9,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19027,8 +19027,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
-            "svg_y": 240.5,
+            "svg_x": 100.0,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -19036,8 +19036,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.19,
-            "svg_y": 240.5,
+            "svg_x": 123.1,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19045,8 +19045,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.12,
-            "svg_y": 240.5,
+            "svg_x": 146.2,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19394,10 +19394,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 47.0,
-        "y": 95.0,
-        "width": 106.0,
-        "height": 151.5
+        "x": 32.5,
+        "y": 92.5,
+        "width": 135.5,
+        "height": 147.5
       },
       "point_cloud": {
         "rows": 8,
@@ -19406,8 +19406,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 62.9,
-            "svg_y": 95.0,
+            "svg_x": 52.83,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -19415,8 +19415,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 81.45,
-            "svg_y": 95.0,
+            "svg_x": 76.54,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -19424,8 +19424,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 95.0,
+            "svg_x": 100.25,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -19433,8 +19433,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.55,
-            "svg_y": 95.0,
+            "svg_x": 123.96,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -19442,71 +19442,71 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 137.1,
-            "svg_y": 95.0,
+            "svg_x": 147.68,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0237,
+            "u": 0.137,
             "v": 0.1429,
-            "svg_x": 49.51,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 51.07,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.263,
+            "u": 0.3185,
             "v": 0.1429,
-            "svg_x": 74.88,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 75.66,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5024,
+            "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.25,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7417,
+            "u": 0.6815,
             "v": 0.1429,
-            "svg_x": 125.62,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 124.84,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.863,
             "v": 0.1429,
-            "svg_x": 150.99,
-            "svg_y": 116.64,
+            "svg_x": 149.43,
+            "svg_y": 113.57,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1037,
+            "v": 0.2857,
+            "svg_x": 46.55,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
+            "u": 0.3019,
             "v": 0.2857,
-            "svg_x": 49.01,
-            "svg_y": 138.29,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2595,
-            "v": 0.2857,
-            "svg_x": 74.5,
-            "svg_y": 138.29,
+            "svg_x": 73.4,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -19514,44 +19514,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.2857,
-            "svg_x": 100.0,
-            "svg_y": 138.29,
+            "svg_x": 100.25,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7405,
+            "u": 0.6981,
             "v": 0.2857,
-            "svg_x": 125.5,
-            "svg_y": 138.29,
+            "svg_x": 127.1,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.8963,
             "v": 0.2857,
-            "svg_x": 150.99,
-            "svg_y": 138.29,
+            "svg_x": 153.95,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
+            "u": 0.0741,
             "v": 0.4286,
-            "svg_x": 49.01,
-            "svg_y": 159.93,
+            "svg_x": 42.54,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2595,
+            "u": 0.287,
             "v": 0.4286,
-            "svg_x": 74.5,
-            "svg_y": 159.93,
+            "svg_x": 71.39,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -19559,44 +19559,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 159.93,
+            "svg_x": 100.25,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7405,
+            "u": 0.713,
             "v": 0.4286,
-            "svg_x": 125.5,
-            "svg_y": 159.93,
+            "svg_x": 129.11,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.9259,
             "v": 0.4286,
-            "svg_x": 150.99,
-            "svg_y": 159.93,
+            "svg_x": 157.96,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
+            "u": 0.0519,
             "v": 0.5714,
-            "svg_x": 49.01,
-            "svg_y": 181.57,
+            "svg_x": 39.53,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2595,
+            "u": 0.2759,
             "v": 0.5714,
-            "svg_x": 74.5,
-            "svg_y": 181.57,
+            "svg_x": 69.89,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -19604,89 +19604,89 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 181.57,
+            "svg_x": 100.25,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7405,
+            "u": 0.7241,
             "v": 0.5714,
-            "svg_x": 125.5,
-            "svg_y": 181.57,
+            "svg_x": 130.61,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.9481,
             "v": 0.5714,
-            "svg_x": 150.99,
-            "svg_y": 181.57,
+            "svg_x": 160.97,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0237,
+            "u": 0.0333,
             "v": 0.7143,
-            "svg_x": 49.51,
-            "svg_y": 203.21,
+            "svg_x": 37.02,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.263,
+            "u": 0.2667,
             "v": 0.7143,
-            "svg_x": 74.88,
-            "svg_y": 203.21,
+            "svg_x": 68.63,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5024,
+            "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.25,
-            "svg_y": 203.21,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7417,
+            "u": 0.7333,
             "v": 0.7143,
-            "svg_x": 125.62,
-            "svg_y": 203.21,
+            "svg_x": 131.87,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.9667,
             "v": 0.7143,
-            "svg_x": 150.99,
-            "svg_y": 203.21,
+            "svg_x": 163.48,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0284,
+            "u": 0.0185,
             "v": 0.8571,
-            "svg_x": 50.01,
-            "svg_y": 224.86,
+            "svg_x": 35.01,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2642,
+            "u": 0.2593,
             "v": 0.8571,
-            "svg_x": 75.01,
-            "svg_y": 224.86,
+            "svg_x": 67.63,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -19694,26 +19694,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.8571,
-            "svg_x": 100.0,
-            "svg_y": 224.86,
+            "svg_x": 100.25,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7358,
+            "u": 0.7407,
             "v": 0.8571,
-            "svg_x": 124.99,
-            "svg_y": 224.86,
+            "svg_x": 132.87,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9716,
+            "u": 0.9815,
             "v": 0.8571,
-            "svg_x": 149.99,
-            "svg_y": 224.86,
+            "svg_x": 165.49,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19721,8 +19721,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 62.9,
-            "svg_y": 246.5,
+            "svg_x": 52.83,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19730,8 +19730,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 81.45,
-            "svg_y": 246.5,
+            "svg_x": 76.54,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19739,8 +19739,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 246.5,
+            "svg_x": 100.25,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -19748,8 +19748,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.55,
-            "svg_y": 246.5,
+            "svg_x": 123.96,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -19757,8 +19757,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 137.1,
-            "svg_y": 246.5,
+            "svg_x": 147.68,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -20105,10 +20105,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 47.0,
-        "y": 95.0,
-        "width": 106.0,
-        "height": 151.5
+        "x": 32.5,
+        "y": 92.5,
+        "width": 135.5,
+        "height": 147.5
       },
       "point_cloud": {
         "rows": 8,
@@ -20117,8 +20117,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 62.9,
-            "svg_y": 95.0,
+            "svg_x": 52.83,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -20126,8 +20126,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 81.45,
-            "svg_y": 95.0,
+            "svg_x": 76.54,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -20135,8 +20135,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 95.0,
+            "svg_x": 100.25,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -20144,8 +20144,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.55,
-            "svg_y": 95.0,
+            "svg_x": 123.96,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -20153,71 +20153,71 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 137.1,
-            "svg_y": 95.0,
+            "svg_x": 147.68,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0237,
+            "u": 0.137,
             "v": 0.1429,
-            "svg_x": 49.51,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 51.07,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.263,
+            "u": 0.3185,
             "v": 0.1429,
-            "svg_x": 74.88,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 75.66,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5024,
+            "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.25,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7417,
+            "u": 0.6815,
             "v": 0.1429,
-            "svg_x": 125.62,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 124.84,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.863,
             "v": 0.1429,
-            "svg_x": 150.99,
-            "svg_y": 116.64,
+            "svg_x": 149.43,
+            "svg_y": 113.57,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1037,
+            "v": 0.2857,
+            "svg_x": 46.55,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
+            "u": 0.3019,
             "v": 0.2857,
-            "svg_x": 49.01,
-            "svg_y": 138.29,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2595,
-            "v": 0.2857,
-            "svg_x": 74.5,
-            "svg_y": 138.29,
+            "svg_x": 73.4,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -20225,44 +20225,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.2857,
-            "svg_x": 100.0,
-            "svg_y": 138.29,
+            "svg_x": 100.25,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7405,
+            "u": 0.6981,
             "v": 0.2857,
-            "svg_x": 125.5,
-            "svg_y": 138.29,
+            "svg_x": 127.1,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.8963,
             "v": 0.2857,
-            "svg_x": 150.99,
-            "svg_y": 138.29,
+            "svg_x": 153.95,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
+            "u": 0.0741,
             "v": 0.4286,
-            "svg_x": 49.01,
-            "svg_y": 159.93,
+            "svg_x": 42.54,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2595,
+            "u": 0.287,
             "v": 0.4286,
-            "svg_x": 74.5,
-            "svg_y": 159.93,
+            "svg_x": 71.39,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -20270,44 +20270,44 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.4286,
-            "svg_x": 100.0,
-            "svg_y": 159.93,
+            "svg_x": 100.25,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7405,
+            "u": 0.713,
             "v": 0.4286,
-            "svg_x": 125.5,
-            "svg_y": 159.93,
+            "svg_x": 129.11,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.9259,
             "v": 0.4286,
-            "svg_x": 150.99,
-            "svg_y": 159.93,
+            "svg_x": 157.96,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
+            "u": 0.0519,
             "v": 0.5714,
-            "svg_x": 49.01,
-            "svg_y": 181.57,
+            "svg_x": 39.53,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2595,
+            "u": 0.2759,
             "v": 0.5714,
-            "svg_x": 74.5,
-            "svg_y": 181.57,
+            "svg_x": 69.89,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -20315,89 +20315,89 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 181.57,
+            "svg_x": 100.25,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7405,
+            "u": 0.7241,
             "v": 0.5714,
-            "svg_x": 125.5,
-            "svg_y": 181.57,
+            "svg_x": 130.61,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.9481,
             "v": 0.5714,
-            "svg_x": 150.99,
-            "svg_y": 181.57,
+            "svg_x": 160.97,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0237,
+            "u": 0.0333,
             "v": 0.7143,
-            "svg_x": 49.51,
-            "svg_y": 203.21,
+            "svg_x": 37.02,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.263,
+            "u": 0.2667,
             "v": 0.7143,
-            "svg_x": 74.88,
-            "svg_y": 203.21,
+            "svg_x": 68.63,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5024,
+            "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.25,
-            "svg_y": 203.21,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7417,
+            "u": 0.7333,
             "v": 0.7143,
-            "svg_x": 125.62,
-            "svg_y": 203.21,
+            "svg_x": 131.87,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
+            "u": 0.9667,
             "v": 0.7143,
-            "svg_x": 150.99,
-            "svg_y": 203.21,
+            "svg_x": 163.48,
+            "svg_y": 197.86,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0284,
+            "u": 0.0185,
             "v": 0.8571,
-            "svg_x": 50.01,
-            "svg_y": 224.86,
+            "svg_x": 35.01,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2642,
+            "u": 0.2593,
             "v": 0.8571,
-            "svg_x": 75.01,
-            "svg_y": 224.86,
+            "svg_x": 67.63,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -20405,26 +20405,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.8571,
-            "svg_x": 100.0,
-            "svg_y": 224.86,
+            "svg_x": 100.25,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7358,
+            "u": 0.7407,
             "v": 0.8571,
-            "svg_x": 124.99,
-            "svg_y": 224.86,
+            "svg_x": 132.87,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9716,
+            "u": 0.9815,
             "v": 0.8571,
-            "svg_x": 149.99,
-            "svg_y": 224.86,
+            "svg_x": 165.49,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -20432,8 +20432,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 62.9,
-            "svg_y": 246.5,
+            "svg_x": 52.83,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -20441,8 +20441,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 81.45,
-            "svg_y": 246.5,
+            "svg_x": 76.54,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -20450,8 +20450,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 246.5,
+            "svg_x": 100.25,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -20459,8 +20459,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.55,
-            "svg_y": 246.5,
+            "svg_x": 123.96,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -20468,8 +20468,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 137.1,
-            "svg_y": 246.5,
+            "svg_x": 147.68,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -20816,10 +20816,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 50.0,
-        "y": 95.0,
-        "width": 100.0,
-        "height": 151.5
+        "x": 52.0,
+        "y": 92.5,
+        "width": 96.0,
+        "height": 147.5
       },
       "point_cloud": {
         "rows": 8,
@@ -20828,8 +20828,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 65.0,
-            "svg_y": 95.0,
+            "svg_x": 66.4,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -20837,8 +20837,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.5,
-            "svg_y": 95.0,
+            "svg_x": 83.2,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -20847,7 +20847,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 95.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -20855,8 +20855,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 117.5,
-            "svg_y": 95.0,
+            "svg_x": 116.8,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -20864,27 +20864,27 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 135.0,
-            "svg_y": 95.0,
+            "svg_x": 133.6,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0201,
+            "u": 0.0209,
             "v": 0.1429,
-            "svg_x": 52.01,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 54.01,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2601,
+            "u": 0.2605,
             "v": 0.1429,
-            "svg_x": 76.01,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 77.01,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
@@ -20892,43 +20892,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7399,
+            "u": 0.7395,
             "v": 0.1429,
-            "svg_x": 123.99,
-            "svg_y": 116.64,
-            "zone": "chest",
+            "svg_x": 122.99,
+            "svg_y": 113.57,
+            "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9799,
+            "u": 0.9791,
             "v": 0.1429,
-            "svg_x": 147.99,
-            "svg_y": 116.64,
+            "svg_x": 145.99,
+            "svg_y": 113.57,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0419,
+            "v": 0.2857,
+            "svg_x": 56.02,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0302,
+            "u": 0.2709,
             "v": 0.2857,
-            "svg_x": 53.02,
-            "svg_y": 138.29,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2651,
-            "v": 0.2857,
-            "svg_x": 76.51,
-            "svg_y": 138.29,
+            "svg_x": 78.01,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -20937,43 +20937,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 138.29,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7349,
+            "u": 0.7291,
             "v": 0.2857,
-            "svg_x": 123.49,
-            "svg_y": 138.29,
+            "svg_x": 121.99,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9698,
+            "u": 0.9581,
             "v": 0.2857,
-            "svg_x": 146.98,
-            "svg_y": 138.29,
+            "svg_x": 143.98,
+            "svg_y": 134.64,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0503,
+            "u": 0.0942,
             "v": 0.4286,
-            "svg_x": 55.03,
-            "svg_y": 159.93,
+            "svg_x": 61.05,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2751,
+            "u": 0.2971,
             "v": 0.4286,
-            "svg_x": 77.51,
-            "svg_y": 159.93,
+            "svg_x": 80.52,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
@@ -20982,133 +20982,133 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 159.93,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7249,
+            "u": 0.7029,
             "v": 0.4286,
-            "svg_x": 122.49,
-            "svg_y": 159.93,
+            "svg_x": 119.48,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9497,
+            "u": 0.9058,
             "v": 0.4286,
-            "svg_x": 144.97,
-            "svg_y": 159.93,
+            "svg_x": 138.95,
+            "svg_y": 155.71,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0905,
+            "u": 0.1204,
             "v": 0.5714,
-            "svg_x": 59.05,
-            "svg_y": 181.57,
+            "svg_x": 63.56,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2952,
+            "u": 0.3102,
             "v": 0.5714,
-            "svg_x": 79.52,
-            "svg_y": 181.57,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 181.57,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7048,
-            "v": 0.5714,
-            "svg_x": 120.48,
-            "svg_y": 181.57,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9095,
-            "v": 0.5714,
-            "svg_x": 140.95,
-            "svg_y": 181.57,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.1357,
-            "v": 0.7143,
-            "svg_x": 63.57,
-            "svg_y": 203.21,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3178,
-            "v": 0.7143,
             "svg_x": 81.78,
-            "svg_y": 203.21,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.7143,
+            "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 203.21,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6822,
-            "v": 0.7143,
+            "u": 0.6898,
+            "v": 0.5714,
             "svg_x": 118.22,
-            "svg_y": 203.21,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8643,
-            "v": 0.7143,
-            "svg_x": 136.43,
-            "svg_y": 203.21,
+            "u": 0.8796,
+            "v": 0.5714,
+            "svg_x": 136.44,
+            "svg_y": 176.79,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1206,
+            "u": 0.1152,
+            "v": 0.7143,
+            "svg_x": 63.06,
+            "svg_y": 197.86,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.3076,
+            "v": 0.7143,
+            "svg_x": 81.53,
+            "svg_y": 197.86,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.7143,
+            "svg_x": 100.0,
+            "svg_y": 197.86,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.6924,
+            "v": 0.7143,
+            "svg_x": 118.47,
+            "svg_y": 197.86,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.8848,
+            "v": 0.7143,
+            "svg_x": 136.94,
+            "svg_y": 197.86,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0733,
             "v": 0.8571,
-            "svg_x": 62.06,
-            "svg_y": 224.86,
+            "svg_x": 59.04,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3103,
+            "u": 0.2866,
             "v": 0.8571,
-            "svg_x": 81.03,
-            "svg_y": 224.86,
+            "svg_x": 79.52,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -21117,25 +21117,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 224.86,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6897,
+            "u": 0.7134,
             "v": 0.8571,
-            "svg_x": 118.97,
-            "svg_y": 224.86,
+            "svg_x": 120.48,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8794,
+            "u": 0.9267,
             "v": 0.8571,
-            "svg_x": 137.94,
-            "svg_y": 224.86,
+            "svg_x": 140.96,
+            "svg_y": 218.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -21143,8 +21143,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 65.0,
-            "svg_y": 246.5,
+            "svg_x": 66.4,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -21152,8 +21152,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.5,
-            "svg_y": 246.5,
+            "svg_x": 83.2,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -21162,7 +21162,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 246.5,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -21170,8 +21170,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 117.5,
-            "svg_y": 246.5,
+            "svg_x": 116.8,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -21179,8 +21179,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 135.0,
-            "svg_y": 246.5,
+            "svg_x": 133.6,
+            "svg_y": 240.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -21531,10 +21531,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 47.0,
-        "y": 95.0,
-        "width": 106.0,
-        "height": 256.5
+        "x": 32.5,
+        "y": 92.5,
+        "width": 135.5,
+        "height": 248.0
       },
       "point_cloud": {
         "rows": 8,
@@ -21543,8 +21543,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 62.9,
-            "svg_y": 95.0,
+            "svg_x": 52.83,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -21552,8 +21552,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 81.45,
-            "svg_y": 95.0,
+            "svg_x": 76.54,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -21561,8 +21561,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 95.0,
+            "svg_x": 100.25,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -21570,8 +21570,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.55,
-            "svg_y": 95.0,
+            "svg_x": 123.96,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -21579,278 +21579,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 137.1,
-            "svg_y": 95.0,
+            "svg_x": 147.68,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0237,
+            "u": 0.1074,
             "v": 0.1429,
-            "svg_x": 49.51,
-            "svg_y": 131.64,
+            "svg_x": 47.05,
+            "svg_y": 127.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.263,
+            "u": 0.3028,
             "v": 0.1429,
-            "svg_x": 74.88,
-            "svg_y": 131.64,
+            "svg_x": 73.53,
+            "svg_y": 127.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5024,
+            "u": 0.4981,
             "v": 0.1429,
+            "svg_x": 100.0,
+            "svg_y": 127.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.6935,
+            "v": 0.1429,
+            "svg_x": 126.47,
+            "svg_y": 127.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.8889,
+            "v": 0.1429,
+            "svg_x": 152.94,
+            "svg_y": 127.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.063,
+            "v": 0.2857,
+            "svg_x": 41.03,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2806,
+            "v": 0.2857,
+            "svg_x": 70.52,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.4981,
+            "v": 0.2857,
+            "svg_x": 100.0,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7157,
+            "v": 0.2857,
+            "svg_x": 129.48,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9333,
+            "v": 0.2857,
+            "svg_x": 158.97,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0296,
+            "v": 0.4286,
+            "svg_x": 36.51,
+            "svg_y": 198.79,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2648,
+            "v": 0.4286,
+            "svg_x": 68.38,
+            "svg_y": 198.79,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 131.64,
-            "zone": "chest",
+            "svg_y": 198.79,
+            "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7417,
-            "v": 0.1429,
-            "svg_x": 125.62,
-            "svg_y": 131.64,
-            "zone": "chest",
+            "u": 0.7352,
+            "v": 0.4286,
+            "svg_x": 132.12,
+            "svg_y": 198.79,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
-            "v": 0.1429,
-            "svg_x": 150.99,
-            "svg_y": 131.64,
-            "zone": "chest",
+            "u": 0.9704,
+            "v": 0.4286,
+            "svg_x": 163.99,
+            "svg_y": 198.79,
+            "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
-            "v": 0.2857,
-            "svg_x": 49.01,
-            "svg_y": 168.29,
-            "zone": "chest",
+            "u": 0.0148,
+            "v": 0.5714,
+            "svg_x": 34.51,
+            "svg_y": 234.21,
+            "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2595,
-            "v": 0.2857,
-            "svg_x": 74.5,
-            "svg_y": 168.29,
-            "zone": "chest",
+            "u": 0.2574,
+            "v": 0.5714,
+            "svg_x": 67.38,
+            "svg_y": 234.21,
+            "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.0,
-            "svg_y": 168.29,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7405,
-            "v": 0.2857,
-            "svg_x": 125.5,
-            "svg_y": 168.29,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.981,
-            "v": 0.2857,
-            "svg_x": 150.99,
-            "svg_y": 168.29,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0237,
-            "v": 0.4286,
-            "svg_x": 49.51,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.263,
-            "v": 0.4286,
-            "svg_x": 74.88,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5024,
-            "v": 0.4286,
+            "v": 0.5714,
             "svg_x": 100.25,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7417,
-            "v": 0.4286,
-            "svg_x": 125.62,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.981,
-            "v": 0.4286,
-            "svg_x": 150.99,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.1327,
-            "v": 0.5714,
-            "svg_x": 61.07,
-            "svg_y": 241.57,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3164,
-            "v": 0.5714,
-            "svg_x": 80.53,
-            "svg_y": 241.57,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 241.57,
+            "svg_y": 234.21,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6836,
+            "u": 0.7426,
             "v": 0.5714,
-            "svg_x": 119.47,
-            "svg_y": 241.57,
+            "svg_x": 133.12,
+            "svg_y": 234.21,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8673,
+            "u": 0.9852,
             "v": 0.5714,
-            "svg_x": 138.93,
-            "svg_y": 241.57,
+            "svg_x": 165.99,
+            "svg_y": 234.21,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1469,
+            "u": 0.1556,
             "v": 0.7143,
-            "svg_x": 62.57,
-            "svg_y": 278.21,
+            "svg_x": 53.58,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3235,
+            "u": 0.3269,
             "v": 0.7143,
-            "svg_x": 81.29,
-            "svg_y": 278.21,
+            "svg_x": 76.79,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4981,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 278.21,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6765,
+            "u": 0.6694,
             "v": 0.7143,
-            "svg_x": 118.71,
-            "svg_y": 278.21,
+            "svg_x": 123.21,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8531,
+            "u": 0.8407,
             "v": 0.7143,
-            "svg_x": 137.43,
-            "svg_y": 278.21,
+            "svg_x": 146.42,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1801,
+            "u": 0.137,
             "v": 0.8571,
-            "svg_x": 66.09,
-            "svg_y": 314.86,
+            "svg_x": 51.07,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.34,
+            "u": 0.3176,
             "v": 0.8571,
-            "svg_x": 83.05,
-            "svg_y": 314.86,
+            "svg_x": 75.53,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4981,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 314.86,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.66,
+            "u": 0.6787,
             "v": 0.8571,
-            "svg_x": 116.95,
-            "svg_y": 314.86,
+            "svg_x": 124.46,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8199,
+            "u": 0.8593,
             "v": 0.8571,
-            "svg_x": 133.91,
-            "svg_y": 314.86,
+            "svg_x": 148.93,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -21858,8 +21858,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 62.9,
-            "svg_y": 351.5,
+            "svg_x": 52.83,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -21867,8 +21867,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 81.45,
-            "svg_y": 351.5,
+            "svg_x": 76.54,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -21876,8 +21876,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 351.5,
+            "svg_x": 100.25,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -21885,8 +21885,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.55,
-            "svg_y": 351.5,
+            "svg_x": 123.96,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -21894,8 +21894,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 137.1,
-            "svg_y": 351.5,
+            "svg_x": 147.68,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -22241,10 +22241,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 47.0,
-        "y": 95.0,
-        "width": 106.0,
-        "height": 256.5
+        "x": 32.5,
+        "y": 92.5,
+        "width": 135.5,
+        "height": 248.0
       },
       "point_cloud": {
         "rows": 8,
@@ -22253,8 +22253,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 62.9,
-            "svg_y": 95.0,
+            "svg_x": 52.83,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -22262,8 +22262,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 81.45,
-            "svg_y": 95.0,
+            "svg_x": 76.54,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -22271,8 +22271,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.0,
-            "svg_y": 95.0,
+            "svg_x": 100.25,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -22280,8 +22280,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.55,
-            "svg_y": 95.0,
+            "svg_x": 123.96,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -22289,278 +22289,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 137.1,
-            "svg_y": 95.0,
+            "svg_x": 147.68,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0237,
+            "u": 0.1074,
             "v": 0.1429,
-            "svg_x": 49.51,
-            "svg_y": 131.64,
+            "svg_x": 47.05,
+            "svg_y": 127.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.263,
+            "u": 0.3028,
             "v": 0.1429,
-            "svg_x": 74.88,
-            "svg_y": 131.64,
+            "svg_x": 73.53,
+            "svg_y": 127.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5024,
+            "u": 0.4981,
             "v": 0.1429,
+            "svg_x": 100.0,
+            "svg_y": 127.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.6935,
+            "v": 0.1429,
+            "svg_x": 126.47,
+            "svg_y": 127.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.8889,
+            "v": 0.1429,
+            "svg_x": 152.94,
+            "svg_y": 127.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.063,
+            "v": 0.2857,
+            "svg_x": 41.03,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2806,
+            "v": 0.2857,
+            "svg_x": 70.52,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.4981,
+            "v": 0.2857,
+            "svg_x": 100.0,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7157,
+            "v": 0.2857,
+            "svg_x": 129.48,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9333,
+            "v": 0.2857,
+            "svg_x": 158.97,
+            "svg_y": 163.36,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0296,
+            "v": 0.4286,
+            "svg_x": 36.51,
+            "svg_y": 198.79,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2648,
+            "v": 0.4286,
+            "svg_x": 68.38,
+            "svg_y": 198.79,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 131.64,
-            "zone": "chest",
+            "svg_y": 198.79,
+            "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7417,
-            "v": 0.1429,
-            "svg_x": 125.62,
-            "svg_y": 131.64,
-            "zone": "chest",
+            "u": 0.7352,
+            "v": 0.4286,
+            "svg_x": 132.12,
+            "svg_y": 198.79,
+            "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.981,
-            "v": 0.1429,
-            "svg_x": 150.99,
-            "svg_y": 131.64,
-            "zone": "chest",
+            "u": 0.9704,
+            "v": 0.4286,
+            "svg_x": 163.99,
+            "svg_y": 198.79,
+            "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.019,
-            "v": 0.2857,
-            "svg_x": 49.01,
-            "svg_y": 168.29,
-            "zone": "chest",
+            "u": 0.0148,
+            "v": 0.5714,
+            "svg_x": 34.51,
+            "svg_y": 234.21,
+            "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2595,
-            "v": 0.2857,
-            "svg_x": 74.5,
-            "svg_y": 168.29,
-            "zone": "chest",
+            "u": 0.2574,
+            "v": 0.5714,
+            "svg_x": 67.38,
+            "svg_y": 234.21,
+            "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.0,
-            "svg_y": 168.29,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7405,
-            "v": 0.2857,
-            "svg_x": 125.5,
-            "svg_y": 168.29,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.981,
-            "v": 0.2857,
-            "svg_x": 150.99,
-            "svg_y": 168.29,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0237,
-            "v": 0.4286,
-            "svg_x": 49.51,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.263,
-            "v": 0.4286,
-            "svg_x": 74.88,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5024,
-            "v": 0.4286,
+            "v": 0.5714,
             "svg_x": 100.25,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7417,
-            "v": 0.4286,
-            "svg_x": 125.62,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.981,
-            "v": 0.4286,
-            "svg_x": 150.99,
-            "svg_y": 204.93,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.1327,
-            "v": 0.5714,
-            "svg_x": 61.07,
-            "svg_y": 241.57,
-            "zone": "hip",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.3164,
-            "v": 0.5714,
-            "svg_x": 80.53,
-            "svg_y": 241.57,
-            "zone": "hip",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 241.57,
+            "svg_y": 234.21,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6836,
+            "u": 0.7426,
             "v": 0.5714,
-            "svg_x": 119.47,
-            "svg_y": 241.57,
+            "svg_x": 133.12,
+            "svg_y": 234.21,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8673,
+            "u": 0.9852,
             "v": 0.5714,
-            "svg_x": 138.93,
-            "svg_y": 241.57,
+            "svg_x": 165.99,
+            "svg_y": 234.21,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1469,
+            "u": 0.1556,
             "v": 0.7143,
-            "svg_x": 62.57,
-            "svg_y": 278.21,
+            "svg_x": 53.58,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3235,
+            "u": 0.3269,
             "v": 0.7143,
-            "svg_x": 81.29,
-            "svg_y": 278.21,
+            "svg_x": 76.79,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4981,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 278.21,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6765,
+            "u": 0.6694,
             "v": 0.7143,
-            "svg_x": 118.71,
-            "svg_y": 278.21,
+            "svg_x": 123.21,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8531,
+            "u": 0.8407,
             "v": 0.7143,
-            "svg_x": 137.43,
-            "svg_y": 278.21,
+            "svg_x": 146.42,
+            "svg_y": 269.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1801,
+            "u": 0.137,
             "v": 0.8571,
-            "svg_x": 66.09,
-            "svg_y": 314.86,
+            "svg_x": 51.07,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.34,
+            "u": 0.3176,
             "v": 0.8571,
-            "svg_x": 83.05,
-            "svg_y": 314.86,
+            "svg_x": 75.53,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.4981,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 314.86,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.66,
+            "u": 0.6787,
             "v": 0.8571,
-            "svg_x": 116.95,
-            "svg_y": 314.86,
+            "svg_x": 124.46,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8199,
+            "u": 0.8593,
             "v": 0.8571,
-            "svg_x": 133.91,
-            "svg_y": 314.86,
+            "svg_x": 148.93,
+            "svg_y": 305.07,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
@@ -22568,8 +22568,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 62.9,
-            "svg_y": 351.5,
+            "svg_x": 52.83,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -22577,8 +22577,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 81.45,
-            "svg_y": 351.5,
+            "svg_x": 76.54,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -22586,8 +22586,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.0,
-            "svg_y": 351.5,
+            "svg_x": 100.25,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -22595,8 +22595,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.55,
-            "svg_y": 351.5,
+            "svg_x": 123.96,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -22604,8 +22604,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 137.1,
-            "svg_y": 351.5,
+            "svg_x": 147.68,
+            "svg_y": 340.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -22954,10 +22954,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 49.0,
-        "y": 95.0,
-        "width": 102.5,
-        "height": 145.5
+        "x": 34.0,
+        "y": 92.5,
+        "width": 132.0,
+        "height": 141.5
       },
       "point_cloud": {
         "rows": 8,
@@ -22966,8 +22966,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.38,
-            "svg_y": 95.0,
+            "svg_x": 53.8,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -22975,8 +22975,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.31,
-            "svg_y": 95.0,
+            "svg_x": 76.9,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -22984,8 +22984,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_x": 100.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -22993,8 +22993,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.19,
-            "svg_y": 95.0,
+            "svg_x": 123.1,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -23002,161 +23002,161 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.12,
-            "svg_y": 95.0,
+            "svg_x": 146.2,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.1407,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 115.79,
+            "svg_x": 52.57,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2586,
+            "u": 0.3213,
             "v": 0.1429,
-            "svg_x": 75.5,
-            "svg_y": 115.79,
+            "svg_x": 76.41,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4975,
+            "u": 0.5019,
             "v": 0.1429,
+            "svg_x": 100.25,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.6825,
+            "v": 0.1429,
+            "svg_x": 124.09,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.8631,
+            "v": 0.1429,
+            "svg_x": 147.93,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1065,
+            "v": 0.2857,
+            "svg_x": 48.05,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.3032,
+            "v": 0.2857,
+            "svg_x": 74.03,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7365,
-            "v": 0.1429,
-            "svg_x": 124.49,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9755,
-            "v": 0.1429,
-            "svg_x": 148.99,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.2857,
-            "svg_x": 51.01,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2598,
-            "v": 0.2857,
-            "svg_x": 75.63,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 136.57,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
+            "u": 0.6968,
             "v": 0.2857,
-            "svg_x": 124.87,
-            "svg_y": 136.57,
+            "svg_x": 125.97,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
+            "u": 0.8935,
             "v": 0.2857,
-            "svg_x": 149.49,
-            "svg_y": 136.57,
+            "svg_x": 151.95,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0798,
             "v": 0.4286,
-            "svg_x": 51.01,
-            "svg_y": 157.36,
+            "svg_x": 44.54,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2909,
             "v": 0.4286,
-            "svg_x": 75.63,
-            "svg_y": 157.36,
+            "svg_x": 72.4,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5019,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 157.36,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
+            "u": 0.7129,
             "v": 0.4286,
-            "svg_x": 124.87,
-            "svg_y": 157.36,
+            "svg_x": 128.11,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
+            "u": 0.924,
             "v": 0.4286,
-            "svg_x": 149.49,
-            "svg_y": 157.36,
+            "svg_x": 155.96,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0532,
             "v": 0.5714,
-            "svg_x": 51.01,
-            "svg_y": 178.14,
+            "svg_x": 41.03,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2766,
             "v": 0.5714,
-            "svg_x": 75.63,
-            "svg_y": 178.14,
+            "svg_x": 70.51,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -23164,116 +23164,116 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.25,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7402,
-            "v": 0.5714,
-            "svg_x": 124.87,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9804,
-            "v": 0.5714,
-            "svg_x": 149.49,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.7143,
-            "svg_x": 51.01,
-            "svg_y": 198.93,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2586,
-            "v": 0.7143,
-            "svg_x": 75.5,
-            "svg_y": 198.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4975,
-            "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 198.93,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7365,
-            "v": 0.7143,
-            "svg_x": 124.49,
-            "svg_y": 198.93,
+            "u": 0.7234,
+            "v": 0.5714,
+            "svg_x": 129.49,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9755,
-            "v": 0.7143,
-            "svg_x": 148.99,
-            "svg_y": 198.93,
+            "u": 0.9468,
+            "v": 0.5714,
+            "svg_x": 158.97,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0245,
+            "u": 0.038,
+            "v": 0.7143,
+            "svg_x": 39.02,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.27,
+            "v": 0.7143,
+            "svg_x": 69.63,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5019,
+            "v": 0.7143,
+            "svg_x": 100.25,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7338,
+            "v": 0.7143,
+            "svg_x": 130.87,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9658,
+            "v": 0.7143,
+            "svg_x": 161.48,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.019,
             "v": 0.8571,
-            "svg_x": 51.51,
-            "svg_y": 219.71,
+            "svg_x": 36.51,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2623,
+            "u": 0.2605,
             "v": 0.8571,
-            "svg_x": 75.88,
-            "svg_y": 219.71,
+            "svg_x": 68.38,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5019,
             "v": 0.8571,
             "svg_x": 100.25,
-            "svg_y": 219.71,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7377,
+            "u": 0.7433,
             "v": 0.8571,
-            "svg_x": 124.62,
-            "svg_y": 219.71,
+            "svg_x": 132.12,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9755,
+            "u": 0.9848,
             "v": 0.8571,
-            "svg_x": 148.99,
-            "svg_y": 219.71,
+            "svg_x": 163.99,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -23281,8 +23281,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.38,
-            "svg_y": 240.5,
+            "svg_x": 53.8,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -23290,8 +23290,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.31,
-            "svg_y": 240.5,
+            "svg_x": 76.9,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -23299,8 +23299,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
-            "svg_y": 240.5,
+            "svg_x": 100.0,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -23308,8 +23308,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.19,
-            "svg_y": 240.5,
+            "svg_x": 123.1,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -23317,8 +23317,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.12,
-            "svg_y": 240.5,
+            "svg_x": 146.2,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -23669,10 +23669,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 48.5,
-        "y": 95.0,
-        "width": 103.5,
-        "height": 145.5
+        "x": 39.0,
+        "y": 92.5,
+        "width": 122.5,
+        "height": 141.5
       },
       "point_cloud": {
         "rows": 8,
@@ -23681,8 +23681,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.03,
-            "svg_y": 95.0,
+            "svg_x": 57.38,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -23690,8 +23690,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.14,
-            "svg_y": 95.0,
+            "svg_x": 78.81,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -23700,7 +23700,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -23708,8 +23708,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.36,
-            "svg_y": 95.0,
+            "svg_x": 121.69,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -23717,278 +23717,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.47,
-            "svg_y": 95.0,
+            "svg_x": 143.12,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0243,
+            "u": 0.1148,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 115.79,
+            "svg_x": 53.06,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2621,
+            "u": 0.3064,
             "v": 0.1429,
-            "svg_x": 75.63,
-            "svg_y": 115.79,
+            "svg_x": 76.53,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.1429,
-            "svg_x": 100.25,
-            "svg_y": 115.79,
+            "svg_x": 100.0,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7379,
+            "u": 0.6895,
             "v": 0.1429,
-            "svg_x": 124.87,
-            "svg_y": 115.79,
+            "svg_x": 123.47,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9757,
+            "u": 0.8811,
             "v": 0.1429,
-            "svg_x": 149.49,
-            "svg_y": 115.79,
+            "svg_x": 146.94,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0194,
+            "u": 0.0861,
             "v": 0.2857,
-            "svg_x": 50.51,
-            "svg_y": 136.57,
+            "svg_x": 49.54,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2597,
+            "u": 0.293,
             "v": 0.2857,
-            "svg_x": 75.38,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7403,
-            "v": 0.2857,
-            "svg_x": 125.12,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9806,
-            "v": 0.2857,
-            "svg_x": 149.99,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0194,
-            "v": 0.4286,
-            "svg_x": 50.51,
-            "svg_y": 157.36,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2597,
-            "v": 0.4286,
-            "svg_x": 75.38,
-            "svg_y": 157.36,
+            "svg_x": 74.9,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
+            "v": 0.2857,
+            "svg_x": 100.25,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.707,
+            "v": 0.2857,
+            "svg_x": 125.6,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9139,
+            "v": 0.2857,
+            "svg_x": 150.96,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0533,
+            "v": 0.4286,
+            "svg_x": 45.53,
+            "svg_y": 153.14,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2766,
+            "v": 0.4286,
+            "svg_x": 72.89,
+            "svg_y": 153.14,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 157.36,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7403,
+            "u": 0.7234,
             "v": 0.4286,
-            "svg_x": 125.12,
-            "svg_y": 157.36,
+            "svg_x": 127.61,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9806,
+            "u": 0.9467,
             "v": 0.4286,
-            "svg_x": 149.99,
-            "svg_y": 157.36,
+            "svg_x": 154.97,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1019,
+            "u": 0.0164,
             "v": 0.5714,
-            "svg_x": 59.05,
-            "svg_y": 178.14,
+            "svg_x": 41.01,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2998,
+            "u": 0.2582,
             "v": 0.5714,
-            "svg_x": 79.52,
-            "svg_y": 178.14,
+            "svg_x": 70.63,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 178.14,
+            "svg_x": 100.25,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6954,
+            "u": 0.7418,
             "v": 0.5714,
-            "svg_x": 120.47,
-            "svg_y": 178.14,
+            "svg_x": 129.87,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8932,
+            "u": 0.9836,
             "v": 0.5714,
-            "svg_x": 140.95,
-            "svg_y": 178.14,
+            "svg_x": 159.49,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1408,
+            "u": 0.1967,
             "v": 0.7143,
-            "svg_x": 63.07,
-            "svg_y": 198.93,
+            "svg_x": 63.1,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3192,
+            "u": 0.3473,
             "v": 0.7143,
-            "svg_x": 81.53,
-            "svg_y": 198.93,
+            "svg_x": 81.55,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.498,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 198.93,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.676,
+            "u": 0.6486,
             "v": 0.7143,
-            "svg_x": 118.46,
-            "svg_y": 198.93,
+            "svg_x": 118.45,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8544,
+            "u": 0.7992,
             "v": 0.7143,
-            "svg_x": 136.93,
-            "svg_y": 198.93,
+            "svg_x": 136.9,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1359,
+            "u": 0.1721,
             "v": 0.8571,
-            "svg_x": 62.57,
-            "svg_y": 219.71,
+            "svg_x": 60.09,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3167,
+            "u": 0.335,
             "v": 0.8571,
-            "svg_x": 81.28,
-            "svg_y": 219.71,
+            "svg_x": 80.04,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.498,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 219.71,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6784,
+            "u": 0.6609,
             "v": 0.8571,
-            "svg_x": 118.71,
-            "svg_y": 219.71,
+            "svg_x": 119.96,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8592,
+            "u": 0.8238,
             "v": 0.8571,
-            "svg_x": 137.43,
-            "svg_y": 219.71,
+            "svg_x": 139.91,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -23996,8 +23996,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.03,
-            "svg_y": 240.5,
+            "svg_x": 57.38,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24005,8 +24005,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.14,
-            "svg_y": 240.5,
+            "svg_x": 78.81,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24015,7 +24015,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.25,
-            "svg_y": 240.5,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -24023,8 +24023,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.36,
-            "svg_y": 240.5,
+            "svg_x": 121.69,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24032,8 +24032,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.47,
-            "svg_y": 240.5,
+            "svg_x": 143.12,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24384,10 +24384,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 49.0,
-        "y": 95.0,
-        "width": 102.5,
-        "height": 145.5
+        "x": 34.0,
+        "y": 92.5,
+        "width": 132.0,
+        "height": 141.5
       },
       "point_cloud": {
         "rows": 8,
@@ -24396,8 +24396,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.38,
-            "svg_y": 95.0,
+            "svg_x": 53.8,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -24405,8 +24405,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.31,
-            "svg_y": 95.0,
+            "svg_x": 76.9,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -24414,8 +24414,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_x": 100.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -24423,8 +24423,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.19,
-            "svg_y": 95.0,
+            "svg_x": 123.1,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -24432,161 +24432,161 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.12,
-            "svg_y": 95.0,
+            "svg_x": 146.2,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.1407,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 115.79,
+            "svg_x": 52.57,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2586,
+            "u": 0.3213,
             "v": 0.1429,
-            "svg_x": 75.5,
-            "svg_y": 115.79,
+            "svg_x": 76.41,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4975,
+            "u": 0.5019,
             "v": 0.1429,
+            "svg_x": 100.25,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.6825,
+            "v": 0.1429,
+            "svg_x": 124.09,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.8631,
+            "v": 0.1429,
+            "svg_x": 147.93,
+            "svg_y": 112.71,
+            "zone": "shoulders",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.1065,
+            "v": 0.2857,
+            "svg_x": 48.05,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.3032,
+            "v": 0.2857,
+            "svg_x": 74.03,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
+            "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7365,
-            "v": 0.1429,
-            "svg_x": 124.49,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9755,
-            "v": 0.1429,
-            "svg_x": 148.99,
-            "svg_y": 115.79,
-            "zone": "shoulders",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.2857,
-            "svg_x": 51.01,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2598,
-            "v": 0.2857,
-            "svg_x": 75.63,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 136.57,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
+            "u": 0.6968,
             "v": 0.2857,
-            "svg_x": 124.87,
-            "svg_y": 136.57,
+            "svg_x": 125.97,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
+            "u": 0.8935,
             "v": 0.2857,
-            "svg_x": 149.49,
-            "svg_y": 136.57,
+            "svg_x": 151.95,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0798,
             "v": 0.4286,
-            "svg_x": 51.01,
-            "svg_y": 157.36,
+            "svg_x": 44.54,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2909,
             "v": 0.4286,
-            "svg_x": 75.63,
-            "svg_y": 157.36,
+            "svg_x": 72.4,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5019,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 157.36,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7402,
+            "u": 0.7129,
             "v": 0.4286,
-            "svg_x": 124.87,
-            "svg_y": 157.36,
+            "svg_x": 128.11,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9804,
+            "u": 0.924,
             "v": 0.4286,
-            "svg_x": 149.49,
-            "svg_y": 157.36,
+            "svg_x": 155.96,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0196,
+            "u": 0.0532,
             "v": 0.5714,
-            "svg_x": 51.01,
-            "svg_y": 178.14,
+            "svg_x": 41.03,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2598,
+            "u": 0.2766,
             "v": 0.5714,
-            "svg_x": 75.63,
-            "svg_y": 178.14,
+            "svg_x": 70.51,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
@@ -24594,116 +24594,116 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.25,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7402,
-            "v": 0.5714,
-            "svg_x": 124.87,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9804,
-            "v": 0.5714,
-            "svg_x": 149.49,
-            "svg_y": 178.14,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0196,
-            "v": 0.7143,
-            "svg_x": 51.01,
-            "svg_y": 198.93,
-            "zone": "waist",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2586,
-            "v": 0.7143,
-            "svg_x": 75.5,
-            "svg_y": 198.93,
-            "zone": "waist",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.4975,
-            "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 198.93,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7365,
-            "v": 0.7143,
-            "svg_x": 124.49,
-            "svg_y": 198.93,
+            "u": 0.7234,
+            "v": 0.5714,
+            "svg_x": 129.49,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9755,
-            "v": 0.7143,
-            "svg_x": 148.99,
-            "svg_y": 198.93,
+            "u": 0.9468,
+            "v": 0.5714,
+            "svg_x": 158.97,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0245,
+            "u": 0.038,
+            "v": 0.7143,
+            "svg_x": 39.02,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.27,
+            "v": 0.7143,
+            "svg_x": 69.63,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5019,
+            "v": 0.7143,
+            "svg_x": 100.25,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.7338,
+            "v": 0.7143,
+            "svg_x": 130.87,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9658,
+            "v": 0.7143,
+            "svg_x": 161.48,
+            "svg_y": 193.57,
+            "zone": "waist",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.019,
             "v": 0.8571,
-            "svg_x": 51.51,
-            "svg_y": 219.71,
+            "svg_x": 36.51,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2623,
+            "u": 0.2605,
             "v": 0.8571,
-            "svg_x": 75.88,
-            "svg_y": 219.71,
+            "svg_x": 68.38,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5019,
             "v": 0.8571,
             "svg_x": 100.25,
-            "svg_y": 219.71,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7377,
+            "u": 0.7433,
             "v": 0.8571,
-            "svg_x": 124.62,
-            "svg_y": 219.71,
+            "svg_x": 132.12,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9755,
+            "u": 0.9848,
             "v": 0.8571,
-            "svg_x": 148.99,
-            "svg_y": 219.71,
+            "svg_x": 163.99,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24711,8 +24711,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.38,
-            "svg_y": 240.5,
+            "svg_x": 53.8,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24720,8 +24720,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.31,
-            "svg_y": 240.5,
+            "svg_x": 76.9,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24729,8 +24729,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
-            "svg_y": 240.5,
+            "svg_x": 100.0,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -24738,8 +24738,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.19,
-            "svg_y": 240.5,
+            "svg_x": 123.1,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -24747,8 +24747,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.12,
-            "svg_y": 240.5,
+            "svg_x": 146.2,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -25096,10 +25096,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 48.5,
-        "y": 95.0,
-        "width": 103.5,
-        "height": 145.5
+        "x": 39.0,
+        "y": 92.5,
+        "width": 122.5,
+        "height": 141.5
       },
       "point_cloud": {
         "rows": 8,
@@ -25108,8 +25108,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.03,
-            "svg_y": 95.0,
+            "svg_x": 57.38,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -25117,8 +25117,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.14,
-            "svg_y": 95.0,
+            "svg_x": 78.81,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -25127,7 +25127,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -25135,8 +25135,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.36,
-            "svg_y": 95.0,
+            "svg_x": 121.69,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -25144,278 +25144,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.47,
-            "svg_y": 95.0,
+            "svg_x": 143.12,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0243,
+            "u": 0.1148,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 115.79,
+            "svg_x": 53.06,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2621,
+            "u": 0.3064,
             "v": 0.1429,
-            "svg_x": 75.63,
-            "svg_y": 115.79,
+            "svg_x": 76.53,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.1429,
-            "svg_x": 100.25,
-            "svg_y": 115.79,
+            "svg_x": 100.0,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7379,
+            "u": 0.6895,
             "v": 0.1429,
-            "svg_x": 124.87,
-            "svg_y": 115.79,
+            "svg_x": 123.47,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9757,
+            "u": 0.8811,
             "v": 0.1429,
-            "svg_x": 149.49,
-            "svg_y": 115.79,
+            "svg_x": 146.94,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0194,
+            "u": 0.0861,
             "v": 0.2857,
-            "svg_x": 50.51,
-            "svg_y": 136.57,
+            "svg_x": 49.54,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2597,
+            "u": 0.293,
             "v": 0.2857,
-            "svg_x": 75.38,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7403,
-            "v": 0.2857,
-            "svg_x": 125.12,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9806,
-            "v": 0.2857,
-            "svg_x": 149.99,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0194,
-            "v": 0.4286,
-            "svg_x": 50.51,
-            "svg_y": 157.36,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2597,
-            "v": 0.4286,
-            "svg_x": 75.38,
-            "svg_y": 157.36,
+            "svg_x": 74.9,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
+            "v": 0.2857,
+            "svg_x": 100.25,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.707,
+            "v": 0.2857,
+            "svg_x": 125.6,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9139,
+            "v": 0.2857,
+            "svg_x": 150.96,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0533,
+            "v": 0.4286,
+            "svg_x": 45.53,
+            "svg_y": 153.14,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2766,
+            "v": 0.4286,
+            "svg_x": 72.89,
+            "svg_y": 153.14,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 157.36,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7403,
+            "u": 0.7234,
             "v": 0.4286,
-            "svg_x": 125.12,
-            "svg_y": 157.36,
+            "svg_x": 127.61,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9806,
+            "u": 0.9467,
             "v": 0.4286,
-            "svg_x": 149.99,
-            "svg_y": 157.36,
+            "svg_x": 154.97,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1068,
+            "u": 0.0164,
             "v": 0.5714,
-            "svg_x": 59.55,
-            "svg_y": 178.14,
+            "svg_x": 41.01,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3022,
+            "u": 0.2582,
             "v": 0.5714,
-            "svg_x": 79.78,
-            "svg_y": 178.14,
+            "svg_x": 70.63,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 178.14,
+            "svg_x": 100.25,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.693,
+            "u": 0.7418,
             "v": 0.5714,
-            "svg_x": 120.22,
-            "svg_y": 178.14,
+            "svg_x": 129.87,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8883,
+            "u": 0.9836,
             "v": 0.5714,
-            "svg_x": 140.44,
-            "svg_y": 178.14,
+            "svg_x": 159.49,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1602,
+            "u": 0.2172,
             "v": 0.7143,
-            "svg_x": 65.08,
-            "svg_y": 198.93,
+            "svg_x": 65.61,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3289,
+            "u": 0.3576,
             "v": 0.7143,
-            "svg_x": 82.54,
-            "svg_y": 198.93,
+            "svg_x": 82.8,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.498,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 198.93,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6663,
+            "u": 0.6383,
             "v": 0.7143,
-            "svg_x": 117.46,
-            "svg_y": 198.93,
+            "svg_x": 117.19,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.835,
+            "u": 0.7787,
             "v": 0.7143,
-            "svg_x": 134.92,
-            "svg_y": 198.93,
+            "svg_x": 134.39,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1505,
+            "u": 0.1803,
             "v": 0.8571,
-            "svg_x": 64.08,
-            "svg_y": 219.71,
+            "svg_x": 61.09,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.324,
+            "u": 0.3391,
             "v": 0.8571,
-            "svg_x": 82.04,
-            "svg_y": 219.71,
+            "svg_x": 80.54,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.498,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 219.71,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6711,
+            "u": 0.6568,
             "v": 0.8571,
-            "svg_x": 117.96,
-            "svg_y": 219.71,
+            "svg_x": 119.45,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8447,
+            "u": 0.8156,
             "v": 0.8571,
-            "svg_x": 135.92,
-            "svg_y": 219.71,
+            "svg_x": 138.91,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -25423,8 +25423,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.03,
-            "svg_y": 240.5,
+            "svg_x": 57.38,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -25432,8 +25432,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.14,
-            "svg_y": 240.5,
+            "svg_x": 78.81,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -25442,7 +25442,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.25,
-            "svg_y": 240.5,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -25450,8 +25450,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.36,
-            "svg_y": 240.5,
+            "svg_x": 121.69,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -25459,8 +25459,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.47,
-            "svg_y": 240.5,
+            "svg_x": 143.12,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -25813,10 +25813,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 48.5,
-        "y": 95.0,
-        "width": 103.5,
-        "height": 145.5
+        "x": 39.0,
+        "y": 92.5,
+        "width": 122.5,
+        "height": 141.5
       },
       "point_cloud": {
         "rows": 8,
@@ -25825,8 +25825,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 64.03,
-            "svg_y": 95.0,
+            "svg_x": 57.38,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -25834,8 +25834,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 82.14,
-            "svg_y": 95.0,
+            "svg_x": 78.81,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -25844,7 +25844,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.25,
-            "svg_y": 95.0,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": true
@@ -25852,8 +25852,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 118.36,
-            "svg_y": 95.0,
+            "svg_x": 121.69,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
@@ -25861,278 +25861,278 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 136.47,
-            "svg_y": 95.0,
+            "svg_x": 143.12,
+            "svg_y": 92.5,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0243,
+            "u": 0.1148,
             "v": 0.1429,
-            "svg_x": 51.01,
-            "svg_y": 115.79,
+            "svg_x": 53.06,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2621,
+            "u": 0.3064,
             "v": 0.1429,
-            "svg_x": 75.63,
-            "svg_y": 115.79,
+            "svg_x": 76.53,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.498,
             "v": 0.1429,
-            "svg_x": 100.25,
-            "svg_y": 115.79,
+            "svg_x": 100.0,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7379,
+            "u": 0.6895,
             "v": 0.1429,
-            "svg_x": 124.87,
-            "svg_y": 115.79,
+            "svg_x": 123.47,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9757,
+            "u": 0.8811,
             "v": 0.1429,
-            "svg_x": 149.49,
-            "svg_y": 115.79,
+            "svg_x": 146.94,
+            "svg_y": 112.71,
             "zone": "shoulders",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0194,
+            "u": 0.0861,
             "v": 0.2857,
-            "svg_x": 50.51,
-            "svg_y": 136.57,
+            "svg_x": 49.54,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2597,
+            "u": 0.293,
             "v": 0.2857,
-            "svg_x": 75.38,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.5,
-            "v": 0.2857,
-            "svg_x": 100.25,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": true
-          },
-          {
-            "u": 0.7403,
-            "v": 0.2857,
-            "svg_x": 125.12,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": false,
-            "is_center": false
-          },
-          {
-            "u": 0.9806,
-            "v": 0.2857,
-            "svg_x": 149.99,
-            "svg_y": 136.57,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.0194,
-            "v": 0.4286,
-            "svg_x": 50.51,
-            "svg_y": 157.36,
-            "zone": "chest",
-            "is_edge": true,
-            "is_center": false
-          },
-          {
-            "u": 0.2597,
-            "v": 0.4286,
-            "svg_x": 75.38,
-            "svg_y": 157.36,
+            "svg_x": 74.9,
+            "svg_y": 132.93,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
             "u": 0.5,
+            "v": 0.2857,
+            "svg_x": 100.25,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": true
+          },
+          {
+            "u": 0.707,
+            "v": 0.2857,
+            "svg_x": 125.6,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.9139,
+            "v": 0.2857,
+            "svg_x": 150.96,
+            "svg_y": 132.93,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.0533,
+            "v": 0.4286,
+            "svg_x": 45.53,
+            "svg_y": 153.14,
+            "zone": "chest",
+            "is_edge": true,
+            "is_center": false
+          },
+          {
+            "u": 0.2766,
+            "v": 0.4286,
+            "svg_x": 72.89,
+            "svg_y": 153.14,
+            "zone": "chest",
+            "is_edge": false,
+            "is_center": false
+          },
+          {
+            "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.25,
-            "svg_y": 157.36,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7403,
+            "u": 0.7234,
             "v": 0.4286,
-            "svg_x": 125.12,
-            "svg_y": 157.36,
+            "svg_x": 127.61,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9806,
+            "u": 0.9467,
             "v": 0.4286,
-            "svg_x": 149.99,
-            "svg_y": 157.36,
+            "svg_x": 154.97,
+            "svg_y": 153.14,
             "zone": "chest",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1068,
+            "u": 0.0164,
             "v": 0.5714,
-            "svg_x": 59.55,
-            "svg_y": 178.14,
+            "svg_x": 41.01,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3022,
+            "u": 0.2582,
             "v": 0.5714,
-            "svg_x": 79.78,
-            "svg_y": 178.14,
+            "svg_x": 70.63,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.5,
             "v": 0.5714,
-            "svg_x": 100.0,
-            "svg_y": 178.14,
+            "svg_x": 100.25,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.693,
+            "u": 0.7418,
             "v": 0.5714,
-            "svg_x": 120.22,
-            "svg_y": 178.14,
+            "svg_x": 129.87,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8883,
+            "u": 0.9836,
             "v": 0.5714,
-            "svg_x": 140.44,
-            "svg_y": 178.14,
+            "svg_x": 159.49,
+            "svg_y": 173.36,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1602,
+            "u": 0.2172,
             "v": 0.7143,
-            "svg_x": 65.08,
-            "svg_y": 198.93,
+            "svg_x": 65.61,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3289,
+            "u": 0.3576,
             "v": 0.7143,
-            "svg_x": 82.54,
-            "svg_y": 198.93,
+            "svg_x": 82.8,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.498,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 198.93,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6663,
+            "u": 0.6383,
             "v": 0.7143,
-            "svg_x": 117.46,
-            "svg_y": 198.93,
+            "svg_x": 117.19,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.835,
+            "u": 0.7787,
             "v": 0.7143,
-            "svg_x": 134.92,
-            "svg_y": 198.93,
+            "svg_x": 134.39,
+            "svg_y": 193.57,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1505,
+            "u": 0.1803,
             "v": 0.8571,
-            "svg_x": 64.08,
-            "svg_y": 219.71,
+            "svg_x": 61.09,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.324,
+            "u": 0.3391,
             "v": 0.8571,
-            "svg_x": 82.04,
-            "svg_y": 219.71,
+            "svg_x": 80.54,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4976,
+            "u": 0.498,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 219.71,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6711,
+            "u": 0.6568,
             "v": 0.8571,
-            "svg_x": 117.96,
-            "svg_y": 219.71,
+            "svg_x": 119.45,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8447,
+            "u": 0.8156,
             "v": 0.8571,
-            "svg_x": 135.92,
-            "svg_y": 219.71,
+            "svg_x": 138.91,
+            "svg_y": 213.79,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -26140,8 +26140,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 64.03,
-            "svg_y": 240.5,
+            "svg_x": 57.38,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -26149,8 +26149,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 82.14,
-            "svg_y": 240.5,
+            "svg_x": 78.81,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -26159,7 +26159,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.25,
-            "svg_y": 240.5,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -26167,8 +26167,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 118.36,
-            "svg_y": 240.5,
+            "svg_x": 121.69,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -26176,8 +26176,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 136.47,
-            "svg_y": 240.5,
+            "svg_x": 143.12,
+            "svg_y": 234.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -26525,10 +26525,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 63.0,
-        "y": 207.0,
-        "width": 74.0,
-        "height": 205.0
+        "x": 52.0,
+        "y": 196.5,
+        "width": 96.0,
+        "height": 214.0
       },
       "point_cloud": {
         "rows": 8,
@@ -26537,8 +26537,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 74.1,
-            "svg_y": 207.0,
+            "svg_x": 66.4,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -26546,8 +26546,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 87.05,
-            "svg_y": 207.0,
+            "svg_x": 83.2,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -26556,7 +26556,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 207.0,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -26564,8 +26564,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 112.95,
-            "svg_y": 207.0,
+            "svg_x": 116.8,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -26573,26 +26573,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 125.9,
-            "svg_y": 207.0,
+            "svg_x": 133.6,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0272,
+            "u": 0.0733,
             "v": 0.1429,
-            "svg_x": 65.01,
-            "svg_y": 236.29,
+            "svg_x": 59.04,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2636,
+            "u": 0.2866,
             "v": 0.1429,
-            "svg_x": 82.51,
-            "svg_y": 236.29,
+            "svg_x": 79.52,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -26601,43 +26601,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 236.29,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7364,
+            "u": 0.7134,
             "v": 0.1429,
-            "svg_x": 117.49,
-            "svg_y": 236.29,
+            "svg_x": 120.48,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9728,
+            "u": 0.9267,
             "v": 0.1429,
-            "svg_x": 134.99,
-            "svg_y": 236.29,
+            "svg_x": 140.96,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0476,
+            "u": 0.0628,
             "v": 0.2857,
-            "svg_x": 66.52,
-            "svg_y": 265.57,
+            "svg_x": 58.03,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2738,
+            "u": 0.2814,
             "v": 0.2857,
-            "svg_x": 83.26,
-            "svg_y": 265.57,
+            "svg_x": 79.02,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -26646,43 +26646,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 265.57,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7262,
+            "u": 0.7186,
             "v": 0.2857,
-            "svg_x": 116.74,
-            "svg_y": 265.57,
+            "svg_x": 120.98,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9524,
+            "u": 0.9372,
             "v": 0.2857,
-            "svg_x": 133.48,
-            "svg_y": 265.57,
+            "svg_x": 141.97,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0884,
+            "u": 0.0471,
             "v": 0.4286,
-            "svg_x": 69.54,
-            "svg_y": 294.86,
+            "svg_x": 56.52,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2942,
+            "u": 0.2736,
             "v": 0.4286,
-            "svg_x": 84.77,
-            "svg_y": 294.86,
+            "svg_x": 78.26,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -26691,43 +26691,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 294.86,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7058,
+            "u": 0.7264,
             "v": 0.4286,
-            "svg_x": 115.23,
-            "svg_y": 294.86,
+            "svg_x": 121.74,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9116,
+            "u": 0.9529,
             "v": 0.4286,
-            "svg_x": 130.46,
-            "svg_y": 294.86,
+            "svg_x": 143.48,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1429,
+            "u": 0.0366,
             "v": 0.5714,
-            "svg_x": 73.57,
-            "svg_y": 324.14,
+            "svg_x": 55.52,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3214,
+            "u": 0.2683,
             "v": 0.5714,
-            "svg_x": 86.79,
-            "svg_y": 324.14,
+            "svg_x": 77.76,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -26736,43 +26736,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 324.14,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6786,
+            "u": 0.7317,
             "v": 0.5714,
-            "svg_x": 113.21,
-            "svg_y": 324.14,
+            "svg_x": 122.24,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8571,
+            "u": 0.9634,
             "v": 0.5714,
-            "svg_x": 126.43,
-            "svg_y": 324.14,
+            "svg_x": 144.48,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0209,
             "v": 0.7143,
-            "svg_x": 75.08,
-            "svg_y": 353.43,
+            "svg_x": 54.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2605,
             "v": 0.7143,
-            "svg_x": 87.54,
-            "svg_y": 353.43,
+            "svg_x": 77.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -26781,43 +26781,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 353.43,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7395,
             "v": 0.7143,
-            "svg_x": 112.46,
-            "svg_y": 353.43,
+            "svg_x": 122.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9791,
             "v": 0.7143,
-            "svg_x": 124.92,
-            "svg_y": 353.43,
+            "svg_x": 145.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0314,
             "v": 0.8571,
-            "svg_x": 75.08,
-            "svg_y": 382.71,
+            "svg_x": 55.02,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2657,
             "v": 0.8571,
-            "svg_x": 87.54,
-            "svg_y": 382.71,
+            "svg_x": 77.51,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -26826,25 +26826,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 382.71,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7343,
             "v": 0.8571,
-            "svg_x": 112.46,
-            "svg_y": 382.71,
+            "svg_x": 122.49,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9686,
             "v": 0.8571,
-            "svg_x": 124.92,
-            "svg_y": 382.71,
+            "svg_x": 144.98,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -26852,8 +26852,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 74.1,
-            "svg_y": 412.0,
+            "svg_x": 66.4,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -26861,8 +26861,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 87.05,
-            "svg_y": 412.0,
+            "svg_x": 83.2,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -26871,7 +26871,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 412.0,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -26879,8 +26879,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 112.95,
-            "svg_y": 412.0,
+            "svg_x": 116.8,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -26888,8 +26888,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 125.9,
-            "svg_y": 412.0,
+            "svg_x": 133.6,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -27238,10 +27238,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 61.0,
-        "y": 217.0,
-        "width": 78.0,
-        "height": 195.0
+        "x": 48.0,
+        "y": 208.0,
+        "width": 104.0,
+        "height": 202.5
       },
       "point_cloud": {
         "rows": 8,
@@ -27250,8 +27250,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 72.7,
-            "svg_y": 217.0,
+            "svg_x": 63.6,
+            "svg_y": 208.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -27259,8 +27259,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 86.35,
-            "svg_y": 217.0,
+            "svg_x": 81.8,
+            "svg_y": 208.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -27269,7 +27269,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 217.0,
+            "svg_y": 208.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": true
@@ -27277,8 +27277,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 113.65,
-            "svg_y": 217.0,
+            "svg_x": 118.2,
+            "svg_y": 208.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
@@ -27286,26 +27286,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 127.3,
-            "svg_y": 217.0,
+            "svg_x": 136.4,
+            "svg_y": 208.0,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0258,
+            "u": 0.087,
             "v": 0.1429,
-            "svg_x": 63.01,
-            "svg_y": 244.86,
+            "svg_x": 57.04,
+            "svg_y": 236.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2629,
+            "u": 0.2935,
             "v": 0.1429,
-            "svg_x": 81.51,
-            "svg_y": 244.86,
+            "svg_x": 78.52,
+            "svg_y": 236.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -27314,43 +27314,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 244.86,
+            "svg_y": 236.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7371,
+            "u": 0.7065,
             "v": 0.1429,
-            "svg_x": 118.49,
-            "svg_y": 244.86,
+            "svg_x": 121.48,
+            "svg_y": 236.93,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9742,
+            "u": 0.913,
             "v": 0.1429,
-            "svg_x": 136.99,
-            "svg_y": 244.86,
+            "svg_x": 142.96,
+            "svg_y": 236.93,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0452,
+            "u": 0.0725,
             "v": 0.2857,
-            "svg_x": 64.52,
-            "svg_y": 272.71,
+            "svg_x": 55.54,
+            "svg_y": 265.86,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2726,
+            "u": 0.2862,
             "v": 0.2857,
-            "svg_x": 82.26,
-            "svg_y": 272.71,
+            "svg_x": 77.77,
+            "svg_y": 265.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -27359,43 +27359,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 272.71,
+            "svg_y": 265.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7274,
+            "u": 0.7138,
             "v": 0.2857,
-            "svg_x": 117.74,
-            "svg_y": 272.71,
+            "svg_x": 122.23,
+            "svg_y": 265.86,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9548,
+            "u": 0.9275,
             "v": 0.2857,
-            "svg_x": 135.48,
-            "svg_y": 272.71,
+            "svg_x": 144.46,
+            "svg_y": 265.86,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0774,
+            "u": 0.058,
             "v": 0.4286,
-            "svg_x": 67.04,
-            "svg_y": 300.57,
+            "svg_x": 54.03,
+            "svg_y": 294.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2887,
+            "u": 0.279,
             "v": 0.4286,
-            "svg_x": 83.52,
-            "svg_y": 300.57,
+            "svg_x": 77.01,
+            "svg_y": 294.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -27404,43 +27404,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 300.57,
+            "svg_y": 294.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7113,
+            "u": 0.721,
             "v": 0.4286,
-            "svg_x": 116.48,
-            "svg_y": 300.57,
+            "svg_x": 122.99,
+            "svg_y": 294.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9226,
+            "u": 0.942,
             "v": 0.4286,
-            "svg_x": 132.96,
-            "svg_y": 300.57,
+            "svg_x": 145.97,
+            "svg_y": 294.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1161,
+            "u": 0.0338,
             "v": 0.5714,
-            "svg_x": 70.06,
-            "svg_y": 328.43,
+            "svg_x": 51.52,
+            "svg_y": 323.71,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3081,
+            "u": 0.2669,
             "v": 0.5714,
-            "svg_x": 85.03,
-            "svg_y": 328.43,
+            "svg_x": 75.76,
+            "svg_y": 323.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -27449,43 +27449,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 328.43,
+            "svg_y": 323.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6919,
+            "u": 0.7331,
             "v": 0.5714,
-            "svg_x": 114.97,
-            "svg_y": 328.43,
+            "svg_x": 124.24,
+            "svg_y": 323.71,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8839,
+            "u": 0.9662,
             "v": 0.5714,
-            "svg_x": 129.94,
-            "svg_y": 328.43,
+            "svg_x": 148.48,
+            "svg_y": 323.71,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.129,
+            "u": 0.0193,
             "v": 0.7143,
-            "svg_x": 71.06,
-            "svg_y": 356.29,
+            "svg_x": 50.01,
+            "svg_y": 352.64,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3145,
+            "u": 0.2597,
             "v": 0.7143,
-            "svg_x": 85.53,
-            "svg_y": 356.29,
+            "svg_x": 75.0,
+            "svg_y": 352.64,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -27494,43 +27494,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 356.29,
+            "svg_y": 352.64,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6855,
+            "u": 0.7403,
             "v": 0.7143,
-            "svg_x": 114.47,
-            "svg_y": 356.29,
+            "svg_x": 125.0,
+            "svg_y": 352.64,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.871,
+            "u": 0.9807,
             "v": 0.7143,
-            "svg_x": 128.94,
-            "svg_y": 356.29,
+            "svg_x": 149.99,
+            "svg_y": 352.64,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1226,
+            "u": 0.029,
             "v": 0.8571,
-            "svg_x": 70.56,
-            "svg_y": 384.14,
+            "svg_x": 51.01,
+            "svg_y": 381.57,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3113,
+            "u": 0.2645,
             "v": 0.8571,
-            "svg_x": 85.28,
-            "svg_y": 384.14,
+            "svg_x": 75.51,
+            "svg_y": 381.57,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -27539,25 +27539,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 384.14,
+            "svg_y": 381.57,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6887,
+            "u": 0.7355,
             "v": 0.8571,
-            "svg_x": 114.72,
-            "svg_y": 384.14,
+            "svg_x": 124.49,
+            "svg_y": 381.57,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8774,
+            "u": 0.971,
             "v": 0.8571,
-            "svg_x": 129.44,
-            "svg_y": 384.14,
+            "svg_x": 148.99,
+            "svg_y": 381.57,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -27565,8 +27565,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 72.7,
-            "svg_y": 412.0,
+            "svg_x": 63.6,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -27574,8 +27574,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 86.35,
-            "svg_y": 412.0,
+            "svg_x": 81.8,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -27584,7 +27584,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 412.0,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -27592,8 +27592,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 113.65,
-            "svg_y": 412.0,
+            "svg_x": 118.2,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -27601,8 +27601,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 127.3,
-            "svg_y": 412.0,
+            "svg_x": 136.4,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -27951,10 +27951,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 63.0,
-        "y": 207.0,
-        "width": 74.0,
-        "height": 205.0
+        "x": 52.0,
+        "y": 196.5,
+        "width": 96.0,
+        "height": 214.0
       },
       "point_cloud": {
         "rows": 8,
@@ -27963,8 +27963,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 74.1,
-            "svg_y": 207.0,
+            "svg_x": 66.4,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -27972,8 +27972,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 87.05,
-            "svg_y": 207.0,
+            "svg_x": 83.2,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -27982,7 +27982,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 207.0,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -27990,8 +27990,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 112.95,
-            "svg_y": 207.0,
+            "svg_x": 116.8,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -27999,26 +27999,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 125.9,
-            "svg_y": 207.0,
+            "svg_x": 133.6,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0272,
+            "u": 0.0733,
             "v": 0.1429,
-            "svg_x": 65.01,
-            "svg_y": 236.29,
+            "svg_x": 59.04,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2636,
+            "u": 0.2866,
             "v": 0.1429,
-            "svg_x": 82.51,
-            "svg_y": 236.29,
+            "svg_x": 79.52,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -28027,43 +28027,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 236.29,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7364,
+            "u": 0.7134,
             "v": 0.1429,
-            "svg_x": 117.49,
-            "svg_y": 236.29,
+            "svg_x": 120.48,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9728,
+            "u": 0.9267,
             "v": 0.1429,
-            "svg_x": 134.99,
-            "svg_y": 236.29,
+            "svg_x": 140.96,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0476,
+            "u": 0.0628,
             "v": 0.2857,
-            "svg_x": 66.52,
-            "svg_y": 265.57,
+            "svg_x": 58.03,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2738,
+            "u": 0.2814,
             "v": 0.2857,
-            "svg_x": 83.26,
-            "svg_y": 265.57,
+            "svg_x": 79.02,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -28072,43 +28072,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 265.57,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7262,
+            "u": 0.7186,
             "v": 0.2857,
-            "svg_x": 116.74,
-            "svg_y": 265.57,
+            "svg_x": 120.98,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9524,
+            "u": 0.9372,
             "v": 0.2857,
-            "svg_x": 133.48,
-            "svg_y": 265.57,
+            "svg_x": 141.97,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0884,
+            "u": 0.0471,
             "v": 0.4286,
-            "svg_x": 69.54,
-            "svg_y": 294.86,
+            "svg_x": 56.52,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2942,
+            "u": 0.2736,
             "v": 0.4286,
-            "svg_x": 84.77,
-            "svg_y": 294.86,
+            "svg_x": 78.26,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -28117,43 +28117,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 294.86,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7058,
+            "u": 0.7264,
             "v": 0.4286,
-            "svg_x": 115.23,
-            "svg_y": 294.86,
+            "svg_x": 121.74,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9116,
+            "u": 0.9529,
             "v": 0.4286,
-            "svg_x": 130.46,
-            "svg_y": 294.86,
+            "svg_x": 143.48,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1429,
+            "u": 0.0366,
             "v": 0.5714,
-            "svg_x": 73.57,
-            "svg_y": 324.14,
+            "svg_x": 55.52,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3214,
+            "u": 0.2683,
             "v": 0.5714,
-            "svg_x": 86.79,
-            "svg_y": 324.14,
+            "svg_x": 77.76,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -28162,43 +28162,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 324.14,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6786,
+            "u": 0.7317,
             "v": 0.5714,
-            "svg_x": 113.21,
-            "svg_y": 324.14,
+            "svg_x": 122.24,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8571,
+            "u": 0.9634,
             "v": 0.5714,
-            "svg_x": 126.43,
-            "svg_y": 324.14,
+            "svg_x": 144.48,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0209,
             "v": 0.7143,
-            "svg_x": 75.08,
-            "svg_y": 353.43,
+            "svg_x": 54.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2605,
             "v": 0.7143,
-            "svg_x": 87.54,
-            "svg_y": 353.43,
+            "svg_x": 77.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -28207,43 +28207,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 353.43,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7395,
             "v": 0.7143,
-            "svg_x": 112.46,
-            "svg_y": 353.43,
+            "svg_x": 122.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9791,
             "v": 0.7143,
-            "svg_x": 124.92,
-            "svg_y": 353.43,
+            "svg_x": 145.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0314,
             "v": 0.8571,
-            "svg_x": 75.08,
-            "svg_y": 382.71,
+            "svg_x": 55.02,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2657,
             "v": 0.8571,
-            "svg_x": 87.54,
-            "svg_y": 382.71,
+            "svg_x": 77.51,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -28252,25 +28252,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 382.71,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7343,
             "v": 0.8571,
-            "svg_x": 112.46,
-            "svg_y": 382.71,
+            "svg_x": 122.49,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9686,
             "v": 0.8571,
-            "svg_x": 124.92,
-            "svg_y": 382.71,
+            "svg_x": 144.98,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -28278,8 +28278,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 74.1,
-            "svg_y": 412.0,
+            "svg_x": 66.4,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -28287,8 +28287,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 87.05,
-            "svg_y": 412.0,
+            "svg_x": 83.2,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -28297,7 +28297,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 412.0,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -28305,8 +28305,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 112.95,
-            "svg_y": 412.0,
+            "svg_x": 116.8,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -28314,8 +28314,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 125.9,
-            "svg_y": 412.0,
+            "svg_x": 133.6,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -28664,10 +28664,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 63.0,
-        "y": 207.0,
-        "width": 74.0,
-        "height": 205.0
+        "x": 52.0,
+        "y": 196.5,
+        "width": 96.0,
+        "height": 214.0
       },
       "point_cloud": {
         "rows": 8,
@@ -28676,8 +28676,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 74.1,
-            "svg_y": 207.0,
+            "svg_x": 66.4,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -28685,8 +28685,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 87.05,
-            "svg_y": 207.0,
+            "svg_x": 83.2,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -28695,7 +28695,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 207.0,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -28703,8 +28703,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 112.95,
-            "svg_y": 207.0,
+            "svg_x": 116.8,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -28712,26 +28712,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 125.9,
-            "svg_y": 207.0,
+            "svg_x": 133.6,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0272,
+            "u": 0.0733,
             "v": 0.1429,
-            "svg_x": 65.01,
-            "svg_y": 236.29,
+            "svg_x": 59.04,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2636,
+            "u": 0.2866,
             "v": 0.1429,
-            "svg_x": 82.51,
-            "svg_y": 236.29,
+            "svg_x": 79.52,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -28740,43 +28740,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 236.29,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7364,
+            "u": 0.7134,
             "v": 0.1429,
-            "svg_x": 117.49,
-            "svg_y": 236.29,
+            "svg_x": 120.48,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9728,
+            "u": 0.9267,
             "v": 0.1429,
-            "svg_x": 134.99,
-            "svg_y": 236.29,
+            "svg_x": 140.96,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0476,
+            "u": 0.0628,
             "v": 0.2857,
-            "svg_x": 66.52,
-            "svg_y": 265.57,
+            "svg_x": 58.03,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2738,
+            "u": 0.2814,
             "v": 0.2857,
-            "svg_x": 83.26,
-            "svg_y": 265.57,
+            "svg_x": 79.02,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -28785,43 +28785,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 265.57,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7262,
+            "u": 0.7186,
             "v": 0.2857,
-            "svg_x": 116.74,
-            "svg_y": 265.57,
+            "svg_x": 120.98,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9524,
+            "u": 0.9372,
             "v": 0.2857,
-            "svg_x": 133.48,
-            "svg_y": 265.57,
+            "svg_x": 141.97,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0884,
+            "u": 0.0471,
             "v": 0.4286,
-            "svg_x": 69.54,
-            "svg_y": 294.86,
+            "svg_x": 56.52,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2942,
+            "u": 0.2736,
             "v": 0.4286,
-            "svg_x": 84.77,
-            "svg_y": 294.86,
+            "svg_x": 78.26,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -28830,43 +28830,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 294.86,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7058,
+            "u": 0.7264,
             "v": 0.4286,
-            "svg_x": 115.23,
-            "svg_y": 294.86,
+            "svg_x": 121.74,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9116,
+            "u": 0.9529,
             "v": 0.4286,
-            "svg_x": 130.46,
-            "svg_y": 294.86,
+            "svg_x": 143.48,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1429,
+            "u": 0.0366,
             "v": 0.5714,
-            "svg_x": 73.57,
-            "svg_y": 324.14,
+            "svg_x": 55.52,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3214,
+            "u": 0.2683,
             "v": 0.5714,
-            "svg_x": 86.79,
-            "svg_y": 324.14,
+            "svg_x": 77.76,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -28875,43 +28875,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 324.14,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6786,
+            "u": 0.7317,
             "v": 0.5714,
-            "svg_x": 113.21,
-            "svg_y": 324.14,
+            "svg_x": 122.24,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8571,
+            "u": 0.9634,
             "v": 0.5714,
-            "svg_x": 126.43,
-            "svg_y": 324.14,
+            "svg_x": 144.48,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0209,
             "v": 0.7143,
-            "svg_x": 75.08,
-            "svg_y": 353.43,
+            "svg_x": 54.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2605,
             "v": 0.7143,
-            "svg_x": 87.54,
-            "svg_y": 353.43,
+            "svg_x": 77.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -28920,43 +28920,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 353.43,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7395,
             "v": 0.7143,
-            "svg_x": 112.46,
-            "svg_y": 353.43,
+            "svg_x": 122.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9791,
             "v": 0.7143,
-            "svg_x": 124.92,
-            "svg_y": 353.43,
+            "svg_x": 145.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0314,
             "v": 0.8571,
-            "svg_x": 75.08,
-            "svg_y": 382.71,
+            "svg_x": 55.02,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2657,
             "v": 0.8571,
-            "svg_x": 87.54,
-            "svg_y": 382.71,
+            "svg_x": 77.51,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -28965,25 +28965,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 382.71,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7343,
             "v": 0.8571,
-            "svg_x": 112.46,
-            "svg_y": 382.71,
+            "svg_x": 122.49,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9686,
             "v": 0.8571,
-            "svg_x": 124.92,
-            "svg_y": 382.71,
+            "svg_x": 144.98,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -28991,8 +28991,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 74.1,
-            "svg_y": 412.0,
+            "svg_x": 66.4,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -29000,8 +29000,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 87.05,
-            "svg_y": 412.0,
+            "svg_x": 83.2,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -29010,7 +29010,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 412.0,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -29018,8 +29018,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 112.95,
-            "svg_y": 412.0,
+            "svg_x": 116.8,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -29027,8 +29027,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 125.9,
-            "svg_y": 412.0,
+            "svg_x": 133.6,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -29377,10 +29377,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 63.0,
-        "y": 207.0,
-        "width": 74.0,
-        "height": 205.0
+        "x": 52.0,
+        "y": 196.5,
+        "width": 96.0,
+        "height": 214.0
       },
       "point_cloud": {
         "rows": 8,
@@ -29389,8 +29389,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 74.1,
-            "svg_y": 207.0,
+            "svg_x": 66.4,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -29398,8 +29398,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 87.05,
-            "svg_y": 207.0,
+            "svg_x": 83.2,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -29408,7 +29408,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.0,
             "svg_x": 100.0,
-            "svg_y": 207.0,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": true
@@ -29416,8 +29416,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 112.95,
-            "svg_y": 207.0,
+            "svg_x": 116.8,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
@@ -29425,26 +29425,26 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 125.9,
-            "svg_y": 207.0,
+            "svg_x": 133.6,
+            "svg_y": 196.5,
             "zone": "waist",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0272,
+            "u": 0.0733,
             "v": 0.1429,
-            "svg_x": 65.01,
-            "svg_y": 236.29,
+            "svg_x": 59.04,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2636,
+            "u": 0.2866,
             "v": 0.1429,
-            "svg_x": 82.51,
-            "svg_y": 236.29,
+            "svg_x": 79.52,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
@@ -29453,43 +29453,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.1429,
             "svg_x": 100.0,
-            "svg_y": 236.29,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7364,
+            "u": 0.7134,
             "v": 0.1429,
-            "svg_x": 117.49,
-            "svg_y": 236.29,
+            "svg_x": 120.48,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9728,
+            "u": 0.9267,
             "v": 0.1429,
-            "svg_x": 134.99,
-            "svg_y": 236.29,
+            "svg_x": 140.96,
+            "svg_y": 227.07,
             "zone": "hip",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0476,
+            "u": 0.0628,
             "v": 0.2857,
-            "svg_x": 66.52,
-            "svg_y": 265.57,
+            "svg_x": 58.03,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2738,
+            "u": 0.2814,
             "v": 0.2857,
-            "svg_x": 83.26,
-            "svg_y": 265.57,
+            "svg_x": 79.02,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -29498,43 +29498,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.2857,
             "svg_x": 100.0,
-            "svg_y": 265.57,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7262,
+            "u": 0.7186,
             "v": 0.2857,
-            "svg_x": 116.74,
-            "svg_y": 265.57,
+            "svg_x": 120.98,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9524,
+            "u": 0.9372,
             "v": 0.2857,
-            "svg_x": 133.48,
-            "svg_y": 265.57,
+            "svg_x": 141.97,
+            "svg_y": 257.64,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0884,
+            "u": 0.0471,
             "v": 0.4286,
-            "svg_x": 69.54,
-            "svg_y": 294.86,
+            "svg_x": 56.52,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2942,
+            "u": 0.2736,
             "v": 0.4286,
-            "svg_x": 84.77,
-            "svg_y": 294.86,
+            "svg_x": 78.26,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -29543,43 +29543,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.4286,
             "svg_x": 100.0,
-            "svg_y": 294.86,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7058,
+            "u": 0.7264,
             "v": 0.4286,
-            "svg_x": 115.23,
-            "svg_y": 294.86,
+            "svg_x": 121.74,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9116,
+            "u": 0.9529,
             "v": 0.4286,
-            "svg_x": 130.46,
-            "svg_y": 294.86,
+            "svg_x": 143.48,
+            "svg_y": 288.21,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1429,
+            "u": 0.0366,
             "v": 0.5714,
-            "svg_x": 73.57,
-            "svg_y": 324.14,
+            "svg_x": 55.52,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3214,
+            "u": 0.2683,
             "v": 0.5714,
-            "svg_x": 86.79,
-            "svg_y": 324.14,
+            "svg_x": 77.76,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
@@ -29588,43 +29588,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.5714,
             "svg_x": 100.0,
-            "svg_y": 324.14,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6786,
+            "u": 0.7317,
             "v": 0.5714,
-            "svg_x": 113.21,
-            "svg_y": 324.14,
+            "svg_x": 122.24,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8571,
+            "u": 0.9634,
             "v": 0.5714,
-            "svg_x": 126.43,
-            "svg_y": 324.14,
+            "svg_x": 144.48,
+            "svg_y": 318.79,
             "zone": "knee",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0209,
             "v": 0.7143,
-            "svg_x": 75.08,
-            "svg_y": 353.43,
+            "svg_x": 54.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2605,
             "v": 0.7143,
-            "svg_x": 87.54,
-            "svg_y": 353.43,
+            "svg_x": 77.01,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -29633,43 +29633,43 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.7143,
             "svg_x": 100.0,
-            "svg_y": 353.43,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7395,
             "v": 0.7143,
-            "svg_x": 112.46,
-            "svg_y": 353.43,
+            "svg_x": 122.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9791,
             "v": 0.7143,
-            "svg_x": 124.92,
-            "svg_y": 353.43,
+            "svg_x": 145.99,
+            "svg_y": 349.36,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.1633,
+            "u": 0.0314,
             "v": 0.8571,
-            "svg_x": 75.08,
-            "svg_y": 382.71,
+            "svg_x": 55.02,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.3316,
+            "u": 0.2657,
             "v": 0.8571,
-            "svg_x": 87.54,
-            "svg_y": 382.71,
+            "svg_x": 77.51,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
@@ -29678,25 +29678,25 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 0.8571,
             "svg_x": 100.0,
-            "svg_y": 382.71,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.6684,
+            "u": 0.7343,
             "v": 0.8571,
-            "svg_x": 112.46,
-            "svg_y": 382.71,
+            "svg_x": 122.49,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.8367,
+            "u": 0.9686,
             "v": 0.8571,
-            "svg_x": 124.92,
-            "svg_y": 382.71,
+            "svg_x": 144.98,
+            "svg_y": 379.93,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -29704,8 +29704,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 74.1,
-            "svg_y": 412.0,
+            "svg_x": 66.4,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -29713,8 +29713,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 87.05,
-            "svg_y": 412.0,
+            "svg_x": 83.2,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -29723,7 +29723,7 @@ export const ONBOARDING_STATIC_DATASET = [
             "u": 0.5,
             "v": 1.0,
             "svg_x": 100.0,
-            "svg_y": 412.0,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": true
@@ -29731,8 +29731,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 112.95,
-            "svg_y": 412.0,
+            "svg_x": 116.8,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -29740,8 +29740,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 125.9,
-            "svg_y": 412.0,
+            "svg_x": 133.6,
+            "svg_y": 410.5,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -30089,10 +30089,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 70.5,
-        "y": 401.0,
-        "width": 59.5,
-        "height": 27.5
+        "x": 52.0,
+        "y": 400.0,
+        "width": 96.0,
+        "height": 28.5
       },
       "point_cloud": {
         "rows": 4,
@@ -30101,8 +30101,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 79.42,
-            "svg_y": 401.0,
+            "svg_x": 66.4,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30110,8 +30110,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 89.84,
-            "svg_y": 401.0,
+            "svg_x": 83.2,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30119,8 +30119,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 401.0,
+            "svg_x": 100.0,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -30128,8 +30128,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 110.66,
-            "svg_y": 401.0,
+            "svg_x": 116.8,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30137,98 +30137,98 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 121.07,
-            "svg_y": 401.0,
+            "svg_x": 133.6,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0763,
+            "u": 0.0524,
             "v": 0.3333,
-            "svg_x": 75.04,
-            "svg_y": 410.17,
+            "svg_x": 57.03,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.286,
+            "u": 0.2775,
             "v": 0.3333,
-            "svg_x": 87.52,
-            "svg_y": 410.17,
+            "svg_x": 78.64,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4958,
+            "u": 0.5026,
             "v": 0.3333,
-            "svg_x": 100.0,
-            "svg_y": 410.17,
+            "svg_x": 100.25,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7055,
+            "u": 0.7277,
             "v": 0.3333,
-            "svg_x": 112.48,
-            "svg_y": 410.17,
+            "svg_x": 121.86,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9153,
+            "u": 0.9529,
             "v": 0.3333,
-            "svg_x": 124.96,
-            "svg_y": 410.17,
+            "svg_x": 143.48,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0424,
+            "u": 0.0262,
             "v": 0.6667,
-            "svg_x": 73.02,
-            "svg_y": 419.33,
+            "svg_x": 54.51,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2712,
+            "u": 0.2644,
             "v": 0.6667,
-            "svg_x": 86.64,
-            "svg_y": 419.33,
+            "svg_x": 77.38,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5026,
             "v": 0.6667,
             "svg_x": 100.25,
-            "svg_y": 419.33,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7288,
+            "u": 0.7408,
             "v": 0.6667,
-            "svg_x": 113.86,
-            "svg_y": 419.33,
+            "svg_x": 123.12,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9576,
+            "u": 0.9791,
             "v": 0.6667,
-            "svg_x": 127.48,
-            "svg_y": 419.33,
+            "svg_x": 145.99,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -30236,7 +30236,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 79.42,
+            "svg_x": 66.4,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30245,7 +30245,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 89.84,
+            "svg_x": 83.2,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30254,7 +30254,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
+            "svg_x": 100.0,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30263,7 +30263,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 110.66,
+            "svg_x": 116.8,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30272,7 +30272,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 121.07,
+            "svg_x": 133.6,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30462,10 +30462,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 70.5,
-        "y": 401.0,
-        "width": 59.5,
-        "height": 27.5
+        "x": 52.0,
+        "y": 400.0,
+        "width": 96.0,
+        "height": 28.5
       },
       "point_cloud": {
         "rows": 4,
@@ -30474,8 +30474,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 79.42,
-            "svg_y": 401.0,
+            "svg_x": 66.4,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30483,8 +30483,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 89.84,
-            "svg_y": 401.0,
+            "svg_x": 83.2,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30492,8 +30492,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 401.0,
+            "svg_x": 100.0,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -30501,8 +30501,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 110.66,
-            "svg_y": 401.0,
+            "svg_x": 116.8,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30510,98 +30510,98 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 121.07,
-            "svg_y": 401.0,
+            "svg_x": 133.6,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0763,
+            "u": 0.0524,
             "v": 0.3333,
-            "svg_x": 75.04,
-            "svg_y": 410.17,
+            "svg_x": 57.03,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.286,
+            "u": 0.2775,
             "v": 0.3333,
-            "svg_x": 87.52,
-            "svg_y": 410.17,
+            "svg_x": 78.64,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4958,
+            "u": 0.5026,
             "v": 0.3333,
-            "svg_x": 100.0,
-            "svg_y": 410.17,
+            "svg_x": 100.25,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7055,
+            "u": 0.7277,
             "v": 0.3333,
-            "svg_x": 112.48,
-            "svg_y": 410.17,
+            "svg_x": 121.86,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9153,
+            "u": 0.9529,
             "v": 0.3333,
-            "svg_x": 124.96,
-            "svg_y": 410.17,
+            "svg_x": 143.48,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0424,
+            "u": 0.0262,
             "v": 0.6667,
-            "svg_x": 73.02,
-            "svg_y": 419.33,
+            "svg_x": 54.51,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2712,
+            "u": 0.2644,
             "v": 0.6667,
-            "svg_x": 86.64,
-            "svg_y": 419.33,
+            "svg_x": 77.38,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5026,
             "v": 0.6667,
             "svg_x": 100.25,
-            "svg_y": 419.33,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7288,
+            "u": 0.7408,
             "v": 0.6667,
-            "svg_x": 113.86,
-            "svg_y": 419.33,
+            "svg_x": 123.12,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9576,
+            "u": 0.9791,
             "v": 0.6667,
-            "svg_x": 127.48,
-            "svg_y": 419.33,
+            "svg_x": 145.99,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -30609,7 +30609,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 79.42,
+            "svg_x": 66.4,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30618,7 +30618,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 89.84,
+            "svg_x": 83.2,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30627,7 +30627,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
+            "svg_x": 100.0,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30636,7 +30636,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 110.66,
+            "svg_x": 116.8,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30645,7 +30645,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 121.07,
+            "svg_x": 133.6,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30833,10 +30833,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 70.5,
-        "y": 393.0,
-        "width": 59.5,
-        "height": 35.5
+        "x": 52.0,
+        "y": 391.0,
+        "width": 96.0,
+        "height": 37.5
       },
       "point_cloud": {
         "rows": 4,
@@ -30845,8 +30845,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 79.42,
-            "svg_y": 393.0,
+            "svg_x": 66.4,
+            "svg_y": 391.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30854,8 +30854,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 89.84,
-            "svg_y": 393.0,
+            "svg_x": 83.2,
+            "svg_y": 391.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30863,8 +30863,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 393.0,
+            "svg_x": 100.0,
+            "svg_y": 391.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -30872,8 +30872,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 110.66,
-            "svg_y": 393.0,
+            "svg_x": 116.8,
+            "svg_y": 391.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -30881,98 +30881,98 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 121.07,
-            "svg_y": 393.0,
+            "svg_x": 133.6,
+            "svg_y": 391.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0847,
+            "u": 0.0628,
             "v": 0.3333,
-            "svg_x": 75.54,
-            "svg_y": 404.83,
+            "svg_x": 58.03,
+            "svg_y": 403.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2924,
+            "u": 0.2827,
             "v": 0.3333,
-            "svg_x": 87.9,
-            "svg_y": 404.83,
+            "svg_x": 79.14,
+            "svg_y": 403.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5026,
             "v": 0.3333,
             "svg_x": 100.25,
-            "svg_y": 404.83,
+            "svg_y": 403.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7076,
+            "u": 0.7225,
             "v": 0.3333,
-            "svg_x": 112.6,
-            "svg_y": 404.83,
+            "svg_x": 121.36,
+            "svg_y": 403.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9153,
+            "u": 0.9424,
             "v": 0.3333,
-            "svg_x": 124.96,
-            "svg_y": 404.83,
+            "svg_x": 142.47,
+            "svg_y": 403.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0424,
+            "u": 0.0314,
             "v": 0.6667,
-            "svg_x": 73.02,
-            "svg_y": 416.67,
+            "svg_x": 55.02,
+            "svg_y": 416.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2712,
+            "u": 0.267,
             "v": 0.6667,
-            "svg_x": 86.64,
-            "svg_y": 416.67,
+            "svg_x": 77.63,
+            "svg_y": 416.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5026,
             "v": 0.6667,
             "svg_x": 100.25,
-            "svg_y": 416.67,
+            "svg_y": 416.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7288,
+            "u": 0.7382,
             "v": 0.6667,
-            "svg_x": 113.86,
-            "svg_y": 416.67,
+            "svg_x": 122.87,
+            "svg_y": 416.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9576,
+            "u": 0.9738,
             "v": 0.6667,
-            "svg_x": 127.48,
-            "svg_y": 416.67,
+            "svg_x": 145.49,
+            "svg_y": 416.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -30980,7 +30980,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 79.42,
+            "svg_x": 66.4,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30989,7 +30989,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 89.84,
+            "svg_x": 83.2,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -30998,7 +30998,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
+            "svg_x": 100.0,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -31007,7 +31007,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 110.66,
+            "svg_x": 116.8,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -31016,7 +31016,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 121.07,
+            "svg_x": 133.6,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -31210,10 +31210,10 @@ export const ONBOARDING_STATIC_DATASET = [
       "fitted_to_default_avatar": true,
       "default_sex": "male",
       "default_viewbox": {
-        "x": 70.5,
-        "y": 401.0,
-        "width": 59.5,
-        "height": 27.5
+        "x": 52.0,
+        "y": 400.0,
+        "width": 96.0,
+        "height": 28.5
       },
       "point_cloud": {
         "rows": 4,
@@ -31222,8 +31222,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 0.0,
-            "svg_x": 79.42,
-            "svg_y": 401.0,
+            "svg_x": 66.4,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -31231,8 +31231,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 0.0,
-            "svg_x": 89.84,
-            "svg_y": 401.0,
+            "svg_x": 83.2,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -31240,8 +31240,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 0.0,
-            "svg_x": 100.25,
-            "svg_y": 401.0,
+            "svg_x": 100.0,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": true
@@ -31249,8 +31249,8 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 0.0,
-            "svg_x": 110.66,
-            "svg_y": 401.0,
+            "svg_x": 116.8,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
@@ -31258,98 +31258,98 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 0.0,
-            "svg_x": 121.07,
-            "svg_y": 401.0,
+            "svg_x": 133.6,
+            "svg_y": 400.0,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0763,
+            "u": 0.0524,
             "v": 0.3333,
-            "svg_x": 75.04,
-            "svg_y": 410.17,
+            "svg_x": 57.03,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.286,
+            "u": 0.2775,
             "v": 0.3333,
-            "svg_x": 87.52,
-            "svg_y": 410.17,
+            "svg_x": 78.64,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.4958,
+            "u": 0.5026,
             "v": 0.3333,
-            "svg_x": 100.0,
-            "svg_y": 410.17,
+            "svg_x": 100.25,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7055,
+            "u": 0.7277,
             "v": 0.3333,
-            "svg_x": 112.48,
-            "svg_y": 410.17,
+            "svg_x": 121.86,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9153,
+            "u": 0.9529,
             "v": 0.3333,
-            "svg_x": 124.96,
-            "svg_y": 410.17,
+            "svg_x": 143.48,
+            "svg_y": 409.5,
             "zone": "ankle",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.0424,
+            "u": 0.0262,
             "v": 0.6667,
-            "svg_x": 73.02,
-            "svg_y": 419.33,
+            "svg_x": 54.51,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
           },
           {
-            "u": 0.2712,
+            "u": 0.2644,
             "v": 0.6667,
-            "svg_x": 86.64,
-            "svg_y": 419.33,
+            "svg_x": 77.38,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.5,
+            "u": 0.5026,
             "v": 0.6667,
             "svg_x": 100.25,
-            "svg_y": 419.33,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": true
           },
           {
-            "u": 0.7288,
+            "u": 0.7408,
             "v": 0.6667,
-            "svg_x": 113.86,
-            "svg_y": 419.33,
+            "svg_x": 123.12,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": false,
             "is_center": false
           },
           {
-            "u": 0.9576,
+            "u": 0.9791,
             "v": 0.6667,
-            "svg_x": 127.48,
-            "svg_y": 419.33,
+            "svg_x": 145.99,
+            "svg_y": 419.0,
             "zone": "feet",
             "is_edge": true,
             "is_center": false
@@ -31357,7 +31357,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.15,
             "v": 1.0,
-            "svg_x": 79.42,
+            "svg_x": 66.4,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -31366,7 +31366,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.325,
             "v": 1.0,
-            "svg_x": 89.84,
+            "svg_x": 83.2,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -31375,7 +31375,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.5,
             "v": 1.0,
-            "svg_x": 100.25,
+            "svg_x": 100.0,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -31384,7 +31384,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.675,
             "v": 1.0,
-            "svg_x": 110.66,
+            "svg_x": 116.8,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,
@@ -31393,7 +31393,7 @@ export const ONBOARDING_STATIC_DATASET = [
           {
             "u": 0.85,
             "v": 1.0,
-            "svg_x": 121.07,
+            "svg_x": 133.6,
             "svg_y": 428.5,
             "zone": "feet",
             "is_edge": true,

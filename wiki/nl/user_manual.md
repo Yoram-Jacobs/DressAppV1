@@ -91,9 +91,9 @@ De Profielpagina fungeert als het centrale bedieningspaneel voor DressApp. Confi
 
 ##### Afhankelijkheden & Achtergrond van Accordeonsecties
 
-1. **Foto's & Digitaal Avatarpodium (`AvatarViewer2D` & `DynamicAvatar`)**
-   - **Waarom is dit belangrijk?**: Geeft uw visuele identiteit weer op alle pascanvassen via een tweevoudig podium (gesegmenteerde uitsnede van een echte lichaamsfoto vs. dynamische 2D Bézier-vector SVG-paspop).
-   - **Subsysteemafhankelijkheden**: Foto-uitsneden worden vrijstaand gemaakt via lokale U2-Net (`rembg`) en in de browser verkleind tot maximaal 1280 px op 82% kwaliteit om binnen de documentlimiet van 16 MB van MongoDB te passen. Het podium past gekalibreerde positiepunten toe (`top-[14.5%]` kraag-tot-halslijn, `top-[36.5%]` tailleband-tot-taillelijn, `bottom-[2%]` schoenvlak) en proportionele borst-/heupschaling ($scaleX$). Klik op *Foto verwijderen* om direct terug te schakelen naar de 2D SVG-vectorpaspop.
+1. **Foto's & 3D dynamisch avatar-podium (`AvatarViewer2D`, `DynamicAvatar` & `closetGarmentFitter`)**
+   - **Waarom is dit belangrijk?**: Rendert je visuele identiteit op alle pas-canvassen met een dual-mode podium: een realistische 3D MB-Lab WebGL menselijke mesh (`avatar_male_1.glb` & `avatar_female_1.glb`, met 2D Bézier SVG-terugvaloptie) of een gesegmenteerde uitknipfoto van je echte lichaam.
+   - **Subsysteem-afhankelijkheden**: De 3D-avatar vormt zich dynamisch in een orthografisch `200 x 450`-canvas op basis van je lengte en lichaamsomtrekken (`scaleY` losgekoppeld van `scaleXZ`) en past 8 realistische Monk-huidskleurtinten (`SkinTonePicker.jsx`) toe. Foto-uitknipsels worden lokaal vrijstaand gemaakt via U2-Net (`rembg`) en in de browser verkleind tot maximaal 1280px op 82% kwaliteit om binnen de documentlimiet van 16 MB van MongoDB te passen. Zowel de 48 vooraf gepaste onboarding-items als de uitknipsels uit de kledingkast van de gebruiker worden via `closetGarmentFitter.js` en live horizontale slice-warping (`FittedGarmentLayer`) exact op de schouders, licht gespreide armen, romp, A-stand-benen en voeten van de 3D-avatar geplaatst. Klik op *Foto verwijderen* om direct terug te schakelen naar de 3D-avatar.
 
 2. **Stijlprofiel (Bescheidenheidsregels, Kledingvoorschrift)**
    - **Waarom is dit belangrijk?**: Stelt persoonlijke grenzen vast voor aanbevolen outfits en voorkomt dat de AI ongepaste stijlsuggesties genereert.

@@ -1,190 +1,114 @@
-# DressApp — Architecture du Système d'Essayage 2D et de Positionnement d'Avatar (`Avatar.md`)
+# DressApp — Architecture de l'Avatar Dynamique 3D et du Système de Positionnement d'Essayage (`Avatar.md`)
 
-> **Version du Document :** 2.0  
-> **Sous-système Cible :** Mannequin 2D Frontend, Découpage Photo du Corps Réel & Moteur de Superposition de Vêtements  
-> **Fichiers Principaux :** `AvatarViewer2D.jsx`, `DynamicAvatar.jsx`, `OutfitCanvas.jsx`, `Profile.jsx`  
-> **Statut :** Déployé en Production & Calibré  
+> **Version du document :** 3.0  
+> **Sous-système cible :** Avatar Frontend 3D MB-Lab WebGL, découpes photo du corps réel et moteur de superposition anatomique des vêtements  
+> **Fichiers principaux :** `DynamicAvatar.jsx`, `AvatarViewer2D.jsx`, `closetGarmentFitter.js`, `SkinTonePicker.jsx`, `fit_onboarding_garments_to_avatar.py`, `onboardingDataset.js`  
+> **Statut :** En production et calibré  
 
 ---
 
-## 1. Résumé Exécutif & Proposition de Valeur
+## 1. Résumé exécutif et proposition de valeur
 
-### 1.1 Présentation Générale
-Le **Système d'Essayage 2D et de Positionnement d'Avatar DressApp** offre un environnement visuel d'essayage adaptatif en temps réel. Il permet aux utilisateurs de prévisualiser des vêtements numérisés superposés de manière fluide soit sur une **photographie détourée du corps réel**, soit sur un **mannequin vectoriel SVG 2D généré par courbes de Bézier**.
+### 1.1 Vue d'ensemble
+Le **Système d'Avatar Dynamique 3D et de Positionnement d'Essayage de DressApp** fournit un environnement d'essayage visuel adaptatif en temps réel. Il permet aux utilisateurs de prévisualiser les vêtements numérisés de leur garde-robe ainsi que les essentiels de la capsule de départ superposés de manière fluide sur une **photographie en pied segmentée** ou sur un **maillage humain 3D MB-Lab réaliste** (`avatar_male_1.glb` et `avatar_female_1.glb`) rendu via Three.js / React Three Fiber dans une viewBox orthographique calibrée de `200 x 450` (avec repli automatique sur un mannequin vectoriel SVG Bézier 2D).
 
-Afin d'assurer une grande précision visuelle sur divers styles de vêtements (t-shirts de compression, polos, cols ras du cou, jeans taille basse, shorts cargo et robes de soirée), le moteur s'appuie sur le calibrage de repères anatomiques, la mise à l'échelle proportionnelle des ratios et des conteneurs d'images sans distorsion.
+Pour offrir une haute précision visuelle dans toutes les catégories de vêtements (hauts, chemises, vêtements d'extérieur, pantalons, jupes, tenues traditionnelles/culturelles complètes, chaussures et accessoires), le moteur combine **des repères de silhouette orthographiques 3D exacts**, un **ajusteur de vêtements hybride à deux niveaux** et un **découpage horizontal dynamique (slice warping)**.
 
 ```mermaid
 flowchart TD
-    subgraph UserProfile["Profil Utilisateur & Mesures"]
-        U_Photo["Téléchargement de la Photo du Corps Réel"]
-        U_Tone["Sélection de la Palette de Couleur de Peau"]
-        U_Params["Paramètres de Morphologie (Grand/Petit, Fort/Mince, Poitrine, Taille, Hanches)"]
-        U_Sizing["Prédicteur de Tailles ANSUR II (Taille, Poids, Tour de taille, Pied -> 10 Métriques)"]
+    subgraph UserProfile["User Profile & Measurements"]
+        U_Photo["Real Body Photo Upload"]
+        U_Tone["8 Monk Skin Tone Swatches (SkinTonePicker.jsx)"]
+        U_Sizing["ANSUR II Sizing Predictor (Height, Weight, Waist, Foot -> 10 Body Metrics)"]
     end
 
-    subgraph BackendIngest["Traitement Backend & Détourage"]
-        Rembg["Détourage Local U2-Net / Segmentation"]
-        Mongo["Synchronisation du Profil MongoDB Atlas"]
+    subgraph AvatarEngine["Frontend Avatar Rendering Engine (DynamicAvatar.jsx & AvatarViewer2D.jsx)"]
+        ModeCheck{"Active Body Photo?"}
+        PhotoView["Real-Body Cutout Layer + extractBodyPhotoAnatomy"]
+        Mesh3DView["3D MB-Lab WebGL Mesh (avatar_male_1.glb / avatar_female_1.glb)"]
+        SvgFallback["2D Bezier SVG Fallback Mannequin"]
+        AnatomyEngine["getFullAvatarAnatomy (200 x 450 Orthographic Landmarks)"]
     end
 
-    subgraph AvatarEngine["Moteur de Rendu d'Avatar Frontend (AvatarViewer2D.jsx)"]
-        ModeCheck{"Photo de corps active ?"}
-        PhotoView["Couche Photo Découpée du Corps Réel"]
-        MannequinView["Mannequin Vectoriel SVG Dynamique (DynamicAvatar.jsx)"]
-        
-        GarmentResolver["Résolveur de Catégories et d'Emplacements de Vêtements"]
-        LandmarkCalc["Moteur de Positionnement par Repères Anatomiques"]
+    subgraph GarmentFitting["Two-Tier Hybrid Garment Fitter & Live Warping"]
+        StarterCapsule["48 Pre-Fitted Starter Assets (fit_onboarding_garments_to_avatar.py)"]
+        Tier1Warp["Tier 1: Real-Photo Alpha-Contour Warping (closetGarmentFitter.js)"]
+        Tier2Bezier["Tier 2: Procedural Cubic-Bezier Reconstruction"]
+        SliceWarper["Live 28-Band Horizontal Slice Warper (FittedGarmentLayer)"]
+        AccessoryAnchor["Dynamic liveAnatomy Accessory Anchoring"]
     end
 
-    subgraph OverlayGeometry["Géométrie des Couches de Vêtements"]
-        TopLayer["Couche Haut / Vêtements d'Extérieur (top-[14.5%], w-[82%], h-[38%])"]
-        BottomLayer["Couche Bas / Ceinture (top-[36.5%], w-[62%], h-[50%])"]
-        ShoesLayer["Couche Chaussures (bottom-[2%], w-[46%], h-[12%])"]
-        AccessoryLayers["Chapeaux / Lunettes / Accessoires / Sacs"]
-    end
-
-    U_Photo --> Rembg --> Mongo
-    U_Params & U_Sizing --> MannequinView
-    U_Tone --> MannequinView
-    
-    ModeCheck -- Oui --> PhotoView
-    ModeCheck -- Non --> MannequinView
-
-    GarmentResolver --> LandmarkCalc
-    LandmarkCalc --> TopLayer & BottomLayer & ShoesLayer & AccessoryLayers
-    TopLayer & BottomLayer & ShoesLayer & AccessoryLayers --> PhotoView & MannequinView
+    U_Photo --> PhotoView
+    U_Tone & U_Sizing --> Mesh3DView
+    U_Sizing --> AnatomyEngine
+    ModeCheck -- Yes --> PhotoView
+    ModeCheck -- No --> Mesh3DView
+    Mesh3DView -. "Headless / Non-WebGL" .-> SvgFallback
+    AnatomyEngine --> StarterCapsule & Tier1Warp & Tier2Bezier & SliceWarper & AccessoryAnchor
+    StarterCapsule & Tier1Warp & Tier2Bezier --> SliceWarper
+    SliceWarper & AccessoryAnchor --> PhotoView & Mesh3DView
 ```
 
-### 1.2 Proposition de Valeur Utilisateur
-* **Précision de l'Alignement Anatomique** : Aligne les cols de chemise parfaitement avec l'encolure de l'avatar (`top-[14.5%]`) et la ceinture des pantalons/shorts avec la taille naturelle (`top-[36.5%]`), éliminant tout chevauchement sur le visage ou espace inesthétique.
-* **Flexibilité du Double Avatar** : Basculez instantanément entre une photo personnelle complète détourée et un mannequin vectoriel SVG 2D dynamique adapté à des mesures anthropométriques précises.
-* **Préservation Proportionnelle des Ratios** : Applique un redimensionnement de la largeur du buste et des hanches ($scaleX$) tout en conservant le ratio d'aspect d'origine des vêtements (`object-fit: contain`), évitant tout étirement ou écrasement.
-* **Hiérarchie Interactive des Couches** : Superposez les manteaux sur les haut intérieurs et les robes tout en permettant de cliquer/taper directement sur chaque couche de vêtement pour en ouvrir les détails.
+### 1.2 Proposition de valeur pour l'utilisateur
+* **Maillages humains 3D MB-Lab réalistes** : Remplace les silhouettes 2D plates par des maillages 3D masculin (`avatar_male_1.glb`) et féminin (`avatar_female_1.glb`) réalistes debout dans une posture en A naturelle, les pieds légèrement écartés et les bras relâchés laissant un espace entre les paumes et les hanches.
+* **Morphing corporel dynamique et 8 carnations Monk** : Réagit en temps réel aux mensurations de l'utilisateur (taille, poids, épaules, poitrine, tour de taille, hanches) et à 8 teintes de peau humaine réalistes (`#F6EDE4` à `#3A2518`) via un shader physique (`MeshPhysicalMaterial`).
+* **Coordonnées de vêtements et d'accessoires calibrées en 3D** : Projette les 48 vêtements de la capsule de départ et tous les articles du dressing de l'utilisateur sur les coordonnées exactes de la silhouette 3D — y compris les bras écartés (`wElbowOut`, `wWristOut`), les largeurs du torse, les jambes en posture en A (`wOuterKnee`, `wOuterAnkle`) et les pieds écartés (`wFootTip`, `wFootHeel`).
+* **Flexibilité double avatar** : Basculez à tout moment entre une photo personnelle en pied détourée et l'avatar dynamique 3D.
 
 ---
 
-## 2. Manuel Utilisateur Complet & Topologie de l'Interface
+## 2. Architecture de l'Avatar 3D (`DynamicAvatar.jsx`)
 
-### 2.1 Topologie Visuelle de l'Interface
+### 2.1 Modèles Blender MB-Lab et calibration de la caméra orthographique
+* **Modèles 3D** :
+  * Maillage masculin : `apps/web/public/models/avatar_male_1.glb` (`height = 1.7877 m`, décalage au sol `ymin = -0.0061 m`)
+  * Maillage féminin : `apps/web/public/models/avatar_female_1.glb` (`height = 1.6873 m`, décalage au sol `ymin = -0.0061 m`)
+* **Projection orthographique** :
+  * Rendu via `<Canvas orthographic camera={{ zoom: 109, position: [0, 0, 5] }}>` dans une viewBox logique `200 x 450` (`aspect = 200 / 450`).
+  * À `zoom = 109`, `1 mètre = 109 unités SVG`, plaçant le centre vertical du canevas de `450` unités à `Y = 225`.
+* **Mise à l'échelle proportionnelle découplée (`Realistic3DAvatarMesh`)** :
+  * L'échelle verticale (`scaleY`) est calculée directement à partir de `targetSvgHeight / (baseModelHeightM * 109)` et ancrée à `yFeet` (`baseModelYMinM = -0.0061`), garantissant un alignement vertical 1:1 avec `getFullAvatarAnatomy` pour toutes les statures (`140 cm` à `210 cm`).
+  * L'échelle horizontale (`scaleX`, `scaleZ`) est calculée indépendamment à partir des ratios pondérés de `chest`, `waist`, `hip` et `shoulders` par rapport aux mesures anthropométriques de référence (`scaleXZ`), évitant que les changements de taille n'élargissent ou ne rétrécissent artificiellement le torse et les membres.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                   Canevas d'Essayage 2D d'Avatar                 │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│                        [ Chapeaux  (top: 1%) ]                   │
-│                        [ Lunettes  (top: 11%) ]                  │
-│                        [ Encolure  (top: 14.5%) ] ◄─ Col Chemise │
-│                     ┌──────────────────────────┐                 │
-│                     │   Hauts / Vêtements Ext. │                 │
-│                     │       (height: 38%)      │                 │
-│                     └──────────────────────────┘                 │
-│                        [ Tour Taille (top: 36.5%) ] ◄─ Ceinture  │
-│                     ┌──────────────────────────┐                 │
-│                     │       Bas / Shorts       │                 │
-│                     │       (height: 50%)      │                 │
-│                     │                          │                 │
-│                     └──────────────────────────┘                 │
-│                        [ Pieds   (bottom: 2%) ] ◄─── Chaussures  │
-│                        [ Chaussures (height: 12%) ]              │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│ [ Changer le Mode ] [ Sélecteur Couleur Peau ] [ Modifier Mesures]│
-└──────────────────────────────────────────────────────────────────┘
-```
+### 2.2 Repères de silhouette orthographiques 3D (`getFullAvatarAnatomy`)
+En rastérisant les maillages triangulaires de `avatar_male_1.glb` et `avatar_female_1.glb` dans l'espace de coordonnées SVG `200 x 450` par intervalles verticaux de 1 unité, `getFullAvatarAnatomy` expose des repères de base exacts (mis à l'échelle dynamiquement selon `heightRatio` et les ratios de circonférence) :
 
-### 2.2 Modes & Déroulement des Utilisations
-
-#### Mode 1 : Couche Photo Découpée du Corps Réel
-1. Ouvrez les **Paramètres du Profil** (`/me`).
-2. Téléchargez une photo plein pied. Le backend effectue une segmentation d'arrière-plan via `rembg` (U2-Net) pour supprimer l'arrière-plan.
-3. L'URL de l'image détourée (`body_photo_url`) met à jour le profil utilisateur dans MongoDB et s'affiche dans le conteneur `AvatarViewer2D`.
-4. Pour revenir au mannequin vectoriel, cliquez sur **Supprimer la photo** sur la page de profil. L'interface se met à jour immédiatement sans rechargement de la page.
-
-#### Mode 2 : Mannequin Vectoriel SVG Dynamique
-1. En l'absence de photo de corps, `AvatarViewer2D` affiche le composant `DynamicAvatar.jsx`.
-2. Le mannequin génère des courbes de Bézier cubiques continues (commandes $C$ et $S$) dans une viewBox SVG fixe de `0 0 200 450`.
-3. L'ajustement des paramètres corporels (taille, poids, tour de taille, poitrine, épaules, hanches) ou le choix de la couleur de peau modifie dynamiquement la silhouette en temps réel.
-
----
-
-## 3. Architecture Technique & Analyse Approfondie
-
-### 3.1 Diviseur d'Ellipse Anatomique & Générateur de Mannequin Bézier
-
-`DynamicAvatar.jsx` calcule les largeurs de projection plane 2D à partir des circonférences anatomiques 3D en utilisant un **Diviseur d'Ellipse Anatomique** ($\text{DIVISOR} = 2.65$) :
-
-$$\begin{aligned}
-w_{\text{shoulders}} &= (\text{shoulders} \times 1.1) \times (1.05 \text{ if male else } 0.95) \\
-w_{\text{chest}} &= \left(\frac{\text{chest}}{2.65} \times 1.05\right) \times (1.02 \text{ if male else } 1.0) \\
-w_{\text{waist}} &= \left(\frac{\text{waist}}{2.65} \times 1.0\right) \times (0.98 \text{ if male else } 0.90) \\
-w_{\text{hip}} &= \left(\frac{\text{hip}}{2.65} \times 1.05\right) \times (0.93 \text{ if male else } 1.05)
-\end{aligned}$$
-
-La silhouette du corps est construite à l'aide de commandes de tracé SVG qui définissent les points de contrôle Bézier cubiques :
-
-```javascript
-// Bezier contour snippet from DynamicAvatar.jsx
-const bodyPath = [
-  `M ${pNeckR}`,
-  `C ${X0 + wNeck + (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.7} ${X0 + wShoulders * 0.9},${yShoulders - 2} ${pShoulderR}`,
-  `C ${X0 + wShoulders * 0.95},${yShoulders + (yChest - yShoulders) * 0.6} ${X0 + wChest + 2},${yChest - 5} ${pChestR}`,
-  `C ${X0 + wChest - 1},${yChest + (yWaist - yChest) * 0.5} ${X0 + wWaist + (isMale ? 1 : -2)},${yWaist - 8} ${pWaistR}`,
-  `C ${X0 + wWaist + (isMale ? 2 : 5)},${yWaist + (yHip - yWaist) * 0.4} ${X0 + wHip + 1},${yHip - 8} ${pHipR}`,
-  ...
-].join(' ');
-```
-
-### 3.2 Positionnement Calibré des Repères & Ratios CSS du Conteneur
-
-Pour garantir que les vêtements se placent parfaitement sans recouvrir le visage ni créer de décalage, les conteneurs dans `AvatarViewer2D.jsx` sont liés à des ratios de positionnement CSS très précis :
-
-| Catégorie de Vêtement | Classe de Position CSS | z-Index | Repère Anatomique d'Alignement |
+| Groupe de repères | Référence Homme (`178 cm`) | Référence Femme (`166 cm`) | Rôle |
 | --- | --- | --- | --- |
-| **Chapeaux / Coiffures** | `top-[1%] left-1/2 w-[34%] aspect-square` | `z-30` | Sommet de la tête |
-| **Lunettes** | `top-[11%] left-1/2 w-[18%] h-[4.5%]` | `z-28` | Ligne des yeux |
-| **Accessoires / Colliers** | `top-[14.5%] left-1/2 w-[30%] aspect-square` | `z-25` | Base du cou |
-| **Haut (Top)** | `top-[14.5%] left-1/2 w-[82%] h-[38%]` | `z-20` | Col vers l'encolure |
-| **Vêtements d'Extérieur** | `top-[14.5%] left-1/2 w-[86%] h-[42%]` | `z-22` | Manteau superposé sur l'épaule |
-| **Robes** | `top-[14.5%] left-1/2 w-[82%] h-[68%]` | `z-20` | Longueur complète de l'encolure au genou |
-| **Ceinture** | `top-[36.5%] left-1/2 w-[62%] h-[5%]` | `z-21` | Passant de ceinture à la taille |
-| **Bas (Pantalons/Shorts)** | `top-[36.5%] left-1/2 w-[62%] h-[50%]` | `z-10` | Ceinture du pantalon à la taille |
-| **Chaussures** | `bottom-[2%] left-1/2 w-[46%] h-[12%]` | `z-15` | Cheville vers le plan des pieds |
-| **Sac à main** | `top-[40%] right-[-5%] w-[40%] h-[30%]` | `z-25` | Niveau de la main tombante |
-
-### 3.3 Redimensionnement Proportionnel en Largeur
-
-En plus du positionnement, les vêtements s'ajustent horizontalement ($scaleX$) en fonction des métriques de l'utilisateur (poitrine forte, fort, mince, taille large, hanches larges) :
-
-```javascript
-// Derivation of garment container scale factors in AvatarViewer2D.jsx
-const scales = useMemo(() => {
-  const heightFactor = 1 + (params.tall * 0.08) - (params.short * 0.08);
-  const widthFactor = 1 + (params.heavy * 0.12) - (params.thin * 0.12);
-  const chestFactor = 1 + (params.busty * 0.1);
-  const waistFactor = 1 + (params.waist_thick * 0.12) - (params.waist_thin * 0.08);
-  const hipsFactor = 1 + (params.hips_wide * 0.12) - (params.hips_narrow * 0.08);
-
-  return { height: heightFactor, width: widthFactor, chest: chestFactor, waist: waistFactor, hips: hipsFactor };
-}, [params]);
-
-// Passed to Framer Motion animate prop for Top and Bottom:
-// Top: scaleX = scales.chest / scales.width
-// Bottom: scaleX = scales.hips / scales.width
-```
+| **Zones verticales du torse** | `yChin: 58.5`, `yShoulders: 68.0`, `yChest: 100.0`, `yWaist: 138.0`, `yHip: 175.0`, `yCrotch: 190.0` | `yChin: 77.0`, `yShoulders: 87.0`, `yChest: 118.0`, `yWaist: 147.0`, `yHip: 185.0`, `yCrotch: 199.0` | Col, couture d'épaule, poitrine/buste, ceinture, bassin et bifurcation d'entrejambe |
+| **Zones verticales des membres** | `yElbow: 134.0`, `yWrist: 186.0`, `yKnees: 278.0`, `yAnkles: 356.0`, `yFeet: 382.0` | `yElbow: 148.0`, `yWrist: 195.0`, `yKnees: 282.0`, `yAnkles: 356.0`, `yFeet: 382.0` | Ourlets de manches courtes/3-quarts/longues, ourlets shorts/midi/chevilles et chaussures |
+| **Demi-largeurs du torse** | `wNeck: 12.1`, `wShoulders: 38.6`, `wChest: 28.0`, `wWaist: 22.8`, `wHip: 25.8` | `wNeck: 10.5`, `wShoulders: 32.5`, `wChest: 24.4`, `wWaist: 19.6`, `wHip: 26.8` | Ouverture d'encolure, pente d'épaule, coutures latérales du torse et tombé des hanches |
+| **Limites des bras écartés** | `wElbowOut: 49.0`, `wElbowIn: 32.8`, `wWristOut: 61.0`, `wWristIn: 47.2` | `wElbowOut: 41.2`, `wElbowIn: 28.8`, `wWristOut: 53.0`, `wWristIn: 42.8` | Couloirs de manches inclinés et points d'ancrage poignet/montre/gants |
+| **Limites jambes en A et pieds** | `wOuterKnee: 33.8`, `wInnerKnee: 16.5`, `wOuterAnkle: 37.8`, `wInnerAnkle: 26.2`, `wFootTip: 42.2`, `wFootHeel: 24.0` | `wOuterKnee: 31.8`, `wInnerKnee: 16.2`, `wOuterAnkle: 36.2`, `wInnerAnkle: 26.0`, `wFootTip: 40.2`, `wFootHeel: 23.0` | Jambes de pantalon, ourlets de jupe et boîtes de chaussures gauche/droite |
 
 ---
 
-## 4. Matrice de Synthèse des Correctifs de Position et Proportion
+## 3. Ajusteur hybride à deux niveaux et déformation par tranches en temps réel
 
-| Problème Identifié | Cause | Correctif Appliqué | Résultat |
-| --- | --- | --- | --- |
-| **Col de chemise chevauchant le visage** | Décalage placé trop haut (`top-[8.3%]` ou `top-[12.8%]`) | Décalage du conteneur supérieur réglé sur `top-[14.5%]` | Le col repose parfaitement sur l'encolure de l'avatar. |
-| **Pantalon/Short trop bas ou chevauchant le bas** | Décalage placé trop bas (`top-[38.5%]`) | Décalage du conteneur inférieur réglé sur `top-[36.5%]` | La ceinture s'aligne exactement sur la taille naturelle de l'avatar. |
-| **Ratios d'aspect déformés** | Étirement non contraint du conteneur | Utilisation de `object-fit: contain` avec ajustement de `scaleX` | Préserve le ratio d'aspect d'origine des images sans déformation. |
-| **Lenteur lors de la suppression de photo** | Rechargement inutile de l'état de la page | Synchronisation instantanée de l'état local dans `Profile.jsx` | Suppression instantanée sans latence d'affichage. |
+### 3.1 Capsule de départ d'onboarding pré-ajustée (`scripts/fit_onboarding_garments_to_avatar.py`)
+* Génère les 48 découpes RGBA transparentes (`*_fitted.png` et `.jpg` en résolution $900 \times 1500$) dans `apps/web/public/assets/onboarding/` ainsi que les métadonnées `default_viewbox` et `point_cloud` dans `apps/web/src/lib/onboardingDataset.js`.
+* Utilise `compute_avatar_geometry` aligné sur `getFullAvatarAnatomy` pour que les hauts et vestes suivent les couloirs des bras 3D (`wElbowOut`/`wWristOut`), que les pantalons et jeans suivent les centres des jambes en posture en A (`legTopCenter` → `kneeCenter` → `ankleCenter`), que les jupes s'évasent harmonieusement sur les mollets et que les paires de chaussures se placent directement sur `(FootHeel..FootTip, yAnkles..yFeet)`.
+
+### 3.2 Ajusteur de vêtements du dressing à l'exécution (`closetGarmentFitter.js`)
+* **Enveloppe anatomique (`getGarmentAnatomicalEnvelope`)** : Calcule la boîte englobante cible (`default_viewbox`) et les repères anatomiques (`wElbowOut`, `wElbowIn`, `wWristOut`, `wWristIn`, `wOuterKnee`, `wInnerKnee`, `wOuterAnkle`, `wInnerAnkle`, `leftAnkleX`, `rightAnkleX`) pour chaque catégorie de vêtement.
+* **Niveau 1 — Déformation de contour alpha sur photo réelle (`warpRealGarmentPhotoToDefaultCanvas`)** :
+  * Ancre les hauts, chemises, robes et vêtements d'extérieur à la base du cou (`yNeckBase`) et à la carrure (`shoulderSpan`) de l'avatar 3D, en orientant proprement les manches selon l'angle des bras 3D.
+  * Positionne les pantalons et jupes entre `yWaist` et `yHip` selon la hauteur de taille avec une **barrière d'entrejambe stricte (`yCrotchTarget >= yCrotch`)**, et aligne les jambes gauche et droite du pantalon le long des centres de jambes en posture en A de la hanche à la cheville.
+  * Sépare les découpes de paires de chaussures (`analyzeFootwearCutout`) afin que les chaussures gauche et droite soient projetées sur `leftAnkleX` et `rightAnkleX` (`±(wFootTip + wFootHeel) / 2`).
+* **Niveau 2 — Reconstruction procédurale par courbes de Bézier cubiques (`renderProceduralBezierFittedGarment`)** :
+  * Générateur de silhouettes de repli utilisant des tracés de Bézier cubiques liés aux coordonnées des bras, du torse, des jambes et des pieds de l'avatar 3D.
+
+### 3.3 Déformation par tranches horizontales en direct et positionnement des accessoires (`AvatarViewer2D.jsx`)
+* **Déformation par tranches horizontales (`FittedGarmentLayer`)** :
+  * Divise chaque vêtement ajusté en `28` tranches horizontales sur sa `default_viewbox`.
+  * Associe le point médian vertical de référence de chaque tranche (`y0Mid`) à la position verticale dynamique morphée de l'utilisateur (`mapBaselineYToLiveY`) et au ratio de largeur horizontale (`getLiveWidthScaleAtY`), étirant et positionnant dynamiquement les vêtements pour toutes les tailles et morphologies.
+* **Ancrage dynamique des accessoires via `liveAnatomy` (`renderGarment`)** :
+  * **Couvre-chefs** : Centrés sur `X = 100`, ancrés à `yCrown` et `yHeadCenter` (`width = wHead * 2.55`).
+  * **Lunettes** : Positionnées au niveau des yeux (`yCrown + (yChin - yCrown) * 0.43`, `width = wHead * 1.95`).
+  * **Boucles d'oreilles** : Positionnées au lobe d'oreille (`yChin - 12` à `yChin + 10`, `width = wHead * 2.35`).
+  * **Écharpe / Tour de cou, Collier et Cravate** : Ancrés à `yNeckBase` et mis à l'échelle selon `wNeck` / `wShoulders`.
+  * **Ceinture** : Centrée à `yWaist + (yHip - yWaist) * 0.22` avec `width = wWaist * 2.18`.
+  * **Montre / Bracelet et Gants** : Ancrés aux coordonnées 3D des poignets écartés (`yWrist`, `wWristOut`).
 
 ---
-
-*Document compiled automatically by Narrator for DressApp.*
+*Document maintenu par DressApp Engineering.*

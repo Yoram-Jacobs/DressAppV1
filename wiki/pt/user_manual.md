@@ -91,9 +91,9 @@ A página de Perfil funciona como o painel de controle central do DressApp. Os c
 
 ##### Dependências e Justificativa das Seções em Sanfona
 
-1. **Fotos e Palco do Avatar Digital (`AvatarViewer2D` e `DynamicAvatar`)**
-   - **Por que isso importa?**: Renderiza sua identidade visual em todas as telas de prova usando um palco de modo duplo (recorte de foto real segmentada vs manequim vetorial SVG Bézier 2D dinâmico).
-   - **Dependências do subsistema**: Os recortes de fotos têm o fundo removido via U2-Net (`rembg`) local e são reduzidos no navegador para no máximo 1280px com 82% de qualidade para caber no limite de documento de 16 MB do MongoDB. O palco aplica pontos anatômicos calibrados (`top-[14.5%]` do colarinho ao decote, `top-[36.5%]` do cós à cintura, `bottom-[2%]` para o plano dos calçados) e escala proporcional de tórax/quadril ($scaleX$). Clique em *Remover Foto* para alternar instantaneamente de volta para o manequim vetorial SVG 2D.
+1. **Fotos e Palco de Avatar Dinâmico 3D (`AvatarViewer2D`, `DynamicAvatar` e `closetGarmentFitter`)**
+   - **Porque é importante?**: Renderiza a sua identidade visual em todas as telas de prova utilizando um palco de modo duplo: uma malha humana 3D MB-Lab WebGL realista (`avatar_male_1.glb` e `avatar_female_1.glb`, com alternativa SVG Bézier 2D) ou um recorte segmentado da sua fotografia de corpo real.
+   - **Dependências do Subsistema**: O avatar 3D adapta-se dinamicamente numa tela ortográfica `200 x 450` de acordo com a sua altura e perímetros corporais (`scaleY` desacoplado de `scaleXZ`) e aplica 8 amostras realistas de tons de pele Monk (`SkinTonePicker.jsx`). Os recortes fotográficos têm o fundo removido via U2-Net local (`rembg`) e são reduzidos no navegador para um máximo de 1280px a 82% de qualidade para caberem no limite de 16 MB por documento do MongoDB. Tanto os 48 artigos pré-ajustados de onboarding como os recortes do guarda-roupa do utilizador são mapeados via `closetGarmentFitter.js` e deformação de faixas horizontais em tempo real (`FittedGarmentLayer`) sobre os ombros exatos, braços abertos, tronco, pernas em postura em A e pés do avatar 3D. Clique em *Remover Foto* para voltar instantaneamente ao avatar 3D.
 
 2. **Perfil de Estilo (Regras de recato, Código de vestimenta)**
    - **Por que isso importa?**: Estabelece limites pessoais para os looks recomendados, evitando que a IA gere sugestões de estilo inadequadas.

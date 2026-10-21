@@ -91,9 +91,9 @@ La página de Perfil sirve como panel de control principal de DressApp. Los camp
 
 ##### Dependencias y Justificación de las Secciones del Acordeón
 
-1. **Fotos y Escenario del Avatar Digital (`AvatarViewer2D` y `DynamicAvatar`)**
-   - **¿Por qué es importante?**: Renderiza tu identidad visual en todos los lienzos de prueba utilizando un escenario de modo dual (recorte de foto de cuerpo real segmentado frente a maniquí vectorial SVG Bézier 2D dinámico).
-   - **Dependencias del subsistema**: Los recortes de fotos se procesan sin fondo mediante U2-Net (`rembg`) local y se reducen de escala en el navegador a un máximo de 1280px al 82 % de calidad para mantenerse dentro del límite de documento de 16 MB de MongoDB. El escenario aplica puntos de referencia posicionales calibrados (`top-[14.5%]` del cuello al escote, `top-[36.5%]` de la pretina a la cintura, `bottom-[2%]` para el plano del calzado) y escalado proporcional de pecho/cadera ($scaleX$). Haz clic en *Eliminar foto* para volver al instante al maniquí vectorial SVG 2D.
+1. **Fotos y escenario de avatar dinámico 3D (`AvatarViewer2D`, `DynamicAvatar` y `closetGarmentFitter`)**
+   - **¿Por qué es importante?**: Renderiza tu identidad visual en todos los lienzos de prueba mediante un escenario de modo dual: una malla humana 3D MB-Lab WebGL realista (`avatar_male_1.glb` y `avatar_female_1.glb`, con respaldo vectorial SVG Bézier 2D) o un recorte segmentado de tu foto de cuerpo real.
+   - **Dependencias del subsistema**: El avatar 3D se adapta dinámicamente en un lienzo ortográfico de `200 x 450` según tu altura y contornos corporales (`scaleY` desacoplado de `scaleXZ`) y aplica 8 muestras realistas de tonos de piel Monk (`SkinTonePicker.jsx`). Los recortes fotográficos se segmentan del fondo mediante U2-Net local (`rembg`) y se reducen en el navegador a un máximo de 1280 px al 82 % de calidad para mantenerse dentro del límite de documentos de 16 MB de MongoDB. Tanto las 48 prendas preajustadas de onboarding como los recortes del armario del usuario se mapean mediante `closetGarmentFitter.js` y deformación de franjas horizontales en vivo (`FittedGarmentLayer`) sobre los hombros exactos, brazos extendidos, torso, piernas en postura en A y pies separados del avatar 3D. Haz clic en *Eliminar foto* para volver al instante al avatar 3D.
 
 2. **Perfil de Estilo (Reglas de modestia, Código de vestimenta)**
    - **¿Por qué es importante?**: Establece límites personales para los atuendos recomendados, evitando que la IA genere sugerencias de estilo inapropiadas.

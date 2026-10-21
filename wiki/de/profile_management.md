@@ -4,9 +4,9 @@ Auf Ihrer **Profil**-Seite können Sie individuell anpassen, wie DressApp Ihre K
 
 ## Profilbereiche
 
-1. **Fotos & Persönlicher Avatar**:
-   - Laden Sie ein Ganzkörperfoto für realistische virtuelle Anproben hoch oder passen Sie Körperform und Hautton Ihrer virtuellen Puppe an. DressApp entfernt automatisch den Hintergrund Ihres Fotos und erkennt exakt Ihre Schulter-, Taillen-, Hüft- und Beinpunkte, sodass jedes Kleidungsstück Ihrer echten Silhouette entspricht.
-   - Schalten Sie das **2D-Punktwolken-Passformnetz (Point-Cloud Fit Mesh)** auf der Avatar-Bühne ein, um Ihre anatomischen Referenzpunkte in Echtzeit zu prüfen.
+1. **Fotos & Persönlicher 3D-Avatar**:
+   - Passen Sie Ihren realistischen, **dynamischen 3D-Avatar** an, der in Echtzeit auf Ihre Körpermaße und 8 natürliche Hauttöne reagiert, oder laden Sie ein Ganzkörperfoto für persönliche Foto-Anproben hoch. DressApp richtet jedes Kleidungsstück und Accessoire automatisch an Ihren Schulter-, Brust-, Taillen-, Hüft-, Arm-, Bein- und Fußpunkten aus.
+   - Schalten Sie das **Punktwolken-Passformnetz (Point-Cloud Fit Mesh)** auf der Avatar-Bühne ein, um Ihre anatomischen Referenzpunkte in Echtzeit zu prüfen.
 
 2. **Stilpräferenzen**:
    - Wählen Sie Ihre bevorzugten Stilrichtungen, Lieblingsfarben, Kleidungsstücke, die Sie vermeiden möchten, sowie Ihren Bedeckungsgrad (Lässig, Moderat oder Konservativ). Ihr KI-Stylist berücksichtigt diese Angaben bei jedem Outfit-Vorschlag.
@@ -16,7 +16,7 @@ Auf Ihrer **Profil**-Seite können Sie individuell anpassen, wie DressApp Ihre K
    - Wenn Sie sich mit Google anmelden, können Sie Ihre Basis-Kontaktdaten mit einem Klick ausfüllen.
 
 4. **Körpermaße & Größen**:
-   - Geben Sie nur vier Grundmaße ein — **Größe**, **Gewicht**, **Taille** und **Fußlänge** — und DressApp berechnet automatisch Ihre übrigen Körpermaße (**Schultern**, **Brust**, **Hüfte**, **Ärmellänge**, **Innenbeinlänge** und **Außenbeinlänge**), um Ihren 2D-Avatar präzise zu kalibrieren.
+   - Geben Sie nur vier Grundmaße ein — **Größe**, **Gewicht**, **Taille** und **Fußlänge** — und DressApp berechnet automatisch Ihre übrigen Körpermaße (**Schultern**, **Brust**, **Hüfte**, **Ärmellänge**, **Innenbeinlänge** und **Außenbeinlänge**), um Ihren 3D-Avatar dynamisch zu skalieren und passende Größen zu empfehlen.
    - Sie können jedes Maß jederzeit auch manuell feinjustieren.
 
 5. **Lebensstil & Beruf**:

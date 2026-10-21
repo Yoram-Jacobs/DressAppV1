@@ -782,15 +782,17 @@ function FittedGarmentLayer({
       const pBot = warpDefaultAvatarPoint(100, y0Bot, defaultAnatomy, liveAnatomy);
 
       let yWidthAnchor = y0Mid;
-      if (
-        roleKey === 'top' ||
-        roleKey === 'outerwear' ||
-        roleKey === 'dress' ||
-        roleKey === 'full_body'
-      ) {
-        yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yShoulders);
-      } else if (roleKey === 'bottom') {
-        yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yHip);
+      if (activeAvatarFit.fit_mode === 'photo_contour') {
+        if (
+          roleKey === 'top' ||
+          roleKey === 'outerwear' ||
+          roleKey === 'dress' ||
+          roleKey === 'full_body'
+        ) {
+          yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yShoulders);
+        } else if (roleKey === 'bottom') {
+          yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yHip);
+        }
       }
 
       const pLeft = warpDefaultAvatarPoint(vb.x, yWidthAnchor, defaultAnatomy, liveAnatomy);
@@ -915,10 +917,12 @@ function PointCloudMeshOverlay({ garments = {}, liveAnatomy }) {
       const vertices = pc.vertices.map((v) => {
         const wVert = warpDefaultAvatarPoint(v.svg_x, v.svg_y, defAnat, liveAnatomy);
         let yWidthAnchor = v.svg_y;
-        if (slot === 'top' || slot === 'outerwear' || slot === 'dress' || slot === 'full_body') {
-          yWidthAnchor = Math.min(v.svg_y, defAnat.yShoulders);
-        } else if (slot === 'bottom') {
-          yWidthAnchor = Math.min(v.svg_y, defAnat.yHip);
+        if (fit.fit_mode === 'photo_contour') {
+          if (slot === 'top' || slot === 'outerwear' || slot === 'dress' || slot === 'full_body') {
+            yWidthAnchor = Math.min(v.svg_y, defAnat.yShoulders);
+          } else if (slot === 'bottom') {
+            yWidthAnchor = Math.min(v.svg_y, defAnat.yHip);
+          }
         }
         const wHoriz = warpDefaultAvatarPoint(v.svg_x, yWidthAnchor, defAnat, liveAnatomy);
         const anchorCx = wHoriz.centerX ?? 100;
@@ -1460,9 +1464,11 @@ export default function AvatarViewer2D({
   const [loadedBodyPhotoImg, setLoadedBodyPhotoImg] = useState(
     () => (activeBodyPhotoUrl && loadedOnboardingImageCache.get(activeBodyPhotoUrl)) || null
   );
+  const [bodyPhotoError, setBodyPhotoError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
+    setBodyPhotoError(false);
     if (!activeBodyPhotoUrl) {
       setLoadedBodyPhotoImg(null);
       return;
@@ -1475,10 +1481,16 @@ export default function AvatarViewer2D({
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       loadedOnboardingImageCache.set(activeBodyPhotoUrl, img);
-      if (mounted) setLoadedBodyPhotoImg(img);
+      if (mounted) {
+        setLoadedBodyPhotoImg(img);
+        setBodyPhotoError(false);
+      }
     };
     img.onerror = () => {
-      if (mounted) setLoadedBodyPhotoImg(null);
+      if (mounted) {
+        setLoadedBodyPhotoImg(null);
+        setBodyPhotoError(true);
+      }
     };
     img.src = activeBodyPhotoUrl;
     return () => {
@@ -1615,6 +1627,85 @@ export default function AvatarViewer2D({
         ...animate,
         x: `${translateX.toFixed(2)}%`
       };
+    } else if (liveAnatomy) {
+      const H = liveAnatomy.viewBoxHeight || 450;
+      const W = 200;
+      const headH = Math.max(24, (liveAnatomy.yChin || 100) - (liveAnatomy.yHeadTop || 52));
+      const cx = typeof liveAnatomy.centerXAtY === 'function' ? liveAnatomy.centerXAtY(liveAnatomy.yWaist) : (liveAnatomy.X0 || 100);
+      const leftPct = `${((cx / W) * 100).toFixed(2)}%`;
+
+      if (roleKey === 'headwear') {
+        const crownBottomY = (liveAnatomy.yHeadTop || 52) + headH * 0.42;
+        const boxH = 18;
+        dynamicStyle = {
+          top: `${(((crownBottomY / H) * 100) - boxH).toFixed(2)}%`,
+          left: leftPct,
+          width: '32%',
+          height: `${boxH}%`,
+        };
+      } else if (roleKey === 'glasses') {
+        const yEyes = (liveAnatomy.yHeadTop || 52) + headH * 0.48;
+        const boxH = 4.6;
+        dynamicStyle = {
+          top: `${(((yEyes / H) * 100) - boxH * 0.5).toFixed(2)}%`,
+          left: leftPct,
+          width: '19%',
+          height: `${boxH}%`,
+        };
+      } else if (roleKey === 'earrings') {
+        const yEars = (liveAnatomy.yHeadTop || 52) + headH * 0.58;
+        const boxH = 6.5;
+        dynamicStyle = {
+          top: `${(((yEars / H) * 100) - boxH * 0.35).toFixed(2)}%`,
+          left: leftPct,
+          width: '24%',
+          height: `${boxH}%`,
+        };
+      } else if (roleKey === 'scarf' || roleKey === 'accessory') {
+        const yNeckTop = (liveAnatomy.yChin || 100) - 2.0;
+        dynamicStyle = {
+          top: `${((yNeckTop / H) * 100).toFixed(2)}%`,
+          left: leftPct,
+          width: roleKey === 'scarf' ? '32%' : '28%',
+          height: roleKey === 'scarf' ? '19%' : '15%',
+        };
+      } else if (roleKey === 'belt') {
+        const yBelt = (liveAnatomy.yWaist || 182) + ((liveAnatomy.yHip || 226) - (liveAnatomy.yWaist || 182)) * 0.18;
+        const wBeltPct = Math.max(30, Math.min(56, (((liveAnatomy.wWaist || 28) * 2 + 7) / W) * 100));
+        dynamicStyle = {
+          top: `${(((yBelt / H) * 100) - 2.2).toFixed(2)}%`,
+          left: leftPct,
+          width: `${wBeltPct.toFixed(2)}%`,
+          height: '4.6%',
+        };
+      } else if (roleKey === 'watch') {
+        const yWr = liveAnatomy.yWrist || 231;
+        const xWr = cx + 0.5 * ((liveAnatomy.wWristIn || 48) + (liveAnatomy.wWristOut || 58));
+        dynamicStyle = {
+          top: `${((yWr / H) * 100).toFixed(2)}%`,
+          left: `${((xWr / W) * 100).toFixed(2)}%`,
+          width: '11.5%',
+        };
+      } else if (roleKey === 'gloves') {
+        const yWr = (liveAnatomy.yWrist || 231) - 2.0;
+        const yHand = (liveAnatomy.yHandTip || 258) + 4.0;
+        const wGlovesPct = Math.max(54, Math.min(76, (((liveAnatomy.wWristOut || 58) * 2 + 10) / W) * 100));
+        dynamicStyle = {
+          top: `${((yWr / H) * 100).toFixed(2)}%`,
+          left: leftPct,
+          width: `${wGlovesPct.toFixed(2)}%`,
+          height: `${Math.max(6.5, ((yHand - yWr) / H) * 100).toFixed(2)}%`,
+        };
+      }
+
+      if (dynamicStyle) {
+        effectiveClasses = extraClasses
+          .replace(/\btop-\[[^\]]+\]/g, '')
+          .replace(/\bleft-\S+/g, '')
+          .replace(/\bw-\[[^\]]+\]/g, '')
+          .replace(/\bh-\[[^\]]+\]/g, '')
+          .trim();
+      }
     }
 
     return (
@@ -1641,13 +1732,13 @@ export default function AvatarViewer2D({
     <div className="relative w-full h-full overflow-hidden flex items-center justify-center p-0 shadow-inner group">
       {/* 2D Dynamic Bezier SVG Avatar or Real Body Photo Container */}
       <div className="relative h-full aspect-[1/2] flex items-center justify-center transition-all duration-500">
-        {activeBodyPhotoUrl ? (
+        {activeBodyPhotoUrl && !bodyPhotoError ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <img
               src={activeBodyPhotoUrl}
               alt={t('profile.bodyPhoto', { defaultValue: 'Full-body photo' })}
               className="w-full h-full object-contain rounded-xl drop-shadow-md"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              onError={() => { setBodyPhotoError(true); }}
             />
             {/* Render Try-On Garments & Accessories on top of real body photo */}
             {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[3.5%] left-1/2 w-[34%] aspect-square z-[50]', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}

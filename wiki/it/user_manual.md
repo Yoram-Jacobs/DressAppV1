@@ -91,9 +91,9 @@ La pagina Profilo funge da pannello di controllo principale per DressApp. I camp
 
 ##### Dipendenze e Razionale delle Sezioni a Fisarmonica
 
-1. **Foto e Palcoscenico dell'Avatar Digitale (`AvatarViewer2D` e `DynamicAvatar`)**
-   - **Perché è importante?**: Visualizza la tua identità visiva su tutti i canvas di prova utilizzando una scena a doppia modalità (ritaglio fotografico del corpo reale segmentato rispetto al manichino vettoriale dinamico 2D Bezier SVG).
-   - **Dipendenze dei sottosistemi**: I ritagli fotografici vengono scontornati tramite U2-Net (`rembg`) locale e ridimensionati nel browser a un massimo di 1280px all'82% di qualità per rientrare nel limite di 16 MB dei documenti MongoDB. La scena applica punti di riferimento posizionali calibrati (`top-[14.5%]` dal colletto allo scollo, `top-[36.5%]` dalla cintura al punto vita, `bottom-[2%]` per il piano delle calzature) e una scala proporzionale torace/fianchi ($scaleX$). Fai clic su *Rimuovi foto* per tornare istantaneamente al manichino vettoriale 2D SVG.
+1. **Foto e scena avatar dinamico 3D (`AvatarViewer2D`, `DynamicAvatar` e `closetGarmentFitter`)**
+   - **Perché è importante?**: Renderizza la tua identità visiva su tutti i canvas di prova utilizzando una scena a doppia modalità: una mesh umana 3D MB-Lab WebGL realistica (`avatar_male_1.glb` e `avatar_female_1.glb`, con fallback SVG Bézier 2D) oppure un ritaglio fotografico segmentato del tuo corpo reale.
+   - **Dipendenze del sottosistema**: L'avatar 3D si modella dinamicamente in un canvas ortografico `200 x 450` in base alla tua altezza e alle circonferenze corporee (`scaleY` disaccoppiato da `scaleXZ`) e applica 8 tonalità realistiche della pelle secondo la scala Monk (`SkinTonePicker.jsx`). I ritagli fotografici vengono scontornati tramite U2-Net locale (`rembg`) e ridimensionati nel browser fino a un massimo di 1280 px all'82% di qualità per rientrare nel limite di 16 MB dei documenti MongoDB. Sia i 48 capi pre-adattati dell'onboarding sia i ritagli del guardaroba utente vengono mappati tramite `closetGarmentFitter.js` e la deformazione dinamica a fasce orizzontali (`FittedGarmentLayer`) sulle spalle esatte, sulle braccia distese, sul busto, sulle gambe in posa a A e sui piedi dell'avatar 3D. Fai clic su *Rimuovi foto* per tornare istantaneamente all'avatar 3D.
 
 2. **Profilo di Stile (Regole di sobrietà, codice di abbigliamento)**
    - **Perché è importante?**: Stabilisce confini personali per gli outfit consigliati, impedendo all'IA di generare suggerimenti di stile inappropriati.

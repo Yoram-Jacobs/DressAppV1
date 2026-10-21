@@ -4,9 +4,9 @@ La pagina **Profilo** ti permette di personalizzare il modo in cui DressApp si a
 
 ## Sezioni del Profilo
 
-1. **Foto e Avatar Personale**:
-   - Carica una foto a figura intera per prove virtuali realistiche, oppure personalizza la corporatura e la carnagione del tuo manichino virtuale. DressApp rimuove automaticamente lo sfondo dalla tua foto e rileva con precisione i punti di spalle, vita, fianchi e gambe affinché ogni capo del tuo guardaroba vesta le tue reali proporzioni.
-   - Attiva la **Mesh di Vestibilità Point-Cloud 2D** sul palco dell'avatar per ispezionare in tempo reale i tuoi punti anatomici e gli ancoraggi dei capi.
+1. **Foto e Avatar Personale 3D**:
+   - Personalizza il tuo **Avatar Dinamico 3D** realistico, che risponde in tempo reale alle tue misure corporee e a 8 tonalità di pelle naturali, oppure carica una foto a figura intera per prove personali. DressApp mappa automaticamente ogni capo e accessorio sui punti esatti di spalle, petto, vita, fianchi, braccia, gambe e piedi.
+   - Attiva la **Mesh di Vestibilità Point-Cloud** sul palco dell'avatar per ispezionare in tempo reale i tuoi punti anatomici e gli ancoraggi dei capi.
 
 2. **Preferenze di Stile**:
    - Scegli le tue estetiche preferite, i colori che ami, i capi che preferisci evitare e il tuo livello di sobrietà (Casual, Moderato o Conservativo). Il tuo AI Stylist segue queste preferenze in ogni suggerimento.
@@ -16,7 +16,7 @@ La pagina **Profilo** ti permette di personalizzare il modo in cui DressApp si a
    - Se accedi con Google, puoi compilare i tuoi dati di contatto principali con un solo clic.
 
 4. **Misure Corporee e Taglie**:
-   - Inserisci solo quattro misure di base — **Altezza**, **Peso**, **Vita** e **Lunghezza del piede** — e DressApp stimerà automaticamente le restanti misure corporee (**Spalle**, **Torace**, **Fianchi**, **Lunghezza manica**, **Interno gamba** ed **Esterno gamba**) per calibrare il tuo Avatar 2D e aiutarti a trovare la taglia perfetta.
+   - Inserisci solo quattro misure di base — **Altezza**, **Peso**, **Vita** e **Lunghezza del piede** — e DressApp stimerà automaticamente il resto delle tue misure (**Spalle**, **Torace**, **Fianchi**, **Lunghezza manica**, **Interno gamba** e **Lunghezza esterna**) per adattare dinamicamente le proporzioni del tuo Avatar 3D e aiutarti a trovare la taglia ideale.
    - Puoi anche perfezionare manualmente ogni singola misura in qualsiasi momento.
 
 5. **Stile di Vita e Occupazione**:

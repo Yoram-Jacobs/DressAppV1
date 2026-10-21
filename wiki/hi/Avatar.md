@@ -1,8 +1,8 @@
-# DressApp — 2D अवतार और ट्राई-ऑन पोजीशनिंग सिस्टम आर्किटेक्चर (`Avatar.md`)
+# DressApp — 3D डायनेमिक अवतार और ट्राई-ऑन पोजिशनिंग सिस्टम आर्किटेक्चर (`Avatar.md`)
 
-> **दस्तावेज़ संस्करण:** 2.0  
-> **लक्ष्य सबसिस्टम:** फ्रंटएंड 2D मैनिक्विन, रियल बॉडी फोटो कटआउट और गारमेंट ओवरले इंजन  
-> **मुख्य फाइलें:** `AvatarViewer2D.jsx`, `DynamicAvatar.jsx`, `OutfitCanvas.jsx`, `Profile.jsx`  
+> **दस्तावेज़ संस्करण:** 3.0  
+> **लक्षित सबसिस्टम:** फ्रंटएंड 3D MB-Lab WebGL अवतार, रियल बॉडी फोटो कटआउट और एनाटॉमिकल गारमेंट ओवरले इंजन  
+> **मुख्य फ़ाइलें:** `DynamicAvatar.jsx`, `AvatarViewer2D.jsx`, `closetGarmentFitter.js`, `SkinTonePicker.jsx`, `fit_onboarding_garments_to_avatar.py`, `onboardingDataset.js`  
 > **स्थिति:** प्रोडक्शन में जारी और कैलिब्रेटेड  
 
 ---
@@ -10,181 +10,105 @@
 ## 1. कार्यकारी सारांश और मूल्य प्रस्ताव
 
 ### 1.1 उच्च-स्तरीय अवलोकन
-**DressApp 2D अवतार और ट्राई-ऑन पोजीशनिंग सिस्टम** एक अनुकूलन योग्य, वास्तविक समय दृश्य ट्राई-ऑन वातावरण प्रदान करता है। यह उपयोगकर्ताओं को या तो **कटआउट वास्तविक शरीर की तस्वीर** पर या **गतिशील रूप से विकृत 2D बेजियर वेक्टर SVG मैनिक्विन** पर अपने अलमारी के कपड़ों को सहजता से ओवरले करके देखने की अनुमति देता है।
+**DressApp 3D डायनेमिक अवतार और ट्राई-ऑन पोजिशनिंग सिस्टम** एक अनुकूली, रीयल-टाइम विज़ुअल ट्राई-ऑन वातावरण प्रदान करता है। यह उपयोगकर्ताओं को अपनी डिजिटल अलमारी के कपड़ों और स्टार्टर कैप्सूल के परिधानों को या तो **सेगमेंटेड रियल-बॉडी फ़ोटोग्राफ़** पर या कैलिब्रेटेड `200 x 450` ऑर्थोग्राफ़िक viewBox के भीतर Three.js / React Three Fiber के माध्यम से रेंडर किए गए **यथार्थवादी 3D MB-Lab मानव मेश** (`avatar_male_1.glb` और `avatar_female_1.glb`, स्वचालित 2D बेज़ियर SVG फ़ॉलबैक के साथ) के ऊपर सहज रूप से लेयर करके प्रीव्यू करने की सुविधा देता है।
 
-विभिन्न परिधान शैलियों (कंप्रेशन शर्ट, पोलो कॉलर, क्रूनेक, लो-राइज जीन्स, कार्गो शॉर्ट्स और औपचारिक कपड़े) में उच्च दृश्य सटीकता देने के लिए, इंजन शारीरिक लैंडमार्क अंशांकन, आनुपातिक अनुपात स्केलिंग और बिना किसी विकृति वाले छवि ओवरले कंटेनरों का उपयोग करता है।
+सभी परिधान श्रेणियों (टॉप्स, शर्ट, आउटरवियर, पतलून, स्कर्ट, पूरे शरीर के पारंपरिक/सांस्कृतिक परिधान, जूते और एक्सेसरीज़) में उच्च दृश्य सटीकता प्रदान करने के लिए, इंजन **सटीक 3D ऑर्थोग्राफ़िक सिल्हूट लैंडमार्क**, **दो-स्तरीय हाइब्रिड गारमेंट फिटर** और **लाइव क्षैतिज स्लाइस वार्पिंग** को जोड़ता है।
 
 ```mermaid
 flowchart TD
-    subgraph UserProfile["उपयोगकर्ता प्रोफ़ाइल और माप"]
-        U_Photo["वास्तविक शरीर का फोटो अपलोड"]
-        U_Tone["त्वचा के रंग पैलेट का चयन"]
-        U_Params["आकार पैरामीटर (लंबे/छोटे, भारी/पतले, छाती, कमर, कूल्हे)"]
-        U_Sizing["ANSUR II साइज़िंग भविष्यवक्ता (ऊंचाई, वजन, कमर, पैर -> 10 बॉडी मेट्रिक्स)"]
+    subgraph UserProfile["User Profile & Measurements"]
+        U_Photo["Real Body Photo Upload"]
+        U_Tone["8 Monk Skin Tone Swatches (SkinTonePicker.jsx)"]
+        U_Sizing["ANSUR II Sizing Predictor (Height, Weight, Waist, Foot -> 10 Body Metrics)"]
     end
 
-    subgraph BackendIngest["बैकएंड प्रोसेसिंग और कटआउट"]
-        Rembg["लोकल U2-Net कटआउट / सेगमेंटेशन"]
-        Mongo["MongoDB Atlas प्रोफ़ाइल सिंक"]
+    subgraph AvatarEngine["Frontend Avatar Rendering Engine (DynamicAvatar.jsx & AvatarViewer2D.jsx)"]
+        ModeCheck{"Active Body Photo?"}
+        PhotoView["Real-Body Cutout Layer + extractBodyPhotoAnatomy"]
+        Mesh3DView["3D MB-Lab WebGL Mesh (avatar_male_1.glb / avatar_female_1.glb)"]
+        SvgFallback["2D Bezier SVG Fallback Mannequin"]
+        AnatomyEngine["getFullAvatarAnatomy (200 x 450 Orthographic Landmarks)"]
     end
 
-    subgraph AvatarEngine["फ्रंटएंड अवतार रेंडरिंग इंजन (AvatarViewer2D.jsx)"]
-        ModeCheck{"क्या सक्रिय बॉडी फोटो है?"}
-        PhotoView["वास्तविक शरीर की कटआउट परत"]
-        MannequinView["डायनेमिक SVG वेक्टर मैनिक्विन (DynamicAvatar.jsx)"]
-        
-        GarmentResolver["परिधान श्रेणी और समूह स्लॉट हलकर्ता"]
-        LandmarkCalc["शारीरिक लैंडमार्क पोजीशनिंग इंजन"]
+    subgraph GarmentFitting["Two-Tier Hybrid Garment Fitter & Live Warping"]
+        StarterCapsule["48 Pre-Fitted Starter Assets (fit_onboarding_garments_to_avatar.py)"]
+        Tier1Warp["Tier 1: Real-Photo Alpha-Contour Warping (closetGarmentFitter.js)"]
+        Tier2Bezier["Tier 2: Procedural Cubic-Bezier Reconstruction"]
+        SliceWarper["Live 28-Band Horizontal Slice Warper (FittedGarmentLayer)"]
+        AccessoryAnchor["Dynamic liveAnatomy Accessory Anchoring"]
     end
 
-    subgraph OverlayGeometry["परिधान परत ज्यामिति"]
-        TopLayer["टॉप / आउटरवियर परत (top-[14.5%], w-[82%], h-[38%])"]
-        BottomLayer["बॉटम / बेल्ट परत (top-[36.5%], w-[62%], h-[50%])"]
-        ShoesLayer["जूते की परत (bottom-[2%], w-[46%], h-[12%])"]
-        AccessoryLayers["हेडवियर / चश्मा / सहायक उपकरण / बैग"]
-    end
-
-    U_Photo --> Rembg --> Mongo
-    U_Params & U_Sizing --> MannequinView
-    U_Tone --> MannequinView
-    
-    ModeCheck -- हां --> PhotoView
-    ModeCheck -- नहीं --> MannequinView
-
-    GarmentResolver --> LandmarkCalc
-    LandmarkCalc --> TopLayer & BottomLayer & ShoesLayer & AccessoryLayers
-    TopLayer & BottomLayer & ShoesLayer & AccessoryLayers --> PhotoView & MannequinView
+    U_Photo --> PhotoView
+    U_Tone & U_Sizing --> Mesh3DView
+    U_Sizing --> AnatomyEngine
+    ModeCheck -- Yes --> PhotoView
+    ModeCheck -- No --> Mesh3DView
+    Mesh3DView -. "Headless / Non-WebGL" .-> SvgFallback
+    AnatomyEngine --> StarterCapsule & Tier1Warp & Tier2Bezier & SliceWarper & AccessoryAnchor
+    StarterCapsule & Tier1Warp & Tier2Bezier --> SliceWarper
+    SliceWarper & AccessoryAnchor --> PhotoView & Mesh3DView
 ```
 
 ### 1.2 उपयोगकर्ता मूल्य प्रस्ताव
-* **शारीरिक संरेखण सटीकता**: शर्ट के कॉलर को अवतार की नेकलाइन (`top-[14.5%]`) और शॉर्ट्स/पैंट के कमरबंद को प्राकृतिक कमर रेखा (`top-[36.5%]`) से पूरी तरह मिलाता है, जिससे चेहरे पर झुकाव या अवांछित अंतराल समाप्त हो जाता है।
-* **दोहरे अवतार का लचीलापन**: एक व्यक्तिगत कटी हुई पूर्ण-शरीर तस्वीर और सटीक एन्थ्रोपोमेट्रिक मापों पर निर्मित एक गतिशील 2D वेक्टर SVG मैनिक्विन के बीच तुरंत स्विच करें।
-* **आनुपातिक पहलू संरक्षण**: परिधान की मूल छवि पहलू अनुपात (`object-fit: contain`) को बनाए रखते हुए छाती और कूल्हे की चौड़ाई स्केलिंग ($scaleX$) लागू करता है, अवांछित खिंचाव या सिकुड़न को रोकता है।
-* **इंटरएक्टिव परत पदानुक्रम**: इनर टॉप्स और ड्रेसेस के ऊपर आउटरवियर को स्टैक करें, जबकि व्यक्तिगत परिधान परतों पर क्लिक करके आइटम विवरण खोलें।
+* **यथार्थवादी 3D MB-Lab मानव मेश**: सपाट 2D सिल्हूट को यथार्थवादी 3D पुरुष (`avatar_male_1.glb`) और महिला (`avatar_female_1.glb`) मेश से बदलता है, जो हल्के फैले हुए पैरों और हथेलियों व कूल्हों के बीच जगह छोड़ती हुई आरामदायक बांहों के साथ प्राकृतिक A-स्टांस में सीधे खड़े होते हैं।
+* **डायनेमिक बॉडी मॉर्फिंग और 8 मोंक स्किन टोन**: फिजिकली बेस्ड (`MeshPhysicalMaterial`) शेडर के माध्यम से उपयोगकर्ता के माप (ऊंचाई, वजन, कंधे, छाती, कमर, कूल्हे) और 8 यथार्थवादी मानव स्किन टोन (`#F6EDE4` से `#3A2518`) पर रीयल टाइम में प्रतिक्रिया करता है।
+* **3D-कैलिब्रेटेड गारमेंट और एक्सेसरी निर्देशांक**: सभी 48 स्टार्टर कैप्सूल कपड़ों और उपयोगकर्ता की अलमारी के किसी भी आइटम को सटीक 3D सिल्हूट निर्देशांकों पर मैप करता है—जिसमें फैली हुई बांहें (`wElbowOut`, `wWristOut`), धड़ की चौड़ाई, A-स्टांस पैर (`wOuterKnee`, `wOuterAnkle`) और फैले हुए पंजे (`wFootTip`, `wFootHeel`) शामिल हैं।
+* **डुअल-अवतार लचीलापन**: किसी भी समय अपनी व्यक्तिगत सेगमेंटेड फुल-बॉडी फोटो और 3D डायनेमिक अवतार के बीच सहजता से स्विच करें।
 
 ---
 
-## 2. व्यापक उपयोगकर्ता मैनुअल और इंटरफ़ेस टोपोलॉजी
+## 2. 3D अवतार आर्किटेक्चर (`DynamicAvatar.jsx`)
 
-### 2.1 दृश्य इंटरफ़ेस टोपोलॉजी
+### 2.1 Blender MB-Lab एसेट्स और ऑर्थोग्राफ़िक कैमरा कैलिब्रेशन
+* **एसेट्स**:
+  * पुरुष मेश: `apps/web/public/models/avatar_male_1.glb` (`height = 1.7877 m`, फ़्लोर ऑफ़सेट `ymin = -0.0061 m`)
+  * महिला मेश: `apps/web/public/models/avatar_female_1.glb` (`height = 1.6873 m`, फ़्लोर ऑफ़सेट `ymin = -0.0061 m`)
+* **ऑर्थोग्राफ़िक प्रोजेक्शन**:
+  * लॉजिकल `200 x 450` viewBox (`aspect = 200 / 450`) के भीतर `<Canvas orthographic camera={{ zoom: 109, position: [0, 0, 5] }}>` के माध्यम से रेंडर किया गया।
+  * `zoom = 109` पर, `1 मीटर = 109 SVG इकाइयाँ`, जो `450`-इकाई कैनवास के लंबवत केंद्र को `Y = 225` पर रखता है।
+* **डिकपल्ड आनुपातिक स्केलिंग (`Realistic3DAvatarMesh`)**:
+  * लंबवत स्केल (`scaleY`) सीधे `targetSvgHeight / (baseModelHeightM * 109)` से गणना किया जाता है और `yFeet` (`baseModelYMinM = -0.0061`) पर एंकर किया जाता है, जो सभी ऊंचाइयों (`140 cm` से `210 cm`) में `getFullAvatarAnatomy` के साथ 1-से-1 लंबवत संरेखण की गारंटी देता है।
+  * क्षैतिज स्केल (`scaleX`, `scaleZ`) की गणना बेसलाइन एंथ्रोपोमेट्रिक माप (`scaleXZ`) के सापेक्ष `chest`, `waist`, `hip` और `shoulders` के भारित अनुपात से स्वतंत्र रूप से की जाती है, जिससे ऊंचाई बदलने पर धड़ और अंग कृत्रिम रूप से चौड़े या संकरे नहीं होते।
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                     2D अवतार ट्राई-ऑन कैनवास                     │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│                        [ टोपी/हेडवियर (top: 1%) ]                │
-│                        [ चश्मा        (top: 11%) ]               │
-│                        [ नेकलाइन      (top: 14.5%) ] ◄─ कॉलर    │
-│                     ┌──────────────────────────┐                 │
-│                     │   ऊपरी कपड़े / जैकेट     │                 │
-│                     │       (height: 38%)      │                 │
-│                     └──────────────────────────┘                 │
-│                        [ कमर रेखा     (top: 36.5%) ] ◄─ कमरबंद   │
-│                     ┌──────────────────────────┐                 │
-│                     │   निचले कपड़े / शॉर्ट्स   │                 │
-│                     │       (height: 50%)      │                 │
-│                     │                          │                 │
-│                     └──────────────────────────┘                 │
-│                        [ पैर          (bottom: 2%) ] ◄─── जूते   │
-│                        [ जूते         (height: 12%) ]            │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│ [ अवतार मोड बदलें ]  [ त्वचा का रंग चुनें ]  [ माप संपादित करें ]  │
-└──────────────────────────────────────────────────────────────────┘
-```
+### 2.2 3D ऑर्थोग्राफ़िक सिल्हूट लैंडमार्क (`getFullAvatarAnatomy`)
+`avatar_male_1.glb` और `avatar_female_1.glb` के त्रिभुज मेश को 1-इकाई लंबवत अंतराल पर `200 x 450` SVG निर्देशांक स्थान में रास्टराइज़ करके, `getFullAvatarAnatomy` सटीक बेसलाइन लैंडमार्क (`heightRatio` और परिधि अनुपात द्वारा गतिशील रूप से स्केल किए गए) प्रदान करता है:
 
-### 2.2 मोड और वर्कफ़्लो गाइड
-
-#### मोड 1: वास्तविक शरीर फोटो कटआउट परत
-1. **प्रोफ़ाइल सेटिंग्स** (`/me`) खोलें।
-2. एक पूर्ण-शरीर तस्वीर अपलोड करें। बैकएंड पृष्ठभूमि के शोर को हटाने के लिए `rembg` (U2-Net) के माध्यम से पृष्ठभूमि विभाजन निष्पादित करता है।
-3. प्रसंस्कृत कटआउट URL (`body_photo_url`) MongoDB में उपयोगकर्ता प्रोफ़ाइल को अपडेट करता है और `AvatarViewer2D` कंटेनर के अंदर रेंडर होता है।
-4. वेक्टर मैनिक्विन पर वापस लौटने के लिए, प्रोफ़ाइल पृष्ठ पर **फोटो हटाएं** पर क्लिक करें। यूआई बिना किसी पेज रीलोड के तुरंत अपडेट होता है।
-
-#### मोड 2: डायनेमिक वेक्टर SVG मैनिक्विन
-1. जब कोई बॉडी फोटो मौजूद नहीं होती है, तो `AvatarViewer2D` `DynamicAvatar.jsx` को रेंडर करता है।
-2. मैनिक्विन एक निश्चित `0 0 200 450` SVG viewBox के अंदर निरंतर क्यूबिक बेजियर वक्र ($C$ और $S$ कमांड) उत्पन्न करता है।
-3. शरीर के मापदंडों (ऊंचाई, वजन, कमर, छाती, कंधे, कूल्हे) को समायोजित करना या त्वचा टोन का चयन करना मैनिक्विन सिल्हूट को वास्तविक समय में गतिशील रूप से बदलता है।
-
----
-
-## 3. प्रौद्योगिकी स्टैक और गहन विश्लेषण
-
-### 3.1 एनाटोमिकल इलिप्से डिवाइडर और बेजियर मैनिक्विन जनरेटर
-
-`DynamicAvatar.jsx` **एनाटोमिकल इलिप्से डिवाइडर** ($\text{DIVISOR} = 2.65$) का उपयोग करके 3D शारीरिक परिधियों से 2D समतल प्रक्षेपण चौड़ाई की गणना करता है:
-
-$$\begin{aligned}
-w_{\text{shoulders}} &= (\text{shoulders} \times 1.1) \times (1.05 \text{ if male else } 0.95) \\
-w_{\text{chest}} &= \left(\frac{\text{chest}}{2.65} \times 1.05\right) \times (1.02 \text{ if male else } 1.0) \\
-w_{\text{waist}} &= \left(\frac{\text{waist}}{2.65} \times 1.0\right) \times (0.98 \text{ if male else } 0.90) \\
-w_{\text{hip}} &= \left(\frac{\text{hip}}{2.65} \times 1.05\right) \times (0.93 \text{ if male else } 1.05)
-\end{aligned}$$
-
-शरीर के सिल्हूट का निर्माण SVG पथ कमांड के माध्यम से क्यूबिक बेजियर नियंत्रण बिंदुओं को मैप करके किया जाता है:
-
-```javascript
-// Bezier contour snippet from DynamicAvatar.jsx
-const bodyPath = [
-  `M ${pNeckR}`,
-  `C ${X0 + wNeck + (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.7} ${X0 + wShoulders * 0.9},${yShoulders - 2} ${pShoulderR}`,
-  `C ${X0 + wShoulders * 0.95},${yShoulders + (yChest - yShoulders) * 0.6} ${X0 + wChest + 2},${yChest - 5} ${pChestR}`,
-  `C ${X0 + wChest - 1},${yChest + (yWaist - yChest) * 0.5} ${X0 + wWaist + (isMale ? 1 : -2)},${yWaist - 8} ${pWaistR}`,
-  `C ${X0 + wWaist + (isMale ? 2 : 5)},${yWaist + (yHip - yWaist) * 0.4} ${X0 + wHip + 1},${yHip - 8} ${pHipR}`,
-  ...
-].join(' ');
-```
-
-### 3.2 कैलिब्रेटेड लैंडमार्क पोजीशनिंग और कंटेनर CSS अनुपात
-
-यह सुनिश्चित करने के लिए कि कपड़े चेहरे के भावों को ढके बिना या शरीर में अंतराल छोड़े बिना पूरी तरह फिट बैठें, `AvatarViewer2D.jsx` में ओवरले कंटेनर सटीक CSS स्थितिगत अनुपातों से बंधे हैं:
-
-| परिधान श्रेणी | CSS स्थिति क्लास | z-Index | संरेखण लैंडमार्क |
+| लैंडमार्क समूह | पुरुष बेसलाइन (`178 cm`) | महिला बेसलाइन (`166 cm`) | उद्देश्य |
 | --- | --- | --- | --- |
-| **टोपी/हेडवियर** | `top-[1%] left-1/2 w-[34%] aspect-square` | `z-30` | सिर का शीर्ष |
-| **चश्मा** | `top-[11%] left-1/2 w-[18%] h-[4.5%]` | `z-28` | आंखों का स्तर |
-| **सहायक उपकरण / हार** | `top-[14.5%] left-1/2 w-[30%] aspect-square` | `z-25` | गर्दन का आधार |
-| **ऊपरी कपड़ा (Top)** | `top-[14.5%] left-1/2 w-[82%] h-[38%]` | `z-20` | कॉलर से नेकलाइन |
-| **जैकेट/आउटरवियर** | `top-[14.5%] left-1/2 w-[86%] h-[42%]` | `z-22` | कंधे पर कोट की परत |
-| **ड्रेस** | `top-[14.5%] left-1/2 w-[82%] h-[68%]` | `z-20` | गर्दन से घुटने तक पूर्ण लंबाई |
-| **बेल्ट** | `top-[36.5%] left-1/2 w-[62%] h-[5%]` | `z-21` | कमर की बेल्ट लूप |
-| **निचला कपड़ा (पैंट/शॉर्ट्स)** | `top-[36.5%] left-1/2 w-[62%] h-[50%]` | `z-10` | कमरबंद से कमर रेखा |
-| **जूते / फुटवियर** | `bottom-[2%] left-1/2 w-[46%] h-[12%]` | `z-15` | टखने से पैर की सतह |
-| **हैंडबैग** | `top-[40%] right-[-5%] w-[40%] h-[30%]` | `z-25` | हाथ गिरने का स्तर |
-
-### 3.3 कपड़ों का आनुपातिक चौड़ाई स्केलिंग
-
-स्थानिक स्थिति के अलावा, परिधान उपयोगकर्ता द्वारा चुने गए शरीर के मापदंडों (भारी, पतला, चौड़ी कमर, चौड़े कूल्हे) के आधार पर क्षैतिज रूप से ($scaleX$) गतिशील रूप से स्केल होते हैं:
-
-```javascript
-// Derivation of garment container scale factors in AvatarViewer2D.jsx
-const scales = useMemo(() => {
-  const heightFactor = 1 + (params.tall * 0.08) - (params.short * 0.08);
-  const widthFactor = 1 + (params.heavy * 0.12) - (params.thin * 0.12);
-  const chestFactor = 1 + (params.busty * 0.1);
-  const waistFactor = 1 + (params.waist_thick * 0.12) - (params.waist_thin * 0.08);
-  const hipsFactor = 1 + (params.hips_wide * 0.12) - (params.hips_narrow * 0.08);
-
-  return { height: heightFactor, width: widthFactor, chest: chestFactor, waist: waistFactor, hips: hipsFactor };
-}, [params]);
-
-// Passed to Framer Motion animate prop for Top and Bottom:
-// Top: scaleX = scales.chest / scales.width
-// Bottom: scaleX = scales.hips / scales.width
-```
+| **लंबवत धड़ ज़ोन** | `yChin: 58.5`, `yShoulders: 68.0`, `yChest: 100.0`, `yWaist: 138.0`, `yHip: 175.0`, `yCrotch: 190.0` | `yChin: 77.0`, `yShoulders: 87.0`, `yChest: 118.0`, `yWaist: 147.0`, `yHip: 185.0`, `yCrotch: 199.0` | कॉलर, कंधे की सीम, छाती/बस्ट, कमरबंद, पेल्विस और इनसीम विभाजन |
+| **लंबवत अंग ज़ोन** | `yElbow: 134.0`, `yWrist: 186.0`, `yKnees: 278.0`, `yAnkles: 356.0`, `yFeet: 382.0` | `yElbow: 148.0`, `yWrist: 195.0`, `yKnees: 282.0`, `yAnkles: 356.0`, `yFeet: 382.0` | शॉर्ट/3-क्वार्टर/लॉन्ग स्लीव हेम, शॉर्ट्स/मिडी/एंकल हेम और जूते का स्थान |
+| **धड़ की आधी चौड़ाई** | `wNeck: 12.1`, `wShoulders: 38.6`, `wChest: 28.0`, `wWaist: 22.8`, `wHip: 25.8` | `wNeck: 10.5`, `wShoulders: 32.5`, `wChest: 24.4`, `wWaist: 19.6`, `wHip: 26.8` | नेकलाइन ओपनिंग, कंधे का ढलान, धड़ की साइड सीम और हिप ड्रेप |
+| **फैली हुई बांहों की सीमाएँ** | `wElbowOut: 49.0`, `wElbowIn: 32.8`, `wWristOut: 61.0`, `wWristIn: 47.2` | `wElbowOut: 41.2`, `wElbowIn: 28.8`, `wWristOut: 53.0`, `wWristIn: 42.8` | कोणीय आस्तीन गलियारे और कलाई/घड़ी/दस्ताने के एंकर |
+| **A-स्टांस पैर और पंजे की सीमाएँ** | `wOuterKnee: 33.8`, `wInnerKnee: 16.5`, `wOuterAnkle: 37.8`, `wInnerAnkle: 26.2`, `wFootTip: 42.2`, `wFootHeel: 24.0` | `wOuterKnee: 31.8`, `wInnerKnee: 16.2`, `wOuterAnkle: 36.2`, `wInnerAnkle: 26.0`, `wFootTip: 40.2`, `wFootHeel: 23.0` | पतलून के लेग ट्यूब, स्कर्ट हेम और बाएं/दाएं फुटवियर बॉक्स |
 
 ---
 
-## 4. स्थिति और अनुपात सुधार का सारांश मैट्रिक्स
+## 3. दो-स्तरीय हाइब्रिड गारमेंट फिटर और लाइव स्लाइस वार्पिंग
 
-| पहचाछानी गई समस्या | कारण | लागू किया गया सुधार | परिणाम |
-| --- | --- | --- | --- |
-| **शर्ट का कॉलर चेहरे को ढक रहा था** | ऑफसेट बहुत ऊपर स्थित था (`top-[8.3%]` या `top-[12.8%]`) | ऊपरी कंटेनर ऑफसेट को `top-[14.5%]` पर सेट किया गया | शर्ट का कॉलर अवतार की नेकलाइन पर बिल्कुल सही बैठता है। |
-| **पैंट/शॉर्ट्स बहुत नीचे या हेम ओवरलैप थे** | ऑफसेट बहुत नीचे स्थित था (`top-[38.5%]`) | निचले कंटेनर ऑफसेट को `top-[36.5%]` पर सेट किया गया | पैंट का कमरबंद अवतार की प्राकृतिक कमर रेखा पर सही बैठता है। |
-| **कपड़ों का विकृत पहलू अनुपात** | अनियंत्रित कंटेनर खिंचाव | आनुपातिक `scaleX` समायोजन के साथ `object-fit: contain` लागू किया गया | बिना किसी क्षैतिज विकृति के परिधान छवि का मूल अनुपात बना रहता है। |
-| **फोटो हटाने में देरी** | पृष्ठ स्थिति पुनः प्राप्त करने की आवश्यकता थी | `Profile.jsx` में त्वरित स्थानीय उपयोगकर्ता स्थिति सिंक लागू किया गया | फोटो हटाना बिना किसी यूआई देरी के तुरंत दिखाई देता है। |
+### 3.1 प्री-फिटेड ऑनबोर्डिंग स्टार्टर कैप्सूल (`scripts/fit_onboarding_garments_to_avatar.py`)
+* `apps/web/src/lib/onboardingDataset.js` में `default_viewbox` और `point_cloud` मेटाडेटा के साथ `apps/web/public/assets/onboarding/` में सभी 48 पारदर्शी RGBA कटआउट ($900 \times 1500$ रिज़ॉल्यूशन पर `*_fitted.png` और `.jpg`) जनरेट करता है।
+* `getFullAvatarAnatomy` के साथ संरेखित `compute_avatar_geometry` का उपयोग करता है ताकि टॉप्स/आउटरवियर 3D फैली हुई बांहों के गलियारों (`wElbowOut`/`wWristOut`) का अनुसरण करें, पतलून/जींस A-स्टांस पैर केंद्रों (`legTopCenter` → `kneeCenter` → `ankleCenter`) का अनुसरण करें, स्कर्ट A-स्टांस पिंडलियों पर खूबसूरती से फैलें, और जोड़े वाले जूते सीधे `(FootHeel..FootTip, yAnkles..yFeet)` पर बैठें।
+
+### 3.2 रनटाइम क्लोज़ेट गारमेंट फिटर (`closetGarmentFitter.js`)
+* **एनाटॉमिकल एनवलप (`getGarmentAnatomicalEnvelope`)**: किसी भी परिधान श्रेणी के लिए लक्षित बाउंडिंग बॉक्स (`default_viewbox`) और शारीरिक लैंडमार्क (`wElbowOut`, `wElbowIn`, `wWristOut`, `wWristIn`, `wOuterKnee`, `wInnerKnee`, `wOuterAnkle`, `wInnerAnkle`, `leftAnkleX`, `rightAnkleX`) की गणना करता है।
+* **स्तर 1 — रियल-फोटो अल्फा-कंटूर वार्पिंग (`warpRealGarmentPhotoToDefaultCanvas`)**:
+  * टॉप्स, शर्ट, ड्रेस और आउटरवियर को 3D अवतार की नेकलाइन (`yNeckBase`) और कंधे की चौड़ाई (`shoulderSpan`) पर एंकर करता है, और 3D बांह के कोण के साथ आस्तीन को साफ-सुथरे ढंग से मैप करता है।
+  * एक सख्त **क्रॉच बैरियर (`yCrotchTarget >= yCrotch`)** के साथ राइज़ स्टाइल के अनुसार `yWaist` और `yHip` के बीच पैंट/स्कर्ट को पोजिशन करता है, और बाएं/दाएं पतलून के पैरों को कूल्हे से टखने तक 3D अवतार के A-स्टांस पैर केंद्रों के साथ संरेखित करता है।
+  * जोड़े वाले फुटवियर कटआउट (`analyzeFootwearCutout`) को विभाजित करता है ताकि बाएं और दाएं जूते `leftAnkleX` और `rightAnkleX` (`±(wFootTip + wFootHeel) / 2`) पर मैप हों।
+* **स्तर 2 — प्रोसीजरल क्यूबिक-बेज़ियर पुनर्निर्माण (`renderProceduralBezierFittedGarment`)**:
+  * 3D अवतार की बांह, धड़, पैर और पंजे के निर्देशांकों से बंधे क्यूबिक-बेज़ियर पथों का उपयोग करने वाला फ़ॉलबैक सिल्हूट जनरेटर।
+
+### 3.3 लाइव क्षैतिज स्लाइस वार्पिंग और एक्सेसरी पोजिशनिंग (`AvatarViewer2D.jsx`)
+* **क्षैतिज स्लाइस वार्पिंग (`FittedGarmentLayer`)**:
+  * प्रत्येक फिट किए गए कपड़े को उसके `default_viewbox` में `28` क्षैतिज स्लाइस में विभाजित करता है।
+  * प्रत्येक स्लाइस के बेसलाइन लंबवत मध्यबिंदु (`y0Mid`) को उपयोगकर्ता के लाइव माप-मॉर्फ्ड लंबवत स्थान (`mapBaselineYToLiveY`) और क्षैतिज चौड़ाई अनुपात (`getLiveWidthScaleAtY`) से मैप करता है, जिससे सभी शरीर की ऊंचाइयों और चौड़ाइयों में कपड़ों को गतिशील रूप से स्ट्रेच और पोजिशन किया जाता है।
+* **डायनेमिक `liveAnatomy` एक्सेसरी एंकरिंग (`renderGarment`)**:
+  * **हेडवियर (टोपी/पगड़ी)**: `X = 100` पर केंद्रित, `yCrown` और `yHeadCenter` (`width = wHead * 2.55`) पर एंकर किया गया।
+  * **चश्मा**: आंखों के स्तर पर स्थित (`yCrown + (yChin - yCrown) * 0.43`, `width = wHead * 1.95`)।
+  * **झुमके (Earrings)**: कान की लोब से स्थित (`yChin - 12` से `yChin + 10`, `width = wHead * 2.35`)।
+  * **स्कार्फ / नेकवियर और नेकलेस / टाई**: `yNeckBase` पर एंकर और `wNeck` / `wShoulders` द्वारा स्केल किया गया।
+  * **बेल्ट**: `width = wWaist * 2.18` के साथ `yWaist + (yHip - yWaist) * 0.22` पर केंद्रित।
+  * **घड़ी / ब्रेसलेट और दस्ताने**: फैली हुई 3D कलाई के निर्देशांकों (`yWrist`, `wWristOut`) पर एंकर किए गए।
 
 ---
-
-*Document compiled automatically by Narrator for DressApp.*
+*DressApp Engineering द्वारा संधारित दस्तावेज़।*

@@ -1,20 +1,20 @@
-# Outfit Planner & 2D Canvas
+# Outfit Planner & 3D Dynamic Avatar Canvas
 
-Compose, layer, and preview coordinated outfits on your virtual avatar before getting dressed.
+Compose, layer, and preview coordinated outfits on your virtual 3D avatar or real-body photo before getting dressed.
 
 ## Overview
-The Outfit Planner provides an interactive 2D avatar canvas where you can test-fit clothes together. You can preview tops, bottoms, shoes, and accessories layered on your avatar, toggle outerwear on and off, and check compatibility scores before stepping out the door.
+The Outfit Planner provides an interactive try-on canvas where you can test-fit clothes together on a realistic 3D dynamic avatar (or your personal full-body photo). You can preview tops, bottoms, dresses, outerwear, shoes, and accessories mapped accurately to your body proportions, toggle outerwear on and off, and check compatibility scores before stepping out the door.
 
 ## Prerequisites
-- Digitized clothes in your closet.
-- (Optional) A full-body photo in your profile if you prefer trying clothes on your real silhouette.
+- Digitized clothes in your closet (or items from the 48-piece Starter Capsule).
+- (Optional) Body measurements and skin tone configured in your Profile, or a full-body photo if you prefer trying clothes on your own photograph.
 
 ## Step-by-Step Instructions
 1. **Open the Canvas**: Tap the **Outfit Canvas** tab in the app.
-2. **Dress Your Avatar**: Drag and drop or tap garments to position them on the mannequin or your full-body photo:
-   - **Tops, Outerwear & Dresses** automatically fit your avatar's shoulders and neckline while keeping their original sleeve and torso cut untouched.
-   - **Pants & Skirts** position their waistband between your natural waist and hips based on their rise style (high-rise, mid-rise, relaxed, or low-rise), fit your waist and pelvis, and keep their original leg cut (wide-leg, straight-leg, bootcut, flared, cargo, or slim) untouched.
-   - **Shoes & Boots** automatically split paired footwear photos so one shoe maps cleanly onto each foot.
+2. **Dress Your Avatar**: Drag and drop or tap garments to position them on your 3D dynamic avatar or full-body photo:
+   - **Tops, Outerwear & Dresses** automatically align to your avatar's neckline, shoulders, torso, and outstretched arms while preserving their original cut.
+   - **Pants & Skirts** position their waistband between your natural waist and hips based on their rise style (high-rise, mid-rise, relaxed, or low-rise), fit your waist and pelvis, and map cleanly along your avatar's A-stance legs while preserving their leg cut.
+   - **Shoes & Accessories** automatically split paired footwear so one shoe maps onto each foot, and anchor hats, glasses, scarves, belts, watches, and gloves directly to your avatar's anatomical landmarks.
 3. **Outerwear Layering ("With / Without Outerwear")**:
    - Add a jacket, cardigan, or overcoat.
    - Use the toggle to view your outfit **With Outerwear** (jacket closed over shirt) or **Without Outerwear** (shirt and pants visible underneath).

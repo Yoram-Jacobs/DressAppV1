@@ -91,9 +91,9 @@ Die Profilseite dient als zentrale Steuerkonsole für DressApp. Konfigurationsfe
 
 ##### Abhängigkeiten & Begründung der Akkordeon-Abschnitte
 
-1. **Fotos & digitale Avatar-Bühne (`AvatarViewer2D` & `DynamicAvatar`)**
-   - **Warum ist das wichtig?**: Rendert Ihre visuelle Identität auf allen Anprobeflächen über eine Dual-Mode-Bühne (segmentierter Echtkörper-Fotoausschnitt vs. dynamische 2D-Bézier-Vektor-SVG-Manikin).
-   - **Subsystem-Abhängigkeiten**: Fotoausschnitte werden über lokales U2-Net (`rembg`) vom Hintergrund freigestellt und im Browser auf maximal 1280 px bei 82 % Qualität herunterskaliert, um innerhalb der 16-MB-Dokumentgrenze von MongoDB zu bleiben. Die Bühne wendet kalibrierte Positions-Landmarks (`top-[14.5%]` Kragen-zu-Halsausschnitt, `top-[36.5%]` Hosenbund-zu-Taille, `bottom-[2%]` Schuhebene) sowie eine proportionale Brust-/Hüftskalierung ($scaleX$) an. Klicken Sie auf *Foto entfernen*, um sofort wieder zur 2D-SVG-Vektormanikin zu wechseln.
+1. **Fotos & dynamische 3D-Avatar-Bühne (`AvatarViewer2D`, `DynamicAvatar` & `closetGarmentFitter`)**
+   - **Warum ist das wichtig?**: Rendert Ihre visuelle Identität auf allen Anprobeflächen über eine Dual-Mode-Bühne: ein realistisches menschliches 3D-MB-Lab-WebGL-Mesh (`avatar_male_1.glb` & `avatar_female_1.glb`, mit 2D-Bézier-SVG-Fallback) oder einen segmentierten Echtkörper-Fotoausschnitt.
+   - **Subsystem-Abhängigkeiten**: Der 3D-Avatar morpht dynamisch in einem orthografischen `200 x 450`-Canvas entsprechend Ihrer Körpergröße und Ihren Körperumfängen (`scaleY` entkoppelt von `scaleXZ`) und wendet 8 realistische Monk-Hautton-Farbfelder (`SkinTonePicker.jsx`) an. Fotoausschnitte werden über lokales U2-Net (`rembg`) vom Hintergrund freigestellt und im Browser auf maximal 1280 px bei 82 % Qualität herunterskaliert, um innerhalb der 16-MB-Dokumentgrenze von MongoDB zu bleiben. Sowohl die 48 vorangepassten Onboarding-Artikel als auch Kleiderschrank-Ausschnitte der Nutzer werden über `closetGarmentFitter.js` und horizontales Live-Slice-Warping (`FittedGarmentLayer`) exakt auf die Schultern, ausgestreckten Arme, den Oberkörper, die A-Stance-Beine und die leicht gespreizten Füße des 3D-Avatars projiziert. Klicken Sie auf *Foto entfernen*, um sofort wieder zum 3D-Avatar zu wechseln.
 
 2. **Stilprofil (Modesty-Regeln, Dresscode)**
    - **Warum ist das wichtig?**: Es legt persönliche Grenzen für empfohlene Outfits fest und verhindert, dass die KI unpassende Stilvorschläge generiert.

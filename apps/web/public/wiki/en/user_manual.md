@@ -91,9 +91,9 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 ##### Accordion Section Dependencies & Rationale
 
-1. **Photos & Digital Avatar Stage (`AvatarViewer2D` & `DynamicAvatar`)**
-   - **Why does it matter?**: Renders your visual identity across all try-on canvases using a dual-mode stage (segmented real-body photo cutout vs dynamic 2D Bezier vector SVG mannequin).
-   - **Subsystem Dependencies**: Photo cutouts are background-matted via local U2-Net (`rembg`) and downscaled in-browser to a maximum of 1280px at 82% quality to fit within MongoDB's 16MB document ceiling. The stage applies calibrated positional landmarks (`top-[14.5%]` collar-to-neckline, `top-[36.5%]` waistband-to-waistline, `bottom-[2%]` footwear plane) and proportional chest/hip scaling ($scaleX$). Click *Remove Photo* to instantly switch back to the 2D SVG vector mannequin.
+1. **Photos & 3D Dynamic Avatar Stage (`AvatarViewer2D`, `DynamicAvatar` & `closetGarmentFitter`)**
+   - **Why does it matter?**: Renders your visual identity across all try-on canvases using a dual-mode stage: a realistic 3D MB-Lab WebGL human mesh (`avatar_male_1.glb` & `avatar_female_1.glb`, with 2D Bezier SVG fallback) or a segmented real-body photo cutout.
+   - **Subsystem Dependencies**: The 3D avatar morphs dynamically in a `200 x 450` orthographic canvas according to your height and body circumferences (`scaleY` decoupled from `scaleXZ`) and applies 8 realistic Monk skin tone swatches (`SkinTonePicker.jsx`). Photo cutouts are background-matted via local U2-Net (`rembg`) and downscaled in-browser to a maximum of 1280px at 82% quality to fit within MongoDB's 16MB document ceiling. Both the 48 pre-fitted onboarding items and user closet cutouts are mapped via `closetGarmentFitter.js` and live horizontal slice warping (`FittedGarmentLayer`) onto the 3D avatar's exact shoulders, outstretched arms, torso, A-stance legs, and spread feet. Click *Remove Photo* to instantly switch back to the 3D avatar.
 
 2. **Style Profile (Modest rules, Dress code)**
    - **Why does it matter?**: It establishes personal boundaries for recommended outfits, preventing the AI from generating inappropriate style suggestions.

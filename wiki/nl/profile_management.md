@@ -4,9 +4,9 @@ Op je **Profiel**-pagina kun je personaliseren hoe DressApp bij je lichaam past,
 
 ## Profielsecties
 
-1. **Foto's & Persoonlijke Avatar**:
-   - Upload een volledige lichaamsfoto voor realistische virtuele pasbeurten, of pas de lichaamsvorm en huidskleur van je virtuele paspop aan. DressApp verwijdert automatisch de achtergrond van je foto en detecteert exact je schouder-, taille-, heup- en beenpunten zodat elk kledingstuk in je kast op je echte lichaamsverhoudingen aansluit.
-   - Schakel het **2D Point-Cloud Fit Mesh** in op het avatarpodium om je anatomische ankerpunten in realtime te bekijken.
+1. **Foto's & Persoonlijke 3D-Avatar**:
+   - Pas je realistische **dynamische 3D-avatar** aan, die in realtime reageert op je lichaamsmaten en 8 natuurlijke huidtinten, of upload een volledige lichaamsfoto voor persoonlijke pasbeurten. DressApp lijnt elk kledingstuk en accessoire automatisch uit op je exacte schouder-, borst-, taille-, heup-, arm-, been- en voetpunten.
+   - Schakel het **Point-Cloud Fit Mesh** in op het avatarpodium om je anatomische ankerpunten in realtime te bekijken.
 
 2. **Stijlvoorkeuren**:
    - Kies je favoriete stijlen, voorkeurskleuren, items die je liever vermijdt en je gewenste bedekkingsgraad (Casual, Gemiddeld of Conservatief). Je AI-stylist volgt deze voorkeuren bij elke outfitsuggestie.
@@ -16,7 +16,7 @@ Op je **Profiel**-pagina kun je personaliseren hoe DressApp bij je lichaam past,
    - Als je inlogt met Google, kun je je basisgegevens met één klik invullen.
 
 4. **Lichaamsmaten & Kledingmaten**:
-   - Voer slechts vier basismaten in — **Lengte**, **Gewicht**, **Taille** en **Voetlengte** — en DressApp schat automatisch je overige lichaamsmaten (**Schouders**, **Borst**, **Heupen**, **Mouwlengte**, **Binnenbeenlengte** en **Buitenbeenlengte**) om je 2D-avatar te kalibreren en goed passende kleding te vinden.
+   - Voer slechts vier basismaten in — **Lengte**, **Gewicht**, **Taille** en **Voetlengte** — en DressApp schat automatisch je overige lichaamsmaten (**Schouders**, **Borst**, **Heupen**, **Mouwlengte**, **Binnenbeenlengte** en **Buitenbeenlengte**) om je 3D-avatar dynamisch te schalen en goed passende kleding te vinden.
    - Je kunt elke afzonderlijke maat ook op elk moment handmatig aanpassen.
 
 5. **Levensstijl & Beroep**:

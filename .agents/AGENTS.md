@@ -72,4 +72,5 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 | `/Investor-pitch` | [investor-pitch](skills/investor-pitch/SKILL.md) | Craft clear, credible, and compelling investor pitches and competitor breakdowns for DressApp |
 | `/expo-tailwind-setup` | [expo-tailwind-setup](skills/expo-tailwind-setup/SKILL.md) | Set up Tailwind CSS v4 in Expo with react-native-css and NativeWind v5 for universal styling |
 | `/expo-web-to-native` | [expo-web-to-native](skills/expo-web-to-native/SKILL.md) | Migrate an existing web React app to a native iOS/Android app with Expo |
+| `/visual-guide` | [visual-user-guide](skills/visual-user-guide/SKILL.md) | Build visual infographic user guides and full-screen mobile screen-recording walkthroughs |
 

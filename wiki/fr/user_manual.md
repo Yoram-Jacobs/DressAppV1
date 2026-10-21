@@ -91,9 +91,9 @@ La page Profil sert de panneau de contrôle central pour DressApp. Les champs de
 
 ##### Dépendances et justification des sections en accordéon
 
-1. **Photos et scène de l'avatar numérique (`AvatarViewer2D` et `DynamicAvatar`)**
-   - **Pourquoi est-ce important ?** : Restitue votre identité visuelle sur toutes les toiles d'essayage grâce à une scène à double mode (découpe photo du corps réel segmentée ou mannequin vectoriel SVG 2D de Bézier dynamique).
-   - **Dépendances des sous-systèmes** : Les découpes photo sont détourées localement via U2-Net (`rembg`) et réduites dans le navigateur à un maximum de 1280 px à 82 % de qualité afin de respecter le plafond de document de 16 Mo de MongoDB. La scène applique des repères de positionnement calibrés (`top-[14.5%]` du col à l'encolure, `top-[36.5%]` de la ceinture à la taille, `bottom-[2%]` pour le plan des chaussures) et une mise à l'échelle proportionnelle poitrine/hanches ($scaleX$). Cliquez sur *Supprimer la photo* pour revenir instantanément au mannequin vectoriel SVG 2D.
+1. **Photos et scène d'avatar dynamique 3D (`AvatarViewer2D`, `DynamicAvatar` et `closetGarmentFitter`)**
+   - **Pourquoi est-ce important ?** : Génère votre identité visuelle sur tous les canevas d'essayage grâce à une scène bi-mode : un maillage humain 3D MB-Lab WebGL réaliste (`avatar_male_1.glb` et `avatar_female_1.glb`, avec repli SVG Bézier 2D) ou une découpe segmentée de votre photo en pied réelle.
+   - **Dépendances du sous-système** : L'avatar 3D se transforme dynamiquement dans un canevas orthographique `200 x 450` selon votre taille et vos circonférences corporelles (`scaleY` découplé de `scaleXZ`) et applique 8 nuances réalistes de carnation Monk (`SkinTonePicker.jsx`). Les découpes photo sont détourées localement via U2-Net (`rembg`) et réduites dans le navigateur à 1280 px maximum à 82 % de qualité pour respecter la limite de document de 16 Mo de MongoDB. Les 48 articles d'onboarding pré-ajustés ainsi que les découpes de la garde-robe utilisateur sont projetés via `closetGarmentFitter.js` et le découpage horizontal dynamique (`FittedGarmentLayer`) sur les épaules, les bras écartés, le torse, les jambes en posture en A et les pieds du modèle 3D. Cliquez sur *Supprimer la photo* pour revenir instantanément à l'avatar 3D.
 
 2. **Profil de style (Règles de pudeur, code vestimentaire)**
    - **Pourquoi est-ce important ?** : Établit des limites personnelles pour les tenues recommandées, empêchant l'IA de générer des suggestions de style inappropriées.

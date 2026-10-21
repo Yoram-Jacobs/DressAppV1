@@ -2857,6 +2857,8 @@ export default function Stylist() {
             <div className="relative w-full h-full bg-[#ddd] rounded-[12px] overflow-hidden border border-border aspect-[4/5]">
               <AvatarViewer
                 shapeParams={user?.avatar_shape_params || {}}
+                measurements={user?.body_measurements || user?.measurements}
+                skinColor={user?.skin_tone}
                 sex={user?.sex || 'female'}
                 outfitItems={getOutfitPiecesMap(selectedOutfitForDetail, closetItems)}
               />
@@ -3296,8 +3298,10 @@ export default function Stylist() {
                                     <div className="relative w-full aspect-[4/5] bg-[#ddd] overflow-hidden shrink-0">
                                       <AvatarViewer
                                         shapeParams={user?.avatar_shape_params || {}}
+                                        measurements={user?.body_measurements || user?.measurements}
+                                        skinColor={user?.skin_tone}
                                         sex={user?.sex || 'female'}
-                                        outfitItems={getOutfitPiecesMap(o)}
+                                        outfitItems={getOutfitPiecesMap(o, closetItems)}
                                       />
                                     </div>
                                     <div className="p-2">
@@ -3739,8 +3743,10 @@ export default function Stylist() {
                                         <div className="absolute inset-0 scale-[0.95]">
                                           <AvatarViewer
                                             shapeParams={user?.avatar_shape_params || {}}
+                                            measurements={user?.body_measurements || user?.measurements}
+                                            skinColor={user?.skin_tone}
                                             sex={user?.sex || 'female'}
-                                            outfitItems={getOutfitPiecesMap(dayOutfit)}
+                                            outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
                                           />
                                         </div>
                                       ) : (
@@ -3918,8 +3924,10 @@ export default function Stylist() {
                             <div className="absolute inset-0 scale-[0.9]">
                               <AvatarViewer
                                 shapeParams={user?.avatar_shape_params || {}}
+                                measurements={user?.body_measurements || user?.measurements}
+                                skinColor={user?.skin_tone}
                                 sex={user?.sex || 'female'}
-                                outfitItems={getOutfitPiecesMap(dayOutfit)}
+                                outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
                               />
                             </div>
                             <div className="absolute inset-0 bg-background/90 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
@@ -3963,7 +3971,13 @@ export default function Stylist() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-12 h-12 bg-secondary/10 rounded-full overflow-hidden border border-border shrink-0">
-                          <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(dayOutfit)} />
+                          <AvatarViewer
+                            shapeParams={user?.avatar_shape_params || {}}
+                            measurements={user?.body_measurements || user?.measurements}
+                            skinColor={user?.skin_tone}
+                            sex={user?.sex || 'female'}
+                            outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
+                          />
                         </div>
                         <div className="min-w-0 text-start">
                           <div className="text-[10px] uppercase tracking-wide text-rose-600 font-semibold">{t('calendar.scheduled', { defaultValue: 'Scheduled' })}</div>
@@ -4008,6 +4022,8 @@ export default function Stylist() {
                         <div className="w-full aspect-[4/5] bg-accent-beige overflow-hidden relative shrink-0">
                           <AvatarViewer
                             shapeParams={user?.avatar_shape_params || {}}
+                            measurements={user?.body_measurements || user?.measurements}
+                            skinColor={user?.skin_tone}
                             sex={user?.sex || 'female'}
                             outfitItems={getRecommendationPiecesMap(rec, closetItems)}
                           />
@@ -4054,7 +4070,13 @@ export default function Stylist() {
                             )}
                           >
                             <div className="w-full aspect-[4/5] bg-accent-beige overflow-hidden relative shrink-0">
-                              <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o)} />
+                              <AvatarViewer
+                                shapeParams={user?.avatar_shape_params || {}}
+                                measurements={user?.body_measurements || user?.measurements}
+                                skinColor={user?.skin_tone}
+                                sex={user?.sex || 'female'}
+                                outfitItems={getOutfitPiecesMap(o, closetItems)}
+                              />
                               {isAlreadyScheduled && (
                                 <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
                                   <Badge className="rounded-full bg-primary-brand text-white border-0 scale-90">

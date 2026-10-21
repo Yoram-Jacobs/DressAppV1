@@ -1,190 +1,114 @@
-# DressApp — 2Dアバター＆試着ポジショニングシステムアーキテクチャ (`Avatar.md`)
+# DressApp — 3Dダイナミックアバター＆バーチャル試着ポジショニングシステムアーキテクチャ (`Avatar.md`)
 
-> **ドキュメントバージョン:** 2.0  
-> **対象サブシステム:** フロントエンド2Dマネキン、リアルボディ写真切り抜き＆衣類オーバーレイエンジン  
-> **コアファイル:** `AvatarViewer2D.jsx`, `DynamicAvatar.jsx`, `OutfitCanvas.jsx`, `Profile.jsx`  
-> **ステータス:** 本番稼働中＆調整済み  
+> **ドキュメントバージョン:** 3.0  
+> **対象サブシステム:** フロントエンド 3D MB-Lab WebGLアバター、実写全身写真切り抜き＆解剖学的衣類オーバーレイエンジン  
+> **主要ファイル:** `DynamicAvatar.jsx`, `AvatarViewer2D.jsx`, `closetGarmentFitter.js`, `SkinTonePicker.jsx`, `fit_onboarding_garments_to_avatar.py`, `onboardingDataset.js`  
+> **ステータス:** 本番環境リリース・キャリブレーション済み  
 
 ---
 
 ## 1. エグゼクティブサマリーと価値提案
 
-### 1.1 ハイレベルの概要
-**DressApp 2Dアバター＆試着ポジショニングシステム**は、リアルタイムで適応型のビジュアル試着環境を提供します。ユーザーは、**切り抜かれたリアルな身体写真**、または**動的に変形する2DベジェベクターSVGマネキン**の上に、デジタル化されたクローゼットの衣類をスムーズに重ね合わせてプレビューできます。
+### 1.1 ハイレベル概要
+**DressApp 3Dダイナミックアバター＆バーチャル試着ポジショニングシステム**は、リアルタイムで適応するビジュアル試着環境を提供します。ユーザーは、デジタル化したクローゼットの衣類やスターターカプセルの定番アイテムを、**セグメント化された実写の全身写真**、またはキャリブレーション済みの`200 x 450`平行投影（orthographic）viewBox内でThree.js / React Three Fiberによって描画される**リアルな3D MB-Labヒューマンメッシュ**（`avatar_male_1.glb`および`avatar_female_1.glb`、自動2DベジェSVGフォールバック付き）の上にシームレスに重ねてプレビューできます。
 
-多様な衣服スタイル（コンプレッションシャツ、ポロシャツの襟、クルーネック、ローライズジーンズ、カーゴショーツ、フォーマルドレスなど）にわたって高い視覚的精度を提供するために、エンジンは解剖学的ランドマーク校正、比例比率スケーリング、および歪みのない画像オーバーレイコンテナを利用しています。
+あらゆる衣類カテゴリ（トップス、シャツ、アウター、パンツ、スカート、全身の伝統・民族衣装、靴、アクセサリー）で高い視覚的精度を実現するため、本エンジンは**正確な3D平行投影シルエットランドマーク**、**2段階ハイブリッド衣類フィッター**、および**リアルタイム水平スライスワーピング**を組み合わせています。
 
 ```mermaid
 flowchart TD
-    subgraph UserProfile["ユーザープロファイルと寸法"]
-        U_Photo["リアルボディ写真のアップロード"]
-        U_Tone["肌のトーンパレットの選択"]
-        U_Params["体型パラメーター (高身長/低身長、太め/細め、バスト、ウエスト、ヒップ)"]
-        U_Sizing["ANSUR II サイズ予測器 (身長、体重、ウエスト、足 -> 10種類の体型メトリクス)"]
+    subgraph UserProfile["User Profile & Measurements"]
+        U_Photo["Real Body Photo Upload"]
+        U_Tone["8 Monk Skin Tone Swatches (SkinTonePicker.jsx)"]
+        U_Sizing["ANSUR II Sizing Predictor (Height, Weight, Waist, Foot -> 10 Body Metrics)"]
     end
 
-    subgraph BackendIngest["バックエンド処理と切り抜き"]
-        Rembg["ローカル U2-Net 切り抜き / セグメンテーション"]
-        Mongo["MongoDB Atlas プロファイル同期"]
+    subgraph AvatarEngine["Frontend Avatar Rendering Engine (DynamicAvatar.jsx & AvatarViewer2D.jsx)"]
+        ModeCheck{"Active Body Photo?"}
+        PhotoView["Real-Body Cutout Layer + extractBodyPhotoAnatomy"]
+        Mesh3DView["3D MB-Lab WebGL Mesh (avatar_male_1.glb / avatar_female_1.glb)"]
+        SvgFallback["2D Bezier SVG Fallback Mannequin"]
+        AnatomyEngine["getFullAvatarAnatomy (200 x 450 Orthographic Landmarks)"]
     end
 
-    subgraph AvatarEngine["フロントエンドアバターレンダリングエンジン (AvatarViewer2D.jsx)"]
-        ModeCheck{"アクティブな身体写真あり？"}
-        PhotoView["リアルボディ切り抜きレイヤー"]
-        MannequinView["動的SVGベクターマネキン (DynamicAvatar.jsx)"]
-        
-        GarmentResolver["衣類カテゴリー＆グループスロットリゾルバー"]
-        LandmarkCalc["解剖学的ランドマークポジショニングエンジン"]
+    subgraph GarmentFitting["Two-Tier Hybrid Garment Fitter & Live Warping"]
+        StarterCapsule["48 Pre-Fitted Starter Assets (fit_onboarding_garments_to_avatar.py)"]
+        Tier1Warp["Tier 1: Real-Photo Alpha-Contour Warping (closetGarmentFitter.js)"]
+        Tier2Bezier["Tier 2: Procedural Cubic-Bezier Reconstruction"]
+        SliceWarper["Live 28-Band Horizontal Slice Warper (FittedGarmentLayer)"]
+        AccessoryAnchor["Dynamic liveAnatomy Accessory Anchoring"]
     end
 
-    subgraph OverlayGeometry["衣類レイヤー幾何学"]
-        TopLayer["トップス / アウターレイヤー (top-[14.5%], w-[82%], h-[38%])"]
-        BottomLayer["ボトムス / ベルトレイヤー (top-[36.5%], w-[62%], h-[50%])"]
-        ShoesLayer["シューズレイヤー (bottom-[2%], w-[46%], h-[12%])"]
-        AccessoryLayers["ヘッドウェア / メガネ / アクセサリー / バッグ"]
-    end
-
-    U_Photo --> Rembg --> Mongo
-    U_Params & U_Sizing --> MannequinView
-    U_Tone --> MannequinView
-    
-    ModeCheck -- はい --> PhotoView
-    ModeCheck -- いいえ --> MannequinView
-
-    GarmentResolver --> LandmarkCalc
-    LandmarkCalc --> TopLayer & BottomLayer & ShoesLayer & AccessoryLayers
-    TopLayer & BottomLayer & ShoesLayer & AccessoryLayers --> PhotoView & MannequinView
+    U_Photo --> PhotoView
+    U_Tone & U_Sizing --> Mesh3DView
+    U_Sizing --> AnatomyEngine
+    ModeCheck -- Yes --> PhotoView
+    ModeCheck -- No --> Mesh3DView
+    Mesh3DView -. "Headless / Non-WebGL" .-> SvgFallback
+    AnatomyEngine --> StarterCapsule & Tier1Warp & Tier2Bezier & SliceWarper & AccessoryAnchor
+    StarterCapsule & Tier1Warp & Tier2Bezier --> SliceWarper
+    SliceWarper & AccessoryAnchor --> PhotoView & Mesh3DView
 ```
 
-### 1.2 ユーザー価値提案
-* **解剖学的配置の精度**: シャツの襟をアバターのネックライン（`top-[14.5%]`）に、ショーツ/パンツのウエストバンドを自然なウエストライン（`top-[36.5%]`）にぴったり合わせ、顔の重なりや不自然な隙間を排除します。
-* **デュアルアバターの柔軟性**: セグメント化された個人用の全身写真と、正確な人体測定値に基づいて構築された動的2DベクターSVGマネキンを瞬時に切り替えられます。
-* **比例アスペクト比の保持**: 衣類画像の本来のアスペクト比（`object-fit: contain`）を維持しながら、胸囲とヒップ幅のスケーリング（$scaleX$）を適用し、不必要な引き伸ばしや圧縮を防ぎます。
-* **インタラクティブなレイヤー階層構造**: インナートップスやドレスの上にアウターウェアを重ねつつ、個々の衣類レイヤーを直接タップ/クリックしてアイテムの詳細を開くことができます。
+### 1.2 ユーザーへの価値提案
+* **リアルな3D MB-Labヒューマンメッシュ**: 平面的な2Dシルエットを、足をわずかに広げ、手のひらと腰の間に自然な空間を保って腕を下ろしたAスタンスで真っ直ぐ立つリアルな3D男性（`avatar_male_1.glb`）および女性（`avatar_female_1.glb`）メッシュに置き換えます。
+* **ダイナミックな体型モーフィング＆8種類のMonkスキントーン**: 物理ベースシェーダー（`MeshPhysicalMaterial`）を介して、ユーザーのサイズ測定値（身長、体重、肩幅、胸囲、ウエスト、ヒップ）と8種類のリアルな肌色（`#F6EDE4`〜`#3A2518`）にリアルタイムで反応します。
+* **3Dキャリブレーション済みの衣類＆アクセサリー座標**: 48点のスターターカプセル衣類と任意のユーザークローゼットアイテムを、広げた腕（`wElbowOut`, `wWristOut`）、胴体幅、Aスタンスの脚（`wOuterKnee`, `wOuterAnkle`）、広げた足元（`wFootTip`, `wFootHeel`）を含む正確な3Dシルエット座標にマッピングします。
+* **デュアルアバターの柔軟性**: セグメント化された個人の全身写真と3Dダイナミックアバターをいつでもシームレスに切り替えられます。
 
 ---
 
-## 2. 包括的ユーザーマニュアルとインターフェース構造
+## 2. 3Dアバターアーキテクチャ (`DynamicAvatar.jsx`)
 
-### 2.1 ビジュアルインターフェース構造
+### 2.1 Blender MB-Labアセットと平行投影カメラキャリブレーション
+* **アセット**:
+  * 男性メッシュ: `apps/web/public/models/avatar_male_1.glb`（`height = 1.7877 m`、床面オフセット `ymin = -0.0061 m`）
+  * 女性メッシュ: `apps/web/public/models/avatar_female_1.glb`（`height = 1.6873 m`、床面オフセット `ymin = -0.0061 m`）
+* **平行投影（Orthographic Projection）**:
+  * 論理viewBox `200 x 450`（`aspect = 200 / 450`）内で `<Canvas orthographic camera={{ zoom: 109, position: [0, 0, 5] }}>` により描画されます。
+  * `zoom = 109`において`1メートル = 109 SVGユニット`となり、`450`ユニットキャンバスの垂直中心が`Y = 225`に配置されます。
+* **分離型比例スケーリング (`Realistic3DAvatarMesh`)**:
+  * 垂直スケール（`scaleY`）は `targetSvgHeight / (baseModelHeightM * 109)` から直接計算され、`yFeet`（`baseModelYMinM = -0.0061`）に固定されるため、あらゆる身長（`140 cm`〜`210 cm`）で `getFullAvatarAnatomy` との1対1の垂直アライメントが保証されます。
+  * 水平スケール（`scaleX`, `scaleZ`）は、基準人体測定値に対する `chest`、`waist`、`hip`、`shoulders` の加重比率（`scaleXZ`）から独立して計算され、身長の変更によって胴体や四肢が不自然に太くなったり細くなったりするのを防ぎます。
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                      2D アバター試着キャンバス                   │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│                        [ ヘッドウェア (top: 1%) ]                │
-│                        [ メガネ       (top: 11%) ]               │
-│                        [ ネックライン (top: 14.5%) ] ◄─ シャツ襟  │
-│                     ┌──────────────────────────┐                 │
-│                     │     トップス / アウター   │                 │
-│                     │       (height: 38%)      │                 │
-│                     └──────────────────────────┘                 │
-│                        [ ウエスト     (top: 36.5%) ] ◄─ ウエスト   │
-│                     ┌──────────────────────────┐                 │
-│                     │    ボトムス / ショーツ   │                 │
-│                     │       (height: 50%)      │                 │
-│                     │                          │                 │
-│                     └──────────────────────────┘                 │
-│                        [ 足           (bottom: 2%) ] ◄── 履物    │
-│                        [ シューズ     (height: 12%) ]            │
-│                                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│ [ モード切り替え ]   [ 肌トーン選択 ]   [ 体型メトリクス編集 ]    │
-└──────────────────────────────────────────────────────────────────┘
-```
+### 2.2 3D平行投影シルエットランドマーク (`getFullAvatarAnatomy`)
+`avatar_male_1.glb` と `avatar_female_1.glb` の三角形メッシュを1ユニットの垂直間隔で `200 x 450` のSVG座標空間にラスタライズすることで、`getFullAvatarAnatomy` は正確な基準ランドマーク（`heightRatio` と周囲長比率によって動的にスケール）を公開します：
 
-### 2.2 モードとワークフローのチュートリアル
-
-#### モード 1: リアルボディ写真切り抜きレイヤー
-1. **プロファイル設定**（`/me`）を開きます。
-2. 全身写真をアップロードします。バックエンドは `rembg`（U2-Net）を介して背景セグメンテーションを実行し、背景のノイズを除去します。
-3. 処理された切り抜き画像URL（`body_photo_url`）がMongoDB内のユーザープロファイルを更新し、`AvatarViewer2D`コンテナ内にレンダリングされます。
-4. ベクターマネキンに戻すには、プロファイルページで**写真を削除**をクリックします。UIはページをリロードすることなく瞬時に更新されます。
-
-#### モード 2: 動的ベクターSVGマネキン
-1. 身体写真が存在しない場合、`AvatarViewer2D`は `DynamicAvatar.jsx` をレンダリングします。
-2. マネキンは、固定された `0 0 200 450` SVG viewBox 内で連続する3次ベジェ曲線（$C$ および $S$ コマンド）を生成します。
-3. 身体パラメーター（身長、体重、ウエスト、胸囲、肩幅、ヒップ）を調整するか、肌のトーンを選択すると、マネキンのシルエットがリアルタイムで動的に変化します。
-
----
-
-## 3. テクノロジースタックと機能の深掘り
-
-### 3.1 解剖学的楕円ディバイダーとベジェマネキンジェネレーター
-
-`DynamicAvatar.jsx` は、**解剖学的楕円ディバイダー**（$\text{DIVISOR} = 2.65$）を使用して、3D解剖学的外周から2D平面投影幅を計算します。
-
-$$\begin{aligned}
-w_{\text{shoulders}} &= (\text{shoulders} \times 1.1) \times (1.05 \text{ if male else } 0.95) \\
-w_{\text{chest}} &= \left(\frac{\text{chest}}{2.65} \times 1.05\right) \times (1.02 \text{ if male else } 1.0) \\
-w_{\text{waist}} &= \left(\frac{\text{waist}}{2.65} \times 1.0\right) \times (0.98 \text{ if male else } 0.90) \\
-w_{\text{hip}} &= \left(\frac{\text{hip}}{2.65} \times 1.05\right) \times (0.93 \text{ if male else } 1.05)
-\end{aligned}$$
-
-身体のシルエットは、3次ベジェ制御点をマッピングするSVGパスコマンドを介して構築されます。
-
-```javascript
-// Bezier contour snippet from DynamicAvatar.jsx
-const bodyPath = [
-  `M ${pNeckR}`,
-  `C ${X0 + wNeck + (wShoulders - wNeck) * 0.6},${yChin + neckHeight * 0.7} ${X0 + wShoulders * 0.9},${yShoulders - 2} ${pShoulderR}`,
-  `C ${X0 + wShoulders * 0.95},${yShoulders + (yChest - yShoulders) * 0.6} ${X0 + wChest + 2},${yChest - 5} ${pChestR}`,
-  `C ${X0 + wChest - 1},${yChest + (yWaist - yChest) * 0.5} ${X0 + wWaist + (isMale ? 1 : -2)},${yWaist - 8} ${pWaistR}`,
-  `C ${X0 + wWaist + (isMale ? 2 : 5)},${yWaist + (yHip - yWaist) * 0.4} ${X0 + wHip + 1},${yHip - 8} ${pHipR}`,
-  ...
-].join(' ');
-```
-
-### 3.2 校正済みランドマーク配置とコンテナCSS比率
-
-顔のパーツを覆ったり、体に隙間を作ったりすることなく衣類をぴったりフィットさせるために、`AvatarViewer2D.jsx` のオーバーレイコンテナは正確なCSS位置比率にバインドされています。
-
-| 衣類カテゴリー | CSS位置クラス | z-Index | 配置用解剖学的ランドマーク |
+| ランドマークグループ | 男性基準値 (`178 cm`) | 女性基準値 (`166 cm`) | 用途 |
 | --- | --- | --- | --- |
-| **ヘッドウェア** | `top-[1%] left-1/2 w-[34%] aspect-square` | `z-30` | 頭頂部 |
-| **メガネ** | `top-[11%] left-1/2 w-[18%] h-[4.5%]` | `z-28` | 目の水平線 |
-| **アクセサリー / ネックレス** | `top-[14.5%] left-1/2 w-[30%] aspect-square` | `z-25` | 首の付け根 |
-| **トップス (Top)** | `top-[14.5%] left-1/2 w-[82%] h-[38%]` | `z-20` | 襟からネックライン |
-| **アウターウェア** | `top-[14.5%] left-1/2 w-[86%] h-[42%]` | `z-22` | 肩にかかるコートのレイヤリング |
-| **ドレス** | `top-[14.5%] left-1/2 w-[82%] h-[68%]` | `z-20` | 首元から膝までのフルレングス |
-| **ベルト** | `top-[36.5%] left-1/2 w-[62%] h-[5%]` | `z-21` | ウエスト位置のベルトループ |
-| **ボトムス (パンツ/ショーツ)** | `top-[36.5%] left-1/2 w-[62%] h-[50%]` | `z-10` | ウエストバンドからウエストライン |
-| **シューズ / 履物** | `bottom-[2%] left-1/2 w-[46%] h-[12%]` | `z-15` | 足首から足底面 |
-| **ハンドバッグ** | `top-[40%] right-[-5%] w-[40%] h-[30%]` | `z-25` | 腕を下げた位置 |
-
-### 3.3 衣類の比例幅スケーリング
-
-空間的な配置に加えて、ユーザーが選択した身体パラメーター（胸囲が大きい、太め、細め、ウエストが太い、ヒップが広い）に基づいて、衣類は水平方向（$scaleX$）に動的にスケールされます。
-
-```javascript
-// Derivation of garment container scale factors in AvatarViewer2D.jsx
-const scales = useMemo(() => {
-  const heightFactor = 1 + (params.tall * 0.08) - (params.short * 0.08);
-  const widthFactor = 1 + (params.heavy * 0.12) - (params.thin * 0.12);
-  const chestFactor = 1 + (params.busty * 0.1);
-  const waistFactor = 1 + (params.waist_thick * 0.12) - (params.waist_thin * 0.08);
-  const hipsFactor = 1 + (params.hips_wide * 0.12) - (params.hips_narrow * 0.08);
-
-  return { height: heightFactor, width: widthFactor, chest: chestFactor, waist: waistFactor, hips: hipsFactor };
-}, [params]);
-
-// Passed to Framer Motion animate prop for Top and Bottom:
-// Top: scaleX = scales.chest / scales.width
-// Bottom: scaleX = scales.hips / scales.width
-```
+| **垂直胴体ゾーン** | `yChin: 58.5`, `yShoulders: 68.0`, `yChest: 100.0`, `yWaist: 138.0`, `yHip: 175.0`, `yCrotch: 190.0` | `yChin: 77.0`, `yShoulders: 87.0`, `yChest: 118.0`, `yWaist: 147.0`, `yHip: 185.0`, `yCrotch: 199.0` | 襟、肩の縫い目、胸囲/バスト、ウエストバンド、骨盤、股下の分岐 |
+| **垂直四肢ゾーン** | `yElbow: 134.0`, `yWrist: 186.0`, `yKnees: 278.0`, `yAnkles: 356.0`, `yFeet: 382.0` | `yElbow: 148.0`, `yWrist: 195.0`, `yKnees: 282.0`, `yAnkles: 356.0`, `yFeet: 382.0` | 半袖/七分袖/長袖の裾、ショート/ミディ/アンクル丈の裾、靴の配置 |
+| **胴体半幅** | `wNeck: 12.1`, `wShoulders: 38.6`, `wChest: 28.0`, `wWaist: 22.8`, `wHip: 25.8` | `wNeck: 10.5`, `wShoulders: 32.5`, `wChest: 24.4`, `wWaist: 19.6`, `wHip: 26.8` | ネックライン開口部、肩の傾斜、胴体サイドシーム、ヒップのドレープ |
+| **広げた腕の境界** | `wElbowOut: 49.0`, `wElbowIn: 32.8`, `wWristOut: 61.0`, `wWristIn: 47.2` | `wElbowOut: 41.2`, `wElbowIn: 28.8`, `wWristOut: 53.0`, `wWristIn: 42.8` | 角度のついた袖のコリドーおよび手首/腕時計/手袋のアンカー |
+| **Aスタンスの脚＆足の境界** | `wOuterKnee: 33.8`, `wInnerKnee: 16.5`, `wOuterAnkle: 37.8`, `wInnerAnkle: 26.2`, `wFootTip: 42.2`, `wFootHeel: 24.0` | `wOuterKnee: 31.8`, `wInnerKnee: 16.2`, `wOuterAnkle: 36.2`, `wInnerAnkle: 26.0`, `wFootTip: 40.2`, `wFootHeel: 23.0` | パンツの脚筒、スカートの裾、左右のフットウェアボックス |
 
 ---
 
-## 4. 位置＆比例補正の要約マトリクス
+## 3. 2段階ハイブリッド衣類フィッター＆リアルタイムスライスワーピング
 
-| 特定された問題 | 原因 | 適用された修正 | 結果 |
-| --- | --- | --- | --- |
-| **シャツの襟が顔に重なる** | オフセット位置が高すぎた（`top-[8.3%]` または `top-[12.8%]`） | 上部コンテナオフセットを `top-[14.5%]` に設定 | シャツの襟がアバターのネックラインにぴったり収まる。 |
-| **パンツ/ショーツの位置が低いか裾に重なる** | オフセット位置が低すぎた（`top-[38.5%]`） | 下部コンテナオフセットを `top-[36.5%]` に設定 | パンツのウエストバンドが自然なウエストラインにぴったりフィットする。 |
-| **衣類のアスペクト比の歪み** | 制約のないコンテナの引き伸ばし | 比例的な `scaleX` 調整を伴う `object-fit: contain` を適用 | 水平方向の歪みなしに、衣類画像の本来のアスペクト比を維持。 |
-| **写真削除時のラグ** | ページ状態の再取得が必要だった | `Profile.jsx` 内で即時のローカルユーザー状態同期を実装 | UIの遅延や壊れた状態なしに写真削除が即座に反映される。 |
+### 3.1 事前フィット済みオンボーディングスターターカプセル (`scripts/fit_onboarding_garments_to_avatar.py`)
+* `apps/web/public/assets/onboarding/` 内の全48点の透明RGBA切り抜き画像（解像度 $900 \times 1500$ の `*_fitted.png` および `.jpg`）と、`apps/web/src/lib/onboardingDataset.js` 内の `default_viewbox` および `point_cloud` メタデータを生成します。
+* `getFullAvatarAnatomy` に準拠した `compute_avatar_geometry` を使用し、トップス/アウターが3Dの広げた腕のコリドー（`wElbowOut`/`wWristOut`）に沿い、パンツ/ジーンズがAスタンスの脚の中心線（`legTopCenter` → `kneeCenter` → `ankleCenter`）に沿い、スカートがAスタンスのふくらはぎの上に自然に広がり、ペアの靴が `(FootHeel..FootTip, yAnkles..yFeet)` の上に正確に配置されるようにします。
+
+### 3.2 ランタイムクローゼット衣類フィッター (`closetGarmentFitter.js`)
+* **解剖学的エンベロープ (`getGarmentAnatomicalEnvelope`)**: すべての衣類カテゴリに対して、ターゲットバウンディングボックス（`default_viewbox`）と解剖学的ランドマーク（`wElbowOut`, `wElbowIn`, `wWristOut`, `wWristIn`, `wOuterKnee`, `wInnerKnee`, `wOuterAnkle`, `wInnerAnkle`, `leftAnkleX`, `rightAnkleX`）を計算します。
+* **ティア1 — 実写アルファ輪郭ワーピング (`warpRealGarmentPhotoToDefaultCanvas`)**:
+  * トップス、シャツ、ドレス、アウターを3Dアバターの首の付け根（`yNeckBase`）と肩幅（`shoulderSpan`）に固定し、3Dの腕の角度に沿って袖を綺麗にマッピングします。
+  * 厳格な**股下バリア（`yCrotchTarget >= yCrotch`）**を適用しつつ股上のスタイルに応じてパンツ/スカートを `yWaist` と `yHip` の間に配置し、左右のパンツの脚をヒップから足首まで3DアバターのAスタンスの脚中心線に沿って変換します。
+  * ペアの靴の切り抜き画像（`analyzeFootwearCutout`）を分割し、左右の靴を `leftAnkleX` と `rightAnkleX`（`±(wFootTip + wFootHeel) / 2`）にマッピングします。
+* **ティア2 — プロシージャル3次ベジェ再構築 (`renderProceduralBezierFittedGarment`)**:
+  * 3Dアバターの腕、胴体、脚、足の座標にバインドされた3次ベジェパスを使用するフォールバックシルエットジェネレーターです。
+
+### 3.3 リアルタイム水平スライスワーピング＆アクセサリー配置 (`AvatarViewer2D.jsx`)
+* **水平スライスワーピング (`FittedGarmentLayer`)**:
+  * フィット済みの各衣類を `default_viewbox` 全体にわたって`28`個の水平スライスに分割します。
+  * 各スライスの基準垂直中点（`y0Mid`）をユーザーのリアルタイム測定モーフィング垂直位置（`mapBaselineYToLiveY`）と水平幅比率（`getLiveWidthScaleAtY`）にマッピングし、あらゆる身長・体型幅に合わせて衣類を動的に伸縮・配置します。
+* **ダイナミックな `liveAnatomy` アクセサリー固定 (`renderGarment`)**:
+  * **帽子・ヘッドウェア**: `X = 100` を中心とし、`yCrown` と `yHeadCenter` に固定（`width = wHead * 2.55`）。
+  * **メガネ・サングラス**: 目の高さに配置（`yCrown + (yChin - yCrown) * 0.43`、`width = wHead * 1.95`）。
+  * **イヤリング・ピアス**: 耳たぶの位置に配置（`yChin - 12` 〜 `yChin + 10`、`width = wHead * 2.35`）。
+  * **スカーフ / ネックウェア＆ネックレス / ネクタイ**: `yNeckBase` に固定し、`wNeck` / `wShoulders` でスケーリング。
+  * **ベルト**: `yWaist + (yHip - yWaist) * 0.22` を中心に配置（`width = wWaist * 2.18`）。
+  * **腕時計 / ブレスレット＆手袋**: 広げた3D手首座標（`yWrist`, `wWristOut`）に固定。
 
 ---
-
-*Document compiled automatically by Narrator for DressApp.*
+*本ドキュメントは DressApp Engineering により管理されています。*

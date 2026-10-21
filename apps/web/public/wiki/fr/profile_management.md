@@ -4,9 +4,9 @@ Votre page **Profil** vous permet de personnaliser la façon dont DressApp s'ada
 
 ## Sections du Profil
 
-1. **Photos et Avatar Personnel** :
-   - Importez une photo en pied pour des essayages virtuels réalistes, ou personnalisez la morphologie et le teint de votre mannequin virtuel. DressApp supprime automatiquement l'arrière-plan de votre photo et détecte avec précision vos épaules, votre taille, vos hanches et vos jambes afin que chaque vêtement de votre garde-robe épouse vos proportions réelles.
-   - Activez le **Maillage d'Ajustement Nuage de Points 2D** sur la scène de votre avatar pour inspecter vos repères anatomiques en temps réel.
+1. **Photos et Avatar Personnel 3D** :
+   - Personnalisez votre **Avatar Dynamique 3D** réaliste, qui réagit en temps réel à vos mensurations et à 8 carnations naturelles, ou importez une photo en pied pour des essayages personnels. DressApp aligne automatiquement chaque vêtement et accessoire sur vos repères exacts d'épaules, de poitrine, de taille, de hanches, de bras, de jambes et de pieds.
+   - Activez le **Maillage d'Ajustement par Nuage de Points** sur la scène de votre avatar pour inspecter vos repères anatomiques en temps réel.
 
 2. **Préférences de Style** :
    - Choisissez vos esthétiques favorites, vos couleurs préférées, les pièces à éviter et votre niveau de modestie (Décontracté, Modéré ou Conservateur). Votre Styliste IA respecte ces préférences à chaque suggestion.
@@ -16,7 +16,7 @@ Votre page **Profil** vous permet de personnaliser la façon dont DressApp s'ada
    - Si vous vous connectez avec Google, vous pouvez remplir vos coordonnées de base en un clic.
 
 4. **Mensurations et Tailles** :
-   - Saisissez seulement quatre mesures de base — **Taille (hauteur)**, **Poids**, **Tour de taille** et **Longueur du pied** — et DressApp estime automatiquement le reste de vos mensurations (**Épaules**, **Poitrine**, **Hanches**, **Longueur de manche**, **Entrejambe** et **Longueur extérieure**) pour calibrer votre Avatar 2D et trouver des vêtements bien ajustés.
+   - Saisissez seulement quatre mesures de base — **Taille (hauteur)**, **Poids**, **Tour de taille** et **Longueur du pied** — et DressApp estime automatiquement le reste de vos mensurations (**Épaules**, **Poitrine**, **Hanches**, **Longueur de manche**, **Entrejambe** et **Longueur extérieure**) pour adapter dynamiquement votre Avatar 3D et trouver des vêtements bien ajustés.
    - Vous pouvez également affiner chaque mesure manuellement à tout moment.
 
 5. **Mode de Vie et Profession** :
