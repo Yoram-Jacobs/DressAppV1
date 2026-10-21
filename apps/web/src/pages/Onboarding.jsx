@@ -139,7 +139,7 @@ function computeFallbackPrediction({ height_cm, weight_kg, waist_cm, foot_length
 }
 
 export default function Onboarding() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const nav = useNavigate();
   const location = useLocation();
   const { user, updateUserLocal, refresh } = useAuth();
@@ -154,10 +154,26 @@ export default function Onboarding() {
     });
     return {
       ...DEFAULT_ONBOARDING_DRAFT,
+      preferred_language: (i18n.language || 'en').split('-')[0].toLowerCase(),
       starter_item_ids: autoIds,
       predicted_sizes: initialFallback,
     };
   });
+
+  // Sync user's preferred_language or active i18n language into the onboarding draft
+  useEffect(() => {
+    const userLang = user?.preferred_language?.split('-')[0]?.toLowerCase();
+    if (userLang && !localStorage.getItem('dressapp.lang') && i18n.language !== userLang) {
+      i18n.changeLanguage(userLang).catch(() => {});
+    }
+  }, [user?.preferred_language, i18n]);
+
+  useEffect(() => {
+    const activeLang = (i18n.language || 'en').split('-')[0].toLowerCase();
+    if (draft.preferred_language !== activeLang) {
+      setDraft((prev) => saveOnboardingDraft({ preferred_language: activeLang }, prev));
+    }
+  }, [i18n.language, draft.preferred_language]);
 
   const [activeCategoryTab, setActiveCategoryTab] = useState('recommended');
   const [predictingFit, setPredictingFit] = useState(false);
@@ -305,8 +321,8 @@ export default function Onboarding() {
   );
 
   const assembledOutfit = useMemo(
-    () => assembleStarterOutfit(draft.starter_item_ids, weatherInfo.tempC),
-    [draft.starter_item_ids, weatherInfo.tempC]
+    () => assembleStarterOutfit(draft.starter_item_ids, weatherInfo.tempC, t),
+    [draft.starter_item_ids, weatherInfo.tempC, t]
   );
 
   const [showStep2Garments, setShowStep2Garments] = useState(true);
@@ -414,6 +430,7 @@ export default function Onboarding() {
         closetStore,
         currentUser: user,
         draft,
+        t,
       });
       if (updatedUser) {
         updateUserLocal?.(updatedUser);

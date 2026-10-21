@@ -94,6 +94,7 @@ export default function AuthCallback() {
               closetStore,
               currentUser: u,
               draft,
+              t,
             });
             await refresh().catch(() => {});
             if (

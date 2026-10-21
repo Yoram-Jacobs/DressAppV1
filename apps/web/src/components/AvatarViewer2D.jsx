@@ -666,14 +666,23 @@ export function resolveOnboardingAvatarFit(garment) {
 }
 
 function resolveEffectiveGarmentUrl(garment) {
+  if (garment?.avatar_overlay_url) {
+    return garment.avatar_overlay_url;
+  }
   const rawUrl = String(garment?.url || garment?.image_url || '');
   if (!rawUrl) return '';
-  if (garment?.id && ONBOARDING_DATASET_BY_ID[garment.id]?.image_url) {
-    return ONBOARDING_DATASET_BY_ID[garment.id].image_url;
+  if (garment?.id && ONBOARDING_DATASET_BY_ID[garment.id]) {
+    return (
+      ONBOARDING_DATASET_BY_ID[garment.id].avatar_overlay_url ||
+      ONBOARDING_DATASET_BY_ID[garment.id].image_url
+    );
   }
   const match = rawUrl.match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg)/i);
-  if (match && match[1] && ONBOARDING_DATASET_BY_ID[match[1]]?.image_url) {
-    return ONBOARDING_DATASET_BY_ID[match[1]].image_url;
+  if (match && match[1] && ONBOARDING_DATASET_BY_ID[match[1]]) {
+    return (
+      ONBOARDING_DATASET_BY_ID[match[1]].avatar_overlay_url ||
+      ONBOARDING_DATASET_BY_ID[match[1]].image_url
+    );
   }
   return rawUrl;
 }

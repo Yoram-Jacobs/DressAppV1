@@ -1,7 +1,176 @@
+import i18n from './i18n';
+import {
+  labelForSubCategory,
+  labelForItemType,
+  labelForColor,
+  labelForMaterial,
+} from './taxonomy';
 import {
   ONBOARDING_STATIC_DATASET,
   ONBOARDING_DATASET_BY_ID,
 } from './onboardingDataset';
+
+const ONBOARDING_DATASET_BY_IMAGE_URL = {};
+const ONBOARDING_DATASET_BY_EN_TITLE = {};
+ONBOARDING_STATIC_DATASET.forEach((tmpl) => {
+  if (tmpl.image_url) {
+    ONBOARDING_DATASET_BY_IMAGE_URL[tmpl.image_url] = tmpl;
+  }
+  if (tmpl.avatar_overlay_url) {
+    ONBOARDING_DATASET_BY_IMAGE_URL[tmpl.avatar_overlay_url] = tmpl;
+  }
+  if (tmpl.title) {
+    ONBOARDING_DATASET_BY_EN_TITLE[tmpl.title.trim().toLowerCase()] = tmpl;
+  }
+  if (tmpl.name) {
+    ONBOARDING_DATASET_BY_EN_TITLE[tmpl.name.trim().toLowerCase()] = tmpl;
+  }
+});
+
+/**
+ * Finds the matching starter capsule template (`ONBOARDING_STATIC_DATASET` entry)
+ * for a closet item or template object, or returns null if it is a user-uploaded item.
+ */
+export function findStarterTemplateForItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  if (item.id && ONBOARDING_DATASET_BY_ID[item.id]) {
+    return ONBOARDING_DATASET_BY_ID[item.id];
+  }
+  const urls = [item.clean_image_url, item.original_image_url, item.image_url].filter(Boolean);
+  for (const u of urls) {
+    if (ONBOARDING_DATASET_BY_IMAGE_URL[u]) {
+      return ONBOARDING_DATASET_BY_IMAGE_URL[u];
+    }
+    const match = String(u).match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg|jpeg|webp)/i);
+    if (match && ONBOARDING_DATASET_BY_ID[match[1]]) {
+      return ONBOARDING_DATASET_BY_ID[match[1]];
+    }
+  }
+  const isStarter =
+    Boolean(item.is_starter_capsule) ||
+    (Array.isArray(item.tags) && item.tags.includes('starter_capsule'));
+  if (isStarter) {
+    const titleKey = String(item.title || item.name || '').trim().toLowerCase();
+    if (titleKey && ONBOARDING_DATASET_BY_EN_TITLE[titleKey]) {
+      return ONBOARDING_DATASET_BY_EN_TITLE[titleKey];
+    }
+  }
+  return null;
+}
+
+/**
+ * Localizes a starter capsule item's details (`title`, `name`, `caption`,
+ * `sub_category`, `item_type`, `color`, `colors`, `material`, `fabric_materials`)
+ * into the user's active language when those fields still hold the default
+ * template values. Non-starter items or user-customized fields are preserved as-is.
+ */
+export function localizeStarterItem(item, tFn) {
+  if (!item || typeof item !== 'object') return item;
+  const template = findStarterTemplateForItem(item);
+  if (!template) return item;
+
+  const translate =
+    typeof tFn === 'function'
+      ? tFn
+      : typeof i18n?.t === 'function'
+        ? i18n.t.bind(i18n)
+        : null;
+  if (!translate) return item;
+
+  const sid = template.id;
+  const localizedTitle = translate(`onboarding.items.${sid}`, {
+    defaultValue: template.title || template.name,
+  });
+  const localizedCaption = translate(`onboarding.itemCaptions.${sid}`, {
+    defaultValue: template.caption || '',
+  });
+  const localizedSubCategory = labelForSubCategory(template.sub_category, translate);
+  const localizedItemType = translate(`onboarding.itemTypes.${sid}`, {
+    defaultValue: labelForItemType(template.item_type, translate) || template.item_type || '',
+  });
+
+  const isDefaultText = (val, tmplVal) => {
+    if (!val) return true;
+    const norm = String(val).trim();
+    if (!norm) return true;
+    return norm.toLowerCase() === String(tmplVal || '').trim().toLowerCase();
+  };
+
+  const nextTitle = isDefaultText(item.title, template.title) ? localizedTitle : item.title;
+  const nextName = isDefaultText(item.name, template.name) ? localizedTitle : item.name;
+  const nextCaption = isDefaultText(item.caption, template.caption) ? localizedCaption : item.caption;
+  const nextSubCategory = isDefaultText(item.sub_category, template.sub_category)
+    ? localizedSubCategory
+    : item.sub_category;
+  const nextItemType = isDefaultText(item.item_type, template.item_type)
+    ? localizedItemType
+    : item.item_type;
+
+  const rawColors =
+    Array.isArray(item.colors) && item.colors.length > 0
+      ? item.colors
+      : Array.isArray(template.colors)
+        ? template.colors
+        : [];
+  const nextColors = rawColors.map((c, idx) => {
+    const tmplColorName = template.colors?.[idx]?.name || c?.name || '';
+    const currentName = c?.name || '';
+    const shouldLocalize = isDefaultText(currentName, tmplColorName);
+    return {
+      ...c,
+      name: shouldLocalize ? labelForColor(tmplColorName || currentName, translate) : currentName,
+    };
+  });
+
+  const nextColor = isDefaultText(item.color, template.color)
+    ? nextColors[0]?.name || labelForColor(template.color, translate)
+    : item.color;
+
+  const rawMaterials =
+    Array.isArray(item.fabric_materials) && item.fabric_materials.length > 0
+      ? item.fabric_materials
+      : Array.isArray(template.fabric_materials)
+        ? template.fabric_materials
+        : [];
+  const nextFabricMaterials = rawMaterials.map((m, idx) => {
+    const tmplMatName = template.fabric_materials?.[idx]?.name || m?.name || '';
+    const currentName = m?.name || '';
+    const shouldLocalize = isDefaultText(currentName, tmplMatName);
+    return {
+      ...m,
+      name: shouldLocalize ? labelForMaterial(tmplMatName || currentName, translate) : currentName,
+    };
+  });
+
+  const nextMaterial = isDefaultText(item.material, template.material)
+    ? nextFabricMaterials[0]?.name || labelForMaterial(template.material, translate)
+    : item.material;
+
+  const isOnboardingAssetUrl = (u) =>
+    !u || /\/assets\/onboarding\/[a-z0-9_]+\.(?:png|jpg|jpeg|webp)/i.test(String(u));
+  const realPhotoUrl = template.image_url;
+
+  return {
+    ...item,
+    name: nextName,
+    title: nextTitle,
+    caption: nextCaption,
+    sub_category: nextSubCategory,
+    item_type: nextItemType,
+    color: nextColor,
+    colors: nextColors,
+    material: nextMaterial,
+    fabric_materials: nextFabricMaterials,
+    image_url: isOnboardingAssetUrl(item.image_url) ? realPhotoUrl : item.image_url,
+    clean_image_url: isOnboardingAssetUrl(item.clean_image_url)
+      ? realPhotoUrl
+      : item.clean_image_url,
+    original_image_url: isOnboardingAssetUrl(item.original_image_url)
+      ? realPhotoUrl
+      : item.original_image_url,
+    avatar_overlay_url: template.avatar_overlay_url || item.avatar_overlay_url || null,
+  };
+}
 
 export const ONBOARDING_DRAFT_KEY = 'dressapp.onboarding_draft';
 export const ONBOARDING_COMPLETED_KEY = 'dressapp.onboarding_completed';
@@ -316,10 +485,11 @@ export function autoSelectStarterCapsule({
  * returning both `avatarOutfitItems` (keyed by slot for `<AvatarViewer />`) and
  * `outfitPieces` (ordered list of full garment objects for UI cards & `/stylist`).
  */
-export function assembleStarterOutfit(selectedIds = [], weatherTempC = 20) {
+export function assembleStarterOutfit(selectedIds = [], weatherTempC = 20, tFn = null) {
   const items = (selectedIds || [])
     .map((id) => ONBOARDING_DATASET_BY_ID[id])
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((tmpl) => localizeStarterItem(tmpl, tFn));
 
   const fullBodies = items.filter((i) => i.category === 'Full Body');
   const tops = items.filter((i) => i.category === 'Top');
@@ -337,14 +507,16 @@ export function assembleStarterOutfit(selectedIds = [], weatherTempC = 20) {
     role,
     name: item.name,
     title: item.title,
+    caption: item.caption,
     category: item.category,
     sub_category: item.sub_category,
     item_type: item.item_type,
     color: item.color,
-    url: item.image_url,
+    url: item.avatar_overlay_url || item.image_url,
     image_url: item.image_url,
     clean_image_url: item.image_url,
     original_image_url: item.image_url,
+    avatar_overlay_url: item.avatar_overlay_url || null,
     avatar_fit: item.avatar_fit || null,
   });
 
@@ -398,16 +570,38 @@ export async function flushOnboardingDraftToBackend({
   closetStore,
   currentUser,
   draft: explicitDraft,
+  t: explicitT,
 } = {}) {
   const draft = explicitDraft || getOnboardingDraft();
   if (!draft || !api) return { seededItems: [], updatedUser: currentUser };
+
+  const activeLang =
+    draft.preferred_language ||
+    (typeof i18n?.language === 'string' && i18n.language.split('-')[0].toLowerCase()) ||
+    currentUser?.preferred_language ||
+    'en';
+  if (activeLang && i18n && i18n.language !== activeLang && typeof i18n.changeLanguage === 'function') {
+    try {
+      await i18n.changeLanguage(activeLang);
+    } catch {
+      // ignore
+    }
+  }
+  const translate =
+    typeof explicitT === 'function'
+      ? explicitT
+      : typeof i18n?.t === 'function'
+        ? i18n.t.bind(i18n)
+        : null;
 
   const existingBM = currentUser?.body_measurements || currentUser?.measurements || {};
   const draftM = draft.measurements || {};
   const predicted = draft.predicted_sizes || {};
   const recSizes = predicted.recommended_sizes || {};
 
-  const profilePatch = {};
+  const profilePatch = {
+    preferred_language: activeLang,
+  };
 
   if (!existingBM.height || draft.step >= 2) {
     const heightCm = Number(draftM.height_cm) || existingBM.height || existingBM.height_cm || 168;
@@ -541,21 +735,22 @@ export async function flushOnboardingDraftToBackend({
       }
 
       try {
+        const localized = localizeStarterItem(template, translate);
         const created = await api.createItem({
           source: 'Private',
-          name: template.name,
-          title: template.title,
-          caption: template.caption,
+          name: localized.name,
+          title: localized.title,
+          caption: localized.caption,
           category: template.category,
-          sub_category: template.sub_category,
-          item_type: template.item_type,
+          sub_category: localized.sub_category,
+          item_type: localized.item_type,
           gender: template.gender,
           dress_code: template.dress_code,
           season: template.season,
-          color: template.color,
-          colors: template.colors,
-          material: template.material,
-          fabric_materials: template.fabric_materials,
+          color: localized.color,
+          colors: localized.colors,
+          material: localized.material,
+          fabric_materials: localized.fabric_materials,
           pattern: template.pattern,
           tags: Array.from(new Set(['starter_capsule', ...(template.tags || [])])),
           original_image_url: template.image_url,
@@ -582,7 +777,7 @@ export async function flushOnboardingDraftToBackend({
 
   // 3. Save assembled first outfit to sessionStorage so /stylist loads it on arrival
   try {
-    const assembled = assembleStarterOutfit(selectedIds);
+    const assembled = assembleStarterOutfit(selectedIds, 20, translate);
     const mappedAvatarItems = {};
     const garments = [];
     Object.entries(assembled.avatarOutfitItems || {}).forEach(([slot, entry]) => {
@@ -607,10 +802,13 @@ export async function flushOnboardingDraftToBackend({
       });
     });
     if (typeof window !== 'undefined' && Object.keys(mappedAvatarItems).length > 0) {
+      const firstOutfitName = translate
+        ? translate('onboarding.firstOutfitTitle', { defaultValue: 'My First AI Look' })
+        : 'My First AI Look';
       window.sessionStorage.setItem(
         ONBOARDING_FIRST_OUTFIT_KEY,
         JSON.stringify({
-          name: 'My First AI Look',
+          name: firstOutfitName,
           avatarOutfitItems: mappedAvatarItems,
           garments,
           createdAt: new Date().toISOString(),

@@ -81,6 +81,7 @@ import { api, client } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useOutfitStore, prewarmOutfits } from '@/lib/useOutfitStore';
+import { localizeStarterItem } from '@/lib/onboardingStore';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
 import {
@@ -176,6 +177,7 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
             matchedCi = ci;
           }
         }
+        const localizedCi = matchedCi ? localizeStarterItem(matchedCi) : localizeStarterItem(g);
         const role = g.role || g.category || 'item';
         const key = `${role}_${idx}`;
         map[key] = {
@@ -185,9 +187,10 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
           clean_image_url: matchedCi?.clean_image_url || g.clean_image_url || img,
           role: role,
           category: matchedCi?.category || g.category,
-          sub_category: matchedCi?.sub_category || g.sub_category,
-          name: matchedCi?.name || matchedCi?.title || g.name || g.title,
-          item_type: matchedCi?.item_type || g.item_type,
+          sub_category: localizedCi?.sub_category || matchedCi?.sub_category || g.sub_category,
+          name: localizedCi?.name || localizedCi?.title || matchedCi?.name || matchedCi?.title || g.name || g.title,
+          title: localizedCi?.title || localizedCi?.name || matchedCi?.title || matchedCi?.name || g.title || g.name,
+          item_type: localizedCi?.item_type || matchedCi?.item_type || g.item_type,
           avatar_fit: matchedCi?.avatar_fit || g.avatar_fit || null,
         };
       }
@@ -204,6 +207,7 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
         const role = item.role || closetItem?.category || 'item';
         const key = `${role}_${idx}`;
         if (closetItem) {
+          const localizedCi = localizeStarterItem(closetItem);
           map[key] = {
             id: closetItem.id,
             closet_item_id: closetItem.id,
@@ -217,9 +221,10 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
             image_variants: closetItem.image_variants,
             role: role,
             category: closetItem.category,
-            sub_category: closetItem.sub_category,
-            name: closetItem.name || closetItem.title,
-            item_type: closetItem.item_type
+            sub_category: localizedCi?.sub_category || closetItem.sub_category,
+            name: localizedCi?.name || localizedCi?.title || closetItem.name || closetItem.title,
+            title: localizedCi?.title || localizedCi?.name || closetItem.title || closetItem.name,
+            item_type: localizedCi?.item_type || closetItem.item_type
           };
         } else {
           map[key] = {

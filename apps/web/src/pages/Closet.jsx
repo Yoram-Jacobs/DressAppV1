@@ -58,6 +58,7 @@ import { SourceTagBadge } from "@/components/SourceTagBadge";
 import { OutfitCompletionSheet } from "@/components/OutfitCompletionSheet";
 import OnboardingMigrationModal from "@/components/OnboardingMigrationModal";
 import ClosetGuidedTour from "@/components/ClosetGuidedTour";
+import { localizeStarterItem } from "@/lib/onboardingStore";
 import { useTierLimits } from "@/hooks/useTierLimits";
 import { HashRepairChip } from "@/components/closet/HashRepairChip";
 import { ThumbRepairChip } from "@/components/closet/ThumbRepairChip";
@@ -131,9 +132,10 @@ function _matchesSource(item, requested) {
   return true;
 }
 
-function _matchesSearch(item, q) {
+function _matchesSearch(rawItem, q) {
   const needles = getSearchNeedles(q);
   if (needles.length === 0) return true;
+  const item = localizeStarterItem(rawItem) || rawItem;
   // Match any substring across user-visible fields and tags.
   const tagsStr = Array.isArray(item?.tags) ? item.tags.join(" ") : (item?.tags || "");
   const customTagsStr = Array.isArray(item?.custom_tags) ? item.custom_tags.join(" ") : (item?.custom_tags || "");
@@ -141,8 +143,12 @@ function _matchesSearch(item, q) {
   const haystack = [
     item?.title,
     item?.name,
+    rawItem?.title,
+    rawItem?.name,
+    item?.caption,
     item?.category,
     item?.sub_category,
+    item?.item_type,
     item?.color,
     item?.brand,
     item?.material,
@@ -2300,9 +2306,10 @@ export default function Closet() {
 }
 
 /* -------------------- shared card body -------------------- */
-function ItemCardInner({ item, isSelected, showCheckbox, score }) {
+function ItemCardInner({ item: rawItem, isSelected, showCheckbox, score }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const item = useMemo(() => localizeStarterItem(rawItem, t) || rawItem, [rawItem, t]);
   const groupItems = useMemo(() => {
     if (!item.group_id) return [];
     const allItems = (closetStore.getSnapshot().items || []).filter(Boolean);

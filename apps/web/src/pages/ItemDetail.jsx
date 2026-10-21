@@ -100,6 +100,7 @@ import { useAuth } from '@/lib/auth';
 import { useTierLimits } from '@/hooks/useTierLimits';
 import { isSTTSupported, createRecognition, startDictationSession } from '@/lib/speech';
 import { deriveSizeFromPreferences } from '@/lib/size_preferences';
+import { localizeStarterItem } from '@/lib/onboardingStore';
 import ItemDetailBanner from "../assets/img/inner6.webp";
 import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 
@@ -223,7 +224,8 @@ const EDITABLE_FIELDS = [
  * indicator — the user has to actually change the size for it to
  * be sent in a PATCH.
  */
-function toFormState(item, user = null) {
+function toFormState(rawItem, user = null, t = null) {
+  const item = localizeStarterItem(rawItem, t) || rawItem || {};
   // The analyser writes `colors` / `fabric_materials` as `[{name, pct}]`
   // arrays. We surface them as-is so the WeightedList editor can render
   // the per-material percentages. The legacy single-string `color` /
@@ -294,8 +296,8 @@ function toFormState(item, user = null) {
  *  were previously set are translated to ``null`` (clear the field).
  *  Multi-select arrays are sent as the full array whenever they differ.
  */
-function diffPatch(loaded, form, user = null) {
-  const baseline = toFormState(loaded, user);
+function diffPatch(loaded, form, user = null, t = null) {
+  const baseline = toFormState(loaded, user, t);
   const out = {};
   for (const key of EDITABLE_FIELDS) {
     const a = baseline[key];
@@ -733,7 +735,7 @@ export default function ItemDetail() {
         return;
       }
       setItem(data);
-      setForm(toFormState(data, user));
+      setForm(toFormState(data, user, t));
       if (data?.preferred_image_view) {
         setShowingOriginal(data.preferred_image_view === 'clean' || data.preferred_image_view === 'original');
       } else {
@@ -756,8 +758,8 @@ export default function ItemDetail() {
   }, []);
 
   const patch = useMemo(
-    () => (item && form ? diffPatch(item, form, user) : {}),
-    [item, form, user],
+    () => (item && form ? diffPatch(item, form, user, t) : {}),
+    [item, form, user, t],
   );
 
   const initialHostId = useMemo(() => {
@@ -777,6 +779,14 @@ export default function ItemDetail() {
   }, [deletedGroupMemberIds, addedGroupMembers, newUploadedMembers, hostIdState, initialHostId]);
 
   const isDirty = Object.keys(patch).length > 0 || groupIsDirty;
+
+  // Keep starter capsule item details adapted to the active language when user switches language
+  useEffect(() => {
+    if (item && !isDirty) {
+      setForm(toFormState(item, user, t));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.language]);
 
   useEffect(() => {
     if (item) {
@@ -1150,7 +1160,7 @@ export default function ItemDetail() {
   };
   const onDiscard = () => {
     if (!item) return;
-    setForm(toFormState(item, user));
+    setForm(toFormState(item, user, t));
 
     // Reset group edits
     setDeletedGroupMemberIds(new Set());
@@ -1195,7 +1205,7 @@ export default function ItemDetail() {
         fill_empty_only: isReceiptItem,
         image_url: activeImg || undefined,
       });
-      setForm(toFormState(res.item, user));
+      setForm(toFormState(res.item, user, t));
       toast.success(t('itemDetail.reanalyze.success') + " · Press Save to keep changes.");
     } catch (err) {
       const detail = err?.response?.data?.detail;

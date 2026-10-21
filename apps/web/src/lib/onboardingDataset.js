@@ -68,7 +68,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "minimalist",
       "abaya"
     ],
-    "image_url": "/assets/onboarding/w_abaya_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_abaya_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_abaya_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -788,7 +789,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "moroccan",
       "takchita"
     ],
-    "image_url": "/assets/onboarding/w_kaftan_emerald.png?v=3d2",
+    "image_url": "/assets/onboarding/w_kaftan_emerald.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_kaftan_emerald.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -1502,7 +1504,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "relaxed",
       "kurta set"
     ],
-    "image_url": "/assets/onboarding/w_jalabiya_kurta_set.png?v=3d2",
+    "image_url": "/assets/onboarding/w_jalabiya_kurta_set.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_jalabiya_kurta_set.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -2219,7 +2222,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "indian",
       "festive"
     ],
-    "image_url": "/assets/onboarding/w_saree_maroon.png?v=3d2",
+    "image_url": "/assets/onboarding/w_saree_maroon.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_saree_maroon.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -2937,7 +2941,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "elegant",
       "sleeveless"
     ],
-    "image_url": "/assets/onboarding/w_dress_sheath_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_dress_sheath_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_dress_sheath_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -3650,7 +3655,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "festa",
       "perna larga"
     ],
-    "image_url": "/assets/onboarding/w_jumpsuit_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_jumpsuit_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_jumpsuit_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -4362,7 +4368,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "dresses_skirts",
       "skirt"
     ],
-    "image_url": "/assets/onboarding/w_skirt_pleated_midi.png?v=3d2",
+    "image_url": "/assets/onboarding/w_skirt_pleated_midi.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_skirt_pleated_midi.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -5076,7 +5083,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "midi",
       "comfortabel"
     ],
-    "image_url": "/assets/onboarding/w_skirt_aline_grey.png?v=3d2",
+    "image_url": "/assets/onboarding/w_skirt_aline_grey.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_skirt_aline_grey.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -5788,7 +5796,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "denim",
       "geplooid"
     ],
-    "image_url": "/assets/onboarding/w_skirt_denim_pleated.png?v=3d2",
+    "image_url": "/assets/onboarding/w_skirt_denim_pleated.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_skirt_denim_pleated.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -6501,7 +6510,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "trousers",
       "workwear"
     ],
-    "image_url": "/assets/onboarding/w_trousers_tailored_grey.png?v=3d2",
+    "image_url": "/assets/onboarding/w_trousers_tailored_grey.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_trousers_tailored_grey.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -7214,7 +7224,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "relaxed fit",
       "dropped crotch"
     ],
-    "image_url": "/assets/onboarding/w_pants_loose_olive.png?v=3d2",
+    "image_url": "/assets/onboarding/w_pants_loose_olive.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_pants_loose_olive.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -7926,7 +7937,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "casual pants",
       "everyday wear"
     ],
-    "image_url": "/assets/onboarding/w_chinos_beige.png?v=3d2",
+    "image_url": "/assets/onboarding/w_chinos_beige.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_chinos_beige.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -8639,7 +8651,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "washed",
       "slim-fit"
     ],
-    "image_url": "/assets/onboarding/w_jeans_blue.png?v=3d2",
+    "image_url": "/assets/onboarding/w_jeans_blue.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_jeans_blue.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -9356,7 +9369,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "mandarin collar",
       "three-quarter sleeve"
     ],
-    "image_url": "/assets/onboarding/w_tunic_mandarin_green.png?v=3d2",
+    "image_url": "/assets/onboarding/w_tunic_mandarin_green.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_tunic_mandarin_green.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -10074,7 +10088,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "long-sleeve",
       "collared"
     ],
-    "image_url": "/assets/onboarding/w_shirt_buttondown_striped.png?v=3d2",
+    "image_url": "/assets/onboarding/w_shirt_buttondown_striped.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_shirt_buttondown_striped.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -10786,7 +10801,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "long sleeve",
       "collared"
     ],
-    "image_url": "/assets/onboarding/w_blouse_stand_collar.png?v=3d2",
+    "image_url": "/assets/onboarding/w_blouse_stand_collar.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_blouse_stand_collar.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -11500,7 +11516,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "athletic wear",
       "long sleeve"
     ],
-    "image_url": "/assets/onboarding/w_top_white_longsleeve.png?v=3d2",
+    "image_url": "/assets/onboarding/w_top_white_longsleeve.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_top_white_longsleeve.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -12213,7 +12230,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "structured",
       "formal"
     ],
-    "image_url": "/assets/onboarding/w_blazer_suit_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_blazer_suit_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_blazer_suit_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -12926,7 +12944,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "jas",
       "bovenkleding"
     ],
-    "image_url": "/assets/onboarding/w_trench_coat_cream.png?v=3d2",
+    "image_url": "/assets/onboarding/w_trench_coat_cream.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_trench_coat_cream.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -13638,7 +13657,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "maniche lunghe",
       "abbigliamento femminile"
     ],
-    "image_url": "/assets/onboarding/w_cardigan_long_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_cardigan_long_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_cardigan_long_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -14356,7 +14376,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "athletic",
       "sporty"
     ],
-    "image_url": "/assets/onboarding/w_sneakers_white_navy.png?v=3d2",
+    "image_url": "/assets/onboarding/w_sneakers_white_navy.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_sneakers_white_navy.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -14728,7 +14749,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "modest",
       "heels"
     ],
-    "image_url": "/assets/onboarding/w_heels_pumps_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_heels_pumps_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_heels_pumps_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -15105,7 +15127,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "slip-on",
       "comfortable"
     ],
-    "image_url": "/assets/onboarding/w_loafers_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_loafers_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_loafers_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -15478,7 +15501,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "wedge",
       "thong"
     ],
-    "image_url": "/assets/onboarding/w_sandals_wedge_black.png?v=3d2",
+    "image_url": "/assets/onboarding/w_sandals_wedge_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/w_sandals_wedge_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -15851,7 +15875,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "dishdasha",
       "white"
     ],
-    "image_url": "/assets/onboarding/m_thobe_white.png?v=3d2",
+    "image_url": "/assets/onboarding/m_thobe_white.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_thobe_white.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -16565,7 +16590,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "classic",
       "kurta set"
     ],
-    "image_url": "/assets/onboarding/m_kurta_set_festive.png?v=3d2",
+    "image_url": "/assets/onboarding/m_kurta_set_festive.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_kurta_set_festive.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -17282,7 +17308,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "businesskleidung",
       "herrenmode"
     ],
-    "image_url": "/assets/onboarding/m_suit_navy_three_piece.png?v=3d2",
+    "image_url": "/assets/onboarding/m_suit_navy_three_piece.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_suit_navy_three_piece.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -17992,7 +18019,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "modest",
       "kurta"
     ],
-    "image_url": "/assets/onboarding/m_kurta_lightblue.png?v=3d2",
+    "image_url": "/assets/onboarding/m_kurta_lightblue.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_kurta_lightblue.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -18704,7 +18732,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "cuban wedding",
       "linen"
     ],
-    "image_url": "/assets/onboarding/m_guayabera_linen.png?v=3d2",
+    "image_url": "/assets/onboarding/m_guayabera_linen.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_guayabera_linen.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -19417,7 +19446,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "menswear",
       "tailored"
     ],
-    "image_url": "/assets/onboarding/m_blazer_suit_charcoal.png?v=3d2",
+    "image_url": "/assets/onboarding/m_blazer_suit_charcoal.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_blazer_suit_charcoal.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -20129,7 +20159,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "elegant",
       "stijlvol"
     ],
-    "image_url": "/assets/onboarding/m_blazer_smart_lightblue.png?v=3d2",
+    "image_url": "/assets/onboarding/m_blazer_smart_lightblue.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_blazer_smart_lightblue.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -20841,7 +20872,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "modest",
       "waistcoat"
     ],
-    "image_url": "/assets/onboarding/m_nehru_waistcoat_black.png?v=3d2",
+    "image_url": "/assets/onboarding/m_nehru_waistcoat_black.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_nehru_waistcoat_black.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -21557,7 +21589,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "bandhgala",
       "royal blue"
     ],
-    "image_url": "/assets/onboarding/m_achkan_royal_blue.png?v=3d2",
+    "image_url": "/assets/onboarding/m_achkan_royal_blue.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_achkan_royal_blue.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -22268,7 +22301,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "bovenkleding",
       "overgangsjas"
     ],
-    "image_url": "/assets/onboarding/m_trench_coat_khaki.png?v=3d2",
+    "image_url": "/assets/onboarding/m_trench_coat_khaki.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_trench_coat_khaki.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -22982,7 +23016,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "collared",
       "long sleeve"
     ],
-    "image_url": "/assets/onboarding/m_shirt_dress_grey.png?v=3d2",
+    "image_url": "/assets/onboarding/m_shirt_dress_grey.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_shirt_dress_grey.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -23698,7 +23733,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "collared",
       "short sleeve"
     ],
-    "image_url": "/assets/onboarding/m_shirt_relaxed_white.png?v=3d2",
+    "image_url": "/assets/onboarding/m_shirt_relaxed_white.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_shirt_relaxed_white.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -24414,7 +24450,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "long sleeve",
       "shawl collar"
     ],
-    "image_url": "/assets/onboarding/m_sweater_shawl_knit.png?v=3d2",
+    "image_url": "/assets/onboarding/m_sweater_shawl_knit.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_sweater_shawl_knit.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -25127,7 +25164,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "casual wear",
       "short sleeve"
     ],
-    "image_url": "/assets/onboarding/m_polo_white.png?v=3d2",
+    "image_url": "/assets/onboarding/m_polo_white.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_polo_white.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -25845,7 +25883,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "short sleeve",
       "graphic tee"
     ],
-    "image_url": "/assets/onboarding/m_tshirt_navy.png?v=3d2",
+    "image_url": "/assets/onboarding/m_tshirt_navy.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_tshirt_navy.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -26558,7 +26597,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "trousers",
       "business attire"
     ],
-    "image_url": "/assets/onboarding/m_trousers_dress_charcoal.png?v=3d2",
+    "image_url": "/assets/onboarding/m_trousers_dress_charcoal.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_trousers_dress_charcoal.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -27272,7 +27312,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "comfortable",
       "versatile"
     ],
-    "image_url": "/assets/onboarding/m_pants_relaxed_olive.png?v=3d2",
+    "image_url": "/assets/onboarding/m_pants_relaxed_olive.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_pants_relaxed_olive.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -27986,7 +28027,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "casual pants",
       "straight leg"
     ],
-    "image_url": "/assets/onboarding/m_chinos_beige.png?v=3d2",
+    "image_url": "/assets/onboarding/m_chinos_beige.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_chinos_beige.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -28700,7 +28742,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "white",
       "slim"
     ],
-    "image_url": "/assets/onboarding/m_pants_white_linen.png?v=3d2",
+    "image_url": "/assets/onboarding/m_pants_white_linen.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_pants_white_linen.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -29414,7 +29457,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "denim",
       "casual wear"
     ],
-    "image_url": "/assets/onboarding/m_jeans_dark_indigo.png?v=3d2",
+    "image_url": "/assets/onboarding/m_jeans_dark_indigo.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_jeans_dark_indigo.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -30127,7 +30171,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "dress shoes",
       "laced"
     ],
-    "image_url": "/assets/onboarding/m_shoes_derby_brown.png?v=3d2",
+    "image_url": "/assets/onboarding/m_shoes_derby_brown.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_shoes_derby_brown.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -30501,7 +30546,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "leather",
       "comfortable"
     ],
-    "image_url": "/assets/onboarding/m_loafers_leather_brown.png?v=3d2",
+    "image_url": "/assets/onboarding/m_loafers_leather_brown.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_loafers_leather_brown.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -30873,7 +30919,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "pointed toe",
       "elastic side"
     ],
-    "image_url": "/assets/onboarding/m_boots_chelsea_brown.png?v=3d2",
+    "image_url": "/assets/onboarding/m_boots_chelsea_brown.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_boots_chelsea_brown.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,
@@ -31251,7 +31298,8 @@ export const ONBOARDING_STATIC_DATASET = [
       "athletic",
       "lace-up"
     ],
-    "image_url": "/assets/onboarding/m_sneakers_navy_white.png?v=3d2",
+    "image_url": "/assets/onboarding/m_sneakers_navy_white.jpg?v=real1",
+    "avatar_overlay_url": "/assets/onboarding/m_sneakers_navy_white.png?v=3d2",
     "is_starter_capsule": true,
     "avatar_fit": {
       "fitted_to_default_avatar": true,

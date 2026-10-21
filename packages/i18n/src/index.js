@@ -94,13 +94,19 @@ export function createI18n({ getStoredLang, setStoredLang, defaultLang = 'en' } 
     try {
       const stored = getStoredLang?.();
       if (stored && typeof stored === 'string') {
-        const storedLower = stored.toLowerCase();
+        const storedLower = stored.split('-')[0].toLowerCase();
+        if (storedLower === 'iw') return 'he';
         if (resources[storedLower]) return storedLower;
       }
-      // navigator.language is available on web and Hermes/JSC in RN (returns device locale)
-      const nav = (typeof navigator !== 'undefined' ? navigator?.language : '') || '';
-      const base = nav.split('-')[0].toLowerCase();
-      if (base && resources[base]) return base;
+      // navigator.languages / navigator.language is available on web and Hermes/JSC in RN (returns device locale)
+      const candidates = typeof navigator !== 'undefined'
+        ? [...(Array.isArray(navigator.languages) ? navigator.languages : []), navigator.language].filter(Boolean)
+        : [];
+      for (const cand of candidates) {
+        let base = String(cand).split('-')[0].toLowerCase();
+        if (base === 'iw') base = 'he';
+        if (base && resources[base]) return base;
+      }
     } catch {
       /* ignore */
     }
