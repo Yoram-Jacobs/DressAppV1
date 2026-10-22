@@ -3318,8 +3318,11 @@ export default function ItemDetail() {
         {is3DOpen && (
           <Suspense fallback={null}>
             <DressingRoom3D
+              open={is3DOpen}
               isOpen={is3DOpen}
+              onOpenChange={(v) => !v && setIs3DOpen(false)}
               onClose={() => setIs3DOpen(false)}
+              outfitItems={studio3DItems}
               garments={studio3DItems}
               profile={user?.profile || {}}
             />

@@ -2320,8 +2320,11 @@ export default function Closet() {
         {is3DStudioOpen && (
           <Suspense fallback={null}>
             <DressingRoom3D
+              open={is3DStudioOpen}
               isOpen={is3DStudioOpen}
+              onOpenChange={(v) => !v && setIs3DStudioOpen(false)}
               onClose={() => setIs3DStudioOpen(false)}
+              outfitItems={studio3DItems}
               garments={studio3DItems}
               profile={user?.profile || {}}
               onItemClick={(it) => {

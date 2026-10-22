@@ -6197,8 +6197,11 @@ export default function AddItem() {
         {is3DPreviewOpen && (
           <Suspense fallback={null}>
             <DressingRoom3D
+              open={is3DPreviewOpen}
               isOpen={is3DPreviewOpen}
+              onOpenChange={(v) => !v && setIs3DPreviewOpen(false)}
               onClose={() => setIs3DPreviewOpen(false)}
+              outfitItems={preview3DItems}
               garments={preview3DItems}
               profile={user?.profile || {}}
             />

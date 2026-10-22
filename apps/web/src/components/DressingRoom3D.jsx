@@ -130,20 +130,43 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef }) {
  * clickable garment rack cards, and individual layer toggling.
  */
 export default function DressingRoom3D({
-  open = false,
+  open,
+  isOpen,
   onOpenChange,
+  onClose,
   outfit = null,
-  outfitItems = {},
-  measurements = {},
-  sex = 'female',
-  skinColor = '#E0AC69',
-  hair = {},
-  shapeParams = {},
+  outfitItems,
+  garments,
+  profile = {},
+  measurements: propMeasurements,
+  sex: propSex,
+  skinColor: propSkinColor,
+  hair: propHair,
+  shapeParams: propShapeParams,
   onItemClick,
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const isMale = String(sex || measurements?.gender || '').toLowerCase() === 'male';
+
+  const isDialogOpen = open !== undefined ? Boolean(open) : Boolean(isOpen);
+  const handleOpenChange = useCallback(
+    (val) => {
+      onOpenChange?.(val);
+      if (!val) {
+        onClose?.();
+      }
+    },
+    [onOpenChange, onClose]
+  );
+
+  const activeItems = garments || outfitItems || {};
+  const activeMeasurements = propMeasurements || profile?.measurements || {};
+  const activeSex = propSex || profile?.gender || profile?.sex || activeMeasurements?.gender || 'female';
+  const activeSkinColor = propSkinColor || profile?.skin_tone || profile?.skinColor || '#E0AC69';
+  const activeHair = propHair || profile?.hair || {};
+  const activeShapeParams = propShapeParams || profile?.shape_params || profile?.shapeParams || {};
+
+  const isMale = String(activeSex || activeMeasurements?.gender || '').toLowerCase() === 'male';
 
   const [autoRotate, setAutoRotate] = useState(false);
   const [cameraPreset, setCameraPreset] = useState(null);
@@ -154,10 +177,10 @@ export default function DressingRoom3D({
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Normalize active garment items from outfit / outfitItems
+  // Normalize active garment items from outfit / outfitItems / garments
   const activeGarments = useMemo(() => {
     const list = [];
-    const entries = Object.entries(outfitItems || {});
+    const entries = Object.entries(activeItems || {});
 
     entries.forEach(([slotKey, item]) => {
       if (!item) return;
@@ -181,39 +204,39 @@ export default function DressingRoom3D({
     });
 
     return list;
-  }, [outfitItems]);
+  }, [activeItems]);
 
   const hasOuterwear = useMemo(() => {
     return activeGarments.some((g) => g.slot === 'outerwear' && (layerVisibility[g.slot] ?? true));
   }, [activeGarments, layerVisibility]);
 
   const hairProps = useMemo(() => {
-    return resolveHairProperties(hair, isMale);
-  }, [hair, isMale]);
+    return resolveHairProperties(activeHair, isMale);
+  }, [activeHair, isMale]);
 
   const morphInfluences = useMemo(() => {
     return computeMorphInfluences({
-      height: measurements?.height,
-      shoulders: measurements?.shoulders,
-      chest: measurements?.chest,
-      waist: measurements?.waist,
-      hip: measurements?.hip || measurements?.hips,
-      armLength: measurements?.armLength || measurements?.arm_length,
-      inseam: measurements?.inseam,
+      height: activeMeasurements?.height,
+      shoulders: activeMeasurements?.shoulders,
+      chest: activeMeasurements?.chest,
+      waist: activeMeasurements?.waist,
+      hip: activeMeasurements?.hip || activeMeasurements?.hips,
+      armLength: activeMeasurements?.armLength || activeMeasurements?.arm_length,
+      inseam: activeMeasurements?.inseam,
       isMale,
-      shapeParams,
-      hair,
+      shapeParams: activeShapeParams,
+      hair: activeHair,
     });
-  }, [measurements, isMale, shapeParams, hair]);
+  }, [activeMeasurements, isMale, activeShapeParams, activeHair]);
 
   // Synchronized metric transform group: locks avatar and garments in 1:1 scale & floor alignment
   const avatarMetricTransform = useMemo(() => {
     return getAvatarMetricTransform({
       isMale,
-      height: measurements?.height,
+      height: activeMeasurements?.height,
       morphInfluences,
     });
-  }, [isMale, measurements?.height, morphInfluences]);
+  }, [isMale, activeMeasurements?.height, morphInfluences]);
 
   const toggleLayer = useCallback((slotKey) => {
     setLayerVisibility((prev) => ({
@@ -245,15 +268,15 @@ export default function DressingRoom3D({
     }
     const targetId = garment?.id;
     if (targetId && String(targetId).trim()) {
-      onOpenChange?.(false);
+      handleOpenChange(false);
       navigate(`/closet/${targetId}`);
     }
-  }, [onItemClick, onOpenChange, navigate]);
+  }, [onItemClick, handleOpenChange, navigate]);
 
   const outfitName = outfit?.name || t('dressing_room_3d.default_outfit', { defaultValue: 'Current Outfit' });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent
         ref={containerRef}
         className="!max-w-6xl w-[96vw] h-[92vh] max-h-[92vh] p-0 overflow-hidden bg-[#FAF7F2] border border-[#E5DFD5] shadow-2xl rounded-2xl flex flex-col text-[#1C2024]"
@@ -300,7 +323,7 @@ export default function DressingRoom3D({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onOpenChange?.(false)}
+              onClick={() => handleOpenChange(false)}
               className="text-[#6B7280] hover:text-rose-600 hover:bg-rose-50 rounded-lg h-8 w-8 transition-colors"
               aria-label={t('common.close', { defaultValue: 'Close' })}
             >
@@ -380,10 +403,10 @@ export default function DressingRoom3D({
                 {/* 3D Realistic Human Avatar (meterScale=false to inherit parent group scale) */}
                 <AvatarMesh3D
                   isMale={isMale}
-                  skinColor={skinColor}
+                  skinColor={activeSkinColor}
                   hairProps={hairProps}
                   morphInfluences={morphInfluences}
-                  height={measurements?.height || (isMale ? 178 : 168)}
+                  height={activeMeasurements?.height || (isMale ? 178 : 168)}
                   meterScale={false}
                   castShadow={true}
                   receiveShadow={true}
