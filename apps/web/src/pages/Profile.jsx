@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LogOut, Loader2, Languages, Newspaper, Calendar, Users, TrendingUp, Save, Shirt } from 'lucide-react';
+import { LogOut, Loader2, Languages, Newspaper, Calendar, Users, TrendingUp, Shirt } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -35,25 +35,13 @@ export default function Profile() {
     preferred_language: (user?.preferred_language || i18n.language || 'en').toLowerCase(),
     preferred_voice_id: user?.preferred_voice_id || 'aura-2-thalia-en',
   });
-  const [busy, setBusy] = useState(false);
   const [langBusy, setLangBusy] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const [migrationInitialApp, setMigrationInitialApp] = useState(null);
   const [migrationInitialStep, setMigrationInitialStep] = useState(null);
 
-  const isDirty = useMemo(() => {
-    if (!user) return false;
-    const initial = {
-      preferred_language: (user.preferred_language || i18n.language || 'en').toLowerCase(),
-      preferred_voice_id: user.preferred_voice_id || 'aura-2-thalia-en',
-    };
 
-    return Object.keys(initial).some(
-      (key) => String(form[key]) !== String(initial[key])
-    );
-  }, [user, form, i18n.language]);
-  void isDirty;
 
   const isTester = Boolean(
     user?.subscription?.is_tester ||
@@ -130,26 +118,7 @@ export default function Profile() {
     }
   };
 
-  const save = async (e) => {
-    e?.preventDefault();
-    setBusy(true);
-    try {
-      const promises = [];
-      window.dispatchEvent(new CustomEvent('dressapp:save-full-profile', { detail: { promises } }));
-      if (promises.length > 0) {
-        await Promise.allSettled(promises);
-      }
-      const body = {
-        preferred_language: form.preferred_language,
-        preferred_voice_id: form.preferred_voice_id,
-      };
-      const res = await api.patchMe(body);
-      updateUserLocal(res);
-      toast.success(t('profile.profileSaved'));
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t('profile.saveFailed'));
-    } finally { setBusy(false); }
-  };
+
 
   const handleOpenMigrationForApp = (app) => {
     if (app) {
@@ -204,19 +173,7 @@ export default function Profile() {
               >
                 {t('pricing.subtitle', { defaultValue: 'Choose the plan that fits your style. Upgrade, downgrade, or cancel at any time.' })}
               </p>
-              <Button
-                onClick={save}
-                disabled={busy}
-                className="!gap-1"
-                data-testid="profile-main-header-save-btn"
-              >
-                {busy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                {t('profile.saveProfile', { defaultValue: 'Save profile' })}
-              </Button>
+
             </div>
           </div>
         </div>

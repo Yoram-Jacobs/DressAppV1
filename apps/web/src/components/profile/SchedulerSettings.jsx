@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Bell, Loader2, X, Plus } from 'lucide-react';
+import { Bell, Loader2, X, Plus, Check } from 'lucide-react';
 import { labelForDressCode } from '@/lib/taxonomy';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { Badge } from '@/components/ui/badge';
@@ -313,6 +313,39 @@ export function SchedulerSettings() {
     return () => window.removeEventListener('dressapp:save-full-profile', handleSaveFull);
   }, [save, tagDraft]);
 
+  const autoSaveTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (!isDirtyRef.current) return;
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      if (isDirtyRef.current) {
+        save({ silent: true });
+      }
+    }, 800);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [enabled, respectOccupation, frequency, weekday, time, styleOption, customStyle, selectedTags, save]);
+
+  useEffect(() => {
+    return () => {
+      if (isDirtyRef.current) {
+        save({ silent: true });
+      }
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [save]);
+
   return (
     <AccordionItem
       value="scheduler"
@@ -576,25 +609,7 @@ export function SchedulerSettings() {
                     </div>
                   )}
 
-                  {/* Quick Save button directly in tags filter */}
-                  <div className="flex justify-end pt-1">
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => save()}
-                      disabled={busy}
-                      className={`rounded-lg h-8 px-3 text-xs transition-all duration-300 ${saved ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
-                      data-testid="scheduler-save-tags-btn"
-                    >
-                      {busy ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin me-1.5" />
-                      ) : saved ? (
-                        t('common.saved', { defaultValue: 'Saved!' })
-                      ) : (
-                        t('common.save', { defaultValue: 'Save' })
-                      )}
-                    </Button>
-                  </div>
+
                 </div>
               )}
             </div>
@@ -634,21 +649,19 @@ export function SchedulerSettings() {
         <div className="text-[12px] text-text-brand p-3 bg-white rounded-full border border-primary-brand text-start">
           {t('profile.phoneWarning', { defaultValue: '* Configure phone number under CONTACT to receive push alerts.' })}
         </div>
-        <div className="flex justify-end">
-          <Button
-            onClick={save}
-            disabled={busy}
-            className={`rounded-xl transition-all duration-300 ${saved ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
-            data-testid="scheduler-save-button"
-          >
-            {busy ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : saved ? (
-              t('common.saved', { defaultValue: 'Saved!' })
-            ) : (
-              t('common.save', { defaultValue: 'Save' })
-            )}
-          </Button>
+        <div className="flex justify-end items-center min-h-[32px]">
+          {busy && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-secondary/60 animate-in fade-in duration-200" data-testid="scheduler-autosave-indicator">
+              <Loader2 className="h-3 w-3 animate-spin text-primary-brand" />
+              <span>{t('common.saving', { defaultValue: 'Saving...' })}</span>
+            </span>
+          )}
+          {saved && !busy && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-medium px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 animate-in fade-in duration-200" data-testid="scheduler-autosave-indicator">
+              <Check className="h-3 w-3" />
+              <span>{t('common.saved', { defaultValue: 'Saved' })}</span>
+            </span>
+          )}
         </div>
         </>
         )}

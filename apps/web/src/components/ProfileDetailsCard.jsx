@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
-import { Save, Loader2, Sparkles, RefreshCw } from 'lucide-react';
+import { Check, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Accordion } from '@/components/ui/accordion';
@@ -45,12 +45,12 @@ export function ProfileDetailsCard() {
 
   const { syncingGoogle, syncGoogleProfile } = useGoogleSync(form, setForm, t);
 
-  const { save, busy: saveBusy } = useSaveProfile(form, isDirty, baselineRef, t);
+  const { save, busy: saveBusy, saveStatus } = useSaveProfile(form, isDirty, baselineRef, t);
 
   useEffect(() => {
     const handleSaveFull = (e) => {
       if (isDirty) {
-        const p = save();
+        const p = save({ silent: true });
         if (e?.detail?.promises && Array.isArray(e.detail.promises)) {
           e.detail.promises.push(p);
         }
@@ -81,19 +81,32 @@ export function ProfileDetailsCard() {
             <h3 className="font-bold text-[14px] text-dark-brand">{t('profile.title')}</h3>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              onClick={save}
-              disabled={busy || saveBusy}
-              className="!gap-1"
-              data-testid="profile-details-header-save-btn"
-            >
-              {busy || saveBusy ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin me-1.5" />
-              ) : (
-                <Save className="h-3.5 w-3.5" />
-              )}
-              {t('profile.saveProfile', { defaultValue: 'Save profile' })}
-            </Button>
+            {saveStatus === 'saving' && (
+              <span
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-secondary/60 animate-in fade-in duration-200"
+                data-testid="profile-autosave-indicator"
+              >
+                <Loader2 className="h-3 w-3 animate-spin text-primary-brand" />
+                <span>{t('common.saving', { defaultValue: 'Saving...' })}</span>
+              </span>
+            )}
+            {saveStatus === 'saved' && (
+              <span
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-medium px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 animate-in fade-in duration-200"
+                data-testid="profile-autosave-indicator"
+              >
+                <Check className="h-3 w-3" />
+                <span>{t('common.saved', { defaultValue: 'Saved' })}</span>
+              </span>
+            )}
+            {saveStatus === 'error' && (
+              <span
+                className="inline-flex items-center gap-1.5 text-xs text-destructive font-medium px-2.5 py-1 rounded-full bg-destructive/10 border border-destructive/20 animate-in fade-in duration-200"
+                data-testid="profile-autosave-indicator"
+              >
+                <span>{t('profile.saveFailed', { defaultValue: 'Save failed' })}</span>
+              </span>
+            )}
             {user?.google_connected && (
               <Button
                 variant="outline"
