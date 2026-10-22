@@ -1,7 +1,10 @@
 /* global setTimeout, clearTimeout */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
+import { useAuth } from "@/lib/auth";
+
+const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
 import {
   Plus,
   Search,
@@ -29,6 +32,7 @@ import {
   Crown,
   SearchX,
   RotateCcw,
+  Box,
 } from 'lucide-react';
 import { getSearchNeedles } from "@/lib/fashionSynonyms";
 import { Button } from "@/components/ui/button";
@@ -167,11 +171,14 @@ const INITIAL_FILTERS = { category: "all", source: "all", search: "" };
 
 export default function Closet() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const { canAccessMigration } = useTierLimits();
   // Single source of truth: the global closet store. Reading from it
   // means navigating to /closet paints **instantly** (no network) —
   // the prewarm in AppLayout has already populated the snapshot.
   const store = useClosetStore();
+  const [is3DStudioOpen, setIs3DStudioOpen] = useState(false);
+  const [studio3DItems, setStudio3DItems] = useState({});
   const [filters, setFilters] = useLocalStorageSync(
     "dressapp.closet.filters",
     INITIAL_FILTERS,
@@ -257,6 +264,24 @@ export default function Closet() {
 
   // Wardrobe migration modal state
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
+
+  const handleOpen3DStudio = useCallback((targetItem = null) => {
+    if (targetItem) {
+      const slot = String(targetItem.category || 'top').toLowerCase();
+      setStudio3DItems({ [slot]: targetItem });
+    } else {
+      const map = {};
+      (filteredItems || []).forEach((it) => {
+        const slot = String(it.category || 'top').toLowerCase();
+        const img = it.image_url || it.clean_image_url || it.reconstructed_image_url || it.thumbnail_data_url;
+        if (!map[slot] && img) {
+          map[slot] = it;
+        }
+      });
+      setStudio3DItems(map);
+    }
+    setIs3DStudioOpen(true);
+  }, [filteredItems]);
 
   const getTaxonomyFieldLabel = (field) => {
     switch (field) {
@@ -1704,8 +1729,22 @@ export default function Closet() {
                   defaultValue: "{{count}} garments",
                 })}
               </span>
-              <div
-                className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-xs"
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpen3DStudio()}
+                  className="h-8 px-2.5 sm:px-3 text-xs font-semibold text-primary-brand border-primary-brand/30 bg-primary-brand/5 hover:bg-primary-brand/10 hover:border-primary-brand/50 rounded-lg flex items-center gap-1.5 shadow-2xs transition-all"
+                  title={t("dressing_room_3d.open_button", { defaultValue: "3D Try-On" })}
+                  data-testid="closet-open-3d-btn"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-primary-brand animate-pulse" />
+                  <span className="hidden sm:inline">{t("dressing_room_3d.open_button", { defaultValue: "3D Try-On" })}</span>
+                  <span className="sm:hidden">3D</span>
+                </Button>
+                <div
+                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-xs"
                 role="group"
                 aria-label={t("closet.viewModeLabel", {
                   defaultValue: "Grid density",
@@ -1756,6 +1795,7 @@ export default function Closet() {
                 </button>
               </div>
             </div>
+          </div>
 
             <div
               className={`grid w-full ${viewMode === "compact"
@@ -1808,6 +1848,7 @@ export default function Closet() {
                         isSelected={isSelected}
                         showCheckbox
                         score={it._score}
+                        onOpen3D={handleOpen3DStudio}
                       />
                     </button>
                   );
@@ -1853,7 +1894,7 @@ export default function Closet() {
                     onTouchEnd={handleTouchEnd}
                     onContextMenu={(e) => e.preventDefault()}
                   >
-                    <ItemCardInner item={it} score={it._score} />
+                    <ItemCardInner item={it} score={it._score} onOpen3D={handleOpen3DStudio} />
                   </Link>
                 );
               })}
@@ -2300,13 +2341,30 @@ export default function Closet() {
             store.prewarm({ force: true }).catch(() => { });
           }}
         />
+        {/* 3D Dressing Room Studio */}
+        {is3DStudioOpen && (
+          <Suspense fallback={null}>
+            <DressingRoom3D
+              isOpen={is3DStudioOpen}
+              onClose={() => setIs3DStudioOpen(false)}
+              garments={studio3DItems}
+              profile={user?.profile || {}}
+              onItemClick={(it) => {
+                setIs3DStudioOpen(false);
+                if (it?.id) {
+                  navigate(`/closet/${it.id}`);
+                }
+              }}
+            />
+          </Suspense>
+        )}
       </section>
     </>
   );
 }
 
 /* -------------------- shared card body -------------------- */
-function ItemCardInner({ item: rawItem, isSelected, showCheckbox, score }) {
+function ItemCardInner({ item: rawItem, isSelected, showCheckbox, score, onOpen3D }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const item = useMemo(() => localizeStarterItem(rawItem, t) || rawItem, [rawItem, t]);
@@ -2495,6 +2553,24 @@ function ItemCardInner({ item: rawItem, isSelected, showCheckbox, score }) {
               })}
             </span>
           </div>
+        )}
+        {/* 3D TRY-ON BUTTON */}
+        {Boolean(onOpen3D) && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onOpen3D(item);
+            }}
+            className="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/5"
+            title={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+            aria-label={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+            data-testid="item-card-3d-btn"
+          >
+            <Box className="h-3.5 w-3.5 text-primary-brand" />
+            <span>3D</span>
+          </button>
         )}
       </div>
       {/* CONTENT */}

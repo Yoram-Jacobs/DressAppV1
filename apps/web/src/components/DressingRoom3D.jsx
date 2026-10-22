@@ -25,7 +25,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import AvatarMesh3D, { getAvatarMetricTransform } from './AvatarMesh3D';
-import GarmentMesh3D from './GarmentMesh3D';
+import GarmentMesh3D, { normalizeGarmentRole } from './GarmentMesh3D';
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 
 // ─── Creamy Boutique Studio Pedestal & Room ───
@@ -162,8 +162,13 @@ export default function DressingRoom3D({
       if (!item) return;
       const g = typeof item === 'object' ? item : { id: item, slot: slotKey };
       if (!g.url && !g.image_url) return;
+      const normSlot = normalizeGarmentRole(
+        slotKey,
+        g.category,
+        g.name || g.title || g.sub_category || g.item_type
+      );
       list.push({
-        slot: slotKey,
+        slot: normSlot,
         id: g.id || slotKey,
         name: g.name || g.title || slotKey,
         url: g.url || g.image_url,

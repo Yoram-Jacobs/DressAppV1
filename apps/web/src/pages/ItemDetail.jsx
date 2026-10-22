@@ -1,13 +1,15 @@
 /* global FileReader, setTimeout, setInterval, clearTimeout, clearInterval */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
 import {
   ArrowLeft,
   Sparkles,
   Trash2,
   Store,
   Loader2,
+  Box,
   Wand2,
   Mic,
   Square,
@@ -527,6 +529,7 @@ export default function ItemDetail() {
   const [newUploadedMembers, setNewUploadedMembers] = useState([]);
   const [hostIdState, setHostIdState] = useState(null);
   const [activeViewIdState, setActiveViewIdState] = useState(id);
+  const [is3DOpen, setIs3DOpen] = useState(false);
   const [gatekeeperOpen, setGatekeeperOpen] = useState(false);
   const [gatekeeperMismatches, setGatekeeperMismatches] = useState([]);
   const getTaxonomyFieldLabel = (field) => {
@@ -1601,6 +1604,17 @@ export default function ItemDetail() {
       )
       : (mergedItem.reconstructed_image_url || bestImageUrl(mergedItem, { skipReconstruction: false }))
   );
+  const studio3DItems = useMemo(() => {
+    if (!mergedItem) return {};
+    const rawCat = mergedItem.category || 'top';
+    const slot = String(rawCat).toLowerCase();
+    const itemLike = {
+      ...mergedItem,
+      image_url: preferredImage || mergedItem.image_url,
+      clean_image_url: preferredImage || mergedItem.clean_image_url,
+    };
+    return { [slot]: itemLike };
+  }, [mergedItem, preferredImage]);
   // "Repair photo" CTA visibility:
   //   • the one-pass /analyze response asked us to advise it
   //     (``reconstruction_advised: true``), AND
@@ -1867,6 +1881,17 @@ export default function ItemDetail() {
                 already accepted a reshoot for this item). */}
               {preferredImage && (
                 <div className="absolute bottom-3 end-3 inline-flex items-center gap-1.5 flex-wrap justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIs3DOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/5"
+                    data-testid="item-detail-3d-tryon-btn"
+                    title={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+                    aria-label={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+                  >
+                    <Box className="h-3.5 w-3.5 text-primary-brand" />
+                    <span>{t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}</span>
+                  </button>
                   {showRepairPhotoCta && (
                     <button
                       type="button"
@@ -3103,6 +3128,17 @@ export default function ItemDetail() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {/* 3D Dressing Room Modal */}
+        {is3DOpen && (
+          <Suspense fallback={null}>
+            <DressingRoom3D
+              isOpen={is3DOpen}
+              onClose={() => setIs3DOpen(false)}
+              garments={studio3DItems}
+              profile={user?.profile || {}}
+            />
+          </Suspense>
+        )}
       </section>
     </>
   );

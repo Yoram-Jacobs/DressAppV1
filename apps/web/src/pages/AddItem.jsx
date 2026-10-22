@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, lazy, Suspense } from "react";
 import {
   Link,
   useNavigate,
@@ -40,7 +40,10 @@ import {
   Zap,
   Layers,
   Lock,
+  Box,
 } from "lucide-react";
+
+const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1259,6 +1262,41 @@ export default function AddItem() {
   const isSuitcase = searchParams.get("from") === "suitcase";
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
+  const [is3DPreviewOpen, setIs3DPreviewOpen] = useState(false);
+  const [preview3DItems, setPreview3DItems] = useState({});
+
+  const handleOpen3DPreview = (targetCard) => {
+    if (targetCard) {
+      const rawCat = targetCard.fields?.category || "top";
+      const slot = String(rawCat).toLowerCase();
+      const itemLike = {
+        id: targetCard.id || "preview-item",
+        title: targetCard.fields?.name || targetCard.fields?.title || "Garment",
+        category: rawCat,
+        image_url: targetCard.previewUrl || targetCard.reconstructedUrl || targetCard.originalCropUrl,
+        clean_image_url: targetCard.previewUrl,
+      };
+      setPreview3DItems({ [slot]: itemLike });
+    } else {
+      const map = {};
+      (cards || []).forEach((c) => {
+        const rawCat = c.fields?.category || "top";
+        const slot = String(rawCat).toLowerCase();
+        const img = c.previewUrl || c.reconstructedUrl || c.originalCropUrl;
+        if (!map[slot] && img) {
+          map[slot] = {
+            id: c.id,
+            title: c.fields?.name || c.fields?.title || "Garment",
+            category: rawCat,
+            image_url: img,
+            clean_image_url: img,
+          };
+        }
+      });
+      setPreview3DItems(map);
+    }
+    setIs3DPreviewOpen(true);
+  };
   const pipelineMode = "auto";
 
   const resolveAnalyzeErrorMessage = (err) => {
@@ -5798,7 +5836,19 @@ export default function AddItem() {
                     <QrCode className="h-6 w-6 text-primary-brand group-hover:text-white transition-colors" />
                   </Button>
                   {(cards.length > 0 || !!bgBatch) && (
-                    <div className="" data-testid="add-item-action-bar">
+                    <div className="flex items-center gap-2" data-testid="add-item-action-bar">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleOpen3DPreview()}
+                        disabled={!cards.some((c) => c.previewUrl || c.reconstructedUrl)}
+                        className="h-auto rounded-full border border-gray-300 bg-white px-3.5 py-2 text-sm font-semibold text-gray-800 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 flex items-center gap-1.5"
+                        data-testid="add-item-3d-tryon-btn"
+                        title={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+                      >
+                        <Box className="h-4 w-4 text-primary-brand" />
+                        <span>{t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}</span>
+                      </Button>
                       <Button
                         onClick={saveAll}
                         disabled={
@@ -5859,6 +5909,7 @@ export default function AddItem() {
                     onChange={(patch) => updateField(card.id, patch)}
                     onCardPatch={(patch) => patchCard(card.id, patch)}
                     quickConfirm={quickConfirm}
+                    onOpen3D={handleOpen3DPreview}
                   />
                 ))}
               </div>
@@ -5870,6 +5921,17 @@ export default function AddItem() {
             onDecoded={handleScanDecoded}
           />
         </div>
+        {/* 3D Dressing Room Modal */}
+        {is3DPreviewOpen && (
+          <Suspense fallback={null}>
+            <DressingRoom3D
+              isOpen={is3DPreviewOpen}
+              onClose={() => setIs3DPreviewOpen(false)}
+              garments={preview3DItems}
+              profile={user?.profile || {}}
+            />
+          </Suspense>
+        )}
       </section>
     </>
   );
@@ -5883,6 +5945,7 @@ function ItemCard({
   onChange,
   onCardPatch,
   quickConfirm,
+  onOpen3D,
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -5984,6 +6047,20 @@ function ItemCard({
                     {t("itemDetail.repair.toggleAI")}
                   </>
                 )}
+              </button>
+            )}
+            {/* 3D TRY-ON BUTTON */}
+            {previewUrl && !isBusy && (
+              <button
+                type="button"
+                onClick={() => onOpen3D?.(card)}
+                className="absolute bottom-2 end-2 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/5"
+                title={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+                aria-label={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+                data-testid="draft-card-3d-btn"
+              >
+                <Box className="h-3.5 w-3.5 text-primary-brand" />
+                <span>3D</span>
               </button>
             )}
             {isBusy && (
