@@ -1130,6 +1130,7 @@ export default function Onboarding() {
                       skinColor={draft.measurements?.skin_tone || '#E0AC69'}
                       outfitItems={showStep2Garments ? assembledOutfit.avatarOutfitItems : {}}
                       showPointCloudMesh={showPointCloudMesh}
+                      interactive={true}
                     />
                   </div>
                   <p className="text-xs text-text-brand text-center mt-2">
@@ -1409,6 +1410,7 @@ export default function Onboarding() {
                       skinColor={draft.measurements?.skin_tone || '#E0AC69'}
                       outfitItems={assembledOutfit.avatarOutfitItems}
                       showPointCloudMesh={showStep4Mesh}
+                      interactive={true}
                     />
                   </div>
 

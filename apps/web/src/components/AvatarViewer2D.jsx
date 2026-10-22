@@ -1172,6 +1172,7 @@ export default function AvatarViewer2D({
   onItemClick,
   bodyPhotoUrl,
   showPointCloudMesh = false,
+  interactive = false,
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -1832,6 +1833,7 @@ export default function AvatarViewer2D({
             skinColor={activeSkinColor}
             shapeParams={params}
             showGuideLines={false}
+            interactive={interactive}
             className="w-full h-full"
           >
             {/* ─── Layered Clothes & Accessories (Segmented transparent PNG overlays) ─── */}

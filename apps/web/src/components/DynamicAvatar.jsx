@@ -1,4 +1,4 @@
-import React, { Suspense, useMemo, useEffect, useRef, useState } from 'react';
+import React, { Suspense, useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -38,147 +38,7 @@ function notifySlotReleased() {
   }
 }
 
-/**
- * Builds Cubic-Bezier 2D SVG silhouette paths matched to the 3D MB-Lab avatar's
- * exact A-stance legs, outstretched arms, torso, and head landmarks.
- * Used as an instant zero-WebGL fallback while the 3D GLB mesh loads or when
- * dozens of Saved Outfit cards are rendered simultaneously.
- */
-function buildAvatarSvgSilhouettePaths(anatomy) {
-  const {
-    X0 = 100,
-    isMale,
-    yHeadTop,
-    yChin,
-    yShoulders,
-    yChest,
-    yWaist,
-    yHip,
-    yCrotch,
-    yKnees,
-    yAnkles,
-    yFeet,
-    yElbow,
-    yWrist,
-    yHandTip,
-    wNeck,
-    wShoulders,
-    wChest,
-    wWaist,
-    wHip,
-    wOuterKnee,
-    wInnerKnee,
-    wOuterAnkle,
-    wInnerAnkle,
-    wFootTip,
-    wFootHeel,
-    wElbowOut,
-    wElbowIn,
-    wWristOut,
-    wWristIn,
-  } = anatomy;
 
-  const headHeight = yChin - yHeadTop;
-  const neckHeight = yShoulders - yChin;
-  const headWidth = headHeight * 0.68;
-
-  const pNeckR = `${X0 + wNeck},${yChin}`;
-  const pShoulderR = `${X0 + wShoulders},${yShoulders}`;
-  const pChestR = `${X0 + wChest},${yChest}`;
-  const pWaistR = `${X0 + wWaist},${yWaist}`;
-  const pHipR = `${X0 + wHip},${yHip}`;
-  const pOuterKneeR = `${X0 + wOuterKnee},${yKnees}`;
-  const pOuterAnkleR = `${X0 + wOuterAnkle},${yAnkles}`;
-  const pFootTipR = `${X0 + wFootTip},${yFeet}`;
-  const pFootHeelR = `${X0 + wFootHeel},${yFeet}`;
-  const pInnerAnkleR = `${X0 + wInnerAnkle},${yAnkles}`;
-  const pInnerKneeR = `${X0 + wInnerKnee},${yKnees}`;
-  const pCrotch = `${X0},${yCrotch}`;
-
-  const pInnerKneeL = `${X0 - wInnerKnee},${yKnees}`;
-  const pInnerAnkleL = `${X0 - wInnerAnkle},${yAnkles}`;
-  const pFootHeelL = `${X0 - wFootHeel},${yFeet}`;
-  const pFootTipL = `${X0 - wFootTip},${yFeet}`;
-  const pOuterAnkleL = `${X0 - wOuterAnkle},${yAnkles}`;
-  const pOuterKneeL = `${X0 - wOuterKnee},${yKnees}`;
-  const pHipL = `${X0 - wHip},${yHip}`;
-  const pWaistL = `${X0 - wWaist},${yWaist}`;
-  const pChestL = `${X0 - wChest},${yChest}`;
-  const pShoulderL = `${X0 - wShoulders},${yShoulders}`;
-  const pNeckL = `${X0 - wNeck},${yChin}`;
-
-  const bodyPath = [
-    `M ${pNeckR}`,
-    `C ${X0 + wNeck + (wShoulders - wNeck) * 0.45},${yChin + neckHeight * 0.55} ${X0 + wShoulders * 0.82},${yShoulders - 0.5} ${pShoulderR}`,
-    `C ${X0 + wShoulders + 1.5},${yShoulders + 10} ${X0 + wChest + 2},${yChest - 5} ${pChestR}`,
-    `C ${X0 + wChest - (isMale ? 1 : 2.5)},${yChest + (yWaist - yChest) * 0.5} ${X0 + wWaist + (isMale ? 1.5 : -1.5)},${yWaist - 8} ${pWaistR}`,
-    `C ${X0 + wWaist + (isMale ? 1 : 3.5)},${yWaist + (yHip - yWaist) * 0.5} ${X0 + wHip + 1.5},${yHip - 8} ${pHipR}`,
-    `C ${X0 + wHip + 1},${yHip + (yKnees - yHip) * 0.4} ${X0 + wOuterKnee - 1.5},${yKnees - 12} ${pOuterKneeR}`,
-    `C ${X0 + wOuterKnee + 1.5},${yKnees + 15} ${X0 + wOuterAnkle - 1.5},${yAnkles - 15} ${pOuterAnkleR}`,
-    `L ${pFootTipR} L ${pFootHeelR}`,
-    `L ${pInnerAnkleR}`,
-    `C ${X0 + wInnerAnkle - 1.5},${yAnkles - 15} ${X0 + wInnerKnee + 1.5},${yKnees + 15} ${pInnerKneeR}`,
-    `C ${X0 + wInnerKnee - 2},${yKnees - 15} ${X0 + 4},${yCrotch + 8} ${pCrotch}`,
-    `C ${X0 - 4},${yCrotch + 8} ${X0 - wInnerKnee + 2},${yKnees - 15} ${pInnerKneeL}`,
-    `C ${X0 - wInnerKnee - 1.5},${yKnees + 15} ${X0 - wInnerAnkle + 1.5},${yAnkles - 15} ${pInnerAnkleL}`,
-    `L ${pFootHeelL} L ${pFootTipL} L ${pOuterAnkleL}`,
-    `C ${X0 - wOuterAnkle + 1.5},${yAnkles - 15} ${X0 - wOuterKnee - 1.5},${yKnees + 15} ${pOuterKneeL}`,
-    `C ${X0 - wOuterKnee + 1.5},${yKnees - 12} ${X0 - wHip - 1},${yHip + (yKnees - yHip) * 0.4} ${pHipL}`,
-    `C ${X0 - wHip - 1.5},${yHip - 8} ${X0 - wWaist - (isMale ? 1 : 3.5)},${yWaist + (yHip - yWaist) * 0.5} ${pWaistL}`,
-    `C ${X0 - wWaist - (isMale ? 1.5 : -1.5)},${yWaist - 8} ${X0 - wChest + (isMale ? 1 : 2.5)},${yChest + (yWaist - yChest) * 0.5} ${pChestL}`,
-    `C ${X0 - wChest - 2},${yChest - 5} ${X0 - wShoulders - 1.5},${yShoulders + 10} ${pShoulderL}`,
-    `C ${X0 - wShoulders * 0.82},${yShoulders - 0.5} ${X0 - wNeck - (wShoulders - wNeck) * 0.45},${yChin + neckHeight * 0.55} ${pNeckL}`,
-    `Z`,
-  ].join(' ');
-
-  const armThickUpper = isMale ? 9.5 : 8.0;
-  const wHandOut = wWristOut + 2.0;
-  const wHandIn = wWristIn - 1.0;
-
-  const armPathR = [
-    `M ${X0 + wShoulders - 1},${yShoulders + 1}`,
-    `C ${X0 + wShoulders + 4},${yShoulders + (yElbow - yShoulders) * 0.4} ${X0 + wElbowOut - 2},${yElbow - 6} ${X0 + wElbowOut},${yElbow}`,
-    `C ${X0 + wElbowOut + 2},${yElbow + (yWrist - yElbow) * 0.45} ${X0 + wWristOut - 1.5},${yWrist - 5} ${X0 + wWristOut},${yWrist}`,
-    `C ${X0 + wWristOut + 1},${yWrist + 5} ${X0 + wHandOut},${yHandTip - 3} ${X0 + wHandOut - 1},${yHandTip}`,
-    `C ${X0 + wHandOut - 3},${yHandTip + 1} ${X0 + wHandIn + 1},${yHandTip} ${X0 + wHandIn},${yHandTip - 3}`,
-    `C ${X0 + wHandIn},${yHandTip - 6} ${X0 + wWristIn + 1},${yWrist + 4} ${X0 + wWristIn},${yWrist}`,
-    `C ${X0 + wWristIn - 1.5},${yElbow + (yWrist - yElbow) * 0.45} ${X0 + wElbowIn + 1.5},${yElbow + 6} ${X0 + wElbowIn},${yElbow}`,
-    `C ${X0 + wElbowIn - 1.5},${yShoulders + (yElbow - yShoulders) * 0.5} ${X0 + wShoulders - armThickUpper},${yShoulders + 12} ${X0 + wShoulders - armThickUpper},${yShoulders + 5}`,
-    `Z`,
-  ].join(' ');
-
-  const armPathL = [
-    `M ${X0 - wShoulders + 1},${yShoulders + 1}`,
-    `C ${X0 - wShoulders - 4},${yShoulders + (yElbow - yShoulders) * 0.4} ${X0 - wElbowOut + 2},${yElbow - 6} ${X0 - wElbowOut},${yElbow}`,
-    `C ${X0 - wElbowOut - 2},${yElbow + (yWrist - yElbow) * 0.45} ${X0 - wWristOut + 1.5},${yWrist - 5} ${X0 - wWristOut},${yWrist}`,
-    `C ${X0 - wWristOut - 1},${yWrist + 5} ${X0 - wHandOut},${yHandTip - 3} ${X0 - wHandOut + 1},${yHandTip}`,
-    `C ${X0 - wHandOut + 3},${yHandTip + 1} ${X0 - wHandIn - 1},${yHandTip} ${X0 - wHandIn},${yHandTip - 3}`,
-    `C ${X0 - wHandIn},${yHandTip - 6} ${X0 - wWristIn - 1},${yWrist + 4} ${X0 - wWristIn},${yWrist}`,
-    `C ${X0 - wWristIn + 1.5},${yElbow + (yWrist - yElbow) * 0.45} ${X0 - wElbowIn - 1.5},${yElbow + 6} ${X0 - wElbowIn},${yElbow}`,
-    `C ${X0 - wElbowIn + 1.5},${yShoulders + (yElbow - yShoulders) * 0.5} ${X0 - wShoulders + armThickUpper},${yShoulders + 12} ${X0 - wShoulders + armThickUpper},${yShoulders + 5}`,
-    `Z`,
-  ].join(' ');
-
-  const headPath = isMale
-    ? [
-        `M ${X0 - headWidth},${yHeadTop + headHeight * 0.45}`,
-        `C ${X0 - headWidth},${yHeadTop - 2} ${X0 + headWidth},${yHeadTop - 2} ${X0 + headWidth},${yHeadTop + headHeight * 0.45}`,
-        `C ${X0 + headWidth},${yHeadTop + headHeight * 0.68} ${X0 + wNeck * 0.95},${yHeadTop + headHeight * 0.85} ${X0 + wNeck * 0.65},${yHeadTop + headHeight * 0.94}`,
-        `C ${X0 + wNeck * 0.38},${yChin} ${X0 - wNeck * 0.38},${yChin} ${X0 - wNeck * 0.65},${yHeadTop + headHeight * 0.94}`,
-        `C ${X0 - wNeck * 0.95},${yHeadTop + headHeight * 0.85} ${X0 - headWidth},${yHeadTop + headHeight * 0.68} ${X0 - headWidth},${yHeadTop + headHeight * 0.45}`,
-        `Z`,
-      ].join(' ')
-    : [
-        `M ${X0 - headWidth},${yHeadTop + headHeight * 0.42}`,
-        `C ${X0 - headWidth},${yHeadTop - 4} ${X0 + headWidth},${yHeadTop - 4} ${X0 + headWidth},${yHeadTop + headHeight * 0.42}`,
-        `C ${X0 + headWidth},${yHeadTop + headHeight * 0.62} ${X0 + wNeck * 0.9},${yHeadTop + headHeight * 0.8} ${X0 + wNeck * 0.55},${yHeadTop + headHeight * 0.92}`,
-        `C ${X0 + wNeck * 0.3},${yChin} ${X0 - wNeck * 0.3},${yChin} ${X0 - wNeck * 0.55},${yHeadTop + headHeight * 0.92}`,
-        `C ${X0 - wNeck * 0.9},${yHeadTop + headHeight * 0.8} ${X0 - headWidth},${yHeadTop + headHeight * 0.62} ${X0 - headWidth},${yHeadTop + headHeight * 0.42}`,
-        `Z`,
-      ].join(' ');
-
-  return { bodyPath, armPathR, armPathL, headPath };
-}
 
 /**
  * Dynamic 2D Human Avatar Generator for DressApp.
@@ -514,6 +374,7 @@ function Realistic3DAvatarMesh({
   morphInfluences,
   height,
   signature,
+  interactive = false,
 }) {
   const modelUrl = isMale ? MALE_GLB_URL : FEMALE_GLB_URL;
   const { scene } = useGLTF(modelUrl);
@@ -644,6 +505,7 @@ function Realistic3DAvatarMesh({
       let cancelled = false;
       let attempts = 0;
       let rafId = null;
+      let timerId = null;
 
       const tryCaptureSnapshot = () => {
         if (cancelled || rendered3DAvatarSnapshotCache.has(signature)) return;
@@ -679,13 +541,21 @@ function Realistic3DAvatarMesh({
         }
       };
 
-      rafId = requestAnimationFrame(tryCaptureSnapshot);
+      if (interactive) {
+        timerId = setTimeout(() => {
+          rafId = requestAnimationFrame(tryCaptureSnapshot);
+        }, 160);
+      } else {
+        rafId = requestAnimationFrame(tryCaptureSnapshot);
+      }
+
       return () => {
         cancelled = true;
+        if (timerId) clearTimeout(timerId);
         if (rafId) cancelAnimationFrame(rafId);
       };
     }
-  }, [clonedScene, skinColor, morphInfluences, signature, gl, threeScene, camera, transform]);
+  }, [clonedScene, skinColor, morphInfluences, signature, gl, threeScene, camera, transform, interactive]);
 
   if (!clonedScene) return null;
 
@@ -710,6 +580,7 @@ export default function DynamicAvatar({
   shapeParams = {},
   className = '',
   showGuideLines = true,
+  interactive = false,
   children
 }) {
   const isMale = String(gender).toLowerCase() === 'male';
@@ -729,8 +600,6 @@ export default function DynamicAvatar({
       }),
     [height, shoulders, chest, waist, hip, armLength, inseam, footLength, gender]
   );
-
-  const svgPaths = useMemo(() => buildAvatarSvgSilhouettePaths(anatomy), [anatomy]);
 
   const morphInfluences = useMemo(
     () =>
@@ -763,45 +632,86 @@ export default function DynamicAvatar({
     () => rendered3DAvatarSnapshotCache.get(avatarSignature) || null
   );
   const [canMountWebGL, setCanMountWebGL] = useState(false);
+  const acquiredSlotRef = useRef(false);
 
+  const acquireSlot = useCallback(() => {
+    if (
+      !acquiredSlotRef.current &&
+      canUseWebGL &&
+      activeWebGLCanvasCount < MAX_CONCURRENT_WEBGL_CANVASES
+    ) {
+      activeWebGLCanvasCount += 1;
+      acquiredSlotRef.current = true;
+      setCanMountWebGL(true);
+      return true;
+    }
+    return false;
+  }, [canUseWebGL]);
+
+  const releaseSlot = useCallback(() => {
+    if (acquiredSlotRef.current) {
+      acquiredSlotRef.current = false;
+      activeWebGLCanvasCount = Math.max(0, activeWebGLCanvasCount - 1);
+      setCanMountWebGL(false);
+      notifySlotReleased();
+    }
+  }, []);
+
+  // Slot Management Lifecycle
+  useEffect(() => {
+    let isMounted = true;
+
+    const handleSlotAttempt = () => {
+      if (!isMounted) return;
+      if (interactive || !rendered3DAvatarSnapshotCache.has(avatarSignature)) {
+        acquireSlot();
+      }
+    };
+
+    if (interactive || !rendered3DAvatarSnapshotCache.has(avatarSignature)) {
+      const got = acquireSlot();
+      if (!got) {
+        slotReleaseSubscribers.add(handleSlotAttempt);
+      }
+    }
+
+    return () => {
+      isMounted = false;
+      slotReleaseSubscribers.delete(handleSlotAttempt);
+      releaseSlot();
+    };
+  }, [canUseWebGL, interactive, acquireSlot, releaseSlot]);
+
+  // Snapshot updates & subscription
   useEffect(() => {
     const cached = rendered3DAvatarSnapshotCache.get(avatarSignature);
     if (cached) {
       setSnapshotUrl(cached);
-      setCanMountWebGL(false);
-      return;
-    }
-    setSnapshotUrl(null);
-
-    let acquiredSlot = false;
-    const tryAcquireSlot = () => {
-      if (
-        !acquiredSlot &&
-        !rendered3DAvatarSnapshotCache.get(avatarSignature) &&
-        canUseWebGL &&
-        activeWebGLCanvasCount < MAX_CONCURRENT_WEBGL_CANVASES
-      ) {
-        activeWebGLCanvasCount += 1;
-        acquiredSlot = true;
-        setCanMountWebGL(true);
+      if (!interactive) {
+        releaseSlot();
+        return;
       }
-    };
-
-    tryAcquireSlot();
-    if (!acquiredSlot) {
-      setCanMountWebGL(false);
-      slotReleaseSubscribers.add(tryAcquireSlot);
+    } else if (!interactive) {
+      // Not cached and not interactive: acquire slot to render snapshot
+      const got = acquireSlot();
+      if (!got) {
+        const retrySlot = () => {
+          if (!rendered3DAvatarSnapshotCache.has(avatarSignature)) {
+            acquireSlot();
+          }
+        };
+        slotReleaseSubscribers.add(retrySlot);
+        return () => {
+          slotReleaseSubscribers.delete(retrySlot);
+        };
+      }
     }
 
     const handleSnapshot = (sig, dataUrl) => {
       if (sig === avatarSignature) {
         setSnapshotUrl(dataUrl);
-        setCanMountWebGL(false);
-        slotReleaseSubscribers.delete(tryAcquireSlot);
-        if (acquiredSlot) {
-          acquiredSlot = false;
-          activeWebGLCanvasCount = Math.max(0, activeWebGLCanvasCount - 1);
-          notifySlotReleased();
+        if (!interactive) {
+          releaseSlot();
         }
       }
     };
@@ -809,14 +719,8 @@ export default function DynamicAvatar({
 
     return () => {
       snapshotSubscribers.delete(handleSnapshot);
-      slotReleaseSubscribers.delete(tryAcquireSlot);
-      if (acquiredSlot) {
-        acquiredSlot = false;
-        activeWebGLCanvasCount = Math.max(0, activeWebGLCanvasCount - 1);
-        notifySlotReleased();
-      }
     };
-  }, [avatarSignature, canUseWebGL]);
+  }, [avatarSignature, interactive, acquireSlot, releaseSlot]);
 
   return (
     <div
@@ -825,19 +729,9 @@ export default function DynamicAvatar({
       data-gender={isMale ? 'male' : 'female'}
       data-skin-color={activeSkinColor}
     >
-      {/* Cached 3D MB-Lab Avatar Render (instantaneous, zero WebGL context overhead across 40+ cards) */}
-      {snapshotUrl && (
-        <img
-          src={snapshotUrl}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
-        />
-      )}
-
-      {/* 3D MB-Lab Realistic Human Avatar Canvas (mounts when generating or updating snapshot) */}
-      {canUseWebGL && !snapshotUrl && canMountWebGL && (
-        <div className="absolute inset-0 w-full h-full pointer-events-none z-[1]">
+      {/* 3D Realistic Human Avatar Canvas (mounts when interactive or generating snapshot) */}
+      {canUseWebGL && canMountWebGL && (
+        <div className="absolute inset-0 w-full h-full pointer-events-none z-[2]">
           <Canvas
             orthographic
             camera={{
@@ -865,32 +759,30 @@ export default function DynamicAvatar({
                 morphInfluences={morphInfluences}
                 height={height}
                 signature={avatarSignature}
+                interactive={interactive}
               />
             </Suspense>
           </Canvas>
         </div>
       )}
 
-      {/* Anatomical Calibration Guide Lines & 200x450 Coordinate Frame (with instant 2D SVG silhouette fallback while 3D snapshot loads) */}
-      <svg
-        viewBox="0 0 200 450"
-        className="w-full h-full pointer-events-none z-[1]"
-        style={{ maxHeight: '100%' }}
-      >
-        {!snapshotUrl && (
-          <g
-            fill={activeSkinColor}
-            stroke="rgba(15, 23, 42, 0.18)"
-            strokeWidth="0.9"
-            strokeLinejoin="round"
-          >
-            <path d={svgPaths.armPathR} />
-            <path d={svgPaths.armPathL} />
-            <path d={svgPaths.bodyPath} />
-            <path d={svgPaths.headPath} />
-          </g>
-        )}
-        {showGuideLines && (
+      {/* Cached 3D Avatar Snapshot (double-buffered image fallback when Canvas is not active or initial frame is loading) */}
+      {snapshotUrl && (
+        <img
+          src={snapshotUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
+        />
+      )}
+
+      {/* Anatomical Calibration Guide Lines & 200x450 Coordinate Frame */}
+      {showGuideLines && (
+        <svg
+          viewBox="0 0 200 450"
+          className="w-full h-full pointer-events-none z-[3]"
+          style={{ maxHeight: '100%' }}
+        >
           <g className="text-slate-400/35 dark:text-slate-500/35 stroke-current stroke-[0.75] stroke-dasharray-[2,3]">
             <line x1="15" y1={anatomy.yShoulders} x2="185" y2={anatomy.yShoulders} />
             <line x1="20" y1={anatomy.yChest} x2="180" y2={anatomy.yChest} />
@@ -898,8 +790,8 @@ export default function DynamicAvatar({
             <line x1="20" y1={anatomy.yHip} x2="180" y2={anatomy.yHip} />
             <line x1="30" y1={anatomy.yCrotch} x2="170" y2={anatomy.yCrotch} />
           </g>
-        )}
-      </svg>
+        </svg>
+      )}
 
       {/* Garment / Overlay Children Slot */}
       {children}

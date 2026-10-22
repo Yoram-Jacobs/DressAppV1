@@ -2866,6 +2866,7 @@ export default function Stylist() {
                 skinColor={user?.skin_tone}
                 sex={user?.sex || 'female'}
                 outfitItems={getOutfitPiecesMap(selectedOutfitForDetail, closetItems)}
+                interactive={true}
               />
             </div>
           </div>

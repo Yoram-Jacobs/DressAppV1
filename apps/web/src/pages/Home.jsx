@@ -2233,6 +2233,7 @@ export default function Home() {
                         skinColor={user?.skin_tone}
                         bodyPhotoUrl={user?.body_photo_url}
                         outfitItems={stylistPreviewOutfitItems}
+                        interactive={true}
                       />
                     </div>
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-black/45 via-black/10 to-transparent px-3 pb-3 pt-10">

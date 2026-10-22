@@ -319,6 +319,7 @@ export default function AvatarPage() {
                     gender={measurements.gender}
                     skinColor={skinColor}
                     showGuideLines={true}
+                    interactive={true}
                   />
                 </div>
               )}
