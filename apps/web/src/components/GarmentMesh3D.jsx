@@ -4,43 +4,43 @@ import * as THREE from 'three';
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
 export const TORSO_PROFILE_FEMALE = [
-  { y: 1.40, rx: 0.175, cz: 0.015, rz: 0.065 }, // Collarbone / neck base
-  { y: 1.36, rx: 0.200, cz: 0.020, rz: 0.085 }, // Shoulders
-  { y: 1.28, rx: 0.200, cz: 0.035, rz: 0.100 }, // Upper chest
-  { y: 1.22, rx: 0.205, cz: 0.057, rz: 0.100 }, // Bust peak (front Z reaches +0.157, back reaches -0.043)
-  { y: 1.14, rx: 0.192, cz: 0.059, rz: 0.086 }, // Under-bust
-  { y: 1.05, rx: 0.196, cz: 0.053, rz: 0.095 }, // Natural waist
-  { y: 0.95, rx: 0.200, cz: 0.037, rz: 0.104 }, // Upper hips
-  { y: 0.86, rx: 0.190, cz: 0.030, rz: 0.090 }, // Pelvis / lower hips
-  { y: 0.65, rx: 0.205, cz: 0.025, rz: 0.115 }, // Upper thigh flare (for skirts/dresses)
+  { y: 1.44, rx: 0.170, cz: 0.025, rz: 0.095 }, // Collarbone / neck base
+  { y: 1.38, rx: 0.215, cz: 0.035, rz: 0.125 }, // Shoulders
+  { y: 1.30, rx: 0.210, cz: 0.045, rz: 0.140 }, // Upper chest
+  { y: 1.23, rx: 0.215, cz: 0.058, rz: 0.150 }, // Bust peak (front Z reaches +0.208, back reaches -0.092)
+  { y: 1.15, rx: 0.205, cz: 0.050, rz: 0.138 }, // Under-bust
+  { y: 1.05, rx: 0.198, cz: 0.045, rz: 0.132 }, // Natural waist
+  { y: 0.95, rx: 0.215, cz: 0.030, rz: 0.145 }, // Upper hips / glutes
+  { y: 0.84, rx: 0.215, cz: 0.025, rz: 0.140 }, // Pelvis / crotch
+  { y: 0.65, rx: 0.230, cz: 0.025, rz: 0.150 }, // Upper thigh flare (for skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
-  { y: 1.46, rx: 0.215, cz: 0.010, rz: 0.095 }, // Collarbone / neck base
-  { y: 1.42, rx: 0.235, cz: 0.015, rz: 0.115 }, // Shoulders
-  { y: 1.35, rx: 0.220, cz: 0.025, rz: 0.142 }, // Upper chest
-  { y: 1.28, rx: 0.218, cz: 0.030, rz: 0.138 }, // Pecs peak (front Z reaches +0.168)
-  { y: 1.18, rx: 0.216, cz: 0.040, rz: 0.115 }, // Rib cage
-  { y: 1.08, rx: 0.215, cz: 0.045, rz: 0.104 }, // Waist
-  { y: 0.96, rx: 0.218, cz: 0.038, rz: 0.115 }, // Upper hips
-  { y: 0.86, rx: 0.220, cz: 0.038, rz: 0.116 }, // Pelvis / crotch
-  { y: 0.70, rx: 0.210, cz: 0.030, rz: 0.125 }, // Thigh flare
+  { y: 1.50, rx: 0.190, cz: 0.025, rz: 0.110 }, // Collarbone / neck base
+  { y: 1.44, rx: 0.245, cz: 0.025, rz: 0.145 }, // Shoulders
+  { y: 1.34, rx: 0.240, cz: 0.035, rz: 0.165 }, // Chest / pecs peak
+  { y: 1.22, rx: 0.235, cz: 0.040, rz: 0.150 }, // Rib cage
+  { y: 1.08, rx: 0.225, cz: 0.045, rz: 0.145 }, // Waist
+  { y: 0.96, rx: 0.230, cz: 0.035, rz: 0.155 }, // Upper hips / glutes
+  { y: 0.86, rx: 0.235, cz: 0.030, rz: 0.155 }, // Pelvis / crotch
+  { y: 0.70, rx: 0.230, cz: 0.025, rz: 0.150 }, // Thigh flare
 ];
 
 export const LEG_PROFILE_FEMALE = [
-  { y: 0.82, cx: 0.105, r: 0.088, cz: 0.029 }, // Crotch / upper thigh
-  { y: 0.65, cx: 0.118, r: 0.076, cz: 0.020 }, // Mid thigh
-  { y: 0.48, cx: 0.131, r: 0.063, cz: 0.005 }, // Knee
-  { y: 0.25, cx: 0.148, r: 0.058, cz: 0.000 }, // Calf
-  { y: 0.09, cx: 0.166, r: 0.044, cz: 0.000 }, // Ankle
+  { y: 0.82, cx: 0.105, r: 0.095, cz: 0.040 }, // Crotch / upper thigh
+  { y: 0.65, cx: 0.112, r: 0.082, cz: 0.042 }, // Mid thigh
+  { y: 0.50, cx: 0.128, r: 0.070, cz: 0.038 }, // Knee
+  { y: 0.35, cx: 0.151, r: 0.065, cz: 0.020 }, // Calf
+  { y: 0.20, cx: 0.165, r: 0.048, cz: 0.025 }, // Lower calf
+  { y: 0.10, cx: 0.165, r: 0.046, cz: 0.042 }, // Ankle
 ];
 
 export const LEG_PROFILE_MALE = [
-  { y: 0.86, cx: 0.105, r: 0.092, cz: 0.038 }, // Crotch
-  { y: 0.70, cx: 0.118, r: 0.080, cz: 0.025 }, // Mid thigh
-  { y: 0.50, cx: 0.128, r: 0.068, cz: 0.008 }, // Knee
-  { y: 0.28, cx: 0.138, r: 0.062, cz: 0.002 }, // Calf
-  { y: 0.10, cx: 0.145, r: 0.048, cz: 0.000 }, // Ankle
+  { y: 0.86, cx: 0.105, r: 0.100, cz: 0.045 }, // Crotch
+  { y: 0.70, cx: 0.118, r: 0.088, cz: 0.035 }, // Mid thigh
+  { y: 0.50, cx: 0.130, r: 0.076, cz: 0.022 }, // Knee
+  { y: 0.30, cx: 0.142, r: 0.068, cz: 0.012 }, // Calf
+  { y: 0.10, cx: 0.155, r: 0.052, cz: 0.010 }, // Ankle
 ];
 
 /**
@@ -229,11 +229,42 @@ async function fetchAndCropTexture(url) {
   const aspect = cropW / cropH;
   const hasSleeves = aspect > 0.80;
 
+  let solidU = 0.5;
+  let solidV = 0.5;
+  try {
+    const cropImgData = cropCtx.getImageData(0, 0, cropW, cropH);
+    const cData = cropImgData.data;
+    const opaqueXs = [];
+    const opaqueYs = [];
+    for (let cy = 0; cy < cropH; cy++) {
+      const row = cy * cropW * 4;
+      for (let cx = 0; cx < cropW; cx++) {
+        if (cData[row + cx * 4 + 3] > 240) {
+          opaqueXs.push(cx);
+          opaqueYs.push(cy);
+        }
+      }
+    }
+    if (opaqueXs.length > 0) {
+      opaqueXs.sort((a, b) => a - b);
+      opaqueYs.sort((a, b) => a - b);
+      const medX = opaqueXs[Math.floor(opaqueXs.length / 2)];
+      const medY = opaqueYs[Math.floor(opaqueYs.length / 2)];
+      solidU = Math.max(0.02, Math.min(0.98, medX / cropW));
+      solidV = Math.max(0.02, Math.min(0.98, 1.0 - (medY / cropH)));
+    }
+  } catch {
+    solidU = 0.5;
+    solidV = 0.5;
+  }
+
   const res = {
     texture,
     dominantColor,
     hasSleeves,
     aspect,
+    solidU,
+    solidV,
     bounds: {
       uMin: 0,
       uMax: 1,
@@ -252,6 +283,8 @@ function useGarmentTexture(url) {
     texture: null,
     dominantColor: '#222226',
     hasSleeves: true,
+    solidU: 0.5,
+    solidV: 0.5,
     bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
   });
 
@@ -282,6 +315,8 @@ function useGarmentTexture(url) {
             texture: tex,
             dominantColor: '#222226',
             hasSleeves: true,
+            solidU: 0.5,
+            solidV: 0.5,
             bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
           });
         });
@@ -304,22 +339,20 @@ function useGarmentTexture(url) {
 export function createAnatomicalTopGeometry({
   isMale = false,
   hasSleeves = true,
-  yTop = 1.40,
-  yBottom = 0.86,
+  yTop = 1.44,
+  yBottom = 0.84,
   layerOffset = 0.015,
+  uSwatch = 0.50,
+  vSwatch = 0.50,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
   const uvs = [];
   const indices = [];
 
-  // Fabric swatch coordinates on cropped texture (center-upper chest area where fabric is solid)
-  const uSwatch = 0.50;
-  const vSwatch = 0.65;
-
   // 1. Torso Shell (wrapping 360° continuously around chest, waist, and hips)
-  const ny = 16;
-  const nx = 24;
+  const ny = 18;
+  const nx = 26;
 
   for (let i = 0; i <= ny; i++) {
     const vNorm = i / ny;
@@ -340,21 +373,29 @@ export function createAnatomicalTopGeometry({
 
       const x = rx * Math.sin(theta);
       const isFront = Math.cos(theta) >= 0;
-      const z = isFront ? cz + rz * Math.cos(theta) : cz - rz * Math.abs(Math.cos(theta));
+
+      // Anatomical bust / chest projection guaranteeing zero penetration
+      const bustFactor = Math.max(0, Math.cos(theta * 1.5));
+      const bustBulge = (y >= 1.15 && y <= 1.32 && !isMale) ? 0.022 * bustFactor : 0.0;
+      const z = isFront
+        ? cz + (rz + bustBulge) * Math.cos(theta)
+        : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
       // Front half (theta in [-PI/2, +PI/2]): Map the real garment photo
       // Back half: Map to the authentic matching fabric swatch
       if (isFront) {
-        // When garment has sleeves in photo, central 60% (0.20 -> 0.80) maps to torso
         const uMinTorso = hasSleeves ? 0.20 : 0.0;
         const uMaxTorso = hasSleeves ? 0.80 : 1.0;
         const uT = uMinTorso + ((Math.sin(theta) + 1) * 0.5) * (uMaxTorso - uMinTorso);
         uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
       } else {
-        // Back of jacket/shirt: seamless matching fabric
-        const backSpread = Math.sin(theta) * 0.08;
-        uvs.push(uSwatch + backSpread, vSwatch);
+        // Back of jacket/shirt: seamless matching fabric (guaranteed 100% opaque)
+        const backSpread = Math.sin(theta) * 0.04;
+        uvs.push(
+          Math.max(0.01, Math.min(0.99, uSwatch + backSpread)),
+          Math.max(0.01, Math.min(0.99, vSwatch))
+        );
       }
     }
   }
@@ -369,7 +410,7 @@ export function createAnatomicalTopGeometry({
     }
   }
 
-  // 2. Left & Right Sleeves (following avatar's A-pose arm trajectory in 3D)
+  // 2. Left & Right Sleeves (following avatar's A-pose arm trajectory in 3D seamlessly from shoulder cap)
   if (hasSleeves) {
     const sides = [-1, 1]; // Left (-X), Right (+X)
     const nySleeve = 10;
@@ -380,13 +421,13 @@ export function createAnatomicalTopGeometry({
 
       for (let i = 0; i <= nySleeve; i++) {
         const t = i / nySleeve;
-        // Arm trajectory measured from avatar GLTF
-        const yArm = 1.36 - t * (1.36 - 0.88);
-        const xArm = side * (0.185 + t * (0.225 - 0.185));
-        const zArm = 0.015 + t * (0.040 - 0.015);
-        const rArm = (0.046 - t * (0.046 - 0.038)) + layerOffset;
+        // Arm trajectory measured from avatar GLTF, starting at shoulder apex
+        const yArm = 1.40 - t * (1.40 - 0.90);
+        const xArm = side * (0.190 + t * (0.255 - 0.190));
+        const zArm = 0.020 + t * (0.040 - 0.020);
+        const rArm = (0.060 - t * (0.060 - 0.042)) + layerOffset;
 
-        const vTex = 1.0 - t * 0.65; // Sleeve runs from shoulder down to wrist
+        const vTex = 1.0 - t * 0.70; // Sleeve runs from shoulder down to wrist
 
         for (let j = 0; j <= nxSleeve; j++) {
           const uFrac = j / nxSleeve;
@@ -398,13 +439,16 @@ export function createAnatomicalTopGeometry({
 
           const isFront = Math.cos(theta) >= 0;
           if (isFront) {
-            // Left sleeve in photo: u in [0, 0.24]; Right sleeve: u in [0.76, 1.0]
+            // Left sleeve in photo: u in [0.02, 0.26]; Right sleeve: u in [0.74, 0.98]
             const uArm = side === -1
-              ? 0.02 + ((Math.sin(theta) + 1) * 0.5) * 0.22
-              : 0.76 + ((Math.sin(theta) + 1) * 0.5) * 0.22;
+              ? 0.02 + ((Math.sin(theta) + 1) * 0.5) * 0.24
+              : 0.74 + ((Math.sin(theta) + 1) * 0.5) * 0.24;
             uvs.push(Math.max(0, Math.min(1, uArm)), Math.max(0, Math.min(1, vTex)));
           } else {
-            uvs.push(uSwatch, vSwatch);
+            uvs.push(
+              Math.max(0.01, Math.min(0.99, uSwatch)),
+              Math.max(0.01, Math.min(0.99, vSwatch))
+            );
           }
         }
       }
@@ -440,17 +484,16 @@ export const createAnatomicalTorsoGeometry = (opts) => createAnatomicalTopGeomet
 export function createAnatomicalDressGeometry({
   isMale = false,
   hasSleeves = false,
-  yTop = 1.40,
-  yBottom = 0.52,
-  layerOffset = 0.016,
+  yTop = 1.44,
+  yBottom = 0.50,
+  layerOffset = 0.018,
+  uSwatch = 0.50,
+  vSwatch = 0.50,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
   const uvs = [];
   const indices = [];
-
-  const uSwatch = 0.50;
-  const vSwatch = 0.60;
 
   // 1. Bodice & Flared Skirt 360° Shell
   const ny = 22;
@@ -459,17 +502,17 @@ export function createAnatomicalDressGeometry({
   for (let i = 0; i <= ny; i++) {
     const vNorm = i / ny;
     const y = yTop - vNorm * (yTop - yBottom);
-    const slice = getTorsoSlice(Math.max(0.82, y), isMale);
+    const slice = getTorsoSlice(Math.max(0.84, y), isMale);
 
     let rx = slice.rx + layerOffset;
     let rz = slice.rz + layerOffset;
     const cz = slice.cz;
 
-    // Flare skirt naturally below hips (y < 0.82)
-    if (y < 0.82) {
-      const flareRatio = Math.pow((0.82 - y) / (0.82 - yBottom), 1.2);
-      rx += flareRatio * 0.12;
-      rz += flareRatio * 0.08;
+    // Flare skirt naturally below hips (y < 0.84)
+    if (y < 0.84) {
+      const flareRatio = Math.pow((0.84 - y) / (0.84 - yBottom), 1.15);
+      rx += flareRatio * 0.14;
+      rz += flareRatio * 0.10;
     }
 
     const vTex = 1.0 - vNorm;
@@ -480,7 +523,13 @@ export function createAnatomicalDressGeometry({
 
       const x = rx * Math.sin(theta);
       const isFront = Math.cos(theta) >= 0;
-      const z = isFront ? cz + rz * Math.cos(theta) : cz - rz * Math.abs(Math.cos(theta));
+
+      // Anatomical bust / chest projection
+      const bustFactor = Math.max(0, Math.cos(theta * 1.5));
+      const bustBulge = (y >= 1.15 && y <= 1.32 && !isMale) ? 0.022 * bustFactor : 0.0;
+      const z = isFront
+        ? cz + (rz + bustBulge) * Math.cos(theta)
+        : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
       if (isFront) {
@@ -489,8 +538,11 @@ export function createAnatomicalDressGeometry({
         const uT = uMinBodice + ((Math.sin(theta) + 1) * 0.5) * (uMaxBodice - uMinBodice);
         uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
       } else {
-        const backSpread = Math.sin(theta) * 0.08;
-        uvs.push(uSwatch + backSpread, vSwatch);
+        const backSpread = Math.sin(theta) * 0.04;
+        uvs.push(
+          Math.max(0.01, Math.min(0.99, uSwatch + backSpread)),
+          Math.max(0.01, Math.min(0.99, vSwatch))
+        );
       }
     }
   }
@@ -516,11 +568,11 @@ export function createAnatomicalDressGeometry({
 
       for (let i = 0; i <= nySleeve; i++) {
         const t = i / nySleeve;
-        const yArm = 1.36 - t * (1.36 - 0.88);
-        const xArm = side * (0.185 + t * (0.225 - 0.185));
-        const zArm = 0.015 + t * (0.040 - 0.015);
-        const rArm = (0.046 - t * (0.046 - 0.038)) + layerOffset;
-        const vTex = 1.0 - t * 0.55;
+        const yArm = 1.40 - t * (1.40 - 0.90);
+        const xArm = side * (0.190 + t * (0.255 - 0.190));
+        const zArm = 0.020 + t * (0.040 - 0.020);
+        const rArm = (0.060 - t * (0.060 - 0.042)) + layerOffset;
+        const vTex = 1.0 - t * 0.65;
 
         for (let j = 0; j <= nxSleeve; j++) {
           const uFrac = j / nxSleeve;
@@ -533,11 +585,14 @@ export function createAnatomicalDressGeometry({
           const isFront = Math.cos(theta) >= 0;
           if (isFront) {
             const uArm = side === -1
-              ? 0.02 + ((Math.sin(theta) + 1) * 0.5) * 0.20
-              : 0.78 + ((Math.sin(theta) + 1) * 0.5) * 0.20;
+              ? 0.02 + ((Math.sin(theta) + 1) * 0.5) * 0.22
+              : 0.76 + ((Math.sin(theta) + 1) * 0.5) * 0.22;
             uvs.push(Math.max(0, Math.min(1, uArm)), Math.max(0, Math.min(1, vTex)));
           } else {
-            uvs.push(uSwatch, vSwatch);
+            uvs.push(
+              Math.max(0.01, Math.min(0.99, uSwatch)),
+              Math.max(0.01, Math.min(0.99, vSwatch))
+            );
           }
         }
       }
@@ -570,15 +625,14 @@ export function createAnatomicalBottomGeometry({
   isShorts = false,
   yTop = 1.05,
   yHem = 0.10,
-  layerOffset = 0.015,
+  layerOffset = 0.014,
+  uSwatch = 0.50,
+  vSwatch = 0.50,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
   const uvs = [];
   const indices = [];
-
-  const uSwatch = 0.50;
-  const vSwatch = 0.50;
 
   // A. SKIRT MODE
   if (isSkirt) {
@@ -587,16 +641,16 @@ export function createAnatomicalBottomGeometry({
     for (let i = 0; i <= ny; i++) {
       const vNorm = i / ny;
       const y = yTop - vNorm * (yTop - yHem);
-      const slice = getTorsoSlice(Math.max(0.82, y), isMale);
+      const slice = getTorsoSlice(Math.max(0.84, y), isMale);
 
       let rx = slice.rx + layerOffset;
       let rz = slice.rz + layerOffset;
       const cz = slice.cz;
 
-      if (y < 0.82) {
-        const flareRatio = Math.pow((0.82 - y) / (0.82 - yHem), 1.2);
-        rx += flareRatio * 0.13;
-        rz += flareRatio * 0.09;
+      if (y < 0.84) {
+        const flareRatio = Math.pow((0.84 - y) / (0.84 - yHem), 1.2);
+        rx += flareRatio * 0.14;
+        rz += flareRatio * 0.10;
       }
 
       const vTex = 1.0 - vNorm;
@@ -606,14 +660,19 @@ export function createAnatomicalBottomGeometry({
         const theta = -Math.PI + uFrac * 2 * Math.PI;
         const x = rx * Math.sin(theta);
         const isFront = Math.cos(theta) >= 0;
-        const z = isFront ? cz + rz * Math.cos(theta) : cz - rz * Math.abs(Math.cos(theta));
+        const z = isFront
+          ? cz + rz * Math.cos(theta)
+          : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
         if (isFront) {
           const uT = (Math.sin(theta) + 1) * 0.5;
           uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
         } else {
-          uvs.push(uSwatch, vSwatch);
+          uvs.push(
+            Math.max(0.01, Math.min(0.99, uSwatch)),
+            Math.max(0.01, Math.min(0.99, vSwatch))
+          );
         }
       }
     }
@@ -637,7 +696,7 @@ export function createAnatomicalBottomGeometry({
 
   // B. PANTS / JEANS / TROUSERS / SHORTS MODE
   const yWaist = yTop;
-  const yCrotch = isMale ? 0.85 : 0.82;
+  const yCrotch = isMale ? 0.86 : 0.82;
   const yAnkle = isShorts ? (isMale ? 0.58 : 0.54) : yHem;
 
   // 1. Pelvis & Waistband Section
@@ -659,14 +718,19 @@ export function createAnatomicalBottomGeometry({
       const theta = -Math.PI + uFrac * 2 * Math.PI;
       const x = rx * Math.sin(theta);
       const isFront = Math.cos(theta) >= 0;
-      const z = isFront ? cz + rz * Math.cos(theta) : cz - rz * Math.abs(Math.cos(theta));
+      const z = isFront
+        ? cz + rz * Math.cos(theta)
+        : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
       if (isFront) {
         const uT = (Math.sin(theta) + 1) * 0.5;
         uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
       } else {
-        uvs.push(uSwatch, vSwatch);
+        uvs.push(
+          Math.max(0.01, Math.min(0.99, uSwatch)),
+          Math.max(0.01, Math.min(0.99, vSwatch))
+        );
       }
     }
   }
@@ -704,7 +768,9 @@ export function createAnatomicalBottomGeometry({
         const theta = -Math.PI + uFrac * 2 * Math.PI;
         const x = cx + r * Math.sin(theta);
         const isFront = Math.cos(theta) >= 0;
-        const z = isFront ? cz + r * Math.cos(theta) : cz - r * Math.abs(Math.cos(theta));
+        const z = isFront
+          ? cz + r * Math.cos(theta)
+          : cz - (r + 0.008) * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
         if (isFront) {
@@ -714,7 +780,10 @@ export function createAnatomicalBottomGeometry({
             : 0.52 + ((Math.sin(theta) + 1) * 0.5) * 0.43;
           uvs.push(Math.max(0, Math.min(1, uLeg)), Math.max(0, Math.min(1, vTex)));
         } else {
-          uvs.push(uSwatch, vSwatch);
+          uvs.push(
+            Math.max(0.01, Math.min(0.99, uSwatch)),
+            Math.max(0.01, Math.min(0.99, vSwatch))
+          );
         }
       }
     }
@@ -742,19 +811,19 @@ export function createAnatomicalBottomGeometry({
  */
 export function createAnatomicalFootwearGeometry({
   isMale = false,
-  yTop = 0.092,
-  ySole = 0.005,
-  layerOffset = 0.008,
+  yTop = 0.095,
+  ySole = -0.006,
+  layerOffset = 0.010,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
   const uvs = [];
   const indices = [];
 
-  const footCenterX = isMale ? 0.145 : 0.166;
+  const footCenterX = isMale ? 0.158 : 0.178;
   const footSides = [-footCenterX, footCenterX];
   const ny = 6;
-  const nx = 14;
+  const nx = 16;
 
   footSides.forEach((cx, idx) => {
     const startIdx = verts.length / 3;
@@ -762,16 +831,20 @@ export function createAnatomicalFootwearGeometry({
     for (let i = 0; i <= ny; i++) {
       const v = i / ny;
       const y = yTop - v * (yTop - ySole);
-      const rx = (isMale ? 0.052 : 0.046) + v * 0.012 + layerOffset;
-      const rz = (isMale ? 0.075 : 0.068) + v * 0.062 + layerOffset;
-      const zCenter = 0.035 + v * 0.075;
+
+      // Ankle collar down to toe/sole center and radii
+      const cz = isMale
+        ? 0.025 + v * (0.065 - 0.025)
+        : 0.045 + v * (0.113 - 0.045);
+      const rx = (isMale ? 0.052 : 0.046) + v * 0.014 + layerOffset;
+      const rz = (isMale ? 0.090 : 0.082) + v * 0.055 + layerOffset;
       const vTex = 1.0 - v;
 
       for (let j = 0; j <= nx; j++) {
         const u = j / nx;
         const theta = -Math.PI + u * 2 * Math.PI;
         const x = cx + rx * Math.sin(theta);
-        const z = zCenter + rz * Math.cos(theta);
+        const z = cz + rz * Math.cos(theta);
         verts.push(x, y, z);
 
         const uT = idx === 0
@@ -799,9 +872,6 @@ export function createAnatomicalFootwearGeometry({
   return geo;
 }
 
-/**
- * Creates 3D accessory geometries (headwear, glasses, scarf, belt, bag).
- */
 export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
@@ -867,7 +937,13 @@ export default function GarmentMesh3D({
   visible = true,
   hasOuterwear = false,
 }) {
-  const { texture, dominantColor, hasSleeves: autoHasSleeves } = useGarmentTexture(garment?.url);
+  const {
+    texture,
+    dominantColor,
+    hasSleeves: autoHasSleeves,
+    solidU = 0.5,
+    solidV = 0.5,
+  } = useGarmentTexture(garment?.url);
 
   const rawSlot = normalizeGarmentRole(
     slot || garment?.slot,
@@ -886,12 +962,12 @@ export default function GarmentMesh3D({
       const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה');
       const isSleeveless = garmentText.includes('sleeveless') || garmentText.includes('tank') || garmentText.includes('vest') || garmentText.includes('גופיה') || garmentText.includes('גופייה') || garmentText.includes('וסט') || !autoHasSleeves;
 
-      const yTop = isMale ? 1.46 : 1.40;
-      let yBottom = isMale ? 0.90 : 0.86;
+      const yTop = isMale ? 1.48 : 1.42;
+      let yBottom = isMale ? 0.88 : 0.84;
       if (isCrop) yBottom = isMale ? 1.15 : 1.10;
       if (isLongline) yBottom = isMale ? 0.75 : 0.70;
 
-      const layerOffset = hasOuterwear ? 0.010 : 0.015;
+      const layerOffset = hasOuterwear ? 0.012 : 0.016;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -899,22 +975,24 @@ export default function GarmentMesh3D({
         yTop,
         yBottom,
         layerOffset,
+        uSwatch: solidU,
+        vSwatch: solidV,
       });
     }
 
-    // 2. OUTERWEAR (Blazers, Suits, Coats, Jackets)
+    // 2. OUTERWEAR (Blazers, Suits, Coats, Jackets, Cardigans)
     if (rawSlot === 'outerwear') {
-      const isLongCoat = garmentText.includes('overcoat') || garmentText.includes('trench') || garmentText.includes('duster') || garmentText.includes('מעיל ארוך');
+      const isLongCoat = garmentText.includes('overcoat') || garmentText.includes('trench') || garmentText.includes('duster') || garmentText.includes('מעיל ארוך') || garmentText.includes('cardigan') || garmentText.includes('קרדיגן');
       const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('עליונית קצרה') || (garmentText.includes('jacket') && garmentText.includes('crop'));
       const isSleeveless = garmentText.includes('vest') || garmentText.includes('waistcoat') || garmentText.includes('וסט') || !autoHasSleeves;
 
-      const yTop = isMale ? 1.48 : 1.42;
-      let yBottom = isMale ? 0.88 : 0.84;
-      if (isLongCoat) yBottom = isMale ? 0.50 : 0.46;
+      const yTop = isMale ? 1.50 : 1.44;
+      let yBottom = isMale ? 0.86 : 0.82;
+      if (isLongCoat) yBottom = isMale ? 0.52 : 0.48;
       if (isCropJacket) yBottom = isMale ? 1.12 : 1.06;
 
-      // Layered cleanly outside tops with 2.6cm clearance
-      const layerOffset = isMale ? 0.028 : 0.026;
+      // Layered cleanly outside tops with 2.8cm to 3.2cm clearance
+      const layerOffset = isMale ? 0.032 : 0.028;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -922,6 +1000,8 @@ export default function GarmentMesh3D({
         yTop,
         yBottom,
         layerOffset,
+        uSwatch: solidU,
+        vSwatch: solidV,
       });
     }
 
@@ -931,8 +1011,8 @@ export default function GarmentMesh3D({
       const isMaxi = garmentText.includes('maxi') || garmentText.includes('gown') || garmentText.includes('evening') || garmentText.includes('ארוכה') || garmentText.includes('מקסי');
       const hasSleeves = autoHasSleeves && (garmentText.includes('long sleeve') || garmentText.includes('sleeve') || garmentText.includes('שרוול'));
 
-      const yTop = isMale ? 1.46 : 1.40;
-      let yBottom = isMale ? 0.55 : 0.52; // Default midi/knee
+      const yTop = isMale ? 1.48 : 1.42;
+      let yBottom = isMale ? 0.55 : 0.50; // Default midi/knee
       if (isMini) yBottom = isMale ? 0.78 : 0.74;
       if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
 
@@ -941,7 +1021,9 @@ export default function GarmentMesh3D({
         hasSleeves,
         yTop,
         yBottom,
-        layerOffset: 0.016,
+        layerOffset: 0.018,
+        uSwatch: solidU,
+        vSwatch: solidV,
       });
     }
 
@@ -962,7 +1044,9 @@ export default function GarmentMesh3D({
         isShorts,
         yTop: isMale ? 1.08 : 1.05,
         yHem,
-        layerOffset: 0.015,
+        layerOffset: 0.014,
+        uSwatch: solidU,
+        vSwatch: solidV,
       });
     }
 
@@ -970,15 +1054,15 @@ export default function GarmentMesh3D({
     if (rawSlot === 'shoes') {
       return createAnatomicalFootwearGeometry({
         isMale,
-        yTop: isMale ? 0.092 : 0.088,
-        ySole: 0.005,
-        layerOffset: 0.008,
+        yTop: isMale ? 0.098 : 0.095,
+        ySole: -0.006,
+        layerOffset: 0.010,
       });
     }
 
     // 6. ACCESSORIES
     return createAnatomicalAccessoryGeometry(rawSlot, { isMale });
-  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves]);
+  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV]);
 
   if (!visible || !garment || !geometry) return null;
 
@@ -995,8 +1079,8 @@ export default function GarmentMesh3D({
         alphaTest={0.02}
         depthWrite={true}
         side={THREE.DoubleSide}
-        roughness={0.62}
-        metalness={0.06}
+        roughness={0.65}
+        metalness={0.04}
         envMapIntensity={0.8}
       />
     </mesh>

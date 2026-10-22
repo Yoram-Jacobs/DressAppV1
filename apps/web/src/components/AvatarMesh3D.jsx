@@ -123,11 +123,10 @@ export default function AvatarMesh3D({
           mat.metalness = 0.05;
           mat.needsUpdate = true;
         } else if (matName.includes('generic')) {
-          // Modest studio briefs / undergarment - tinted in natural seamless tone to avoid dark bra peaking
-          const undergarmentColor = skinThreeColor.clone().multiplyScalar(0.94);
-          mat.color.copy(undergarmentColor);
-          mat.roughness = 0.58;
-          mat.metalness = 0.02;
+          // Modest studio activewear bra & briefs set (chic graphite charcoal with soft matte fabric finish)
+          mat.color.set('#20242C');
+          mat.roughness = 0.68;
+          mat.metalness = 0.04;
           mat.needsUpdate = true;
         } else if (matName.includes('cornea')) {
           mat.transparent = true;
