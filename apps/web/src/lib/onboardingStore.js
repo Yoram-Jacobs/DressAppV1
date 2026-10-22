@@ -220,7 +220,7 @@ export function getOnboardingDraft() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;
-    return {
+    const resolvedDraft = {
       ...DEFAULT_ONBOARDING_DRAFT,
       ...parsed,
       measurements: {
@@ -236,6 +236,10 @@ export function getOnboardingDraft() {
         },
       },
     };
+    if (!Array.isArray(resolvedDraft.starter_item_ids) || resolvedDraft.starter_item_ids.length === 0) {
+      resolvedDraft.starter_item_ids = autoSelectStarterCapsule(resolvedDraft);
+    }
+    return resolvedDraft;
   } catch {
     return null;
   }

@@ -1763,9 +1763,9 @@ export default function AvatarViewer2D({
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden flex items-center justify-center p-0 shadow-inner group">
+    <div className="relative w-full h-full max-h-full overflow-hidden flex items-center justify-center p-0 shadow-inner group">
       {/* 2D Dynamic Bezier SVG Avatar or Real Body Photo Container */}
-      <div className="relative h-full aspect-[1/2] flex items-center justify-center transition-all duration-500">
+      <div className="relative w-full h-full aspect-[200/450] max-h-full max-w-full flex items-center justify-center transition-all duration-500">
         {activeBodyPhotoUrl && !bodyPhotoError ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <img

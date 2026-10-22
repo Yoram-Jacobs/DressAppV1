@@ -145,18 +145,22 @@ export default function Onboarding() {
   const { user, updateUserLocal, refresh } = useAuth();
 
   const [draft, setDraft] = useState(() => {
-    const saved = getOnboardingDraft();
-    if (saved) return saved;
-    const autoIds = autoSelectStarterCapsule(DEFAULT_ONBOARDING_DRAFT);
-    const initialFallback = computeFallbackPrediction({
-      ...DEFAULT_ONBOARDING_DRAFT.measurements,
-      sex: DEFAULT_ONBOARDING_DRAFT.sex,
-    });
+    let saved = getOnboardingDraft();
+    if (!saved) {
+      saved = { ...DEFAULT_ONBOARDING_DRAFT };
+    }
+    if (!Array.isArray(saved.starter_item_ids) || saved.starter_item_ids.length === 0) {
+      saved.starter_item_ids = autoSelectStarterCapsule(saved);
+    }
+    if (!saved.predicted_sizes || Object.keys(saved.predicted_sizes).length === 0) {
+      saved.predicted_sizes = computeFallbackPrediction({
+        ...saved.measurements,
+        sex: saved.sex,
+      });
+    }
     return {
-      ...DEFAULT_ONBOARDING_DRAFT,
+      ...saved,
       preferred_language: (i18n.language || 'en').split('-')[0].toLowerCase(),
-      starter_item_ids: autoIds,
-      predicted_sizes: initialFallback,
     };
   });
 
@@ -1123,7 +1127,7 @@ export default function Onboarding() {
                     </div>
                   </div>
 
-                  <div className="w-full max-w-[240px]">
+                  <div className="w-full max-w-[240px] aspect-[200/450] mx-auto flex items-center justify-center">
                     <AvatarViewer
                       measurements={avatarMeasurements}
                       sex={draft.sex === 'male' ? 'male' : 'female'}
@@ -1403,7 +1407,7 @@ export default function Onboarding() {
                     </button>
                   </div>
 
-                  <div className="w-full max-w-[250px] my-1">
+                  <div className="w-full max-w-[250px] aspect-[200/450] mx-auto flex items-center justify-center my-1">
                     <AvatarViewer
                       measurements={avatarMeasurements}
                       sex={draft.sex === 'male' ? 'male' : 'female'}

@@ -638,7 +638,7 @@ export default function DynamicAvatar({
     if (
       !acquiredSlotRef.current &&
       canUseWebGL &&
-      activeWebGLCanvasCount < MAX_CONCURRENT_WEBGL_CANVASES
+      (interactive || activeWebGLCanvasCount < MAX_CONCURRENT_WEBGL_CANVASES)
     ) {
       activeWebGLCanvasCount += 1;
       acquiredSlotRef.current = true;
@@ -646,7 +646,7 @@ export default function DynamicAvatar({
       return true;
     }
     return false;
-  }, [canUseWebGL]);
+  }, [canUseWebGL, interactive]);
 
   const releaseSlot = useCallback(() => {
     if (acquiredSlotRef.current) {
@@ -724,11 +724,19 @@ export default function DynamicAvatar({
 
   return (
     <div
-      className={`relative w-full h-full flex items-center justify-center select-none ${className}`}
+      className={`relative w-full h-full aspect-[200/450] max-h-full max-w-full flex items-center justify-center select-none ${className}`}
       data-testid="dynamic-3d-avatar"
       data-gender={isMale ? 'male' : 'female'}
       data-skin-color={activeSkinColor}
+      data-interactive={interactive ? 'true' : 'false'}
     >
+      {/* Initial load indicator before 3D model frame is ready */}
+      {!snapshotUrl && !canMountWebGL && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[1] gap-2">
+          <div className="w-8 h-8 rounded-full border-2 border-primary-brand/30 border-t-primary-brand animate-spin" />
+        </div>
+      )}
+
       {/* 3D Realistic Human Avatar Canvas (mounts when interactive or generating snapshot) */}
       {canUseWebGL && canMountWebGL && (
         <div className="absolute inset-0 w-full h-full pointer-events-none z-[2]">
@@ -776,13 +784,15 @@ export default function DynamicAvatar({
         />
       )}
 
-      {/* Anatomical Calibration Guide Lines & 200x450 Coordinate Frame */}
-      {showGuideLines && (
-        <svg
-          viewBox="0 0 200 450"
-          className="w-full h-full pointer-events-none z-[3]"
-          style={{ maxHeight: '100%' }}
-        >
+      {/* 200x450 Coordinate Frame & In-Flow Aspect Ratio Anchor (holds 200:450 ratio intact across all screen layouts) */}
+      <svg
+        viewBox="0 0 200 450"
+        className="w-full h-full pointer-events-none z-[3] block select-none"
+        style={{ maxHeight: '100%' }}
+        aria-hidden="true"
+      >
+        <rect width="200" height="450" fill="none" opacity="0" />
+        {showGuideLines && (
           <g className="text-slate-400/35 dark:text-slate-500/35 stroke-current stroke-[0.75] stroke-dasharray-[2,3]">
             <line x1="15" y1={anatomy.yShoulders} x2="185" y2={anatomy.yShoulders} />
             <line x1="20" y1={anatomy.yChest} x2="180" y2={anatomy.yChest} />
@@ -790,8 +800,8 @@ export default function DynamicAvatar({
             <line x1="20" y1={anatomy.yHip} x2="180" y2={anatomy.yHip} />
             <line x1="30" y1={anatomy.yCrotch} x2="170" y2={anatomy.yCrotch} />
           </g>
-        </svg>
-      )}
+        )}
+      </svg>
 
       {/* Garment / Overlay Children Slot */}
       {children}
