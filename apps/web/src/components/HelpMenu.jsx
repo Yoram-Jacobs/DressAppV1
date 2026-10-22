@@ -166,7 +166,6 @@ export default function HelpMenu({ initialTab, onClose }) {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const viewerIsPro = !!user?.professional?.is_professional;
   const activeTabRef = useRef(null);
 
