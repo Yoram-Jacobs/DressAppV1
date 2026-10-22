@@ -66,6 +66,29 @@ async def save_closet_item_document(
             user_tier = "professional"
             
     if user_tier == "free":
+        from app.services.credit_manager import (
+            MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+            can_use_cluster_pipeline,
+            get_available_reconstruction_credits,
+        )
+        from app.services.vision.geometry import is_cluster_or_rack_analysis
+        payload_dict = payload.model_dump() if hasattr(payload, "model_dump") else payload.dict()
+        if not can_use_cluster_pipeline(user) and is_cluster_or_rack_analysis(payload_dict):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "code": "mass_pipeline_tier_restricted",
+                    "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                    "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                    "available_credits": get_available_reconstruction_credits(user),
+                    "message": (
+                        f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                        f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                        f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan."
+                    ),
+                },
+            )
+
         current_count = await db.closet_items.count_documents({"user_id": user["id"]})
         capacity_limit = min(150, 50 + user.get("closet_capacity_bonus", 0))
         if current_count >= capacity_limit:

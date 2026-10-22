@@ -1413,6 +1413,31 @@ async def parse_garments(
 
     is_side_by_side_unworn_cluster = has_vertical_belt
     if not is_side_by_side_unworn_cluster:
+        # Multiple tops or multiple bottoms or 3+ shoes indicates a multi-garment cluster
+        if len(raw_upper_bbs) >= 2:
+            top_xs = [(b[1] + b[3]) / 2.0 for b in raw_upper_bbs]
+            top_ws = [max(1, b[3] - b[1]) for b in raw_upper_bbs]
+            for i_a in range(len(raw_upper_bbs)):
+                for i_b in range(i_a + 1, len(raw_upper_bbs)):
+                    if abs(top_xs[i_a] - top_xs[i_b]) > 0.25 * min(top_ws[i_a], top_ws[i_b]):
+                        is_side_by_side_unworn_cluster = True
+                        break
+                if is_side_by_side_unworn_cluster:
+                    break
+        if not is_side_by_side_unworn_cluster and len(raw_bottom_bbs) >= 2:
+            bot_xs = [(b[1] + b[3]) / 2.0 for b in raw_bottom_bbs]
+            bot_ws = [max(1, b[3] - b[1]) for b in raw_bottom_bbs]
+            for i_a in range(len(raw_bottom_bbs)):
+                for i_b in range(i_a + 1, len(raw_bottom_bbs)):
+                    if abs(bot_xs[i_a] - bot_xs[i_b]) > 0.25 * min(bot_ws[i_a], bot_ws[i_b]):
+                        is_side_by_side_unworn_cluster = True
+                        break
+                if is_side_by_side_unworn_cluster:
+                    break
+        if not is_side_by_side_unworn_cluster and len(raw_shoe_bbs) >= 3:
+            is_side_by_side_unworn_cluster = True
+
+    if not is_side_by_side_unworn_cluster:
         for i_a in range(len(raw_major_bbs)):
             _ca, (ay1, ax1, ay2, ax2) = raw_major_bbs[i_a]
             aw = max(1, ax2 - ax1)
@@ -1430,11 +1455,11 @@ async def parse_garments(
 
     has_anatomical_outfit_stack = False
     if not is_side_by_side_unworn_cluster:
-        # 1. Standing outfit with footwear at bottom and upper/lower garments above
-        if raw_shoe_bbs and (raw_upper_bbs or raw_bottom_bbs):
+        # 1. Standing outfit with footwear at bottom and pants/dress directly above them
+        if raw_shoe_bbs and (raw_bottom_bbs or any(c == "dress" for c, _ in raw_major_bbs)):
             max_shoe_y2 = max(b[2] for b in raw_shoe_bbs)
             min_shoe_y1 = min(b[0] for b in raw_shoe_bbs)
-            min_cloth_y1 = min(b[0] for b in (raw_upper_bbs + raw_bottom_bbs))
+            min_cloth_y1 = min(b[0] for b in (raw_upper_bbs + raw_bottom_bbs)) if (raw_upper_bbs or raw_bottom_bbs) else 0
             if min_shoe_y1 >= int(0.55 * H) and min_cloth_y1 <= int(0.50 * H) and (max_shoe_y2 - min_cloth_y1) >= int(0.45 * H):
                 has_anatomical_outfit_stack = True
         # 2. Upper garment stacked vertically above lower garment along the same body axis
@@ -1489,10 +1514,14 @@ async def parse_garments(
             if is_side_by_side_unworn_cluster:
                 human_mask_full = None
                 has_any_human = False
-            elif has_anatomical_outfit_stack and raw_shoe_bbs:
-                # Full-body standing person wearing clothes + shoes (even if exposed skin is small, e.g. 0.2%-25%)
-                human_mask_full = skin_outside_garments.astype(np.uint8) if (0.001 <= skin_frac <= 0.28 and not is_warm_wall_bg) else None
-                has_any_human = True
+            elif has_anatomical_outfit_stack and raw_shoe_bbs and not is_side_by_side_unworn_cluster:
+                # Full-body standing person wearing clothes + shoes
+                if not is_warm_wall_bg:
+                    human_mask_full = skin_outside_garments.astype(np.uint8)
+                    has_any_human = True
+                else:
+                    human_mask_full = None
+                    has_any_human = False
             elif has_anatomical_outfit_stack and (0.003 <= skin_frac <= 0.25) and not is_warm_wall_bg:
                 human_mask_full = skin_outside_garments.astype(np.uint8)
                 has_any_human = True
@@ -1980,7 +2009,9 @@ async def parse_garments(
                             if (x_in / float(bw)) < 0.65:
                                 unworn_cluster_hint = True
                                 break
-        elif len(by_label) >= 3 and "Shoes" not in by_label:
+        elif len(by_label) >= 3:
+            unworn_cluster_hint = True
+        elif len(by_label) >= 2 and any(k in by_label for k in ("Shoes", "footwear")) and any(it.get("category") in ("top", "outerwear", "dress") for it in by_label.values()) and not has_head:
             unworn_cluster_hint = True
 
     if (count_hint is None or count_hint <= 1) and not has_human and not unworn_cluster_hint and not is_multi_category_outfit and len(by_label) > 1:

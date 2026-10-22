@@ -238,29 +238,62 @@ def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
         if any(h in lbl for h in ("person", "model", "woman", "man", "human", "face", "hair", "head", "skin", "body")):
             return True
 
+    # If any item is explicitly marked as an unworn cluster/rack, it is never a human model
+    if any(d.get("_unworn_cluster_hint") for d in items):
+        return False
+
     # Vertical anatomical arrangement of garments on a standing human model:
     # A human wearer has top strictly above bottom/shoes spanning significant vertical frame.
     tops = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("top", "outerwear", "dress") and d.get("bbox")]
     bottoms = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("bottom", "pants", "skirt") and d.get("bbox")]
     shoes = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes") and d.get("bbox")]
+
+    # Multiple side-by-side tops or bottoms or 3+ shoes indicates a rack/pile cluster, not a human wearer
+    if len(tops) >= 2:
+        top_xs = [(d["bbox"][1] + d["bbox"][3]) / 2.0 for d in tops]
+        top_ws = [max(1, d["bbox"][3] - d["bbox"][1]) for d in tops]
+        for i_a in range(len(tops)):
+            for i_b in range(i_a + 1, len(tops)):
+                if abs(top_xs[i_a] - top_xs[i_b]) > 0.25 * min(top_ws[i_a], top_ws[i_b]):
+                    return False
+    if len(bottoms) >= 2:
+        bot_xs = [(d["bbox"][1] + d["bbox"][3]) / 2.0 for d in bottoms]
+        bot_ws = [max(1, d["bbox"][3] - d["bbox"][1]) for d in bottoms]
+        for i_a in range(len(bottoms)):
+            for i_b in range(i_a + 1, len(bottoms)):
+                if abs(bot_xs[i_a] - bot_xs[i_b]) > 0.25 * min(bot_ws[i_a], bot_ws[i_b]):
+                    return False
+    if len(shoes) >= 3:
+        return False
+
     if tops and bottoms:
         min_top_y = min(d["bbox"][0] for d in tops)
         min_bot_y = min(d["bbox"][0] for d in bottoms)
         max_bot_y = max(d["bbox"][2] for d in bottoms)
-        if min_top_y < min_bot_y and (max_bot_y - min_top_y) >= 250:
+        top_cx = (min(d["bbox"][1] for d in tops) + max(d["bbox"][3] for d in tops)) / 2.0
+        bot_cx = (min(d["bbox"][1] for d in bottoms) + max(d["bbox"][3] for d in bottoms)) / 2.0
+        if min_top_y < min_bot_y and (max_bot_y - min_top_y) >= 250 and abs(top_cx - bot_cx) <= 250:
             return True
     if tops and shoes:
-        min_top_y = min(d["bbox"][0] for d in tops)
-        min_shoe_y = min(d["bbox"][0] for d in shoes)
-        max_shoe_y = max(d["bbox"][2] for d in shoes)
-        if min_top_y < min_shoe_y and (max_shoe_y - min_top_y) >= 350:
-            return True
+        # Tops without bottoms and shoes separated by empty air is a rack with shoes on floor,
+        # unless a long dress/jumpsuit spans down towards footwear along the body column
+        dresses = [d for d in tops if (d.get("category") or d.get("kind") or "").lower() == "dress"]
+        if dresses:
+            min_top_y = min(d["bbox"][0] for d in dresses)
+            min_shoe_y = min(d["bbox"][0] for d in shoes)
+            max_shoe_y = max(d["bbox"][2] for d in shoes)
+            dress_cx = (min(d["bbox"][1] for d in dresses) + max(d["bbox"][3] for d in dresses)) / 2.0
+            shoe_cx = (min(d["bbox"][1] for d in shoes) + max(d["bbox"][3] for d in shoes)) / 2.0
+            if min_top_y < min_shoe_y and (max_shoe_y - min_top_y) >= 350 and abs(dress_cx - shoe_cx) <= 250:
+                return True
     if bottoms and shoes:
         min_bot_y = min(d["bbox"][0] for d in bottoms)
         bot_h = max(d["bbox"][2] - d["bbox"][0] for d in bottoms)
         min_shoe_y = min(d["bbox"][0] for d in shoes)
         max_shoe_y = max(d["bbox"][2] for d in shoes)
-        if min_bot_y <= 400 and bot_h >= 350 and min_bot_y < min_shoe_y and (max_shoe_y - min_bot_y) >= 450:
+        bot_cx = (min(d["bbox"][1] for d in bottoms) + max(d["bbox"][3] for d in bottoms)) / 2.0
+        shoe_cx = (min(d["bbox"][1] for d in shoes) + max(d["bbox"][3] for d in shoes)) / 2.0
+        if min_bot_y <= 400 and bot_h >= 350 and min_bot_y < min_shoe_y and (max_shoe_y - min_bot_y) >= 450 and abs(bot_cx - shoe_cx) <= 250:
             return True
     return False
 
@@ -512,5 +545,43 @@ def _looks_already_cropped(
     # Signal 5: several detections of the same kind, all clustered inside
     # a small area (collar / sleeve / hem hallucinations).
     return union <= frame_area * _SUBPART_UNION_FRAC
+
+
+def is_cluster_or_rack_analysis(analysis: dict[str, Any] | None) -> bool:
+    """Return True if the LLM analysis description, title, or item type indicates that
+    the image is an unworn cluster of multiple garments (e.g. a clothes rack, hanging rod,
+    garment pile, shoe rack, or wardrobe closet shot).
+    """
+    if not analysis or not isinstance(analysis, dict):
+        return False
+    title = str(analysis.get("title") or "").lower().strip()
+    name = str(analysis.get("name") or "").lower().strip()
+    sub_category = str(analysis.get("sub_category") or "").lower().strip()
+    item_type = str(analysis.get("item_type") or "").lower().strip()
+    category = str(analysis.get("category") or "").lower().strip()
+    caption = str(analysis.get("caption") or "").lower().strip()
+    summary = str(analysis.get("summary") or "").lower().strip()
+
+    combined_text = f"{title} {name} {category} {sub_category} {item_type} {caption} {summary}".lower()
+
+    CLUSTER_PATTERNS = (
+        "clothes rack", "clothing rack", "garment rack", "hanger rack", "hanging rack",
+        "hangers on a rack", "coat rack", "closet rack", "wardrobe rack", "closet rod",
+        "hanging rod", "rack of clothes", "rack of garments", "clothes on a rack",
+        "garments on a rack", "variety of clothes", "assortment of clothes", "multiple clothes",
+        "multiple garments", "collection of clothes", "cluster of clothes", "pile of clothes",
+        "stack of clothes", "pile of garments", "shoe rack", "shelf of shoes", "rack of shoes",
+        "shoe shelf", "shoe shelves", "shoes on a rack", "shoes on a shelf",
+        "hanging on a rack", "hanging on a hanger rack", "hanging on a clothes rack",
+        "hanging on hangers", "hung on a rack", "hanging in a closet",
+        # Multilingual
+        "מתלה בגדים", "קולב בגדים", "ערימת בגדים", "מתלה",
+        "perchero", "estante de ropa", "pila de ropa",
+        "kleiderständer", "kleiderstange",
+        "portant à vêtements", "porte-manteau", "pile de vêtements",
+        "شماعة ملابس", "رف ملابس", "كومة ملابس",
+    )
+    return any(p in combined_text for p in CLUSTER_PATTERNS)
+
 
 

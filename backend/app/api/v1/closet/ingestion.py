@@ -589,7 +589,25 @@ async def analyze_item_image(
                         analysis = _safe_analysis(frame.get("analysis") or {})
                         from app.services.vision import (
                             _is_unidentifiable,
+                            is_cluster_or_rack_analysis,
                         )
+                        if is_cluster_or_rack_analysis(analysis) and not can_use_cluster_pipeline(user):
+                            logger.info("ingestion stream: blocking cluster upload for free user on item %d (%s)", idx, analysis.get("title"))
+                            mass_restricted_count += 1
+                            await queue.put({
+                                "type": "mass_restricted",
+                                "image_index": frame.get("image_index", 0),
+                                "code": "mass_pipeline_tier_restricted",
+                                "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                                "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                                "available_credits": get_available_reconstruction_credits(user),
+                                "message": (
+                                    f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                                    f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                                    f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan."
+                                ),
+                            })
+                            continue
                         if _is_unidentifiable(analysis):
                             await queue.put({
                                 "type": "item_skip",
@@ -876,6 +894,22 @@ async def analyze_item_image(
                         else {}
                     )
                     analysis = _safe_analysis(frame.get("analysis") or {})
+                    from app.services.vision import is_cluster_or_rack_analysis
+                    if is_cluster_or_rack_analysis(analysis) and not can_use_cluster_pipeline(user):
+                        mass_restricted_frames.append({
+                            "type": "mass_restricted",
+                            "image_index": frame.get("image_index", 0),
+                            "code": "mass_pipeline_tier_restricted",
+                            "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                            "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                            "available_credits": get_available_reconstruction_credits(user),
+                            "message": (
+                                f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                                f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                                f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan."
+                            ),
+                        })
+                        continue
                     if not _is_unidentifiable(analysis):
                         from app.services.duplicate_detection import find_potential_duplicate
                         img_idx = frame.get("image_index", 0)

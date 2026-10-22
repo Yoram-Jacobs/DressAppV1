@@ -1168,6 +1168,78 @@ function Stepper({ cards, saving, bgBatch }) {
   );
 }
 
+const isClusterOrRackItem = (analysis) => {
+  if (!analysis || typeof analysis !== "object") return false;
+  const combined = [
+    analysis.title,
+    analysis.name,
+    analysis.category,
+    analysis.sub_category,
+    analysis.item_type,
+    analysis.caption,
+    analysis.summary,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const patterns = [
+    "clothes rack",
+    "clothing rack",
+    "garment rack",
+    "hanger rack",
+    "hanging rack",
+    "hangers on a rack",
+    "coat rack",
+    "closet rack",
+    "wardrobe rack",
+    "closet rod",
+    "hanging rod",
+    "rack of clothes",
+    "rack of garments",
+    "clothes on a rack",
+    "garments on a rack",
+    "variety of clothes",
+    "assortment of clothes",
+    "multiple clothes",
+    "multiple garments",
+    "collection of clothes",
+    "cluster of clothes",
+    "pile of clothes",
+    "stack of clothes",
+    "pile of garments",
+    "shoe rack",
+    "shelf of shoes",
+    "rack of shoes",
+    "shoe shelf",
+    "shoe shelves",
+    "shoes on a rack",
+    "shoes on a shelf",
+    "hanging on a rack",
+    "hanging on a hanger rack",
+    "hanging on a clothes rack",
+    "hanging on hangers",
+    "hung on a rack",
+    "hanging in a closet",
+    "מתלה בגדים",
+    "קולב בגדים",
+    "ערימת בגדים",
+    "מתלה",
+    "perchero",
+    "estante de ropa",
+    "pila de ropa",
+    "kleiderständer",
+    "kleiderstange",
+    "portant à vêtements",
+    "porte-manteau",
+    "pile de vêtements",
+    "شماعة ملابس",
+    "رف ملابس",
+    "كومة ملابس",
+  ];
+  return patterns.some((p) => combined.includes(p));
+};
+
 /* -------------------- page -------------------- */
 export default function AddItem() {
   const { t, i18n } = useTranslation();
@@ -3125,6 +3197,30 @@ export default function AddItem() {
         if (!slot) return;
         const { id: slotId, origCard } = slot;
 
+        if (!canAccessMassUpload && isClusterOrRackItem(frame.analysis)) {
+          console.warn("[AddItem] handleItem: detected cluster/rack item for free user, blocking slot", slotId);
+          if (origCard) {
+            workStore.completeAnalyze(origCard.id);
+            setCards((prev) =>
+              prev.filter(
+                (c) => c.id !== slotId && c.id !== origCard.id && !c.id.startsWith(`${origCard.id}-`),
+              ),
+            );
+          } else {
+            setCards((prev) => prev.filter((c) => c.id !== slotId));
+          }
+          setMassClusterModal({
+            previewUrl: origCard?.previewUrl || null,
+            filename: origCard?.sourceFilename || origCard?.file?.name || null,
+            message: t("addItem.pipeline.massClusterFreeBlocked", {
+              minCredits: minClusterCredits || 15,
+              defaultValue:
+                "Cluster garment uploading uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least 15 AI reconstruction credits on the Free plan.",
+            }),
+          });
+          return;
+        }
+
         const job = workStore.getSnapshot().analyzeJobs[origCard.id];
         if (job) {
           workStore.updateAnalyze(origCard.id, {
@@ -3315,6 +3411,28 @@ export default function AddItem() {
       // If streaming callbacks were bypassed (e.g. axios POST fallback),
       // hydrate any cards still scanning from resp.items so they don't get stuck!
       if (Array.isArray(resp?.items) && resp.items.length > 0) {
+        if (!canAccessMassUpload) {
+          const clusterItems = resp.items.filter((it) => isClusterOrRackItem(it.analysis));
+          if (clusterItems.length > 0) {
+            const firstOrig = cardsToProcess[0];
+            const clusterCardIds = new Set(
+              clusterItems.map((it, idx) => {
+                const imgIdx = it.image_index !== undefined ? it.image_index : idx;
+                return cardsToProcess[imgIdx]?.id;
+              }).filter(Boolean),
+            );
+            setCards((prev) => prev.filter((c) => !clusterCardIds.has(c.id)));
+            setMassClusterModal({
+              previewUrl: firstOrig?.previewUrl || null,
+              filename: firstOrig?.sourceFilename || firstOrig?.file?.name || null,
+              message: t("addItem.pipeline.massClusterFreeBlocked", {
+                minCredits: minClusterCredits || 15,
+                defaultValue:
+                  "Cluster garment uploading uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least 15 AI reconstruction credits on the Free plan.",
+              }),
+            });
+          }
+        }
         setCards((prev) =>
           prev.map((c) => {
             if (c.status !== "scanning") return c;
@@ -3325,6 +3443,9 @@ export default function AddItem() {
             );
             if (match) {
               const analysis = match.analysis || {};
+              if (!canAccessMassUpload && isClusterOrRackItem(analysis)) {
+                return null;
+              }
               return {
                 ...c,
                 status: "ready",
@@ -3340,7 +3461,7 @@ export default function AddItem() {
               };
             }
             return c;
-          }),
+          }).filter(Boolean),
         );
       }
 

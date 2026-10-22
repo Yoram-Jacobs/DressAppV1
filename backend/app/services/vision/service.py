@@ -26,7 +26,15 @@ from .image import (
     _apply_fast_matte,
     _create_batch_collage,
 )
-from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped, _iou_norm, _containment, _detect_human_presence
+from .geometry import (
+    _nms_detections,
+    _is_unidentifiable,
+    is_cluster_or_rack_analysis,
+    _looks_already_cropped,
+    _iou_norm,
+    _containment,
+    _detect_human_presence,
+)
 from .validation import (
     _coerce_single_garment,
     _coerce_enums,
@@ -2917,6 +2925,7 @@ class GarmentVisionService:
                     )
                     has_masc_cue = any(
                         is_distinctly_masculine_garment(d.get("category"), d.get("label"), d.get("label"), name=d.get("label"), full_text=d.get("label"))
+                        for d in detections
                     ) or any(k in cat_labels for k in ("boxers", "tuxedo", "kurta", "sherwani", "thobe", "dishdasha")) or any(
                         w in str(d.get("label", "")).lower() for d in detections for w in ("kurta", "sherwani", "thobe", "dishdasha", "tuxedo", "boxer")
                     )
@@ -2977,7 +2986,7 @@ class GarmentVisionService:
                 force_multi_from_router = False
                 force_single_from_router = False
                 if (
-                    (not has_human_wearer or (not has_explicit_head and not shoe_dets and len(detections) >= 2))
+                    (not has_human_wearer or not has_explicit_head)
                     and not unworn_cluster_hint
                     and eff_mode == "auto"
                     and not cutout_only
@@ -3507,6 +3516,33 @@ class GarmentVisionService:
                         analysis["provider_used"] = assembled.get("provider_used", "gemma")
                         analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
 
+                        if is_cluster_or_rack_analysis(analysis):
+                            if not can_use_cluster:
+                                logger.info("analyze_outfits_stream: blocking cluster/rack upload for free user at slot %d (%s)", slot_idx, analysis.get("title"))
+                                await frame_queue.put({
+                                    "type": "mass_restricted",
+                                    "image_index": image_idx,
+                                    "code": "mass_pipeline_tier_restricted",
+                                    "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                                    "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                                    "available_credits": avail_recon_credits,
+                                    "message": (
+                                        f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                                        f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                                        f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan."
+                                    ),
+                                })
+                                continue
+                            else:
+                                logger.info("analyze_outfits_stream: skipping clothes rack fixture at slot %d (%s)", slot_idx, analysis.get("title"))
+                                await frame_queue.put({
+                                    "type": "item_skip",
+                                    "index": slot_idx,
+                                    "image_index": image_idx,
+                                    "reason": "non_clothing",
+                                })
+                                continue
+
                         if _is_unidentifiable(analysis):
                             logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
                             await frame_queue.put({
@@ -3678,6 +3714,33 @@ class GarmentVisionService:
                                     slot_idx, repr(exc)[:160],
                                 )
 
+                        if is_cluster_or_rack_analysis(analysis):
+                            if not can_use_cluster:
+                                logger.info("analyze_outfits_stream: blocking cluster/rack upload for free user at slot %d (%s)", slot_idx, analysis.get("title"))
+                                await frame_queue.put({
+                                    "type": "mass_restricted",
+                                    "image_index": image_idx,
+                                    "code": "mass_pipeline_tier_restricted",
+                                    "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                                    "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                                    "available_credits": avail_recon_credits,
+                                    "message": (
+                                        f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                                        f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                                        f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan."
+                                    ),
+                                })
+                                return
+                            else:
+                                logger.info("analyze_outfits_stream: skipping clothes rack fixture at slot %d (%s)", slot_idx, analysis.get("title"))
+                                await frame_queue.put({
+                                    "type": "item_skip",
+                                    "index": slot_idx,
+                                    "image_index": image_idx,
+                                    "reason": "non_clothing",
+                                })
+                                return
+
                         if _is_unidentifiable(analysis):
                             logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
                             await frame_queue.put({
@@ -3820,6 +3883,33 @@ class GarmentVisionService:
                                     if item_mg in ("men", "women"):
                                         analysis["gender"] = item_mg
 
+                                    if is_cluster_or_rack_analysis(analysis):
+                                        if not can_use_cluster:
+                                            logger.info("analyze_outfits_stream: blocking cluster/rack upload for free user at slot %d (%s)", slot_idx, analysis.get("title"))
+                                            await frame_queue.put({
+                                                "type": "mass_restricted",
+                                                "image_index": image_idx,
+                                                "code": "mass_pipeline_tier_restricted",
+                                                "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                                                "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                                                "available_credits": avail_recon_credits,
+                                                "message": (
+                                                    f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                                                    f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                                                    f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan."
+                                                ),
+                                            })
+                                            continue
+                                        else:
+                                            logger.info("analyze_outfits_stream: skipping clothes rack fixture at slot %d (%s)", slot_idx, analysis.get("title"))
+                                            await frame_queue.put({
+                                                "type": "item_skip",
+                                                "index": slot_idx,
+                                                "image_index": image_idx,
+                                                "reason": "non_clothing",
+                                            })
+                                            continue
+
                                     if _is_unidentifiable(analysis):
                                         logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
                                         await frame_queue.put({
@@ -3931,6 +4021,33 @@ class GarmentVisionService:
                                     fallback_analysis = _coerce_enums(fallback_analysis, user_gender=eff_gender, model_gender=item_mg)
                                     if item_mg in ("men", "women"):
                                         fallback_analysis["gender"] = item_mg
+
+                                    if is_cluster_or_rack_analysis(fallback_analysis):
+                                        if not can_use_cluster:
+                                            logger.info("analyze_outfits_stream: blocking cluster/rack upload for free user at slot %d (%s)", slot_idx, fallback_analysis.get("title"))
+                                            await frame_queue.put({
+                                                "type": "mass_restricted",
+                                                "image_index": image_idx,
+                                                "code": "mass_pipeline_tier_restricted",
+                                                "i18n_key": "addItem.pipeline.massClusterFreeBlocked",
+                                                "required_credits": MIN_CLUSTER_RECONSTRUCTION_CREDITS,
+                                                "available_credits": avail_recon_credits,
+                                                "message": (
+                                                    f"Cluster garment uploading (garments hanging in a closet, on hangers, on a shoe rack, or in a pile) "
+                                                    f"uses Nano Banana AI studio reconstruction and requires a Manager or Professional plan, or at least "
+                                                    f"{MIN_CLUSTER_RECONSTRUCTION_CREDITS} AI reconstruction credits on the Free plan."
+                                                ),
+                                            })
+                                            continue
+                                        else:
+                                            logger.info("analyze_outfits_stream: skipping clothes rack fixture at slot %d (%s)", slot_idx, fallback_analysis.get("title"))
+                                            await frame_queue.put({
+                                                "type": "item_skip",
+                                                "index": slot_idx,
+                                                "image_index": image_idx,
+                                                "reason": "non_clothing",
+                                            })
+                                            continue
 
                                     if _is_unidentifiable(fallback_analysis):
                                         logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, fallback_analysis.get("title"))
