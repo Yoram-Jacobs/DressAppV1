@@ -4888,7 +4888,10 @@
       "campaignsAccess": "Campanhas de anúncios incluídas",
       "wardrobeMigration": "Migração do guarda-roupa",
       "analysisSpeed": "Velocidade de análise",
-      "generativeInpainting": "Retoques e Reanálise de Estúdio com IA"
+      "generativeInpainting": "Retoques e Reanálise de Estúdio com IA",
+      "clusterUpload": "Upload de roupas em grupo (araras / armário)",
+      "clusterUploadIncluded": "Upload de roupas em grupo incluído",
+      "clusterUploadFree": "Upload em grupo (com 15+ créditos)"
     },
     "supportTiers": {
       "community": "Suporte da comunidade",
@@ -4981,7 +4984,7 @@
     "freeCreditsOnboarding": "5 reconstruções gratuitas de IA",
     "monthlyCreditsDesc": "100 créditos de IA / mês (não cumulativos)",
     "creditPacksTitle": "Pacotes de créditos",
-    "creditPacksSubtitle": "Compre pacotes de créditos para reconstruções por IA sob demanda. Os créditos pagos nunca expiram.",
+    "creditPacksSubtitle": "Compre pacotes de créditos para reconstruções de IA sob demanda e para desbloquear o upload em grupo (15+ créditos). Créditos pagos nunca expiram.",
     "pack10": "10 créditos — $3",
     "pack50": "50 créditos — $12",
     "pack100": "100 créditos — $20",
@@ -5000,7 +5003,10 @@
     "demoteCancelBtn": "Manter meu plano",
     "demoteConfirmBtn": "Confirmar mudança para Gratuito",
     "demoteSuccessToast": "Seu plano foi alterado para Gratuito. Seus últimos 50 itens adicionados foram mantidos.",
-    "demoteFailedToast": "Falha ao mudar para o Plano Gratuito."
+    "demoteFailedToast": "Falha ao mudar para o Plano Gratuito.",
+    "clusterFree": "Requer 15+ créditos",
+    "unlocksCluster": "Desbloqueia upload em grupo",
+    "packIncludesCluster": "Pacote pago — desbloqueia o upload em grupo (15+ créditos)"
   },
   "avatar": {
     "savedSuccess": "Avatar e perfil visual salvos!",
@@ -5744,20 +5750,21 @@
   },
   "dressing_room_3d": {
     "title": "Provador 3D",
-    "subtitle": "Estúdio interativo de prova virtual em 360°",
+    "subtitle": "Estúdio de prova virtual interativo em 360°",
     "open_button": "Provar em 3D",
     "default_outfit": "Look atual",
     "full_body": "Corpo inteiro",
     "upper_body": "Parte superior",
     "lower_body": "Parte inferior",
-    "auto_rotate": "Giro 360°",
+    "auto_rotate": "Rotação 360°",
     "reset_view": "Redefinir vista",
-    "drag_hint": "Arraste para girar em 360° • Role para zoom",
+    "drag_hint": "Arraste para girar 360° • Role ou junte os dedos para dar zoom",
     "garments": "Camadas do look",
     "hide_item": "Ocultar peça",
     "show_item": "Mostrar peça",
     "fullscreen": "Tela cheia",
-    "exit_fullscreen": "Sair da tela cheia"
+    "exit_fullscreen": "Sair da tela cheia",
+    "view_item_details": "Ver detalhes da peça"
   },
   "stylistTour": {
     "step1": {

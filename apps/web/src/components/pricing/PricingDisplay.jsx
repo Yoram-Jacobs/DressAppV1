@@ -27,7 +27,9 @@ const featureKeys = {
   "Scheduler & push notifications": "pricing.features.schedulerAccess",
   "Priority support": "pricing.features.prioritySupport",
   "Ad Campaigns included": "pricing.features.campaignsAccess",
-  "Dedicated support": "pricing.features.dedicatedSupport"
+  "Dedicated support": "pricing.features.dedicatedSupport",
+  "Cluster garment upload included": "pricing.features.clusterUploadIncluded",
+  "Cluster upload (with 15+ credits)": "pricing.features.clusterUploadFree"
 };
 
 // Same visual language as the Transactions page status badges.
@@ -104,6 +106,13 @@ export function PricingDisplay({
       manager: t('pricing.speedPaid', { defaultValue: '⚡ 2s (Cloud Gemini)' }),
       professional: t('pricing.speedPaid', { defaultValue: '⚡ 2s (Cloud Gemini)' }),
       type: 'text',
+    },
+    {
+      label: t('pricing.features.clusterUpload', { defaultValue: 'Cluster Garment Upload (Closet / Racks)' }),
+      free: t('pricing.clusterFree', { defaultValue: 'Requires 15+ credits' }),
+      manager: true,
+      professional: true,
+      type: 'cluster',
     },
     {
       label: t('pricing.features.generativeInpainting', { defaultValue: 'AI Photo Reshoots & Inpainting' }),
@@ -299,7 +308,7 @@ export function PricingDisplay({
               {t('pricing.creditPacksTitle', { defaultValue: 'Credit Packs' })}
             </h2>
             <p className="text-[13px] text-text-brand font-semibold mt-1">
-              {t('pricing.creditPacksSubtitle', { defaultValue: 'Purchase credit packs for on-demand AI reconstructions. Paid credits never expire.' })}
+              {t('pricing.creditPacksSubtitle', { defaultValue: 'Purchase credit packs for on-demand AI reconstructions and unlock Cluster Upload. Paid credits never expire.' })}
             </p>
           </div>
         </div>
@@ -335,8 +344,18 @@ export function PricingDisplay({
                   <div className="text-[18px] font-bold text-primary-brand mt-1">
                     ${cp.price_usd || (cp.price_cents ? cp.price_cents / 100 : 0)}
                   </div>
+                  {cp.credits >= 15 && (
+                    <div className="mt-1.5">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900">
+                        <Sparkles className="h-2.5 w-2.5 text-amber-600" />
+                        {t('pricing.unlocksCluster', { defaultValue: 'Unlocks Cluster Upload' })}
+                      </span>
+                    </div>
+                  )}
                   <p className="text-[11px] text-text-brand font-semibold mt-2">
-                    {t('pricing.noExpiration', { defaultValue: 'Paid pack - never expires' })}
+                    {cp.credits >= 15
+                      ? t('pricing.packIncludesCluster', { defaultValue: 'Paid pack — unlocks Cluster Upload (15+ credits)' })
+                      : t('pricing.noExpiration', { defaultValue: 'Paid pack - never expires' })}
                   </p>
                 </div>
                 <div className="mt-4">
@@ -378,7 +397,7 @@ export function PricingDisplay({
           <table className="w-full border-collapse min-w-[720px]">
             <thead>
               <tr className="border-b border-border bg-primary-shadow">
-                <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                <th className="text-start text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
                   {t('pricing.compareFeatureCol', { defaultValue: 'Features' })}
                 </th>
                 <th className="text-center text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
@@ -403,21 +422,29 @@ export function PricingDisplay({
                     <span className="font-bold text-sm text-text-brand">{row.label}</span>
                   </td>
                   <td className="px-4 py-4 text-center">
-                    {row.type === 'flag' ? (
+                    {row.type === 'cluster' ? (
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] gap-1 w-fit mx-auto bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900"
+                      >
+                        <Sparkles className="h-3 w-3 text-amber-600" />
+                        {row.free}
+                      </Badge>
+                    ) : row.type === 'flag' ? (
                       <FeatureFlag included={row.free} />
                     ) : (
                       <span className="text-sm font-semibold text-text-brand">{row.free}</span>
                     )}
                   </td>
                   <td className="px-4 py-4 text-center">
-                    {row.type === 'flag' ? (
+                    {row.type === 'flag' || row.type === 'cluster' ? (
                       <FeatureFlag included={row.manager} />
                     ) : (
                       <span className="text-sm font-semibold text-text-brand">{row.manager}</span>
                     )}
                   </td>
                   <td className="px-4 py-4 text-center bg-primary-shadow/30">
-                    {row.type === 'flag' ? (
+                    {row.type === 'flag' || row.type === 'cluster' ? (
                       <FeatureFlag included={row.professional} />
                     ) : (
                       <span className="text-sm font-bold text-primary-brand">{row.professional}</span>

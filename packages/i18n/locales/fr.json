@@ -4877,7 +4877,10 @@
       "campaignsAccess": "Campagnes publicitaires incluses",
       "wardrobeMigration": "Migration de garde-robe",
       "analysisSpeed": "Vitesse d'analyse",
-      "generativeInpainting": "Retouche photo générative par IA"
+      "generativeInpainting": "Retouche photo générative par IA",
+      "clusterUpload": "Téléversement de vêtements en grappe (portants / armoire)",
+      "clusterUploadIncluded": "Téléversement en grappe inclus",
+      "clusterUploadFree": "Téléversement en grappe (dès 15 crédits)"
     },
     "supportTiers": {
       "community": "Support communauté",
@@ -4970,7 +4973,7 @@
     "freeCreditsOnboarding": "5 reconstructions IA gratuites",
     "monthlyCreditsDesc": "100 crédits IA / mois (non cumulables)",
     "creditPacksTitle": "Packs de crédits",
-    "creditPacksSubtitle": "Achetez des packs de crédits pour des reconstructions IA à la demande. Les crédits achetés n'expirent jamais.",
+    "creditPacksSubtitle": "Achetez des packs de crédits pour des reconstructions IA à la demande et débloquez le téléversement en grappe (15+ crédits). Les crédits payants n'expirent jamais.",
     "pack10": "10 crédits — 3 $",
     "pack50": "50 crédits — 12 $",
     "pack100": "100 crédits — 20 $",
@@ -4989,7 +4992,10 @@
     "demoteCancelBtn": "Conserver mon forfait",
     "demoteConfirmBtn": "Confirmer la rétrogradation",
     "demoteSuccessToast": "Votre forfait est passé à Gratuit. Vos 50 derniers articles ajoutés ont été conservés.",
-    "demoteFailedToast": "Échec du passage au forfait Gratuit."
+    "demoteFailedToast": "Échec du passage au forfait Gratuit.",
+    "clusterFree": "Nécessite 15+ crédits",
+    "unlocksCluster": "Débloque le téléversement en grappe",
+    "packIncludesCluster": "Pack payant — débloque le téléversement en grappe (15+ crédits)"
   },
   "avatar": {
     "savedSuccess": "Avatar et profil visuel enregistrés !",
@@ -5730,5 +5736,23 @@
       "addressHint": "Active les prévisions météo locales pour vos tenues et les expéditions Marketplace.",
       "saveBtn": "Enregistrer et activer"
     }
+  },
+  "dressing_room_3d": {
+    "title": "Cabine d'essayage 3D",
+    "subtitle": "Studio virtuel interactif d'essayage à 360°",
+    "open_button": "Essayage 3D",
+    "default_outfit": "Tenue actuelle",
+    "full_body": "Corps entier",
+    "upper_body": "Haut du corps",
+    "lower_body": "Bas du corps",
+    "auto_rotate": "Rotation 360°",
+    "reset_view": "Réinitialiser la vue",
+    "drag_hint": "Glissez pour faire pivoter à 360° • Faites défiler pour zoomer",
+    "garments": "Couches de la tenue",
+    "hide_item": "Masquer l'article",
+    "show_item": "Afficher l'article",
+    "fullscreen": "Plein écran",
+    "exit_fullscreen": "Quitter le plein écran",
+    "view_item_details": "Voir les détails de l'article"
   }
 }

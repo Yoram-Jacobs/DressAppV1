@@ -4888,7 +4888,10 @@
       "campaignsAccess": "Campagne pubblicitarie incluse",
       "wardrobeMigration": "Migrazione del guardaroba",
       "analysisSpeed": "Velocità di analisi",
-      "generativeInpainting": "Fotoritocco e Rianalisi generativa IA"
+      "generativeInpainting": "Fotoritocco e Rianalisi generativa IA",
+      "clusterUpload": "Caricamento capi a grappolo (stand / armadio)",
+      "clusterUploadIncluded": "Caricamento capi a grappolo incluso",
+      "clusterUploadFree": "Caricamento a grappolo (con 15+ crediti)"
     },
     "supportTiers": {
       "community": "Supporto community",
@@ -4981,7 +4984,7 @@
     "freeCreditsOnboarding": "5 ricostruzioni IA gratuite",
     "monthlyCreditsDesc": "100 crediti IA al mese (non cumulabili)",
     "creditPacksTitle": "Pacchetti di crediti",
-    "creditPacksSubtitle": "Acquista pacchetti di crediti per ricostruzioni IA su richiesta. I crediti acquistati non scadono mai.",
+    "creditPacksSubtitle": "Acquista pacchetti di crediti per ricostruzioni IA su richiesta e per sbloccare il caricamento a grappolo (15+ crediti). I crediti acquistati non scadono mai.",
     "pack10": "10 crediti — 3 $",
     "pack50": "50 crediti — 12 $",
     "pack100": "100 crediti — 20 $",
@@ -5000,7 +5003,10 @@
     "demoteCancelBtn": "Mantieni il mio piano",
     "demoteConfirmBtn": "Conferma passaggio a Gratuito",
     "demoteSuccessToast": "Il tuo piano è passato a Gratuito. Gli ultimi 50 capi aggiunti sono stati conservati.",
-    "demoteFailedToast": "Impossibile passare al piano Gratuito."
+    "demoteFailedToast": "Impossibile passare al piano Gratuito.",
+    "clusterFree": "Richiede 15+ crediti",
+    "unlocksCluster": "Sblocca caricamento a grappolo",
+    "packIncludesCluster": "Pacchetto a pagamento — sblocca il caricamento a grappolo (15+ crediti)"
   },
   "avatar": {
     "savedSuccess": "Avatar e profilo visivo salvati!",
@@ -5745,19 +5751,20 @@
   "dressing_room_3d": {
     "title": "Camerino virtuale 3D",
     "subtitle": "Studio di prova virtuale interattivo a 360°",
-    "open_button": "Prova in 3D",
+    "open_button": "Prova 3D",
     "default_outfit": "Outfit attuale",
     "full_body": "Corpo intero",
     "upper_body": "Parte superiore",
     "lower_body": "Parte inferiore",
-    "auto_rotate": "Rotazione 360°",
-    "reset_view": "Ripristina vista",
+    "auto_rotate": "Rotazione a 360°",
+    "reset_view": "Reimposta vista",
     "drag_hint": "Trascina per ruotare a 360° • Scorri per ingrandire",
-    "garments": "Strati dell'outfit",
-    "hide_item": "Nascondi capo",
-    "show_item": "Mostra capo",
+    "garments": "Livelli dell'outfit",
+    "hide_item": "Nascondi articolo",
+    "show_item": "Mostra articolo",
     "fullscreen": "Schermo intero",
-    "exit_fullscreen": "Esci da schermo intero"
+    "exit_fullscreen": "Esci da schermo intero",
+    "view_item_details": "Visualizza dettagli articolo"
   },
   "stylistTour": {
     "step1": {

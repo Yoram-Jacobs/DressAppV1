@@ -4888,7 +4888,10 @@
       "campaignsAccess": "包含广告活动",
       "wardrobeMigration": "衣橱迁移",
       "analysisSpeed": "分析速度",
-      "generativeInpainting": "AI 摄影棚重绘与精修"
+      "generativeInpainting": "AI 摄影棚重绘与精修",
+      "clusterUpload": "成簇服装上传 (衣架 / 衣柜)",
+      "clusterUploadIncluded": "包含成簇服装上传",
+      "clusterUploadFree": "成簇上传 (需 15+ 积分)"
     },
     "supportTiers": {
       "community": "社区支持",
@@ -4981,7 +4984,7 @@
     "freeCreditsOnboarding": "5次免费AI重构",
     "monthlyCreditsDesc": "每月100点AI积分（不累积）",
     "creditPacksTitle": "积分包",
-    "creditPacksSubtitle": "购买积分包按需进行AI重构。已购买积分永不过期。",
+    "creditPacksSubtitle": "购买积分包以进行按需 AI 重构并解锁成簇上传 (15+ 积分)。付费积分永不过期。",
     "pack10": "10积分 — $3",
     "pack50": "50积分 — $12",
     "pack100": "100积分 — $20",
@@ -5000,7 +5003,10 @@
     "demoteCancelBtn": "保留当前套餐",
     "demoteConfirmBtn": "确认降级",
     "demoteSuccessToast": "您的套餐已切换为免费版，已为您保留最后添加的 50 件衣橱单品。",
-    "demoteFailedToast": "切换为免费套餐失败。"
+    "demoteFailedToast": "切换为免费套餐失败。",
+    "clusterFree": "需要 15+ 积分",
+    "unlocksCluster": "解锁成簇上传",
+    "packIncludesCluster": "付费包 — 解锁成簇上传 (15+ 积分)"
   },
   "avatar": {
     "savedSuccess": "头像和视觉配置文件已保存！",
@@ -5743,21 +5749,22 @@
     }
   },
   "dressing_room_3d": {
-    "title": "3D试衣间",
-    "subtitle": "360°全景交互式虚拟试衣空间",
-    "open_button": "3D试穿",
-    "default_outfit": "当前穿搭",
-    "full_body": "全身视角",
+    "title": "3D 试衣间",
+    "subtitle": "交互式 360° 虚拟试衣空间",
+    "open_button": "3D 试穿",
+    "default_outfit": "当前搭配",
+    "full_body": "全身",
     "upper_body": "上半身",
     "lower_body": "下半身",
-    "auto_rotate": "360°旋转",
+    "auto_rotate": "360° 旋转",
     "reset_view": "重置视角",
-    "drag_hint": "拖拽以360°旋转 • 滚轮缩放",
-    "garments": "搭配层级",
-    "hide_item": "隐藏此件",
-    "show_item": "显示此件",
-    "fullscreen": "全屏显示",
-    "exit_fullscreen": "退出全屏"
+    "drag_hint": "拖拽以 360° 旋转 • 滚动或捏合缩放",
+    "garments": "服饰图层",
+    "hide_item": "隐藏单品",
+    "show_item": "显示单品",
+    "fullscreen": "全屏",
+    "exit_fullscreen": "退出全屏",
+    "view_item_details": "查看单品详情"
   },
   "stylistTour": {
     "step1": {

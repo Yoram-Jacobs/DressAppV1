@@ -146,6 +146,7 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
                         "5 onboarding credits",
                         "Up to 50 closet items",
                         "Up to 10 requests per day",
+                        "Cluster upload (with 15+ credits)",
                         "Community support"
                     ],
                 },
@@ -154,6 +155,7 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
                     "price": 1000,  # $10.00 / month ($100/yr)
                     "features": [
                         "100 AI credits / month (not cumulative)",
+                        "Cluster garment upload included",
                         "Unlimited closet items",
                         "Unlimited daily requests",
                         "Marketplace selling & renting",
@@ -167,6 +169,7 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
                     "price": 1500,  # $15.00 / month ($150/yr)
                     "features": [
                         "100 AI credits / month (not cumulative)",
+                        "Cluster garment upload included",
                         "Unlimited closet items",
                         "Unlimited daily requests",
                         "Marketplace selling & renting",

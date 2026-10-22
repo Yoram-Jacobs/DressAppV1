@@ -6,6 +6,38 @@ import { resolveHairProperties } from './DynamicAvatar';
 const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair3';
 const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair3';
 
+// Metric scaling and floor positioning helper for the 3D human avatar model
+export function getAvatarMetricTransform({ isMale = false, height = 170, morphInfluences = {} } = {}) {
+  const defaultH = isMale ? 178 : 168;
+  const numH = Math.max(130, Math.min(215, Number(height) || defaultH));
+  const baseModelHeightM = isMale ? 1.7877 : 1.6873;
+  const baseModelYMinM = -0.0061;
+
+  const targetHeightM = numH / 100.0;
+  const defaultHeightM = defaultH / 100.0;
+
+  // Compensate for vertical expansion from morph targets so total height matches targetHeightM
+  const morphUniformRatio =
+    1 +
+    (morphInfluences?.tall || 0) * (isMale ? 0.334 : 0.247) -
+    (morphInfluences?.short || 0) * (isMale ? 0.230 : 0.241);
+  const morphHeightRatio =
+    morphUniformRatio +
+    (morphInfluences?.legs_long || 0) * 0.13 -
+    (morphInfluences?.legs_short || 0) * 0.06;
+
+  const scaleY = targetHeightM / (baseModelHeightM * Math.max(0.75, morphHeightRatio));
+  const scaleXZ = defaultHeightM / (baseModelHeightM * Math.max(0.75, morphUniformRatio));
+
+  // Place soles of feet precisely at y = 0
+  const posY = -baseModelYMinM * scaleY;
+
+  return {
+    scale: [scaleXZ, scaleY, scaleXZ],
+    position: [0, posY, 0],
+  };
+}
+
 /**
  * AvatarMesh3D
  * 
@@ -50,41 +82,13 @@ export default function AvatarMesh3D({
 
   // Metric scaling and floor positioning
   const transform = useMemo(() => {
-    const defaultH = isMale ? 178 : 168;
-    const numH = Math.max(130, Math.min(215, Number(height) || defaultH));
-    const baseModelHeightM = isMale ? 1.7877 : 1.6873;
-    const baseModelYMinM = -0.0061;
-
     if (!meterScale) {
       return {
         scale: [1, 1, 1],
         position: [0, 0, 0],
       };
     }
-
-    const targetHeightM = numH / 100.0;
-    const defaultHeightM = defaultH / 100.0;
-
-    // Compensate for vertical expansion from morph targets so total height matches targetHeightM
-    const morphUniformRatio =
-      1 +
-      (morphInfluences?.tall || 0) * (isMale ? 0.334 : 0.247) -
-      (morphInfluences?.short || 0) * (isMale ? 0.230 : 0.241);
-    const morphHeightRatio =
-      morphUniformRatio +
-      (morphInfluences?.legs_long || 0) * 0.13 -
-      (morphInfluences?.legs_short || 0) * 0.06;
-
-    const scaleY = targetHeightM / (baseModelHeightM * Math.max(0.75, morphHeightRatio));
-    const scaleXZ = defaultHeightM / (baseModelHeightM * Math.max(0.75, morphUniformRatio));
-
-    // Place soles of feet precisely at y = 0
-    const posY = -baseModelYMinM * scaleY;
-
-    return {
-      scale: [scaleXZ, scaleY, scaleXZ],
-      position: [0, posY, 0],
-    };
+    return getAvatarMetricTransform({ isMale, height, morphInfluences });
   }, [height, isMale, morphInfluences, meterScale]);
 
   // Update materials, morph targets, and shadows

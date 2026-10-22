@@ -4885,7 +4885,10 @@
       "campaignsAccess": "広告キャンペーン機能",
       "wardrobeMigration": "ワードローブの移行",
       "analysisSpeed": "解析スピード",
-      "generativeInpainting": "AIスタジオ写真再撮影＆インペインティング"
+      "generativeInpainting": "AIスタジオ写真再撮影＆インペインティング",
+      "clusterUpload": "クラスター衣服アップロード (ハンガーラック / クローゼット)",
+      "clusterUploadIncluded": "クラスター衣服アップロードが含まれています",
+      "clusterUploadFree": "クラスターアップロード (15+ クレジット)"
     },
     "supportTiers": {
       "community": "コミュニティサポート",
@@ -4978,7 +4981,7 @@
     "freeCreditsOnboarding": "5回の無料AI再構築",
     "monthlyCreditsDesc": "月100 AIクレジット（繰り越しなし）",
     "creditPacksTitle": "クレジットパック",
-    "creditPacksSubtitle": "必要な時にAI再構築を利用できるクレジットパックを購入。購入したクレジットは無期限です。",
+    "creditPacksSubtitle": "オンデマンドAI再構築やクラスターアップロード（15+ クレジット）の解放のためにクレジットパックを購入。購入したクレジットに有効期限はありません。",
     "pack10": "10クレジット — $3",
     "pack50": "50クレジット — $12",
     "pack100": "100クレジット — $20",
@@ -4997,7 +5000,10 @@
     "demoteCancelBtn": "現在のプランを維持",
     "demoteConfirmBtn": "プラン変更を確定",
     "demoteSuccessToast": "無料プランに変更されました。最後に追加された50着が保持されました。",
-    "demoteFailedToast": "無料プランへの変更に失敗しました。"
+    "demoteFailedToast": "無料プランへの変更に失敗しました。",
+    "clusterFree": "15+ クレジットが必要",
+    "unlocksCluster": "クラスターアップロードを解放",
+    "packIncludesCluster": "有料パック — クラスターアップロードを解放 (15+ クレジット)"
   },
   "avatar": {
     "savedSuccess": "アバターとビジュアルプロフィールを保存しました!",
@@ -5738,5 +5744,23 @@
       "addressHint": "毎日のコーデ用のピンポイント天気予報とマーケット配送を有効にします。",
       "saveBtn": "保存してスタイリストを強化"
     }
+  },
+  "dressing_room_3d": {
+    "title": "3D試着ドレッシングルーム",
+    "subtitle": "インタラクティブな360°バーチャルフィッティングスタジオ",
+    "open_button": "3D試着",
+    "default_outfit": "現在のコーディネート",
+    "full_body": "全身",
+    "upper_body": "上半身",
+    "lower_body": "下半身",
+    "auto_rotate": "360°回転",
+    "reset_view": "視点をリセット",
+    "drag_hint": "ドラッグで360°回転 • スクロール/ピンチで拡大縮小",
+    "garments": "コーデのレイヤー",
+    "hide_item": "アイテムを非表示",
+    "show_item": "アイテムを表示",
+    "fullscreen": "全画面表示",
+    "exit_fullscreen": "全画面表示を終了",
+    "view_item_details": "アイテムの詳細を表示"
   }
 }

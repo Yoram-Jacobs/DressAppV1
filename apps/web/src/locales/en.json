@@ -4913,7 +4913,10 @@
       "campaignsAccess": "Ad Campaigns included",
       "wardrobeMigration": "Wardrobe Migration",
       "analysisSpeed": "Analysis Speed",
-      "generativeInpainting": "AI Photo Reshoots & Inpainting"
+      "generativeInpainting": "AI Photo Reshoots & Inpainting",
+      "clusterUpload": "Cluster Garment Upload (Closet / Racks)",
+      "clusterUploadIncluded": "Cluster garment upload included",
+      "clusterUploadFree": "Cluster upload (with 15+ credits)"
     },
     "supportTiers": {
       "community": "Community Support",
@@ -5006,7 +5009,7 @@
     "freeCreditsOnboarding": "5 free AI reconstructions",
     "monthlyCreditsDesc": "100 AI credits / month (not cumulative)",
     "creditPacksTitle": "Credit Packs",
-    "creditPacksSubtitle": "Purchase credit packs for on-demand AI reconstructions. Paid credits never expire.",
+    "creditPacksSubtitle": "Purchase credit packs for on-demand AI reconstructions and to unlock Cluster Upload (15+ credits). Paid credits never expire.",
     "pack10": "10 Credits — $3",
     "pack50": "50 Credits — $12",
     "pack100": "100 Credits — $20",
@@ -5025,7 +5028,10 @@
     "demoteCancelBtn": "Keep My Plan",
     "demoteConfirmBtn": "Confirm Demotion",
     "demoteSuccessToast": "Your plan has been switched to Free. Your last 50 added closet items were retained.",
-    "demoteFailedToast": "Failed to demote to Free plan."
+    "demoteFailedToast": "Failed to demote to Free plan.",
+    "clusterFree": "Requires 15+ credits",
+    "unlocksCluster": "Unlocks Cluster Upload",
+    "packIncludesCluster": "Paid pack — unlocks Cluster Upload (15+ credits)"
   },
   "avatar": {
     "savedSuccess": "Avatar & visual profile saved!",
@@ -5778,7 +5784,8 @@
     "hide_item": "Hide item",
     "show_item": "Show item",
     "fullscreen": "Full screen",
-    "exit_fullscreen": "Exit full screen"
+    "exit_fullscreen": "Exit full screen",
+    "view_item_details": "View item details"
   },
   "stylistTour": {
     "step1": {

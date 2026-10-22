@@ -5035,7 +5035,10 @@
       "campaignsAccess": "קמפיינים פרסומיים כלולים",
       "wardrobeMigration": "העברת מלתחה",
       "analysisSpeed": "מהירות ניתוח",
-      "generativeInpainting": "שחזור סטודיו גנרטיבי ב-AI"
+      "generativeInpainting": "שחזור סטודיו גנרטיבי ב-AI",
+      "clusterUpload": "העלאת אשכול בגדים (מתלים / ארון)",
+      "clusterUploadIncluded": "העלאת אשכול בגדים כלולה במנוי",
+      "clusterUploadFree": "העלאת אשכול (עם 15+ קרדיטים)"
     },
     "supportTiers": {
       "community": "תמיכת קהילה",
@@ -5128,7 +5131,7 @@
     "freeCreditsOnboarding": "5 שחזורי AI חינם",
     "monthlyCreditsDesc": "100 קרדיטי AI בחודש (לא מצטבר)",
     "creditPacksTitle": "חבילות קרדיטים",
-    "creditPacksSubtitle": "רכוש חבילות קרדיטים לשחזורי AI לפי דרישה. קרדיטים שנרכשו אינם פגים לעולם.",
+    "creditPacksSubtitle": "רכוש חבילות קרדיטים לשחזורי AI לפי דרישה ולפתיחת העלאת אשכול (15+ קרדיטים). קרדיטים בתשלום אינם פגים לעולם.",
     "pack10": "10 קרדיטים — 3$",
     "pack50": "50 קרדיטים — 12$",
     "pack100": "100 קרדיטים — 20$",
@@ -5147,7 +5150,10 @@
     "demoteCancelBtn": "הישארות במסלול הנוכחי",
     "demoteConfirmBtn": "אישור המעבר למסלול החינמי",
     "demoteSuccessToast": "המסלול שלכם הועבר למסלול החינמי, ו-50 הפריטים האחרונים שנוספו לארון נשמרו.",
-    "demoteFailedToast": "המעבר למסלול החינמי נכשל."
+    "demoteFailedToast": "המעבר למסלול החינמי נכשל.",
+    "clusterFree": "דורש 15+ קרדיטים",
+    "unlocksCluster": "פותח העלאת אשכול",
+    "packIncludesCluster": "חבילה בתשלום — פותחת העלאת אשכול (15+ קרדיטים)"
   },
   "avatar": {
     "savedSuccess": "אווטאר ופרופיל חזותי נשמר!",
@@ -5838,21 +5844,22 @@
     }
   },
   "dressing_room_3d": {
-    "title": "חדר הלבשה ומדידה בתלת-ממד",
-    "subtitle": "סטודיו מדידה וירטואלי אינטראקטיבי ב-360 מעלות",
+    "title": "חדר מדידה בתלת-ממד",
+    "subtitle": "סטודיו מדידה וירטואלי אינטראקטיבי ב-360°",
     "open_button": "מדידה בתלת-ממד",
-    "default_outfit": "הלוק הנוכחי",
-    "full_body": "מבט מלא",
+    "default_outfit": "אאוטפיט נוכחי",
+    "full_body": "גוף מלא",
     "upper_body": "פלג גוף עליון",
     "lower_body": "פלג גוף תחתון",
-    "auto_rotate": "סיבוב 360°",
-    "reset_view": "איפוס מבט",
-    "drag_hint": "גררו לסיבוב 360° • גללו או צבטו לזום",
-    "garments": "שכבות הלוק",
-    "hide_item": "הסתרת פריט",
-    "show_item": "הצגת פריט",
+    "auto_rotate": "סיבוב ב-360°",
+    "reset_view": "איפוס תצוגה",
+    "drag_hint": "גרור כדי לסובב ב-360° • גלול או צבוט להגדלה",
+    "garments": "שכבות הלבוש",
+    "hide_item": "הסתר פריט",
+    "show_item": "הצג פריט",
     "fullscreen": "מסך מלא",
-    "exit_fullscreen": "יציאה ממסך מלא"
+    "exit_fullscreen": "יציאה ממסך מלא",
+    "view_item_details": "צפייה בפרטי הפריט"
   },
   "stylistTour": {
     "step1": {

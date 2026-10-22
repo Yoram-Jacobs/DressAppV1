@@ -10,6 +10,13 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
+// Mock react-router-dom
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+  useLocation: () => ({ pathname: '/stylist' }),
+}));
+
 // Mock auth hook
 jest.mock('@/lib/auth', () => ({
   useAuth: () => ({
@@ -183,6 +190,86 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(screen.getByTitle('Show item')).toBeInTheDocument();
   });
 
+  test('Clicking an item card in Outfit Layers triggers navigation or custom onItemClick', () => {
+    mockNavigate.mockClear();
+    const handleItemClickMock = jest.fn();
+    const onOpenChangeMock = jest.fn();
+
+    // Render with custom onItemClick
+    const { rerender } = render(
+      <DressingRoom3D
+        open={true}
+        onOpenChange={onOpenChangeMock}
+        outfitItems={sampleOutfitItems}
+        measurements={sampleMeasurements}
+        onItemClick={handleItemClickMock}
+      />
+    );
+
+    const topItemCard = screen.getByTestId('rack-item-top');
+    expect(topItemCard).toBeInTheDocument();
+    fireEvent.click(topItemCard);
+    expect(handleItemClickMock).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'top-101', name: 'Classic White Linen Shirt' })
+    );
+
+    // Rerender without onItemClick -> verifies fallback to navigate('/closet/:id')
+    rerender(
+      <DressingRoom3D
+        open={true}
+        onOpenChange={onOpenChangeMock}
+        outfitItems={sampleOutfitItems}
+        measurements={sampleMeasurements}
+      />
+    );
+
+    const bottomItemCard = screen.getByTestId('rack-item-bottom');
+    fireEvent.click(bottomItemCard);
+    expect(onOpenChangeMock).toHaveBeenCalledWith(false);
+    expect(mockNavigate).toHaveBeenCalledWith('/closet/bottom-202');
+  });
+
+  test('GarmentMesh3D anatomical geometry builders generate valid non-empty geometry', () => {
+    const {
+      getTorsoSlice,
+      getLegSlice,
+      createAnatomicalTorsoGeometry,
+      createAnatomicalBottomGeometry,
+      createAnatomicalFootwearGeometry,
+    } = require('@/components/GarmentMesh3D');
+
+    // 1. Torso slice interpolation at bust and waist
+    const femaleBust = getTorsoSlice(1.22, false);
+    expect(femaleBust.rx).toBeGreaterThan(0.18);
+    expect(femaleBust.cz).toBeGreaterThan(0.04); // bust reaches forward
+
+    const maleChest = getTorsoSlice(1.30, true);
+    expect(maleChest.rx).toBeGreaterThan(0.22);
+
+    // 2. Leg slice interpolation at crotch and ankle
+    const legCrotch = getLegSlice(0.80, false);
+    const legAnkle = getLegSlice(0.08, false);
+    expect(legAnkle.cx).toBeGreaterThan(legCrotch.cx); // A-stance widening
+
+    // 3. Torso geometry (top / outerwear / dress)
+    const torsoGeo = createAnatomicalTorsoGeometry({ isMale: false, yTop: 1.38, yBottom: 0.96 });
+    expect(torsoGeo.getAttribute('position').count).toBeGreaterThan(100);
+    expect(torsoGeo.getAttribute('uv').count).toBeGreaterThan(100);
+    expect(torsoGeo.getIndex().count).toBeGreaterThan(200);
+
+    // 4. Pants bottom geometry
+    const pantsGeo = createAnatomicalBottomGeometry({ isMale: false, isSkirt: false });
+    expect(pantsGeo.getAttribute('position').count).toBeGreaterThan(150);
+
+    // 5. Skirt bottom geometry
+    const skirtGeo = createAnatomicalBottomGeometry({ isMale: false, isSkirt: true });
+    expect(skirtGeo.getAttribute('position').count).toBeGreaterThan(150);
+
+    // 6. Footwear geometry
+    const footGeo = createAnatomicalFootwearGeometry({ isMale: false });
+    expect(footGeo.getAttribute('position').count).toBeGreaterThan(80);
+  });
+
   test('AvatarViewer2D renders 3D Try-On button when interactive is true and opens modal', async () => {
     render(
       <AvatarViewer2D
@@ -218,6 +305,7 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
       'reset_view',
       'drag_hint',
       'garments',
+      'view_item_details',
       'hide_item',
       'show_item',
       'fullscreen',

@@ -4881,7 +4881,10 @@
       "campaignsAccess": "Werbekampagnen inklusive",
       "wardrobeMigration": "Kleiderschrank-Migration",
       "analysisSpeed": "Analysegeschwindigkeit",
-      "generativeInpainting": "Generative KI-Studio-Retusche & Inpainting"
+      "generativeInpainting": "Generative KI-Studio-Retusche & Inpainting",
+      "clusterUpload": "Cluster-Kleidung-Upload (Kleiderständer / Schrank)",
+      "clusterUploadIncluded": "Cluster-Kleidung-Upload inklusive",
+      "clusterUploadFree": "Cluster-Upload (ab 15 Credits)"
     },
     "supportTiers": {
       "community": "Community-Support",
@@ -4974,7 +4977,7 @@
     "freeCreditsOnboarding": "5 kostenlose KI-Rekonstruktionen",
     "monthlyCreditsDesc": "100 KI-Credits / Monat (nicht kumulativ)",
     "creditPacksTitle": "Guthabenpakete",
-    "creditPacksSubtitle": "Kaufen Sie Guthabenpakete für KI-Rekonstruktionen auf Abruf. Gekaufte Credits verfallen nie.",
+    "creditPacksSubtitle": "Kaufen Sie Credit-Packs für On-Demand-KI-Rekonstruktionen und zur Freischaltung des Cluster-Uploads (15+ Credits). Bezahlte Credits verfallen nie.",
     "pack10": "10 Credits — 3 $",
     "pack50": "50 Credits — 12 $",
     "pack100": "100 Credits — 20 $",
@@ -4993,7 +4996,10 @@
     "demoteCancelBtn": "Meinen Tarif behalten",
     "demoteConfirmBtn": "Herabstufung bestätigen",
     "demoteSuccessToast": "Ihr Tarif wurde auf Free umgestellt. Ihre letzten 50 hinzugefügten Kleidungsstücke wurden beibehalten.",
-    "demoteFailedToast": "Wechsel zum Free-Tarif fehlgeschlagen."
+    "demoteFailedToast": "Wechsel zum Free-Tarif fehlgeschlagen.",
+    "clusterFree": "Erfordert 15+ Credits",
+    "unlocksCluster": "Schaltet Cluster-Upload frei",
+    "packIncludesCluster": "Bezahltes Paket — schaltet Cluster-Upload frei (15+ Credits)"
   },
   "avatar": {
     "savedSuccess": "Avatar und visuelles Profil gespeichert!",
@@ -5736,8 +5742,8 @@
     }
   },
   "dressing_room_3d": {
-    "title": "3D-Umkleidekabine",
-    "subtitle": "Interaktives virtuelles 360°-Anprobestudio",
+    "title": "3D-Ankleidezimmer",
+    "subtitle": "Interaktives virtuelles 360°-Anpassungsstudio",
     "open_button": "3D-Anprobe",
     "default_outfit": "Aktuelles Outfit",
     "full_body": "Ganzkörper",
@@ -5745,12 +5751,13 @@
     "lower_body": "Unterkörper",
     "auto_rotate": "360°-Drehung",
     "reset_view": "Ansicht zurücksetzen",
-    "drag_hint": "Ziehen zum 360°-Drehen • Scrollen zum Zoomen",
+    "drag_hint": "Ziehen für 360°-Drehung • Scrollen zum Zoomen",
     "garments": "Outfit-Ebenen",
     "hide_item": "Artikel ausblenden",
-    "show_item": "Artikel einblenden",
+    "show_item": "Artikel anzeigen",
     "fullscreen": "Vollbild",
-    "exit_fullscreen": "Vollbild beenden"
+    "exit_fullscreen": "Vollbild beenden",
+    "view_item_details": "Artikeldetails anzeigen"
   },
   "stylistTour": {
     "step1": {

@@ -4888,7 +4888,10 @@
       "campaignsAccess": "Advertentiecampagnes inbegrepen",
       "wardrobeMigration": "Garderobemigratie",
       "analysisSpeed": "Analysesnelheid",
-      "generativeInpainting": "Generatieve AI Studio-reshoots & Inpainting"
+      "generativeInpainting": "Generatieve AI Studio-reshoots & Inpainting",
+      "clusterUpload": "Cluster kleding upload (kledingrek / kast)",
+      "clusterUploadIncluded": "Cluster kleding upload inbegrepen",
+      "clusterUploadFree": "Cluster upload (met 15+ credits)"
     },
     "supportTiers": {
       "community": "Community-support",
@@ -4981,7 +4984,7 @@
     "freeCreditsOnboarding": "5 gratis AI-reconstructies",
     "monthlyCreditsDesc": "100 AI-credits / maand (niet cumulatief)",
     "creditPacksTitle": "Creditpakketten",
-    "creditPacksSubtitle": "Koop creditpakketten voor on-demand AI-reconstructies. Betaalde credits verlopen nooit.",
+    "creditPacksSubtitle": "Koop creditpakketten voor on-demand AI-reconstructies en om Cluster-upload te ontgrendelen (15+ credits). Betaalde credits vervallen nooit.",
     "pack10": "10 credits — $3",
     "pack50": "50 credits — $12",
     "pack100": "100 credits — $20",
@@ -5000,7 +5003,10 @@
     "demoteCancelBtn": "Mijn abonnement behouden",
     "demoteConfirmBtn": "Bevestig terugzetten",
     "demoteSuccessToast": "Uw abonnement is omgezet naar Gratis. Uw laatste 50 toegevoegde items zijn behouden.",
-    "demoteFailedToast": "Omzetten naar Gratis abonnement mislukt."
+    "demoteFailedToast": "Omzetten naar Gratis abonnement mislukt.",
+    "clusterFree": "Vereist 15+ credits",
+    "unlocksCluster": "Ontgrendelt cluster upload",
+    "packIncludesCluster": "Betaald pakket — ontgrendelt cluster-upload (15+ credits)"
   },
   "avatar": {
     "savedSuccess": "Avatar en visueel profiel opgeslagen!",
@@ -5741,5 +5747,23 @@
       "addressHint": "Activeert lokale weersvoorspellingen voor je outfits en Marketplace-verzending.",
       "saveBtn": "Opslaan & Stylist activeren"
     }
+  },
+  "dressing_room_3d": {
+    "title": "3D-paskamer",
+    "subtitle": "Interactieve virtuele 360°-passtudio",
+    "open_button": "3D passen",
+    "default_outfit": "Huidige outfit",
+    "full_body": "Volledig lichaam",
+    "upper_body": "Bovenlichaam",
+    "lower_body": "Onderlichaam",
+    "auto_rotate": "360° draaien",
+    "reset_view": "Weergave herstellen",
+    "drag_hint": "Sleep om 360° te draaien • Scroll om in te zoomen",
+    "garments": "Outfitlagen",
+    "hide_item": "Item verbergen",
+    "show_item": "Item tonen",
+    "fullscreen": "Volledig scherm",
+    "exit_fullscreen": "Volledig scherm verlaten",
+    "view_item_details": "Bekijk itemdetails"
   }
 }

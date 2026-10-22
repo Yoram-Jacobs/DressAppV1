@@ -4881,7 +4881,10 @@
       "campaignsAccess": "Campañas publicitarias incluidas",
       "wardrobeMigration": "Migración de armario",
       "analysisSpeed": "Velocidad de análisis",
-      "generativeInpainting": "Retoques y Reanálisis de Estudio con IA"
+      "generativeInpainting": "Retoques y Reanálisis de Estudio con IA",
+      "clusterUpload": "Carga de prendas en grupo (percheros / armario)",
+      "clusterUploadIncluded": "Carga de prendas en grupo incluida",
+      "clusterUploadFree": "Carga en grupo (con 15+ créditos)"
     },
     "supportTiers": {
       "community": "Soporte de la comunidad",
@@ -4974,7 +4977,7 @@
     "freeCreditsOnboarding": "5 reconstrucciones gratuitas de IA",
     "monthlyCreditsDesc": "100 créditos de IA al mes (no acumulables)",
     "creditPacksTitle": "Paquetes de créditos",
-    "creditPacksSubtitle": "Compra paquetes de créditos para reconstrucciones con IA bajo demanda. Los créditos comprados nunca caducan.",
+    "creditPacksSubtitle": "Compra paquetes de créditos para reconstrucciones de IA bajo demanda y para desbloquear la carga en grupo (15+ créditos). Los créditos de pago nunca caducan.",
     "pack10": "10 créditos — $3",
     "pack50": "50 créditos — $12",
     "pack100": "100 créditos — $20",
@@ -4993,7 +4996,10 @@
     "demoteCancelBtn": "Mantener mi plan",
     "demoteConfirmBtn": "Confirmar cambio a Gratis",
     "demoteSuccessToast": "Tu plan ha cambiado a Gratis. Se conservaron las últimas 50 prendas añadidas a tu armario.",
-    "demoteFailedToast": "No se pudo cambiar al Plan Gratis."
+    "demoteFailedToast": "No se pudo cambiar al Plan Gratis.",
+    "clusterFree": "Requiere 15+ créditos",
+    "unlocksCluster": "Desbloquea carga en grupo",
+    "packIncludesCluster": "Paquete de pago — desbloquea la carga en grupo (15+ créditos)"
   },
   "avatar": {
     "savedSuccess": "¡Avatar y perfil visual guardados!",
@@ -5734,5 +5740,23 @@
       "addressHint": "Activa pronósticos del clima hiperlocales para tus outfits y envíos del Marketplace.",
       "saveBtn": "Guardar y potenciar Estilista"
     }
+  },
+  "dressing_room_3d": {
+    "title": "Probador 3D",
+    "subtitle": "Estudio interactivo de ajuste virtual en 360°",
+    "open_button": "Probar en 3D",
+    "default_outfit": "Conjunto actual",
+    "full_body": "Cuerpo entero",
+    "upper_body": "Parte superior",
+    "lower_body": "Parte inferior",
+    "auto_rotate": "Giro 360°",
+    "reset_view": "Restablecer vista",
+    "drag_hint": "Arrastra para rotar 360° • Desplaza o pellizca para hacer zoom",
+    "garments": "Capas del conjunto",
+    "hide_item": "Ocultar prenda",
+    "show_item": "Mostrar prenda",
+    "fullscreen": "Pantalla completa",
+    "exit_fullscreen": "Salir de pantalla completa",
+    "view_item_details": "Ver detalles de la prenda"
   }
 }
