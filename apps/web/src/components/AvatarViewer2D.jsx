@@ -1772,7 +1772,7 @@ export default function AvatarViewer2D({
   return (
     <div className="relative w-full h-full max-h-full overflow-hidden flex items-center justify-center p-0 shadow-inner group">
       {/* 2D Dynamic Bezier SVG Avatar or Real Body Photo Container */}
-      <div className="relative w-full h-full aspect-[200/450] max-h-full max-w-full flex items-center justify-center transition-all duration-500">
+      <div className="relative h-full w-auto aspect-[200/450] max-h-full max-w-full flex items-center justify-center mx-auto transition-all duration-500">
         {activeBodyPhotoUrl && !bodyPhotoError ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <img
@@ -1842,7 +1842,7 @@ export default function AvatarViewer2D({
             shapeParams={params}
             showGuideLines={false}
             interactive={interactive}
-            className="w-full h-full"
+            className="h-full w-auto aspect-[200/450] max-h-full max-w-full mx-auto"
           >
             {/* ─── Layered Clothes & Accessories (Segmented transparent PNG overlays) ─── */}
             {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[3.5%] left-1/2 w-[34%] aspect-square z-[50]', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}

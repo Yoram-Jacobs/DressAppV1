@@ -1,5 +1,5 @@
 import React, { Suspense, useMemo, useEffect, useRef, useState, useCallback } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -536,6 +536,63 @@ export function computeMorphInfluences({
   };
 }
 
+/**
+ * Locks the Three.js OrthographicCamera to the 200:450 anatomical coordinate frame
+ * regardless of the DOM canvas container's aspect ratio, preventing horizontal or vertical distortion.
+ */
+function ResponsiveOrthoCamera() {
+  const { camera, size } = useThree();
+
+  const syncCamera = useCallback(() => {
+    if (!camera || !camera.isOrthographicCamera) return;
+    const targetAspect = 200 / 450;
+    const width = size?.width || 200;
+    const height = size?.height || 450;
+    const currentAspect = width / (height || 1);
+
+    let left = -100;
+    let right = 100;
+    let top = 225;
+    let bottom = -225;
+
+    if (currentAspect > targetAspect) {
+      // Wider container -> expand left & right to maintain exact 1:1 isometric pixel ratio
+      const halfWidth = 225 * currentAspect;
+      left = -halfWidth;
+      right = halfWidth;
+    } else {
+      // Taller container -> expand top & bottom
+      const halfHeight = 100 / (currentAspect || targetAspect);
+      top = halfHeight;
+      bottom = -halfHeight;
+    }
+
+    if (
+      Math.abs((camera.left || 0) - left) > 0.001 ||
+      Math.abs((camera.right || 0) - right) > 0.001 ||
+      Math.abs((camera.top || 0) - top) > 0.001 ||
+      Math.abs((camera.bottom || 0) - bottom) > 0.001
+    ) {
+      camera.manual = true;
+      camera.left = left;
+      camera.right = right;
+      camera.top = top;
+      camera.bottom = bottom;
+      camera.updateProjectionMatrix();
+    }
+  }, [camera, size?.width, size?.height]);
+
+  useEffect(() => {
+    syncCamera();
+  }, [syncCamera]);
+
+  useFrame(() => {
+    syncCamera();
+  });
+
+  return null;
+}
+
 function Realistic3DAvatarMesh({
   isMale,
   skinColor,
@@ -812,7 +869,7 @@ export default function DynamicAvatar({
     const morphKey = Object.entries(morphInfluences)
       .map(([k, v]) => `${k}:${Number(v || 0).toFixed(2)}`)
       .join('|');
-    return `hair3_${isMale ? 'M' : 'F'}_${activeSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(height) || 170}_${morphKey}`;
+    return `v6_prop_${isMale ? 'M' : 'F'}_${activeSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(height) || 170}_${morphKey}`;
   }, [isMale, activeSkinColor, hairProps.color, hairProps.roughness, height, morphInfluences]);
 
   const [snapshotUrl, setSnapshotUrl] = useState(
@@ -911,7 +968,7 @@ export default function DynamicAvatar({
 
   return (
     <div
-      className={`relative w-full h-full aspect-[200/450] max-h-full max-w-full flex items-center justify-center select-none ${className}`}
+      className={`relative h-full w-auto aspect-[200/450] max-h-full max-w-full flex items-center justify-center mx-auto select-none ${className}`}
       data-testid="dynamic-3d-avatar"
       data-gender={isMale ? 'male' : 'female'}
       data-skin-color={activeSkinColor}
@@ -943,6 +1000,7 @@ export default function DynamicAvatar({
             }}
             gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
           >
+            <ResponsiveOrthoCamera />
             <ambientLight intensity={1.15} />
             <hemisphereLight args={['#ffffff', '#cbd5e1', 0.85]} />
             <directionalLight position={[120, 180, 260]} intensity={1.35} />
