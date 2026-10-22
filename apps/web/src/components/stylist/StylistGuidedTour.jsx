@@ -27,6 +27,65 @@ export default function StylistGuidedTour() {
   const [tourOpen, setTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState(null);
+  const cardRef = React.useRef(null);
+  const [measuredCardHeight, setMeasuredCardHeight] = useState(260);
+
+  useEffect(() => {
+    if (cardRef.current) {
+      const h = cardRef.current.offsetHeight;
+      if (h > 0 && Math.abs(h - measuredCardHeight) > 4) {
+        setMeasuredCardHeight(h);
+      }
+    }
+  }, [tourStep, tourOpen, measuredCardHeight]);
+
+  const popoverStyle = useMemo(() => {
+    if (typeof window === 'undefined' || !spotlightRect) {
+      return {
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 'min(92vw, 450px)',
+      };
+    }
+
+    const vw = window.innerWidth || 1024;
+    const vh = window.innerHeight || 768;
+    const cardWidth = Math.min(450, vw - 24);
+    const cardH = measuredCardHeight || 260;
+    const GAP = 16;
+
+    const spaceBelow = vh - (spotlightRect.top + spotlightRect.height);
+    const spaceAbove = spotlightRect.top;
+
+    // Position above target if space below is insufficient, ensuring zero overlay
+    const placeAbove =
+      (spaceBelow < cardH + GAP + 24 && spaceAbove >= cardH + GAP) ||
+      (spaceBelow < 200 && spaceAbove > spaceBelow);
+
+    let top;
+    if (placeAbove) {
+      top = Math.max(12, spotlightRect.top - cardH - GAP);
+    } else {
+      top = Math.min(vh - cardH - 12, spotlightRect.top + spotlightRect.height + GAP);
+    }
+
+    let left;
+    if (spotlightRect.width < 500) {
+      const targetCenter = spotlightRect.left + spotlightRect.width / 2;
+      const idealLeft = targetCenter - cardWidth / 2;
+      left = Math.max(12, Math.min(vw - cardWidth - 12, idealLeft));
+    } else {
+      left = Math.max(12, (vw - cardWidth) / 2);
+    }
+
+    return {
+      top: `${top}px`,
+      left: `${left}px`,
+      width: `${cardWidth}px`,
+      transform: 'none',
+    };
+  }, [spotlightRect, measuredCardHeight]);
 
   // Tour steps definition
   const steps = useMemo(
@@ -295,20 +354,9 @@ export default function StylistGuidedTour() {
 
       {/* Floating Tour Guide Dialog Card */}
       <div
+        ref={cardRef}
         className="fixed z-50 transition-all duration-300 pointer-events-auto"
-        style={{
-          top: spotlightRect
-            ? Math.min(
-                Math.max(16, spotlightRect.top + spotlightRect.height + 16),
-                (window.innerHeight || 800) - 320
-              )
-            : '50%',
-          left: '50%',
-          transform: spotlightRect
-            ? 'translateX(-50%)'
-            : 'translate(-50%, -50%)',
-          width: 'min(92vw, 460px)',
-        }}
+        style={popoverStyle}
       >
         <div className="bg-white/95 dark:bg-card/95 backdrop-blur-md border border-border/80 rounded-2xl p-5 md:p-6 shadow-[0_16px_48px_rgba(20,30,25,0.22)] space-y-4">
           {/* Header Badge & Close */}

@@ -574,11 +574,13 @@ export default function ClosetGuidedTour({
     const vh = window.innerHeight;
     const cardMaxWidth = Math.min(400, vw - 24);
     const spaceBelow = vh - (spotlightRect.top + spotlightRect.height);
-    const placeAbove = spaceBelow < 270 && spotlightRect.top > 250;
+    const cardH = 260;
+    const GAP = 16;
+    const placeAbove = (spaceBelow < cardH + GAP + 24 && spotlightRect.top >= cardH + GAP) || (spaceBelow < 200 && spotlightRect.top > spaceBelow);
 
     const top = placeAbove
-      ? Math.max(16, spotlightRect.top - 250)
-      : Math.min(vh - 260, spotlightRect.top + spotlightRect.height + 14);
+      ? Math.max(16, spotlightRect.top - cardH - GAP)
+      : Math.min(vh - cardH - 14, spotlightRect.top + spotlightRect.height + GAP);
 
     const centerLeft = spotlightRect.left + spotlightRect.width / 2 - cardMaxWidth / 2;
     const left = Math.max(12, Math.min(vw - cardMaxWidth - 12, centerLeft));
