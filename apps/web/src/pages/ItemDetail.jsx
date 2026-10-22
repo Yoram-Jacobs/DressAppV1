@@ -1604,7 +1604,7 @@ export default function ItemDetail() {
       )
       : (mergedItem.reconstructed_image_url || bestImageUrl(mergedItem, { skipReconstruction: false }))
   );
-  const studio3DItems = useMemo(() => {
+  const studio3DItems = (() => {
     if (!mergedItem) return {};
     const rawCat = mergedItem.category || 'top';
     const slot = String(rawCat).toLowerCase();
@@ -1614,7 +1614,7 @@ export default function ItemDetail() {
       clean_image_url: preferredImage || mergedItem.clean_image_url,
     };
     return { [slot]: itemLike };
-  }, [mergedItem, preferredImage]);
+  })();
   // "Repair photo" CTA visibility:
   //   • the one-pass /analyze response asked us to advise it
   //     (``reconstruction_advised: true``), AND
