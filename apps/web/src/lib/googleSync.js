@@ -31,5 +31,5 @@ export async function fetchAndPrepareGoogleProfile(form) {
   };
 
   const updated = await api.patchMe(payload);
-  return { newForm, updated };
+  return { newForm, updated, patch: payload };
 }

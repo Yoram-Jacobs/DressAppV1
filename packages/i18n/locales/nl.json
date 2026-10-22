@@ -5745,7 +5745,8 @@
       "streetPlaceholder": "Straat en huisnummer",
       "countryPlaceholder": "Land",
       "addressHint": "Activeert lokale weersvoorspellingen voor je outfits en Marketplace-verzending.",
-      "saveBtn": "Opslaan & Stylist activeren"
+      "saveBtn": "Opslaan & Stylist activeren",
+      "oauthTip": "Opmerking: Bij het koppelen van Google Calendar kan Google het scherm \"Niet-geverifieerde app\" weergeven. Klik op \"Geavanceerd\" en vervolgens op \"Naar DressApp gaan\" om toegang te verlenen."
     }
   },
   "dressing_room_3d": {

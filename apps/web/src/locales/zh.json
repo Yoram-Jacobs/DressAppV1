@@ -5756,7 +5756,8 @@
       "streetPlaceholder": "街道与门牌号",
       "countryPlaceholder": "国家/地区",
       "addressHint": "为您的每日穿搭提供精准当地天气预报及市集收发货支持。",
-      "saveBtn": "保存并升级造型师"
+      "saveBtn": "保存并升级造型师",
+      "oauthTip": "提示：连接 Google Calendar 时，Google 可能会显示“未验证的应用”屏幕。点击“高级”然后点击“前往 DressApp”以批准日历访问。"
     }
   },
   "dressing_room_3d": {

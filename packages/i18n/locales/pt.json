@@ -5741,7 +5741,8 @@
       "streetPlaceholder": "Rua e número",
       "countryPlaceholder": "País",
       "addressHint": "Ativa a previsão do tempo local diária para seus looks e envios do Marketplace.",
-      "saveBtn": "Salvar e turbinar Stylist"
+      "saveBtn": "Salvar e turbinar Stylist",
+      "oauthTip": "Nota: Ao conectar o Google Calendar, o Google pode exibir uma tela de \"Aplicativo não verificado\". Clique em \"Avançado\" e depois em \"Acessar o DressApp\" para aprovar o acesso."
     }
   },
   "dressing_room_3d": {

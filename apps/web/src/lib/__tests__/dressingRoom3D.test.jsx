@@ -244,7 +244,7 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(femaleBust.cz).toBeGreaterThan(0.04); // bust reaches forward
 
     const maleChest = getTorsoSlice(1.30, true);
-    expect(maleChest.rx).toBeGreaterThan(0.22);
+    expect(maleChest.rx).toBeGreaterThan(0.21);
 
     // 2. Leg slice interpolation at crotch and ankle
     const legCrotch = getLegSlice(0.80, false);

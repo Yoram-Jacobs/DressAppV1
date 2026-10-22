@@ -5742,7 +5742,8 @@
       "streetPlaceholder": "番地・建物名",
       "countryPlaceholder": "国",
       "addressHint": "毎日のコーデ用のピンポイント天気予報とマーケット配送を有効にします。",
-      "saveBtn": "保存してスタイリストを強化"
+      "saveBtn": "保存してスタイリストを強化",
+      "oauthTip": "注：Googleカレンダーを連携する際、Googleに「確認されていないアプリ」画面が表示される場合があります。「詳細」をクリックし「DressAppに移動」を選択して連携を許可してください。"
     }
   },
   "dressing_room_3d": {

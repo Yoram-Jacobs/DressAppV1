@@ -25,11 +25,12 @@ export const auth = {
       .then((r) => r.data);
   },
 
-  googleOAuthStart: () => client.get('/auth/google/start').then((r) => r.data),
+  googleOAuthStart: (next = '') =>
+    client.get('/auth/google/start', { params: next ? { next } : {} }).then((r) => r.data),
   googleOAuthDisconnect: () =>
     client.post('/auth/google/disconnect').then((r) => r.data),
-  googleReConsent: (withCalendar = false) =>
-    client.get('/auth/google/re-consent', { params: { with_calendar: withCalendar } }).then((r) => r.data),
+  googleReConsent: (withCalendar = false, next = '') =>
+    client.get('/auth/google/re-consent', { params: { with_calendar: withCalendar, ...(next ? { next } : {}) } }).then((r) => r.data),
   googleSyncProfile: () =>
     client.post('/auth/google/sync-profile').then((r) => r.data),
 };

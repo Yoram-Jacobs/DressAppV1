@@ -5756,7 +5756,8 @@
       "streetPlaceholder": "Via e numero civico",
       "countryPlaceholder": "Paese",
       "addressHint": "Attiva le previsioni meteo locali per i tuoi outfit e le spedizioni Marketplace.",
-      "saveBtn": "Salva e attiva Stylist"
+      "saveBtn": "Salva e attiva Stylist",
+      "oauthTip": "Nota: Quando colleghi Google Calendar, Google potrebbe mostrare una schermata \"App non verificata\". Fai clic su \"Avanzate\" e poi su \"Vai a DressApp\" per approvare l'accesso."
     }
   },
   "dressing_room_3d": {

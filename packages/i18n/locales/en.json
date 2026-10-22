@@ -5762,7 +5762,8 @@
       "streetPlaceholder": "Street & house number",
       "countryPlaceholder": "Country",
       "addressHint": "Powers hyper-local daily weather forecasts for your outfits and Marketplace shipping.",
-      "saveBtn": "Save & Power Up Stylist"
+      "saveBtn": "Save & Power Up Stylist",
+      "oauthTip": "Note: When connecting Google Calendar, Google may display an \"Unverified app\" screen. Click \"Advanced\" then \"Go to DressApp\" to approve calendar access."
     }
   },
   "dressing_room_3d": {

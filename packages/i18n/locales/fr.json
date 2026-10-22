@@ -5734,7 +5734,8 @@
       "streetPlaceholder": "Rue et numéro",
       "countryPlaceholder": "Pays",
       "addressHint": "Active les prévisions météo locales pour vos tenues et les expéditions Marketplace.",
-      "saveBtn": "Enregistrer et activer"
+      "saveBtn": "Enregistrer et activer",
+      "oauthTip": "Remarque : Lors de la connexion à Google Calendar, Google peut afficher un écran \"Application non vérifiée\". Cliquez sur \"Paramètres avancés\" puis sur \"Accéder à DressApp\" pour approuver l'accès."
     }
   },
   "dressing_room_3d": {

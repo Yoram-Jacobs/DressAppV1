@@ -5753,7 +5753,8 @@
       "streetPlaceholder": "Calle y número",
       "countryPlaceholder": "País",
       "addressHint": "Activa pronósticos del clima hiperlocales para tus outfits y envíos del Marketplace.",
-      "saveBtn": "Guardar y potenciar Estilista"
+      "saveBtn": "Guardar y potenciar Estilista",
+      "oauthTip": "Nota: Al conectar Google Calendar, Google puede mostrar una pantalla de \"Aplicación no verificada\". Haz clic en \"Avanzado\" y luego en \"Ir a DressApp\" para aprobar el acceso."
     }
   },
   "dressing_room_3d": {

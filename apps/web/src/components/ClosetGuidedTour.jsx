@@ -105,7 +105,7 @@ export default function ClosetGuidedTour({
     }
   }, [user, dob, phone]);
 
-  // Check calendar connection status once on mount
+  // Check calendar connection status once on mount & handle post-OAuth return
   useEffect(() => {
     if (!user) return;
     let mounted = true;
@@ -117,10 +117,29 @@ export default function ClosetGuidedTour({
         }
       })
       .catch(() => {});
+
+    // Listen for ?calendar=connected or ?calendar=error from Google OAuth redirect
+    const cal = searchParams.get('calendar');
+    if (cal === 'connected') {
+      setCalendarConnected(true);
+      toast.success(t('calendar.connected', { defaultValue: 'Google Calendar connected successfully!' }));
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('calendar');
+      setSearchParams(nextParams, { replace: true });
+      refresh?.().catch(() => {});
+    } else if (cal === 'error') {
+      const reason = searchParams.get('reason') || 'unknown_error';
+      toast.error(`${t('calendar.connectFailed', { defaultValue: 'Connection failed' })}: ${reason.replaceAll('_', ' ')}`);
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('calendar');
+      nextParams.delete('reason');
+      setSearchParams(nextParams, { replace: true });
+    }
+
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, searchParams, setSearchParams, t, refresh]);
 
   // Auto-launch tour for newly onboarded users landing in /closet or when triggered via ?tour=1 / custom event
   useEffect(() => {
@@ -390,7 +409,7 @@ export default function ClosetGuidedTour({
   const handleConnectCalendar = async () => {
     setConnectingCalendar(true);
     try {
-      const res = await api.googleOAuthStart();
+      const res = await api.googleOAuthStart('/closet');
       if (res?.authorization_url) {
         window.location.href = res.authorization_url;
       } else {
@@ -422,13 +441,21 @@ export default function ClosetGuidedTour({
         address,
       });
 
-      if (res?.patch && Object.keys(res.patch).length > 0) {
-        if (res.patch.date_of_birth) setDob(res.patch.date_of_birth);
-        if (res.patch.phone) setPhone(res.patch.phone);
-        if (res.patch.address) {
+      const patchData = res?.newForm || res?.patch;
+      const hasFields = Boolean(
+        patchData?.date_of_birth ||
+        patchData?.phone ||
+        patchData?.address?.city ||
+        patchData?.address?.line1
+      );
+
+      if (patchData && hasFields) {
+        if (patchData.date_of_birth) setDob(patchData.date_of_birth);
+        if (patchData.phone) setPhone(patchData.phone);
+        if (patchData.address) {
           setAddress((prev) => ({
             ...prev,
-            ...res.patch.address,
+            ...patchData.address,
           }));
         }
         if (res.updated) {
@@ -442,7 +469,7 @@ export default function ClosetGuidedTour({
         );
       } else {
         // Request incremental People API consent if no fields were returned
-        const consent = await api.googleReConsent(false);
+        const consent = await api.googleReConsent(false, '/closet');
         if (consent?.authorization_url) {
           window.location.href = consent.authorization_url;
           return;
@@ -456,9 +483,14 @@ export default function ClosetGuidedTour({
       }
     } catch (err) {
       const detail = err?.response?.data?.detail;
-      if (err?.response?.status === 409 && detail === 'missing_people_scopes') {
+      if (
+        detail === 'missing_people_scopes' ||
+        detail === 'Google account not connected.' ||
+        err?.response?.status === 403 ||
+        err?.response?.status === 409
+      ) {
         try {
-          const consent = await api.googleReConsent(false);
+          const consent = await api.googleReConsent(false, '/closet');
           if (consent?.authorization_url) {
             window.location.href = consent.authorization_url;
             return;
@@ -468,7 +500,8 @@ export default function ClosetGuidedTour({
         }
       }
       toast.error(
-        err?.message ||
+        detail ||
+          err?.message ||
           t('closetTour.googleSyncError', {
             defaultValue: 'Could not sync from Google. Please fill in the fields below.',
           })
@@ -938,7 +971,7 @@ export default function ClosetGuidedTour({
               disabled={syncingGoogle}
               onClick={handleSyncFromGoogle}
               data-testid="quick-profile-google-sync-btn"
-              className="rounded-full h-9 px-3.5 text-xs font-bold border-primary-brand/40 text-primary-brand bg-white hover:bg-primary-brand hover:text-white shrink-0"
+              className="rounded-full h-9 px-3.5 text-xs font-bold border border-primary-brand/40 text-primary-brand bg-white hover:!bg-primary-brand hover:!text-white transition-colors shrink-0"
             >
               {syncingGoogle ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin me-1.5" />
@@ -990,7 +1023,7 @@ export default function ClosetGuidedTour({
                 disabled={connectingCalendar}
                 onClick={handleConnectCalendar}
                 data-testid="quick-profile-connect-calendar-btn"
-                className="rounded-full h-8 px-3 text-xs font-bold border-primary-brand/40 text-primary-brand hover:bg-primary-brand hover:text-white"
+                className="rounded-full h-8 px-3 text-xs font-bold border border-primary-brand/40 text-primary-brand bg-white hover:!bg-primary-brand hover:!text-white transition-colors"
               >
                 {connectingCalendar && (
                   <Loader2 className="w-3.5 h-3.5 animate-spin me-1" />
@@ -1002,6 +1035,17 @@ export default function ClosetGuidedTour({
                 </span>
               </Button>
             )}
+          </div>
+
+          {/* Explanatory OAuth notice for Google verification */}
+          <div className="rounded-[12px] bg-amber-500/10 border border-amber-500/20 p-2.5 text-[11px] text-amber-900 dark:text-amber-200 flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <span>
+              {t('closetTour.modal.oauthTip', {
+                defaultValue:
+                  'Note: When connecting Google Calendar, Google may display an \'Unverified app\' screen. Click \'Advanced\' (מתקדם) then \'Go to DressApp\' (מעבר אל) to approve calendar access.',
+              })}
+            </span>
           </div>
 
           {/* Inline Form for DOB, Phone, and Weather/Shipping Address */}

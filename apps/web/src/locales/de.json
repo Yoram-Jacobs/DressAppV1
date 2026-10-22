@@ -5749,7 +5749,8 @@
       "streetPlaceholder": "Straße und Hausnummer",
       "countryPlaceholder": "Land",
       "addressHint": "Aktiviert lokale Wettervorhersagen für deine Outfits und den Marktplatz-Versand.",
-      "saveBtn": "Speichern & Stylist aktivieren"
+      "saveBtn": "Speichern & Stylist aktivieren",
+      "oauthTip": "Hinweis: Beim Verbinden von Google Calendar zeigt Google möglicherweise einen Bildschirm \"Nicht verifizierte App\" an. Klicken Sie auf \"Erweitert\" und dann auf \"Zu DressApp wechseln\", um den Zugriff zu genehmigen."
     }
   },
   "dressing_room_3d": {
