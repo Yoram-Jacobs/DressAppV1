@@ -611,7 +611,10 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="md:col-span-1">
         {/* ============ LEFT PANEL: Planner ============ */}
-        <div className="bg-white rounded-[20px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5">
+        <div
+          className="bg-white rounded-[20px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5"
+          data-testid="shuffler-planner-sidebar"
+        >
           <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--primary-color)]">
             <Sparkles className="!h-3.5 !w-3.5 text-[var(--primary-color)]" />
             <span>{t('stylist.personalStylist', { defaultValue: 'Personal Stylist' })}</span>
@@ -813,7 +816,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3.5 w-full">
+          <div className="flex flex-col gap-3.5 w-full" data-testid="shuffler-carousels-container">
             {renderRow('top', labelForRole('top', t), filteredTops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
             {renderRow('bottom', labelForRole('bottom', t), filteredBottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
             {renderRow('shoes', labelForRole('shoes', t), filteredShoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
@@ -834,6 +837,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
             <Button
               onClick={handleShuffle}
               disabled={isSpinning}
+              data-testid="shuffler-generate-btn"
               className=" h-auto
               w-full
                           rounded-full
@@ -860,6 +864,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
               onClick={handleSave}
               disabled={saving || isSpinning || (filteredTops.length === 0 && filteredBottoms.length === 0 && filteredShoes.length === 0)}
               variant="outline"
+              data-testid="shuffler-save-btn"
               className="
               w-full
                         h-auto

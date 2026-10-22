@@ -5762,5 +5762,45 @@
       "addressHint": "Powers hyper-local daily weather forecasts for your outfits and Marketplace shipping.",
       "saveBtn": "Save & Power Up Stylist"
     }
+  },
+  "dressing_room_3d": {
+    "title": "3D Try-On Dressing Room",
+    "subtitle": "Interactive 360° virtual fitting studio",
+    "open_button": "3D Try-On",
+    "default_outfit": "Current Outfit",
+    "full_body": "Full Body",
+    "upper_body": "Upper Body",
+    "lower_body": "Lower Body",
+    "auto_rotate": "360° Rotate",
+    "reset_view": "Reset View",
+    "drag_hint": "Drag to rotate 360° • Scroll / pinch to zoom",
+    "garments": "Outfit Layers",
+    "hide_item": "Hide item",
+    "show_item": "Show item",
+    "fullscreen": "Full screen",
+    "exit_fullscreen": "Exit full screen"
+  },
+  "stylistTour": {
+    "step1": {
+      "badge": "Step 1 of 4 • Your Starter Capsule",
+      "title": "Mix & Match Separates",
+      "desc": "Your starter garments are organized into Tops, Bottoms, and Shoes rows. Swipe or click the arrows to browse and test different combinations fitted to your personal proportions."
+    },
+    "step2": {
+      "badge": "Step 2 of 4 • AI One-Click Shuffle",
+      "title": "Instant AI Outfit Generation",
+      "desc": "Click \"Generate New Outfit\" anytime. DressApp evaluates color theory, seasonality, and your body proportions to harmonize a complete outfit in seconds."
+    },
+    "step3": {
+      "badge": "Step 3 of 4 • Schedule & Agenda Sync",
+      "title": "Dress for Your Actual Day",
+      "desc": "Toggle \"Today's Agenda\" to match outfits to your Google Calendar meetings, or choose an occasion (Work, Casual, Party, Gym) for tailored dress codes."
+    },
+    "step4": {
+      "badge": "Step 4 of 4 • Save & Explore",
+      "title": "Save Outfits & Visit Your Closet",
+      "desc": "Love an outfit? Click \"Save Outfit\" to add it to your Lookbook. Whenever you are ready to photograph and add your real clothes, head over to your Closet!",
+      "closetBtn": "Explore My Closet"
+    }
   }
 }

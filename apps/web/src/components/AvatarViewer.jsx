@@ -11,6 +11,7 @@ export default function AvatarViewer({
   hair,
   showPointCloudMesh = false,
   interactive = false,
+  enable3DTryOn = true,
 }) {
   return (
     <AvatarViewer2D
@@ -24,6 +25,7 @@ export default function AvatarViewer({
       hair={hair}
       showPointCloudMesh={showPointCloudMesh}
       interactive={interactive}
+      enable3DTryOn={enable3DTryOn}
     />
   );
 }

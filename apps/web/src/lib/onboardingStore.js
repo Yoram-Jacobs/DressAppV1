@@ -180,6 +180,8 @@ export const ONBOARDING_COMPLETED_KEY = 'dressapp.onboarding_completed';
 export const ONBOARDING_FIRST_OUTFIT_KEY = 'dressapp.onboarding_first_outfit';
 export const ONBOARDING_TOUR_PENDING_KEY = 'dressapp.closet_tour_pending';
 export const ONBOARDING_TOUR_COMPLETED_KEY = 'dressapp.closet_tour_completed';
+export const STYLIST_TOUR_PENDING_KEY = 'dressapp.stylist_tour_pending';
+export const STYLIST_TOUR_COMPLETED_KEY = 'dressapp.stylist_tour_completed';
 
 export const DEFAULT_ONBOARDING_DRAFT = {
   step: 1,
@@ -293,6 +295,9 @@ export function markOnboardingCompleted(userId = 'guest') {
     window.localStorage.setItem(ONBOARDING_COMPLETED_KEY, String(userId || 'done'));
     if (!window.localStorage.getItem(ONBOARDING_TOUR_COMPLETED_KEY)) {
       window.localStorage.setItem(ONBOARDING_TOUR_PENDING_KEY, 'true');
+    }
+    if (!window.localStorage.getItem(STYLIST_TOUR_COMPLETED_KEY)) {
+      window.localStorage.setItem(STYLIST_TOUR_PENDING_KEY, 'true');
     }
   } catch {
     // ignore

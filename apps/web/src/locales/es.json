@@ -5738,5 +5738,45 @@
       "addressHint": "Activa pronósticos del clima hiperlocales para tus outfits y envíos del Marketplace.",
       "saveBtn": "Guardar y potenciar Estilista"
     }
+  },
+  "dressing_room_3d": {
+    "title": "Probador virtual 3D",
+    "subtitle": "Estudio interactivo de prueba virtual en 360°",
+    "open_button": "Probar en 3D",
+    "default_outfit": "Conjunto actual",
+    "full_body": "Cuerpo entero",
+    "upper_body": "Parte superior",
+    "lower_body": "Parte inferior",
+    "auto_rotate": "Giro 360°",
+    "reset_view": "Restablecer vista",
+    "drag_hint": "Arrastra para rotar en 360° • Desplaza o pellizca para hacer zoom",
+    "garments": "Capas del conjunto",
+    "hide_item": "Ocultar prenda",
+    "show_item": "Mostrar prenda",
+    "fullscreen": "Pantalla completa",
+    "exit_fullscreen": "Salir de pantalla completa"
+  },
+  "stylistTour": {
+    "step1": {
+      "badge": "Paso 1 de 4 • Tu Cápsula Inicial",
+      "title": "Combina Prendas Separadas",
+      "desc": "Tus prendas iniciales están organizadas en filas de Tops, Pantalones y Calzado. Desliza o usa las flechas para explorar y probar combinaciones adaptadas a tus proporciones."
+    },
+    "step2": {
+      "badge": "Paso 2 de 4 • Mezcla IA con Un Clic",
+      "title": "Generación Instantánea con IA",
+      "desc": "Haz clic en \"Generar nuevo atuendo\" cuando quieras. DressApp evalúa la teoría del color, la temporada y tu figura para crear un look perfecto en segundos."
+    },
+    "step3": {
+      "badge": "Paso 3 de 4 • Sincronización de Agenda",
+      "title": "Vístete para tu Día Real",
+      "desc": "Activa \"Agenda de hoy\" para coordinar looks con tus citas de Google Calendar, o elige una ocasión (Trabajo, Casual, Fiesta, Gimnasio)."
+    },
+    "step4": {
+      "badge": "Paso 4 de 4 • Guardar y Explorar",
+      "title": "Guarda Atuendos y Visita tu Armario",
+      "desc": "¿Te encanta el atuendo? Haz clic en \"Guardar atuendo\". Cuando quieras fotografiar y añadir tu ropa real, ¡ve a tu Armario!",
+      "closetBtn": "Explorar mi Armario"
+    }
   }
 }

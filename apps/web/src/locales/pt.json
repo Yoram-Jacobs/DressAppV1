@@ -5741,5 +5741,45 @@
       "addressHint": "Ativa a previsão do tempo local diária para seus looks e envios do Marketplace.",
       "saveBtn": "Salvar e turbinar Stylist"
     }
+  },
+  "dressing_room_3d": {
+    "title": "Provador 3D",
+    "subtitle": "Estúdio interativo de prova virtual em 360°",
+    "open_button": "Provar em 3D",
+    "default_outfit": "Look atual",
+    "full_body": "Corpo inteiro",
+    "upper_body": "Parte superior",
+    "lower_body": "Parte inferior",
+    "auto_rotate": "Giro 360°",
+    "reset_view": "Redefinir vista",
+    "drag_hint": "Arraste para girar em 360° • Role para zoom",
+    "garments": "Camadas do look",
+    "hide_item": "Ocultar peça",
+    "show_item": "Mostrar peça",
+    "fullscreen": "Tela cheia",
+    "exit_fullscreen": "Sair da tela cheia"
+  },
+  "stylistTour": {
+    "step1": {
+      "badge": "Passo 1 de 4 • Sua Cápsula Inicial",
+      "title": "Combine Peças Separadas",
+      "desc": "Suas peças iniciais estão organizadas em Tops, Partes de Baixo e Calçados. Deslize ou use as setas para testar combinações adaptadas ao seu corpo."
+    },
+    "step2": {
+      "badge": "Passo 2 de 4 • Mistura IA com Um Clique",
+      "title": "Geração Instantânea com IA",
+      "desc": "Clique em \"Gerar novo visual\" a qualquer momento. O DressApp avalia teoria das cores, estação e proporções corporais para criar um visual harmonioso."
+    },
+    "step3": {
+      "badge": "Passo 3 de 4 • Sincronização de Agenda",
+      "title": "Vista-se para o seu Dia Real",
+      "desc": "Ative \"Agenda de hoje\" para combinar looks com seus eventos do Google Calendar, ou escolha uma ocasião (Trabalho, Casual, Festa, Academia)."
+    },
+    "step4": {
+      "badge": "Passo 4 de 4 • Salvar e Explorar",
+      "title": "Salve Looks e Visite seu Closet",
+      "desc": "Adorou o visual? Clique em \"Salvar visual\". Quando estiver pronto para fotografar e adicionar suas roupas reais, vá para o seu Closet!",
+      "closetBtn": "Explorar Meu Closet"
+    }
   }
 }

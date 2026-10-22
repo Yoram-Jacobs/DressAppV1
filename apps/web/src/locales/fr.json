@@ -5734,5 +5734,45 @@
       "addressHint": "Active les prévisions météo locales pour vos tenues et les expéditions Marketplace.",
       "saveBtn": "Enregistrer et activer"
     }
+  },
+  "dressing_room_3d": {
+    "title": "Cabine d'essayage 3D",
+    "subtitle": "Studio d'essayage virtuel interactif à 360°",
+    "open_button": "Essayage 3D",
+    "default_outfit": "Tenue actuelle",
+    "full_body": "Corps entier",
+    "upper_body": "Haut du corps",
+    "lower_body": "Bas du corps",
+    "auto_rotate": "Rotation 360°",
+    "reset_view": "Réinitialiser",
+    "drag_hint": "Faites glisser pour pivoter à 360° • Molette pour zoomer",
+    "garments": "Couches de la tenue",
+    "hide_item": "Masquer l'article",
+    "show_item": "Afficher l'article",
+    "fullscreen": "Plein écran",
+    "exit_fullscreen": "Quitter le plein écran"
+  },
+  "stylistTour": {
+    "step1": {
+      "badge": "Étape 1 sur 4 • Votre Capsule de Départ",
+      "title": "Assortir les Pièces",
+      "desc": "Vos vêtements de départ sont organisés en rangées : Hauts, Bas et Chaussures. Balayez ou cliquez sur les flèches pour tester des combinaisons adaptées à vos proportions."
+    },
+    "step2": {
+      "badge": "Étape 2 sur 4 • Mix IA en Un Clic",
+      "title": "Génération Instantanée par IA",
+      "desc": "Cliquez sur \"Générer une nouvelle tenue\" à tout moment. DressApp analyse la théorie des couleurs, la saison et votre silhouette pour harmoniser votre look."
+    },
+    "step3": {
+      "badge": "Étape 3 sur 4 • Synchronisation d'Agenda",
+      "title": "Habillez-vous pour Votre Journée",
+      "desc": "Activez \"Agenda du jour\" pour adapter votre tenue à vos réunions Google Calendar, ou choisissez une occasion (Travail, Décontracté, Fête, Sport)."
+    },
+    "step4": {
+      "badge": "Étape 4 sur 4 • Sauvegarder et Explorer",
+      "title": "Sauvegardez vos Tenues & Visitez votre Garde-robe",
+      "desc": "Vous aimez cette tenue ? Cliquez sur \"Enregistrer la tenue\". Dès que vous êtes prêt à photographier vos vrais vêtements, rendez-vous dans votre Garde-robe !",
+      "closetBtn": "Explorer ma Garde-robe"
+    }
   }
 }

@@ -58,68 +58,101 @@ export default function AuthCallback() {
       return;
     }
 
-    // 1) Store token, 2) fetch user, 3) flush onboarding draft if present, 4) toast, 5) redirect.
+    // 1) Store token immediately
     tokenStore.set(token);
-    userStore.set(null); // force a fresh /me on the AuthProvider refresh
-    refresh()
-      .then(async (u) => {
-        if (!u) {
-          setError('session_failed');
-          tokenStore.clear();
-          return;
-        }
-        // Wipe the hash so the token never lingers in browser history.
-        try {
-          window.history.replaceState(null, '', window.location.pathname);
-        } catch {
-          /* noop */
-        }
 
-        let targetRoute = safeNext;
-        try {
-          const draft = getOnboardingDraft();
-          const userAlreadyOnboarded = Boolean(
-            u?.migration_flag ||
-              (Array.isArray(u?.style_profile?.aesthetics) &&
-                u.style_profile.aesthetics.length > 0 &&
-                (u?.body_measurements?.height || u?.body_measurements?.height_cm))
-          );
-          const hasDraftContent =
-            draft &&
-            Boolean(draft.updated_at) &&
-            (userAlreadyOnboarded ? Number(draft.step) >= 3 : Number(draft.step) >= 1);
-          if (hasDraftContent) {
-            const flushResult = await flushOnboardingDraftToBackend({
-              api,
-              closetStore,
-              currentUser: u,
-              draft,
-              t,
-            });
-            await refresh().catch(() => {});
-            if (
-              flushResult?.flushed &&
-              (safeNext === '/home' || safeNext === '/onboarding') &&
-              flushResult.redirectTo
-            ) {
-              targetRoute = flushResult.redirectTo;
-            }
+    // Decode JWT payload synchronously so the app has user ID and email without network delay
+    let seedUser = null;
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const json = atob(b64);
+        const payload = JSON.parse(json);
+        if (payload?.sub || payload?.user_id) {
+          seedUser = {
+            id: payload.sub || payload.user_id,
+            email: payload.email || '',
+            roles: payload.roles || ['user'],
+          };
+          userStore.set(seedUser);
+        }
+      }
+    } catch {
+      /* ignore token decode error */
+    }
+
+    // Wipe the hash so the token never lingers in browser history.
+    try {
+      window.history.replaceState(null, '', window.location.pathname);
+    } catch {
+      /* noop */
+    }
+
+    const finalizeAuth = async () => {
+      let targetRoute = safeNext;
+      try {
+        const draft = getOnboardingDraft();
+        const userAlreadyOnboarded = Boolean(
+          seedUser?.migration_flag ||
+            (Array.isArray(seedUser?.style_profile?.aesthetics) &&
+              seedUser.style_profile.aesthetics.length > 0 &&
+              (seedUser?.body_measurements?.height || seedUser?.body_measurements?.height_cm))
+        );
+        const hasDraftContent =
+          draft &&
+          Boolean(draft.updated_at) &&
+          (userAlreadyOnboarded ? Number(draft.step) >= 3 : Number(draft.step) >= 1);
+        if (hasDraftContent) {
+          const flushResult = await flushOnboardingDraftToBackend({
+            api,
+            closetStore,
+            currentUser: seedUser,
+            draft,
+            t,
+          });
+          if (
+            flushResult?.flushed &&
+            (safeNext === '/home' || safeNext === '/onboarding') &&
+            flushResult.redirectTo
+          ) {
+            targetRoute = flushResult.redirectTo;
           }
-        } catch {
-          /* non-fatal: proceed to targetRoute */
         }
+      } catch (err) {
+        console.warn('Onboarding draft flush warning:', err);
+      }
 
-        if (warning === 'calendar_persist_failed') {
-          toast.warning(t('auth.calendarPersistWarning'));
-        } else {
-          toast.success(t('auth.signedInWithGoogle'));
+      if (warning === 'calendar_persist_failed') {
+        toast.warning(t('auth.calendarPersistWarning'));
+      } else {
+        toast.success(t('auth.signedInWithGoogle'));
+      }
+
+      // Navigate immediately into the target route
+      nav(targetRoute, { replace: true });
+
+      // Lazy connection check with background retry (non-blocking)
+      const performLazyConnectionCheck = async (attempts = 3) => {
+        for (let i = 0; i < attempts; i++) {
+          try {
+            const u = await refresh();
+            if (u) return u;
+          } catch (err) {
+            console.warn(`Lazy connection check attempt ${i + 1}:`, err);
+          }
+          if (i < attempts - 1) {
+            await new Promise((res) => setTimeout(res, 800 * (i + 1)));
+          }
         }
-        nav(targetRoute, { replace: true });
-      })
-      .catch(() => {
-        setError('session_failed');
-        tokenStore.clear();
-      });
+      };
+      performLazyConnectionCheck().catch(() => {});
+    };
+
+    finalizeAuth().catch((err) => {
+      console.error('AuthCallback finalize error:', err);
+      nav(safeNext, { replace: true });
+    });
   }, [nav, refresh, t]);
 
   return (

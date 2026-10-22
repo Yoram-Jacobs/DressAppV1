@@ -69,6 +69,7 @@ import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
 import AvatarViewer from '@/components/AvatarViewer';
+import DressingRoom3D from '@/components/DressingRoom3D';
 import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
 import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
 import { ItemFloater } from '@/components/stylist/ItemFloater';
@@ -76,6 +77,7 @@ import HarmonyBadge from '@/components/stylist/HarmonyBadge';
 import ShareOutfitModal from '@/components/stylist/ShareOutfitModal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DressMeShuffler from '@/components/stylist/DressMeShuffler';
+import StylistGuidedTour from '@/components/stylist/StylistGuidedTour';
 import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
 import { api, client } from '@/lib/api';
 import { toast } from 'sonner';
@@ -355,6 +357,8 @@ export default function Stylist() {
       const tabParam = params.get('tab');
       if (tabParam) {
         setActiveTab(tabParam);
+      } else if (params.get('onboarded') === '1' || params.get('tour') === '1') {
+        setActiveTab('shuffle');
       }
     }
   }, [location]);
@@ -432,6 +436,7 @@ export default function Stylist() {
   const [dragOverDay, setDragOverDay] = useStoreState(stylistUIStore, 'dragOverDay');
   const [selectedOutfitForDetail, setSelectedOutfitForDetail] = useStoreState(stylistUIStore, 'selectedOutfitForDetail');
   const [shareDetailModalOpen, setShareDetailModalOpen] = useStoreState(stylistUIStore, 'shareDetailModalOpen');
+  const [detailDressingRoomOpen, setDetailDressingRoomOpen] = useState(false);
   const [calendarModalOpen, setCalendarModalOpen] = useStoreState(stylistUIStore, 'calendarModalOpen');
   const [schedulingDate, setSchedulingDate] = useStoreState(stylistUIStore, 'schedulingDate');
   const [currentCalendarMonth, setCurrentCalendarMonth] = useStoreState(stylistUIStore, 'currentCalendarMonth');
@@ -2816,6 +2821,15 @@ export default function Stylist() {
                 >
                   <Share2 className="!h-3.5 !w-3.5" /> {t('common.share', { defaultValue: 'Share' })}
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDetailDressingRoomOpen(true)}
+                  className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-4 py-[5px] leading-[22px] !shadow-none border border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5 hover:bg-[var(--primary-color)] hover:text-white transition-colors"
+                  data-testid="detail-open-dressing-room-3d-btn"
+                >
+                  <Sparkles className="!h-3.5 !w-3.5 text-primary-brand" /> {t('dressing_room_3d.open_button', { defaultValue: '3D Try-On' })}
+                </Button>
               </>
             ) : (
               <>
@@ -2851,6 +2865,15 @@ export default function Stylist() {
                   className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-5 py-[5px] leading-[22px] !shadow-none border border-[#666] hover:!border-[var(--primary-color)] hover:!text-[var(--primary-color)]"
                 >
                   <Share2 className="!h-3.5 !w-3.5" /> {t('common.share', { defaultValue: 'Share' })}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDetailDressingRoomOpen(true)}
+                  className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-5 py-[5px] leading-[22px] !shadow-none border border-[var(--primary-color)] text-[var(--primary-color)] bg-[var(--primary-color)]/5 hover:bg-[var(--primary-color)] hover:text-white transition-colors"
+                  data-testid="saved-open-dressing-room-3d-btn"
+                >
+                  <Sparkles className="!h-3.5 !w-3.5 text-primary-brand" /> {t('dressing_room_3d.open_button', { defaultValue: '3D Try-On' })}
                 </Button>
               </>
             )}
@@ -3070,6 +3093,19 @@ export default function Stylist() {
           </div>
         </div>
         <ShareOutfitModal open={shareDetailModalOpen} onOpenChange={setShareDetailModalOpen} outfit={selectedOutfitForDetail} />
+        {detailDressingRoomOpen && selectedOutfitForDetail && (
+          <DressingRoom3D
+            open={detailDressingRoomOpen}
+            onOpenChange={setDetailDressingRoomOpen}
+            outfit={selectedOutfitForDetail}
+            outfitItems={getOutfitPiecesMap(selectedOutfitForDetail, closetItems)}
+            measurements={user?.body_measurements || user?.measurements}
+            sex={user?.sex || 'female'}
+            skinColor={user?.skin_tone}
+            hair={user?.hair}
+            shapeParams={user?.avatar_shape_params || {}}
+          />
+        )}
       </div>
     );
   };
@@ -3126,6 +3162,8 @@ export default function Stylist() {
       <section className='px-[40px] py-[40px] bg-[var(--accent-beige)] max-[991px]:px-[15px] max-[991px]:py-[30px]
             max-[767px]:px-[15px] max-[767px]:py-[30px]
             max-[480px]:px-[15px] max-[480px]:py-[30px]'>
+        {/* Interactive Guided Tour on the AI Outfit Builder */}
+        <StylistGuidedTour />
         <div className='w-full'>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className={cn("h-full hidden lg:block lg:col-span-3", (sidebarCollapsed || activeTab !== 'chat') && "!hidden")}>

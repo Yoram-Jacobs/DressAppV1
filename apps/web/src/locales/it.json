@@ -5741,5 +5741,45 @@
       "addressHint": "Attiva le previsioni meteo locali per i tuoi outfit e le spedizioni Marketplace.",
       "saveBtn": "Salva e attiva Stylist"
     }
+  },
+  "dressing_room_3d": {
+    "title": "Camerino virtuale 3D",
+    "subtitle": "Studio di prova virtuale interattivo a 360°",
+    "open_button": "Prova in 3D",
+    "default_outfit": "Outfit attuale",
+    "full_body": "Corpo intero",
+    "upper_body": "Parte superiore",
+    "lower_body": "Parte inferiore",
+    "auto_rotate": "Rotazione 360°",
+    "reset_view": "Ripristina vista",
+    "drag_hint": "Trascina per ruotare a 360° • Scorri per ingrandire",
+    "garments": "Strati dell'outfit",
+    "hide_item": "Nascondi capo",
+    "show_item": "Mostra capo",
+    "fullscreen": "Schermo intero",
+    "exit_fullscreen": "Esci da schermo intero"
+  },
+  "stylistTour": {
+    "step1": {
+      "badge": "Passo 1 di 4 • La tua Capsule Iniziale",
+      "title": "Abbina Capi Singoli",
+      "desc": "I tuoi capi iniziali sono organizzati in Top, Pantaloni e Scarpe. Scorri o clicca sulle frecce per testare combinazioni adatte alla tua corporatura."
+    },
+    "step2": {
+      "badge": "Passo 2 di 4 • Shuffle IA in Un Clic",
+      "title": "Creazione Outfit IA Istantanea",
+      "desc": "Clicca su \"Genera nuovo outfit\" in qualsiasi momento. DressApp analizza armocromia, stagionalità e corporatura per armonizzare il tuo look."
+    },
+    "step3": {
+      "badge": "Passo 3 di 4 • Sincronizzazione Agenda",
+      "title": "Vestiti per la tua Giornata Reale",
+      "desc": "Attiva \"Agenda di oggi\" per abbinare gli outfit agli impegni di Google Calendar, o scegli un'occasione (Lavoro, Casual, Festa, Sport)."
+    },
+    "step4": {
+      "badge": "Passo 4 di 4 • Salva ed Esplora",
+      "title": "Salva Outfit ed Esplora il tuo Guardaroba",
+      "desc": "Ti piace il look? Clicca su \"Salva outfit\". Quando vorrai fotografare e aggiungere i tuoi veri vestiti, visita il tuo Guardaroba!",
+      "closetBtn": "Esplora il mio Guardaroba"
+    }
   }
 }

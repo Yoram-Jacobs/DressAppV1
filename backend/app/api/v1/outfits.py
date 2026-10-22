@@ -536,14 +536,15 @@ async def webpush_subscribe(
             deduped_subs.append(s)
     deduped_subs.append(sub_dict)
 
+    update_doc: dict[str, Any] = {"web_push_subscriptions": deduped_subs}
+    if isinstance(user.get("scheduler_settings"), dict):
+        update_doc["scheduler_settings.push_enabled"] = True
+    else:
+        update_doc["scheduler_settings"] = {"push_enabled": True}
+
     await db.users.update_one(
         {"id": user["id"]},
-        {
-            "$set": {
-                "web_push_subscriptions": deduped_subs,
-                "scheduler_settings.push_enabled": True,
-            }
-        },
+        {"$set": update_doc},
     )
     logger.info("Registered web push subscription for user_id=%s", user["id"])
     return {"subscribed": True, "provider": "vapid"}

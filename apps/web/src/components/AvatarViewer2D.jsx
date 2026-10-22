@@ -1,6 +1,7 @@
-import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { Sparkles } from 'lucide-react';
 import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { useAuth } from '@/lib/auth';
@@ -11,6 +12,8 @@ import DynamicAvatar, {
   getDefaultAvatarAnatomy,
   warpDefaultAvatarPoint,
 } from '@/components/DynamicAvatar';
+
+const DressingRoom3D = lazy(() => import('./DressingRoom3D'));
 import {
   ONBOARDING_DATASET_BY_ID,
   ONBOARDING_STATIC_DATASET,
@@ -1174,9 +1177,11 @@ export default function AvatarViewer2D({
   bodyPhotoUrl,
   showPointCloudMesh = false,
   interactive = false,
+  enable3DTryOn = true,
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [isDressingRoomOpen, setIsDressingRoomOpen] = useState(false);
 
   const activeBodyPhotoUrl = resolveMediaUrl(bodyPhotoUrl !== undefined ? (bodyPhotoUrl || null) : (user?.body_photo_url || null));
   const rawSkinColor = (skinColor && skinColor.toLowerCase() !== '#9ca3af') ? skinColor : (user?.skin_tone || '#E0AC69');
@@ -1923,6 +1928,40 @@ export default function AvatarViewer2D({
             );
           })}
         </div>
+      )}
+
+      {/* 3D Try-On Studio Trigger (visible when interactive is enabled) */}
+      {interactive && enable3DTryOn && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsDressingRoomOpen(true);
+          }}
+          className="absolute bottom-2.5 end-2.5 z-40 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold bg-slate-900/85 hover:bg-slate-900 text-white backdrop-blur-md border border-slate-700/60 shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          title={t('dressing_room_3d.open_button', { defaultValue: '3D Try-On' })}
+          aria-label={t('dressing_room_3d.open_button', { defaultValue: '3D Try-On' })}
+          data-testid="open-dressing-room-3d-btn"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-primary-brand animate-pulse" />
+          <span>{t('dressing_room_3d.open_button', { defaultValue: '3D Try-On' })}</span>
+        </button>
+      )}
+
+      {/* Interactive 3D Try-On Dressing Room Modal */}
+      {isDressingRoomOpen && (
+        <Suspense fallback={null}>
+          <DressingRoom3D
+            open={isDressingRoomOpen}
+            onOpenChange={setIsDressingRoomOpen}
+            outfitItems={garments}
+            measurements={computedMeasurements}
+            sex={sex}
+            skinColor={activeSkinColor}
+            hair={activeHair}
+            shapeParams={params}
+          />
+        </Suspense>
       )}
     </div>
   );

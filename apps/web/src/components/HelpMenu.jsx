@@ -182,6 +182,8 @@ export default function HelpMenu({ initialTab, onClose }) {
     }
     if (window.location.pathname === "/closet") {
       window.dispatchEvent(new CustomEvent("dressapp:start-grand-tour"));
+    } else if (window.location.pathname === "/stylist") {
+      window.dispatchEvent(new CustomEvent("dressapp:start-stylist-tour"));
     } else {
       navigate("/closet?tour=1");
     }

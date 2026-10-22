@@ -5734,5 +5734,45 @@
       "addressHint": "Aktiviert lokale Wettervorhersagen für deine Outfits und den Marktplatz-Versand.",
       "saveBtn": "Speichern & Stylist aktivieren"
     }
+  },
+  "dressing_room_3d": {
+    "title": "3D-Umkleidekabine",
+    "subtitle": "Interaktives virtuelles 360°-Anprobestudio",
+    "open_button": "3D-Anprobe",
+    "default_outfit": "Aktuelles Outfit",
+    "full_body": "Ganzkörper",
+    "upper_body": "Oberkörper",
+    "lower_body": "Unterkörper",
+    "auto_rotate": "360°-Drehung",
+    "reset_view": "Ansicht zurücksetzen",
+    "drag_hint": "Ziehen zum 360°-Drehen • Scrollen zum Zoomen",
+    "garments": "Outfit-Ebenen",
+    "hide_item": "Artikel ausblenden",
+    "show_item": "Artikel einblenden",
+    "fullscreen": "Vollbild",
+    "exit_fullscreen": "Vollbild beenden"
+  },
+  "stylistTour": {
+    "step1": {
+      "badge": "Schritt 1 von 4 • Deine Starter-Kapsel",
+      "title": "Kombiniere Einzelteile",
+      "desc": "Deine Starter-Kleidungsstücke sind in Reihen für Oberteile, Hosen und Schuhe sortiert. Wische oder klicke auf die Pfeile, um Kombinationen für deine Proportionen zu testen."
+    },
+    "step2": {
+      "badge": "Schritt 2 von 4 • KI-Shuffle mit einem Klick",
+      "title": "Sofortige KI-Outfit-Erstellung",
+      "desc": "Klicke jederzeit auf \"Neues Outfit generieren\". DressApp bewertet Farbtheorie, Saison und Körperform, um ein harmonisches Outfit zusammenzustellen."
+    },
+    "step3": {
+      "badge": "Schritt 3 von 4 • Kalender & Agenda-Sync",
+      "title": "Perfekt gekleidet für deinen Tag",
+      "desc": "Aktiviere \"Heutige Agenda\", um Outfits an Google Calendar-Termine anzupassen, oder wähle einen Anlass (Büro, Freizeit, Party, Sport)."
+    },
+    "step4": {
+      "badge": "Schritt 4 von 4 • Speichern & Entdecken",
+      "title": "Outfits speichern & Kleiderschrank erkunden",
+      "desc": "Gefällt dir das Outfit? Klicke auf \"Outfit speichern\". Sobald du bereit bist, deine echte Kleidung zu fotografieren, wechsle zu deinem Kleiderschrank!",
+      "closetBtn": "Meinen Kleiderschrank erkunden"
+    }
   }
 }

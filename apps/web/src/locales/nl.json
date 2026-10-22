@@ -5745,5 +5745,45 @@
       "addressHint": "Activeert lokale weersvoorspellingen voor je outfits en Marketplace-verzending.",
       "saveBtn": "Opslaan & Stylist activeren"
     }
+  },
+  "dressing_room_3d": {
+    "title": "3D-Paskamer",
+    "subtitle": "Interactieve virtuele 360°-passtudio",
+    "open_button": "3D Pasbeurt",
+    "default_outfit": "Huidige outfit",
+    "full_body": "Volledig lichaam",
+    "upper_body": "Bovenlichaam",
+    "lower_body": "Onderlichaam",
+    "auto_rotate": "360° Draaien",
+    "reset_view": "Weergave herstellen",
+    "drag_hint": "Sleep om 360° te draaien • Scroll om in te zoomen",
+    "garments": "Outfitlagen",
+    "hide_item": "Item verbergen",
+    "show_item": "Item tonen",
+    "fullscreen": "Volledig scherm",
+    "exit_fullscreen": "Volledig scherm sluiten"
+  },
+  "stylistTour": {
+    "step1": {
+      "badge": "Stap 1 van 4 • Jouw Starter Capsule",
+      "title": "Combineer Kledingstukken",
+      "desc": "Je startkleding is ingedeeld in rijen voor Tops, Broeken en Schoenen. Veeg of klik op de pijlen om combinaties te testen die passen bij jouw figuur."
+    },
+    "step2": {
+      "badge": "Stap 2 van 4 • AI Shuffle in Eén Klik",
+      "title": "Directe AI Outfit Creatie",
+      "desc": "Klik op \"Genereer nieuwe outfit\". DressApp analyseert kleurentheorie, seizoenen en lichaamsproporties om binnen enkele seconden een complete look te maken."
+    },
+    "step3": {
+      "badge": "Stap 3 van 4 • Agenda & Planning Sync",
+      "title": "Gekleed voor Jouw Echte Dag",
+      "desc": "Schakel \"Agenda van vandaag\" in om outfits af te stemmen op Google Calendar-afspraken, of kies een gelegenheid (Werk, Casual, Feest, Sport)."
+    },
+    "step4": {
+      "badge": "Stap 4 van 4 • Bewaren & Verkennen",
+      "title": "Bewaar Outfits & Bekijk je Kledingkast",
+      "desc": "Blij met je outfit? Klik op \"Outfit opslaan\". Zodra je klaar bent om je echte kleding te fotograferen, ga je naar je Kledingkast!",
+      "closetBtn": "Verken Mijn Kledingkast"
+    }
   }
 }
