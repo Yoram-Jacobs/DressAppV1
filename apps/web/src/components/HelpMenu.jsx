@@ -166,6 +166,7 @@ export default function HelpMenu({ initialTab, onClose }) {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const viewerIsPro = !!user?.professional?.is_professional;
   const activeTabRef = useRef(null);
 
@@ -175,6 +176,10 @@ export default function HelpMenu({ initialTab, onClose }) {
     } catch {}
     if (typeof onClose === "function") {
       onClose();
+    }
+    if (!user) {
+      navigate("/onboarding");
+      return;
     }
     if (window.location.pathname === "/closet") {
       window.dispatchEvent(new CustomEvent("dressapp:start-grand-tour"));

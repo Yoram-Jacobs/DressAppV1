@@ -42,8 +42,11 @@ export function findStarterTemplateForItem(item) {
       return ONBOARDING_DATASET_BY_IMAGE_URL[u];
     }
     const match = String(u).match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg|jpeg|webp)/i);
-    if (match && ONBOARDING_DATASET_BY_ID[match[1]]) {
-      return ONBOARDING_DATASET_BY_ID[match[1]];
+    if (match && match[1]) {
+      const baseId = match[1].replace(/_cutout$/i, '');
+      if (ONBOARDING_DATASET_BY_ID[baseId]) {
+        return ONBOARDING_DATASET_BY_ID[baseId];
+      }
     }
   }
   const isStarter =

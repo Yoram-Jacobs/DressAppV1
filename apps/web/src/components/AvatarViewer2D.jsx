@@ -647,8 +647,11 @@ export function resolveOnboardingAvatarFit(garment) {
   }
   const urlStr = String(garment.url || garment.image_url || '');
   const match = urlStr.match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg)/i);
-  if (match && match[1] && ONBOARDING_DATASET_BY_ID[match[1]]?.avatar_fit) {
-    return ONBOARDING_DATASET_BY_ID[match[1]].avatar_fit;
+  if (match && match[1]) {
+    const baseId = match[1].replace(/_cutout$/i, '');
+    if (ONBOARDING_DATASET_BY_ID[baseId]?.avatar_fit) {
+      return ONBOARDING_DATASET_BY_ID[baseId].avatar_fit;
+    }
   }
   const cleanUrl = urlStr.split('?')[0];
   const byTitle = ONBOARDING_STATIC_DATASET.find(
@@ -678,11 +681,14 @@ function resolveEffectiveGarmentUrl(garment) {
     );
   }
   const match = rawUrl.match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg)/i);
-  if (match && match[1] && ONBOARDING_DATASET_BY_ID[match[1]]) {
-    return (
-      ONBOARDING_DATASET_BY_ID[match[1]].avatar_overlay_url ||
-      ONBOARDING_DATASET_BY_ID[match[1]].image_url
-    );
+  if (match && match[1]) {
+    const baseId = match[1].replace(/_cutout$/i, '');
+    if (ONBOARDING_DATASET_BY_ID[baseId]) {
+      return (
+        ONBOARDING_DATASET_BY_ID[baseId].avatar_overlay_url ||
+        ONBOARDING_DATASET_BY_ID[baseId].image_url
+      );
+    }
   }
   return rawUrl;
 }

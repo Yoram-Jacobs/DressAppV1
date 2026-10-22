@@ -28,10 +28,10 @@ describe('onboardingDataset & onboardingStore', () => {
     sessionStorage.clear();
   });
 
-  test('ONBOARDING_STATIC_DATASET has 48 curated items with pre-fitted avatar_fit & point-cloud meshes', () => {
-    expect(WOMEN_ONBOARDING_DATASET).toHaveLength(24);
-    expect(MEN_ONBOARDING_DATASET).toHaveLength(24);
-    expect(ONBOARDING_STATIC_DATASET).toHaveLength(48);
+  test('ONBOARDING_STATIC_DATASET has 52 curated items with pre-fitted avatar_fit & point-cloud meshes', () => {
+    expect(WOMEN_ONBOARDING_DATASET).toHaveLength(26);
+    expect(MEN_ONBOARDING_DATASET).toHaveLength(26);
+    expect(ONBOARDING_STATIC_DATASET).toHaveLength(52);
 
     ONBOARDING_STATIC_DATASET.forEach((item) => {
       expect(item.id).toBeTruthy();
@@ -81,7 +81,7 @@ describe('onboardingDataset & onboardingStore', () => {
       aesthetics: ['modest', 'traditional'],
       conservativeness: 'high',
     });
-    expect(modestWomen).toHaveLength(24);
+    expect(modestWomen).toHaveLength(26);
     const topFiveIds = modestWomen.slice(0, 5).map((i) => i.id);
     expect(topFiveIds).toEqual(
       expect.arrayContaining(['w_abaya_black', 'w_kaftan_emerald', 'w_jalabiya_kurta_set'])

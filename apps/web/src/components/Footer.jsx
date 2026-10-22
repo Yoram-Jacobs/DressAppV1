@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import HelpMenu from "@/components/HelpMenu";
+import { useAuth } from "@/lib/auth";
 
 export const Footer = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const getFeatureLink = (path) => (user ? path : "/onboarding");
   const currentYear = new Date().getFullYear();
   const [helpOpen, setHelpOpen] = useState(false);
   const [helpTab, setHelpTab] = useState("best-practice");
@@ -99,7 +102,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/experts"
+                  to={getFeatureLink("/experts")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("nav.experts", {
@@ -121,7 +124,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/me/stats"
+                  to={getFeatureLink("/me/stats")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.sustainabilityReport", {
@@ -142,7 +145,7 @@ export const Footer = () => {
             <ul className="m-0 list-none space-y-3 p-0">
               <li>
                 <Link
-                  to="/closet"
+                  to={getFeatureLink("/closet")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.digitalCloset", {
@@ -153,7 +156,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/stylist"
+                  to={getFeatureLink("/stylist")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.aiStylistChat", {
@@ -164,7 +167,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/trends"
+                  to={getFeatureLink("/trends")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.trendScout", {
@@ -175,7 +178,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/suitcase"
+                  to={getFeatureLink("/suitcase")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.travelCapsule", {
@@ -196,7 +199,7 @@ export const Footer = () => {
             <ul className="m-0 list-none space-y-3 p-0">
               <li>
                 <Link
-                  to="/market"
+                  to={getFeatureLink("/market")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.buySell", {
@@ -207,7 +210,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/market"
+                  to={getFeatureLink("/market")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.directSwaps", {
@@ -218,7 +221,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/campaigns/mine"
+                  to={getFeatureLink("/campaigns/mine")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.donationsTracker", {
@@ -229,7 +232,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/ads"
+                  to={getFeatureLink("/ads")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.zeroWastePolicy", {
@@ -315,7 +318,7 @@ export const Footer = () => {
 
               <li>
                 <Link
-                  to="/me"
+                  to={getFeatureLink("/me")}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("nav.settings", {

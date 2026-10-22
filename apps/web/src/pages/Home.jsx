@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
@@ -190,6 +190,7 @@ const translateSeasonList = (value, t) => {
 export default function Home() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { canAccessMigration } = useTierLimits();
   const closet = useClosetStore({ prewarm: true });
   const loc = useAppLocation();
@@ -373,7 +374,13 @@ export default function Home() {
   let suggestionLink = "/stylist";
   let suggestionImg = Calender;
 
-  if (isClosetEmpty) {
+  if (!user) {
+    suggestionBadge = t("home.getStarted", { defaultValue: "Get Started" });
+    suggestionTitle = t("home.addItemsToClosetTitle", { defaultValue: "Build your Digital Closet" });
+    suggestionSub = t("home.addItemsToClosetSub", { defaultValue: "Start onboarding to get daily AI outfits" });
+    suggestionLink = "/onboarding";
+    suggestionImg = Closet;
+  } else if (isClosetEmpty) {
     suggestionBadge = t("home.getStarted", { defaultValue: "Get Started" });
     suggestionTitle = t("home.addItemsToClosetTitle", { defaultValue: "Add Items to your Closet" });
     suggestionSub = t("home.addItemsToClosetSub", { defaultValue: "Upload clothes to get daily AI outfits" });
@@ -1173,7 +1180,7 @@ export default function Home() {
         "
                 >
                   <Link
-                    to="/stylist"
+                    to={user ? "/stylist" : "/onboarding"}
                     className="inline-flex items-center justify-center gap-2"
                   >
                     <Sparkles className="h-4 w-4" />
@@ -1207,7 +1214,7 @@ export default function Home() {
       "
                 >
                   <Link
-                    to="/closet"
+                    to={user ? "/closet" : "/onboarding"}
                     className="inline-flex items-center justify-center gap-2"
                   >
                     {t("home.openCloset")}
@@ -1260,7 +1267,7 @@ export default function Home() {
             />
             {/* ================= WEATHER CARD ================= */}
             <Link
-              to="/stylist"
+              to={user ? "/stylist" : "/onboarding"}
               className="
             absolute
             start-3
@@ -1666,7 +1673,7 @@ export default function Home() {
                     "
                   >
                     <Link
-                      to="/closet/add"
+                      to={user ? "/closet/add" : "/onboarding"}
                       className="inline-flex items-center justify-center gap-2"
                     >
                       <Plus className="h-4 w-4" />
@@ -2252,9 +2259,16 @@ export default function Home() {
                   ))}
                 </div>
                 {/* Input */}
-                <div className="mt-5 flex items-center gap-2 rounded-full border border-black/[0.08] bg-accent-beige p-1.5">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    navigate(user ? "/stylist" : "/onboarding");
+                  }}
+                  className="mt-5 flex items-center gap-2 rounded-full border border-black/[0.08] bg-accent-beige p-1.5"
+                >
                   <button
                     type="button"
+                    onClick={() => navigate(user ? "/stylist" : "/onboarding")}
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-color)] transition-smooth hover:bg-white hover:text-[var(--primary-color)]"
                     aria-label={t("home.stylistPreview.addImageAria", {
                       defaultValue: "Add image",
@@ -2273,6 +2287,7 @@ export default function Home() {
 
                   <button
                     type="button"
+                    onClick={() => navigate(user ? "/stylist" : "/onboarding")}
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-color)] transition-smooth hover:bg-white hover:text-[var(--primary-color)]"
                     aria-label={t("home.stylistPreview.micAria", {
                       defaultValue: "Use microphone",
@@ -2290,7 +2305,7 @@ export default function Home() {
                   >
                     <i className="bi bi-send-fill text-[11px]" />
                   </button>
-                </div>
+                </form>
               </motion.div>
             </div>
             {/* Right Content */}
@@ -2356,14 +2371,14 @@ export default function Home() {
                   className="flex flex-wrap items-center gap-3"
                 >
                   <Link
-                    to="/stylist"
+                    to={user ? "/stylist" : "/onboarding"}
                     className="inline-flex min-h-11 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                   >
                     <i className="bi bi-stars me-2" />
                     {t("home.stylist.cta", { defaultValue: "Ask the stylist" })}
                   </Link>
                   <Link
-                    to="/stylist?tab=match"
+                    to={user ? "/stylist?tab=match" : "/onboarding"}
                     className="inline-flex min-h-11 items-center justify-center rounded-[50px] border border-[var(--primary-color)] bg-white px-[24px] py-[18px] text-[14px] font-bold leading-none text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
                     data-testid="home-stylist-scheduled-outfits"
                   >
@@ -2468,7 +2483,7 @@ export default function Home() {
 
                 {/* Explore */}
                 <Link
-                  to="/market"
+                  to={user ? "/market" : "/onboarding"}
                   className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
                   {t("home.marketplace.explore", {
@@ -2524,7 +2539,7 @@ export default function Home() {
                     className="group overflow-hidden rounded-[12px] border border-border my-[20px] bg-white transition-smooth hover:-translate-y-[5px] hover:shadow-md"
                   >
                     {/* Image */}
-                    <Link to={item.link || "/market"} className="relative block aspect-[4/3] w-full overflow-hidden bg-white">
+                    <Link to={user ? (item.link || "/market") : "/onboarding"} className="relative block aspect-[4/3] w-full overflow-hidden bg-white">
                       <img
                         src={item.image}
                         onError={(e) => {
@@ -2542,7 +2557,7 @@ export default function Home() {
                     {/* Details */}
                     <div className="p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <Link to={item.link || "/market"} className="m-0 min-w-0 truncate text-[15px] font-black leading-[1.3] text-[var(--dark-color)] no-underline hover:text-[var(--primary-color)]">
+                        <Link to={user ? (item.link || "/market") : "/onboarding"} className="m-0 min-w-0 truncate text-[15px] font-black leading-[1.3] text-[var(--dark-color)] no-underline hover:text-[var(--primary-color)]">
                           {item.title}
                         </Link>
                         <span className="shrink-0 text-[15px] font-black text-[var(--dark-color)]">
@@ -2562,19 +2577,19 @@ export default function Home() {
                       </p>
                       <div className="flex items-center gap-2">
                         <Link
-                          to="/market"
+                          to={user ? "/market" : "/onboarding"}
                           className="flex-1 rounded-[50px] border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-2.5 text-center text-[12px] font-bold text-white no-underline transition-smooth hover:-translate-y-[1px] hover:bg-[var(--primary-hover)]"
                         >
                           {t("home.marketplace.buy", { defaultValue: "Buy" })}
                         </Link>
                         <Link
-                          to="/market"
+                          to={user ? "/market" : "/onboarding"}
                           className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-[var(--dark-color)] no-underline transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           {t("home.marketplace.swap", { defaultValue: "Swap" })}
                         </Link>
                         <Link
-                          to="/market"
+                          to={user ? "/market" : "/onboarding"}
                           className="flex-1 rounded-[50px] border border-black/10 bg-white px-3 py-2.5 text-center text-[12px] font-bold text-[var(--dark-color)] no-underline transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                         >
                           {t("home.marketplace.donate", {
@@ -2656,7 +2671,7 @@ export default function Home() {
             </motion.span>
 
             {/* Heading + View More */}
-            <Link to="/trends" className="">
+            <Link to={user ? "/trends" : "/onboarding"} className="">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -2905,7 +2920,7 @@ export default function Home() {
               {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
             </motion.span>
 
-            <Link to="/experts" className="block no-underline">
+            <Link to={user ? "/experts" : "/onboarding"} className="block no-underline">
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -2934,7 +2949,7 @@ export default function Home() {
               </p>
 
               <Link
-                to="/experts"
+                to={user ? "/experts" : "/onboarding"}
                 className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
               >
                 {t("home.experts.viewAll", {
@@ -3000,7 +3015,7 @@ export default function Home() {
                   </p>
 
                   <Link
-                    to="/experts"
+                    to={user ? "/experts" : "/onboarding"}
                     className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
                   >
                     {t("home.experts.bookSession", {

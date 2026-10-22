@@ -5447,7 +5447,11 @@
       "m_shoes_derby_brown": "棕色抛光真皮德比正装皮鞋",
       "m_loafers_leather_brown": "经典棕色真皮一脚蹬乐福鞋",
       "m_boots_chelsea_brown": "深棕色真皮切尔西靴",
-      "m_sneakers_navy_white": "藏青与白色拼色低帮休闲鞋"
+      "m_sneakers_navy_white": "藏青与白色拼色低帮休闲鞋",
+      "w_tshirt_white_crew": "经典白色纯棉圆领T恤",
+      "w_tshirt_black_fitted": "基础款黑色修身纯棉T恤",
+      "m_tshirt_white_crew": "基础款白色纯棉圆领T恤",
+      "m_tshirt_black_crew": "经典黑色纯棉圆领T恤"
     },
     "itemCaptions": {
       "m_top_oxford_white": "清爽白色长袖纯棉牛津纺纽扣衬衫，适合办公、商务休闲及正式叠穿。",
@@ -5549,7 +5553,11 @@
       "m_jeans_dark_indigo": "深靛蓝直筒牛仔裤",
       "m_loafers_leather_brown": "经典棕色真皮一脚蹬乐福鞋",
       "m_boots_chelsea_brown": "深棕色真皮切尔西靴",
-      "m_sneakers_navy_white": "藏青与白色拼色低帮休闲鞋"
+      "m_sneakers_navy_white": "藏青与白色拼色低帮休闲鞋",
+      "w_tshirt_white_crew": "透气纯棉白色圆领T恤，轻松打造日常叠穿造型。",
+      "w_tshirt_black_fitted": "利落修身黑色短袖棉质T恤，可与牛仔裤、半身裙或西装外套完美搭配。",
+      "m_tshirt_white_crew": "清爽白色100%纯棉圆领T恤，适合单穿或作为夹克内搭。",
+      "m_tshirt_black_crew": "经典百搭黑色纯棉圆领T恤，适合日常休闲与街头穿搭。"
     },
     "itemTypes": {
       "m_top_oxford_white": "牛津纺纽扣衬衫",
@@ -5651,7 +5659,11 @@
       "m_jeans_dark_indigo": "深靛蓝直筒牛仔裤",
       "m_loafers_leather_brown": "经典棕色真皮一脚蹬乐福鞋",
       "m_boots_chelsea_brown": "深棕色真皮切尔西靴",
-      "m_sneakers_navy_white": "藏青与白色拼色低帮休闲鞋"
+      "m_sneakers_navy_white": "藏青与白色拼色低帮休闲鞋",
+      "w_tshirt_white_crew": "圆领T恤",
+      "w_tshirt_black_fitted": "修身圆领T恤",
+      "m_tshirt_white_crew": "圆领T恤",
+      "m_tshirt_black_crew": "圆领T恤"
     },
     "firstOutfitTitle": "我的第一套 AI 穿搭"
   },

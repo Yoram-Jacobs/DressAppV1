@@ -5468,7 +5468,11 @@
       "m_shoes_derby_brown": "Polished Brown Leather Derby Dress Shoes",
       "m_loafers_leather_brown": "Classic Brown Leather Slip-On Loafers",
       "m_boots_chelsea_brown": "Rich Brown Leather Chelsea Boots",
-      "m_sneakers_navy_white": "Clean Navy & White Low-Top Sneakers"
+      "m_sneakers_navy_white": "Clean Navy & White Low-Top Sneakers",
+      "w_tshirt_white_crew": "Classic White Cotton Crew-Neck T-Shirt",
+      "w_tshirt_black_fitted": "Essential Black Fitted Cotton T-Shirt",
+      "m_tshirt_white_crew": "Essential White Crew-Neck Cotton T-Shirt",
+      "m_tshirt_black_crew": "Classic Black Crew-Neck Cotton T-Shirt"
     },
     "itemCaptions": {
       "m_top_oxford_white": "Crisp white long-sleeve cotton Oxford button-down shirt for office, smart-casual, and formal layering.",
@@ -5570,7 +5574,11 @@
       "m_jeans_dark_indigo": "Clean dark indigo straight-leg denim jeans with timeless five-pocket construction.",
       "m_loafers_leather_brown": "Versatile slip-on leather loafers suited for smart-casual trousers, kurtas, and thobes.",
       "m_boots_chelsea_brown": "Sleek ankle-high brown leather Chelsea boots with elastic side gussets.",
-      "m_sneakers_navy_white": "Crisp low-top leather sneakers in navy and white for everyday casual and streetwear looks."
+      "m_sneakers_navy_white": "Crisp low-top leather sneakers in navy and white for everyday casual and streetwear looks.",
+      "w_tshirt_white_crew": "Breathable pure cotton white crew-neck t-shirt for effortless everyday layering.",
+      "w_tshirt_black_fitted": "Sleek black fitted short-sleeve cotton t-shirt that pairs cleanly with jeans, skirts, or blazers.",
+      "m_tshirt_white_crew": "Crisp white 100% cotton crew-neck t-shirt for clean solo wear or layering under jackets.",
+      "m_tshirt_black_crew": "Timeless black pure cotton crew-neck t-shirt suited for everyday casual and streetwear looks."
     },
     "itemTypes": {
       "m_top_oxford_white": "Oxford Button-Down Shirt",
@@ -5672,7 +5680,11 @@
       "m_jeans_dark_indigo": "Straight Jeans",
       "m_loafers_leather_brown": "Slip-On Leather Loafers",
       "m_boots_chelsea_brown": "Chelsea Boots",
-      "m_sneakers_navy_white": "Low-Top Sneakers"
+      "m_sneakers_navy_white": "Low-Top Sneakers",
+      "w_tshirt_white_crew": "Crew-Neck T-Shirt",
+      "w_tshirt_black_fitted": "Fitted Crew-Neck T-Shirt",
+      "m_tshirt_white_crew": "Crew-Neck T-Shirt",
+      "m_tshirt_black_crew": "Crew-Neck T-Shirt"
     },
     "firstOutfitTitle": "My First AI Look"
   },

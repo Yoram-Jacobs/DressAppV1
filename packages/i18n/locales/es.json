@@ -5444,7 +5444,11 @@
       "m_shoes_derby_brown": "Zapatos de vestir Derby de cuero marrón",
       "m_loafers_leather_brown": "Mocasines clásicos de cuero marrón",
       "m_boots_chelsea_brown": "Botines Chelsea de cuero marrón",
-      "m_sneakers_navy_white": "Zapatillas bajas azul marino y blanco"
+      "m_sneakers_navy_white": "Zapatillas bajas azul marino y blanco",
+      "w_tshirt_white_crew": "Camiseta Clásica Blanca de Algodón con Cuello Redondo",
+      "w_tshirt_black_fitted": "Camiseta Esencial Negra Entallada de Algodón",
+      "m_tshirt_white_crew": "Camiseta Esencial Blanca de Algodón con Cuello Redondo",
+      "m_tshirt_black_crew": "Camiseta Clásica Negra de Algodón con Cuello Redondo"
     },
     "itemCaptions": {
       "m_top_oxford_white": "Camisa Oxford de algodón blanco de manga larga con botones para la oficina, estilo casual elegante y capas formales.",
@@ -5546,7 +5550,11 @@
       "m_jeans_dark_indigo": "Vaqueros rectos azul índigo oscuro",
       "m_loafers_leather_brown": "Mocasines clásicos de cuero marrón",
       "m_boots_chelsea_brown": "Botines Chelsea de cuero marrón",
-      "m_sneakers_navy_white": "Zapatillas bajas azul marino y blanco"
+      "m_sneakers_navy_white": "Zapatillas bajas azul marino y blanco",
+      "w_tshirt_white_crew": "Camiseta blanca transpirable de puro algodón con cuello redondo para combinar a diario sin esfuerzo.",
+      "w_tshirt_black_fitted": "Camiseta negra entallada de manga corta en algodón que combina limpiamente con vaqueros, faldas o blazers.",
+      "m_tshirt_white_crew": "Camiseta blanca impecable 100% algodón con cuello redondo para llevar sola o bajo chaquetas.",
+      "m_tshirt_black_crew": "Camiseta negra atemporal de puro algodón con cuello redondo ideal para looks casuales y urbanos."
     },
     "itemTypes": {
       "m_top_oxford_white": "Camisa Oxford con botones",
@@ -5648,7 +5656,11 @@
       "m_jeans_dark_indigo": "Vaqueros rectos azul índigo oscuro",
       "m_loafers_leather_brown": "Mocasines clásicos de cuero marrón",
       "m_boots_chelsea_brown": "Botines Chelsea de cuero marrón",
-      "m_sneakers_navy_white": "Zapatillas bajas azul marino y blanco"
+      "m_sneakers_navy_white": "Zapatillas bajas azul marino y blanco",
+      "w_tshirt_white_crew": "Camiseta de Cuello Redondo",
+      "w_tshirt_black_fitted": "Camiseta Entallada de Cuello Redondo",
+      "m_tshirt_white_crew": "Camiseta de Cuello Redondo",
+      "m_tshirt_black_crew": "Camiseta de Cuello Redondo"
     },
     "firstOutfitTitle": "Mi primer look con IA"
   },

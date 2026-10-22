@@ -5447,7 +5447,11 @@
       "m_shoes_derby_brown": "Scarpe eleganti Derby in pelle marrone",
       "m_loafers_leather_brown": "Mocassini classici in pelle marrone",
       "m_boots_chelsea_brown": "Stivaletti Chelsea in pelle marrone",
-      "m_sneakers_navy_white": "Sneaker basse blu navy e bianche"
+      "m_sneakers_navy_white": "Sneaker basse blu navy e bianche",
+      "w_tshirt_white_crew": "T-Shirt Classica Bianca in Cotone Girocollo",
+      "w_tshirt_black_fitted": "T-Shirt Essenziale Nera Avvitata in Cotone",
+      "m_tshirt_white_crew": "T-Shirt Essenziale Bianca in Cotone Girocollo",
+      "m_tshirt_black_crew": "T-Shirt Classica Nera in Cotone Girocollo"
     },
     "itemCaptions": {
       "m_top_oxford_white": "Camicia Oxford button-down in cotone bianco a maniche lunghe per l'ufficio, lo smart-casual e gli abbinamenti formali.",
@@ -5549,7 +5553,11 @@
       "m_jeans_dark_indigo": "Jeans dritti indaco scuro",
       "m_loafers_leather_brown": "Mocassini classici in pelle marrone",
       "m_boots_chelsea_brown": "Stivaletti Chelsea in pelle marrone",
-      "m_sneakers_navy_white": "Sneaker basse blu navy e bianche"
+      "m_sneakers_navy_white": "Sneaker basse blu navy e bianche",
+      "w_tshirt_white_crew": "T-shirt bianca traspirante in puro cotone girocollo per abbinamenti quotidiani impeccabili.",
+      "w_tshirt_black_fitted": "T-shirt nera avvitata a maniche corte in cotone che si abbina con pulizia a jeans, gonne o blazer.",
+      "m_tshirt_white_crew": "T-shirt bianca fresca 100% cotone girocollo da indossare da sola o sotto le giacche.",
+      "m_tshirt_black_crew": "T-shirt nera intramontabile in puro cotone girocollo perfetta per look casual e streetwear."
     },
     "itemTypes": {
       "m_top_oxford_white": "Camicia Oxford button-down",
@@ -5651,7 +5659,11 @@
       "m_jeans_dark_indigo": "Jeans dritti indaco scuro",
       "m_loafers_leather_brown": "Mocassini classici in pelle marrone",
       "m_boots_chelsea_brown": "Stivaletti Chelsea in pelle marrone",
-      "m_sneakers_navy_white": "Sneaker basse blu navy e bianche"
+      "m_sneakers_navy_white": "Sneaker basse blu navy e bianche",
+      "w_tshirt_white_crew": "T-Shirt Girocollo",
+      "w_tshirt_black_fitted": "T-Shirt Avvitata Girocollo",
+      "m_tshirt_white_crew": "T-Shirt Girocollo",
+      "m_tshirt_black_crew": "T-Shirt Girocollo"
     },
     "firstOutfitTitle": "Il mio primo look IA"
   },

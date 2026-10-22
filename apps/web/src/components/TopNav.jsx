@@ -108,32 +108,39 @@ export const TopNav = () => {
 
         {/* Navigation Links */}
         <nav aria-label={t('nav.primary')} className="flex items-center gap-1">
-          {LINKS.map(({ to, icon: Icon, key, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={() => {
-                if (window.location.pathname === to) {
-                  resetRouteScrollPosition(to);
-                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                  const mainEl = document.getElementById('main-content');
-                  if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }}
-              data-testid={`topnav-link-${key}`}
-              className={({ isActive }) =>
-                cn(
-                  'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold transition-all duration-200',
-                  isActive
-                    ? 'text-[var(--primary-color)] bg-[var(--primary-color)]/10'
-                    : 'text-foreground/75 hover:text-[var(--primary-color)] hover:bg-secondary/60'
-                )
-              }
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span>{label}</span>
-            </NavLink>
-          ))}
+          {LINKS.map(({ to, icon: Icon, key, label }) => {
+            const isPublic = to === '/home' || to === '/pricing';
+            const effectiveTo = (!user && !isPublic) ? '/onboarding' : to;
+            return (
+              <NavLink
+                key={to}
+                to={effectiveTo}
+                onClick={() => {
+                  if (window.location.pathname === effectiveTo) {
+                    resetRouteScrollPosition(effectiveTo);
+                    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                    const mainEl = document.getElementById('main-content');
+                    if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                data-testid={`topnav-link-${key}`}
+                className={({ isActive }) => {
+                  const active = user
+                    ? (to === '/home' ? (window.location.pathname === '/' || window.location.pathname === '/home') : isActive)
+                    : (to === '/home' ? (window.location.pathname === '/' || window.location.pathname === '/home') : (to === '/pricing' && window.location.pathname === '/pricing'));
+                  return cn(
+                    'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold transition-all duration-200',
+                    active
+                      ? 'text-[var(--primary-color)] bg-[var(--primary-color)]/10'
+                      : 'text-foreground/75 hover:text-[var(--primary-color)] hover:bg-secondary/60'
+                  );
+                }}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span>{label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* Right Actions */}

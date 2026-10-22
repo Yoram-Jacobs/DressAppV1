@@ -176,7 +176,7 @@ export default function Pricing() {
 
   const handleUpgrade = async (tierName) => {
     if (!user) {
-      navigate('/login');
+      navigate('/onboarding');
       return;
     }
     if (subBusy) return;
@@ -207,7 +207,7 @@ export default function Pricing() {
 
   const handleBuyCreditPack = async (packId) => {
     if (!user) {
-      navigate('/login');
+      navigate('/onboarding');
       return;
     }
     if (subBusy) return;

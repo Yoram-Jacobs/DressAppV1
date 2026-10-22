@@ -5448,7 +5448,11 @@
       "m_shoes_derby_brown": "ブラウンレザーのポリッシュド・ダービーシューズ",
       "m_loafers_leather_brown": "クラシックなブラウンレザーのスリッポンローファー",
       "m_boots_chelsea_brown": "リッチブラウンのレザーチェルシーブーツ",
-      "m_sneakers_navy_white": "ネイビー＆ホワイトのローカットスニーカー"
+      "m_sneakers_navy_white": "ネイビー＆ホワイトのローカットスニーカー",
+      "w_tshirt_white_crew": "クラシックホワイト・コットンクルーネックTシャツ",
+      "w_tshirt_black_fitted": "エッセンシャルブラック・フィットコットンTシャツ",
+      "m_tshirt_white_crew": "エッセンシャルホワイト・コットンクルーネックTシャツ",
+      "m_tshirt_black_crew": "クラシックブラック・コットンクルーネックTシャツ"
     },
     "itemCaptions": {
       "m_top_oxford_white": "オフィス、スマートカジュアル、フォーマルな重ね着に最適な、清潔感のある白の長袖コットンオックスフォードボタンダウンシャツ。",
@@ -5550,7 +5554,11 @@
       "m_jeans_dark_indigo": "ダークインディゴのストレートデニム",
       "m_loafers_leather_brown": "クラシックなブラウンレザーのスリッポンローファー",
       "m_boots_chelsea_brown": "リッチブラウンのレザーチェルシーブーツ",
-      "m_sneakers_navy_white": "ネイビー＆ホワイトのローカットスニーカー"
+      "m_sneakers_navy_white": "ネイビー＆ホワイトのローカットスニーカー",
+      "w_tshirt_white_crew": "毎日のレイヤリングに最適な、通気性に優れた純綿ホワイトクルーネックTシャツ。",
+      "w_tshirt_black_fitted": "デニムやスカート、ブレザーとすっきり合わせられるブラックのフィット感ある半袖コットンTシャツ。",
+      "m_tshirt_white_crew": "一枚着にもジャケットのインナーにも映える、清潔感のある綿100%ホワイトクルーネックTシャツ。",
+      "m_tshirt_black_crew": "カジュアルからストリートまで幅広く活躍する、定番の純綿ブラッククルーネックTシャツ。"
     },
     "itemTypes": {
       "m_top_oxford_white": "オックスフォードボタンダウンシャツ",
@@ -5652,7 +5660,11 @@
       "m_jeans_dark_indigo": "ダークインディゴのストレートデニム",
       "m_loafers_leather_brown": "クラシックなブラウンレザーのスリッポンローファー",
       "m_boots_chelsea_brown": "リッチブラウンのレザーチェルシーブーツ",
-      "m_sneakers_navy_white": "ネイビー＆ホワイトのローカットスニーカー"
+      "m_sneakers_navy_white": "ネイビー＆ホワイトのローカットスニーカー",
+      "w_tshirt_white_crew": "クルーネックTシャツ",
+      "w_tshirt_black_fitted": "フィット・クルーネックTシャツ",
+      "m_tshirt_white_crew": "クルーネックTシャツ",
+      "m_tshirt_black_crew": "クルーネックTシャツ"
     },
     "firstOutfitTitle": "はじめてのAIコーディネート"
   },

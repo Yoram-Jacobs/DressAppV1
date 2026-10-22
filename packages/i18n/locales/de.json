@@ -5440,7 +5440,11 @@
       "m_shoes_derby_brown": "Polierte braune Leder-Derbyschuhe",
       "m_loafers_leather_brown": "Klassische braune Leder-Loafer",
       "m_boots_chelsea_brown": "Edle braune Leder-Chelsea-Boots",
-      "m_sneakers_navy_white": "Dunkelblaue & weiße Low-Top-Sneaker"
+      "m_sneakers_navy_white": "Dunkelblaue & weiße Low-Top-Sneaker",
+      "w_tshirt_white_crew": "Klassisches Weißes Baumwoll-T-Shirt mit Rundhals",
+      "w_tshirt_black_fitted": "Essentielles Schwarzes Tailliertes Baumwoll-T-Shirt",
+      "m_tshirt_white_crew": "Essentielles Weißes Baumwoll-T-Shirt mit Rundhals",
+      "m_tshirt_black_crew": "Klassisches Schwarzes Baumwoll-T-Shirt mit Rundhals"
     },
     "itemCaptions": {
       "m_top_oxford_white": "Knackiges weißes Langarm-Oxfordhemd aus Baumwolle mit Knopfleiste für Büro, Smart-Casual und formelle Lagenlooks.",
@@ -5542,7 +5546,11 @@
       "m_jeans_dark_indigo": "Dunkelblaue Straight-Fit-Jeans",
       "m_loafers_leather_brown": "Klassische braune Leder-Loafer",
       "m_boots_chelsea_brown": "Edle braune Leder-Chelsea-Boots",
-      "m_sneakers_navy_white": "Dunkelblaue & weiße Low-Top-Sneaker"
+      "m_sneakers_navy_white": "Dunkelblaue & weiße Low-Top-Sneaker",
+      "w_tshirt_white_crew": "Atmungsaktives weißes Rundhals-T-Shirt aus reiner Baumwolle für müheloses tägliches Layering.",
+      "w_tshirt_black_fitted": "Schlichtes schwarzes tailliertes Kurzarm-T-Shirt aus Baumwolle, perfekt zu Jeans, Röcken oder Blazern.",
+      "m_tshirt_white_crew": "Frisches weißes Rundhals-T-Shirt aus 100 % Baumwolle zum Solo-Tragen oder unter Jacken.",
+      "m_tshirt_black_crew": "Zeitloses schwarzes Rundhals-T-Shirt aus reiner Baumwolle für Alltag und Streetwear."
     },
     "itemTypes": {
       "m_top_oxford_white": "Oxford-Button-down-Hemd",
@@ -5644,7 +5652,11 @@
       "m_jeans_dark_indigo": "Dunkelblaue Straight-Fit-Jeans",
       "m_loafers_leather_brown": "Klassische braune Leder-Loafer",
       "m_boots_chelsea_brown": "Edle braune Leder-Chelsea-Boots",
-      "m_sneakers_navy_white": "Dunkelblaue & weiße Low-Top-Sneaker"
+      "m_sneakers_navy_white": "Dunkelblaue & weiße Low-Top-Sneaker",
+      "w_tshirt_white_crew": "Rundhals-T-Shirt",
+      "w_tshirt_black_fitted": "Tailliertes Rundhals-T-Shirt",
+      "m_tshirt_white_crew": "Rundhals-T-Shirt",
+      "m_tshirt_black_crew": "Rundhals-T-Shirt"
     },
     "firstOutfitTitle": "Mein erster KI-Look"
   },

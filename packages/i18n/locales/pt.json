@@ -5447,7 +5447,11 @@
       "m_shoes_derby_brown": "Sapato social Derby de couro marrom",
       "m_loafers_leather_brown": "Mocassim clássico de couro marrom",
       "m_boots_chelsea_brown": "Bota Chelsea de couro marrom",
-      "m_sneakers_navy_white": "Tênis cano baixo azul-marinho e branco"
+      "m_sneakers_navy_white": "Tênis cano baixo azul-marinho e branco",
+      "w_tshirt_white_crew": "Camiseta Clássica Branca de Algodão Gola Careca",
+      "w_tshirt_black_fitted": "Camiseta Essencial Preta Ajustada de Algodão",
+      "m_tshirt_white_crew": "Camiseta Essencial Branca de Algodão Gola Careca",
+      "m_tshirt_black_crew": "Camiseta Clássica Preta de Algodão Gola Careca"
     },
     "itemCaptions": {
       "m_top_oxford_white": "Camisa Oxford de algodão branco de manga comprida com botões para o escritório, estilo casual elegante e sobreposições formais.",
@@ -5549,7 +5553,11 @@
       "m_jeans_dark_indigo": "Calça jeans reta índigo escuro",
       "m_loafers_leather_brown": "Mocassim clássico de couro marrom",
       "m_boots_chelsea_brown": "Bota Chelsea de couro marrom",
-      "m_sneakers_navy_white": "Tênis cano baixo azul-marinho e branco"
+      "m_sneakers_navy_white": "Tênis cano baixo azul-marinho e branco",
+      "w_tshirt_white_crew": "Camiseta branca respirável de puro algodão com gola careca para sobreposições diárias sem esforço.",
+      "w_tshirt_black_fitted": "Camiseta preta ajustada de manga curta em algodão que combina perfeitamente com jeans, saias ou blazers.",
+      "m_tshirt_white_crew": "Camiseta branca impecável 100% algodão com gola careca para usar sozinha ou sob jaquetas.",
+      "m_tshirt_black_crew": "Camiseta preta atemporal de puro algodão com gola careca ideal para visuais casuais e streetwear."
     },
     "itemTypes": {
       "m_top_oxford_white": "Camisa Oxford com botões",
@@ -5651,7 +5659,11 @@
       "m_jeans_dark_indigo": "Calça jeans reta índigo escuro",
       "m_loafers_leather_brown": "Mocassim clássico de couro marrom",
       "m_boots_chelsea_brown": "Bota Chelsea de couro marrom",
-      "m_sneakers_navy_white": "Tênis cano baixo azul-marinho e branco"
+      "m_sneakers_navy_white": "Tênis cano baixo azul-marinho e branco",
+      "w_tshirt_white_crew": "Camiseta Gola Careca",
+      "w_tshirt_black_fitted": "Camiseta Ajustada Gola Careca",
+      "m_tshirt_white_crew": "Camiseta Gola Careca",
+      "m_tshirt_black_crew": "Camiseta Gola Careca"
     },
     "firstOutfitTitle": "O meu primeiro look IA"
   },

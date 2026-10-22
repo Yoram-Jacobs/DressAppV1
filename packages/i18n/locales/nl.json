@@ -5451,7 +5451,11 @@
       "m_shoes_derby_brown": "Gepolijste bruine leren Derby-schoenen",
       "m_loafers_leather_brown": "Klassieke bruine leren instappers",
       "m_boots_chelsea_brown": "Rijke bruine leren Chelsea-boots",
-      "m_sneakers_navy_white": "Marineblauwe & witte lage sneakers"
+      "m_sneakers_navy_white": "Marineblauwe & witte lage sneakers",
+      "w_tshirt_white_crew": "Klassiek Wit Katoenen T-Shirt met Ronde Hals",
+      "w_tshirt_black_fitted": "Essentieel Zwart Getailleerd Katoenen T-Shirt",
+      "m_tshirt_white_crew": "Essentieel Wit Katoenen T-Shirt met Ronde Hals",
+      "m_tshirt_black_crew": "Klassiek Zwart Katoenen T-Shirt met Ronde Hals"
     },
     "itemCaptions": {
       "m_top_oxford_white": "Helderwit katoenen Oxford button-down overhemd met lange mouwen voor kantoor, smart-casual en formele laagjes.",
@@ -5553,7 +5557,11 @@
       "m_jeans_dark_indigo": "Donkerindigo rechte jeans",
       "m_loafers_leather_brown": "Klassieke bruine leren instappers",
       "m_boots_chelsea_brown": "Rijke bruine leren Chelsea-boots",
-      "m_sneakers_navy_white": "Marineblauwe & witte lage sneakers"
+      "m_sneakers_navy_white": "Marineblauwe & witte lage sneakers",
+      "w_tshirt_white_crew": "Ademend wit T-shirt van puur katoen met ronde hals voor moeiteloze dagelijkse laagjes.",
+      "w_tshirt_black_fitted": "Strak zwart getailleerd katoenen T-shirt met korte mouwen dat mooi past bij jeans, rokken of blazers.",
+      "m_tshirt_white_crew": "Fris wit T-shirt van 100% katoen met ronde hals om solo of onder jasjes te dragen.",
+      "m_tshirt_black_crew": "Tijdloos zwart T-shirt van puur katoen met ronde hals voor casual en streetwear looks."
     },
     "itemTypes": {
       "m_top_oxford_white": "Oxford button-down overhemd",
@@ -5655,7 +5663,11 @@
       "m_jeans_dark_indigo": "Donkerindigo rechte jeans",
       "m_loafers_leather_brown": "Klassieke bruine leren instappers",
       "m_boots_chelsea_brown": "Rijke bruine leren Chelsea-boots",
-      "m_sneakers_navy_white": "Marineblauwe & witte lage sneakers"
+      "m_sneakers_navy_white": "Marineblauwe & witte lage sneakers",
+      "w_tshirt_white_crew": "T-Shirt met Ronde Hals",
+      "w_tshirt_black_fitted": "Getailleerd T-Shirt met Ronde Hals",
+      "m_tshirt_white_crew": "T-Shirt met Ronde Hals",
+      "m_tshirt_black_crew": "T-Shirt met Ronde Hals"
     },
     "firstOutfitTitle": "Mijn eerste AI-look"
   },

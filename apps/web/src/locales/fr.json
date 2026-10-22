@@ -5440,7 +5440,11 @@
       "m_shoes_derby_brown": "Chaussures Derby habillées en cuir marron",
       "m_loafers_leather_brown": "Mocassins classiques en cuir marron",
       "m_boots_chelsea_brown": "Bottines Chelsea en cuir marron",
-      "m_sneakers_navy_white": "Baskets basses bleu marine et blanc"
+      "m_sneakers_navy_white": "Baskets basses bleu marine et blanc",
+      "w_tshirt_white_crew": "T-Shirt Classique Blanc en Coton à Col Rond",
+      "w_tshirt_black_fitted": "T-Shirt Essentiel Noir Ajusté en Coton",
+      "m_tshirt_white_crew": "T-Shirt Essentiel Blanc en Coton à Col Rond",
+      "m_tshirt_black_crew": "T-Shirt Classique Noir en Coton à Col Rond"
     },
     "itemCaptions": {
       "m_top_oxford_white": "Chemise Oxford boutonnée en coton blanc à manches longues pour le bureau, le chic décontracté et les superpositions formelles.",
@@ -5542,7 +5546,11 @@
       "m_jeans_dark_indigo": "Jean coupe droite indigo foncé",
       "m_loafers_leather_brown": "Mocassins classiques en cuir marron",
       "m_boots_chelsea_brown": "Bottines Chelsea en cuir marron",
-      "m_sneakers_navy_white": "Baskets basses bleu marine et blanc"
+      "m_sneakers_navy_white": "Baskets basses bleu marine et blanc",
+      "w_tshirt_white_crew": "T-shirt blanc respirant en pur coton à col rond pour des superpositions quotidiennes sans effort.",
+      "w_tshirt_black_fitted": "T-shirt noir ajusté à manches courtes en coton qui s'associe parfaitement aux jeans, jupes ou blazers.",
+      "m_tshirt_white_crew": "T-shirt blanc impeccable 100 % coton à col rond à porter seul ou sous une veste.",
+      "m_tshirt_black_crew": "T-shirt noir intemporel en pur coton à col rond adapté aux tenues décontractées et streetwear."
     },
     "itemTypes": {
       "m_top_oxford_white": "Chemise Oxford boutonnée",
@@ -5644,7 +5652,11 @@
       "m_jeans_dark_indigo": "Jean coupe droite indigo foncé",
       "m_loafers_leather_brown": "Mocassins classiques en cuir marron",
       "m_boots_chelsea_brown": "Bottines Chelsea en cuir marron",
-      "m_sneakers_navy_white": "Baskets basses bleu marine et blanc"
+      "m_sneakers_navy_white": "Baskets basses bleu marine et blanc",
+      "w_tshirt_white_crew": "T-Shirt à Col Rond",
+      "w_tshirt_black_fitted": "T-Shirt Ajusté à Col Rond",
+      "m_tshirt_white_crew": "T-Shirt à Col Rond",
+      "m_tshirt_black_crew": "T-Shirt à Col Rond"
     },
     "firstOutfitTitle": "Mon premier look IA"
   },

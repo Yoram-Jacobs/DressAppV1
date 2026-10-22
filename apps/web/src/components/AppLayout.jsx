@@ -190,11 +190,7 @@ export const AppLayout = () => {
     location.pathname === '/' ||
     location.pathname === '/home' ||
     location.pathname === '/about' ||
-    location.pathname === '/pricing' ||
-    location.pathname === '/experts' ||
-    location.pathname === '/trends' ||
-    location.pathname.startsWith('/market') ||
-    location.pathname.startsWith('/transactions');
+    location.pathname === '/pricing';
   const needsOnboardingSetup =
     !isPublicBrowsePage &&
     isLoaded &&

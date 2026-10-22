@@ -1042,7 +1042,7 @@ def draw_fitted_garment(spec: dict[str, Any]) -> Image.Image:
             draw_collar("mandarin", base_rgb, trim_rgb)
         elif "sweater" in item_id:
             draw_collar("shawl", base_rgb, trim_rgb)
-        elif "shirt" in sub or "polo" in sub or "guayabera" in sub:
+        elif sub in ("shirt", "polo shirt", "guayabera"):
             draw_collar("shirt", base_rgb, trim_rgb)
 
         if "guayabera" in item_id:
@@ -1271,10 +1271,6 @@ def main() -> None:
         png_path = ONBOARDING_ASSETS_DIR / f"{item_id}.png"
         cropped.save(png_path, format="PNG", optimize=True)
 
-        jpg_bg = Image.new("RGB", cropped.size, (248, 247, 244))
-        jpg_bg.paste(cropped, mask=cropped.split()[3])
-        jpg_bg.save(ONBOARDING_ASSETS_DIR / f"{item_id}.jpg", format="JPEG", quality=92)
-
         default_viewbox = {
             "x": round(min_x / 2.0, 2),
             "y": round(min_y / 2.0, 2),
@@ -1288,7 +1284,8 @@ def main() -> None:
             alpha_crop=np.array(cropped)[:, :, 3],
         )
 
-        item["image_url"] = f"/assets/onboarding/{item_id}.png?v=3d2"
+        item["image_url"] = f"/assets/onboarding/{item_id}_cutout.png?v=gv1"
+        item["avatar_overlay_url"] = f"/assets/onboarding/{item_id}.png?v=3d2"
         item["avatar_fit"] = {
             "fitted_to_default_avatar": True,
             "avatar_version": "3d_v2",

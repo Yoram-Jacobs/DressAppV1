@@ -17,9 +17,21 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
 
 export default function MigrationStepShowcase({ t, setIsMigrationModalOpen }) {
+    const navigate = useNavigate();
+    const { user } = useAuth();
     const [migrationStep, setMigrationStep] = useState(0);
+
+    const handleTriggerMigration = () => {
+        if (!user) {
+            navigate('/onboarding');
+        } else {
+            setIsMigrationModalOpen(true);
+        }
+    };
     const [scanCount, setScanCount] = useState(5);
     const scanIntervalRef = useRef(null);
 
@@ -419,7 +431,7 @@ export default function MigrationStepShowcase({ t, setIsMigrationModalOpen }) {
                                             </div>
                                             <span
                                                 className="text-xs font-bold text-primary-brand underline cursor-pointer whitespace-nowrap"
-                                                onClick={() => setIsMigrationModalOpen(true)}
+                                                onClick={handleTriggerMigration}
                                             >
                                                 {t("home.migration.testRun", {
                                                     defaultValue: "Try Live Import",
@@ -454,7 +466,7 @@ export default function MigrationStepShowcase({ t, setIsMigrationModalOpen }) {
                     <Button
                         type="button"
                         data-testid="home-migrate-wardrobe-closet-cta"
-                        onClick={() => setIsMigrationModalOpen(true)}
+                        onClick={handleTriggerMigration}
                         className=" h-auto
                                     rounded-full
                                     border-0

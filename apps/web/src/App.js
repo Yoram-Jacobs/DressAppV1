@@ -167,14 +167,14 @@ function App() {
                       <Route path="/home" element={<Home />} />
                       <Route path="/about" element={<AboutUs />} />
                       <Route path="/pricing" element={<Pricing />} />
-                      <Route path="/experts" element={<ExpertsDirectory />} />
-                      <Route path="/trends" element={<TrendScout />} />
-                      <Route path="/market" element={<Marketplace />} />
-                      <Route path="/market/:id" element={<ListingDetail />} />
-                      <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
 
                       {/* Protected routes requiring authentication */}
                       <Route element={<ProtectedRoute />}>
+                        <Route path="/market" element={<Marketplace />} />
+                        <Route path="/market/:id" element={<ListingDetail />} />
+                        <Route path="/experts" element={<ExpertsDirectory />} />
+                        <Route path="/trends" element={<TrendScout />} />
+                        <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
                         <Route path="/closet" element={<Closet />} />
                         <Route path="/suitcase" element={<Suitcase />} />
                         <Route path="/closet/add" element={<AddItem />} />
