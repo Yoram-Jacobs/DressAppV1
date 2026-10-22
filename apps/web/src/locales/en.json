@@ -1892,7 +1892,11 @@
       "type_straight": "Straight",
       "type_wavy": "Wavy",
       "type_curly": "Curly",
-      "type_coily": "Coily"
+      "type_coily": "Coily",
+      "default_color_female": "Brunette",
+      "default_style_female": "Karre",
+      "default_color_male": "Dark Brown",
+      "default_style_male": "Short Fashionable"
     },
     "saveProfile": "Save Full Profile",
     "savedProfile": "Profile saved",

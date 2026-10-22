@@ -1850,7 +1850,11 @@
       "type_straight": "Прямые",
       "type_wavy": "Волнистые",
       "type_curly": "Кудрявые",
-      "type_coily": "Спиралевидные"
+      "type_coily": "Спиралевидные",
+      "default_color_female": "Шатен",
+      "default_style_female": "Каре",
+      "default_color_male": "Тёмно-коричневый",
+      "default_style_male": "Короткая модная"
     },
     "saveProfile": "Сохранить весь профиль",
     "savedProfile": "Профиль сохранён",

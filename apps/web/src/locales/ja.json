@@ -1850,7 +1850,11 @@
       "type_straight": "ストレート",
       "type_wavy": "ウェーブ",
       "type_curly": "カーリー",
-      "type_coily": "コイリー"
+      "type_coily": "コイリー",
+      "default_color_female": "ブルネット",
+      "default_style_female": "カレ（ボブ）",
+      "default_color_male": "ダークブラウン",
+      "default_style_male": "ショートモダン"
     },
     "saveProfile": "プロフィール全体を保存",
     "savedProfile": "プロフィールを保存しました",

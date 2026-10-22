@@ -1892,7 +1892,11 @@
       "type_straight": "Direct",
       "type_wavy": "Golvend",
       "type_curly": "Krullend",
-      "type_coily": "Coily"
+      "type_coily": "Coily",
+      "default_color_female": "Brunette",
+      "default_style_female": "Carré-bob",
+      "default_color_male": "Donkerbruin",
+      "default_style_male": "Kort & Modieus"
     },
     "saveProfile": "Volledig profiel opslaan",
     "savedProfile": "Profiel opgeslagen",

@@ -1850,7 +1850,11 @@
       "type_straight": "Droit",
       "type_wavy": "Ondulé",
       "type_curly": "Bouclé",
-      "type_coily": "Bouclé"
+      "type_coily": "Bouclé",
+      "default_color_female": "Brun",
+      "default_style_female": "Carré",
+      "default_color_male": "Brun foncé",
+      "default_style_male": "Court tendance"
     },
     "saveProfile": "Enregistrer le profil",
     "savedProfile": "Profil enregistré",

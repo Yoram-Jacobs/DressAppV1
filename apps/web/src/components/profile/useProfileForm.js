@@ -1,8 +1,11 @@
 import { useState, useMemo, useRef } from 'react';
+import { getDefaultAvatarHair } from '../DynamicAvatar.jsx';
 
 export function useProfileForm(user) {
   const initial = useMemo(
-    () => ({
+    () => {
+      const defaultHair = getDefaultAvatarHair(user?.sex || 'female');
+      return {
       first_name: user?.first_name || '',
       last_name: user?.last_name || '',
       phone: user?.phone || '',
@@ -43,10 +46,10 @@ export function useProfileForm(user) {
         dress_size: user?.body_measurements?.dress_size || '',
       },
       hair: {
-        length: user?.hair?.length || '',
-        type: user?.hair?.type || '',
-        color: user?.hair?.color || '',
-        style: user?.hair?.style || '',
+        length: user?.hair?.length || defaultHair.length,
+        type: user?.hair?.type || defaultHair.type,
+        color: user?.hair?.color || defaultHair.color,
+        style: user?.hair?.style || defaultHair.style,
       },
       professional: {
         is_professional: !!user?.professional?.is_professional,
@@ -79,7 +82,8 @@ export function useProfileForm(user) {
           max_campaign_distance_km: user?.scheduler_settings?.campaign_notification_prefs?.max_campaign_distance_km || 10,
         }
       },
-    }),
+    };
+    },
     [user],
   );
 
@@ -104,7 +108,23 @@ export function useProfileForm(user) {
   }
   const isDirty = JSON.stringify(form) !== baselineRef.current;
 
-  const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const setField = (k, v) =>
+    setForm((f) => {
+      if (k === 'sex') {
+        const prevDef = getDefaultAvatarHair(f.sex || 'female');
+        const nextDef = getDefaultAvatarHair(v || 'female');
+        const h = f.hair || {};
+        const isStillDefault =
+          (!h.length || h.length === prevDef.length) &&
+          (!h.type || h.type === prevDef.type) &&
+          (!h.color || h.color === prevDef.color) &&
+          (!h.style || h.style === prevDef.style);
+        if (isStillDefault) {
+          return { ...f, [k]: v, hair: { ...nextDef } };
+        }
+      }
+      return { ...f, [k]: v };
+    });
   const setNested = (parent, k, v) => {
     if (typeof k === 'function') {
       setForm((f) => ({ ...f, [parent]: k(f[parent], f) }));

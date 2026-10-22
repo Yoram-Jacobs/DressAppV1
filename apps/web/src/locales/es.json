@@ -1850,7 +1850,11 @@
       "type_straight": "Liso",
       "type_wavy": "Ondulado",
       "type_curly": "Rizado",
-      "type_coily": "Muy rizado"
+      "type_coily": "Muy rizado",
+      "default_color_female": "Castaño",
+      "default_style_female": "Bob carré",
+      "default_color_male": "Castaño oscuro",
+      "default_style_male": "Corto moderno"
     },
     "saveProfile": "Guardar perfil completo",
     "savedProfile": "Perfil guardado",

@@ -1850,7 +1850,11 @@
       "type_straight": "Lisci",
       "type_wavy": "Mossi",
       "type_curly": "Ricci",
-      "type_coily": "Molto ricci"
+      "type_coily": "Molto ricci",
+      "default_color_female": "Castano",
+      "default_style_female": "Carré",
+      "default_color_male": "Castano scuro",
+      "default_style_male": "Corto alla moda"
     },
     "saveProfile": "Salva profilo completo",
     "savedProfile": "Profilo salvato",

@@ -1859,7 +1859,11 @@
       "type_straight": "Glatt",
       "type_wavy": "Wellig",
       "type_curly": "Lockig",
-      "type_coily": "Kraus"
+      "type_coily": "Kraus",
+      "default_color_female": "Brünett",
+      "default_style_female": "Karree-Bob",
+      "default_color_male": "Dunkelbraun",
+      "default_style_male": "Kurz & Modern"
     },
     "saveProfile": "Gesamtes Profil speichern",
     "savedProfile": "Profil gespeichert",

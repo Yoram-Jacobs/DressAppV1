@@ -1167,6 +1167,7 @@ export default function AvatarViewer2D({
   shapeParams = {},
   measurements: providedMeasurements,
   skinColor,
+  hair,
   sex = 'female',
   outfitItems = {},
   onItemClick,
@@ -1180,6 +1181,7 @@ export default function AvatarViewer2D({
   const activeBodyPhotoUrl = resolveMediaUrl(bodyPhotoUrl !== undefined ? (bodyPhotoUrl || null) : (user?.body_photo_url || null));
   const rawSkinColor = (skinColor && skinColor.toLowerCase() !== '#9ca3af') ? skinColor : (user?.skin_tone || '#E0AC69');
   const activeSkinColor = rawSkinColor.toLowerCase() === '#9ca3af' ? '#E0AC69' : rawSkinColor;
+  const activeHair = hair !== undefined ? hair : (user?.hair || {});
 
   // Normalize params between 0 and 1
   const params = useMemo(() => {
@@ -1831,6 +1833,7 @@ export default function AvatarViewer2D({
             footLength={computedMeasurements.footLength}
             gender={computedMeasurements.gender || sex}
             skinColor={activeSkinColor}
+            hair={activeHair}
             shapeParams={params}
             showGuideLines={false}
             interactive={interactive}

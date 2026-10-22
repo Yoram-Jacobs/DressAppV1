@@ -8,6 +8,7 @@ export default function AvatarViewer({
   onItemClick,
   bodyPhotoUrl,
   skinColor,
+  hair,
   showPointCloudMesh = false,
   interactive = false,
 }) {
@@ -20,6 +21,7 @@ export default function AvatarViewer({
       onItemClick={onItemClick}
       bodyPhotoUrl={bodyPhotoUrl}
       skinColor={skinColor}
+      hair={hair}
       showPointCloudMesh={showPointCloudMesh}
       interactive={interactive}
     />

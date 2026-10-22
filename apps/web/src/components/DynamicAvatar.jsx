@@ -3,8 +3,8 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-const MALE_GLB_URL = '/models/avatar_male_1.glb';
-const FEMALE_GLB_URL = '/models/avatar_female_1.glb';
+const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair3';
+const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair3';
 
 // Cache rendered 3D WebGL snapshots (`data:image/png;base64,...`) keyed by avatar signature
 // so grids with 40+ Saved Outfit cards can render the 3D avatar instantaneously without
@@ -317,6 +317,171 @@ export function getAvatarGeometry({
   };
 }
 
+export function getDefaultAvatarHair(sex = 'female') {
+  const isMale = String(sex || '').toLowerCase() === 'male';
+  if (isMale) {
+    return {
+      length: 'short',
+      type: 'straight',
+      color: 'Dark Brown',
+      style: 'Short Fashionable',
+    };
+  }
+  return {
+    length: 'medium',
+    type: 'straight',
+    color: 'Brunette',
+    style: 'Karre',
+  };
+}
+
+export function resolveHairProperties(hair = {}, isMale = false) {
+  const rawLength = String(hair?.length || '').trim().toLowerCase();
+  const rawType = String(hair?.type || '').trim().toLowerCase();
+  const rawStyle = String(hair?.style || '').trim().toLowerCase();
+  const rawColor = String(hair?.color || '').trim();
+  const colorLower = rawColor.toLowerCase();
+
+  // 1. Resolve Hair Color (Hex or multilingual color name)
+  let color = isMale ? '#181412' : '#3B2316';
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(rawColor)) {
+    color = rawColor;
+  } else if (colorLower) {
+    const COLOR_RULES = [
+      [['jet black', 'raven', 'ebony', 'black', 'שחור', 'أسود', 'negro', 'noir', 'schwarz', 'nero', 'черный', 'чёрный', '黒', '黑'], '#110E0D'],
+      [['brunette'], '#3B2316'],
+      [['dark brown', 'espresso', 'חום כהה', 'بني غامق', 'castaño oscuro', 'brun foncé', 'dunkelbraun', 'темно-коричневый', 'тёмно-коричневый', '深棕', 'ダークブラウン'], isMale ? '#181412' : '#28160E'],
+      [['light brown', 'caramel', 'honey', 'dirty blonde', 'bronde', 'שטני', 'חום בהיר', 'קרמל', 'דבש', 'בني فاتح', 'castaño claro', 'châtain clair', 'hellbraun', 'светло-коричневый', '浅棕'], '#7A5230'],
+      [['chestnut', 'chocolate', 'mahogany', 'ערמוני', 'שוקולד', 'מהגוני', 'châtain', 'kastanienbraun', 'каштановый'], '#4E2716'],
+      [['brown', 'חום', 'بني', 'castaño', 'marron', 'brun', 'braun', 'bruno', 'коричневый', 'шатен', 'ブラウン', '茶', '棕'], '#3B2316'],
+      [['platinum', 'icy blonde', 'silver blonde', 'פלטינה', 'בלונד פלטינה', 'platine', 'platino', 'платиновый'], '#E8DFCE'],
+      [['ash blonde', 'בלונד אפרפר', 'cendré', 'пепельный'], '#C8B99E'],
+      [['strawberry', 'rose gold', 'בלונד תות'], '#C98A5B'],
+      [['blonde', 'blond', 'golden', 'yellow', 'בלונד', 'בלונדיני', 'זהוב', 'أشقر', 'rubio', 'biondo', 'блонд', 'блондин', 'ブロンド', '金'], '#D4AF6A'],
+      [['ginger', 'copper', 'orange', 'carrot', 'ג\'ינג\'י', 'גינגי', 'נחושת', 'כתום', 'roux', 'pelirrojo', 'рыжий', 'медパ', 'медный'], '#A84620'],
+      [['auburn', 'burgundy', 'wine', 'crimson', 'red', 'אדום', 'בורדו', 'أحمر', 'rojo', 'rouge', 'rot', 'rosso', 'красный', '赤', '红'], '#6E1E1A'],
+      [['white', 'snow', 'לבן', 'أبيض', 'blanco', 'blanc', 'weiß', 'bianco', 'белый', '白'], '#E5E7EB'],
+      [['silver', 'gray', 'grey', 'salt', 'אפור', 'כסף', 'שיבה', 'رمادي', 'فضي', 'gris', 'grau', 'grigio', 'седой', 'серый', '銀', '灰'], '#9499A1'],
+      [['pink', 'rose', 'magenta', 'ורוד', 'وردي', 'rosa'], '#D66B92'],
+      [['blue', 'navy', 'teal', 'turquoise', 'כחול', 'أزرق', 'azul', 'bleu', 'blau'], '#28558A'],
+      [['purple', 'violet', 'lavender', 'plum', 'סגול', 'بنفسجي', 'morado', 'violet'], '#5E3A78'],
+      [['green', 'emerald', 'ירוק', 'أخضر', 'verde', 'vert', 'grün'], '#245C46'],
+    ];
+    for (const [keywords, hex] of COLOR_RULES) {
+      if (keywords.some((kw) => colorLower.includes(kw))) {
+        color = hex;
+        break;
+      }
+    }
+  }
+
+  // 2. Resolve Material Roughness & Metalness (from hair.type and hair.style)
+  let roughness = isMale ? 0.48 : 0.38;
+  let metalness = 0.04;
+  if (/sleek|flat|glass|חלק מאוד|lisse/.test(rawStyle)) {
+    roughness = 0.28;
+    metalness = 0.06;
+  } else if (rawType === 'wavy' || /wavy|wave|beach|גלי|ondul/.test(rawStyle)) {
+    roughness = 0.40;
+    metalness = 0.04;
+  } else if (rawType === 'curly' || /curly|curl|ringlet|perm|מתולתל|תלתל|boucl|rizad|lockig/.test(rawStyle)) {
+    roughness = 0.50;
+    metalness = 0.03;
+  } else if (rawType === 'coily' || /coily|coil|afro|kinky|twist|אפרו|crépu/.test(rawStyle)) {
+    roughness = 0.66;
+    metalness = 0.02;
+  }
+
+  // 3. Resolve 3D Hair Morph Target Weights (`hair_short`, `hair_long`, `hair_wavy`, `hair_curly`, `hair_coily`, `hair_updo`, `hair_volume`)
+  const morphs = {
+    hair_short: 0,
+    hair_long: 0,
+    hair_wavy: 0,
+    hair_curly: 0,
+    hair_coily: 0,
+    hair_updo: 0,
+    hair_volume: 0,
+  };
+
+  // Length mapping
+  if (isMale) {
+    // Male Basis is already a short fashionable haircut
+    if (rawLength === 'short') {
+      if (/buzz|crew|fade|military|skin|קצוץ|מארינס|דירוג|גלח|rasé|rapado/.test(rawStyle)) {
+        morphs.hair_short = /buzz|קצוץ|גלח/.test(rawStyle) ? 1.15 : 1.0;
+      }
+    } else if (rawLength === 'medium') {
+      morphs.hair_long = 0.55;
+      morphs.hair_volume = 0.30;
+    } else if (rawLength === 'long') {
+      morphs.hair_long = 1.0;
+      morphs.hair_volume = 0.35;
+    }
+  } else {
+    // Female Basis is a medium chin-length Carré / Bob
+    if (rawLength === 'short') {
+      morphs.hair_short = 1.0;
+    } else if (rawLength === 'long') {
+      morphs.hair_long = 1.0;
+    } else if (rawLength === 'medium') {
+      morphs.hair_short = 0;
+      morphs.hair_long = 0;
+    }
+  }
+
+  // Style-based length overrides
+  if (isMale) {
+    if (/buzz|crew|fade|military|skin|קצוץ|מארינס|דירוג|גלח|rasé|rapado/.test(rawStyle)) {
+      morphs.hair_short = Math.max(morphs.hair_short, /buzz|קצוץ|גלח/.test(rawStyle) ? 1.15 : 1.0);
+      morphs.hair_long = 0;
+    } else if (/long|flowing|surfer|shoulder|ארוך|גולש/.test(rawStyle) && !rawLength) {
+      morphs.hair_long = 1.0;
+      morphs.hair_short = 0;
+    }
+  } else {
+    if (/pixie|buzz|crew|crop|boyish|קצוץ|קצר|פיקסי|מארינס|garçonne|rapado/.test(rawStyle)) {
+      morphs.hair_short = Math.max(morphs.hair_short, /buzz|קצוץ|גלח/.test(rawStyle) ? 1.15 : 1.0);
+      morphs.hair_long = 0;
+    } else if (/karre|carré|carre|bob|קארה|בוב/.test(rawStyle)) {
+      if (!rawLength) {
+        morphs.hair_short = 0;
+        morphs.hair_long = 0;
+      }
+      if (/long bob|lob|קארה ארוך/.test(rawStyle)) {
+        morphs.hair_long = Math.max(morphs.hair_long, 0.45);
+      }
+    } else if (/long|flowing|waist|mermaid|shoulder|ארוך|גולש/.test(rawStyle) && !rawLength) {
+      morphs.hair_long = 1.0;
+      morphs.hair_short = 0;
+    }
+  }
+
+  // Type & Style texture mapping
+  if (rawType === 'wavy' || (!rawType && /wavy|wave|beach|גלי|ondul/.test(rawStyle))) {
+    morphs.hair_wavy = 1.0;
+  } else if (rawType === 'curly' || (!rawType && /curly|curl|ringlet|perm|מתולתל|תלתל|boucl|rizad/.test(rawStyle))) {
+    morphs.hair_curly = 1.0;
+  } else if (rawType === 'coily' || (!rawType && /coily|coil|afro|kinky|twist|אפרו|crépu/.test(rawStyle))) {
+    morphs.hair_coily = 1.0;
+  }
+
+  // Style-specific structural shapes (Updo / Bun / Ponytail & Layered / Blowout / Pompadour Volume)
+  if (/bun|updo|ponytail|pony|chignon|topknot|tied|braid|גולגול|קוקו|אסוף|צמה|chignon|moño|coleta|كعكة|ضفيرة/.test(rawStyle)) {
+    morphs.hair_updo = 1.0;
+    morphs.hair_long = 0;
+  }
+  if (/layer|volume|voluminous|blowout|pompadour|quiff|bouffant|שכבות|מדורג|נפח|פומפדור|בלורית|פן|dégradé|capas/.test(rawStyle)) {
+    morphs.hair_volume = Math.max(morphs.hair_volume, 0.85);
+  }
+
+  return {
+    color,
+    roughness,
+    metalness,
+    morphs,
+  };
+}
+
 export function computeMorphInfluences({
   height,
   shoulders,
@@ -327,6 +492,7 @@ export function computeMorphInfluences({
   inseam,
   isMale,
   shapeParams = {},
+  hair = {},
 }) {
   const baseH = isMale ? 178 : 168;
   const baseSh = isMale ? 44 : 38;
@@ -348,6 +514,7 @@ export function computeMorphInfluences({
 
   // Aggregate overall mass deviation from chest + waist + hip
   const massDelta = (dCh / 24 + dW / 22 + dHip / 24) / 3;
+  const hairProps = resolveHairProperties(hair, isMale);
 
   return {
     tall: clamp01(Math.max(shapeParams.tall || 0, dH > 0 ? dH / 32 : 0)),
@@ -365,12 +532,14 @@ export function computeMorphInfluences({
     arms_short: clamp01(dArm < 0 ? -dArm / 14 : 0),
     legs_long: clamp01(dIns > 0 ? dIns / 16 : 0),
     legs_short: clamp01(dIns < 0 ? -dIns / 16 : 0),
+    ...hairProps.morphs,
   };
 }
 
 function Realistic3DAvatarMesh({
   isMale,
   skinColor,
+  hairProps,
   morphInfluences,
   height,
   signature,
@@ -425,12 +594,15 @@ function Realistic3DAvatarMesh({
     };
   }, [height, isMale, morphInfluences]);
 
-  // Update skin tone, anatomical materials, morph Target influences, and capture snapshot
+  // Update skin tone, hair properties, anatomical materials, morph target influences, and capture snapshot
   useEffect(() => {
     if (!clonedScene) return;
 
     const skinThreeColor = new THREE.Color(skinColor || '#D9A17C');
     const nailColor = skinThreeColor.clone().lerp(new THREE.Color('#F5CAC3'), 0.35);
+    const activeHairColor = hairProps?.color || (isMale ? '#181412' : '#3B2316');
+    const activeHairRoughness = hairProps?.roughness ?? (isMale ? 0.48 : 0.38);
+    const activeHairMetalness = hairProps?.metalness ?? 0.04;
 
     clonedScene.traverse((node) => {
       if (!node.isMesh) return;
@@ -477,6 +649,11 @@ function Realistic3DAvatarMesh({
           mat.transparent = true;
           mat.opacity = 0.85;
           mat.needsUpdate = true;
+        } else if (matName.includes('hair')) {
+          mat.color.set(activeHairColor);
+          mat.roughness = activeHairRoughness;
+          mat.metalness = activeHairMetalness;
+          mat.needsUpdate = true;
         } else if (matName.includes('teeth')) {
           mat.color.set('#F8F5F0');
           mat.roughness = 0.2;
@@ -488,10 +665,13 @@ function Realistic3DAvatarMesh({
         }
       }
 
-      // Apply morph target influences
+      // Apply body + hair morph target influences (resetting inactive targets to 0)
       const dict = node.morphTargetDictionary;
       const influences = node.morphTargetInfluences;
       if (dict && influences && morphInfluences) {
+        for (let i = 0; i < influences.length; i += 1) {
+          influences[i] = 0;
+        }
         Object.entries(morphInfluences).forEach(([targetName, val]) => {
           const idx = dict[targetName] ?? dict[`${targetName} `];
           if (idx !== undefined && idx < influences.length) {
@@ -555,7 +735,7 @@ function Realistic3DAvatarMesh({
         if (rafId) cancelAnimationFrame(rafId);
       };
     }
-  }, [clonedScene, skinColor, morphInfluences, signature, gl, threeScene, camera, transform, interactive]);
+  }, [clonedScene, skinColor, hairProps, isMale, morphInfluences, signature, gl, threeScene, camera, transform, interactive]);
 
   if (!clonedScene) return null;
 
@@ -577,6 +757,7 @@ export default function DynamicAvatar({
   footLength = 24.5,
   gender = 'female',
   skinColor = '#D9A17C',
+  hair = {},
   shapeParams = {},
   className = '',
   showGuideLines = true,
@@ -601,6 +782,11 @@ export default function DynamicAvatar({
     [height, shoulders, chest, waist, hip, armLength, inseam, footLength, gender]
   );
 
+  const hairProps = useMemo(
+    () => resolveHairProperties(hair, isMale),
+    [hair, isMale]
+  );
+
   const morphInfluences = useMemo(
     () =>
       computeMorphInfluences({
@@ -613,8 +799,9 @@ export default function DynamicAvatar({
         inseam,
         isMale,
         shapeParams,
+        hair,
       }),
-    [height, shoulders, chest, waist, hip, armLength, inseam, isMale, shapeParams]
+    [height, shoulders, chest, waist, hip, armLength, inseam, isMale, shapeParams, hair]
   );
 
   const rawSkinColor = skinColor || '#E0AC69';
@@ -625,8 +812,8 @@ export default function DynamicAvatar({
     const morphKey = Object.entries(morphInfluences)
       .map(([k, v]) => `${k}:${Number(v || 0).toFixed(2)}`)
       .join('|');
-    return `${isMale ? 'M' : 'F'}_${activeSkinColor}_${Number(height) || 170}_${morphKey}`;
-  }, [isMale, activeSkinColor, height, morphInfluences]);
+    return `hair3_${isMale ? 'M' : 'F'}_${activeSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(height) || 170}_${morphKey}`;
+  }, [isMale, activeSkinColor, hairProps.color, hairProps.roughness, height, morphInfluences]);
 
   const [snapshotUrl, setSnapshotUrl] = useState(
     () => rendered3DAvatarSnapshotCache.get(avatarSignature) || null
@@ -728,6 +915,7 @@ export default function DynamicAvatar({
       data-testid="dynamic-3d-avatar"
       data-gender={isMale ? 'male' : 'female'}
       data-skin-color={activeSkinColor}
+      data-hair-color={hairProps.color}
       data-interactive={interactive ? 'true' : 'false'}
     >
       {/* Initial load indicator before 3D model frame is ready */}
@@ -764,6 +952,7 @@ export default function DynamicAvatar({
               <Realistic3DAvatarMesh
                 isMale={isMale}
                 skinColor={activeSkinColor}
+                hairProps={hairProps}
                 morphInfluences={morphInfluences}
                 height={height}
                 signature={avatarSignature}

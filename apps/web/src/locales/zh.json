@@ -1852,7 +1852,11 @@
       "type_straight": "直发",
       "type_wavy": "波浪发",
       "type_curly": "卷发",
-      "type_coily": "螺旋卷"
+      "type_coily": "螺旋卷",
+      "default_color_female": "深褐发（Brunette）",
+      "default_style_female": "法式齐颌短发（Karre）",
+      "default_color_male": "深棕色",
+      "default_style_male": "时尚短发"
     },
     "saveProfile": "保存完整资料",
     "savedProfile": "个人资料已保存",

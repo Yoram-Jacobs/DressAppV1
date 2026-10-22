@@ -61,6 +61,8 @@ export function PhotosSection({ form, setField, t, user }) {
                 sex={form.sex || 'female'}
                 bodyPhotoUrl={form.body_photo_url}
                 skinColor={normalizeSkinTone(form.skin_tone)}
+                hair={form.hair}
+                interactive={true}
               />
             </div>
 

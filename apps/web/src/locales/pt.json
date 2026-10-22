@@ -1850,7 +1850,11 @@
       "type_straight": "Liso",
       "type_wavy": "Ondulado",
       "type_curly": "Cacheado",
-      "type_coily": "Crespo"
+      "type_coily": "Crespo",
+      "default_color_female": "Castanho",
+      "default_style_female": "Chanel (Carré)",
+      "default_color_male": "Castanho escuro",
+      "default_style_male": "Curto moderno"
     },
     "saveProfile": "Salvar perfil completo",
     "savedProfile": "Perfil salvo",

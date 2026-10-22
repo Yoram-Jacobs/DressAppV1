@@ -8,6 +8,7 @@ export default function OutfitAvatarViewer({
   shapeParams,
   measurements,
   skinColor,
+  hair,
   sex,
   outfitItemsMap,
   className = '',
@@ -23,6 +24,7 @@ export default function OutfitAvatarViewer({
         shapeParams={shapeParams}
         measurements={measurements}
         skinColor={skinColor}
+        hair={hair}
         sex={sex}
         outfitItems={outfitItemsMap}
         onItemClick={onItemClick}

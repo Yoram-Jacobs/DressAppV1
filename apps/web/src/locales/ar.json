@@ -1850,7 +1850,11 @@
       "type_straight": "مفرود",
       "type_wavy": "متموج",
       "type_curly": "مجعد",
-      "type_coily": "شديد الجعودة"
+      "type_coily": "شديد الجعودة",
+      "default_color_female": "بني كستنائي",
+      "default_style_female": "كاريه",
+      "default_color_male": "بني غامق",
+      "default_style_male": "قصير عصري"
     },
     "saveProfile": "حفظ الملف الشخصي بالكامل",
     "savedProfile": "تم حفظ الملف الشخصي",

@@ -1884,7 +1884,11 @@
       "type_straight": "חלק",
       "type_wavy": "גלי",
       "type_curly": "מתולתל",
-      "type_coily": "אפרו"
+      "type_coily": "אפרו",
+      "default_color_female": "חום ערמוני",
+      "default_style_female": "קארה",
+      "default_color_male": "חום כהה",
+      "default_style_male": "קצר אופנתי"
     },
     "saveProfile": "שמור פרופיל מלא",
     "savedProfile": "הפרופיל נשמר",

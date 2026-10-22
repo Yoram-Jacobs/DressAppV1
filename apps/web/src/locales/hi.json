@@ -1850,7 +1850,11 @@
       "type_straight": "सीधे",
       "type_wavy": "लहरीले",
       "type_curly": "घुंघराले",
-      "type_coily": "कॉइली"
+      "type_coily": "कॉइली",
+      "default_color_female": "ब्रूनेट (भूरा)",
+      "default_style_female": "कारे बॉब",
+      "default_color_male": "गहरा भूरा",
+      "default_style_male": "छोटा फैशनेबल"
     },
     "saveProfile": "परिवर्तन सहेजें",
     "savedProfile": "प्रोफ़ाइल सहेजी गई",

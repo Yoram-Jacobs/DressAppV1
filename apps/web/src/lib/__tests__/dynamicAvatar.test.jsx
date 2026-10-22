@@ -3,7 +3,11 @@ import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import DynamicAvatar, {
   computeMorphInfluences,
+  resolveHairProperties,
+  getDefaultAvatarHair,
 } from '@/components/DynamicAvatar';
+import { useProfileForm } from '@/components/profile/useProfileForm';
+import { renderHook, act } from '@testing-library/react';
 import AvatarViewer from '@/components/AvatarViewer';
 
 // Mock react-i18next
@@ -164,5 +168,57 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     expect(morphs.tall).toBeGreaterThan(0);
     expect(morphs.short).toBe(0);
     expect(morphs.shoulders_wide).toBeGreaterThan(0);
+  });
+
+  test('resolveHairProperties & computeMorphInfluences map hair length, type, style, and color', () => {
+    const blondeLongWavy = resolveHairProperties(
+      { length: 'long', type: 'wavy', color: 'Golden Blonde', style: 'Layered Waves' },
+      false
+    );
+    expect(blondeLongWavy.color).toBe('#D4AF6A');
+    expect(blondeLongWavy.morphs.hair_long).toBe(1);
+    expect(blondeLongWavy.morphs.hair_wavy).toBe(1);
+    expect(blondeLongWavy.morphs.hair_volume).toBeGreaterThan(0.8);
+
+    const blackShortCurlyBun = resolveHairProperties(
+      { length: 'short', type: 'curly', color: 'Jet Black', style: 'High Bun Updo' },
+      false
+    );
+    expect(blackShortCurlyBun.color).toBe('#110E0D');
+    expect(blackShortCurlyBun.morphs.hair_curly).toBe(1);
+    expect(blackShortCurlyBun.morphs.hair_updo).toBe(1);
+    expect(blackShortCurlyBun.morphs.hair_long).toBe(0);
+
+    const maleBuzzCoily = computeMorphInfluences({
+      height: 180,
+      isMale: true,
+      hair: { length: 'short', type: 'coily', color: '#222222', style: 'Buzz Fade' },
+    });
+    expect(maleBuzzCoily.hair_short).toBeGreaterThanOrEqual(1);
+    expect(maleBuzzCoily.hair_coily).toBe(1);
+  });
+
+  test('useProfileForm defaults Hair & Grooming properties to the avatar default characteristics', () => {
+    const { result } = renderHook(() => useProfileForm({ sex: 'female' }));
+    expect(result.current.form.hair).toEqual({
+      length: 'medium',
+      type: 'straight',
+      color: 'Brunette',
+      style: 'Karre',
+    });
+
+    const femaleResolved = resolveHairProperties(result.current.form.hair, false);
+    expect(femaleResolved.color).toBe('#3B2316');
+    expect(Object.values(femaleResolved.morphs).every((v) => v === 0)).toBe(true);
+
+    // Switching gender to male updates default hair automatically
+    act(() => {
+      result.current.setField('sex', 'male');
+    });
+    expect(result.current.form.hair).toEqual(getDefaultAvatarHair('male'));
+
+    const maleResolved = resolveHairProperties(result.current.form.hair, true);
+    expect(maleResolved.color).toBe('#181412');
+    expect(Object.values(maleResolved.morphs).every((v) => v === 0)).toBe(true);
   });
 });

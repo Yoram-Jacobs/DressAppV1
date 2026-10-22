@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, Save, Camera, Image as ImgIcon, Trash2, Sliders, CheckCircle2, UserCheck, Palette } from 'lucide-react';
@@ -34,6 +35,7 @@ async function fileToDataUrl(file, maxEdge = 1024) {
 
 export default function AvatarPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -318,6 +320,7 @@ export default function AvatarPage() {
                     inseam={measurements.inseam}
                     gender={measurements.gender}
                     skinColor={skinColor}
+                    hair={user?.hair || {}}
                     showGuideLines={true}
                     interactive={true}
                   />
