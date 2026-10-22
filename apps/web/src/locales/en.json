@@ -5821,5 +5821,10 @@
       "desc": "Love an outfit? Click \"Save Outfit\" to add it to your Lookbook. Whenever you are ready to photograph and add your real clothes, head over to your Closet!",
       "closetBtn": "Explore My Closet"
     }
+  },
+  "dressingRoom": {
+    "title": "3D Dressing Room",
+    "tryOn3D": "Try on in 3D",
+    "badge3D": "3D"
   }
 }

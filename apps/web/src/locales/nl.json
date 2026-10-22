@@ -5804,5 +5804,10 @@
       "desc": "Blij met je outfit? Klik op \"Outfit opslaan\". Zodra je klaar bent om je echte kleding te fotograferen, ga je naar je Kledingkast!",
       "closetBtn": "Verken Mijn Kledingkast"
     }
+  },
+  "dressingRoom": {
+    "title": "3D-paskamer",
+    "tryOn3D": "In 3D passen",
+    "badge3D": "3D"
   }
 }

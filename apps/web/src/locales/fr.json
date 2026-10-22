@@ -5793,5 +5793,10 @@
       "desc": "Vous aimez cette tenue ? Cliquez sur \"Enregistrer la tenue\". Dès que vous êtes prêt à photographier vos vrais vêtements, rendez-vous dans votre Garde-robe !",
       "closetBtn": "Explorer ma Garde-robe"
     }
+  },
+  "dressingRoom": {
+    "title": "Cabine d'essayage 3D",
+    "tryOn3D": "Essayer en 3D",
+    "badge3D": "3D"
   }
 }

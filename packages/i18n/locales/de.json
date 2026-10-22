@@ -5755,5 +5755,10 @@
     "fullscreen": "Vollbild",
     "exit_fullscreen": "Vollbild beenden",
     "view_item_details": "Artikeldetails anzeigen"
+  },
+  "dressingRoom": {
+    "title": "3D-Umkleidekabine",
+    "tryOn3D": "In 3D anprobieren",
+    "badge3D": "3D"
   }
 }

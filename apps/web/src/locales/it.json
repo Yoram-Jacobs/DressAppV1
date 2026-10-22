@@ -5800,5 +5800,10 @@
       "desc": "Ti piace il look? Clicca su \"Salva outfit\". Quando vorrai fotografare e aggiungere i tuoi veri vestiti, visita il tuo Guardaroba!",
       "closetBtn": "Esplora il mio Guardaroba"
     }
+  },
+  "dressingRoom": {
+    "title": "Camerino 3D",
+    "tryOn3D": "Prova in 3D",
+    "badge3D": "3D"
   }
 }

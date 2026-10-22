@@ -5763,5 +5763,10 @@
     "fullscreen": "पूर्ण स्क्रीन",
     "exit_fullscreen": "पूर्ण स्क्रीन से बाहर निकलें",
     "view_item_details": "आइटम विवरण देखें"
+  },
+  "dressingRoom": {
+    "title": "3D ड्रेसिंग रूम",
+    "tryOn3D": "3D में आज़माएं",
+    "badge3D": "3D"
   }
 }

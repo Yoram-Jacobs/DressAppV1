@@ -151,21 +151,39 @@ export function resolveEffectiveGarmentUrl(garment) {
   if (garment.avatar_overlay_url) {
     return resolveMediaUrl(garment.avatar_overlay_url);
   }
-  const rawUrl = String(garment.url || garment.image_url || garment.clean_image_url || '');
+  if (garment.rawItem?.avatar_overlay_url) {
+    return resolveMediaUrl(garment.rawItem.avatar_overlay_url);
+  }
+  const rawUrl = String(
+    garment.url ||
+    garment.image_url ||
+    garment.clean_image_url ||
+    garment.rawItem?.image_url ||
+    garment.rawItem?.clean_image_url ||
+    ''
+  );
 
-  if (garment.id) {
-    const id = String(garment.id).replace(/_cutout$/i, '');
+  const candidateId =
+    garment.template_id ||
+    garment.starter_template_id ||
+    garment.id ||
+    garment.rawItem?.template_id ||
+    garment.rawItem?.starter_template_id ||
+    garment.rawItem?.id;
+
+  if (candidateId) {
+    const id = String(candidateId).replace(/_cutout$/i, '');
     if (/^[wm]_[a-z0-9_]+$/i.test(id)) {
       return `/assets/onboarding/${id}.png`;
     }
   }
 
-  const match = rawUrl.match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg)/i);
+  const match = rawUrl.match(/\/assets\/onboarding\/([a-z0-9_]+?)(?:_cutout)?\.(?:png|jpg|jpeg|webp)/i);
   if (match && match[1]) {
     const baseId = match[1].replace(/_cutout$/i, '');
     return `/assets/onboarding/${baseId}.png`;
   }
 
-  const best = bestImageUrl(garment);
+  const best = bestImageUrl(garment.rawItem || garment);
   return best || resolveMediaUrl(rawUrl);
 }

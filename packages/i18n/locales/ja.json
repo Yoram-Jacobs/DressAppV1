@@ -5763,5 +5763,10 @@
     "fullscreen": "全画面表示",
     "exit_fullscreen": "全画面表示を終了",
     "view_item_details": "アイテムの詳細を表示"
+  },
+  "dressingRoom": {
+    "title": "3D試着室",
+    "tryOn3D": "3Dで試着",
+    "badge3D": "3D"
   }
 }

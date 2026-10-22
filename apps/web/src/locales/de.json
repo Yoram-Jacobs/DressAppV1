@@ -5793,5 +5793,10 @@
       "desc": "Gefällt dir das Outfit? Klicke auf \"Outfit speichern\". Sobald du bereit bist, deine echte Kleidung zu fotografieren, wechsle zu deinem Kleiderschrank!",
       "closetBtn": "Meinen Kleiderschrank erkunden"
     }
+  },
+  "dressingRoom": {
+    "title": "3D-Umkleidekabine",
+    "tryOn3D": "In 3D anprobieren",
+    "badge3D": "3D"
   }
 }

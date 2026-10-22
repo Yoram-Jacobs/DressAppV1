@@ -5797,5 +5797,10 @@
       "desc": "¿Te encanta el atuendo? Haz clic en \"Guardar atuendo\". Cuando quieras fotografiar y añadir tu ropa real, ¡ve a tu Armario!",
       "closetBtn": "Explorar mi Armario"
     }
+  },
+  "dressingRoom": {
+    "title": "Probador 3D",
+    "tryOn3D": "Probar en 3D",
+    "badge3D": "3D"
   }
 }

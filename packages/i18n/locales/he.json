@@ -5857,5 +5857,10 @@
     "fullscreen": "מסך מלא",
     "exit_fullscreen": "יציאה ממסך מלא",
     "view_item_details": "צפייה בפרטי הפריט"
+  },
+  "dressingRoom": {
+    "title": "חדר מדידה בתלת-ממד",
+    "tryOn3D": "מדידה בתלת-ממד",
+    "badge3D": "תלת-ממד"
   }
 }

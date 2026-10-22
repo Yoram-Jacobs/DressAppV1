@@ -115,21 +115,17 @@ async function fetchAndCropTexture(url) {
   }
 
   let img;
+  let objectUrlToRevoke = null;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('Fetch failed');
     const blob = await res.blob();
     const objectUrl = URL.createObjectURL(blob);
+    objectUrlToRevoke = objectUrl;
     img = await new Promise((resolve, reject) => {
       const i = new Image();
-      i.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        resolve(i);
-      };
-      i.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(new Error('Image decode failed'));
-      };
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('Image decode failed'));
       i.src = objectUrl;
     });
   } catch {
@@ -144,13 +140,22 @@ async function fetchAndCropTexture(url) {
 
   const w = img.naturalWidth || img.width;
   const h = img.naturalHeight || img.height;
-  if (!w || !h) return null;
+  if (!w || !h) {
+    if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
+    return null;
+  }
 
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(img, 0, 0);
+  try {
+    ctx.drawImage(img, 0, 0);
+  } finally {
+    if (objectUrlToRevoke) {
+      URL.revokeObjectURL(objectUrlToRevoke);
+    }
+  }
 
   let imgData = null;
   try {
@@ -341,8 +346,10 @@ export function createAnatomicalTopGeometry({
       // Front half (theta in [-PI/2, +PI/2]): Map the real garment photo
       // Back half: Map to the authentic matching fabric swatch
       if (isFront) {
-        // sin(theta) ranges from -1 (left flank) to +1 (right flank)
-        const uT = (Math.sin(theta) + 1) * 0.5;
+        // When garment has sleeves in photo, central 60% (0.20 -> 0.80) maps to torso
+        const uMinTorso = hasSleeves ? 0.20 : 0.0;
+        const uMaxTorso = hasSleeves ? 0.80 : 1.0;
+        const uT = uMinTorso + ((Math.sin(theta) + 1) * 0.5) * (uMaxTorso - uMinTorso);
         uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
       } else {
         // Back of jacket/shirt: seamless matching fabric
@@ -477,7 +484,9 @@ export function createAnatomicalDressGeometry({
       verts.push(x, y, z);
 
       if (isFront) {
-        const uT = (Math.sin(theta) + 1) * 0.5;
+        const uMinBodice = hasSleeves ? 0.20 : 0.0;
+        const uMaxBodice = hasSleeves ? 0.80 : 1.0;
+        const uT = uMinBodice + ((Math.sin(theta) + 1) * 0.5) * (uMaxBodice - uMinBodice);
         uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
       } else {
         const backSpread = Math.sin(theta) * 0.08;

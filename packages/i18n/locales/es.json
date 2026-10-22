@@ -5759,5 +5759,10 @@
     "fullscreen": "Pantalla completa",
     "exit_fullscreen": "Salir de pantalla completa",
     "view_item_details": "Ver detalles de la prenda"
+  },
+  "dressingRoom": {
+    "title": "Probador 3D",
+    "tryOn3D": "Probar en 3D",
+    "badge3D": "3D"
   }
 }

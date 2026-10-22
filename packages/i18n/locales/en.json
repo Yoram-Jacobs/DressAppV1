@@ -5783,5 +5783,10 @@
     "fullscreen": "Full screen",
     "exit_fullscreen": "Exit full screen",
     "view_item_details": "View item details"
+  },
+  "dressingRoom": {
+    "title": "3D Dressing Room",
+    "tryOn3D": "Try on in 3D",
+    "badge3D": "3D"
   }
 }

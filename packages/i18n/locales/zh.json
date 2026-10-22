@@ -5762,5 +5762,10 @@
     "fullscreen": "全屏",
     "exit_fullscreen": "退出全屏",
     "view_item_details": "查看单品详情"
+  },
+  "dressingRoom": {
+    "title": "3D试衣间",
+    "tryOn3D": "3D试穿",
+    "badge3D": "3D"
   }
 }

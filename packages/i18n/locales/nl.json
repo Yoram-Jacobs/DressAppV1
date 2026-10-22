@@ -5766,5 +5766,10 @@
     "fullscreen": "Volledig scherm",
     "exit_fullscreen": "Volledig scherm verlaten",
     "view_item_details": "Bekijk itemdetails"
+  },
+  "dressingRoom": {
+    "title": "3D-paskamer",
+    "tryOn3D": "In 3D passen",
+    "badge3D": "3D"
   }
 }

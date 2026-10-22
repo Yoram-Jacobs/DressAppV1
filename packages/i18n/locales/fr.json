@@ -5755,5 +5755,10 @@
     "fullscreen": "Plein écran",
     "exit_fullscreen": "Quitter le plein écran",
     "view_item_details": "Voir les détails de l'article"
+  },
+  "dressingRoom": {
+    "title": "Cabine d'essayage 3D",
+    "tryOn3D": "Essayer en 3D",
+    "badge3D": "3D"
   }
 }

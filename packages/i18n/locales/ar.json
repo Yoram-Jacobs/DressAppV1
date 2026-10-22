@@ -5795,5 +5795,10 @@
     "fullscreen": "ملء الشاشة",
     "exit_fullscreen": "الخروج من ملء الشاشة",
     "view_item_details": "عرض تفاصيل القطعة"
+  },
+  "dressingRoom": {
+    "title": "غرفة قياس ثلاثية الأبعاد",
+    "tryOn3D": "تجربة ثلاثية الأبعاد",
+    "badge3D": "3D"
   }
 }

@@ -1749,13 +1749,13 @@ export default function Closet() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleOpen3DStudio()}
-                  className="h-8 px-2.5 sm:px-3 text-xs font-semibold text-primary-brand border-primary-brand/30 bg-primary-brand/5 hover:bg-primary-brand/10 hover:border-primary-brand/50 rounded-lg flex items-center gap-1.5 shadow-2xs transition-all"
-                  title={t("dressing_room_3d.open_button", { defaultValue: "3D Try-On" })}
+                  className="h-8 px-3 text-xs font-semibold text-primary-brand border-primary-brand/30 bg-primary-brand/5 hover:bg-primary-brand/10 hover:border-primary-brand/50 rounded-lg flex items-center gap-1.5 shadow-2xs transition-all"
+                  title={t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}
                   data-testid="closet-open-3d-btn"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-primary-brand animate-pulse" />
-                  <span className="hidden sm:inline">{t("dressing_room_3d.open_button", { defaultValue: "3D Try-On" })}</span>
-                  <span className="sm:hidden">3D</span>
+                  <Box className="w-3.5 h-3.5 text-primary-brand" />
+                  <span className="hidden sm:inline">{t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}</span>
+                  <span className="sm:hidden">{t("dressingRoom.badge3D", { defaultValue: "3D" })}</span>
                 </Button>
                 <PinchDensityControl
                   density={closetDensity}
@@ -2497,7 +2497,7 @@ function ItemCardInner({ item: rawItem, isSelected, showCheckbox, score, onOpen3
               (Array.isArray(item.tags) && item.tags.includes("starter_capsule"))
           ) && (
             <div
-              className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-center rounded-full bg-dark-brand/85 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-xs"
+              className="absolute bottom-2.5 start-2.5 end-14 z-20 flex items-center justify-center rounded-full bg-dark-brand/85 px-2.5 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-xs"
               data-testid="closet-item-starter-badge"
             >
               <Sparkles className="me-1 h-3 w-3 shrink-0 text-amber-300" />
@@ -2511,7 +2511,7 @@ function ItemCardInner({ item: rawItem, isSelected, showCheckbox, score, onOpen3
         {/* PENDING SYNC */}
         {item._pendingSync && (
           <div
-            className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-dark-brand"
+            className="absolute bottom-3 start-3 z-20 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-dark-brand"
             data-testid="closet-item-pending-sync"
             aria-live="polite"
             aria-label={t("closet.pendingSync", {
@@ -2538,7 +2538,7 @@ function ItemCardInner({ item: rawItem, isSelected, showCheckbox, score, onOpen3
               e.stopPropagation();
               onOpen3D(item);
             }}
-            className="absolute bottom-3 right-3 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/5"
+            className="absolute bottom-2.5 end-2.5 z-30 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/10"
             title={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
             aria-label={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
             data-testid="item-card-3d-btn"

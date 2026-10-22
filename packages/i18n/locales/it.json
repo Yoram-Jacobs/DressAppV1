@@ -5762,5 +5762,10 @@
     "fullscreen": "Schermo intero",
     "exit_fullscreen": "Esci da schermo intero",
     "view_item_details": "Visualizza dettagli articolo"
+  },
+  "dressingRoom": {
+    "title": "Camerino 3D",
+    "tryOn3D": "Prova in 3D",
+    "badge3D": "3D"
   }
 }

@@ -5076,6 +5076,16 @@ export default function AddItem() {
                       defaultValue: "Digital Import",
                     })}
                   </TabsTrigger>
+                  <button
+                    type="button"
+                    onClick={() => handleOpen3DPreview()}
+                    className="group flex items-center gap-[7px] rounded-full px-[18px] py-[10px] text-[12px] font-bold text-text-brand bg-transparent border-0 transition-all duration-200 whitespace-nowrap hover:text-primary-brand hover:bg-primary-shadow"
+                    data-testid="add-item-tab-3d"
+                    title={t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}
+                  >
+                    <Box className="h-4 w-4 text-primary-brand" />
+                    <span>{t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}</span>
+                  </button>
                 </TabsList>
               </div>
               <TabsContent
@@ -6316,13 +6326,13 @@ function ItemCard({
               <button
                 type="button"
                 onClick={() => onOpen3D?.(card)}
-                className="absolute bottom-2 end-2 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/5"
+                className="absolute bottom-2 end-2 z-20 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/10"
                 title={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
                 aria-label={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
                 data-testid="draft-card-3d-btn"
               >
                 <Box className="h-3.5 w-3.5 text-primary-brand" />
-                <span>3D</span>
+                <span>{t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}</span>
               </button>
             )}
             {isBusy && (

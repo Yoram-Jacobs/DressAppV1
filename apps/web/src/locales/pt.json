@@ -5800,5 +5800,10 @@
       "desc": "Adorou o visual? Clique em \"Salvar visual\". Quando estiver pronto para fotografar e adicionar suas roupas reais, vá para o seu Closet!",
       "closetBtn": "Explorar Meu Closet"
     }
+  },
+  "dressingRoom": {
+    "title": "Provador 3D",
+    "tryOn3D": "Experimentar em 3D",
+    "badge3D": "3D"
   }
 }
