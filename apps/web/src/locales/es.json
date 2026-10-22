@@ -908,6 +908,17 @@
       "upgradePlanCta": "Obtener créditos IA o mejorar plan",
       "massClusterCreditsRequiredLabel": "Mínimo de créditos de reconstrucción IA: 15",
       "massClusterCurrentCreditsLabel": "Tu saldo: {{available}}"
+    },
+    "quota": {
+      "title": "Límite de créditos alcanzado",
+      "insufficientSubtitle": "Créditos insuficientes o límite de cuota alcanzado",
+      "messageWithBalance": "Tu solicitud de {{count}} prendas superó tu cuota de créditos. Tienes {{balance}} crédito(s) disponible(s) en tu plan Gratuito. ¿Deseas agregar {{balance}} prendas ahora o mejorar tu plan?",
+      "messageZeroBalance": "Tu solicitud de {{count}} prendas superó tu cuota diaria de créditos. Te quedan 0 créditos hoy en tu plan Gratuito. Mejora tu plan para obtener análisis ilimitado con IA, o continúa agregando tus prendas manualmente sin IA.",
+      "availableCreditsLabel": "Créditos IA disponibles:",
+      "addAllowedButton": "Agregar {{count}} prendas",
+      "upgradeButton": "Mejorar plan",
+      "editManuallyButton": "Continuar manualmente",
+      "manualContinueHint": "Puedes ingresar los detalles manualmente y guardar tus prendas."
     }
   },
   "itemDetail": {

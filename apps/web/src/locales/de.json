@@ -908,6 +908,17 @@
       "upgradePlanCta": "KI-Credits holen oder upgraden",
       "massClusterCreditsRequiredLabel": "Mindestens erforderliche KI-Rekonstruktions-Credits: 15",
       "massClusterCurrentCreditsLabel": "Dein Guthaben: {{available}}"
+    },
+    "quota": {
+      "title": "Guthaben-Quote erreicht",
+      "insufficientSubtitle": "Unzureichendes Guthaben oder Kontingentlimit erreicht",
+      "messageWithBalance": "Deine Anfrage für {{count}} Kleidungsstücke übersteigt dein Guthabenkontingent. Du hast {{balance}} Guthaben im kostenlosen Plan verfügbar. Möchtest du jetzt {{balance}} Kleidungsstücke hinzufügen oder deinen Plan upgraden?",
+      "messageZeroBalance": "Deine Anfrage für {{count}} Kleidungsstücke übersteigt dein tägliches Kontingent. Du hast heute 0 Guthaben in deinem kostenlosen Plan übrig. Upgrade deinen Plan für unbegrenzte KI-Analysen oder fahre fort, indem du deine Kleidungsstücke manuell ohne KI hinzufügst.",
+      "availableCreditsLabel": "Verfügbare KI-Guthaben:",
+      "addAllowedButton": "{{count}} Kleidungsstücke hinzufügen",
+      "upgradeButton": "Plan upgraden",
+      "editManuallyButton": "Manuell fortfahren",
+      "manualContinueHint": "Du kannst Details manuell eingeben und deine Kleidungsstücke speichern."
     }
   },
   "itemDetail": {

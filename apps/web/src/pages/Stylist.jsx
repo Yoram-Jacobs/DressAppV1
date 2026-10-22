@@ -62,6 +62,7 @@ import { useClosetStore } from '@/lib/useClosetStore';
 import { closetStore } from '@/lib/closetStore';
 import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
+import { usePinchGridDensity, PinchDensityControl, PinchFeedbackBadge } from "@/hooks/usePinchGridDensity";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTierLimits } from '@/hooks/useTierLimits';
 import { TurboStatusCard } from '@/components/TurboStatusCard';
@@ -445,6 +446,27 @@ export default function Stylist() {
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
   const [canvasSearchQuery, setCanvasSearchQuery] = useState('');
+
+  const CANVAS_GRID_CLASSES = {
+    1: "grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto w-full",
+    2: "grid-cols-2 sm:grid-cols-3 gap-4 w-full",
+    3: "grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 w-full",
+    4: "grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 w-full",
+  };
+
+  const {
+    density: canvasDensity,
+    setDensity: setCanvasDensity,
+    currentGridClass: canvasGridClass,
+    activeFeedback: canvasFeedback,
+    pinchProps: canvasPinchProps,
+  } = usePinchGridDensity({
+    key: "dressapp.outfits.gridDensity",
+    defaultDensity: 3,
+    minDensity: 1,
+    maxDensity: 4,
+    gridClasses: CANVAS_GRID_CLASSES,
+  });
 
   // Vibe & keyword search filter for Outfit Canvas
   const filteredCanvasOutfits = useMemo(() => {
@@ -3212,19 +3234,30 @@ export default function Stylist() {
                           /* Outfit Thumbnail Grid View */
                           <>
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                              <h3 className="text-[20px] font-bold text-[var(--dark-color)]">
-                                {t('stylist.calendar.outfit_canvas', { defaultValue: 'Saved Outfits' })}
-                              </h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-[20px] font-bold text-[var(--dark-color)]">
+                                  {t('stylist.calendar.outfit_canvas', { defaultValue: 'Saved Outfits' })}
+                                </h3>
+                                {outfits.length > 0 && (
+                                  <Badge variant="secondary" className="w-fit text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                                    {canvasSearchQuery
+                                      ? t('stylist.calendar.resultsCount', {
+                                          count: filteredCanvasOutfits.length,
+                                          total: outfits.length,
+                                          defaultValue: `Found ${filteredCanvasOutfits.length} of ${outfits.length} outfits`
+                                        })
+                                      : `${outfits.length} outfits`}
+                                  </Badge>
+                                )}
+                              </div>
                               {outfits.length > 0 && (
-                                <Badge variant="secondary" className="w-fit text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                                  {canvasSearchQuery
-                                    ? t('stylist.calendar.resultsCount', {
-                                        count: filteredCanvasOutfits.length,
-                                        total: outfits.length,
-                                        defaultValue: `Found ${filteredCanvasOutfits.length} of ${outfits.length} outfits`
-                                      })
-                                    : `${outfits.length} outfits`}
-                                </Badge>
+                                <PinchDensityControl
+                                  density={canvasDensity}
+                                  setDensity={setCanvasDensity}
+                                  min={1}
+                                  max={4}
+                                  labels={{ 1: "1x", 2: "2x", 3: "3x", 4: "4x" }}
+                                />
                               )}
                             </div>
 
@@ -3325,7 +3358,16 @@ export default function Stylist() {
                                 </CardContent>
                               </Card>
                             ) : (
-                              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 w-full">
+                              <div className={`grid transition-all duration-200 ${canvasGridClass}`} {...canvasPinchProps}>
+                                <PinchFeedbackBadge
+                                  activeDensity={canvasFeedback}
+                                  labels={{
+                                    1: "1 Column (Large)",
+                                    2: "2 Columns (Standard)",
+                                    3: "3 Columns (Compact)",
+                                    4: "4 Columns (Dense)",
+                                  }}
+                                />
                                 {filteredCanvasOutfits.map((o) => (
                                   <Card
                                     key={o.id}

@@ -141,3 +141,31 @@ export function isCleanImagePending(item) {
   return !!(item && item.clean_image_status === 'pending');
 }
 
+/**
+ * Resolves the effective background-free or overlay-optimized garment URL.
+ * Prioritizes pre-fitted avatar_overlay_url for catalog/onboarding staples
+ * (which are tightly cropped with 0% padding) and falls back to bestImageUrl.
+ */
+export function resolveEffectiveGarmentUrl(garment) {
+  if (!garment) return '';
+  if (garment.avatar_overlay_url) {
+    return resolveMediaUrl(garment.avatar_overlay_url);
+  }
+  const rawUrl = String(garment.url || garment.image_url || garment.clean_image_url || '');
+
+  if (garment.id) {
+    const id = String(garment.id).replace(/_cutout$/i, '');
+    if (/^[wm]_[a-z0-9_]+$/i.test(id)) {
+      return `/assets/onboarding/${id}.png`;
+    }
+  }
+
+  const match = rawUrl.match(/\/assets\/onboarding\/([a-z0-9_]+)\.(?:png|jpg)/i);
+  if (match && match[1]) {
+    const baseId = match[1].replace(/_cutout$/i, '');
+    return `/assets/onboarding/${baseId}.png`;
+  }
+
+  const best = bestImageUrl(garment);
+  return best || resolveMediaUrl(rawUrl);
+}

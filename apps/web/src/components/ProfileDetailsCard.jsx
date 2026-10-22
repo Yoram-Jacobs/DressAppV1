@@ -135,7 +135,7 @@ export function ProfileDetailsCard() {
             )}
           </div>
         </div>
-        <Accordion type="multiple" defaultValue={['identity']} className="w-full space-y-4">
+        <Accordion type="multiple" defaultValue={[]} className="w-full space-y-4">
           <IdentitySection form={form} setField={setField} t={t} user={user} />
           <ContactSection
             form={form}

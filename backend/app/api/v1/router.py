@@ -35,7 +35,7 @@ from app.api.v1 import (
 api_v1_router = APIRouter(prefix="/v1")
 
 
-@api_v1_router.get("/health")
+@api_v1_router.api_route("/health", methods=["GET", "HEAD"])
 async def health_check():
     return {"status": "ok"}
 

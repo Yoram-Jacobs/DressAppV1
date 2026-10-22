@@ -908,6 +908,17 @@
       "upgradePlanCta": "AI-credits kopen of upgraden",
       "massClusterCreditsRequiredLabel": "Minimale AI-reconstructiecredits: 15",
       "massClusterCurrentCreditsLabel": "Jouw saldo: {{available}}"
+    },
+    "quota": {
+      "title": "Tegoedlimiet bereikt",
+      "insufficientSubtitle": "Onvoldoende tegoed of quotalimiet bereikt",
+      "messageWithBalance": "Je verzoek voor {{count}} kledingstukken overschrijdt je tegoedlimiet. Je hebt nog {{balance}} tegoed beschikbaar in je gratis abonnement. Wil je nu {{balance}} kledingstukken toevoegen of je abonnement upgraden?",
+      "messageZeroBalance": "Je verzoek voor {{count}} kledingstukken overschrijdt je dagelijkse tegoedlimiet. Je hebt vandaag 0 tegoed over in je gratis abonnement. Upgrade je abonnement voor onbeperkte AI-analyse, of ga verder door je kleding handmatig zonder AI toe te voegen.",
+      "availableCreditsLabel": "Beschikbaar AI-tegoed:",
+      "addAllowedButton": "{{count}} kledingstukken toevoegen",
+      "upgradeButton": "Abonnement upgraden",
+      "editManuallyButton": "Handmatig doorgaan",
+      "manualContinueHint": "Je kunt gegevens handmatig invoeren en je kledingstukken opslaan."
     }
   },
   "itemDetail": {

@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import AvatarMesh3D, { getAvatarMetricTransform } from './AvatarMesh3D';
 import GarmentMesh3D, { normalizeGarmentRole } from './GarmentMesh3D';
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
+import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
 
 // ─── Creamy Boutique Studio Pedestal & Room ───
 function StudioPedestal() {
@@ -54,7 +55,7 @@ function StudioPedestal() {
       </mesh>
 
       {/* Polished Champagne Gold Rim Ring */}
-      <mesh position={[0, -0.001, 0]}>
+      <mesh position={[0, -0.001, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.815, 0.842, 64]} />
         <meshStandardMaterial
           color="#C5A880"
@@ -171,7 +172,7 @@ export default function DressingRoom3D({
         slot: normSlot,
         id: g.id || slotKey,
         name: g.name || g.title || slotKey,
-        url: g.url || g.image_url,
+        url: resolveEffectiveGarmentUrl(g) || g.url || g.image_url,
         category: g.category || slotKey,
         sub_category: g.sub_category || '',
         item_type: g.item_type || '',

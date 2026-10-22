@@ -8,6 +8,7 @@ from app.services.credit_manager import (
     refund_user_credits as _refund,
     get_user_tier,
     get_credit_exhaustion_info,
+    make_insufficient_credits_exception,
 )
 
 async def deduct_user_credits(

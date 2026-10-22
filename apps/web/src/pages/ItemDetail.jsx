@@ -1,6 +1,6 @@
 /* global FileReader, setTimeout, setInterval, clearTimeout, clearInterval */
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
 import {
@@ -77,6 +77,7 @@ import { SourceTagBadge } from '@/components/SourceTagBadge';
 import { DppPanel } from '@/components/DppPanel';
 import { api } from '@/lib/api';
 import { useClosetStore } from '@/lib/useClosetStore';
+import { useOutfitStore } from '@/lib/useOutfitStore';
 import { closetStore } from '@/lib/closetStore';
 import { workStore } from '@/lib/workStore';
 import { bestImageUrl, resolveMediaUrl, getStoredViewPreference, setStoredViewPreference } from '@/lib/itemImage';
@@ -516,6 +517,7 @@ export default function ItemDetail() {
   const { id } = useParams();
   const nav = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [item, setItem] = useState(null);
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -578,6 +580,20 @@ export default function ItemDetail() {
   // the bar towards ~92% over ~14s (roughly the p95 duration of the
   // SegFormer + rembg pipeline) and snap to 100% on completion.
   const [cleanBackgroundProgress, setCleanBackgroundProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState(() => {
+    const tParam = searchParams.get('tab');
+    if (tParam && ['details', 'ai', 'pairings', 'dpp'].includes(tParam)) return tParam;
+    return 'details';
+  });
+
+  const { items: allOutfits = [] } = useOutfitStore();
+  const pairedOutfits = useMemo(() => {
+    if (!allOutfits || !id) return [];
+    return allOutfits.filter((o) => {
+      const garments = o.garments || o.items || [];
+      return garments.some((g) => (g.id === id || g.closet_item_id === id));
+    });
+  }, [allOutfits, id]);
   const [dictating, setDictating] = useState(false);
   const [dictationInterim, setDictationInterim] = useState('');
   const [showingOriginal, setShowingOriginal] = useState(false);
@@ -1814,9 +1830,9 @@ export default function ItemDetail() {
             </Badge>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {/* ---------- Image column ---------- */}
-          <div className="md:col-span-3 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* ---------- Image / Visual column ---------- */}
+          <div className="lg:col-span-2 space-y-4">
             {/* image-card */}
             <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border relative">
               <AspectRatio ratio={4 / 3} className="bg-white dark:bg-[#F5F2EB]">
@@ -2271,8 +2287,6 @@ export default function ItemDetail() {
                 </div>
               </div>
             )}
-            {/* DPP provenance panel (Phase V6) — shown when an item was imported via QR scan */}
-            <DppPanel dppData={item.dpp_data} />
             {/* Clean background card (Phase V Fix 2) */}
             <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border" data-testid="item-clean-bg-card">
               <div className="flex items-center gap-3 p-5 border-b border-border">
@@ -2337,317 +2351,80 @@ export default function ItemDetail() {
               (e.g., "Remove the shoes", "Complete the hole where the hand was",
               "Remove the metal studs from the jacket's front"), calling Nano
               Banana image generation as needed. */}
-            <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border" data-testid="item-reanalyze-card">
-              {isFree ? (
-                <div>
-                  <div className="flex items-center gap-3 p-5 border-b border-border bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent">
-                    <div className="p-3 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
-                      <Crown className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[14px] font-bold block text-dark-brand uppercase">
-                          {t('itemDetail.generativeLockedTitle', { defaultValue: 'AI Studio Reshoots & Re-analysing' })}
-                        </span>
-                        <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800 border-amber-300">
-                          {t('pricing.manager', { defaultValue: 'Manager' })}
-                        </Badge>
-                      </div>
-                      <span className="text-[12px] text-text-brand font-medium block mt-0.5 normal-case">
-                        {t('itemDetail.generativeLocked', { defaultValue: 'Exclusive to Manager & Professional. Cloud Gemini performs instant 2s re-analysis, generative studio inpainting, hole filling, and fine-grained fabric inspection.' })}
-                      </span>
-                    </div>
-                  </div>
-                  <CardContent className="p-5 space-y-4">
-                    <div className="space-y-2.5 rounded-xl bg-accent-beige/40 dark:bg-muted/30 p-4 border border-border/60">
-                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
-                        <Zap className="h-4 w-4 text-amber-500 shrink-0" />
-                        <span>{t('itemDetail.generativeFeature1', { defaultValue: '⚡ Instant 2s Cloud Gemini analysis' })}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
-                        <Sparkles className="h-4 w-4 text-primary-brand shrink-0" />
-                        <span>{t('itemDetail.generativeFeature2', { defaultValue: '🎨 Generative studio photo reshoots & inpainting' })}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
-                        <BadgeCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                        <span>{t('itemDetail.generativeFeature3', { defaultValue: '🔬 Deep fabric, texture & attribute detection' })}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-                      <span className="text-xs text-text-brand font-medium">
-                        {t('addItem.eyesSlowNotice', { defaultValue: 'Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!' })}
-                      </span>
-                      <Button
-                        type="button"
-                        onClick={() => nav('/pricing')}
-                        className="bg-primary-brand text-white hover:opacity-95 font-bold shrink-0 shadow-sm"
-                        data-testid="item-reanalyze-upgrade-btn"
-                      >
-                        <Crown className="h-4 w-4 mr-1.5 text-amber-300" />
-                        {t('pricing.upgradePlan', { defaultValue: 'Upgrade Plan' })}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-3 p-5 border-b border-border">
-                <div className="p-3 rounded-full bg-primary-shadow text-primary-brand dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
-                  <RefreshCw className="h-5 w-5" />
-                </div>
-                <div>
-                  <span className="text-[14px] font-bold block text-dark-brand uppercase">
-                    {t('itemDetail.reanalyze.label', { defaultValue: 'Re-analyse photo' })}
-                  </span>
-                  <span className="text-[12px] text-text-brand font-semibold block mt-0.5 normal-case">
-                    {t('itemDetail.reanalyze.subtitle', { defaultValue: 'Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using AI Reconstructor.' })}
-                  </span>
-                </div>
-              </div>
-              <CardContent className="p-5 space-y-3">
-                {/* Conversational Message Thread */}
-                {reanalyzeChatHistory.length > 0 && (
-                  <div
-                    className="max-h-[380px] overflow-y-auto space-y-2 p-3 rounded-[12px] bg-primary-shadow border border-border text-xs max-[480px]:max-h-[280px] transition-all"
-                    data-testid="item-reanalyze-chat-thread"
-                  >
-                    {reanalyzeChatHistory.map((msg, idx) => (
-                      <div key={idx} className="space-y-3">
-                        {msg.role === 'user' ? (
-                          <div className="flex justify-end">
-                            <div className="bg-primary-brand text-white rounded-[12px] rounded-br-none px-3 py-2 max-w-[85%] shadow-sm leading-relaxed">
-                              {msg.content}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-start space-y-1.5 max-w-[92%]">
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" className="text-[10px] px-1.5 gap-1 bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300">
-                                {t('itemDetail.reanalyze.eyesBadge', { defaultValue: 'The Eyes' })}
-                              </Badge>
-                              {msg.action_taken === 'image_edit' && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-                                  {msg.model_used || t('itemDetail.reanalyze.aiGeneratedBadge', { defaultValue: 'AI Reconstructed' })}
-                                </Badge>
-                              )}
-                              {msg.action_taken === 'metadata_update' && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-                                  {t('itemDetail.reanalyze.refreshedAttributes', { defaultValue: 'Refreshed attributes' })}
-                                </Badge>
-                              )}
-                            </div>
-                            <div
-                              className={`rounded-[12px] rounded-bl-none p-3 shadow-sm border  leading-relaxed space-y-2 w-full ${msg.error
-                                ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-900 dark:text-red-200'
-                                : 'bg-card border-border/60 text-dark-brand'
-                                }`}
-                            >
-                              <p className="whitespace-pre-wrap">{msg.content}</p>
-
-                              {/* Generated Image Preview Card */}
-                              {msg.image_url && (
-                                <div className="bg-accent-beige rounded-[12px] p-3 space-y-2 flex items-center justify-center flex-col">
-                                  <div className="relative aspect-square max-h-48 w-full overflow-hidden">
-                                    <img
-                                      src={resolveMediaUrl(msg.image_url)}
-                                      alt="Reconstructed preview"
-                                      className="h-full w-full object-contain"
-                                    />
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant={form.reconstructed_image_url === msg.image_url ? "" : "default"}
-                                    className="!gap-1"
-                                    onClick={() => onApplyReconstructedImage(msg.image_url)}
-                                    data-testid="item-reanalyze-apply-photo-btn"
-                                  >
-                                    {form.reconstructed_image_url === msg.image_url ? (
-                                      <>
-                                        <Check className="!h-3 !w-3" />
-                                        {t('itemDetail.reanalyze.applied', { defaultValue: 'Applied' })}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Sparkles className="!h-3.5 !w-3.5" />
-                                        {t('itemDetail.reanalyze.applyImage', { defaultValue: 'Apply as garment photo' })}
-                                      </>
-                                    )}
-                                  </Button>
-                                </div>
-                              )}
-
-                              {/* Updated Metadata Chips */}
-                              {msg.updated_fields && (
-                                <div className="flex flex-wrap gap-1 pt-1">
-                                  {Object.keys(msg.updated_fields).map((k) => (
-                                    <span key={k} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary-shadow font-semibold text-primary-brand">
-                                      ✓ {k}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {/* Quick Prompt Starters / Chips */}
-                <div className="space-y-3">
-                  <span className="text-[11px] uppercase font-bold text-text-brand tracking-wider block">
-                    {t('itemDetail.reanalyze.promptStarters', { defaultValue: 'Quick prompts' })}
-                  </span>
-                  <div className="flex flex-wrap gap-1.5" data-testid="item-reanalyze-prompt-chips">
-                    <button
-                      type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' }))}
-                      disabled={reanalyzeChatBusy || analyzing}
-                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
-                    >
-                      {t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' })}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' }))}
-                      disabled={reanalyzeChatBusy || analyzing}
-                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
-                    >
-                      {t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' })}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' }))}
-                      disabled={reanalyzeChatBusy || analyzing}
-                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
-                    >
-                      {t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' })}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' }))}
-                      disabled={reanalyzeChatBusy || analyzing}
-                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
-                    >
-                      {t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' })}
-                    </button>
-                  </div>
-                </div>
-                {/* Prompt Input Box */}
-                <div className="relative flex items-center gap-1.5 border border-border rounded-[12px] bg-primary-shadpw px-1 py-1">
-                  <Input
-                    value={reanalyzePrompt}
-                    onChange={(e) => setReanalyzePrompt(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        onSendReanalyzePrompt();
-                      }
-                    }}
-                    placeholder={t('itemDetail.reanalyze.promptPlaceholder', { defaultValue: "Ask The Eyes: 'Fill holes and gaps', 'Reconstruct the garment', 'Align vertically'…" })}
-                    disabled={reanalyzeChatBusy || analyzing}
-                    className="border-0 !shadow-none focus:!shadow-none mb-0"
-                    data-testid="item-reanalyze-prompt-input"
-                  />
-                  {sttSupported.current && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className={`h-7 w-7 rounded-lg shrink-0 ${reanalyzeDictating
-                        ? 'text-red-500 animate-pulse bg-red-50 dark:bg-red-950/40'
-                        : 'text-text-brand hover:text-primary-brand'
-                        }`}
-                      onClick={reanalyzeDictating ? stopPromptDictation : startPromptDictation}
-                      disabled={reanalyzeChatBusy || analyzing}
-                      title="Voice prompt"
-                      data-testid="item-reanalyze-mic-btn"
-                    >
-                      <Mic className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    size="icon"
-                    className="h-7 w-7 rounded-lg shrink-0 bg-primary-brand text-white"
-                    onClick={() => onSendReanalyzePrompt()}
-                    disabled={!reanalyzePrompt.trim() || reanalyzeChatBusy || analyzing}
-                    data-testid="item-reanalyze-send-btn"
-                  >
-                    {reanalyzeChatBusy ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Send className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
-                </div>
-                {/* Chat & Nano Banana progress bar */}
-                {reanalyzeChatBusy && (
-                  <div className="space-y-1.5" data-testid="item-reanalyze-chat-progress">
-                    <Progress value={reanalyzeChatProgress} className="h-1.5 w-full" />
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1 text-[12px] text-text-brand font-semibold">
-                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                        {t('itemDetail.reanalyze.eyesThinking', { defaultValue: 'The Eyes is analyzing…' })}
-                      </span>
-                      <span className="text-[12px] tabular-nums text-text-brand font-bold">{Math.round(reanalyzeChatProgress)}%</span>
-                    </div>
-                  </div>
-                )}
-                {/* 1-Click Full Re-analyse fallback */}
-                <div className="flex items-center justify-between gap-2 max-[480px]:flex-col">
-                  <Button
-                    onClick={onReanalyze}
-                    disabled={analyzing || reanalyzeChatBusy}
-                    size="sm"
-                    className=""
-                    data-testid="item-reanalyze-button"
-                  >
-                    {analyzing ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {t('itemDetail.reanalyze.running', { defaultValue: 'Analysing…' })}
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        {t('itemDetail.reanalyze.quickReanalyze', { defaultValue: '1-Click Full Re-analyse' })}
-                      </>
-                    )}
-                  </Button>
-                  <p className="text-[10px] text-text-brand font-semibold italic text-end">
-                    {t('itemDetail.reanalyze.disclaimer', { defaultValue: 'Only auto-filled fields are overwritten. Your manual edits to size, price, notes, and intent are preserved.' })}
-                  </p>
-                </div>
-                {analyzing && (
-                  <div className="space-y-2" data-testid="item-reanalyze-progress">
-                    <Progress
-                      value={analyzeProgress}
-                      className="h-2 w-full"
-                      data-testid="item-reanalyze-progress-bar"
-                    />
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[11px] text-text-brand italic">
-                        {t('itemDetail.reanalyze.progressHint')}
-                      </p>
-                      <span
-                        className="text-[12px] tabular-nums text-text-brand font-bold"
-                        data-testid="item-reanalyze-progress-pct"
-                      >
-                        {Math.round(analyzeProgress)}%
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </>
-          )}
-        </Card>
+            
           </div>
-          {/* ---------- Edit form column ---------- */}
-          <div className="md:col-span-2 space-y-4" data-testid="item-edit-form">
+          {/* ---------- Right Tabbed Content Column ---------- */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* 4-Tab Switcher Pill */}
+            <div className="inline-flex items-center gap-1.5 p-1 bg-secondary rounded-full border border-border w-full sm:w-auto overflow-x-auto shadow-2xs" role="tablist" data-testid="item-detail-tabs">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'details'}
+                onClick={() => setActiveTab('details')}
+                className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${
+                  activeTab === 'details'
+                    ? 'bg-primary-brand text-white shadow-xs'
+                    : 'text-text-brand hover:text-primary-brand hover:bg-primary-shadow'
+                }`}
+                data-testid="item-tab-details"
+              >
+                <Sliders className="h-3.5 w-3.5" />
+                <span>{t('itemDetail.tabs.details', { defaultValue: 'Details' })}</span>
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'ai'}
+                onClick={() => setActiveTab('ai')}
+                className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${
+                  activeTab === 'ai'
+                    ? 'bg-primary-brand text-white shadow-xs'
+                    : 'text-text-brand hover:text-primary-brand hover:bg-primary-shadow'
+                }`}
+                data-testid="item-tab-ai"
+              >
+                <Wand2 className="h-3.5 w-3.5" />
+                <span>{t('itemDetail.tabs.aiAnalysis', { defaultValue: 'AI Analysis' })}</span>
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'pairings'}
+                onClick={() => setActiveTab('pairings')}
+                className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${
+                  activeTab === 'pairings'
+                    ? 'bg-primary-brand text-white shadow-xs'
+                    : 'text-text-brand hover:text-primary-brand hover:bg-primary-shadow'
+                }`}
+                data-testid="item-tab-pairings"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>{t('itemDetail.tabs.pairings', { defaultValue: 'Pairings' })}</span>
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'dpp'}
+                onClick={() => setActiveTab('dpp')}
+                className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all duration-200 whitespace-nowrap ${
+                  activeTab === 'dpp'
+                    ? 'bg-primary-brand text-white shadow-xs'
+                    : 'text-text-brand hover:text-primary-brand hover:bg-primary-shadow'
+                }`}
+                data-testid="item-tab-dpp"
+              >
+                <QrCode className="h-3.5 w-3.5" />
+                <span>{t('itemDetail.tabs.passport', { defaultValue: 'DPP' })}</span>
+              </button>
+            </div>
+
+            {/* TAB 1: DETAILS */}
+            {activeTab === 'details' && (
+              <div className="space-y-4" data-testid="item-edit-form">
             {/* Identity */}
             <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border">
               <div className="flex items-center gap-3 p-5 border-b border-border">
@@ -3095,6 +2872,415 @@ export default function ItemDetail() {
                 </AlertDialogContent>
               </AlertDialog>
             </div>
+              </div>
+            )}
+
+            {/* TAB 2: AI ANALYSIS */}
+            {activeTab === 'ai' && (
+              <div className="space-y-4">
+                <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border" data-testid="item-reanalyze-card">
+              {isFree ? (
+                <div>
+                  <div className="flex items-center gap-3 p-5 border-b border-border bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent">
+                    <div className="p-3 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                      <Crown className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[14px] font-bold block text-dark-brand uppercase">
+                          {t('itemDetail.generativeLockedTitle', { defaultValue: 'AI Studio Reshoots & Re-analysing' })}
+                        </span>
+                        <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800 border-amber-300">
+                          {t('pricing.manager', { defaultValue: 'Manager' })}
+                        </Badge>
+                      </div>
+                      <span className="text-[12px] text-text-brand font-medium block mt-0.5 normal-case">
+                        {t('itemDetail.generativeLocked', { defaultValue: 'Exclusive to Manager & Professional. Cloud Gemini performs instant 2s re-analysis, generative studio inpainting, hole filling, and fine-grained fabric inspection.' })}
+                      </span>
+                    </div>
+                  </div>
+                  <CardContent className="p-5 space-y-4">
+                    <div className="space-y-2.5 rounded-xl bg-accent-beige/40 dark:bg-muted/30 p-4 border border-border/60">
+                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
+                        <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+                        <span>{t('itemDetail.generativeFeature1', { defaultValue: '⚡ Instant 2s Cloud Gemini analysis' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
+                        <Sparkles className="h-4 w-4 text-primary-brand shrink-0" />
+                        <span>{t('itemDetail.generativeFeature2', { defaultValue: '🎨 Generative studio photo reshoots & inpainting' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
+                        <BadgeCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>{t('itemDetail.generativeFeature3', { defaultValue: '🔬 Deep fabric, texture & attribute detection' })}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                      <span className="text-xs text-text-brand font-medium">
+                        {t('addItem.eyesSlowNotice', { defaultValue: 'Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!' })}
+                      </span>
+                      <Button
+                        type="button"
+                        onClick={() => nav('/pricing')}
+                        className="bg-primary-brand text-white hover:opacity-95 font-bold shrink-0 shadow-sm"
+                        data-testid="item-reanalyze-upgrade-btn"
+                      >
+                        <Crown className="h-4 w-4 mr-1.5 text-amber-300" />
+                        {t('pricing.upgradePlan', { defaultValue: 'Upgrade Plan' })}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 p-5 border-b border-border">
+                <div className="p-3 rounded-full bg-primary-shadow text-primary-brand dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
+                  <RefreshCw className="h-5 w-5" />
+                </div>
+                <div>
+                  <span className="text-[14px] font-bold block text-dark-brand uppercase">
+                    {t('itemDetail.reanalyze.label', { defaultValue: 'Re-analyse photo' })}
+                  </span>
+                  <span className="text-[12px] text-text-brand font-semibold block mt-0.5 normal-case">
+                    {t('itemDetail.reanalyze.subtitle', { defaultValue: 'Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using AI Reconstructor.' })}
+                  </span>
+                </div>
+              </div>
+              <CardContent className="p-5 space-y-3">
+                {/* Conversational Message Thread */}
+                {reanalyzeChatHistory.length > 0 && (
+                  <div
+                    className="max-h-[380px] overflow-y-auto space-y-2 p-3 rounded-[12px] bg-primary-shadow border border-border text-xs max-[480px]:max-h-[280px] transition-all"
+                    data-testid="item-reanalyze-chat-thread"
+                  >
+                    {reanalyzeChatHistory.map((msg, idx) => (
+                      <div key={idx} className="space-y-3">
+                        {msg.role === 'user' ? (
+                          <div className="flex justify-end">
+                            <div className="bg-primary-brand text-white rounded-[12px] rounded-br-none px-3 py-2 max-w-[85%] shadow-sm leading-relaxed">
+                              {msg.content}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-start space-y-1.5 max-w-[92%]">
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" className="text-[10px] px-1.5 gap-1 bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300">
+                                {t('itemDetail.reanalyze.eyesBadge', { defaultValue: 'The Eyes' })}
+                              </Badge>
+                              {msg.action_taken === 'image_edit' && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+                                  {msg.model_used || t('itemDetail.reanalyze.aiGeneratedBadge', { defaultValue: 'AI Reconstructed' })}
+                                </Badge>
+                              )}
+                              {msg.action_taken === 'metadata_update' && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                                  {t('itemDetail.reanalyze.refreshedAttributes', { defaultValue: 'Refreshed attributes' })}
+                                </Badge>
+                              )}
+                            </div>
+                            <div
+                              className={`rounded-[12px] rounded-bl-none p-3 shadow-sm border  leading-relaxed space-y-2 w-full ${msg.error
+                                ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900 text-red-900 dark:text-red-200'
+                                : 'bg-card border-border/60 text-dark-brand'
+                                }`}
+                            >
+                              <p className="whitespace-pre-wrap">{msg.content}</p>
+
+                              {/* Generated Image Preview Card */}
+                              {msg.image_url && (
+                                <div className="bg-accent-beige rounded-[12px] p-3 space-y-2 flex items-center justify-center flex-col">
+                                  <div className="relative aspect-square max-h-48 w-full overflow-hidden">
+                                    <img
+                                      src={resolveMediaUrl(msg.image_url)}
+                                      alt="Reconstructed preview"
+                                      className="h-full w-full object-contain"
+                                    />
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={form.reconstructed_image_url === msg.image_url ? "" : "default"}
+                                    className="!gap-1"
+                                    onClick={() => onApplyReconstructedImage(msg.image_url)}
+                                    data-testid="item-reanalyze-apply-photo-btn"
+                                  >
+                                    {form.reconstructed_image_url === msg.image_url ? (
+                                      <>
+                                        <Check className="!h-3 !w-3" />
+                                        {t('itemDetail.reanalyze.applied', { defaultValue: 'Applied' })}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Sparkles className="!h-3.5 !w-3.5" />
+                                        {t('itemDetail.reanalyze.applyImage', { defaultValue: 'Apply as garment photo' })}
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              )}
+
+                              {/* Updated Metadata Chips */}
+                              {msg.updated_fields && (
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                  {Object.keys(msg.updated_fields).map((k) => (
+                                    <span key={k} className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary-shadow font-semibold text-primary-brand">
+                                      ✓ {k}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Quick Prompt Starters / Chips */}
+                <div className="space-y-3">
+                  <span className="text-[11px] uppercase font-bold text-text-brand tracking-wider block">
+                    {t('itemDetail.reanalyze.promptStarters', { defaultValue: 'Quick prompts' })}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5" data-testid="item-reanalyze-prompt-chips">
+                    <button
+                      type="button"
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' }))}
+                      disabled={reanalyzeChatBusy || analyzing}
+                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
+                    >
+                      {t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' }))}
+                      disabled={reanalyzeChatBusy || analyzing}
+                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
+                    >
+                      {t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' }))}
+                      disabled={reanalyzeChatBusy || analyzing}
+                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
+                    >
+                      {t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' }))}
+                      disabled={reanalyzeChatBusy || analyzing}
+                      className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
+                    >
+                      {t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' })}
+                    </button>
+                  </div>
+                </div>
+                {/* Prompt Input Box */}
+                <div className="relative flex items-center gap-1.5 border border-border rounded-[12px] bg-primary-shadpw px-1 py-1">
+                  <Input
+                    value={reanalyzePrompt}
+                    onChange={(e) => setReanalyzePrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        onSendReanalyzePrompt();
+                      }
+                    }}
+                    placeholder={t('itemDetail.reanalyze.promptPlaceholder', { defaultValue: "Ask The Eyes: 'Fill holes and gaps', 'Reconstruct the garment', 'Align vertically'…" })}
+                    disabled={reanalyzeChatBusy || analyzing}
+                    className="border-0 !shadow-none focus:!shadow-none mb-0"
+                    data-testid="item-reanalyze-prompt-input"
+                  />
+                  {sttSupported.current && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className={`h-7 w-7 rounded-lg shrink-0 ${reanalyzeDictating
+                        ? 'text-red-500 animate-pulse bg-red-50 dark:bg-red-950/40'
+                        : 'text-text-brand hover:text-primary-brand'
+                        }`}
+                      onClick={reanalyzeDictating ? stopPromptDictation : startPromptDictation}
+                      disabled={reanalyzeChatBusy || analyzing}
+                      title="Voice prompt"
+                      data-testid="item-reanalyze-mic-btn"
+                    >
+                      <Mic className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    size="icon"
+                    className="h-7 w-7 rounded-lg shrink-0 bg-primary-brand text-white"
+                    onClick={() => onSendReanalyzePrompt()}
+                    disabled={!reanalyzePrompt.trim() || reanalyzeChatBusy || analyzing}
+                    data-testid="item-reanalyze-send-btn"
+                  >
+                    {reanalyzeChatBusy ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+                {/* Chat & Nano Banana progress bar */}
+                {reanalyzeChatBusy && (
+                  <div className="space-y-1.5" data-testid="item-reanalyze-chat-progress">
+                    <Progress value={reanalyzeChatProgress} className="h-1.5 w-full" />
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-[12px] text-text-brand font-semibold">
+                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                        {t('itemDetail.reanalyze.eyesThinking', { defaultValue: 'The Eyes is analyzing…' })}
+                      </span>
+                      <span className="text-[12px] tabular-nums text-text-brand font-bold">{Math.round(reanalyzeChatProgress)}%</span>
+                    </div>
+                  </div>
+                )}
+                {/* 1-Click Full Re-analyse fallback */}
+                <div className="flex items-center justify-between gap-2 max-[480px]:flex-col">
+                  <Button
+                    onClick={onReanalyze}
+                    disabled={analyzing || reanalyzeChatBusy}
+                    size="sm"
+                    className=""
+                    data-testid="item-reanalyze-button"
+                  >
+                    {analyzing ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        {t('itemDetail.reanalyze.running', { defaultValue: 'Analysing…' })}
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        {t('itemDetail.reanalyze.quickReanalyze', { defaultValue: '1-Click Full Re-analyse' })}
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-[10px] text-text-brand font-semibold italic text-end">
+                    {t('itemDetail.reanalyze.disclaimer', { defaultValue: 'Only auto-filled fields are overwritten. Your manual edits to size, price, notes, and intent are preserved.' })}
+                  </p>
+                </div>
+                {analyzing && (
+                  <div className="space-y-2" data-testid="item-reanalyze-progress">
+                    <Progress
+                      value={analyzeProgress}
+                      className="h-2 w-full"
+                      data-testid="item-reanalyze-progress-bar"
+                    />
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-text-brand italic">
+                        {t('itemDetail.reanalyze.progressHint')}
+                      </p>
+                      <span
+                        className="text-[12px] tabular-nums text-text-brand font-bold"
+                        data-testid="item-reanalyze-progress-pct"
+                      >
+                        {Math.round(analyzeProgress)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </>
+          )}
+        </Card>
+              </div>
+            )}
+
+            {/* TAB 3: OUTFIT PAIRINGS */}
+            {activeTab === 'pairings' && (
+              <div className="space-y-4">
+                <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border" data-testid="item-pairings-card">
+                  <div className="flex items-center justify-between p-5 border-b border-border">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-full bg-purple-500/10 text-purple-600 shrink-0">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-[14px] font-bold block text-dark-brand uppercase">
+                          {t('itemDetail.tabs.pairings', { defaultValue: 'Outfit Pairings' })}
+                        </span>
+                        <span className="text-[12px] text-text-brand font-semibold block mt-0.5 normal-case">
+                          {t('itemDetail.pairingsSubtitle', { defaultValue: 'Saved combinations and styles featuring this garment' })}
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="rounded-full text-xs font-bold"
+                      onClick={() => nav('/stylist', { state: { itemToPair: mergedItem } })}
+                      data-testid="item-pair-in-stylist-btn"
+                    >
+                      <Wand2 className="h-3.5 w-3.5 me-1.5" />
+                      {t('itemDetail.styleWithAi', { defaultValue: 'Style with AI' })}
+                    </Button>
+                  </div>
+                  <CardContent className="p-5">
+                    {pairedOutfits.length === 0 ? (
+                      <div className="text-center py-10 px-4 border border-dashed border-border rounded-xl space-y-3">
+                        <div className="p-3 rounded-full bg-secondary w-fit mx-auto text-text-brand">
+                          <Shirt className="h-6 w-6" />
+                        </div>
+                        <p className="text-sm font-bold text-dark-brand">
+                          {t('itemDetail.noPairingsYet', { defaultValue: 'No saved outfits with this item yet' })}
+                        </p>
+                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                          {t('itemDetail.noPairingsDesc', { defaultValue: 'Send this garment to AI Stylist to generate complete looks, or save daily recommendations.' })}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-full mt-2"
+                          onClick={() => nav('/stylist', { state: { itemToPair: mergedItem } })}
+                        >
+                          {t('itemDetail.composeLookCta', { defaultValue: 'Create Look in Stylist' })}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {pairedOutfits.map((o) => (
+                          <div
+                            key={o.id}
+                            onClick={() => nav('/stylist', { state: { selectedOutfitId: o.id, tab: 'outfits' } })}
+                            className="group rounded-xl border border-border overflow-hidden bg-white hover:border-primary-brand hover:shadow-md cursor-pointer transition-all p-2.5 flex flex-col gap-2"
+                          >
+                            <div className="aspect-[4/3] rounded-lg bg-secondary/50 overflow-hidden flex items-center justify-center">
+                              {o.image_url ? (
+                                <img src={o.image_url} alt={o.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="flex -space-x-2 overflow-hidden p-2">
+                                  {(o.garments || o.items || []).slice(0, 3).map((g, idx) => (
+                                    <img
+                                      key={idx}
+                                      src={g.image_url || g.thumbnail_data_url || preferredImage}
+                                      alt=""
+                                      className="inline-block h-12 w-12 rounded-full ring-2 ring-white object-cover"
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-dark-brand truncate">{o.name || t('stylist.calendar.untitledOutfit', { defaultValue: 'Saved Look' })}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{o.occasion || o.style || t('stylist.calendar.customOutfit', { defaultValue: 'Outfit' })}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* TAB 4: DPP (Digital Product Passport) */}
+            {activeTab === 'dpp' && (
+              <div className="space-y-4">
+                <DppPanel dppData={item?.dpp_data} />
+              </div>
+            )}
           </div>
         </div>
         {/* Taxonomy gatekeeper warning dialog */}

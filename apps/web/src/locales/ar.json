@@ -908,6 +908,17 @@
       "upgradePlanCta": "شراء أرصدة أو ترقية الباقة",
       "massClusterCreditsRequiredLabel": "الحد الأدنى لأرصدة إعادة البناء: 15",
       "massClusterCurrentCreditsLabel": "رصيدك الحالي: {{available}}"
+    },
+    "quota": {
+      "title": "تم الوصول إلى الحد الأقصى للرصيد",
+      "insufficientSubtitle": "رصيد غير كافٍ أو تم الوصول إلى الحد الأقصى للمحاولات",
+      "messageWithBalance": "طلبك لتحليل {{count}} قطعة تجاوز حصة رصيدك المتاحة. لديك {{balance}} من الرصيد المتاح في خطتك المجانية. هل ترغب في إضافة {{balance}} قطعة الآن، أو ترقية خطتك؟",
+      "messageZeroBalance": "طلبك لتحليل {{count}} قطعة تجاوز حصتك اليومية. لم يتبق لديك أي رصيد اليوم في خطتك المجانية. قم بترقية خطتك للحصول على تحليل غير محدود، أو تابع إضافة ملابسك يدويًا.",
+      "availableCreditsLabel": "الرصيد المتاح للذكاء الاصطناعي:",
+      "addAllowedButton": "إضافة {{count}} من الملابس",
+      "upgradeButton": "ترقية الخطة",
+      "editManuallyButton": "المتابعة يدويًا",
+      "manualContinueHint": "يمكنك إدخال تفاصيل الملابس يدويًا وحفظها."
     }
   },
   "itemDetail": {

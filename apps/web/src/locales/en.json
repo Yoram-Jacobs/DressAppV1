@@ -908,6 +908,17 @@
       "upgradePlanCta": "Get AI Credits or Upgrade",
       "massClusterCreditsRequiredLabel": "Minimum AI Reconstruction Credits: 15",
       "massClusterCurrentCreditsLabel": "Your Balance: {{available}}"
+    },
+    "quota": {
+      "title": "Credits Quota Reached",
+      "insufficientSubtitle": "Insufficient credits or quota limit reached",
+      "messageWithBalance": "Your request for {{count}} garments exceeded your credits quota. You have {{balance}} garment credit(s) available on your Free plan. Would you like to add {{balance}} garments now, or upgrade your plan?",
+      "messageZeroBalance": "Your request for {{count}} garments exceeded your daily credits quota. You have 0 credits remaining today on your Free plan. Upgrade your plan for unlimited AI analysis, or continue adding your garments manually without AI.",
+      "availableCreditsLabel": "Available AI Credits:",
+      "addAllowedButton": "Add {{count}} garments",
+      "upgradeButton": "Upgrade Plan",
+      "editManuallyButton": "Continue manually",
+      "manualContinueHint": "You can manually enter details and save your garments."
     }
   },
   "itemDetail": {

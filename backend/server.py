@@ -68,8 +68,8 @@ async def root() -> dict:
     return {"message": "DressApp API is live", "docs": "/docs"}
 
 
-@app.get("/health")
-@api_router.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
+@api_router.api_route("/health", methods=["GET", "HEAD"])
 async def health_check() -> dict:
     """Fast health probe checking database connectivity and API status."""
     db_ok = False

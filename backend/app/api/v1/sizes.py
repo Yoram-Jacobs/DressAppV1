@@ -1291,7 +1291,8 @@ async def analyze_chart(
             from app.db.database import get_db
             from app.services.billing_service import deduct_user_credits
             if not await deduct_user_credits(get_db(), user, cost=1):
-                raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+                from app.services.credit_manager import make_insufficient_credits_exception
+                raise make_insufficient_credits_exception(user, cost=1)
         except HTTPException:
             raise
         except Exception as exc:  # noqa: BLE001

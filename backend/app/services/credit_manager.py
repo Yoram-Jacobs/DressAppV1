@@ -716,6 +716,23 @@ def get_credit_exhaustion_info(user_or_tier: dict | str) -> dict[str, str]:
     }
 
 
+def make_insufficient_credits_exception(user: dict, cost: int = 1) -> HTTPException:
+    """Creates a structured 402 HTTPException with the user's available credit balance and required credits."""
+    tier = get_user_tier(user)
+    onprem_state = compute_onprem_credit_state(user) if tier == "free" else {}
+    credit_balance = int(onprem_state.get("onprem_credits_balance", 0)) if tier == "free" else 0
+    return HTTPException(
+        status_code=402,
+        detail={
+            "code": "insufficient_credits",
+            "message": "Insufficient credits or quota limit reached",
+            "credit_balance": credit_balance,
+            "required_credits": int(cost),
+            "tier": tier,
+        },
+    )
+
+
 async def ensure_monthly_subscription_credits(user_record: dict, db: Any) -> dict:
     """Ensure Manager and Professional subscribers receive 100 non-cumulative AI credits each billing month."""
     user_id = user_record.get("id")

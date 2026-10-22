@@ -514,7 +514,8 @@ async def analyze_item_image(
 
     cost = len(raw_list) if (not payload.cutout_only and eff_mode != "mass") else 0
     if cost > 0 and not await deduct_user_credits(db, user, cost=cost):
-        raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+        from app.services.credit_manager import make_insufficient_credits_exception
+        raise make_insufficient_credits_exception(user, cost=cost)
 
     async def try_refund(refund_amount: int | None = None):
         amt = cost if refund_amount is None else min(cost, max(0, int(refund_amount)))

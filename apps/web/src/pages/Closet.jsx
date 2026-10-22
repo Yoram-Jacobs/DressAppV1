@@ -25,15 +25,13 @@ import {
   Luggage,
   ArrowRight,
   Layers as Layers3,
-  LayoutGrid,
-  Grid,
-  List,
   Shirt,
   Crown,
   SearchX,
   RotateCcw,
   Box,
 } from 'lucide-react';
+import { usePinchGridDensity, PinchDensityControl, PinchFeedbackBadge } from "@/hooks/usePinchGridDensity";
 import { getSearchNeedles } from "@/lib/fashionSynonyms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,6 +169,7 @@ const INITIAL_FILTERS = { category: "all", source: "all", search: "" };
 
 export default function Closet() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { canAccessMigration } = useTierLimits();
   // Single source of truth: the global closet store. Reading from it
@@ -192,11 +191,26 @@ export default function Closet() {
     "dressapp.closet.searchMode",
     "keyword",
   );
-  // View mode: 'grid' (2 cols mobile), 'compact' (3 cols mobile), or 'list' (1 col)
-  const [viewMode, setViewMode] = useLocalStorageSync(
-    "dressapp.closet.viewMode",
-    "grid",
-  );
+  // Grid density via pinch gesture (1 = List / Large, 2 = Standard, 3 = Compact, 4 = Dense)
+  const CLOSET_GRID_CLASSES = {
+    1: "grid-cols-1 gap-4 max-w-2xl mx-auto",
+    2: "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
+    3: "grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6",
+    4: "grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8",
+  };
+  const {
+    density: closetDensity,
+    setDensity: setClosetDensity,
+    currentGridClass: closetGridClass,
+    activeFeedback: closetFeedback,
+    pinchProps: closetPinchProps,
+  } = usePinchGridDensity({
+    key: "dressapp.closet.gridDensity",
+    defaultDensity: 2,
+    minDensity: 1,
+    maxDensity: 4,
+    gridClasses: CLOSET_GRID_CLASSES,
+  });
   const [semanticActive, setSemanticActive] = useState(false);
   const [semanticItems, setSemanticItems] = useState([]);
   const [semanticIndexed, setSemanticIndexed] = useState(0);
@@ -1743,69 +1757,30 @@ export default function Closet() {
                   <span className="hidden sm:inline">{t("dressing_room_3d.open_button", { defaultValue: "3D Try-On" })}</span>
                   <span className="sm:hidden">3D</span>
                 </Button>
-                <div
-                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-xs"
-                role="group"
-                aria-label={t("closet.viewModeLabel", {
-                  defaultValue: "Grid density",
-                })}
-                data-testid="closet-view-mode-group"
-              >
-                <button
-                  type="button"
-                  onClick={() => setViewMode("grid")}
-                  aria-pressed={viewMode === "grid"}
-                  aria-label={t("closet.view2Cols", { defaultValue: "2 columns" })}
-                  title={t("closet.view2Cols", { defaultValue: "2 columns" })}
-                  data-testid="closet-view-2cols"
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "grid"
-                    ? "bg-primary-brand text-white shadow-xs"
-                    : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
-                    }`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("compact")}
-                  aria-pressed={viewMode === "compact"}
-                  aria-label={t("closet.view3Cols", { defaultValue: "3 columns" })}
-                  title={t("closet.view3Cols", { defaultValue: "3 columns" })}
-                  data-testid="closet-view-3cols"
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "compact"
-                    ? "bg-primary-brand text-white shadow-xs"
-                    : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
-                    }`}
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("list")}
-                  aria-pressed={viewMode === "list"}
-                  aria-label={t("closet.viewList", { defaultValue: "List view" })}
-                  title={t("closet.viewList", { defaultValue: "List view" })}
-                  data-testid="closet-view-list"
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "list"
-                    ? "bg-primary-brand text-white shadow-xs"
-                    : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
-                    }`}
-                >
-                  <List className="h-4 w-4" />
-                </button>
+                <PinchDensityControl
+                  density={closetDensity}
+                  setDensity={setClosetDensity}
+                  min={1}
+                  max={4}
+                  labels={{ 1: '1x', 2: '2x', 3: '3x', 4: '4x' }}
+                />
               </div>
-            </div>
           </div>
 
             <div
-              className={`grid w-full ${viewMode === "compact"
-                ? "grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-                : viewMode === "list"
-                  ? "grid-cols-1 gap-3 max-w-2xl mx-auto"
-                  : "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                }`}
+              className={`grid w-full transition-all duration-200 ${closetGridClass}`}
               data-testid="closet-grid"
+              {...closetPinchProps}
             >
+              <PinchFeedbackBadge
+                activeDensity={closetFeedback}
+                labels={{
+                  1: t("closet.view1Col", { defaultValue: "1 Column (Large)" }),
+                  2: t("closet.view2Cols", { defaultValue: "2 Columns (Standard)" }),
+                  3: t("closet.view3Cols", { defaultValue: "3 Columns (Compact)" }),
+                  4: t("closet.view4Cols", { defaultValue: "4 Columns (Dense)" }),
+                }}
+              />
               {items.map((it) => {
                 const isSelected = selected.has(it.id);
 

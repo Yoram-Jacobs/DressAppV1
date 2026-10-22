@@ -908,6 +908,17 @@
       "upgradePlanCta": "Obter créditos IA ou fazer upgrade",
       "massClusterCreditsRequiredLabel": "Mínimo de créditos de reconstrução IA: 15",
       "massClusterCurrentCreditsLabel": "Seu saldo: {{available}}"
+    },
+    "quota": {
+      "title": "Limite de créditos atingido",
+      "insufficientSubtitle": "Créditos insuficientes ou limite de cota atingido",
+      "messageWithBalance": "Seu pedido de {{count}} peças excedeu sua cota de créditos. Você tem {{balance}} crédito(s) disponível(is) no plano Gratuito. Deseja adicionar {{balance}} peças agora ou fazer upgrade do plano?",
+      "messageZeroBalance": "Seu pedido de {{count}} peças excedeu sua cota diária de créditos. Você tem 0 créditos restantes hoje no plano Gratuito. Faça upgrade do seu plano para análise ilimitada com IA ou continue adicionando suas peças manualmente sem IA.",
+      "availableCreditsLabel": "Créditos de IA disponíveis:",
+      "addAllowedButton": "Adicionar {{count}} peças",
+      "upgradeButton": "Fazer upgrade do plano",
+      "editManuallyButton": "Continuar manualmente",
+      "manualContinueHint": "Você pode preencher os detalhes manualmente e salvar suas peças."
     }
   },
   "itemDetail": {

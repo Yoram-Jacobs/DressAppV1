@@ -350,6 +350,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     } catch (err) {
       clearInterval(spinTimer);
       console.error('AI Planner Scout failed:', err);
+      const detail = err.response?.data?.detail;
       const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail || '');
       if (detailStr.toLowerCase().includes('quota') || detailStr.toLowerCase().includes('exhausted') || detailStr.toLowerCase().includes('limit') || err.response?.status === 402) {
         toast.error(t('common.upgradeToUse', {

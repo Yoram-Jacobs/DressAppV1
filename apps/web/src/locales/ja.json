@@ -908,6 +908,17 @@
       "upgradePlanCta": "AIクレジット購入またはアップグレード",
       "massClusterCreditsRequiredLabel": "必要な最小AI再構築クレジット: 15",
       "massClusterCurrentCreditsLabel": "現在の残高: {{available}}"
+    },
+    "quota": {
+      "title": "クレジット上限に達しました",
+      "insufficientSubtitle": "クレジットが不足しているか、クォータ上限に達しました",
+      "messageWithBalance": "{{count}}点の衣服の分析リクエストはクレジット上限を超過しました。無料プランで利用可能なクレジットは{{balance}}点分です。今すぐ{{balance}}点を追加しますか？それともプランをアップグレードしますか？",
+      "messageZeroBalance": "{{count}}点の衣服のリクエストは1日のクレジット上限を超過しました。本日の無料プラン残高は0です。無制限のAI分析を利用するにはプランをアップグレードするか、AIなしで手動で衣服の追加を続けてください。",
+      "availableCreditsLabel": "利用可能なAIクレジット:",
+      "addAllowedButton": "{{count}}点を追加",
+      "upgradeButton": "プランをアップグレード",
+      "editManuallyButton": "手動で続行",
+      "manualContinueHint": "手動で詳細を入力して衣服を保存できます。"
     }
   },
   "itemDetail": {

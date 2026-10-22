@@ -123,10 +123,11 @@ export default function AvatarMesh3D({
           mat.metalness = 0.05;
           mat.needsUpdate = true;
         } else if (matName.includes('generic')) {
-          // Modest studio briefs / undergarment
-          mat.color.set('#1E293B');
-          mat.roughness = 0.65;
-          mat.metalness = 0.05;
+          // Modest studio briefs / undergarment - tinted in natural seamless tone to avoid dark bra peaking
+          const undergarmentColor = skinThreeColor.clone().multiplyScalar(0.94);
+          mat.color.copy(undergarmentColor);
+          mat.roughness = 0.58;
+          mat.metalness = 0.02;
           mat.needsUpdate = true;
         } else if (matName.includes('cornea')) {
           mat.transparent = true;

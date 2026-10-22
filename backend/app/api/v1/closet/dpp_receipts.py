@@ -217,7 +217,8 @@ async def extract_pdf_text(
         from app.services.billing_service import deduct_user_credits
         db = get_db()
         if not await deduct_user_credits(db, user, cost=1):
-            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+            from app.services.credit_manager import make_insufficient_credits_exception
+            raise make_insufficient_credits_exception(user, cost=1)
 
         # Try Gemini Multimodal OCR first
         try:
@@ -479,7 +480,8 @@ async def parse_receipt(
         from app.services.billing_service import deduct_user_credits
         db = get_db()
         if not await deduct_user_credits(db, user, cost=1):
-            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+            from app.services.credit_manager import make_insufficient_credits_exception
+            raise make_insufficient_credits_exception(user, cost=1)
 
         from app.services.gemini_client import get_gemini_client
         user_api_key = resolve_user_gemini_api_key(user)

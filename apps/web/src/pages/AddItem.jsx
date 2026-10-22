@@ -23,6 +23,7 @@ import {
   Save,
   Tag,
   AlertTriangle,
+  AlertCircle,
   X,
   Sparkles,
   Camera,
@@ -1257,6 +1258,7 @@ export default function AddItem() {
     minClusterCredits,
     nanoBananaMonthlyLimit,
     nanoBananaMonthlyRemaining,
+    onpremCreditsBalance,
   } = useTierLimits();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSuitcase = searchParams.get("from") === "suitcase";
@@ -1400,6 +1402,66 @@ export default function AddItem() {
   // skip/add per row. Null when the dialog is closed.
   const [preflight, setPreflight] = useState(null);
   const [massClusterModal, setMassClusterModal] = useState(null);
+  const [quotaModal, setQuotaModal] = useState(null); // { isOpen, creditBalance, requiredCount, pendingCards }
+
+  const handleQuotaExceeded = ({ creditBalance, requiredCount, pendingCards }) => {
+    (pendingCards || []).forEach((c) => {
+      analyzeInFlight.current.delete(c.id);
+      workStore.completeAnalyze(c.id);
+    });
+    setCards((prev) =>
+      prev.map((c) =>
+        (pendingCards || []).some((pc) => pc.id === c.id || c.id.startsWith(`${pc.id}-`))
+          ? { ...c, status: "ready", progress: 100, error: null }
+          : c
+      )
+    );
+    setQuotaModal({
+      isOpen: true,
+      creditBalance: typeof creditBalance === "number" ? Math.max(0, creditBalance) : 0,
+      requiredCount: requiredCount || (pendingCards || []).length,
+      pendingCards: pendingCards || [],
+    });
+  };
+
+  const handleAddAllowedGarments = () => {
+    if (!quotaModal) return;
+    const { creditBalance, pendingCards } = quotaModal;
+    setQuotaModal(null);
+    if (creditBalance <= 0 || !pendingCards || pendingCards.length === 0) return;
+
+    const allowedCards = pendingCards.slice(0, creditBalance);
+    const allowedIds = new Set(allowedCards.map((c) => c.id));
+    const pendingIds = new Set(pendingCards.map((c) => c.id));
+
+    setCards((prev) =>
+      prev
+        .filter((c) => allowedIds.has(c.id) || !pendingIds.has(c.id))
+        .map((c) =>
+          allowedIds.has(c.id)
+            ? { ...c, status: "scanning", progress: 5, error: null }
+            : c
+        )
+    );
+
+    setTimeout(() => {
+      analyzeCards(allowedCards);
+    }, 50);
+  };
+
+  const handleUpgradePlan = () => {
+    setQuotaModal(null);
+    nav("/pricing#plans-section");
+  };
+
+  const handleManualDrafts = () => {
+    setQuotaModal(null);
+    toast.info(
+      t("addItem.quota.manualContinueHint", {
+        defaultValue: "You can manually enter details and save your garments.",
+      })
+    );
+  };
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   // Patch 12 (May 2026) — analyzeCard in-flight guard. The user reported
@@ -2970,6 +3032,20 @@ export default function AddItem() {
         );
       };
 
+      if (
+        isFree &&
+        typeof onpremCreditsBalance === "number" &&
+        onpremCreditsBalance < validPhotos.length
+      ) {
+        handleQuotaExceeded({
+          creditBalance: onpremCreditsBalance,
+          requiredCount: validPhotos.length,
+          pendingCards: [],
+        });
+        setBgBatch(null);
+        return;
+      }
+
       try {
         await api.analyzeItemImage(
           {
@@ -2996,6 +3072,36 @@ export default function AddItem() {
         );
       } catch (err) {
         console.warn(`[handleBatchBackground] analyzeItemImage failed:`, err);
+        const errDetail = err?.response?.data?.detail;
+        const isInsufficient =
+          err?.response?.status === 402 ||
+          errDetail?.code === "insufficient_credits" ||
+          errDetail?.code === "credits_exhausted" ||
+          (typeof errDetail === "string" && (
+            errDetail.toLowerCase().includes("insufficient credits") ||
+            errDetail.toLowerCase().includes("quota limit reached")
+          )) ||
+          (typeof errDetail?.message === "string" && (
+            errDetail.message.toLowerCase().includes("insufficient credits") ||
+            errDetail.message.toLowerCase().includes("quota limit reached")
+          ));
+
+        if (isInsufficient) {
+          setBgBatch(null);
+          const balance =
+            typeof errDetail?.credit_balance === "number"
+              ? errDetail.credit_balance
+              : typeof onpremCreditsBalance === "number"
+              ? onpremCreditsBalance
+              : 0;
+          handleQuotaExceeded({
+            creditBalance: balance,
+            requiredCount: validPhotos.length,
+            pendingCards: [],
+          });
+          return;
+        }
+
         const detailMsg = resolveAnalyzeErrorMessage(err);
         if (detailMsg) lastErrorMsg = detailMsg;
       }
@@ -3089,6 +3195,19 @@ export default function AddItem() {
     });
 
     if (cardsToProcess.length === 0) return;
+
+    if (
+      isFree &&
+      typeof onpremCreditsBalance === "number" &&
+      onpremCreditsBalance < cardsToProcess.length
+    ) {
+      handleQuotaExceeded({
+        creditBalance: onpremCreditsBalance,
+        requiredCount: cardsToProcess.length,
+        pendingCards: cardsToProcess,
+      });
+      return;
+    }
 
     const startedAt = Date.now();
     const tick = setInterval(() => {
@@ -3537,6 +3656,35 @@ export default function AddItem() {
     } catch (err) {
       clearInterval(tick);
       const errDetail = err?.response?.data?.detail;
+
+      const isInsufficientCredits =
+        err?.response?.status === 402 ||
+        errDetail?.code === "insufficient_credits" ||
+        errDetail?.code === "credits_exhausted" ||
+        (typeof errDetail === "string" && (
+          errDetail.toLowerCase().includes("insufficient credits") ||
+          errDetail.toLowerCase().includes("quota limit reached")
+        )) ||
+        (typeof errDetail?.message === "string" && (
+          errDetail.message.toLowerCase().includes("insufficient credits") ||
+          errDetail.message.toLowerCase().includes("quota limit reached")
+        ));
+
+      if (isInsufficientCredits) {
+        const balance =
+          typeof errDetail?.credit_balance === "number"
+            ? errDetail.credit_balance
+            : typeof onpremCreditsBalance === "number"
+            ? onpremCreditsBalance
+            : 0;
+
+        handleQuotaExceeded({
+          creditBalance: balance,
+          requiredCount: cardsToProcess.length,
+          pendingCards: cardsToProcess,
+        });
+        return;
+      }
       if (
         errDetail?.code === "mass_pipeline_tier_restricted" ||
         errDetail?.i18n_key === "addItem.pipeline.massClusterFreeBlocked"
@@ -4520,6 +4668,120 @@ export default function AddItem() {
                     defaultValue: "Get AI Credits or Upgrade",
                   })}
                 </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          {/* Quota Exceeded Modal */}
+          <Dialog
+            open={!!quotaModal?.isOpen}
+            onOpenChange={(open) => {
+              if (!open) setQuotaModal(null);
+            }}
+          >
+            <DialogContent
+              className="sm:max-w-md"
+              data-testid="quota-exceeded-dialog"
+            >
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-dark-brand">
+                  <Sparkles className="h-5 w-5 text-amber-500 shrink-0" />
+                  <span>
+                    {t("addItem.quota.title", {
+                      defaultValue: "Credits Quota Reached",
+                    })}
+                  </span>
+                </DialogTitle>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium w-fit mt-1">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    {t("addItem.quota.insufficientSubtitle", {
+                      defaultValue: "Insufficient credits or quota limit reached",
+                    })}
+                  </span>
+                </div>
+                <DialogDescription className="text-sm text-text-brand pt-3 leading-relaxed">
+                  {quotaModal?.creditBalance > 0
+                    ? t("addItem.quota.messageWithBalance", {
+                        count: quotaModal.requiredCount,
+                        balance: quotaModal.creditBalance,
+                        defaultValue: `Your request for ${quotaModal.requiredCount} garments exceeded your credits quota. You have ${quotaModal.creditBalance} garment credit(s) available on your Free plan. Would you like to add ${quotaModal.creditBalance} garments now, or upgrade your plan?`,
+                      })
+                    : t("addItem.quota.messageZeroBalance", {
+                        count: quotaModal.requiredCount,
+                        defaultValue: `Your request for ${quotaModal.requiredCount} garments exceeded your daily credits quota. You have 0 credits remaining today on your Free plan. Upgrade your plan for unlimited AI analysis, or continue adding your garments manually without AI.`,
+                      })}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="my-2 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-xs text-amber-900">
+                <span className="font-semibold">
+                  {t("addItem.quota.availableCreditsLabel", {
+                    defaultValue: "Available AI Credits:",
+                  })}
+                </span>
+                <span className="font-bold text-sm">
+                  {quotaModal?.creditBalance ?? 0}
+                </span>
+              </div>
+
+              <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setQuotaModal(null)}
+                  className="rounded-full px-5 py-2 text-sm font-semibold"
+                  data-testid="quota-cancel-button"
+                >
+                  {t("common.cancel", { defaultValue: "Cancel" })}
+                </Button>
+
+                {quotaModal?.creditBalance > 0 ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleUpgradePlan}
+                      data-testid="quota-upgrade-btn"
+                      className="rounded-full px-5 py-2 text-sm font-semibold border-amber-300 text-amber-800 hover:bg-amber-50"
+                    >
+                      <Zap className="h-4 w-4 mr-1.5 text-amber-600" />
+                      {t("addItem.quota.upgradeButton", { defaultValue: "Upgrade Plan" })}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleAddAllowedGarments}
+                      data-testid="quota-add-allowed-btn"
+                      className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2 text-sm font-semibold"
+                    >
+                      <Check className="h-4 w-4 mr-1.5" />
+                      {t("addItem.quota.addAllowedButton", {
+                        count: quotaModal.creditBalance,
+                        defaultValue: `Add ${quotaModal.creditBalance} garments`,
+                      })}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleManualDrafts}
+                      data-testid="quota-manual-btn"
+                      className="rounded-full px-5 py-2 text-sm font-semibold"
+                    >
+                      {t("addItem.quota.editManuallyButton", { defaultValue: "Continue manually" })}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleUpgradePlan}
+                      data-testid="quota-upgrade-btn"
+                      className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2 text-sm font-semibold"
+                    >
+                      <Zap className="h-4 w-4 mr-1.5" />
+                      {t("addItem.quota.upgradeButton", { defaultValue: "Upgrade Plan" })}
+                    </Button>
+                  </>
+                )}
               </DialogFooter>
             </DialogContent>
           </Dialog>

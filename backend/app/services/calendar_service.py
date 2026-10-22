@@ -389,6 +389,28 @@ class CalendarService:
         if userinfo.get("locale") and not existing.get("locale"):
             profile_patch["locale"] = userinfo["locale"]
 
+        # If People API scopes were granted, auto-fill demographics as well
+        if any(s in granted_scopes for s in PEOPLE_SCOPES):
+            try:
+                extended = await self.fetch_people_profile(tokens["access_token"])
+                if extended:
+                    if extended.get("date_of_birth") and not existing.get("date_of_birth"):
+                        profile_patch["date_of_birth"] = extended["date_of_birth"]
+                    if extended.get("phone") and not existing.get("phone"):
+                        profile_patch["phone"] = extended["phone"]
+                    if extended.get("sex") and not existing.get("sex"):
+                        profile_patch["sex"] = extended["sex"]
+                    if extended.get("address"):
+                        existing_addr = existing.get("address") or {}
+                        g_addr = extended["address"]
+                        merged = {
+                            k: g_addr.get(k) or existing_addr.get(k) or ""
+                            for k in ["line1", "line2", "city", "region", "postal_code", "country"]
+                        }
+                        profile_patch["address"] = merged
+            except Exception as e:
+                logger.warning("Failed to auto-fetch People profile in persist_tokens: %s", e)
+
         update_doc: dict[str, Any] = {"google_calendar_tokens": doc, **profile_patch}
         await db.users.update_one({"id": user_id}, {"$set": update_doc})
         return doc

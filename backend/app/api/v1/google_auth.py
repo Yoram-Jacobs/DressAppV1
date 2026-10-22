@@ -43,6 +43,7 @@ from app.services.auth import (
 from app.services.calendar_service import (
     LOGIN_SCOPES,
     SCOPES,
+    PEOPLE_SCOPES,
     calendar_service,
 )
 
@@ -115,6 +116,7 @@ def _read_state(token: str, *, expected_purpose: str) -> dict[str, Any]:
 async def google_oauth_start(
     request: Request,
     user: dict = Depends(get_current_user),
+    next: str | None = Query(default=None),
 ) -> dict[str, Any]:
     """Generate the Google authorization URL for the current DressApp user."""
     if not calendar_service.enabled:
@@ -131,10 +133,11 @@ async def google_oauth_start(
     if not frontend_origin:
         frontend_origin = _frontend_origin(request)
 
+    safe_next = next if (next and next.startswith("/") and not next.startswith("//")) else None
     state = _build_state(
         user["id"],
         purpose="google-oauth-link",
-        extra={"redirect_uri": redirect_uri, "frontend_origin": frontend_origin},
+        extra={"redirect_uri": redirect_uri, "frontend_origin": frontend_origin, "next": safe_next},
     )
     try:
         url = calendar_service.build_authorization_url(
@@ -213,9 +216,15 @@ async def _handle_calendar_link_callback(
     if not user_id:
         return RedirectResponse(f"{redirect_base}?calendar=error&reason=missing_user")
 
+    target_path = data.get("next") or "/me"
+    if not target_path.startswith("/"):
+        target_path = f"/{target_path}"
     if data.get("frontend_origin"):
-        redirect_base = f"{data['frontend_origin']}/me"
+        redirect_base = f"{data['frontend_origin']}{target_path}"
+    else:
+        redirect_base = f"{redirect_base.rstrip('/me')}{target_path}"
 
+    sep = "&" if "?" in redirect_base else "?"
     redirect_uri = data.get("redirect_uri")
     try:
         tokens = await calendar_service.exchange_code(
@@ -224,7 +233,7 @@ async def _handle_calendar_link_callback(
     except Exception:  # noqa: BLE001
         logger.exception("Google token exchange failed")
         return RedirectResponse(
-            f"{redirect_base}?calendar=error&reason=token_exchange_failed"
+            f"{redirect_base}{sep}calendar=error&reason=token_exchange_failed"
         )
 
     try:
@@ -232,11 +241,11 @@ async def _handle_calendar_link_callback(
     except Exception:  # noqa: BLE001
         logger.exception("Persisting Google tokens failed")
         return RedirectResponse(
-            f"{redirect_base}?calendar=error&reason=persist_failed"
+            f"{redirect_base}{sep}calendar=error&reason=persist_failed"
         )
 
     logger.info("google-calendar: successfully linked user_id=%s", user_id)
-    return RedirectResponse(f"{redirect_base}?calendar=connected")
+    return RedirectResponse(f"{redirect_base}{sep}calendar=connected")
 
 
 @auth_router.post("/disconnect")
@@ -255,31 +264,36 @@ async def google_re_consent(
         default=False,
         description="When true, also requests calendar.readonly scope.",
     ),
+    next: str | None = Query(default=None),
 ) -> dict[str, Any]:
     """Generate a new Google authorization URL that forces re-consent with
     the full scope set (including People API scopes for demographics).
-
-    This is needed for users who signed in BEFORE the People API scopes
-    were added — their existing tokens don't have the permissions needed
-    to fetch birthday, phone, address, or gender from Google.
     """
     if not calendar_service.enabled:
         raise HTTPException(503, "Google OAuth not configured on server")
 
+    safe_next = next if (next and next.startswith("/") and not next.startswith("//")) else None
     state = _build_state(
         user["id"],
         purpose="google-oauth-link",
-        extra={"reconsent": True},
+        extra={
+            "reconsent": True,
+            "redirect_uri": calendar_service.resolve_redirect_uri(request),
+            "frontend_origin": _frontend_origin(request),
+            "next": safe_next,
+        },
     )
 
-    scopes = SCOPES if with_calendar else LOGIN_SCOPES
+    scopes = list(LOGIN_SCOPES) + list(PEOPLE_SCOPES)
+    if with_calendar:
+        scopes.append("https://www.googleapis.com/auth/calendar.events.readonly")
     try:
         url = calendar_service.build_authorization_url(
             state,
             request=request,
             scopes=scopes,
             prompt="consent",
-            include_granted_scopes=False,
+            include_granted_scopes=True,
             access_type="offline",
         )
     except RuntimeError as exc:
@@ -954,14 +968,14 @@ async def calendar_upcoming(
     return {"events": events, "count": len(events)}
 
 
-@auth_router.post("/sync-profile")
+@auth_router.api_route("/sync-profile", methods=["GET", "POST"])
 async def sync_profile_from_google(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Retrieve user's extended profile details (birthday, phone, address) from Google People API."""
     tokens = user.get("google_calendar_tokens") or {}
     if not tokens.get("access_token"):
-        raise HTTPException(status_code=400, detail="Google account not connected.")
+        raise HTTPException(status_code=403, detail="missing_people_scopes")
 
     # Check if People API scopes were granted — if not, the People API
     # calls will silently return empty data, confusing the user.

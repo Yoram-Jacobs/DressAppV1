@@ -908,6 +908,17 @@
       "upgradePlanCta": "Obtenir des crédits IA ou mettre à niveau",
       "massClusterCreditsRequiredLabel": "Crédits de reconstruction IA requis : 15",
       "massClusterCurrentCreditsLabel": "Votre solde : {{available}}"
+    },
+    "quota": {
+      "title": "Quota de crédits atteint",
+      "insufficientSubtitle": "Crédits insuffisants ou limite de quota atteinte",
+      "messageWithBalance": "Votre demande de {{count}} vêtements a dépassé votre quota de crédits. Vous disposez de {{balance}} crédit(s) dans votre forfait Gratuit. Souhaitez-vous ajouter {{balance}} vêtements maintenant ou mettre à niveau votre forfait ?",
+      "messageZeroBalance": "Votre demande de {{count}} vêtements a dépassé votre quota quotidien. Il vous reste 0 crédit aujourd'hui dans votre forfait Gratuit. Mettez à niveau votre forfait pour une analyse IA illimitée, ou continuez à ajouter vos vêtements manuellement sans IA.",
+      "availableCreditsLabel": "Crédits IA disponibles :",
+      "addAllowedButton": "Ajouter {{count}} vêtements",
+      "upgradeButton": "Mettre à niveau le forfait",
+      "editManuallyButton": "Continuer manuellement",
+      "manualContinueHint": "Vous pouvez saisir les détails manuellement et enregistrer vos vêtements."
     }
   },
   "itemDetail": {

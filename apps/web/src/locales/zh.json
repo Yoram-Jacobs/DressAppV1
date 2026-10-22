@@ -908,6 +908,17 @@
       "upgradePlanCta": "获取 AI 积分或升级计划",
       "massClusterCreditsRequiredLabel": "最低 AI 重建积分要求：15",
       "massClusterCurrentCreditsLabel": "您当前的余额：{{available}}"
+    },
+    "quota": {
+      "title": "已达到点数限额",
+      "insufficientSubtitle": "点数不足或已达配额上限",
+      "messageWithBalance": "您分析 {{count}} 件衣物的请求超出了点数配额。您的免费计划中尚有 {{balance}} 个可用点数。您希望现在添加 {{balance}} 件衣物，还是升级计划？",
+      "messageZeroBalance": "您分析 {{count}} 件衣物的请求超出了每日点数限额。您的免费计划今日剩余 0 点。升级计划以获取无限 AI 分析，或继续在不使用 AI 的情况下手动添加衣物。",
+      "availableCreditsLabel": "可用 AI 点数：",
+      "addAllowedButton": "添加 {{count}} 件衣物",
+      "upgradeButton": "升级计划",
+      "editManuallyButton": "手动继续",
+      "manualContinueHint": "您可以手动输入信息并保存衣物。"
     }
   },
   "itemDetail": {

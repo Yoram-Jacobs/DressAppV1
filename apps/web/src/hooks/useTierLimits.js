@@ -72,6 +72,19 @@ export function useTierLimits() {
   const maxClosetSlots = isFree ? Math.min(150, 50 + closetCapacityBonus) : Infinity;
   const maxAiActionsPerDay = isFree ? 10 : Infinity;
 
+  const onpremCreditsBalance = (() => {
+    if (typeof user?.onprem_credits?.onprem_credits_balance === 'number') {
+      return user.onprem_credits.onprem_credits_balance;
+    }
+    if (typeof user?.onprem_credits_balance === 'number') {
+      return user.onprem_credits_balance;
+    }
+    if (typeof user?.ai_configuration?.onprem_credits_balance === 'number') {
+      return user.ai_configuration.onprem_credits_balance;
+    }
+    return isFree ? 10 : Infinity;
+  })();
+
   const getUpgradeMessage = (featureText, isProOnly = false) => {
     if (isProOnly) {
       return t('common.upgradeToUsePro', {
@@ -105,5 +118,6 @@ export function useTierLimits() {
     maxClosetSlots,
     maxAiActionsPerDay,
     getUpgradeMessage,
+    onpremCreditsBalance,
   };
 }

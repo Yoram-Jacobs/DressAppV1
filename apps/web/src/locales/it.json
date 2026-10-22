@@ -908,6 +908,17 @@
       "upgradePlanCta": "Ottieni crediti IA o fai upgrade",
       "massClusterCreditsRequiredLabel": "Crediti minimi di ricostruzione IA: 15",
       "massClusterCurrentCreditsLabel": "Il tuo saldo: {{available}}"
+    },
+    "quota": {
+      "title": "Limite di crediti raggiunto",
+      "insufficientSubtitle": "Crediti insufficienti o limite di quota raggiunto",
+      "messageWithBalance": "La tua richiesta di {{count}} capi ha superato la quota di crediti. Hai {{balance}} credito/i disponibile/i nel tuo piano Gratuito. Vuoi aggiungere {{balance}} capi adesso o aggiornare il tuo piano?",
+      "messageZeroBalance": "La tua richiesta di {{count}} capi ha superato la quota giornaliera di crediti. Oggi hai 0 crediti rimanenti nel tuo piano Gratuito. Aggiorna il tuo piano per analisi IA illimitate, oppure continua ad aggiungere i tuoi capi manualmente senza IA.",
+      "availableCreditsLabel": "Crediti IA disponibili:",
+      "addAllowedButton": "Aggiungi {{count}} capi",
+      "upgradeButton": "Aggiorna piano",
+      "editManuallyButton": "Continua manualmente",
+      "manualContinueHint": "Puoi inserire i dettagli manualmente e salvare i tuoi capi."
     }
   },
   "itemDetail": {

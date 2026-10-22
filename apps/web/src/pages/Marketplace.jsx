@@ -29,6 +29,7 @@ import {
 } from "@/lib/marketplaceStore";
 import { useMarketplaceProgress } from "@/lib/useMarketplaceProgress";
 import { useLocalStorageSync } from "@/lib/useLocalStorageSync";
+import { usePinchGridDensity, PinchDensityControl, PinchFeedbackBadge } from "@/hooks/usePinchGridDensity";
 import { useCachedList } from "@/lib/createCachedStore";
 import { toast } from "sonner";
 import market5 from "@/assets/img/market5.webp";
@@ -137,6 +138,27 @@ export default function Marketplace() {
     "dressapp.marketplace.activeTab",
     "browse",
   );
+
+  const MARKET_GRID_CLASSES = {
+    1: "grid-cols-1 gap-4 max-w-xl mx-auto",
+    2: "grid-cols-1 sm:grid-cols-2 gap-4",
+    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-4",
+    4: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3",
+  };
+
+  const {
+    density: marketDensity,
+    setDensity: setMarketDensity,
+    currentGridClass: marketGridClass,
+    activeFeedback: marketFeedback,
+    pinchProps: marketPinchProps,
+  } = usePinchGridDensity({
+    key: "dressapp.marketplace.gridDensity",
+    defaultDensity: 3,
+    minDensity: 1,
+    maxDensity: 4,
+    gridClasses: MARKET_GRID_CLASSES,
+  });
 
   // Stable params object — keyed inputs to the cached browse store.
   // Mirrors the original wire-shape decisions: classic source values
@@ -506,10 +528,34 @@ export default function Marketplace() {
               </div>
               <div className="min-w-0">
                 {!loading && displayItems.length > 0 && (
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      {displayItems.length} {t("market.items", { defaultValue: "items" })}
+                    </span>
+                    <PinchDensityControl
+                      density={marketDensity}
+                      setDensity={setMarketDensity}
+                      min={1}
+                      max={4}
+                      labels={{ 1: "1x", 2: "2x", 3: "3x", 4: "4x" }}
+                    />
+                  </div>
+                )}
+                {!loading && displayItems.length > 0 && (
                   <div
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-4"
+                    className={`grid transition-all duration-200 ${marketGridClass}`}
                     data-testid="marketplace-grid"
+                    {...marketPinchProps}
                   >
+                    <PinchFeedbackBadge
+                      activeDensity={marketFeedback}
+                      labels={{
+                        1: "1 Column (Large)",
+                        2: "2 Columns (Standard)",
+                        3: "3 Columns (Compact)",
+                        4: "4 Columns (Dense)",
+                      }}
+                    />
                     {displayItems.map((l) => (
                       <div key={l.id}>
                         <Link

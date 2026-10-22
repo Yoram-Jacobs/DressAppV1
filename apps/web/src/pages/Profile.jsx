@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LogOut, Loader2, Languages, Newspaper, Calendar, Users, TrendingUp, Shirt } from 'lucide-react';
+import { LogOut, Loader2, Languages, Newspaper, Calendar, Users, TrendingUp, Shirt, UserCheck, Crown, MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -37,6 +37,18 @@ export default function Profile() {
   });
   const [langBusy, setLangBusy] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
+  const [collapsedGroups, setCollapsedGroups] = useState({
+    identity: true,
+    subscription: true,
+    more: true,
+  });
+
+  const toggleGroup = (groupKey) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [groupKey]: !prev[groupKey],
+    }));
+  };
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const [migrationInitialApp, setMigrationInitialApp] = useState(null);
   const [migrationInitialStep, setMigrationInitialStep] = useState(null);
@@ -60,17 +72,33 @@ export default function Profile() {
 
   useEffect(() => {
     const items = [];
-    if (searchParams.get('open') === 'scheduler' || location.hash === '#scheduler-settings-section' || location.state?.scrollTo === 'scheduler-settings-section') {
+    const openParam = searchParams.get('open');
+    const groupParam = searchParams.get('group');
+
+    if (groupParam && ['identity', 'subscription', 'more'].includes(groupParam)) {
+      setCollapsedGroups((prev) => ({ ...prev, [groupParam]: false }));
+    }
+
+    if (openParam === 'scheduler' || location.hash === '#scheduler-settings-section' || location.state?.scrollTo === 'scheduler-settings-section') {
       items.push('scheduler');
+      setCollapsedGroups((prev) => ({ ...prev, more: false }));
       setTimeout(() => {
         document.getElementById('scheduler-settings-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
+      }, 200);
     }
-    if (isTester && (searchParams.get('open') === 'ai-config' || searchParams.get('tab') === 'ai-config' || location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section')) {
+    if (isTester && (openParam === 'ai-config' || searchParams.get('tab') === 'ai-config' || location.hash === '#ai-configuration-section' || location.state?.scrollTo === 'ai-configuration-section')) {
       items.push('ai-config');
+      setCollapsedGroups((prev) => ({ ...prev, subscription: false }));
       setTimeout(() => {
         document.getElementById('ai-configuration-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
+      }, 200);
+    }
+    if (openParam === 'subscription' || location.hash === '#subscription-settings-section') {
+      items.push('subscription');
+      setCollapsedGroups((prev) => ({ ...prev, subscription: false }));
+      setTimeout(() => {
+        document.getElementById('subscription-settings-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 200);
     }
     if (items.length > 0) {
       setExpandedItems(items);
@@ -251,66 +279,197 @@ export default function Profile() {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <ProfileDetailsCard />
-          </div>
-          <div>
-            <Card className="rounded-[12px] border border-border bg-white shadow-sm h-full" data-testid="profile-settings-card">
-              <CardContent className="p-5 space-y-4">
-                <div className="">
-                  <div className="text-[12px] text-text-brand font-semibold">
-                    {t('profile.sections.settings', { defaultValue: 'Settings & Integrations' })}
+        <div className="space-y-4" data-testid="profile-groups-container">
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* GROUP 1: IDENTITY & STYLE                                      */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <div className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden" data-testid="profile-group-identity">
+            <button
+              type="button"
+              onClick={() => toggleGroup('identity')}
+              className="w-full flex items-center justify-between p-4 bg-white hover:bg-secondary/40 transition-colors cursor-pointer text-start"
+              aria-expanded={!collapsedGroups.identity}
+              data-testid="profile-group-identity-toggle"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-emerald-500/10 text-emerald-600 shrink-0">
+                  <UserCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-dark-brand">
+                      {t('profile.groups.identity', { defaultValue: 'Identity' })}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary text-muted-foreground border border-border">
+                      6
+                    </span>
                   </div>
-                  <h3 className="font-bold text-[14px] text-dark-brand">{t('profile.settingsTitle', { defaultValue: 'System Preferences' })}</h3>
+                  <span className="text-xs text-text-brand block mt-0.5">
+                    {t('profile.sections.identityDesc', { defaultValue: 'Personal details, body measurements, virtual fitting avatar, and style DNA' })}
+                  </span>
                 </div>
-                <Accordion
-                  type="multiple"
-                  value={expandedItems}
-                  onValueChange={setExpandedItems}
-                  className="w-full space-y-4"
-                >
-                  {isTester && <AIConfiguration />}
-                  <SubscriptionSettings />
-                  <SchedulerSettings />
-                  <CalendarConnect />
-                  <LocationCard />
-                  <InviteFriendsButton />
-                  <ShoppingAssistant />
-                  <ImportWardrobeSection onSelectAppForMigration={handleOpenMigrationForApp} />
-                </Accordion>
-                <div className="flex">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full text-white bg-destructive hover:bg-destructive/50 transition-all duration-300"
-                    onClick={() => { logout(); nav('/login'); }}
-                    data-testid="settings-logout-button"
-                  >
-                    <LogOut className="h-4 w-4" /> {t('profile.signOut')}
-                  </Button>
-                </div>
-                <div className="flex justify-center items-center gap-3">
-                  <Button
-                    type="button"
-                    onClick={() => handleOpenMigrationForApp(null)}
-                    className=""
-                    data-testid="profile-import-wardrobe-pill"
-                  >
-                    <Shirt className="w-3.5 h-3.5" />
-                    <span>{t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}</span>
-                  </Button>
+              </div>
+              <div className="text-muted-foreground p-1">
+                {collapsedGroups.identity ? (
+                  <ChevronRight className="h-5 w-5 rtl:rotate-180 transition-transform" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 transition-transform" />
+                )}
+              </div>
+            </button>
+            {!collapsedGroups.identity && (
+              <div className="p-4 border-t border-border bg-accent-beige/20 animate-in fade-in duration-200">
+                <ProfileDetailsCard />
+              </div>
+            )}
+          </div>
 
-                  <Link
-                    to="/delete-account"
-                    className="text-[12px] font-semibold text-destructive hover:text-dark-brand transition-colors duration-200"
-                    data-testid="delete-account-link"
-                  >
-                    {t('profile.deleteAccountLink', { defaultValue: 'Delete my Account' })}
-                  </Link>
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* GROUP 2: SUBSCRIPTION & SERVICES                               */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <div className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden" data-testid="profile-group-subscription">
+            <button
+              type="button"
+              onClick={() => toggleGroup('subscription')}
+              className="w-full flex items-center justify-between p-4 bg-white hover:bg-secondary/40 transition-colors cursor-pointer text-start"
+              aria-expanded={!collapsedGroups.subscription}
+              data-testid="profile-group-subscription-toggle"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-amber-500/10 text-amber-500 shrink-0">
+                  <Crown className="h-5 w-5" />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-dark-brand">
+                      {t('profile.groups.subscription', { defaultValue: 'Subscription' })}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary text-muted-foreground border border-border">
+                      {isTester ? 5 : 4}
+                    </span>
+                  </div>
+                  <span className="text-xs text-text-brand block mt-0.5">
+                    {t('profile.sections.subscriptionDesc', { defaultValue: 'Membership tier, reconstruction credits, calendar sync, and locations' })}
+                  </span>
+                </div>
+              </div>
+              <div className="text-muted-foreground p-1">
+                {collapsedGroups.subscription ? (
+                  <ChevronRight className="h-5 w-5 rtl:rotate-180 transition-transform" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 transition-transform" />
+                )}
+              </div>
+            </button>
+            {!collapsedGroups.subscription && (
+              <div className="p-4 border-t border-border bg-accent-beige/20 animate-in fade-in duration-200">
+                <Card className="rounded-[12px] border border-border bg-white shadow-sm" data-testid="profile-subscription-card">
+                  <CardContent className="p-5 space-y-4">
+                    <Accordion
+                      type="multiple"
+                      value={expandedItems}
+                      onValueChange={setExpandedItems}
+                      className="w-full space-y-4"
+                    >
+                      {isTester && <AIConfiguration />}
+                      <SubscriptionSettings />
+                      <CalendarConnect />
+                      <LocationCard />
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* GROUP 3: MORE & INTEGRATIONS                                    */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          <div className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden" data-testid="profile-group-more">
+            <button
+              type="button"
+              onClick={() => toggleGroup('more')}
+              className="w-full flex items-center justify-between p-4 bg-white hover:bg-secondary/40 transition-colors cursor-pointer text-start"
+              aria-expanded={!collapsedGroups.more}
+              data-testid="profile-group-more-toggle"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-500/10 text-purple-600 shrink-0">
+                  <MoreHorizontal className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-dark-brand">
+                      {t('profile.groups.more', { defaultValue: 'More' })}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-secondary text-muted-foreground border border-border">
+                      4
+                    </span>
+                  </div>
+                  <span className="text-xs text-text-brand block mt-0.5">
+                    {t('profile.sections.moreDesc', { defaultValue: 'Automated outfit scheduling, shopping assistant, catalog import, and invites' })}
+                  </span>
+                </div>
+              </div>
+              <div className="text-muted-foreground p-1">
+                {collapsedGroups.more ? (
+                  <ChevronRight className="h-5 w-5 rtl:rotate-180 transition-transform" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 transition-transform" />
+                )}
+              </div>
+            </button>
+            {!collapsedGroups.more && (
+              <div className="p-4 border-t border-border bg-accent-beige/20 animate-in fade-in duration-200">
+                <Card className="rounded-[12px] border border-border bg-white shadow-sm" data-testid="profile-more-card">
+                  <CardContent className="p-5 space-y-4">
+                    <Accordion
+                      type="multiple"
+                      value={expandedItems}
+                      onValueChange={setExpandedItems}
+                      className="w-full space-y-4"
+                    >
+                      <SchedulerSettings />
+                      <InviteFriendsButton />
+                      <ShoppingAssistant />
+                      <ImportWardrobeSection onSelectAppForMigration={handleOpenMigrationForApp} />
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+
+          {/* Sign Out and Account Actions */}
+          <div className="rounded-[12px] border border-border bg-white p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full sm:w-auto text-white bg-destructive hover:bg-destructive/80 transition-all duration-300"
+              onClick={() => { logout(); nav('/login'); }}
+              data-testid="settings-logout-button"
+            >
+              <LogOut className="h-4 w-4 me-1.5" /> {t('profile.signOut')}
+            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenMigrationForApp(null)}
+                data-testid="profile-import-wardrobe-pill"
+              >
+                <Shirt className="w-3.5 h-3.5 me-1.5" />
+                <span>{t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}</span>
+              </Button>
+
+              <Link
+                to="/delete-account"
+                className="text-[12px] font-semibold text-destructive hover:text-dark-brand transition-colors duration-200"
+                data-testid="delete-account-link"
+              >
+                {t('profile.deleteAccountLink', { defaultValue: 'Delete my Account' })}
+              </Link>
+            </div>
           </div>
         </div>
         <OnboardingMigrationModal

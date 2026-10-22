@@ -920,6 +920,17 @@
       "upgradePlanCta": "רכישת קרדיטים או שדרוג מסלול",
       "massClusterCreditsRequiredLabel": "מינימום קרדיטים נדרש לשחזור: 15",
       "massClusterCurrentCreditsLabel": "היתרה שלך כעת: {{available}}"
+    },
+    "quota": {
+      "title": "הגעת למכסת הקרדיטים",
+      "insufficientSubtitle": "אין מספיק קרדיטים או שהגעת למגבלת המכסה",
+      "messageWithBalance": "הבקשה שלך ל-{{count}} פריטים חורגת ממכסת הקרדיטים שלך. נותרו לך {{balance}} קרדיטים בתוכנית החינמית. האם ברצונך להוסיף {{balance}} פריטים כעת, או לשדרג את התוכנית?",
+      "messageZeroBalance": "הבקשה שלך ל-{{count}} פריטים חורגת ממכסת הקרדיטים היומית שלך. לא נותרו לך קרדיטים היום בתוכנית החינמית. שדרג את תוכניתך לקבלת ניתוח בינה מלאכותית ללא הגבלה, או המשך בהוספת הפריטים באופן ידני ללא בינה מלאכותית.",
+      "availableCreditsLabel": "קרדיטים זמינים לבינה מלאכותית:",
+      "addAllowedButton": "הוסף {{count}} פריטים",
+      "upgradeButton": "שדרג תוכנית",
+      "editManuallyButton": "המשך באופן ידני",
+      "manualContinueHint": "באפשרותך להזין את פרטי הפריטים ידנית ולשמור אותם."
     }
   },
   "itemDetail": {
