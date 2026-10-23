@@ -20,8 +20,6 @@ import {
   ChevronRight,
   ChevronLeft,
   ExternalLink,
-  Box,
-  Loader2,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -30,7 +28,6 @@ import AvatarMesh3D, { getAvatarMetricTransform } from './AvatarMesh3D';
 import GarmentMesh3D, { normalizeGarmentRole } from './GarmentMesh3D';
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
-import { getOpenTryOnStatus, generateGarment3D } from '@/lib/api/tryon';
 
 // ─── Creamy Boutique Studio Pedestal & Room ───
 function StudioPedestal() {
@@ -176,51 +173,9 @@ export default function DressingRoom3D({
   const [layerVisibility, setLayerVisibility] = useState({});
   const [showRack, setShowRack] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [custom3DModels, setCustom3DModels] = useState({});
-  const [generating3D, setGenerating3D] = useState({});
-  const [openTryOnReady, setOpenTryOnReady] = useState(false);
 
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    let mounted = true;
-    getOpenTryOnStatus()
-      .then((st) => {
-        if (mounted && st?.status === 'ready') {
-          setOpenTryOnReady(true);
-        }
-      })
-      .catch(() => {
-        // Fallback gracefully to parametric geometry
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const handleGenerate3D = useCallback(async (g, e) => {
-    e?.stopPropagation?.();
-    if (!g || !g.id || generating3D[g.id]) return;
-
-    setGenerating3D((prev) => ({ ...prev, [g.id]: true }));
-    try {
-      const res = await generateGarment3D({
-        garmentId: String(g.id),
-        imageUrl: g.url,
-        category: g.slot,
-        title: g.name,
-      });
-      const meshUrl = res?.model_3d_url || res?.mesh_url || res?.glb_url;
-      if (meshUrl) {
-        setCustom3DModels((prev) => ({ ...prev, [g.id]: meshUrl }));
-      }
-    } catch (err) {
-      console.warn('OpenTryOn 3D generation error:', err);
-    } finally {
-      setGenerating3D((prev) => ({ ...prev, [g.id]: false }));
-    }
-  }, [generating3D]);
 
   // Normalize active garment items from outfit / outfitItems / garments
   const activeGarments = useMemo(() => {
@@ -236,7 +191,6 @@ export default function DressingRoom3D({
         g.category,
         g.name || g.title || g.sub_category || g.item_type
       );
-      const effective3DModel = custom3DModels[g.id || slotKey] || g.model_3d_url || g.glb_url || g.mesh_3d;
       list.push({
         slot: normSlot,
         id: g.id || slotKey,
@@ -246,12 +200,11 @@ export default function DressingRoom3D({
         sub_category: g.sub_category || '',
         item_type: g.item_type || '',
         rawItem: g,
-        model_3d_url: effective3DModel,
       });
     });
 
     return list;
-  }, [activeItems, custom3DModels]);
+  }, [activeItems]);
 
   const hasOuterwear = useMemo(() => {
     return activeGarments.some((g) => g.slot === 'outerwear' && (layerVisibility[g.slot] ?? true));
@@ -350,16 +303,6 @@ export default function DressingRoom3D({
                 <Badge variant="secondary" className="text-[10px] font-semibold bg-primary-brand/10 text-primary-brand border-primary-brand/25">
                   360° 3D Studio
                 </Badge>
-                {openTryOnReady && (
-                  <Badge
-                    variant="secondary"
-                    className="hidden sm:inline-flex text-[10px] font-semibold bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 items-center"
-                    title="Powered by OpenTryOn fashion AI"
-                  >
-                    <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
-                    OpenTryOn AI
-                  </Badge>
-                )}
               </div>
               <p className="text-xs text-[#6B7280] truncate max-w-[280px] sm:max-w-md">
                 {outfitName}
@@ -645,46 +588,19 @@ export default function DressingRoom3D({
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1 shrink-0 ms-1">
-                            {openTryOnReady && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => handleGenerate3D(g, e)}
-                              disabled={generating3D[g.id]}
-                              className={`h-7 w-7 rounded-lg transition-colors ${
-                                g.model_3d_url
-                                  ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-700'
-                                  : 'text-[#6B7280] hover:text-primary-brand hover:bg-[#EFEAE0]'
-                              }`}
-                              title={
-                                g.model_3d_url
-                                  ? t('dressing_room_3d.mesh_active', { defaultValue: 'OpenTryOn 3D mesh active' })
-                                  : t('dressing_room_3d.generate_3d', { defaultValue: 'Generate 3D volumetric mesh (OpenTryOn)' })
-                              }
-                            >
-                              {generating3D[g.id] ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-brand" />
-                              ) : (
-                                <Box className="w-3.5 h-3.5" />
-                              )}
-                            </Button>
-                            )}
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleLayer(g.slot);
-                              }}
-                              className="h-7 w-7 rounded-lg text-[#6B7280] hover:text-[#111827] hover:bg-[#EFEAE0]"
-                              title={isVisible ? t('dressing_room_3d.hide_item', { defaultValue: 'Hide item' }) : t('dressing_room_3d.show_item', { defaultValue: 'Show item' })}
-                              aria-label={isVisible ? t('dressing_room_3d.hide_item', { defaultValue: 'Hide item' }) : t('dressing_room_3d.show_item', { defaultValue: 'Show item' })}
-                            >
-                              {isVisible ? <Eye className="w-3.5 h-3.5 text-primary-brand" /> : <EyeOff className="w-3.5 h-3.5" />}
-                            </Button>
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleLayer(g.slot);
+                            }}
+                            className="h-7 w-7 rounded-lg text-[#6B7280] hover:text-[#111827] hover:bg-[#EFEAE0] shrink-0 ms-1"
+                            title={isVisible ? t('dressing_room_3d.hide_item', { defaultValue: 'Hide item' }) : t('dressing_room_3d.show_item', { defaultValue: 'Show item' })}
+                            aria-label={isVisible ? t('dressing_room_3d.hide_item', { defaultValue: 'Hide item' }) : t('dressing_room_3d.show_item', { defaultValue: 'Show item' })}
+                          >
+                            {isVisible ? <Eye className="w-3.5 h-3.5 text-primary-brand" /> : <EyeOff className="w-3.5 h-3.5" />}
+                          </Button>
                         </div>
                       );
                     })}

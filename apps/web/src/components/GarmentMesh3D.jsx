@@ -1024,27 +1024,6 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
  * anatomical body-contoured drape around chest, shoulders, waist, and sleeves,
  * contact shadows, and physical studio materials.
  */
-// ─── OpenTryOn True 3D Volumetric Mesh Component ───
-function True3DGarmentMesh({ modelUrl, visible = true, renderOrder = 10 }) {
-  const { scene } = useGLTF(modelUrl);
-  const clonedScene = useMemo(() => {
-    if (!scene) return null;
-    const clone = scene.clone(true);
-    clone.traverse((node) => {
-      if (node.isMesh && node.material) {
-        node.material = node.material.clone();
-        node.castShadow = true;
-        node.receiveShadow = true;
-      }
-    });
-    return clone;
-  }, [scene]);
-
-  if (!visible || !clonedScene) return null;
-
-  return <primitive object={clonedScene} renderOrder={renderOrder} />;
-}
-
 export default function GarmentMesh3D({
   garment,
   slot,
@@ -1197,12 +1176,6 @@ export default function GarmentMesh3D({
     () => applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences),
     [baseGeometry, morphField, morphInfluences]
   );
-
-  const model3dUrl = garment?.model_3d_url || garment?.glb_url || garment?.mesh_3d;
-  if (model3dUrl && visible) {
-    const renderOrder = rawSlot === 'outerwear' ? 12 : rawSlot === 'dress' ? 11 : rawSlot === 'top' ? 10 : 8;
-    return <True3DGarmentMesh modelUrl={model3dUrl} visible={visible} renderOrder={renderOrder} />;
-  }
 
   if (!visible || !garment || !geometry) return null;
 
