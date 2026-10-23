@@ -28,6 +28,7 @@ import AvatarMesh3D, { getAvatarMetricTransform } from './AvatarMesh3D';
 import GarmentMesh3D, { normalizeGarmentRole } from './GarmentMesh3D';
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
+import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFit';
 
 // ─── Creamy Boutique Studio Pedestal & Room ───
 function StudioPedestal() {
@@ -205,6 +206,14 @@ export default function DressingRoom3D({
 
     return list;
   }, [activeItems]);
+
+  // Worn footwear drives the foot pose (heels) and lifts the whole figure off the floor
+  const footPose = useMemo(() => {
+    const shoe = activeGarments.find((g) => g.slot === 'shoes' && (layerVisibility[g.slot] ?? true));
+    if (!shoe) return null;
+    const spec = resolveFootwearSpec(shoe);
+    return computeFootPose(isMale, spec.heelHeight, spec.soleThickness);
+  }, [activeGarments, layerVisibility, isMale]);
 
   const hasOuterwear = useMemo(() => {
     return activeGarments.some((g) => g.slot === 'outerwear' && (layerVisibility[g.slot] ?? true));
@@ -400,12 +409,14 @@ export default function DressingRoom3D({
 
               {/* Shared Metric Space: avatar and garments are wrapped in the exact same metric transform */}
               <group position={avatarMetricTransform.position} scale={avatarMetricTransform.scale}>
+                <group position={[0, footPose?.groupLift || 0, 0]}>
                 {/* 3D Realistic Human Avatar (meterScale=false to inherit parent group scale) */}
                 <AvatarMesh3D
                   isMale={isMale}
                   skinColor={activeSkinColor}
                   hairProps={hairProps}
                   morphInfluences={morphInfluences}
+                  footPose={footPose}
                   height={activeMeasurements?.height || (isMale ? 178 : 168)}
                   meterScale={false}
                   castShadow={true}
@@ -424,9 +435,11 @@ export default function DressingRoom3D({
                       visible={isVisible}
                       hasOuterwear={hasOuterwear}
                       morphInfluences={morphInfluences}
+                      footPose={footPose}
                     />
                   );
                 })}
+                </group>
               </group>
             </Suspense>
           </Canvas>

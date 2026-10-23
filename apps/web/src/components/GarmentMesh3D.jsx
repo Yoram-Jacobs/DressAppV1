@@ -3,6 +3,12 @@ import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { buildAvatarMorphField, applyAvatarMorphsToGeometry } from '@/lib/avatarMorphField';
 import { MALE_GLB_URL, FEMALE_GLB_URL } from './AvatarMesh3D';
+import {
+  resolveFootwearSpec,
+  createFittedFootwearGeometry,
+  createHeelGeometry,
+  poseGeometry,
+} from '@/lib/footwearFit';
 
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
@@ -285,6 +291,48 @@ async function fetchAndCropTexture(url) {
 
   let solidU = 0.5;
   let solidV = 0.5;
+  // Footwear photo layout: a pair side by side (top view), a single top view, or a side view
+  const shoeLayout = { mode: aspect > 1.15 ? 'side' : 'top', splitU: 0.5, toeLeft: true };
+  try {
+    const layoutData = cropCtx.getImageData(0, 0, cropW, cropH).data;
+    const colCount = new Array(cropW).fill(0);
+    const colTop = new Array(cropW).fill(cropH);
+    for (let cy = 0; cy < cropH; cy++) {
+      const row = cy * cropW * 4;
+      for (let cx = 0; cx < cropW; cx++) {
+        const o = row + cx * 4;
+        const nearWhite = layoutData[o] > 238 && layoutData[o + 1] > 238 && layoutData[o + 2] > 238;
+        if (layoutData[o + 3] > 40 && !nearWhite) {
+          colCount[cx]++;
+          if (cy < colTop[cx]) colTop[cx] = cy;
+        }
+      }
+    }
+    let minCov = Infinity;
+    let minCol = -1;
+    for (let cx = Math.floor(cropW * 0.3); cx < Math.ceil(cropW * 0.7); cx++) {
+      if (colCount[cx] < minCov) {
+        minCov = colCount[cx];
+        minCol = cx;
+      }
+    }
+    if (minCol >= 0 && minCov <= cropH * 0.02) {
+      shoeLayout.mode = 'pair';
+      shoeLayout.splitU = minCol / cropW;
+    } else if (shoeLayout.mode === 'side') {
+      // The toe end of a side-view shoe is the lower end
+      const quarter = Math.max(1, Math.floor(cropW * 0.25));
+      let leftH = 0;
+      let rightH = 0;
+      for (let cx = 0; cx < quarter; cx++) {
+        leftH += cropH - colTop[cx];
+        rightH += cropH - colTop[cropW - 1 - cx];
+      }
+      shoeLayout.toeLeft = leftH < rightH;
+    }
+  } catch {
+    // Keep default layout
+  }
   try {
     const cropImgData = cropCtx.getImageData(0, 0, cropW, cropH);
     const cData = cropImgData.data;
@@ -319,6 +367,7 @@ async function fetchAndCropTexture(url) {
     aspect,
     solidU,
     solidV,
+    shoeLayout: { ...shoeLayout, solidU, solidV },
     bounds: {
       uMin: 0,
       uMax: 1,
@@ -1031,6 +1080,7 @@ export default function GarmentMesh3D({
   visible = true,
   hasOuterwear = false,
   morphInfluences = null,
+  footPose = null,
 }) {
   const {
     texture,
@@ -1038,6 +1088,7 @@ export default function GarmentMesh3D({
     hasSleeves: autoHasSleeves,
     solidU = 0.5,
     solidV = 0.5,
+    shoeLayout = null,
   } = useGarmentTexture(garment?.url);
 
   const rawSlot = normalizeGarmentRole(
@@ -1046,6 +1097,10 @@ export default function GarmentMesh3D({
     garment?.name || garment?.title || garment?.sub_category || garment?.item_type
   );
   const garmentText = `${garment?.sub_category || ''} ${garment?.item_type || ''} ${garment?.name || ''} ${garment?.category || ''}`.toLowerCase();
+  const footwearSpec = useMemo(
+    () => (rawSlot === 'shoes' ? resolveFootwearSpec(garment) : null),
+    [rawSlot, garment]
+  );
 
   // Avatar morph field: lets garments inherit the exact body deformation
   // (height, leg length, bust, shoulders...) applied to the avatar mesh.
@@ -1160,21 +1215,26 @@ export default function GarmentMesh3D({
 
     // 5. SHOES
     if (rawSlot === 'shoes') {
-      return createAnatomicalFootwearGeometry({
+      return createFittedFootwearGeometry({
         isMale,
-        yTop: (isMale ? 0.098 : 0.095) + yShift * 0.1,
-        ySole: -0.006,
-        layerOffset: 0.010,
+        spec: footwearSpec,
+        layout: shoeLayout,
       });
     }
 
     // 6. ACCESSORIES
     return createAnatomicalAccessoryGeometry(rawSlot, { isMale });
-  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV]);
+  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV, footwearSpec, shoeLayout]);
 
-  const geometry = useMemo(
-    () => applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences),
-    [baseGeometry, morphField, morphInfluences]
+  const geometry = useMemo(() => {
+    const morphed = applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences);
+    // Footwear follows the heeled foot pose applied to the avatar
+    return rawSlot === 'shoes' ? poseGeometry(morphed, footPose) : morphed;
+  }, [baseGeometry, morphField, morphInfluences, rawSlot, footPose]);
+
+  const heelGeometry = useMemo(
+    () => (rawSlot === 'shoes' && visible ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose }) : null),
+    [rawSlot, visible, isMale, footwearSpec, footPose]
   );
 
   if (!visible || !garment || !geometry) return null;
@@ -1182,6 +1242,12 @@ export default function GarmentMesh3D({
   const renderOrder = rawSlot === 'outerwear' ? 12 : rawSlot === 'dress' ? 11 : rawSlot === 'top' ? 10 : 8;
 
   return (
+    <>
+    {heelGeometry && (
+      <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
+        <meshStandardMaterial color={dominantColor || '#1F1F22'} roughness={0.45} metalness={0.08} />
+      </mesh>
+    )}
     <mesh
       geometry={geometry}
       castShadow
@@ -1203,5 +1269,6 @@ export default function GarmentMesh3D({
         polygonOffsetUnits={-1}
       />
     </mesh>
+    </>
   );
 }

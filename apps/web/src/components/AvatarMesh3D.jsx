@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { poseAvatarGeometry } from '@/lib/footwearFit';
 import * as THREE from 'three';
 import { resolveHairProperties } from './DynamicAvatar';
 
@@ -57,6 +58,7 @@ export default function AvatarMesh3D({
   castShadow = true,
   receiveShadow = true,
   groupRef: externalGroupRef,
+  footPose = null,
 }) {
   const modelUrl = isMale ? MALE_GLB_URL : FEMALE_GLB_URL;
   const { scene } = useGLTF(modelUrl);
@@ -76,9 +78,30 @@ export default function AvatarMesh3D({
       if (node.isMesh && node.material) {
         node.material = node.material.clone();
       }
+      if (node.isMesh && node.geometry) {
+        node.userData.originalGeometry = node.geometry;
+      }
     });
     return clone;
   }, [scene]);
+
+  // Heeled footwear: re-pose the feet (heel raised, pivot about the ball of the foot).
+  // Works on per-instance geometry copies so the shared GLTF stays untouched.
+  useEffect(() => {
+    if (!clonedScene) return;
+    clonedScene.traverse((node) => {
+      const original = node.userData?.originalGeometry;
+      if (!node.isMesh || !original) return;
+      if (node.geometry !== original) {
+        node.geometry.dispose?.();
+        node.geometry = original;
+      }
+      if (!footPose?.active) return;
+      if (!original.boundingBox) original.computeBoundingBox?.();
+      if (original.boundingBox && original.boundingBox.min.y > 0.2) return;
+      node.geometry = poseAvatarGeometry(original.clone(), footPose);
+    });
+  }, [clonedScene, footPose]);
 
   // Metric scaling and floor positioning
   const transform = useMemo(() => {
