@@ -303,27 +303,37 @@ export function poseGeometry(geometry, pose) {
  */
 function shoeUV(side, x, y, z, frame, layout) {
   const { x0, x1, z0, z1, yTop } = frame;
-  const along = (z - z0) / (z1 - z0); // 0 heel -> 1 toe
-  const across = (x - x0) / (x1 - x0); // 0 at -X edge -> 1 at +X edge
-  const mode = layout?.mode || 'pair';
+  const clamp01 = (t) => Math.max(0, Math.min(1, t));
+  const along = clamp01((z - z0) / (z1 - z0)); // 0 heel -> 1 toe
+  const across = clamp01((x - x0) / (x1 - x0)); // 0 at -X edge -> 1 at +X edge
+  const mode = layout?.mode || 'top';
+  const full = { u0: 0, u1: 1, v0: 0, v1: 1 };
+
+  // Inset the box slightly so edge samples land on the shoe, not the background
+  const inset = (bx) => {
+    const du = (bx.u1 - bx.u0) * 0.04;
+    const dv = (bx.v1 - bx.v0) * 0.03;
+    return { u0: bx.u0 + du, u1: bx.u1 - du, v0: bx.v0 + dv, v1: bx.v1 - dv };
+  };
 
   if (mode === 'side') {
-    // Side view: u along the shoe length, v up the shoe height
+    const bx = inset(layout?.box || full);
     const toeLeft = layout?.toeLeft !== false;
     const u = toeLeft ? 1 - along : along;
-    const v = Math.max(0.02, Math.min(0.98, 0.04 + (y / Math.max(0.04, yTop)) * 0.9));
-    return [Math.max(0.02, Math.min(0.98, 0.03 + u * 0.94)), v];
+    const h = clamp01(y / Math.max(0.04, yTop));
+    return [bx.u0 + u * (bx.u1 - bx.u0), bx.v0 + h * (bx.v1 - bx.v0)];
   }
 
-  // Top view: toes point down in the photo (v low), heel opening up (v high)
-  const v = Math.max(0.02, Math.min(0.98, 0.98 - along * 0.96));
-  if (mode === 'pair') {
-    const split = layout?.splitU ?? 0.5;
-    // Avatar faces the camera: the -X foot appears on the image's left
-    const [u0, u1] = side < 0 ? [0.01, split - 0.01] : [split + 0.01, 0.99];
-    return [u0 + Math.max(0, Math.min(1, across)) * (u1 - u0), v];
+  // Top view: toes point down in the photo, heel opening up
+  let bx = layout?.box || full;
+  if (mode === 'pair' && layout?.boxes?.length === 2) {
+    // Avatar faces the camera: its -X foot appears on the image's left
+    bx = side < 0 ? layout.boxes[0] : layout.boxes[1];
+  } else if (mode === 'pair') {
+    bx = side < 0 ? { u0: 0, u1: 0.5, v0: 0, v1: 1 } : { u0: 0.5, u1: 1, v0: 0, v1: 1 };
   }
-  return [0.02 + Math.max(0, Math.min(1, across)) * 0.96, v];
+  bx = inset(bx);
+  return [bx.u0 + across * (bx.u1 - bx.u0), bx.v0 + (1 - along) * (bx.v1 - bx.v0)];
 }
 
 /**

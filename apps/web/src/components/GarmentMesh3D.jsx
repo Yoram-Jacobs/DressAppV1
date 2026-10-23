@@ -291,48 +291,79 @@ async function fetchAndCropTexture(url) {
 
   let solidU = 0.5;
   let solidV = 0.5;
-  // Footwear photo layout: a pair side by side (top view), a single top view, or a side view
-  const shoeLayout = { mode: aspect > 1.15 ? 'side' : 'top', splitU: 0.5, toeLeft: true };
+  // Footwear photo layout: locate each shoe silhouette (column runs of opaque pixels)
+  // so every foot samples only inside its own shoe in the photo.
+  const shoeLayout = { mode: aspect > 1.25 ? 'side' : 'top', toeLeft: true, boxes: null, box: null };
   try {
     const layoutData = cropCtx.getImageData(0, 0, cropW, cropH).data;
+    const isOpaque = (o) => {
+      const nearWhite = layoutData[o] > 238 && layoutData[o + 1] > 238 && layoutData[o + 2] > 238;
+      return layoutData[o + 3] > 40 && !nearWhite;
+    };
     const colCount = new Array(cropW).fill(0);
-    const colTop = new Array(cropW).fill(cropH);
     for (let cy = 0; cy < cropH; cy++) {
       const row = cy * cropW * 4;
       for (let cx = 0; cx < cropW; cx++) {
-        const o = row + cx * 4;
-        const nearWhite = layoutData[o] > 238 && layoutData[o + 1] > 238 && layoutData[o + 2] > 238;
-        if (layoutData[o + 3] > 40 && !nearWhite) {
-          colCount[cx]++;
-          if (cy < colTop[cx]) colTop[cx] = cy;
+        if (isOpaque(row + cx * 4)) colCount[cx]++;
+      }
+    }
+    const maxCov = Math.max(1, ...colCount);
+    const runs = [];
+    let runStart = -1;
+    for (let cx = 0; cx <= cropW; cx++) {
+      const on = cx < cropW && colCount[cx] > maxCov * 0.06;
+      if (on && runStart < 0) runStart = cx;
+      if (!on && runStart >= 0) {
+        runs.push([runStart, cx - 1]);
+        runStart = -1;
+      }
+    }
+    // Merge tiny runs into neighbours, keep the substantial ones
+    const big = runs.filter(([r0, r1]) => r1 - r0 + 1 >= cropW * 0.12);
+    const boxFor = ([c0, c1]) => {
+      let r0 = cropH;
+      let r1 = -1;
+      for (let cy = 0; cy < cropH; cy++) {
+        const row = cy * cropW * 4;
+        for (let cx = c0; cx <= c1; cx++) {
+          if (isOpaque(row + cx * 4)) {
+            if (cy < r0) r0 = cy;
+            if (cy > r1) r1 = cy;
+            break;
+          }
         }
       }
-    }
-    let minCov = Infinity;
-    let minCol = -1;
-    for (let cx = Math.floor(cropW * 0.3); cx < Math.ceil(cropW * 0.7); cx++) {
-      if (colCount[cx] < minCov) {
-        minCov = colCount[cx];
-        minCol = cx;
-      }
-    }
-    if (minCol >= 0 && minCov <= cropH * 0.02) {
+      if (r1 < 0) { r0 = 0; r1 = cropH - 1; }
+      // Texture v runs bottom (0) -> top (1)
+      return { u0: c0 / cropW, u1: (c1 + 1) / cropW, v0: 1 - (r1 + 1) / cropH, v1: 1 - r0 / cropH };
+    };
+    if (big.length >= 2) {
+      const sorted = big.sort((p1, p2) => (p2[1] - p2[0]) - (p1[1] - p1[0])).slice(0, 2).sort((p1, p2) => p1[0] - p2[0]);
       shoeLayout.mode = 'pair';
-      shoeLayout.splitU = minCol / cropW;
-    } else if (shoeLayout.mode === 'side') {
-      // The toe end of a side-view shoe is the lower end
-      const quarter = Math.max(1, Math.floor(cropW * 0.25));
-      let leftH = 0;
-      let rightH = 0;
-      for (let cx = 0; cx < quarter; cx++) {
-        leftH += cropH - colTop[cx];
-        rightH += cropH - colTop[cropW - 1 - cx];
+      shoeLayout.boxes = sorted.map(boxFor);
+    } else {
+      const run = big[0] || [0, cropW - 1];
+      const box = boxFor(run);
+      shoeLayout.box = box;
+      const bw = (box.u1 - box.u0) * cropW;
+      const bh = (box.v1 - box.v0) * cropH;
+      shoeLayout.mode = bw / Math.max(1, bh) > 1.25 ? 'side' : 'top';
+      if (shoeLayout.mode === 'side') {
+        // The toe end of a side-view shoe is the lower end
+        const quarter = Math.max(1, Math.floor((run[1] - run[0] + 1) * 0.25));
+        let leftH = 0;
+        let rightH = 0;
+        for (let k = 0; k < quarter; k++) {
+          leftH += colCount[run[0] + k];
+          rightH += colCount[run[1] - k];
+        }
+        shoeLayout.toeLeft = leftH < rightH;
       }
-      shoeLayout.toeLeft = leftH < rightH;
     }
   } catch {
     // Keep default layout
   }
+
   try {
     const cropImgData = cropCtx.getImageData(0, 0, cropW, cropH);
     const cData = cropImgData.data;
@@ -360,8 +391,23 @@ async function fetchAndCropTexture(url) {
     solidV = 0.5;
   }
 
+  // Opaque variant (transparent pixels filled with the dominant fabric colour)
+  const opaqueCanvas = document.createElement('canvas');
+  opaqueCanvas.width = cropW;
+  opaqueCanvas.height = cropH;
+  const opaqueCtx = opaqueCanvas.getContext('2d');
+  opaqueCtx.fillStyle = dominantColor;
+  opaqueCtx.fillRect(0, 0, cropW, cropH);
+  opaqueCtx.drawImage(cropCanvas, 0, 0);
+  const opaqueTexture = new THREE.CanvasTexture(opaqueCanvas);
+  opaqueTexture.colorSpace = THREE.SRGBColorSpace;
+  opaqueTexture.wrapS = THREE.ClampToEdgeWrapping;
+  opaqueTexture.wrapT = THREE.ClampToEdgeWrapping;
+  opaqueTexture.needsUpdate = true;
+
   const res = {
     texture,
+    opaqueTexture,
     dominantColor,
     hasSleeves,
     aspect,
@@ -1084,6 +1130,7 @@ export default function GarmentMesh3D({
 }) {
   const {
     texture,
+    opaqueTexture = null,
     dominantColor,
     hasSleeves: autoHasSleeves,
     solidU = 0.5,
@@ -1255,10 +1302,10 @@ export default function GarmentMesh3D({
       renderOrder={renderOrder}
     >
       <meshStandardMaterial
-        map={texture || null}
+        map={(rawSlot === 'shoes' ? opaqueTexture || texture : texture) || null}
         color={texture ? '#FFFFFF' : dominantColor || '#CBD5E1'}
-        transparent={true}
-        alphaTest={0.02}
+        transparent={rawSlot !== 'shoes'}
+        alphaTest={rawSlot === 'shoes' ? 0 : 0.02}
         depthWrite={true}
         side={THREE.DoubleSide}
         roughness={0.65}
