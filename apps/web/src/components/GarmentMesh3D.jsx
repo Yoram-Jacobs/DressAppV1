@@ -1,28 +1,28 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
+import { useGLTF } from '@react-three/drei';
 
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
 export const TORSO_PROFILE_FEMALE = [
   { y: 1.46, rx: 0.130, cz: 0.025, rz: 0.090 }, // High collar / neck base
-  { y: 1.42, rx: 0.180, cz: 0.025, rz: 0.105 }, // Clavicle / collarbone
-  { y: 1.36, rx: 0.235, cz: 0.035, rz: 0.135 }, // Shoulders
-  { y: 1.28, rx: 0.235, cz: 0.045, rz: 0.150 }, // Upper chest
-  { y: 1.23, rx: 0.240, cz: 0.058, rz: 0.160 }, // Bust peak (front Z reaches +0.218, back reaches -0.102)
-  { y: 1.15, rx: 0.225, cz: 0.050, rz: 0.145 }, // Under-bust
-  { y: 1.05, rx: 0.215, cz: 0.045, rz: 0.138 }, // Natural waist
-  { y: 0.95, rx: 0.228, cz: 0.030, rz: 0.150 }, // Upper hips / glutes
+  { y: 1.42, rx: 0.195, cz: 0.030, rz: 0.115 }, // Shoulder line / clavicle (overlays avatar shoulder line)
+  { y: 1.36, rx: 0.235, cz: 0.038, rz: 0.138 }, // Upper chest
+  { y: 1.25, rx: 0.238, cz: 0.055, rz: 0.162 }, // Bust peak (front Z reaches +0.217, back reaches -0.102)
+  { y: 1.15, rx: 0.222, cz: 0.048, rz: 0.145 }, // Under-bust
+  { y: 1.05, rx: 0.212, cz: 0.040, rz: 0.138 }, // Natural waist
+  { y: 0.95, rx: 0.226, cz: 0.030, rz: 0.148 }, // Upper hips / glutes
   { y: 0.84, rx: 0.230, cz: 0.025, rz: 0.145 }, // Pelvis / crotch
   { y: 0.65, rx: 0.245, cz: 0.025, rz: 0.155 }, // Upper thigh flare (for skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
   { y: 1.52, rx: 0.145, cz: 0.025, rz: 0.100 }, // High collar / neck base
-  { y: 1.48, rx: 0.205, cz: 0.025, rz: 0.120 }, // Clavicle / collarbone
-  { y: 1.42, rx: 0.260, cz: 0.025, rz: 0.155 }, // Shoulders
-  { y: 1.34, rx: 0.255, cz: 0.035, rz: 0.170 }, // Chest / pecs peak
-  { y: 1.22, rx: 0.250, cz: 0.040, rz: 0.158 }, // Rib cage
-  { y: 1.08, rx: 0.240, cz: 0.045, rz: 0.150 }, // Waist
+  { y: 1.48, rx: 0.225, cz: 0.028, rz: 0.125 }, // Shoulder line / clavicle (overlays avatar shoulder line)
+  { y: 1.42, rx: 0.260, cz: 0.025, rz: 0.155 }, // Shoulders / upper chest
+  { y: 1.30, rx: 0.250, cz: 0.040, rz: 0.165 }, // Chest / pecs peak
+  { y: 1.18, rx: 0.240, cz: 0.042, rz: 0.152 }, // Rib cage
+  { y: 1.08, rx: 0.235, cz: 0.040, rz: 0.145 }, // Waist
   { y: 0.96, rx: 0.245, cz: 0.035, rz: 0.160 }, // Upper hips / glutes
   { y: 0.86, rx: 0.250, cz: 0.030, rz: 0.160 }, // Pelvis / crotch
   { y: 0.70, rx: 0.245, cz: 0.025, rz: 0.155 }, // Thigh flare
@@ -391,8 +391,8 @@ function useGarmentTexture(url) {
 export function createAnatomicalTopGeometry({
   isMale = false,
   hasSleeves = true,
-  yTop = isMale ? 1.50 : 1.45,
-  yBottom = isMale ? 0.86 : 0.82,
+  yTop = isMale ? 1.53 : 1.47,
+  yBottom = isMale ? 0.88 : 0.84,
   layerOffset = 0.015,
   uSwatch = 0.50,
   vSwatch = 0.50,
@@ -405,7 +405,7 @@ export function createAnatomicalTopGeometry({
   // 1. Torso Shell (wrapping 360° continuously around collar, chest, waist, and hips)
   const ny = 20;
   const nx = 28;
-  const yShoulder = isMale ? 1.42 : 1.36;
+  const yShoulder = isMale ? 1.48 : 1.42;
 
   for (let i = 0; i <= ny; i++) {
     const vNorm = i / ny;
@@ -486,10 +486,10 @@ export function createAnatomicalTopGeometry({
     const nySleeve = 10;
     const nxSleeve = 14;
 
-    const yArmStart = isMale ? 1.42 : 1.36;
-    const yArmEnd = isMale ? 0.94 : 0.88;
-    const xArmStart = isMale ? 0.215 : 0.190;
-    const xArmEnd = isMale ? 0.275 : 0.255;
+    const yArmStart = isMale ? 1.48 : 1.42;
+    const yArmEnd = isMale ? 0.96 : 0.90;
+    const xArmStart = isMale ? 0.225 : 0.195;
+    const xArmEnd = isMale ? 0.280 : 0.255;
 
     sides.forEach((side) => {
       const startIdx = verts.length / 3;
@@ -556,7 +556,7 @@ export const createAnatomicalTorsoGeometry = (opts) => createAnatomicalTopGeomet
 export function createAnatomicalDressGeometry({
   isMale = false,
   hasSleeves = false,
-  yTop = isMale ? 1.50 : 1.45,
+  yTop = isMale ? 1.53 : 1.47,
   yBottom = 0.50,
   layerOffset = 0.018,
   uSwatch = 0.50,
@@ -570,7 +570,7 @@ export function createAnatomicalDressGeometry({
   // 1. Bodice & Flared Skirt 360° Shell
   const ny = 22;
   const nx = 26;
-  const yShoulder = isMale ? 1.42 : 1.36;
+  const yShoulder = isMale ? 1.48 : 1.42;
 
   for (let i = 0; i <= ny; i++) {
     const vNorm = i / ny;
@@ -652,10 +652,10 @@ export function createAnatomicalDressGeometry({
     const nySleeve = 10;
     const nxSleeve = 12;
 
-    const yArmStart = isMale ? 1.42 : 1.36;
-    const yArmEnd = isMale ? 0.94 : 0.88;
-    const xArmStart = isMale ? 0.215 : 0.190;
-    const xArmEnd = isMale ? 0.275 : 0.255;
+    const yArmStart = isMale ? 1.48 : 1.42;
+    const yArmEnd = isMale ? 0.96 : 0.90;
+    const xArmStart = isMale ? 0.225 : 0.195;
+    const xArmEnd = isMale ? 0.280 : 0.255;
 
     sides.forEach((side) => {
       const startIdx = verts.length / 3;
@@ -1022,6 +1022,27 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
  * anatomical body-contoured drape around chest, shoulders, waist, and sleeves,
  * contact shadows, and physical studio materials.
  */
+// ─── OpenTryOn True 3D Volumetric Mesh Component ───
+function True3DGarmentMesh({ modelUrl, visible = true, renderOrder = 10 }) {
+  const { scene } = useGLTF(modelUrl);
+  const clonedScene = useMemo(() => {
+    if (!scene) return null;
+    const clone = scene.clone(true);
+    clone.traverse((node) => {
+      if (node.isMesh && node.material) {
+        node.material = node.material.clone();
+        node.castShadow = true;
+        node.receiveShadow = true;
+      }
+    });
+    return clone;
+  }, [scene]);
+
+  if (!visible || !clonedScene) return null;
+
+  return <primitive object={clonedScene} renderOrder={renderOrder} />;
+}
+
 export default function GarmentMesh3D({
   garment,
   slot,
@@ -1058,9 +1079,10 @@ export default function GarmentMesh3D({
       const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה');
       const isSleeveless = garmentText.includes('sleeveless') || garmentText.includes('tank') || garmentText.includes('vest') || garmentText.includes('גופיה') || garmentText.includes('גופייה') || garmentText.includes('וסט') || !autoHasSleeves;
 
-      const yTop = (isMale ? 1.50 : 1.45) + yShift;
-      let yBottom = (isMale ? 0.88 : 0.84) + yShift;
-      if (isCrop) yBottom = (isMale ? 1.15 : 1.10) + yShift;
+      // High collar at 1.47 (F) / 1.53 (M), shoulder seam overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
+      const yTop = (isMale ? 1.53 : 1.47) + yShift;
+      let yBottom = (isMale ? 0.90 : 0.86) + yShift;
+      if (isCrop) yBottom = (isMale ? 1.18 : 1.12) + yShift;
       if (isLongline) yBottom = (isMale ? 0.75 : 0.70) + yShift;
 
       const layerOffset = (hasOuterwear ? 0.016 : 0.022) + rxShift;
@@ -1082,10 +1104,11 @@ export default function GarmentMesh3D({
       const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('עליונית קצרה') || (garmentText.includes('jacket') && garmentText.includes('crop'));
       const isSleeveless = garmentText.includes('vest') || garmentText.includes('waistcoat') || garmentText.includes('וסט') || !autoHasSleeves;
 
-      const yTop = (isMale ? 1.52 : 1.46) + yShift;
-      let yBottom = (isMale ? 0.86 : 0.82) + yShift;
+      // Outerwear collar stands at 1.48 (F) / 1.54 (M), shoulder line overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
+      const yTop = (isMale ? 1.54 : 1.48) + yShift;
+      let yBottom = (isMale ? 0.88 : 0.84) + yShift;
       if (isLongCoat) yBottom = (isMale ? 0.52 : 0.48) + yShift;
-      if (isCropJacket) yBottom = (isMale ? 1.12 : 1.06) + yShift;
+      if (isCropJacket) yBottom = (isMale ? 1.15 : 1.10) + yShift;
 
       // Layered cleanly outside tops with generous clearance
       const layerOffset = (isMale ? 0.038 : 0.034) + rxShift;
@@ -1107,7 +1130,8 @@ export default function GarmentMesh3D({
       const isMaxi = garmentText.includes('maxi') || garmentText.includes('gown') || garmentText.includes('evening') || garmentText.includes('ארוכה') || garmentText.includes('מקסי');
       const hasSleeves = autoHasSleeves && (garmentText.includes('long sleeve') || garmentText.includes('sleeve') || garmentText.includes('שרוול'));
 
-      const yTop = (isMale ? 1.50 : 1.45) + yShift;
+      // Dress bodice top overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
+      const yTop = (isMale ? 1.53 : 1.47) + yShift;
       let yBottom = (isMale ? 0.55 : 0.50) + yShift; // Default midi/knee
       if (isMini) yBottom = (isMale ? 0.78 : 0.74) + yShift;
       if (isMaxi) yBottom = (isMale ? 0.16 : 0.12) + yShift;
@@ -1159,6 +1183,12 @@ export default function GarmentMesh3D({
     // 6. ACCESSORIES
     return createAnatomicalAccessoryGeometry(rawSlot, { isMale });
   }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV, morphInfluences]);
+
+  const model3dUrl = garment?.model_3d_url || garment?.glb_url || garment?.mesh_3d;
+  if (model3dUrl && visible) {
+    const renderOrder = rawSlot === 'outerwear' ? 12 : rawSlot === 'dress' ? 11 : rawSlot === 'top' ? 10 : 8;
+    return <True3DGarmentMesh modelUrl={model3dUrl} visible={visible} renderOrder={renderOrder} />;
+  }
 
   if (!visible || !garment || !geometry) return null;
 

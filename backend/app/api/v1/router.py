@@ -30,6 +30,7 @@ from app.api.v1 import (
     weather,
     image_generation,
     internal,
+    tryon,
 )
 
 api_v1_router = APIRouter(prefix="/v1")
@@ -95,3 +96,5 @@ api_v1_router.include_router(daily_proposals.router)
 api_v1_router.include_router(weather.router)
 api_v1_router.include_router(image_generation.router)
 api_v1_router.include_router(internal.router)
+
+api_v1_router.include_router(tryon.router)
