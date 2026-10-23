@@ -4,28 +4,28 @@ import * as THREE from 'three';
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
 export const TORSO_PROFILE_FEMALE = [
-  { y: 1.46, rx: 0.120, cz: 0.025, rz: 0.080 }, // High collar / neck base
-  { y: 1.42, rx: 0.165, cz: 0.025, rz: 0.095 }, // Clavicle / collarbone
-  { y: 1.36, rx: 0.215, cz: 0.035, rz: 0.125 }, // Shoulders
-  { y: 1.28, rx: 0.210, cz: 0.045, rz: 0.140 }, // Upper chest
-  { y: 1.23, rx: 0.215, cz: 0.058, rz: 0.150 }, // Bust peak (front Z reaches +0.208, back reaches -0.092)
-  { y: 1.15, rx: 0.205, cz: 0.050, rz: 0.138 }, // Under-bust
-  { y: 1.05, rx: 0.198, cz: 0.045, rz: 0.132 }, // Natural waist
-  { y: 0.95, rx: 0.215, cz: 0.030, rz: 0.145 }, // Upper hips / glutes
-  { y: 0.84, rx: 0.215, cz: 0.025, rz: 0.140 }, // Pelvis / crotch
-  { y: 0.65, rx: 0.230, cz: 0.025, rz: 0.150 }, // Upper thigh flare (for skirts/dresses)
+  { y: 1.46, rx: 0.130, cz: 0.025, rz: 0.090 }, // High collar / neck base
+  { y: 1.42, rx: 0.180, cz: 0.025, rz: 0.105 }, // Clavicle / collarbone
+  { y: 1.36, rx: 0.235, cz: 0.035, rz: 0.135 }, // Shoulders
+  { y: 1.28, rx: 0.235, cz: 0.045, rz: 0.150 }, // Upper chest
+  { y: 1.23, rx: 0.240, cz: 0.058, rz: 0.160 }, // Bust peak (front Z reaches +0.218, back reaches -0.102)
+  { y: 1.15, rx: 0.225, cz: 0.050, rz: 0.145 }, // Under-bust
+  { y: 1.05, rx: 0.215, cz: 0.045, rz: 0.138 }, // Natural waist
+  { y: 0.95, rx: 0.228, cz: 0.030, rz: 0.150 }, // Upper hips / glutes
+  { y: 0.84, rx: 0.230, cz: 0.025, rz: 0.145 }, // Pelvis / crotch
+  { y: 0.65, rx: 0.245, cz: 0.025, rz: 0.155 }, // Upper thigh flare (for skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
-  { y: 1.52, rx: 0.135, cz: 0.025, rz: 0.095 }, // High collar / neck base
-  { y: 1.48, rx: 0.190, cz: 0.025, rz: 0.110 }, // Clavicle / collarbone
-  { y: 1.42, rx: 0.245, cz: 0.025, rz: 0.145 }, // Shoulders
-  { y: 1.34, rx: 0.240, cz: 0.035, rz: 0.165 }, // Chest / pecs peak
-  { y: 1.22, rx: 0.235, cz: 0.040, rz: 0.150 }, // Rib cage
-  { y: 1.08, rx: 0.225, cz: 0.045, rz: 0.145 }, // Waist
-  { y: 0.96, rx: 0.230, cz: 0.035, rz: 0.155 }, // Upper hips / glutes
-  { y: 0.86, rx: 0.235, cz: 0.030, rz: 0.155 }, // Pelvis / crotch
-  { y: 0.70, rx: 0.230, cz: 0.025, rz: 0.150 }, // Thigh flare
+  { y: 1.52, rx: 0.145, cz: 0.025, rz: 0.100 }, // High collar / neck base
+  { y: 1.48, rx: 0.205, cz: 0.025, rz: 0.120 }, // Clavicle / collarbone
+  { y: 1.42, rx: 0.260, cz: 0.025, rz: 0.155 }, // Shoulders
+  { y: 1.34, rx: 0.255, cz: 0.035, rz: 0.170 }, // Chest / pecs peak
+  { y: 1.22, rx: 0.250, cz: 0.040, rz: 0.158 }, // Rib cage
+  { y: 1.08, rx: 0.240, cz: 0.045, rz: 0.150 }, // Waist
+  { y: 0.96, rx: 0.245, cz: 0.035, rz: 0.160 }, // Upper hips / glutes
+  { y: 0.86, rx: 0.250, cz: 0.030, rz: 0.160 }, // Pelvis / crotch
+  { y: 0.70, rx: 0.245, cz: 0.025, rz: 0.155 }, // Thigh flare
 ];
 
 export const LEG_PROFILE_FEMALE = [
@@ -84,15 +84,65 @@ export function getLegSlice(y, isMale) {
  */
 export function normalizeGarmentRole(role, category, title) {
   const text = (String(role || '') + ' ' + String(category || '') + ' ' + String(title || '')).toLowerCase().trim();
-  if (/(?:outerwear|jacket|coat|blazer|parka|מעיל|ז['’]קט|ג['’]קט|בלייזר|עליונית|vest|overcoat)/i.test(text)) return 'outerwear';
-  if (/(?:dress|gown|jumpsuit|romper|overall|שמלה|שמלת|אוברול|סרבל|חלוק|גלבייה)/i.test(text)) return 'dress';
-  if (/(?:bottom|pants|jeans|trousers|shorts?|skirt|מכנסיים|מכנס|חצאית|ג['’]ינס|שורטס|טייץ)/i.test(text)) return 'bottom';
-  if (/(?:top|shirt|blouse|sweater|hoodie|tee|t-shirt|polo|חולצה|חולצת|סוודר|גופייה|גופיה|סווטשירט)/i.test(text)) return 'top';
-  if (/(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|נעליים|נעלי|מגפיים|סנדלים|מוקסינים)/i.test(text)) return 'shoes';
-  if (/(?:hat|cap|headwear|beanie|כובע|כיפה|ברט)/i.test(text)) return 'headwear';
-  if (/(?:glasses|sunglasses|משקפיים|משקפי)/i.test(text)) return 'glasses';
-  if (/(?:belt|חגורה)/i.test(text)) return 'belt';
-  if (/(?:bag|purse|tote|backpack|תיק|ארנק)/i.test(text)) return 'bag';
+  if (!text) return 'accessory';
+
+  // 1. Direct slot match
+  const r = String(role || '').toLowerCase().trim();
+  if (r === 'outerwear' || r === 'coat' || r === 'jacket') return 'outerwear';
+  if (r === 'dress' || r === 'full_body' || r === 'one_piece') return 'dress';
+  if (r === 'bottom' || r === 'pants' || r === 'skirt' || r === 'shorts') return 'bottom';
+  if (r === 'top' || r === 'shirt') return 'top';
+  if (r === 'shoes' || r === 'footwear') return 'shoes';
+  if (r === 'headwear' || r === 'hat') return 'headwear';
+  if (r === 'glasses') return 'glasses';
+  if (r === 'belt') return 'belt';
+  if (r === 'bag') return 'bag';
+
+  // 2. Multi-lingual Outerwear (checked BEFORE general tops/bottoms)
+  if (/(?:outerwear|jacket|coat|blazer|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|מעיל|ז['’]קט|ג['’]קט|בלייזר|עליונית|קרדיגן|וסט|ملابس خارجية|معطف|سترة|جاكيت|بليزر|كارديجان|ropa de abrigo|cazadora|chaleco|vêtements d['’]extérieur|vêtement d['’]extérieur|veste|manteau|gilet|outdoor-bekleidung|oberbekleidung|jacke|mantel|weste|capispalla|giacca|cappotto|casacos e jaquetas|agasalho|jaqueta|casaco|cardigã|верхняя одежда|куртка|пальто|пиджак|блейзер|кардиган|外套|大衣|夹克|西装|开衫|アウター|コート|ブレザー|カーディガン|buitenmode|आउटरवियर|जैकेट|कोट|ब्लेज़र)/i.test(text)) {
+    return 'outerwear';
+  }
+
+  // 3. Multi-lingual Dress & Full Body (including cultural attire)
+  if (/(?:dress|gown|jumpsuit|romper|overall|one_piece|full_body|abaya|kaftan|caftan|thobe|achkan|saree|sari|lehenga|anarkali|kurti|kimono|hanbok|שמלה|שמלת|שמלות|אוברול|סרבל|חלוק|גלבייה|חלק שלם|עבאיה|כפתן|סארי|תוב|قطعة كاملة|فستان|جمبسوت|عباية|قفطان|ثوب|جلابية|cuerpo entero|vestido|mono|corps entier|robe|combinaison|ganzkörper|kleid|completi e abiti|abito|tuta|corpo inteiro|macacão|полный образ|плать|комбинезон|连体|套装|连衣裙|裙装|ワンピース|ドレス|オールインワン|volledig lichaam|jurk|फुल बॉडी|साड़ी|लहंगा)/i.test(text)) {
+    return 'dress';
+  }
+
+  // 4. Multi-lingual Bottoms (pants, jeans, skirts, shorts, leggings)
+  if (/(?:bottom|bottoms|pants|jeans|trousers|shorts?|skirt|leggings|sweatpants|joggers|slacks|chino|חלק תחתון|תחתון|מכנסיים|מכנס|חצאית|חצאיות|ג['’]ינס|שורטס|טייץ|דגמ["״]ח|ברמודה|قطعة سفلية|الطبقة السفلية|بنطال|بنطلون|تنورة|شورت|جينز|inferior|parte inferior|pantalón|pantalones|falda|vaqueros|bas|pantalon|jupe|jean|unterteil|unterschicht|hose|rock|pantaloni|gonna|partes de baixo|calça|calças|saia|низ|брюки|штаны|юбка|шорты|джинсы|下装|下层|裤子|长裤|短裤|裙子|半身裙|牛仔裤|ボトムス|ズボン|スカート|onderkleding|बॉटम्स|पतलून|पेंट|सलवार|पायजामा|जींस)/i.test(text)) {
+    return 'bottom';
+  }
+
+  // 5. Multi-lingual Tops (shirts, blouses, sweaters, hoodies, tees, polos, tanks, camisoles, knitwear)
+  if (/(?:top|tops|shirt|blouse|sweater|hoodie|tee|t-shirt|polo|tank|crop|sweatshirt|pullover|camisole|jersey|tunic|kurta|חלק עליון|עליון|חולצה|חולצת|חולצות|בלוזה|סוודר|סוודרים|סווטשירט|קפוצ['’]ון|גופייה|גופיה|גופיות|טוניקה|قطعة علوية|الطبقة العلوية|قميص|بلوزة|كنزة|سويتر|توب|superior|parte superior|camisa|blusa|suéter|sueter|camiseta|haut|chemise|chemisier|pull|oberteil|oberschicht|hemd|bluse|maglia|camicia|camicetta|maglione|partes de cima|верх|рубашка|блузка|свитер|футболка|топ|джемпер|толстовка|худи|上装|顶层|上衣|衬衫|卫衣|毛衣|t恤|トップス|シャツ|ブラウス|セーター|bovenkleding|टॉप्स|टॉप|कुर्ता|शर्ट|ब्लाउज|टी-शर्ट|स्वेटर)/i.test(text)) {
+    return 'top';
+  }
+
+  // 6. Multi-lingual Footwear / Shoes
+  if (/(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?|slippers?|pumps?|clogs?|espadrilles?|הנעלה|נעליים|נעלי|מגפיים|מגפי|סנדלים|מוקסינים|עקבים|קבקבים|أحذية|حذاء|صندل|جزمة|calzado|zapatos|botas|sandalias|zapatillas|chaussure|chaussures|bottes|schuhwerk|schuhe|stiefel|sneaker|scarpe|calzature|stivali|calçados|sapatos|обувь|ботинки|туфли|кроссовки|сапоги|сандалии|鞋履|鞋子|运动鞋|靴子|凉鞋|シューズ|靴|スニーカー|ブーツ|サンダル|schoenen|जूते|सैंडल|चप्पल)/i.test(text)) {
+    return 'shoes';
+  }
+
+  // 7. Multi-lingual Headwear
+  if (/(?:hat|cap|headwear|beanie|beret|turban|hijab|fedora|panama|sombrero|bonnet|כובע|כיפה|ברט|כיסויי ראש|מטפחת|טורבן|أغطية الرأس|غطاء رأس|قبعة|sombreros|gorro|chapeaux|chapeau|bonnet|kopfbedeckung|mütze|hut|copricapo|cappello|chapéus|chapéu|головной убор|шапка|шляпа|кепка|头饰|帽子|キャップ|hoofddeksels|hoed|pet|हेडवियर|टोपी)/i.test(text)) {
+    return 'headwear';
+  }
+
+  // 8. Multi-lingual Glasses
+  if (/(?:glasses|sunglasses|eyewear|spectacles|משקפיים|משקפי|משקפי שמש|نظارات|anteojos|gafas|lunettes|gläser|brille|occhiali|copos|óculos|очки|眼镜|墨镜|眼鏡|サングラス|bril|चश्मा)/i.test(text)) {
+    return 'glasses';
+  }
+
+  // 9. Multi-lingual Belt
+  if (/(?:belt|חגורה|חגורות|חגור|حزام|cinturón|cinturon|ceinture|gürtel|guertel|cintura|cinto|пояс|ремень|腰带|皮带|ベルト|riem|बेल्ट)/i.test(text)) {
+    return 'belt';
+  }
+
+  // 10. Multi-lingual Bag / Purse
+  if (/(?:bag|purse|tote|backpack|handbag|clutch|satchel|crossbody|תיק|ארנק|תיק יד|תרמיל|حقيبة|شنطة|bolso|mochila|sac|tasche|borsa|bolsa|сумка|рюкзак|包|手袋|背包|バッグ|鞄|tas|बैग|पर्स)/i.test(text)) {
+    return 'bag';
+  }
+
   return 'accessory';
 }
 
@@ -978,6 +1028,7 @@ export default function GarmentMesh3D({
   isMale = false,
   visible = true,
   hasOuterwear = false,
+  morphInfluences = null,
 }) {
   const {
     texture,
@@ -998,18 +1049,21 @@ export default function GarmentMesh3D({
   const geometry = useMemo(() => {
     if (!visible) return null;
 
+    const yShift = morphInfluences ? ((morphInfluences.tall || 0) * 0.04 - (morphInfluences.short || 0) * 0.03) : 0;
+    const rxShift = morphInfluences ? ((morphInfluences.heavy || 0) * 0.02 + (morphInfluences.shoulders_wide || 0) * 0.015 - (morphInfluences.thin || 0) * 0.01) : 0;
+
     // 1. TOP
     if (rawSlot === 'top') {
       const isCrop = garmentText.includes('crop') || garmentText.includes('sports_bra') || garmentText.includes('bralette') || garmentText.includes('קרופ') || garmentText.includes('חזיה');
       const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה');
       const isSleeveless = garmentText.includes('sleeveless') || garmentText.includes('tank') || garmentText.includes('vest') || garmentText.includes('גופיה') || garmentText.includes('גופייה') || garmentText.includes('וסט') || !autoHasSleeves;
 
-      const yTop = isMale ? 1.50 : 1.45;
-      let yBottom = isMale ? 0.88 : 0.84;
-      if (isCrop) yBottom = isMale ? 1.15 : 1.10;
-      if (isLongline) yBottom = isMale ? 0.75 : 0.70;
+      const yTop = (isMale ? 1.50 : 1.45) + yShift;
+      let yBottom = (isMale ? 0.88 : 0.84) + yShift;
+      if (isCrop) yBottom = (isMale ? 1.15 : 1.10) + yShift;
+      if (isLongline) yBottom = (isMale ? 0.75 : 0.70) + yShift;
 
-      const layerOffset = hasOuterwear ? 0.012 : 0.016;
+      const layerOffset = (hasOuterwear ? 0.016 : 0.022) + rxShift;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -1028,13 +1082,13 @@ export default function GarmentMesh3D({
       const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('עליונית קצרה') || (garmentText.includes('jacket') && garmentText.includes('crop'));
       const isSleeveless = garmentText.includes('vest') || garmentText.includes('waistcoat') || garmentText.includes('וסט') || !autoHasSleeves;
 
-      const yTop = isMale ? 1.52 : 1.46;
-      let yBottom = isMale ? 0.86 : 0.82;
-      if (isLongCoat) yBottom = isMale ? 0.52 : 0.48;
-      if (isCropJacket) yBottom = isMale ? 1.12 : 1.06;
+      const yTop = (isMale ? 1.52 : 1.46) + yShift;
+      let yBottom = (isMale ? 0.86 : 0.82) + yShift;
+      if (isLongCoat) yBottom = (isMale ? 0.52 : 0.48) + yShift;
+      if (isCropJacket) yBottom = (isMale ? 1.12 : 1.06) + yShift;
 
-      // Layered cleanly outside tops with 3.0cm to 3.4cm clearance
-      const layerOffset = isMale ? 0.034 : 0.030;
+      // Layered cleanly outside tops with generous clearance
+      const layerOffset = (isMale ? 0.038 : 0.034) + rxShift;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -1053,17 +1107,17 @@ export default function GarmentMesh3D({
       const isMaxi = garmentText.includes('maxi') || garmentText.includes('gown') || garmentText.includes('evening') || garmentText.includes('ארוכה') || garmentText.includes('מקסי');
       const hasSleeves = autoHasSleeves && (garmentText.includes('long sleeve') || garmentText.includes('sleeve') || garmentText.includes('שרוול'));
 
-      const yTop = isMale ? 1.50 : 1.45;
-      let yBottom = isMale ? 0.55 : 0.50; // Default midi/knee
-      if (isMini) yBottom = isMale ? 0.78 : 0.74;
-      if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
+      const yTop = (isMale ? 1.50 : 1.45) + yShift;
+      let yBottom = (isMale ? 0.55 : 0.50) + yShift; // Default midi/knee
+      if (isMini) yBottom = (isMale ? 0.78 : 0.74) + yShift;
+      if (isMaxi) yBottom = (isMale ? 0.16 : 0.12) + yShift;
 
       return createAnatomicalDressGeometry({
         isMale,
         hasSleeves,
         yTop,
         yBottom,
-        layerOffset: 0.018,
+        layerOffset: 0.022 + rxShift,
         uSwatch: solidU,
         vSwatch: solidV,
       });
@@ -1076,17 +1130,17 @@ export default function GarmentMesh3D({
       const isMiniSkirt = isSkirt && (garmentText.includes('mini') || garmentText.includes('קצרה'));
       const isMaxiSkirt = isSkirt && (garmentText.includes('maxi') || garmentText.includes('ארוכה') || garmentText.includes('מקסי'));
 
-      let yHem = isMale ? 0.11 : 0.10;
-      if (isMiniSkirt) yHem = isMale ? 0.76 : 0.72;
-      if (isMaxiSkirt) yHem = isMale ? 0.16 : 0.12;
+      let yHem = (isMale ? 0.11 : 0.10) + yShift;
+      if (isMiniSkirt) yHem = (isMale ? 0.76 : 0.72) + yShift;
+      if (isMaxiSkirt) yHem = (isMale ? 0.16 : 0.12) + yShift;
 
       return createAnatomicalBottomGeometry({
         isMale,
         isSkirt,
         isShorts,
-        yTop: isMale ? 1.08 : 1.05,
+        yTop: (isMale ? 1.08 : 1.05) + yShift,
         yHem,
-        layerOffset: 0.014,
+        layerOffset: 0.018 + rxShift,
         uSwatch: solidU,
         vSwatch: solidV,
       });
@@ -1096,7 +1150,7 @@ export default function GarmentMesh3D({
     if (rawSlot === 'shoes') {
       return createAnatomicalFootwearGeometry({
         isMale,
-        yTop: isMale ? 0.098 : 0.095,
+        yTop: (isMale ? 0.098 : 0.095) + yShift * 0.1,
         ySole: -0.006,
         layerOffset: 0.010,
       });
@@ -1104,15 +1158,18 @@ export default function GarmentMesh3D({
 
     // 6. ACCESSORIES
     return createAnatomicalAccessoryGeometry(rawSlot, { isMale });
-  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV]);
+  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV, morphInfluences]);
 
   if (!visible || !garment || !geometry) return null;
+
+  const renderOrder = rawSlot === 'outerwear' ? 12 : rawSlot === 'dress' ? 11 : rawSlot === 'top' ? 10 : 8;
 
   return (
     <mesh
       geometry={geometry}
       castShadow
       receiveShadow
+      renderOrder={renderOrder}
     >
       <meshStandardMaterial
         map={texture || null}
@@ -1124,6 +1181,9 @@ export default function GarmentMesh3D({
         roughness={0.65}
         metalness={0.04}
         envMapIntensity={0.8}
+        polygonOffset={true}
+        polygonOffsetFactor={-1}
+        polygonOffsetUnits={-1}
       />
     </mesh>
   );

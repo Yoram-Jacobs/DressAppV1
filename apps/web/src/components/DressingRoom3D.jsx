@@ -423,6 +423,7 @@ export default function DressingRoom3D({
                       isMale={isMale}
                       visible={isVisible}
                       hasOuterwear={hasOuterwear}
+                      morphInfluences={morphInfluences}
                     />
                   );
                 })}
