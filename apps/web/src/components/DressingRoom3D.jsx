@@ -211,8 +211,9 @@ export default function DressingRoom3D({
         category: g.slot,
         title: g.name,
       });
-      if (res && res.mesh_url) {
-        setCustom3DModels((prev) => ({ ...prev, [g.id]: res.mesh_url }));
+      const meshUrl = res?.model_3d_url || res?.mesh_url || res?.glb_url;
+      if (meshUrl) {
+        setCustom3DModels((prev) => ({ ...prev, [g.id]: meshUrl }));
       }
     } catch (err) {
       console.warn('OpenTryOn 3D generation error:', err);
@@ -349,14 +350,16 @@ export default function DressingRoom3D({
                 <Badge variant="secondary" className="text-[10px] font-semibold bg-primary-brand/10 text-primary-brand border-primary-brand/25">
                   360° 3D Studio
                 </Badge>
-                <Badge
-                  variant="secondary"
-                  className="hidden sm:inline-flex text-[10px] font-semibold bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 items-center"
-                  title="Powered by OpenTryOn fashion AI"
-                >
-                  <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
-                  OpenTryOn AI
-                </Badge>
+                {openTryOnReady && (
+                  <Badge
+                    variant="secondary"
+                    className="hidden sm:inline-flex text-[10px] font-semibold bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 items-center"
+                    title="Powered by OpenTryOn fashion AI"
+                  >
+                    <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
+                    OpenTryOn AI
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-[#6B7280] truncate max-w-[280px] sm:max-w-md">
                 {outfitName}
@@ -643,6 +646,7 @@ export default function DressingRoom3D({
                           </div>
 
                           <div className="flex items-center gap-1 shrink-0 ms-1">
+                            {openTryOnReady && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -665,6 +669,7 @@ export default function DressingRoom3D({
                                 <Box className="w-3.5 h-3.5" />
                               )}
                             </Button>
+                            )}
 
                             <Button
                               variant="ghost"

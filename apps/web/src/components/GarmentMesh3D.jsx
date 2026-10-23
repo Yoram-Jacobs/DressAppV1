@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
+import { buildAvatarMorphField, applyAvatarMorphsToGeometry } from '@/lib/avatarMorphField';
+import { MALE_GLB_URL, FEMALE_GLB_URL } from './AvatarMesh3D';
 
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
@@ -1066,12 +1068,19 @@ export default function GarmentMesh3D({
   );
   const garmentText = `${garment?.sub_category || ''} ${garment?.item_type || ''} ${garment?.name || ''} ${garment?.category || ''}`.toLowerCase();
 
+  // Avatar morph field: lets garments inherit the exact body deformation
+  // (height, leg length, bust, shoulders...) applied to the avatar mesh.
+  const { scene: avatarScene } = useGLTF(isMale ? MALE_GLB_URL : FEMALE_GLB_URL);
+  const morphField = useMemo(() => buildAvatarMorphField(avatarScene), [avatarScene]);
+
   // Build the appropriate 3D geometry matching this slot and garment type
-  const geometry = useMemo(() => {
+  // (authored in the avatar's base, un-morphed coordinate space)
+  const baseGeometry = useMemo(() => {
     if (!visible) return null;
 
-    const yShift = morphInfluences ? ((morphInfluences.tall || 0) * 0.04 - (morphInfluences.short || 0) * 0.03) : 0;
-    const rxShift = morphInfluences ? ((morphInfluences.heavy || 0) * 0.02 + (morphInfluences.shoulders_wide || 0) * 0.015 - (morphInfluences.thin || 0) * 0.01) : 0;
+    // Morph-driven reshaping is applied afterwards via the avatar morph field
+    const yShift = 0;
+    const rxShift = 0;
 
     // 1. TOP
     if (rawSlot === 'top') {
@@ -1182,7 +1191,12 @@ export default function GarmentMesh3D({
 
     // 6. ACCESSORIES
     return createAnatomicalAccessoryGeometry(rawSlot, { isMale });
-  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV, morphInfluences]);
+  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV]);
+
+  const geometry = useMemo(
+    () => applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences),
+    [baseGeometry, morphField, morphInfluences]
+  );
 
   const model3dUrl = garment?.model_3d_url || garment?.glb_url || garment?.mesh_3d;
   if (model3dUrl && visible) {

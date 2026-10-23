@@ -3,8 +3,8 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { resolveHairProperties } from './DynamicAvatar';
 
-const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair3';
-const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair3';
+export const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair3';
+export const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair3';
 
 // Metric scaling and floor positioning helper for the 3D human avatar model
 export function getAvatarMetricTransform({ isMale = false, height = 170, morphInfluences = {} } = {}) {
