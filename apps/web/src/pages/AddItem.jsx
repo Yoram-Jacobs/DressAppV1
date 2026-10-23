@@ -4587,7 +4587,8 @@ export default function AddItem() {
               if (!open) setMassClusterModal(null);
             }}
           >
-            <DialogContent
+            {massClusterModal && (
+              <DialogContent
               className="sm:max-w-md"
               data-testid="mass-cluster-free-blocked-dialog"
             >
@@ -4670,6 +4671,7 @@ export default function AddItem() {
                 </Button>
               </DialogFooter>
             </DialogContent>
+            )}
           </Dialog>
           {/* Quota Exceeded Modal */}
           <Dialog
@@ -4678,112 +4680,114 @@ export default function AddItem() {
               if (!open) setQuotaModal(null);
             }}
           >
-            <DialogContent
-              className="sm:max-w-md"
-              data-testid="quota-exceeded-dialog"
-            >
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-dark-brand">
-                  <Sparkles className="h-5 w-5 text-amber-500 shrink-0" />
-                  <span>
-                    {t("addItem.quota.title", {
-                      defaultValue: "Credits Quota Reached",
+            {quotaModal && (
+              <DialogContent
+                className="sm:max-w-md"
+                data-testid="quota-exceeded-dialog"
+              >
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-dark-brand">
+                    <Sparkles className="h-5 w-5 text-amber-500 shrink-0" />
+                    <span>
+                      {t("addItem.quota.title", {
+                        defaultValue: "Credits Quota Reached",
+                      })}
+                    </span>
+                  </DialogTitle>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium w-fit mt-1">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      {t("addItem.quota.insufficientSubtitle", {
+                        defaultValue: "Insufficient credits or quota limit reached",
+                      })}
+                    </span>
+                  </div>
+                  <DialogDescription className="text-sm text-text-brand pt-3 leading-relaxed">
+                    {(quotaModal?.creditBalance || 0) > 0
+                      ? t("addItem.quota.messageWithBalance", {
+                          count: quotaModal?.requiredCount ?? 0,
+                          balance: quotaModal?.creditBalance ?? 0,
+                          defaultValue: `Your request for ${quotaModal?.requiredCount ?? 0} garments exceeded your credits quota. You have ${quotaModal?.creditBalance ?? 0} garment credit(s) available on your Free plan. Would you like to add ${quotaModal?.creditBalance ?? 0} garments now, or upgrade your plan?`,
+                        })
+                      : t("addItem.quota.messageZeroBalance", {
+                          count: quotaModal?.requiredCount ?? 0,
+                          defaultValue: `Your request for ${quotaModal?.requiredCount ?? 0} garments exceeded your daily credits quota. You have 0 credits remaining today on your Free plan. Upgrade your plan for unlimited AI analysis, or continue adding your garments manually without AI.`,
+                        })}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="my-2 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-xs text-amber-900">
+                  <span className="font-semibold">
+                    {t("addItem.quota.availableCreditsLabel", {
+                      defaultValue: "Available AI Credits:",
                     })}
                   </span>
-                </DialogTitle>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium w-fit mt-1">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  <span>
-                    {t("addItem.quota.insufficientSubtitle", {
-                      defaultValue: "Insufficient credits or quota limit reached",
-                    })}
+                  <span className="font-bold text-sm">
+                    {quotaModal?.creditBalance ?? 0}
                   </span>
                 </div>
-                <DialogDescription className="text-sm text-text-brand pt-3 leading-relaxed">
-                  {quotaModal?.creditBalance > 0
-                    ? t("addItem.quota.messageWithBalance", {
-                        count: quotaModal.requiredCount,
-                        balance: quotaModal.creditBalance,
-                        defaultValue: `Your request for ${quotaModal.requiredCount} garments exceeded your credits quota. You have ${quotaModal.creditBalance} garment credit(s) available on your Free plan. Would you like to add ${quotaModal.creditBalance} garments now, or upgrade your plan?`,
-                      })
-                    : t("addItem.quota.messageZeroBalance", {
-                        count: quotaModal.requiredCount,
-                        defaultValue: `Your request for ${quotaModal.requiredCount} garments exceeded your daily credits quota. You have 0 credits remaining today on your Free plan. Upgrade your plan for unlimited AI analysis, or continue adding your garments manually without AI.`,
-                      })}
-                </DialogDescription>
-              </DialogHeader>
 
-              <div className="my-2 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-xs text-amber-900">
-                <span className="font-semibold">
-                  {t("addItem.quota.availableCreditsLabel", {
-                    defaultValue: "Available AI Credits:",
-                  })}
-                </span>
-                <span className="font-bold text-sm">
-                  {quotaModal?.creditBalance ?? 0}
-                </span>
-              </div>
+                <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setQuotaModal(null)}
+                    className="rounded-full px-5 py-2 text-sm font-semibold"
+                    data-testid="quota-cancel-button"
+                  >
+                    {t("common.cancel", { defaultValue: "Cancel" })}
+                  </Button>
 
-              <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setQuotaModal(null)}
-                  className="rounded-full px-5 py-2 text-sm font-semibold"
-                  data-testid="quota-cancel-button"
-                >
-                  {t("common.cancel", { defaultValue: "Cancel" })}
-                </Button>
-
-                {quotaModal?.creditBalance > 0 ? (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleUpgradePlan}
-                      data-testid="quota-upgrade-btn"
-                      className="rounded-full px-5 py-2 text-sm font-semibold border-amber-300 text-amber-800 hover:bg-amber-50"
-                    >
-                      <Zap className="h-4 w-4 mr-1.5 text-amber-600" />
-                      {t("addItem.quota.upgradeButton", { defaultValue: "Upgrade Plan" })}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleAddAllowedGarments}
-                      data-testid="quota-add-allowed-btn"
-                      className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2 text-sm font-semibold"
-                    >
-                      <Check className="h-4 w-4 mr-1.5" />
-                      {t("addItem.quota.addAllowedButton", {
-                        count: quotaModal.creditBalance,
-                        defaultValue: `Add ${quotaModal.creditBalance} garments`,
-                      })}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleManualDrafts}
-                      data-testid="quota-manual-btn"
-                      className="rounded-full px-5 py-2 text-sm font-semibold"
-                    >
-                      {t("addItem.quota.editManuallyButton", { defaultValue: "Continue manually" })}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleUpgradePlan}
-                      data-testid="quota-upgrade-btn"
-                      className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2 text-sm font-semibold"
-                    >
-                      <Zap className="h-4 w-4 mr-1.5" />
-                      {t("addItem.quota.upgradeButton", { defaultValue: "Upgrade Plan" })}
-                    </Button>
-                  </>
-                )}
-              </DialogFooter>
-            </DialogContent>
+                  {(quotaModal?.creditBalance || 0) > 0 ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleUpgradePlan}
+                        data-testid="quota-upgrade-btn"
+                        className="rounded-full px-5 py-2 text-sm font-semibold border-amber-300 text-amber-800 hover:bg-amber-50"
+                      >
+                        <Zap className="h-4 w-4 mr-1.5 text-amber-600" />
+                        {t("addItem.quota.upgradeButton", { defaultValue: "Upgrade Plan" })}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleAddAllowedGarments}
+                        data-testid="quota-add-allowed-btn"
+                        className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2 text-sm font-semibold"
+                      >
+                        <Check className="h-4 w-4 mr-1.5" />
+                        {t("addItem.quota.addAllowedButton", {
+                          count: quotaModal?.creditBalance ?? 0,
+                          defaultValue: `Add ${quotaModal?.creditBalance ?? 0} garments`,
+                        })}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleManualDrafts}
+                        data-testid="quota-manual-btn"
+                        className="rounded-full px-5 py-2 text-sm font-semibold"
+                      >
+                        {t("addItem.quota.editManuallyButton", { defaultValue: "Continue manually" })}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleUpgradePlan}
+                        data-testid="quota-upgrade-btn"
+                        className="rounded-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover)] text-white px-6 py-2 text-sm font-semibold"
+                      >
+                        <Zap className="h-4 w-4 mr-1.5" />
+                        {t("addItem.quota.upgradeButton", { defaultValue: "Upgrade Plan" })}
+                      </Button>
+                    </>
+                  )}
+                </DialogFooter>
+              </DialogContent>
+            )}
           </Dialog>
           <Dialog
             open={isUrlModalOpen}

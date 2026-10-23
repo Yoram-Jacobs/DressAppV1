@@ -2178,7 +2178,10 @@
     "onPremCreditsNote": "+10 daily credits • Cumulative up to 300 over 30 days (1 credit per garment, stylist prompt, or suitcase item)",
     "aiCreditsBalanceLabel": "Visual Try-On Credits",
     "aiCreditsAvailableCount": "{{count}} available",
-    "topUpCredits": "Top Up"
+    "topUpCredits": "Top Up",
+    "mobileShareTitle": "Mobile Share Sheet & Link Checker",
+    "mobileShareDesc": "Shopping on your phone? Tap Share in Safari or Chrome and select DressApp for instant sizing, or paste any garment link directly.",
+    "openMobileAssistant": "Launch Size Checker"
   },
   "admin": {
     "title": "Admin",
@@ -5788,5 +5791,39 @@
     "title": "3D Dressing Room",
     "tryOn3D": "Try on in 3D",
     "badge3D": "3D"
+  },
+  "shareTarget": {
+    "badge": "Mobile Size Assistant",
+    "title": "Check Size from Retail Link",
+    "subtitle": "Shared from Zara, ASOS, SHEIN, H&M, or any store via your mobile share sheet.",
+    "inputLabel": "Store Product Link",
+    "checkSize": "Check Size",
+    "supportedStores": "Works with Zara, ASOS, H&M, SHEIN, Mango, Uniqlo & more",
+    "pasteLink": "Paste Link",
+    "measurementsActive": "Using stored body measurements: ",
+    "noMeasurements": "No body measurements found. Add them to your profile for exact sizing.",
+    "editMeasurements": "Edit",
+    "readingSizeChart": "Connecting to store & scanning size chart…",
+    "matchingMeasurements": "AI is cross-referencing your body measurements",
+    "errorGeneric": "Could not analyze this store link. Please try uploading a size chart screenshot.",
+    "errorHint": "Tip: You can take a screenshot of the size chart on the retailer page and upload it below.",
+    "openStore": "Store Link",
+    "recommendationTitle": "Best Fit for You",
+    "sizePrefix": "Size",
+    "fitConfidence": "Match",
+    "addToCloset": "Add to My Closet",
+    "inYourCloset": "Added to Closet",
+    "buyOnStore": "Buy on {{store}}",
+    "manualNeededTitle": "Size Chart Protected by Retailer",
+    "manualNeededDesc": "This store uses anti-bot shields or dynamic popups. Simply take a screenshot of the size chart on their site and upload it below!",
+    "uploadScreenshot": "Upload Size Chart Screenshot",
+    "viewOnStore": "View Size Chart on Store Site",
+    "checkAnother": "Check Another Link",
+    "addedSuccess": "Added to your closet in size {{size}}!",
+    "viewInCloset": "View in Closet",
+    "pastedClipboard": "Pasted from clipboard. Tap Analyze to proceed.",
+    "clipboardError": "Clipboard access denied. Please paste manually.",
+    "chartAnalyzed": "Size chart analyzed successfully!",
+    "chartError": "Could not parse size chart from image. Please try a clearer screenshot."
   }
 }

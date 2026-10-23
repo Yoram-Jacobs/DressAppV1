@@ -1,3 +1,5 @@
+import pytest
+from unittest.mock import AsyncMock, patch
 """Tests for size chart analysis logic in backend/app/api/v1/sizes.py.
 
 Verifies:
@@ -12,6 +14,8 @@ from app.api.v1.sizes import (
     _detect_category,
     _heuristic_match,
     _MEASUREMENT_ALIASES,
+    _clean_shared_url,
+    _detect_store_name,
 )
 
 
@@ -123,3 +127,53 @@ def test_lower_body_sizing_evaluates_waist_and_hip():
     assert result is not None
     assert result["recommended_size"] == "M"
     assert "waist" in result["matched_columns"] or "hip" in result["matched_columns"]
+
+
+def test_clean_shared_url_and_detect_store():
+    # 1. URL embedded in social share text with tracking query parameters
+    raw = "Look at this shirt! https://www.zara.com/us/en/oversized-linen-shirt-p12345.html?utm_source=share&utm_medium=mobile_app&fbclid=abc123"
+    cleaned = _clean_shared_url(raw)
+    assert cleaned == "https://www.zara.com/us/en/oversized-linen-shirt-p12345.html"
+    assert _detect_store_name(cleaned) == "Zara"
+
+    # 2. ASOS share
+    raw_asos = "https://www.asos.com/prd/54321?ref=share"
+    assert _clean_shared_url(raw_asos) == "https://www.asos.com/prd/54321"
+    assert _detect_store_name(raw_asos) == "ASOS"
+
+
+@pytest.mark.anyio
+async def test_analyze_url_endpoint():
+    from app.api.v1.sizes import analyze_url, AnalyzeUrlIn, ProductPreview
+
+    mock_user = {
+        "id": "usr_test_share",
+        "email": "test@dressapp.co",
+        "body_measurements": {"chest": 96, "waist": 82, "hip": 100},
+    }
+
+    mock_product = ProductPreview(
+        url="https://www.zara.com/us/en/linen-shirt-p123.html",
+        title="Linen Blend Overshirt",
+        brand="Zara",
+        image_url="https://static.zara.net/photos/shirt.jpg",
+        price="49.90",
+        currency="USD",
+        garment_type="shirt",
+        store="Zara",
+    )
+    mock_chart = """
+    Size | Chest (cm) | Waist (cm)
+    S    | 88-92      | 74-78
+    M    | 94-98      | 80-84
+    L    | 100-106    | 86-92
+    """
+
+    with patch("app.api.v1.sizes._extract_product_from_url", new_callable=AsyncMock) as mock_extract:
+        mock_extract.return_value = (mock_product, mock_chart, None)
+        payload = AnalyzeUrlIn(url="Check this out! https://www.zara.com/us/en/linen-shirt-p123.html?utm_source=app")
+        res = await analyze_url(payload=payload, user=mock_user)
+        assert res.product.title == "Linen Blend Overshirt"
+        assert res.product.brand == "Zara"
+        assert res.recommendation.recommended_size == "M"
+        assert "chest" in res.recommendation.matched_columns

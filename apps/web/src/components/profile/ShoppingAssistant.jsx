@@ -1,11 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Sparkles, Globe, Bookmark, Info } from 'lucide-react';
+import { Sparkles, Globe, Bookmark, Info, Smartphone, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 export function ShoppingAssistant() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <AccordionItem
@@ -29,7 +32,40 @@ export function ShoppingAssistant() {
       </AccordionTrigger>
       <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
         
-        {/* Part 1: Chrome Extension Store Placeholder */}
+        {/* Part 1: Mobile Share Sheet (Approach 2) */}
+        <div className="space-y-3 rounded-[12px] bg-gradient-to-r from-primary-shadow/60 via-sand/40 to-white border border-primary-brand/30 p-3.5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-primary-brand text-white flex items-center justify-center shrink-0">
+                <Smartphone className="h-4 w-4" />
+              </div>
+              <h4 className="font-bold text-[14px] text-dark-brand">
+                {t('profile.mobileShareTitle', { defaultValue: 'Mobile Share Sheet & Link Checker' })}
+              </h4>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-brand/10 text-primary-brand border border-primary-brand/20">
+              {t('common.recommended', { defaultValue: 'Mobile Ready' })}
+            </span>
+          </div>
+          <p className="text-[12px] text-text-brand font-semibold leading-relaxed">
+            {t('profile.mobileShareDesc', { defaultValue: 'Shopping on your phone? Tap Share in Safari or Chrome and select DressApp for instant sizing, or paste any garment link directly.' })}
+          </p>
+          <div className="pt-1">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => navigate('/shopping-assistant')}
+              className="bg-primary-brand hover:bg-primary-hover text-white text-xs font-semibold h-8 rounded-lg shadow-xs"
+              data-testid="profile-open-share-target-btn"
+            >
+              <Sparkles className="w-3.5 h-3.5 me-1.5" />
+              {t('profile.openMobileAssistant', { defaultValue: 'Launch Size Checker' })}
+              <ArrowRight className="w-3 h-3 ms-1.5 rtl:rotate-180" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Part 2: Chrome Extension Store Placeholder */}
         <div className="space-y-2 rounded-[12px] bg-white border border-border p-3">
           <div className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-primary-brand" />
@@ -45,7 +81,7 @@ export function ShoppingAssistant() {
           </div>
         </div>
 
-        {/* Part 2: Universal Bookmarklet */}
+        {/* Part 3: Universal Bookmarklet */}
         <div className="space-y-2 rounded-[12px] bg-white border border-border p-3">
           <div className="flex items-center gap-2">
             <Bookmark className="h-5 w-5 text-primary-brand" />

@@ -8,6 +8,8 @@ export const calendar = {
 
 export const misc = {
   predictMeasurements: (body) => client.post('/sizes/predict-measurements', body).then((r) => r.data),
+  analyzeUrl: (body) => client.post('/sizes/analyze-url', body).then((r) => r.data),
+  analyzeChart: (body) => client.post('/sizes/analyze-chart', body).then((r) => r.data),
   getWeather: (params = {}) => client.get('/weather', { params }).then((r) => r.data),
 };
 

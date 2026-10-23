@@ -131,6 +131,29 @@ class AnalyzeChartOut(BaseModel):
     has_measurements: bool
 
 
+
+class AnalyzeUrlIn(BaseModel):
+    url: str = Field(..., description="Shared product URL or text containing a URL")
+    title: str | None = None
+    text: str | None = None
+    user_preferred_units: str = Field(default="cm", pattern="^(cm|in)$")
+
+
+class ProductPreview(BaseModel):
+    url: str
+    title: str
+    brand: str | None = None
+    image_url: str | None = None
+    price: str | None = None
+    currency: str | None = None
+    garment_type: str | None = None
+    store: str | None = None
+
+
+class AnalyzeUrlOut(BaseModel):
+    product: ProductPreview
+    recommendation: AnalyzeChartOut
+
 # ----------------------------- prompt --------------------------------
 # Sharp, OCR-first system prompt. No "DressApp's sizing assistant"
 # branding noise, no "garment styling" cues, no chain-of-thought
@@ -1341,6 +1364,304 @@ async def analyze_chart(
         elapsed_ms=int((time.time() - t0) * 1000),
         has_measurements=has_measurements,
     )
+
+
+
+_STORE_DOMAINS: dict[str, str] = {
+    "zara.com": "Zara",
+    "asos.com": "ASOS",
+    "hm.com": "H&M",
+    "shein.com": "SHEIN",
+    "mango.com": "Mango",
+    "uniqlo.com": "Uniqlo",
+    "amazon": "Amazon",
+    "aliexpress": "AliExpress",
+    "farfetch.com": "Farfetch",
+    "cos.com": "COS",
+    "aritzia.com": "Aritzia",
+    "nordstrom.com": "Nordstrom",
+    "zalando": "Zalando",
+    "boohoo.com": "Boohoo",
+    "pullandbear.com": "Pull&Bear",
+    "bershka.com": "Bershka",
+    "stradivarius.com": "Stradivarius",
+    "massimodutti.com": "Massimo Dutti",
+    "urbanoutfitters.com": "Urban Outfitters",
+}
+
+
+def _clean_shared_url(raw_url: str, text: str | None = None) -> str:
+    combined = f"{raw_url or ''} {text or ''}".strip()
+    match = re.search(r"https?://[^\s\"'<>]+", combined)
+    url = match.group(0) if match else (raw_url or "").strip()
+    try:
+        from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+        parsed = urlparse(url)
+        qsl = parse_qsl(parsed.query)
+        clean_qsl = [
+            (k, v) for k, v in qsl
+            if not k.lower().startswith("utm_") and k.lower() not in ("fbclid", "gclid", "igshid", "ref", "aff_platform")
+        ]
+        return urlunparse(parsed._replace(query=urlencode(clean_qsl)))
+    except Exception:
+        return url
+
+
+def _detect_store_name(url: str) -> str:
+    from urllib.parse import urlparse
+    try:
+        host = urlparse(url).netloc.lower()
+        for domain, name in _STORE_DOMAINS.items():
+            if domain in host:
+                return name
+        parts = host.replace("www.", "").split(".")
+        if parts and parts[0]:
+            return parts[0].capitalize()
+    except Exception:
+        pass
+    return "Retailer"
+
+
+async def _extract_product_from_url(
+    url: str,
+    title_hint: str | None = None,
+) -> tuple[ProductPreview, str | None, str | None]:
+    """Scrapes product details, size tables, and images from a shared retail URL."""
+    from urllib.parse import urlparse, urljoin
+    from bs4 import BeautifulSoup
+    import httpx
+
+    clean_url = _clean_shared_url(url)
+    store = _detect_store_name(clean_url)
+
+    # Derive fallback title from slug
+    parsed = urlparse(clean_url)
+    path_parts = [p for p in parsed.path.split("/") if p and not p.isdigit() and len(p) > 2]
+    slug = path_parts[-1] if path_parts else ""
+    slug = re.sub(r"\.(html?|php|aspx?)$", "", slug, flags=re.I)
+    slug = re.sub(r"[-_]+", " ", slug)
+    slug = re.sub(r"\b[pP]?\d+\b", "", slug).strip()
+    fallback_title = title_hint or (slug.title() if len(slug) > 3 else f"{store} Item")
+
+    garment_type = None
+    slug_lower = (fallback_title + " " + clean_url).lower()
+    for kw, gtype in [
+        ("shirt", "shirt"), ("t-shirt", "t-shirt"), ("tee", "t-shirt"),
+        ("dress", "dress"), ("jacket", "jacket"), ("coat", "coat"),
+        ("hoodie", "hoodie"), ("sweater", "sweater"), ("pants", "pants"),
+        ("jeans", "jeans"), ("trousers", "pants"), ("shoes", "shoes"),
+        ("sneakers", "shoes"), ("boots", "boots"), ("skirt", "skirt"),
+        ("shorts", "shorts"), ("blazer", "blazer"),
+    ]:
+        if kw in slug_lower:
+            garment_type = gtype
+            break
+
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) "
+            "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+    }
+
+    title = fallback_title
+    image_url = None
+    price = None
+    currency = "$"
+    chart_text = None
+    chart_image_url = None
+
+    try:
+        async with httpx.AsyncClient(timeout=12.0, follow_redirects=True, headers=headers) as client:
+            resp = await client.get(clean_url)
+            if resp.status_code < 400 and "text/html" in resp.headers.get("content-type", ""):
+                soup = BeautifulSoup(resp.text, "html.parser")
+
+                # Title
+                og_title = soup.find("meta", property="og:title") or soup.find("meta", attrs={"name": "twitter:title"})
+                if og_title and og_title.get("content"):
+                    t_cand = og_title["content"].strip()
+                    t_cand = re.sub(r"\s*[\|\-–]\s*.*$", "", t_cand).strip()
+                    if t_cand:
+                        title = t_cand
+                elif soup.title and soup.title.string:
+                    t_cand = re.sub(r"\s*[\|\-–]\s*.*$", "", soup.title.string).strip()
+                    if t_cand:
+                        title = t_cand
+
+                # Image
+                og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "twitter:image"})
+                if og_img and og_img.get("content"):
+                    image_url = og_img["content"].strip()
+                elif schema_img := soup.find("link", rel="image_src"):
+                    image_url = schema_img.get("href")
+
+                # Price
+                og_price = soup.find("meta", property="product:price:amount") or soup.find("meta", property="og:price:amount")
+                if og_price and og_price.get("content"):
+                    price = og_price["content"].strip()
+                og_curr = soup.find("meta", property="product:price:currency") or soup.find("meta", property="og:price:currency")
+                if og_curr and og_curr.get("content"):
+                    currency = og_curr["content"].strip()
+
+                # Size Chart Detection
+                size_hints = ["size", "chest", "bust", "waist", "hip", "hips", "length", "insole", "foot"]
+                tables = soup.find_all("table")
+                best_table = None
+                best_table_score = 0
+                for tbl in tables:
+                    txt = tbl.get_text(" ", strip=True).lower()
+                    score = sum(10 for h in size_hints if h in txt)
+                    if score > best_table_score:
+                        best_table_score = score
+                        best_table = tbl
+
+                if best_table and best_table_score >= 20:
+                    rows = []
+                    for tr in best_table.find_all("tr"):
+                        cells = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
+                        if cells:
+                            rows.append(" | ".join(cells))
+                    chart_text = "\n".join(rows)
+
+                if not chart_text:
+                    for el in soup.find_all(attrs={"class": re.compile(r"size[-_]?(guide|chart|table|info)", re.I)}):
+                        txt = el.get_text("\n", strip=True)
+                        if len(txt) > 30 and any(h in txt.lower() for h in size_hints):
+                            chart_text = txt[:3000]
+                            break
+
+                for img in soup.find_all("img"):
+                    alt = (img.get("alt") or "").lower()
+                    src = (img.get("src") or img.get("data-src") or "").lower()
+                    if ("size" in alt or "size" in src) and ("chart" in alt or "guide" in alt or "chart" in src or "guide" in src):
+                        chart_image_url = img.get("src") or img.get("data-src")
+                        if chart_image_url and not chart_image_url.startswith("http"):
+                            chart_image_url = urljoin(clean_url, chart_image_url)
+                        break
+
+                if not garment_type:
+                    combined_info = f"{title} {soup.find('meta', attrs={'name': 'description'}) or ''}".lower()
+                    for kw, gtype in [
+                        ("shirt", "shirt"), ("t-shirt", "t-shirt"), ("dress", "dress"),
+                        ("jacket", "jacket"), ("pants", "pants"), ("jeans", "jeans"),
+                        ("shoes", "shoes"), ("boots", "boots"), ("skirt", "skirt"),
+                        ("hoodie", "hoodie"), ("coat", "coat"),
+                    ]:
+                        if kw in combined_info:
+                            garment_type = gtype
+                            break
+
+    except Exception as exc:
+        log.warning("Could not scrape %s: %s", clean_url, exc)
+
+    preview = ProductPreview(
+        url=clean_url,
+        title=title,
+        brand=store,
+        image_url=image_url,
+        price=price,
+        currency=currency,
+        garment_type=garment_type,
+        store=store,
+    )
+    return preview, chart_text, chart_image_url
+
+
+@router.post("/analyze-url", response_model=AnalyzeUrlOut)
+async def analyze_url(
+    payload: AnalyzeUrlIn,
+    user: dict = Depends(get_current_user),
+) -> AnalyzeUrlOut:
+    """Analyze a shared retail product URL (from OS share sheet or link paste) and recommend size."""
+    t0 = time.time()
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
+
+    measurements = (user or {}).get("body_measurements") or {}
+    has_measurements = bool(measurements)
+
+    clean_url = _clean_shared_url(payload.url, payload.text)
+    if not clean_url.startswith("http://") and not clean_url.startswith("https://"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="A valid HTTP or HTTPS product URL is required.",
+        )
+
+    product, chart_text, chart_image_url = await _extract_product_from_url(clean_url, payload.title)
+
+    parsed: dict[str, Any] | None = None
+    source = "none"
+
+    # Step 1: Heuristic match on extracted chart table/text
+    if chart_text:
+        parsed = _heuristic_match(
+            chart_text=chart_text,
+            measurements=measurements,
+            garment_type=product.garment_type,
+        )
+        if parsed:
+            source = "heuristic"
+
+    # Step 2: Gemini text-only fallback if text available but heuristic inconclusive
+    if parsed is None and chart_text and GeminiClient is not None:
+        try:
+            user_prompt = _build_user_text_only_prompt(
+                measurements=measurements,
+                garment_type=product.garment_type,
+                store=product.store,
+                page_title=product.title,
+                user_preferred_units=payload.user_preferred_units,
+                chart_text=chart_text,
+            )
+            g_client = GeminiClient(api_key=user_api_key or settings.GEMINI_API_KEY)
+            raw = await asyncio.wait_for(
+                g_client.text(
+                    user_text=user_prompt,
+                    system=_SYSTEM_PROMPT,
+                    model=user_model,
+                    response_mime_type="application/json",
+                ),
+                timeout=25.0,
+            )
+            parsed = _coerce_response(raw)
+            if parsed:
+                source = "gemini-text"
+        except Exception as exc:
+            log.warning("Gemini text analysis of URL chart failed: %s", exc)
+
+    # Step 3: Handle result or graceful fallback
+    if parsed is not None:
+        rec = _normalise(
+            parsed,
+            source=source,
+            elapsed_ms=int((time.time() - t0) * 1000),
+            has_measurements=has_measurements,
+        )
+    else:
+        # Graceful fallback: product info is still preserved so user sees what they shared
+        why = (
+            f"{product.brand} size chart was not directly detected in public page markup. "
+            "Snap or upload a screenshot of the size guide below for an exact fit recommendation!"
+        )
+        rec = AnalyzeChartOut(
+            recommended_size=None,
+            confidence=0.0,
+            garment_type=product.garment_type,
+            size_chart_units=payload.user_preferred_units,
+            matched_columns=[],
+            reasoning=why,
+            alternatives=[],
+            warnings=["Size chart requires manual screenshot or text paste."],
+            source="none",
+            elapsed_ms=int((time.time() - t0) * 1000),
+            has_measurements=has_measurements,
+        )
+
+    return AnalyzeUrlOut(product=product, recommendation=rec)
 
 
 # =====================================================================
