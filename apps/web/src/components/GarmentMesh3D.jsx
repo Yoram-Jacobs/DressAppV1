@@ -1101,8 +1101,8 @@ export function createAnatomicalBottomGeometry({
 
   // A. SKIRT MODE
   if (isSkirt) {
-    const ny = 16;
-    const nx = 24;
+    const ny = 18;
+    const nx = 28;
     for (let i = 0; i <= ny; i++) {
       const vNorm = i / ny;
       const y = yTop - vNorm * (yTop - yHem);
@@ -1113,9 +1113,9 @@ export function createAnatomicalBottomGeometry({
       const cz = slice.cz;
 
       if (y < 0.84) {
-        const flareRatio = Math.pow((0.84 - y) / (0.84 - yHem), 1.2);
-        rx += flareRatio * 0.14;
-        rz += flareRatio * 0.10;
+        const flareRatio = Math.pow((0.84 - y) / (0.84 - yHem), 1.15);
+        rx += flareRatio * 0.15;
+        rz += flareRatio * 0.11;
       }
 
       const vTex = 1.0 - vNorm;
@@ -1127,13 +1127,24 @@ export function createAnatomicalBottomGeometry({
         const isFront = Math.cos(theta) >= 0;
         const z = isFront
           ? cz + rz * Math.cos(theta)
-          : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
+          : cz - (rz + 0.010) * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
         if (isFront) {
-          const uT = (Math.sin(theta) + 1) * 0.5;
-          uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
+          const flankFrac = Math.abs(Math.sin(theta));
+          if (flankFrac > 0.78) {
+            // Flank transitions into seamless solid fabric swatch (zero see-through side slit)
+            uvs.push(
+              Math.max(0.01, Math.min(0.99, uSwatch)),
+              Math.max(0.01, Math.min(0.99, vSwatch))
+            );
+          } else {
+            // Map front photo safely within opaque fabric width
+            const uT = 0.5 + (Math.sin(theta) / 0.78) * 0.38;
+            uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0, Math.min(1, vTex)));
+          }
         } else {
+          // Back is rich solid fabric swatch
           uvs.push(
             Math.max(0.01, Math.min(0.99, uSwatch)),
             Math.max(0.01, Math.min(0.99, vSwatch))
@@ -1160,106 +1171,84 @@ export function createAnatomicalBottomGeometry({
   }
 
   // B. PANTS / JEANS / TROUSERS / SHORTS MODE
+  // Continuous anatomical leg bifurcation from waistband down to hem.
+  // Eliminates disjoint pelvis shelf, overhangs, and box-like hip artifacts.
   const yWaist = yTop;
   const yCrotch = isMale ? 0.86 : 0.82;
   const yAnkle = isShorts ? (isMale ? 0.58 : 0.54) : yHem;
 
-  // 1. Pelvis & Waistband Section
-  const nyPelvis = 6;
-  const nxPelvis = 24;
-
-  for (let i = 0; i <= nyPelvis; i++) {
-    const vPelvis = i / nyPelvis;
-    const y = yWaist - vPelvis * (yWaist - yCrotch);
-    const slice = getTorsoSlice(y, isMale);
-
-    const rx = slice.rx + layerOffset;
-    const rz = slice.rz + layerOffset;
-    const cz = slice.cz;
-    const vTex = 1.0 - vPelvis * ((yWaist - yCrotch) / (yWaist - yAnkle));
-
-    for (let j = 0; j <= nxPelvis; j++) {
-      const uFrac = j / nxPelvis;
-      const theta = -Math.PI + uFrac * 2 * Math.PI;
-      const x = rx * Math.sin(theta);
-      const isFront = Math.cos(theta) >= 0;
-      const z = isFront
-        ? cz + rz * Math.cos(theta)
-        : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
-      verts.push(x, y, z);
-
-      if (isFront) {
-        const flankFrac = Math.abs(Math.sin(theta));
-        if (flankFrac > 0.84) {
-          uvs.push(
-            Math.max(0.01, Math.min(0.99, uSwatch)),
-            Math.max(0.01, Math.min(0.99, vSwatch))
-          );
-        } else {
-          const uT = 0.5 + (Math.sin(theta) / 0.84) * 0.45;
-          uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0, Math.min(1, vTex)));
-        }
-      } else {
-        uvs.push(
-          Math.max(0.01, Math.min(0.99, uSwatch)),
-          Math.max(0.01, Math.min(0.99, vSwatch))
-        );
-      }
-    }
-  }
-
-  for (let i = 0; i < nyPelvis; i++) {
-    for (let j = 0; j < nxPelvis; j++) {
-      const a = i * (nxPelvis + 1) + j;
-      const b = a + 1;
-      const c = a + (nxPelvis + 1);
-      const d = c + 1;
-      indices.push(a, c, b, b, c, d);
-    }
-  }
-
-  // 2. Left & Right 3D Leg Shells
-  const nyLeg = 14;
-  const nxLeg = 16;
+  const nyLeg = 18;
+  const nxLeg = 18;
   const legSides = [-1, 1]; // Left (-X), Right (+X)
 
   legSides.forEach((side) => {
     const startIdx = verts.length / 3;
 
     for (let i = 0; i <= nyLeg; i++) {
-      const vLeg = i / nyLeg;
-      const y = yCrotch - vLeg * (yCrotch - yAnkle);
-      const slice = getLegSlice(y, isMale);
+      const vNorm = i / nyLeg;
+      const y = yWaist - vNorm * (yWaist - yAnkle);
+      const isAboveCrotch = y >= yCrotch;
 
-      const cx = side * slice.cx;
-      const cz = slice.cz;
-      const r = slice.r + layerOffset;
-      const vTex = 1.0 - (((yWaist - yCrotch) + vLeg * (yCrotch - yAnkle)) / (yWaist - yAnkle));
+      let cx, cz, rx, rz;
+      if (isAboveCrotch) {
+        // Upper Pelvis & Waistband: smoothly contours along the hip silhouette
+        const tPelvis = (y - yCrotch) / Math.max(0.01, yWaist - yCrotch); // 0 at crotch, 1 at waist
+        const sliceTorso = getTorsoSlice(y, isMale);
+        const sliceLegCrotch = getLegSlice(yCrotch, isMale);
+
+        const hipRx = sliceTorso.rx + layerOffset;
+        const hipRz = sliceTorso.rz + layerOffset;
+        const crotchR = sliceLegCrotch.r + layerOffset;
+
+        const centerCrotch = side * sliceLegCrotch.cx;
+        const centerWaist = side * (hipRx * 0.48);
+        cx = centerCrotch * (1 - tPelvis) + centerWaist * tPelvis;
+        rx = Math.abs(side * hipRx - cx);
+        rz = crotchR * (1 - tPelvis) + hipRz * tPelvis;
+        cz = sliceLegCrotch.cz * (1 - tPelvis) + sliceTorso.cz * tPelvis;
+      } else {
+        // Below Crotch: natural anatomical leg profile down to hem
+        const slice = getLegSlice(y, isMale);
+        cx = side * slice.cx;
+        cz = slice.cz;
+        rx = slice.r + layerOffset;
+        rz = rx;
+      }
+
+      // vTex runs from 0.98 (waistband) down to 0.02 (hem)
+      const vTex = 0.98 - vNorm * 0.94;
 
       for (let j = 0; j <= nxLeg; j++) {
         const uFrac = j / nxLeg;
         const theta = -Math.PI + uFrac * 2 * Math.PI;
-        const x = cx + r * Math.sin(theta);
+
         const isFront = Math.cos(theta) >= 0;
+        const x = cx + rx * Math.sin(theta);
         const z = isFront
-          ? cz + r * Math.cos(theta)
-          : cz - (r + 0.008) * Math.abs(Math.cos(theta));
+          ? cz + rz * Math.cos(theta)
+          : cz - (rz + 0.008) * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
         if (isFront) {
           const flankFrac = Math.abs(Math.sin(theta));
-          if (flankFrac > 0.84) {
+          if (flankFrac > 0.88) {
+            // Flank boundary transitions into seamless fabric swatch
             uvs.push(
               Math.max(0.01, Math.min(0.99, uSwatch)),
               Math.max(0.01, Math.min(0.99, vSwatch))
             );
           } else {
-            const legCenter = side === -1 ? 0.28 : 0.72;
+            // Map cleanly onto the respective leg column in the front photo
+            const legCenter = side === -1 ? 0.30 : 0.70;
             const legSpan = 0.18;
-            const uLeg = legCenter + (Math.sin(theta) / 0.84) * legSpan;
-            uvs.push(Math.max(0.01, Math.min(0.99, uLeg)), Math.max(0, Math.min(1, vTex)));
+            const uLeg = legCenter + (Math.sin(theta) / 0.88) * (side === -1 ? legSpan : -legSpan);
+            uvs.push(
+              Math.max(0.02, Math.min(0.98, uLeg)),
+              Math.max(0.02, Math.min(0.98, vTex))
+            );
           }
         } else {
+          // Back of pants: rich solid denim fabric swatch
           uvs.push(
             Math.max(0.01, Math.min(0.99, uSwatch)),
             Math.max(0.01, Math.min(0.99, vSwatch))
@@ -1475,7 +1464,7 @@ export default function GarmentMesh3D({
 
       return createAnatomicalTopGeometry({
         isMale,
-        hasSleeves: sleeveStyle.type !== 'sleeveless' && autoHasSleeves,
+        hasSleeves: sleeveStyle.type !== 'sleeveless',
         sleeveFactor: sleeveStyle.factor,
         yTop,
         yBottom,
@@ -1548,7 +1537,8 @@ export default function GarmentMesh3D({
 
       let yHem = (isMale ? 0.11 : 0.10) + yShift;
       if (isMiniSkirt) yHem = (isMale ? 0.76 : 0.72) + yShift;
-      if (isMaxiSkirt) yHem = (isMale ? 0.16 : 0.12) + yShift;
+      else if (isMaxiSkirt) yHem = (isMale ? 0.16 : 0.12) + yShift;
+      else if (isSkirt) yHem = (isMale ? 0.48 : 0.44) + yShift;
 
       return createAnatomicalBottomGeometry({
         isMale,
@@ -1616,8 +1606,8 @@ export default function GarmentMesh3D({
         color={rawSlot === 'shoes'
           ? (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B')
           : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
-        transparent={rawSlot !== 'shoes'}
-        alphaTest={rawSlot === 'shoes' ? 0 : 0.02}
+        transparent={!['top', 'outerwear', 'dress', 'bottom', 'shoes'].includes(rawSlot)}
+        alphaTest={['top', 'outerwear', 'dress', 'bottom', 'shoes'].includes(rawSlot) ? 0 : 0.02}
         depthWrite={true}
         side={THREE.DoubleSide}
         roughness={rawSlot === 'shoes' ? 0.38 : 0.65}
