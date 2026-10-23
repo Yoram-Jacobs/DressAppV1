@@ -391,6 +391,66 @@ async function fetchAndCropTexture(url) {
     solidV = 0.5;
   }
 
+  // Gap-free variant for clothing shells: on every row that contains fabric, fill
+  // transparent holes between the garment's outer edges (e.g. the wedge between a
+  // sleeve and the body in flat-lay photos) and extend the edge colour outward, so
+  // flank and side-seam samples never land on see-through background. Rows with no
+  // fabric at all (above a strapless neckline, etc.) stay transparent.
+  let filledTexture = null;
+  try {
+    const fillData = cropCtx.getImageData(0, 0, cropW, cropH);
+    const px = fillData.data;
+    const pad = Math.max(2, Math.round(cropW * 0.14));
+    const ALPHA_ON = 128;
+    for (let cy = 0; cy < cropH; cy++) {
+      const row = cy * cropW * 4;
+      let left = -1;
+      let right = -1;
+      for (let cx = 0; cx < cropW; cx++) {
+        if (px[row + cx * 4 + 3] >= ALPHA_ON) {
+          if (left < 0) left = cx;
+          right = cx;
+        }
+      }
+      if (left < 0) continue;
+      // Interior holes: carry the last opaque colour across
+      let lastO = row + left * 4;
+      for (let cx = left; cx <= right; cx++) {
+        const o = row + cx * 4;
+        if (px[o + 3] >= ALPHA_ON) {
+          lastO = o;
+        } else {
+          px[o] = px[lastO]; px[o + 1] = px[lastO + 1]; px[o + 2] = px[lastO + 2]; px[o + 3] = 255;
+        }
+      }
+      // Outward edge extension
+      const lo = row + left * 4;
+      for (let cx = Math.max(0, left - pad); cx < left; cx++) {
+        const o = row + cx * 4;
+        px[o] = px[lo]; px[o + 1] = px[lo + 1]; px[o + 2] = px[lo + 2]; px[o + 3] = 255;
+      }
+      const ro = row + right * 4;
+      for (let cx = right + 1; cx <= Math.min(cropW - 1, right + pad); cx++) {
+        const o = row + cx * 4;
+        px[o] = px[ro]; px[o + 1] = px[ro + 1]; px[o + 2] = px[ro + 2]; px[o + 3] = 255;
+      }
+    }
+    const fillCanvas = document.createElement('canvas');
+    fillCanvas.width = cropW;
+    fillCanvas.height = cropH;
+    fillCanvas.getContext('2d').putImageData(fillData, 0, 0);
+    filledTexture = new THREE.CanvasTexture(fillCanvas);
+    filledTexture.colorSpace = THREE.SRGBColorSpace;
+    filledTexture.wrapS = THREE.ClampToEdgeWrapping;
+    filledTexture.wrapT = THREE.ClampToEdgeWrapping;
+    filledTexture.generateMipmaps = true;
+    filledTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    filledTexture.magFilter = THREE.LinearFilter;
+    filledTexture.needsUpdate = true;
+  } catch {
+    filledTexture = null;
+  }
+
   // Opaque variant (transparent pixels filled with the dominant fabric colour)
   const opaqueCanvas = document.createElement('canvas');
   opaqueCanvas.width = cropW;
@@ -408,6 +468,7 @@ async function fetchAndCropTexture(url) {
   const res = {
     texture,
     opaqueTexture,
+    filledTexture,
     dominantColor,
     hasSleeves,
     aspect,
@@ -1131,6 +1192,7 @@ export default function GarmentMesh3D({
   const {
     texture,
     opaqueTexture = null,
+    filledTexture = null,
     dominantColor,
     hasSleeves: autoHasSleeves,
     solidU = 0.5,
@@ -1302,7 +1364,11 @@ export default function GarmentMesh3D({
       renderOrder={renderOrder}
     >
       <meshStandardMaterial
-        map={(rawSlot === 'shoes' ? opaqueTexture || texture : texture) || null}
+        map={(rawSlot === 'shoes'
+          ? opaqueTexture || texture
+          : ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot)
+            ? filledTexture || texture
+            : texture) || null}
         color={texture ? '#FFFFFF' : dominantColor || '#CBD5E1'}
         transparent={rawSlot !== 'shoes'}
         alphaTest={rawSlot === 'shoes' ? 0 : 0.02}
