@@ -1327,7 +1327,7 @@
     "todayProposal": "اقتراح اليوم",
     "garmentsInLook": "قطع هذا المظهر",
     "wearAndSave": "ارتداء وحفظ الإطلالة",
-    "tryOnAvatar": "عرض الإطلالة",
+    "tryOnAvatar": "تجربة على الأفاتار",
     "outfitCanvas": "لوحة تنسيق الملابس",
     "outfitCanvasSub": "قم بتثبيت القطع المفضلة وتبديل الباقي عشوائياً",
     "rollShuffle": "تدوير / تبديل عشوائي",
@@ -1441,7 +1441,13 @@
     "outfitPieces": "قطع الإطلالة",
     "tapToInspect": "انقر للمعاينة",
     "suggestedAccessory": "إكسسوار مقترح",
-    "suggestedPrefix": "مقترح:"
+    "suggestedPrefix": "مقترح:",
+    "outfitsCount": "{{count}} إطلالات",
+    "modeSeparates": "قطع منفصلة (علوي وسفلي)",
+    "modeFullBody": "إطلالة كاملة (فستان / جمبسوت / ساري)",
+    "restrictedBySeparates": "معطل - تم اختيار قطع علوية وسفلية منفصلة",
+    "restrictedByFullBody": "معطل للإطلالات الكاملة",
+    "activateSection": "التبديل إلى هذا"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",

@@ -1327,7 +1327,7 @@
     "todayProposal": "HEUTIGER VORSCHLAG",
     "garmentsInLook": "Kleidungsstücke in diesem Look",
     "wearAndSave": "Anziehen & Look speichern",
-    "tryOnAvatar": "Look ansehen",
+    "tryOnAvatar": "Auf Avatar anprobieren",
     "outfitCanvas": "Outfit-Leinwand",
     "outfitCanvasSub": "Lieblingsteile sperren und den Rest mischen",
     "rollShuffle": "Würfeln / Mischen",
@@ -1441,7 +1441,13 @@
     "outfitPieces": "Outfit-Teile",
     "tapToInspect": "Tippen zum Ansehen",
     "suggestedAccessory": "Empfohlenes Accessoire",
-    "suggestedPrefix": "Empfohlen:"
+    "suggestedPrefix": "Empfohlen:",
+    "outfitsCount": "{{count}} Outfits",
+    "modeSeparates": "Zweiteiler (Ober- & Unterteil)",
+    "modeFullBody": "Ganzkörper (Kleid / Jumpsuit / Sari)",
+    "restrictedBySeparates": "Deaktiviert für Ober- & Unterteil-Zweiteiler",
+    "restrictedByFullBody": "Deaktiviert für Ganzkörper-Looks",
+    "activateSection": "Hierhin wechseln"
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",

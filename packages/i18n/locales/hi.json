@@ -1327,7 +1327,7 @@
     "todayProposal": "आज का सुझाव",
     "garmentsInLook": "इस लुक के परिधान",
     "wearAndSave": "पहनें और लुक सहेजें",
-    "tryOnAvatar": "लुक देखें",
+    "tryOnAvatar": "अवतार पर आज़माएं",
     "outfitCanvas": "आउटफ़िट कैनवास",
     "outfitCanvasSub": "पसंदीदा आइटम लॉक करें और बाकी को शफ़ल करें",
     "rollShuffle": "रोल / शफ़ल",
@@ -1441,7 +1441,13 @@
     "outfitPieces": "पहनावे के वस्त्र",
     "tapToInspect": "जांचने के लिए टैप करें",
     "suggestedAccessory": "सुझाया गया एक्सेसरी",
-    "suggestedPrefix": "सुझाव:"
+    "suggestedPrefix": "सुझाव:",
+    "outfitsCount": "{{count}} परिधान",
+    "modeSeparates": "अलग-अलग (ऊपरी और निचला)",
+    "modeFullBody": "फुल बॉडी (ड्रेस / जंपसूट / साड़ी)",
+    "restrictedBySeparates": "अलग-अलग कपड़ों के लिए अक्षम",
+    "restrictedByFullBody": "फुल-बॉडी लुक के लिए अक्षम",
+    "activateSection": "इस पर स्विच करें"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",

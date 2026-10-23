@@ -1327,7 +1327,7 @@
     "todayProposal": "VOORSTEL VAN VANDAAG",
     "garmentsInLook": "Kledingstukken in deze look",
     "wearAndSave": "Dragen & Look opslaan",
-    "tryOnAvatar": "Bekijk look",
+    "tryOnAvatar": "Passen op avatar",
     "outfitCanvas": "Outfit-canvas",
     "outfitCanvasSub": "Vergrendel favorieten en hussel de rest",
     "rollShuffle": "Husselen / Schudden",
@@ -1441,7 +1441,13 @@
     "outfitPieces": "Outfitstukken",
     "tapToInspect": "Tik om te bekijken",
     "suggestedAccessory": "Aanbevolen accessoire",
-    "suggestedPrefix": "Aanbevolen:"
+    "suggestedPrefix": "Aanbevolen:",
+    "outfitsCount": "{{count}} outfits",
+    "modeSeparates": "Aparte delen (Boven- & onderstuk)",
+    "modeFullBody": "Volledig lichaam (Jurk / Jumpsuit / Sari)",
+    "restrictedBySeparates": "Uitgeschakeld voor aparte delen",
+    "restrictedByFullBody": "Uitgeschakeld voor eendelige looks",
+    "activateSection": "Hiernaar overschakelen"
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",

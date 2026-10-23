@@ -789,13 +789,21 @@ async def planner_scout_endpoint(
         for m in members:
             members_by_group[m["group_id"]].append(m)
             
-        def norm_category(cat):
+        def norm_category(cat, item_text=""):
             s = str(cat or "").strip().lower().replace(" ", "_")
-            if s in ("top", "tops", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse", "outerwear", "full_body", "jacket", "coat"): return "top"
-            if s in ("bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "trousers"): return "bottom"
-            if s in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe"): return "footwear"
-            if s in ("dress", "dresses", "jumpsuit", "suit", "full_body_suit"): return "dress"
-            if s in ("accessory", "accessories"): return "accessories"
+            txt = f"{s} {str(item_text or '').lower()}"
+            if any(k in txt for k in ("sari", "saree", "dress", "gown", "jumpsuit", "kaftan", "abaya", "galabiya", "thobe", "full_body", "one_piece", "romper")):
+                return "full_body"
+            if any(k in txt for k in ("outerwear", "jacket", "coat", "blazer", "cardigan", "parka", "trench", "overcoat", "puffer", "vest", "achkan")):
+                return "outerwear"
+            if any(k in txt for k in ("watch", "hat", "cap", "belt", "glasses", "sunglasses", "scarf", "earring", "glove", "bag", "accessory", "accessories")):
+                return "accessories"
+            if any(k in txt for k in ("top", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse", "hoodie", "tank", "tee", "crop")):
+                return "top"
+            if any(k in txt for k in ("bottom", "pants", "shorts", "jeans", "skirt", "trousers", "joggers", "slacks")):
+                return "bottom"
+            if any(k in txt for k in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe", "heels", "loafers")):
+                return "footwear"
             return s
             
         final_garments = []
@@ -804,7 +812,7 @@ async def planner_scout_endpoint(
             g_id = g.get("group_id")
             if g_id and g_id in members_by_group:
                 g_members = members_by_group[g_id]
-                all_cats = {norm_category(g.get("category")), *(norm_category(m.get("category")) for m in g_members)}
+                all_cats = {norm_category(g.get("category"), g.get("title")), *(norm_category(m.get("category"), m.get("title")) for m in g_members)}
                 if len(all_cats) > 1:
                     final_garments.extend(g_members)
         garments = final_garments
@@ -823,19 +831,34 @@ async def planner_scout_endpoint(
     if not filtered:
         raise HTTPException(status_code=400, detail="No matching garments found in your closet for these filters.")
 
-    tops = [g for g in filtered if norm_category(g.get("category")) in ("top", "dress")]
-    bottoms = [g for g in filtered if norm_category(g.get("category")) == "bottom"]
-    shoes = [g for g in filtered if norm_category(g.get("category")) == "footwear"]
+    def get_cat(item):
+        return norm_category(item.get("category"), item.get("title") or item.get("name"))
 
-    if not tops:
-        tops = [g for g in garments if norm_category(g.get("category")) in ("top", "dress")]
-    if not bottoms:
-        bottoms = [g for g in garments if norm_category(g.get("category")) == "bottom"]
+    outerwears = [g for g in filtered if get_cat(g) == "outerwear"]
+    full_bodies = [g for g in filtered if get_cat(g) == "full_body"]
+    tops = [g for g in filtered if get_cat(g) == "top"]
+    bottoms = [g for g in filtered if get_cat(g) == "bottom"]
+    shoes = [g for g in filtered if get_cat(g) == "footwear"]
+    accessories = [g for g in filtered if get_cat(g) == "accessories"]
+
     if not shoes:
-        shoes = [g for g in garments if norm_category(g.get("category")) == "footwear"]
+        shoes = [g for g in garments if get_cat(g) == "footwear"]
+    if not tops:
+        tops = [g for g in garments if get_cat(g) == "top"]
+    if not bottoms:
+        bottoms = [g for g in garments if get_cat(g) == "bottom"]
+    if not full_bodies:
+        full_bodies = [g for g in garments if get_cat(g) == "full_body"]
+    if not outerwears:
+        outerwears = [g for g in garments if get_cat(g) == "outerwear"]
+    if not accessories:
+        accessories = [g for g in garments if get_cat(g) == "accessories"]
 
-    if not tops or not bottoms or not shoes:
-        raise HTTPException(status_code=400, detail="Ensure your closet has at least one Top/Outerwear, one Bottom, and one pair of shoes.")
+    has_full_body = len(full_bodies) > 0
+    has_separates = len(tops) > 0 and len(bottoms) > 0
+
+    if not shoes or (not has_full_body and not has_separates):
+        raise HTTPException(status_code=400, detail="Ensure your closet has either a Full-Body item (dress/sari) or a Top + Bottom combination, plus shoes.")
 
     def slim(lst):
         return [
@@ -859,21 +882,34 @@ async def planner_scout_endpoint(
 
     prompt = (
         f"You are the AI Stylist for DressApp.\n"
-        f"Select EXACTLY one Top/Outerwear, one Bottom, and one pair of Footwear from the candidates below to compose a perfectly coordinated look.\n\n"
+        f"Compose a perfectly coordinated look for the user.\n"
+        f"RULES FOR OUTFIT COORDINATION:\n"
+        f"1. Choose EITHER a Full-Body outfit piece (dress/sari/jumpsuit) OR a Top + Bottom combination.\n"
+        f"   - When choosing a Full-Body item, set 'full_body_id' and leave 'bottom_id' and 'top_id' as null. NEVER layer a full-body dress with a separate skirt/pants.\n"
+        f"   - When choosing Top + Bottom separates, set 'top_id' and 'bottom_id' and leave 'full_body_id' as null.\n"
+        f"2. Always pick one pair of Footwear (shoes_id).\n"
+        f"3. Optionally pick an Outerwear piece (outerwear_id) if suitable for weather or style (to overlay over top/dress).\n"
+        f"4. Optionally pick an Accessory (accessory_id) such as a watch, hat, bag, or belt.\n\n"
         f"Current Weather: {weather_summary}\n"
         f"Today's Calendar Events: {calendar_events}\n"
         f"Constraints:\n"
         f"- Target Style/Dress Code: {payload.dress_code or 'any'}\n"
         f"- Target Tag: {payload.tag or 'any'}\n"
         f"- Honor the weather, calendar events, cultural conventions, and modest/religious appropriateness where applicable.\n\n"
-        f"Top Candidates:\n{slim(tops)[:40]}\n\n"
-        f"Bottom Candidates:\n{slim(bottoms)[:40]}\n\n"
-        f"Footwear Candidates:\n{slim(shoes)[:40]}\n\n"
+        f"Full-Body Candidates:\n{slim(full_bodies)[:25]}\n\n"
+        f"Top Candidates:\n{slim(tops)[:25]}\n\n"
+        f"Bottom Candidates:\n{slim(bottoms)[:25]}\n\n"
+        f"Footwear Candidates:\n{slim(shoes)[:25]}\n\n"
+        f"Outerwear Candidates:\n{slim(outerwears)[:15]}\n\n"
+        f"Accessory Candidates:\n{slim(accessories)[:15]}\n\n"
         f"Output MUST be in JSON matching this schema:\n"
         f"{{\n"
-        f"  \"top_id\": string,\n"
-        f"  \"bottom_id\": string,\n"
+        f"  \"full_body_id\": string or null,\n"
+        f"  \"top_id\": string or null,\n"
+        f"  \"bottom_id\": string or null,\n"
         f"  \"shoes_id\": string,\n"
+        f"  \"outerwear_id\": string or null,\n"
+        f"  \"accessory_id\": string or null,\n"
         f"  \"why\": string // styling advice and rationale in 1-2 sentences\n"
         f"}}"
     )
@@ -890,18 +926,18 @@ async def planner_scout_endpoint(
     current_credits = (updated_user.get("ai_configuration") or {}).get("current_credits", 0)
 
     return {
+        "full_body_id": res_json.get("full_body_id"),
         "top_id": res_json.get("top_id"),
         "bottom_id": res_json.get("bottom_id"),
         "shoes_id": res_json.get("shoes_id"),
+        "outerwear_id": res_json.get("outerwear_id"),
+        "accessory_id": res_json.get("accessory_id"),
         "why": res_json.get("why"),
         "weather": weather_ctx,
         "weather_summary": weather_summary,
         "events": calendar_events,
         "credits_left": current_credits,
     }
-
-
-from pydantic import BaseModel
 
 
 class StylistSpeakRequest(BaseModel):

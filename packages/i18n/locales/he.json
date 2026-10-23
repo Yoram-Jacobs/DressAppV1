@@ -1370,7 +1370,7 @@
     "selectGarmentSlot": "בחר {{role}}",
     "todayProposal": "הצעת היום",
     "tryOn": "מדוד",
-    "tryOnAvatar": "הצג לוק",
+    "tryOnAvatar": "מדידה על האווטאר",
     "welcomeMsg": "שלום! אני הסטייליסט האישי שלך ב-AI. שאל אותי מה ללבוש, בקש הצעות לאירוע או תאר את סגנון הלבוש שתרצה!",
     "addGarmentsFirst": "הוסף פריטים לקנבס התלבושות תחילה.",
     "plannedCanvasLook": "מראה מתוכנן מקנבס",
@@ -1454,7 +1454,13 @@
     },
     "fallbackQuotaBanner": "הבקשה הושלמה בצורה חלקה באמצעות מודל הבינה המלאכותית המקומי של DressApp.",
     "outfitPieces": "פריטי הלוק",
-    "tapToInspect": "הקישו לצפייה בפריט"
+    "tapToInspect": "הקישו לצפייה בפריט",
+    "outfitsCount": "{{count}} אאוטפיטים",
+    "modeSeparates": "פריטים נפרדים (עליון ותחתון)",
+    "modeFullBody": "חלק שלם (שמלה / סרבל / סארי)",
+    "restrictedBySeparates": "מושבת - נבחרו חלקי עליון ותחתון נפרדים",
+    "restrictedByFullBody": "מושבת עבור פריט גוף מלא (שמלה/סארי)",
+    "activateSection": "החלף לאפשרות זו"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
