@@ -5777,7 +5777,12 @@
     "show_item": "आइटम दिखाएँ",
     "fullscreen": "पूर्ण स्क्रीन",
     "exit_fullscreen": "पूर्ण स्क्रीन से बाहर निकलें",
-    "view_item_details": "आइटम विवरण देखें"
+    "view_item_details": "आइटम विवरण देखें",
+    "view_garment_only": "केवल कपड़ा देखें (बिना अवतार)",
+    "garment_only": "केवल कपड़ा",
+    "show_avatar": "अवतार दिखाएं",
+    "garment_view_badge": "3D कपड़ा दृश्य",
+    "avatar_studio_badge": "360° अवतार स्टूडियो"
   },
   "stylistTour": {
     "step1": {
@@ -5805,6 +5810,7 @@
   "dressingRoom": {
     "title": "3D ड्रेसिंग रूम",
     "tryOn3D": "3D में आज़माएं",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "3D व्यू"
   }
 }

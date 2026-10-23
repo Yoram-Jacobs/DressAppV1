@@ -5777,7 +5777,12 @@
     "show_item": "アイテムを表示",
     "fullscreen": "全画面表示",
     "exit_fullscreen": "全画面表示を終了",
-    "view_item_details": "アイテムの詳細を表示"
+    "view_item_details": "アイテムの詳細を表示",
+    "view_garment_only": "アイテムのみ表示（アバターなし）",
+    "garment_only": "アイテムのみ",
+    "show_avatar": "アバターを表示",
+    "garment_view_badge": "3Dアイテムビュー",
+    "avatar_studio_badge": "360° アバタースタジオ"
   },
   "stylistTour": {
     "step1": {
@@ -5805,6 +5810,7 @@
   "dressingRoom": {
     "title": "3D試着室",
     "tryOn3D": "3Dで試着",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "3Dビュー"
   }
 }

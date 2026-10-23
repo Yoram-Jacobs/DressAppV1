@@ -463,4 +463,42 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     // Long sleeve extends all the way down to wrist (y ~ 0.90m)
     expect(minLongY).toBeCloseTo(0.90, 1);
   });
+
+  test('DressingRoom3D standalone garment mode (Zara 3D style) allows viewing garment without avatar and toggling', () => {
+    const singleShoe = {
+      shoes: {
+        id: 'boot-999',
+        name: 'Zara Leather Ankle Boots',
+        url: 'https://static.zara.net/boot.jpg',
+        category: 'shoes',
+        sub_category: 'ankle boots',
+      },
+    };
+
+    const { rerender } = render(
+      <DressingRoom3D
+        open={true}
+        onOpenChange={jest.fn()}
+        garments={singleShoe}
+        initialShowAvatar={false}
+        standaloneMode={true}
+        focusedSlot="shoes"
+      />
+    );
+
+    // Should display 3D Garment View badge
+    expect(screen.getByText('3D Garment View')).toBeInTheDocument();
+
+    // Toggle avatar button should be visible with "Show Avatar"
+    const toggleAvatarBtn = screen.getByTestId('toggle-avatar-btn');
+    expect(toggleAvatarBtn).toBeInTheDocument();
+    expect(screen.getByText('Show Avatar')).toBeInTheDocument();
+
+    // Click to toggle avatar on
+    fireEvent.click(toggleAvatarBtn);
+
+    // Badge should switch to 360° Avatar Studio and button to Garment Only
+    expect(screen.getByText('360° Avatar Studio')).toBeInTheDocument();
+    expect(screen.getByText('Garment Only')).toBeInTheDocument();
+  });
 });

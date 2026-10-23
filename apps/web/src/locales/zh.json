@@ -5776,7 +5776,12 @@
     "show_item": "显示单品",
     "fullscreen": "全屏",
     "exit_fullscreen": "退出全屏",
-    "view_item_details": "查看单品详情"
+    "view_item_details": "查看单品详情",
+    "view_garment_only": "仅查看衣物（无虚拟形象）",
+    "garment_only": "仅衣物",
+    "show_avatar": "显示形象",
+    "garment_view_badge": "3D衣物展示",
+    "avatar_studio_badge": "360° 形象试衣间"
   },
   "stylistTour": {
     "step1": {
@@ -5804,6 +5809,7 @@
   "dressingRoom": {
     "title": "3D试衣间",
     "tryOn3D": "3D试穿",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "3D视角"
   }
 }

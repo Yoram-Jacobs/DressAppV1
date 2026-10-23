@@ -5780,7 +5780,12 @@
     "show_item": "Item tonen",
     "fullscreen": "Volledig scherm",
     "exit_fullscreen": "Volledig scherm verlaten",
-    "view_item_details": "Bekijk itemdetails"
+    "view_item_details": "Bekijk itemdetails",
+    "view_garment_only": "Alleen kledingstuk bekijken (zonder avatar)",
+    "garment_only": "Alleen kledingstuk",
+    "show_avatar": "Toon avatar",
+    "garment_view_badge": "3D-kledingweergave",
+    "avatar_studio_badge": "360° Avatar Studio"
   },
   "stylistTour": {
     "step1": {
@@ -5808,6 +5813,7 @@
   "dressingRoom": {
     "title": "3D-paskamer",
     "tryOn3D": "In 3D passen",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "3D-weergave"
   }
 }

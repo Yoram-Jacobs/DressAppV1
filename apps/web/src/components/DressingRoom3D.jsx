@@ -82,7 +82,17 @@ function StudioPedestal() {
 }
 
 // ─── Camera Controller & Animated Transitions ───
-function CameraController({ cameraPreset, setCameraPreset, controlsRef }) {
+export const GARMENT_CAMERA_TARGETS = {
+  shoes: { target: [0, 0.12, 0], pos: [0, 0.32, 0.95] },
+  bottom: { target: [0, 0.55, 0], pos: [0, 0.65, 1.45] },
+  top: { target: [0, 1.20, 0], pos: [0, 1.25, 1.35] },
+  outerwear: { target: [0, 1.15, 0], pos: [0, 1.20, 1.55] },
+  dress: { target: [0, 1.05, 0], pos: [0, 1.10, 1.75] },
+  accessory: { target: [0, 1.15, 0], pos: [0, 1.20, 1.25] },
+  full: { target: [0, 0.95, 0], pos: [0, 1.05, 2.5] },
+};
+
+function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGarmentSlot, showAvatar }) {
   const { camera } = useThree();
   const targetCamPos = useRef(new THREE.Vector3(0, 1.05, 2.5));
   const targetLookAt = useRef(new THREE.Vector3(0, 0.95, 0));
@@ -99,11 +109,21 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef }) {
     } else if (cameraPreset === 'lower') {
       targetCamPos.current.set(0, 0.45, 1.35);
       targetLookAt.current.set(0, 0.35, 0);
+    } else if (cameraPreset === 'garment' || cameraPreset === 'item') {
+      const slotConfig = GARMENT_CAMERA_TARGETS[activeGarmentSlot] || GARMENT_CAMERA_TARGETS.full;
+      targetCamPos.current.set(...slotConfig.pos);
+      targetLookAt.current.set(...slotConfig.target);
     } else if (cameraPreset === 'reset') {
-      targetCamPos.current.set(0, 1.05, 2.5);
-      targetLookAt.current.set(0, 0.95, 0);
+      if (!showAvatar && activeGarmentSlot) {
+        const slotConfig = GARMENT_CAMERA_TARGETS[activeGarmentSlot] || GARMENT_CAMERA_TARGETS.full;
+        targetCamPos.current.set(...slotConfig.pos);
+        targetLookAt.current.set(...slotConfig.target);
+      } else {
+        targetCamPos.current.set(0, 1.05, 2.5);
+        targetLookAt.current.set(0, 0.95, 0);
+      }
     }
-  }, [cameraPreset]);
+  }, [cameraPreset, activeGarmentSlot, showAvatar]);
 
   useFrame((_, delta) => {
     if (!cameraPreset) return;
@@ -144,6 +164,11 @@ export default function DressingRoom3D({
   skinColor: propSkinColor,
   hair: propHair,
   shapeParams: propShapeParams,
+  initialShowAvatar,
+  showAvatar: controlledShowAvatar,
+  onToggleAvatar,
+  focusedSlot,
+  standaloneMode = false,
   onItemClick,
 }) {
   const { t } = useTranslation();
@@ -174,6 +199,24 @@ export default function DressingRoom3D({
   const [layerVisibility, setLayerVisibility] = useState({});
   const [showRack, setShowRack] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [internalShowAvatar, setInternalShowAvatar] = useState(
+    initialShowAvatar !== undefined ? Boolean(initialShowAvatar) : (standaloneMode ? false : true)
+  );
+  const showAvatar = controlledShowAvatar !== undefined ? controlledShowAvatar : internalShowAvatar;
+
+  const handleToggleAvatar = useCallback(() => {
+    const nextVal = !showAvatar;
+    if (controlledShowAvatar === undefined) {
+      setInternalShowAvatar(nextVal);
+    }
+    onToggleAvatar?.(nextVal);
+    if (!nextVal) {
+      setCameraPreset('garment');
+    } else {
+      setCameraPreset('full');
+    }
+  }, [showAvatar, controlledShowAvatar, onToggleAvatar]);
 
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
@@ -254,6 +297,12 @@ export default function DressingRoom3D({
     }));
   }, []);
 
+  useEffect(() => {
+    if (!showAvatar) {
+      setCameraPreset('garment');
+    }
+  }, []);
+
   const handleResetCamera = useCallback(() => {
     setCameraPreset('reset');
   }, []);
@@ -310,7 +359,9 @@ export default function DressingRoom3D({
                   {t('dressing_room_3d.title', { defaultValue: '3D Try-On Dressing Room' })}
                 </h2>
                 <Badge variant="secondary" className="text-[10px] font-semibold bg-primary-brand/10 text-primary-brand border-primary-brand/25">
-                  360° 3D Studio
+                  {!showAvatar
+                    ? t('dressing_room_3d.garment_view_badge', { defaultValue: '3D Garment View' })
+                    : t('dressing_room_3d.avatar_studio_badge', { defaultValue: '360° Avatar Studio' })}
                 </Badge>
               </div>
               <p className="text-xs text-[#6B7280] truncate max-w-[280px] sm:max-w-md">
@@ -343,10 +394,16 @@ export default function DressingRoom3D({
 
         {/* ─── Main 3D Viewport & Overlay Controls ─── */}
         <div className="relative flex-1 w-full h-full overflow-hidden select-none bg-[#FAF7F2]">
+          {(() => {
+            const primarySlot = focusedSlot || activeGarments[0]?.slot || 'top';
+            const initialCamConfig = (!showAvatar && GARMENT_CAMERA_TARGETS[primarySlot])
+              ? GARMENT_CAMERA_TARGETS[primarySlot]
+              : GARMENT_CAMERA_TARGETS.full;
+            return (
           <Canvas
             shadows
             camera={{
-              position: [0, 1.05, 2.5],
+              position: initialCamConfig.pos,
               fov: 42,
               near: 0.1,
               far: 20,
@@ -386,10 +443,10 @@ export default function DressingRoom3D({
 
             <OrbitControls
               ref={controlsRef}
-              target={[0, 0.95, 0]}
+              target={initialCamConfig.target}
               minPolarAngle={Math.PI / 3.4}
               maxPolarAngle={Math.PI / 2.05}
-              minDistance={1.1}
+              minDistance={0.5}
               maxDistance={3.8}
               enablePan={false}
               enableDamping={true}
@@ -402,6 +459,8 @@ export default function DressingRoom3D({
               cameraPreset={cameraPreset}
               setCameraPreset={setCameraPreset}
               controlsRef={controlsRef}
+              activeGarmentSlot={primarySlot}
+              showAvatar={showAvatar}
             />
 
             <Suspense fallback={null}>
@@ -411,17 +470,19 @@ export default function DressingRoom3D({
               <group position={avatarMetricTransform.position} scale={avatarMetricTransform.scale}>
                 <group position={[0, footPose?.groupLift || 0, 0]}>
                 {/* 3D Realistic Human Avatar (meterScale=false to inherit parent group scale) */}
-                <AvatarMesh3D
-                  isMale={isMale}
-                  skinColor={activeSkinColor}
-                  hairProps={hairProps}
-                  morphInfluences={morphInfluences}
-                  footPose={footPose}
-                  height={activeMeasurements?.height || (isMale ? 178 : 168)}
-                  meterScale={false}
-                  castShadow={true}
-                  receiveShadow={true}
-                />
+                {showAvatar && (
+                  <AvatarMesh3D
+                    isMale={isMale}
+                    skinColor={activeSkinColor}
+                    hairProps={hairProps}
+                    morphInfluences={morphInfluences}
+                    footPose={footPose}
+                    height={activeMeasurements?.height || (isMale ? 178 : 168)}
+                    meterScale={false}
+                    castShadow={true}
+                    receiveShadow={true}
+                  />
+                )}
 
                 {/* Active Outfit Garments Worn in 3D Anatomical Fit */}
                 {activeGarments.map((garment) => {
@@ -443,6 +504,8 @@ export default function DressingRoom3D({
               </group>
             </Suspense>
           </Canvas>
+            );
+          })()}
 
           {/* ─── Floating Interaction & Drag Hint ─── */}
           <div className="absolute top-4 start-4 z-10 pointer-events-none">
@@ -486,6 +549,30 @@ export default function DressingRoom3D({
               >
                 <Footprints className="w-3.5 h-3.5 text-primary-brand" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.lower_body', { defaultValue: 'Lower Body' })}</span>
+              </Button>
+
+              <div className="h-4 w-px bg-[#E5DFD5] mx-1" />
+
+              {/* Toggle Avatar / Garment-Only view (Zara 3D style) */}
+              <Button
+                variant={!showAvatar ? 'default' : 'ghost'}
+                size="sm"
+                onClick={handleToggleAvatar}
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                  !showAvatar
+                    ? 'bg-primary-brand text-white shadow-md'
+                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                }`}
+                data-testid="toggle-avatar-btn"
+                title={showAvatar ? t('dressing_room_3d.view_garment_only', { defaultValue: 'View Garment Only (Without Avatar)' }) : t('dressing_room_3d.show_avatar', { defaultValue: 'Show Avatar' })}
+                aria-label={showAvatar ? t('dressing_room_3d.view_garment_only', { defaultValue: 'View Garment Only (Without Avatar)' }) : t('dressing_room_3d.show_avatar', { defaultValue: 'Show Avatar' })}
+              >
+                <User className={`w-3.5 h-3.5 ${!showAvatar ? 'opacity-80' : 'text-primary-brand'}`} />
+                <span className="hidden sm:inline">
+                  {showAvatar
+                    ? t('dressing_room_3d.garment_only', { defaultValue: 'Garment Only' })
+                    : t('dressing_room_3d.show_avatar', { defaultValue: 'Show Avatar' })}
+                </span>
               </Button>
 
               <div className="h-4 w-px bg-[#E5DFD5] mx-1" />

@@ -1902,11 +1902,11 @@ export default function ItemDetail() {
                     onClick={() => setIs3DOpen(true)}
                     className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-gray-800 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:scale-105 active:scale-95 border border-black/5"
                     data-testid="item-detail-3d-tryon-btn"
-                    title={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
-                    aria-label={t("dressingRoom.tryOn3D", { defaultValue: "Try on in 3D" })}
+                    title={t("dressingRoom.view3D", { defaultValue: "3D View" })}
+                    aria-label={t("dressingRoom.view3D", { defaultValue: "3D View" })}
                   >
                     <Box className="h-3.5 w-3.5 text-primary-brand" />
-                    <span>{t("dressingRoom.title", { defaultValue: "3D Dressing Room" })}</span>
+                    <span>{t("dressingRoom.view3D", { defaultValue: "3D View" })}</span>
                   </button>
                   {showRepairPhotoCta && (
                     <button
@@ -3338,6 +3338,9 @@ export default function ItemDetail() {
               outfitItems={studio3DItems}
               garments={studio3DItems}
               profile={user?.profile || {}}
+              initialShowAvatar={false}
+              standaloneMode={true}
+              focusedSlot={Object.keys(studio3DItems)[0]}
             />
           </Suspense>
         )}

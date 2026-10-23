@@ -5769,7 +5769,12 @@
     "show_item": "Afficher l'article",
     "fullscreen": "Plein écran",
     "exit_fullscreen": "Quitter le plein écran",
-    "view_item_details": "Voir les détails de l'article"
+    "view_item_details": "Voir les détails de l'article",
+    "view_garment_only": "Afficher le vêtement seul (sans avatar)",
+    "garment_only": "Vêtement seul",
+    "show_avatar": "Afficher avatar",
+    "garment_view_badge": "Vue 3D du vêtement",
+    "avatar_studio_badge": "Studio avatar 360°"
   },
   "stylistTour": {
     "step1": {
@@ -5797,6 +5802,7 @@
   "dressingRoom": {
     "title": "Cabine d'essayage 3D",
     "tryOn3D": "Essayer en 3D",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "Vue 3D"
   }
 }

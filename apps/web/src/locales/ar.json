@@ -5809,7 +5809,12 @@
     "show_item": "إظهار القطعة",
     "fullscreen": "ملء الشاشة",
     "exit_fullscreen": "الخروج من ملء الشاشة",
-    "view_item_details": "عرض تفاصيل القطعة"
+    "view_item_details": "عرض تفاصيل القطعة",
+    "view_garment_only": "عرض القطعة فقط (بدون الصورة الرمزية)",
+    "garment_only": "القطعة فقط",
+    "show_avatar": "إظهار الصورة الرمزية",
+    "garment_view_badge": "عرض ثلاثي الأبعاد للملابس",
+    "avatar_studio_badge": "استوديو أفاتار 360 درجة"
   },
   "stylistTour": {
     "step1": {
@@ -5837,6 +5842,7 @@
   "dressingRoom": {
     "title": "غرفة قياس ثلاثية الأبعاد",
     "tryOn3D": "تجربة ثلاثية الأبعاد",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "عرض ثلاثي الأبعاد"
   }
 }

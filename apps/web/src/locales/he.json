@@ -5871,7 +5871,12 @@
     "show_item": "הצג פריט",
     "fullscreen": "מסך מלא",
     "exit_fullscreen": "יציאה ממסך מלא",
-    "view_item_details": "צפייה בפרטי הפריט"
+    "view_item_details": "צפייה בפרטי הפריט",
+    "view_garment_only": "הצג בגד בלבד (ללא אווטאר)",
+    "garment_only": "בגד בלבד",
+    "show_avatar": "הצג אווטאר",
+    "garment_view_badge": "תצוגת תלת ממד לבגד",
+    "avatar_studio_badge": "סטודיו אווטאר 360°"
   },
   "stylistTour": {
     "step1": {
@@ -5899,6 +5904,7 @@
   "dressingRoom": {
     "title": "חדר מדידה בתלת-ממד",
     "tryOn3D": "מדידה בתלת-ממד",
-    "badge3D": "תלת-ממד"
+    "badge3D": "תלת-ממד",
+    "view3D": "תצוגת תלת ממד"
   }
 }

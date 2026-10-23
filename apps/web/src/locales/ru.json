@@ -5778,7 +5778,12 @@
     "show_item": "Показать вещь",
     "fullscreen": "Во весь экран",
     "exit_fullscreen": "Выйти из полноэкранного режима",
-    "view_item_details": "Просмотреть сведения о вещи"
+    "view_item_details": "Просмотреть сведения о вещи",
+    "view_garment_only": "Просмотр только вещи (без аватара)",
+    "garment_only": "Только вещь",
+    "show_avatar": "Показать аватар",
+    "garment_view_badge": "3D-просмотр вещи",
+    "avatar_studio_badge": "360° студия аватара"
   },
   "stylistTour": {
     "step1": {
@@ -5806,6 +5811,7 @@
   "dressingRoom": {
     "title": "3D-примерочная",
     "tryOn3D": "Примерить в 3D",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "3D-просмотр"
   }
 }
