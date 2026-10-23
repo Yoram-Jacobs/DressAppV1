@@ -1338,7 +1338,7 @@
     "todayProposal": "PROPUESTA DE HOY",
     "garmentsInLook": "Prendas en este look",
     "wearAndSave": "Vestir y guardar look",
-    "tryOnAvatar": "Ver look",
+    "tryOnAvatar": "Probar en avatar",
     "outfitCanvas": "Lienzo de atuendos",
     "outfitCanvasSub": "Bloquea las prendas que te gusten y mezcla el resto",
     "rollShuffle": "Tirar / Mezclar",
@@ -1452,7 +1452,13 @@
     "outfitPieces": "Prendas del conjunto",
     "tapToInspect": "Toca para inspeccionar",
     "suggestedAccessory": "Accesorio sugerido",
-    "suggestedPrefix": "Sugerido:"
+    "suggestedPrefix": "Sugerido:",
+    "outfitsCount": "{{count}} conjuntos",
+    "modeSeparates": "Prendas separadas (Superior e inferior)",
+    "modeFullBody": "Cuerpo entero (Vestido / Mono / Sari)",
+    "restrictedBySeparates": "Desactivado para prendas separadas",
+    "restrictedByFullBody": "Desactivado para looks de cuerpo entero",
+    "activateSection": "Cambiar a esto"
   },
   "outfitCompletion": {
     "cta": "Completar el look",

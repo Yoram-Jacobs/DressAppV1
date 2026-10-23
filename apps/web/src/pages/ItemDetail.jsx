@@ -1622,12 +1622,29 @@ export default function ItemDetail() {
   );
   const studio3DItems = (() => {
     if (!mergedItem) return {};
-    const rawCat = mergedItem.category || 'top';
+    // The 3D model always represents the whole item group: the host defines the
+    // garment identity (category / type) and its photo is the front view; every
+    // other group photo (back / side) is handed to the viewer to remove guesswork.
+    const hostView = currentGroupItems.find((x) => x.id === hostIdState) || null;
+    const base = isViewingHost || !hostView
+      ? mergedItem
+      : { ...mergedItem, ...hostView, id: hostView.id };
+    const imageOf = (m) => resolveMediaUrl(
+      m.reconstructed_image_url || bestImageUrl(m, { skipReconstruction: false })
+    );
+    const frontImage = (isViewingHost || !hostView ? preferredImage : imageOf(hostView))
+      || base.image_url;
+    const memberViews = currentGroupItems
+      .filter((x) => x.id !== (hostView?.id || id))
+      .map(imageOf)
+      .filter((u) => u && u !== frontImage);
+    const rawCat = base.category || 'top';
     const slot = String(rawCat).toLowerCase();
     const itemLike = {
-      ...mergedItem,
-      image_url: preferredImage || mergedItem.image_url,
-      clean_image_url: preferredImage || mergedItem.clean_image_url,
+      ...base,
+      image_url: frontImage,
+      clean_image_url: frontImage,
+      view_urls: memberViews,
     };
     return { [slot]: itemLike };
   })();

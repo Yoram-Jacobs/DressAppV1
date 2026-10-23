@@ -1338,7 +1338,7 @@
     "todayProposal": "今日推荐搭配",
     "garmentsInLook": "本套搭配包含单品",
     "wearAndSave": "穿戴并保存穿搭",
-    "tryOnAvatar": "查看穿搭",
+    "tryOnAvatar": "在虚拟化身上试穿",
     "outfitCanvas": "穿搭画布",
     "outfitCanvasSub": "锁定喜欢的单品，随机搭配其他",
     "rollShuffle": "摇一摇 / 随机搭配",
@@ -1452,7 +1452,13 @@
     "outfitPieces": "搭配单品",
     "tapToInspect": "点击查看详情",
     "suggestedAccessory": "推荐配饰",
-    "suggestedPrefix": "建议："
+    "suggestedPrefix": "建议：",
+    "outfitsCount": "{{count}} 套穿搭",
+    "modeSeparates": "分体穿搭 (上装与下装)",
+    "modeFullBody": "全身单品 (连衣裙 / 连体裤 / 纱丽)",
+    "restrictedBySeparates": "分体搭配时已禁用",
+    "restrictedByFullBody": "全身穿搭时已禁用",
+    "activateSection": "切换至此项"
   },
   "outfitCompletion": {
     "cta": "完成搭配",

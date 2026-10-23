@@ -1341,7 +1341,7 @@
     "todayProposal": "TODAY'S PROPOSAL",
     "garmentsInLook": "Garments in this Look",
     "wearAndSave": "Wear & Save Look",
-    "tryOnAvatar": "View Look",
+    "tryOnAvatar": "Try on Avatar",
     "outfitCanvas": "Outfit Canvas",
     "outfitCanvasSub": "Lock items you love & shuffle the rest",
     "rollShuffle": "Roll / Shuffle",
@@ -1452,7 +1452,13 @@
     "fallbackLabel": "(Fallback)",
     "fallbackDescriptionPattern": "A balanced daily outfit matching your preferred {{style}} style and local weather.",
     "outfitPieces": "Outfit Pieces",
-    "tapToInspect": "Tap to inspect"
+    "tapToInspect": "Tap to inspect",
+    "outfitsCount": "{{count}} outfits",
+    "modeSeparates": "Separates (Top & Bottom)",
+    "modeFullBody": "Full Body (Dress / Jumpsuit / Sari)",
+    "restrictedBySeparates": "Disabled for Top & Bottom separates",
+    "restrictedByFullBody": "Disabled for Full-Body looks",
+    "activateSection": "Switch to this"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",

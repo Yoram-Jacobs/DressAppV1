@@ -1338,7 +1338,7 @@
     "todayProposal": "ОБРАЗ НА СЕГОДНЯ",
     "garmentsInLook": "Вещи в этом образе",
     "wearAndSave": "Надеть и сохранить образ",
-    "tryOnAvatar": "Посмотреть образ",
+    "tryOnAvatar": "Примерить на аватар",
     "outfitCanvas": "Холст образов",
     "outfitCanvasSub": "Закрепите любимые вещи и перемешайте остальные",
     "rollShuffle": "Бросить кубик / Перемешать",
@@ -1452,7 +1452,13 @@
     "outfitPieces": "Вещи образа",
     "tapToInspect": "Нажмите для просмотра",
     "suggestedAccessory": "Рекомендуемый аксессуар",
-    "suggestedPrefix": "Рекомендуется:"
+    "suggestedPrefix": "Рекомендуется:",
+    "outfitsCount": "{{count}} образов",
+    "modeSeparates": "Раздельные вещи (Верх и низ)",
+    "modeFullBody": "Полный образ (Платье / Комбинезон / Сари)",
+    "restrictedBySeparates": "Отключено для раздельных вещей",
+    "restrictedByFullBody": "Отключено для цельных образов",
+    "activateSection": "Переключиться на это"
   },
   "outfitCompletion": {
     "cta": "Завершить образ",

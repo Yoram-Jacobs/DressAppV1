@@ -9,6 +9,12 @@ import {
   createHeelGeometry,
   poseGeometry,
 } from '@/lib/footwearFit';
+import {
+  buildSilhouetteShell,
+  chooseGridResolution,
+  resampleAlphaMask,
+  isConsistentView,
+} from '@/lib/garmentSilhouette';
 
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
@@ -88,9 +94,35 @@ export function getLegSlice(y, isMale) {
 }
 
 /**
+ * Garment-type words in the item NAME ("... cargo pants", "wool overcoat") are far
+ * more reliable than a mislabeled category field. Returns a core slot or null.
+ */
+export function inferRoleFromName(title) {
+  const text = String(title || '').toLowerCase();
+  if (!text) return null;
+  if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|מעיל|ז['’]קט|ג['’]קט|בלייזר|קרדיגן)/i.test(text)) return 'outerwear';
+  if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|שמלה|שמלת|אוברול|סרבל)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks)\b/i.test(text)) return 'dress';
+  if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|leggings|joggers|slacks|sweatpants)\b|מכנס|ג['’]ינס|חצאית|שורטס|טייץ)/i.test(text)) return 'bottom';
+  if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey)\b|חולצ|סוודר|גופי)/i.test(text)) return 'top';
+  return null;
+}
+
+/**
  * Normalizes multi-lingual category / role strings into canonical slots.
+ * A clear garment type in the title overrides a contradicting top/bottom/outerwear/
+ * dress category so pants never render as a top (and vice versa).
  */
 export function normalizeGarmentRole(role, category, title) {
+  const declared = normalizeDeclaredGarmentRole(role, category, title);
+  const inferred = inferRoleFromName(title);
+  const CORE = ['top', 'bottom', 'outerwear', 'dress'];
+  if (inferred && inferred !== declared && CORE.includes(declared) && CORE.includes(inferred)) {
+    return inferred;
+  }
+  return declared;
+}
+
+function normalizeDeclaredGarmentRole(role, category, title) {
   const text = (String(role || '') + ' ' + String(category || '') + ' ' + String(title || '')).toLowerCase().trim();
   if (!text) return 'accessory';
 
@@ -168,6 +200,69 @@ export function extractImageAlphaBounds(img) {
 
 const textureCache = new Map();
 
+/** Mean colour, silhouette area and texture busyness of a cut-out canvas. */
+function computeCanvasStats(canvas) {
+  const S = 48;
+  const aspect = canvas.width / Math.max(1, canvas.height);
+  const sw = aspect >= 1 ? S : Math.max(8, Math.round(S * aspect));
+  const sh = aspect >= 1 ? Math.max(8, Math.round(S / aspect)) : S;
+  const c = document.createElement('canvas');
+  c.width = sw;
+  c.height = sh;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.drawImage(canvas, 0, 0, sw, sh);
+  const d = cx.getImageData(0, 0, sw, sh).data;
+  let r = 0, g = 0, b = 0, n = 0;
+  const lum = [];
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 128) continue;
+    r += d[i]; g += d[i + 1]; b += d[i + 2]; n++;
+    lum.push(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+  }
+  const mean = n ? [r / n, g / n, b / n] : [128, 128, 128];
+  const meanLum = lum.length ? lum.reduce((a, v) => a + v, 0) / lum.length : 128;
+  const variance = lum.length ? lum.reduce((a, v) => a + (v - meanLum) * (v - meanLum), 0) / lum.length : 0;
+  return { mean, area: n / (sw * sh), aspect, stdev: Math.sqrt(variance) };
+}
+
+/**
+ * Builds the texture for the BACK sheet of a garment, aligned to the front cut-out:
+ *   1. a back photo from the item group (when one is consistent with the front view)
+ *   2. the mirrored front photo for patterned / graphic fabrics
+ *   3. a solid fabric-coloured silhouette otherwise
+ */
+function buildBackTexture({ frontCanvas, backCanvas, dominantColor, patterned }) {
+  const W = frontCanvas.width;
+  const H = frontCanvas.height;
+  const out = document.createElement('canvas');
+  out.width = W;
+  out.height = H;
+  const ctx = out.getContext('2d');
+  if (!backCanvas && patterned) {
+    ctx.drawImage(frontCanvas, 0, 0);
+  } else {
+    // Silhouette in the fabric colour, then lay the real back photo on top
+    ctx.drawImage(frontCanvas, 0, 0);
+    ctx.globalCompositeOperation = 'source-in';
+    ctx.fillStyle = dominantColor;
+    ctx.fillRect(0, 0, W, H);
+    if (backCanvas) {
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.drawImage(backCanvas, 0, 0, W, H);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  const tex = new THREE.CanvasTexture(out);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 async function fetchAndCropTexture(url) {
   if (!url || typeof document === 'undefined') return null;
   if (textureCache.has(url)) {
@@ -198,19 +293,24 @@ async function fetchAndCropTexture(url) {
     });
   }
 
-  const w = img.naturalWidth || img.width;
-  const h = img.naturalHeight || img.height;
-  if (!w || !h) {
+  const srcW = img.naturalWidth || img.width;
+  const srcH = img.naturalHeight || img.height;
+  if (!srcW || !srcH) {
     if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
     return null;
   }
+  // Cap the working resolution: keeps flood-fill / mask analysis fast and GPU memory small
+  const MAX_SIDE = 1100;
+  const downScale = Math.min(1, MAX_SIDE / Math.max(srcW, srcH));
+  const w = Math.max(1, Math.round(srcW * downScale));
+  const h = Math.max(1, Math.round(srcH * downScale));
 
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   try {
-    ctx.drawImage(img, 0, 0);
+    ctx.drawImage(img, 0, 0, w, h);
   } finally {
     if (objectUrlToRevoke) {
       URL.revokeObjectURL(objectUrlToRevoke);
@@ -228,6 +328,7 @@ async function fetchAndCropTexture(url) {
   let dominantColor = '#222226';
   let isLightBg = false;
   let bgR = 255, bgG = 255, bgB = 255;
+  let bgMask = null;
 
   if (imgData) {
     const data = imgData.data;
@@ -255,15 +356,39 @@ async function fetchAndCropTexture(url) {
       isLightBg = bgR > 215 && bgG > 215 && bgB > 215;
     }
 
-    const isBgPixel = (r, g, b, a) => {
-      if (a < 35) return true;
-      if (isLightBg) {
-        const dist = Math.hypot(r - bgR, g - bgG, b - bgB);
-        if (dist < 42) return true;
-        if (r > 235 && g > 235 && b > 235) return true;
-      }
-      return false;
+    // Background mask: fully transparent pixels are always background; near-white
+    // catalog backdrop is only background when it is connected to the image border
+    // (so white shirts / white sneakers keep their own white pixels).
+    const isLightPixel = (o) => {
+      const r = data[o], g = data[o + 1], b = data[o + 2];
+      if (Math.hypot(r - bgR, g - bgG, b - bgB) < 42) return true;
+      return r > 235 && g > 235 && b > 235;
     };
+    bgMask = new Uint8Array(w * h);
+    for (let p = 0; p < w * h; p++) {
+      if (data[p * 4 + 3] < 35) bgMask[p] = 1;
+    }
+    if (isLightBg) {
+      const stack = new Int32Array(w * h);
+      let sp = 0;
+      const push = (p) => {
+        if (!bgMask[p] && isLightPixel(p * 4)) {
+          bgMask[p] = 1;
+          stack[sp++] = p;
+        }
+      };
+      for (let x = 0; x < w; x++) { push(x); push((h - 1) * w + x); }
+      for (let y = 0; y < h; y++) { push(y * w); push(y * w + (w - 1)); }
+      while (sp > 0) {
+        const p = stack[--sp];
+        const x = p % w;
+        const y = (p - x) / w;
+        if (x > 0) push(p - 1);
+        if (x < w - 1) push(p + 1);
+        if (y > 0) push(p - w);
+        if (y < h - 1) push(p + w);
+      }
+    }
 
     let foundMinX = w, foundMaxX = 0, foundMinY = h, foundMaxY = 0;
     let sumR = 0, sumG = 0, sumB = 0, countDom = 0;
@@ -272,21 +397,16 @@ async function fetchAndCropTexture(url) {
       const row = y * w * 4;
       for (let x = 0; x < w; x++) {
         const off = row + x * 4;
-        const r = data[off];
-        const g = data[off + 1];
-        const b = data[off + 2];
-        const a = data[off + 3];
-
-        if (!isBgPixel(r, g, b, a)) {
+        if (!bgMask[y * w + x]) {
           if (x < foundMinX) foundMinX = x;
           if (x > foundMaxX) foundMaxX = x;
           if (y < foundMinY) foundMinY = y;
           if (y > foundMaxY) foundMaxY = y;
 
           // Sample genuine fabric / shoe leather
-          sumR += r;
-          sumG += g;
-          sumB += b;
+          sumR += data[off];
+          sumG += data[off + 1];
+          sumB += data[off + 2];
           countDom++;
         }
       }
@@ -316,16 +436,16 @@ async function fetchAndCropTexture(url) {
   const cropCtx = cropCanvas.getContext('2d');
   cropCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
 
-  // If the catalog photo was on a white background, remove background pixels from cropCanvas
-  if (imgData && isLightBg) {
+  // Remove the connected catalog backdrop from the crop (keeps interior whites intact)
+  if (imgData && isLightBg && bgMask) {
     try {
       const cImgData = cropCtx.getImageData(0, 0, cropW, cropH);
       const cPx = cImgData.data;
-      for (let i = 0; i < cPx.length; i += 4) {
-        const r = cPx[i], g = cPx[i + 1], b = cPx[i + 2], a = cPx[i + 3];
-        const dist = Math.hypot(r - bgR, g - bgG, b - bgB);
-        if (a < 35 || dist < 42 || (r > 235 && g > 235 && b > 235)) {
-          cPx[i + 3] = 0; // Transparent
+      for (let cy = 0; cy < cropH; cy++) {
+        for (let cx = 0; cx < cropW; cx++) {
+          if (bgMask[(minY + cy) * w + (minX + cx)]) {
+            cPx[(cy * cropW + cx) * 4 + 3] = 0; // Transparent
+          }
         }
       }
       cropCtx.putImageData(cImgData, 0, 0);
@@ -512,6 +632,20 @@ async function fetchAndCropTexture(url) {
   opaqueTexture.wrapT = THREE.ClampToEdgeWrapping;
   opaqueTexture.needsUpdate = true;
 
+  // Silhouette mask (grid resolution) + colour statistics for the silhouette shell builder
+  let shellMask = null;
+  let canvasStats = null;
+  try {
+    const sData = cropCtx.getImageData(0, 0, cropW, cropH).data;
+    const alpha = new Uint8Array(cropW * cropH);
+    for (let p = 0; p < alpha.length; p++) alpha[p] = sData[p * 4 + 3];
+    const { nx, ny } = chooseGridResolution(aspect);
+    shellMask = { mask: resampleAlphaMask(alpha, cropW, cropH, nx, ny), nx, ny };
+    canvasStats = computeCanvasStats(cropCanvas);
+  } catch {
+    shellMask = null;
+  }
+
   const res = {
     texture,
     opaqueTexture,
@@ -521,6 +655,9 @@ async function fetchAndCropTexture(url) {
     aspect,
     solidU,
     solidV,
+    canvas: cropCanvas,
+    shellMask,
+    canvasStats,
     shoeLayout: { ...shoeLayout, solidU, solidV },
     bounds: {
       uMin: 0,
@@ -535,7 +672,7 @@ async function fetchAndCropTexture(url) {
   return res;
 }
 
-function useGarmentTexture(url) {
+function useGarmentTexture(url, extraUrls = [], patterned = false) {
   const [data, setData] = useState({
     texture: null,
     opaqueTexture: null,
@@ -545,8 +682,12 @@ function useGarmentTexture(url) {
     aspect: 1.0,
     solidU: 0.5,
     solidV: 0.5,
+    backTexture: null,
+    backSource: null,
+    ready: false,
     bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
   });
+  const extraKey = (extraUrls || []).filter(Boolean).join('|');
 
   useEffect(() => {
     let mounted = true;
@@ -558,14 +699,46 @@ function useGarmentTexture(url) {
         dominantColor: '#222226',
         hasSleeves: true,
         aspect: 1.0,
+        backTexture: null,
+        backSource: null,
+        ready: false,
         bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
       });
-      return;
+      return undefined;
     }
 
     fetchAndCropTexture(url)
-      .then((res) => {
-        if (mounted && res) setData(res);
+      .then(async (res) => {
+        if (!mounted || !res) return;
+        setData({ ...res, backTexture: null, backSource: null, ready: true });
+
+        // ── Item group: look for a consistent back / side view ──
+        if (!res.canvas || !res.shellMask) return;
+        let backCanvas = null;
+        const candidates = extraKey ? extraKey.split('|') : [];
+        for (const u of candidates) {
+          if (u === url) continue;
+          try {
+            const other = await fetchAndCropTexture(u);
+            if (other?.canvas && isConsistentView(res.canvasStats, other.canvasStats)) {
+              backCanvas = other.canvas;
+              break;
+            }
+          } catch {
+            // ignore unusable view
+          }
+        }
+        if (!mounted) return;
+        const wantsPattern = patterned || (res.canvasStats?.stdev ?? 0) > 38;
+        const backTexture = buildBackTexture({
+          frontCanvas: res.canvas,
+          backCanvas,
+          dominantColor: res.dominantColor,
+          patterned: wantsPattern,
+        });
+        setData((prev) => (prev.texture === res.texture
+          ? { ...prev, backTexture, backSource: backCanvas ? 'photo' : (wantsPattern ? 'mirror' : 'solid') }
+          : prev));
       })
       .catch(() => {
         // Fallback standard texture loader
@@ -583,6 +756,9 @@ function useGarmentTexture(url) {
             aspect: 1.0,
             solidU: 0.5,
             solidV: 0.5,
+            backTexture: null,
+            backSource: null,
+            ready: true,
             bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
           });
         });
@@ -591,7 +767,7 @@ function useGarmentTexture(url) {
     return () => {
       mounted = false;
     };
-  }, [url]);
+  }, [url, extraKey, patterned]);
 
   return data;
 }
@@ -1393,11 +1569,57 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
 }
 
 /**
+ * Vertical placement + clearance of a garment shell for each clothing slot,
+ * expressed in the avatar's base (un-morphed) metric space.
+ */
+export function resolveShellFit({ rawSlot, garmentText = '', isMale = false, hasOuterwear = false } = {}) {
+  const has = (...words) => words.some((w) => garmentText.includes(w));
+  if (rawSlot === 'top') {
+    const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
+    const isLongline = has('kurta', 'tunic', 'longline', 'thobe', 'טוניקה');
+    let yBottom = isMale ? 0.90 : 0.86;
+    if (isCrop) yBottom = isMale ? 1.18 : 1.12;
+    if (isLongline) yBottom = isMale ? 0.75 : 0.70;
+    return { yTop: isMale ? 1.53 : 1.47, yBottom, layerOffset: hasOuterwear ? 0.016 : 0.022, isSkirt: false };
+  }
+  if (rawSlot === 'outerwear') {
+    const isLong = has('overcoat', 'trench', 'duster', 'מעיל ארוך', 'cardigan', 'קרדיגן', 'coat', 'parka', 'robe');
+    const isCrop = has('bolero', 'shrug', 'עליונית קצרה') || (has('jacket') && has('crop'));
+    let yBottom = isMale ? 0.88 : 0.84;
+    if (isLong) yBottom = isMale ? 0.52 : 0.48;
+    if (isCrop) yBottom = isMale ? 1.15 : 1.10;
+    return { yTop: isMale ? 1.54 : 1.48, yBottom, layerOffset: isMale ? 0.038 : 0.034, isSkirt: false };
+  }
+  if (rawSlot === 'dress') {
+    const isMini = has('mini', 'קצרה');
+    const isMaxi = has('maxi', 'gown', 'evening', 'ארוכה', 'מקסי', 'kaftan', 'caftan', 'robe', 'abaya');
+    let yBottom = isMale ? 0.55 : 0.50;
+    if (isMini) yBottom = isMale ? 0.78 : 0.74;
+    if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
+    return { yTop: isMale ? 1.53 : 1.47, yBottom, layerOffset: 0.022, isSkirt: false };
+  }
+  if (rawSlot === 'bottom') {
+    const isSkirt = has('skirt', 'חצאית');
+    const isShorts = has('shorts', 'ברמודה', 'קצרים', 'שורטס');
+    const isMini = isSkirt && has('mini', 'קצרה');
+    const isMaxi = isSkirt && has('maxi', 'ארוכה', 'מקסי');
+    let yBottom = isMale ? 0.11 : 0.10;
+    if (isShorts) yBottom = isMale ? 0.58 : 0.54;
+    if (isSkirt) yBottom = isMale ? 0.48 : 0.44;
+    if (isMini) yBottom = isMale ? 0.76 : 0.72;
+    if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
+    return { yTop: isMale ? 1.08 : 1.05, yBottom, layerOffset: 0.018, isSkirt };
+  }
+  return null;
+}
+
+/**
  * GarmentMesh3D
- * 
- * Renders an active outfit piece in the 3D Try-On Dressing Room with authentic 3D depth,
- * anatomical body-contoured drape around chest, shoulders, waist, and sleeves,
- * contact shadows, and physical studio materials.
+ *
+ * Renders an active outfit piece in the 3D Try-On Dressing Room. Clothing keeps the
+ * silhouette of its own photo (sleeves, pant legs, hem) as a front/back shell that is
+ * inflated to the avatar's body profile; item-group back views supply the back sheet.
+ * Footwear and accessories use dedicated fitted geometry.
  */
 export default function GarmentMesh3D({
   garment,
@@ -1411,6 +1633,8 @@ export default function GarmentMesh3D({
   standaloneMode = false,
 }) {
   const isStandalone = Boolean(standaloneMode || !showAvatar);
+  const patternLabel = String(garment?.pattern || garment?.rawItem?.pattern || '').toLowerCase().trim();
+  const isPatterned = Boolean(patternLabel) && !/^(solid|plain|—|-|none|חלק|אחיד)$/i.test(patternLabel);
   const {
     texture,
     opaqueTexture = null,
@@ -1421,7 +1645,10 @@ export default function GarmentMesh3D({
     solidU = 0.5,
     solidV = 0.5,
     shoeLayout = null,
-  } = useGarmentTexture(garment?.url);
+    shellMask = null,
+    backTexture = null,
+    ready: textureReady = false,
+  } = useGarmentTexture(garment?.url, garment?.extraViews, isPatterned);
 
   const rawSlot = normalizeGarmentRole(
     slot || garment?.slot,
@@ -1571,14 +1798,80 @@ export default function GarmentMesh3D({
     return rawSlot === 'shoes' ? poseGeometry(morphed, footPose) : morphed;
   }, [baseGeometry, morphField, morphInfluences, rawSlot, footPose]);
 
+  // ── Silhouette shell: the garment keeps its own photographed outline ──
+  const shellFit = useMemo(
+    () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear }),
+    [rawSlot, garmentText, isMale, hasOuterwear]
+  );
+  const shell = useMemo(() => {
+    if (!visible || !shellFit || !shellMask) return null;
+    try {
+      const built = buildSilhouetteShell({
+        mask: shellMask.mask,
+        nx: shellMask.nx,
+        ny: shellMask.ny,
+        aspect,
+        slot: rawSlot,
+        isMale,
+        isSkirt: shellFit.isSkirt,
+        yTop: shellFit.yTop,
+        yBottom: shellFit.yBottom,
+        layerOffset: shellFit.layerOffset,
+        getTorsoSlice,
+        getLegSlice,
+      });
+      return built.ok ? built : null;
+    } catch (err) {
+      console.warn('Silhouette shell unavailable, using procedural fallback:', err);
+      return null;
+    }
+  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale]);
+  const shellGeos = useMemo(() => {
+    if (!shell) return null;
+    return {
+      front: applyAvatarMorphsToGeometry(shell.front, morphField, morphInfluences),
+      back: applyAvatarMorphsToGeometry(shell.back, morphField, morphInfluences),
+    };
+  }, [shell, morphField, morphInfluences]);
+
   const heelGeometry = useMemo(
     () => (rawSlot === 'shoes' && visible ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose }) : null),
     [rawSlot, visible, isMale, footwearSpec, footPose]
   );
 
-  if (!visible || !garment || !geometry) return null;
+  if (!visible || !garment) return null;
+
+  const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
+  // Never flash an untextured (white) body-shaped placeholder while the photo loads
+  if (isCoreClothing && !textureReady) return null;
 
   const renderOrder = rawSlot === 'outerwear' ? 12 : rawSlot === 'dress' ? 11 : rawSlot === 'top' ? 10 : 8;
+
+  if (shellGeos && texture) {
+    const shellMaterialProps = {
+      color: '#FFFFFF',
+      alphaTest: 0.5,
+      transparent: false,
+      depthWrite: true,
+      side: THREE.DoubleSide,
+      roughness: 0.78,
+      metalness: 0.02,
+      envMapIntensity: 0.7,
+      alphaToCoverage: true,
+    };
+    return (
+      <>
+        <mesh name="garment-front-sheet" geometry={shellGeos.front} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial map={texture} {...shellMaterialProps} />
+        </mesh>
+        <mesh name="garment-back-sheet" geometry={shellGeos.back} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial map={backTexture || texture} {...shellMaterialProps} />
+        </mesh>
+      </>
+    );
+  }
+
+  if (!geometry) return null;
 
   return (
     <>

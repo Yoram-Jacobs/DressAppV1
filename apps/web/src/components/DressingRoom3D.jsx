@@ -237,14 +237,33 @@ export default function DressingRoom3D({
         g.category,
         g.name || g.title || g.sub_category || g.item_type
       );
+      const frontUrl = resolveEffectiveGarmentUrl(g) || g.url || g.image_url;
+
+      // Item group: every other photo of the same garment (back / side views) removes the guesswork
+      const extraViews = [];
+      const seenViews = new Set([frontUrl]);
+      const pushView = (u) => {
+        if (u && !seenViews.has(u)) {
+          seenViews.add(u);
+          extraViews.push(u);
+        }
+      };
+      (Array.isArray(g.view_urls) ? g.view_urls : []).forEach(pushView);
+      (Array.isArray(g.group_members) ? g.group_members : []).forEach((m) => {
+        if (!m || m.id === g.id) return;
+        pushView(resolveEffectiveGarmentUrl(m) || m.clean_image_url || m.image_url);
+      });
+
       list.push({
         slot: normSlot,
         id: g.id || slotKey,
         name: g.name || g.title || slotKey,
-        url: resolveEffectiveGarmentUrl(g) || g.url || g.image_url,
+        url: frontUrl,
         category: g.category || slotKey,
         sub_category: g.sub_category || '',
         item_type: g.item_type || '',
+        pattern: g.pattern || '',
+        extraViews,
         rawItem: g,
       });
     });
@@ -397,7 +416,9 @@ export default function DressingRoom3D({
         {/* ─── Main 3D Viewport & Overlay Controls ─── */}
         <div className="relative flex-1 w-full h-full overflow-hidden select-none bg-[#FAF7F2]">
           {(() => {
-            const primarySlot = focusedSlot || activeGarments[0]?.slot || 'top';
+            const primarySlot = (focusedSlot && GARMENT_CAMERA_TARGETS[focusedSlot])
+              ? focusedSlot
+              : (activeGarments[0]?.slot || 'top');
             const initialCamConfig = (!showAvatar && GARMENT_CAMERA_TARGETS[primarySlot])
               ? GARMENT_CAMERA_TARGETS[primarySlot]
               : GARMENT_CAMERA_TARGETS.full;

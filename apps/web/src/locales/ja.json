@@ -1338,7 +1338,7 @@
     "todayProposal": "本日の提案コーデ",
     "garmentsInLook": "このコーデのアイテム",
     "wearAndSave": "着用してコーデを保存",
-    "tryOnAvatar": "ルックを見る",
+    "tryOnAvatar": "アバターで試着",
     "outfitCanvas": "コーデキャンバス",
     "outfitCanvasSub": "お気に入りをロックして残りをシャッフル",
     "rollShuffle": "シャッフル / ランダム",
@@ -1452,7 +1452,13 @@
     "outfitPieces": "コーディネートのアイテム",
     "tapToInspect": "タップして詳細",
     "suggestedAccessory": "おすすめのアクセサリー",
-    "suggestedPrefix": "おすすめ："
+    "suggestedPrefix": "おすすめ：",
+    "outfitsCount": "{{count}}件のコーデ",
+    "modeSeparates": "セパレート (トップス & ボトムス)",
+    "modeFullBody": "全身 (ワンピース / サリー)",
+    "restrictedBySeparates": "セパレート選択時は無効",
+    "restrictedByFullBody": "全身コーデ選択時は無効",
+    "activateSection": "こちらに切り替え"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",

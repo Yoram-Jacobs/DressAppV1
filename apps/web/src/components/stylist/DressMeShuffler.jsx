@@ -1,6 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Save, ImageOff, ChevronLeft, ChevronRight, X, CalendarDays, Loader2, Shirt, Layers, Footprints, ShoppingBag } from 'lucide-react';
+import {
+  Sparkles,
+  Save,
+  ImageOff,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  CalendarDays,
+  Loader2,
+  Shirt,
+  Layers,
+  Footprints,
+  ShoppingBag,
+  Watch,
+  Lock,
+  Eye,
+  Check,
+  Ban,
+  Sparkle
+} from 'lucide-react';
 import { useStoreState } from '@/lib/createSimpleStore';
 import { shufflerUIStore } from '@/lib/shufflerUIStore';
 import { useClosetItems } from '@/lib/useClosetStore';
@@ -20,11 +39,46 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
+import { useAuth } from '@/lib/auth';
+import AvatarViewer from '@/components/AvatarViewer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const DRESS_CODE_OPTIONS = ['all', 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'];
 
+export function detectAccessoryRole(item) {
+  if (!item) return 'accessory';
+  const text = `${item.name || ''} ${item.title || ''} ${item.sub_category || ''} ${item.item_type || ''} ${item.category || ''}`.toLowerCase();
+  
+  if (/\b(watch|watches|smartwatch|wristwatch|timepiece|bracelet|bangle)\b/i.test(text) || /(?:שעון|שעון יד|צמיד|סמארטוואטש|ساعة|سوار)/i.test(text)) {
+    return 'watch';
+  }
+  if (/\b(hat|hats|cap|caps|beanie|beret|fedora|visor|turban|kippah|headband|bandana|mitpachat)\b/i.test(text) || /(?:כובע|קסקט|ברט|כיפה|מצחייה|סרט ראש|קשת|טורבן|מטפחת|קובע|قبعة|طاقية)/i.test(text)) {
+    return 'headwear';
+  }
+  if (/\b(glasses|sunglasses|spectacles|eyewear|shades)\b/i.test(text) || /(?:משקפיים|משקפי שמש|משקפי_שמש|משקפי ראייה|نظارات|نظارة)/i.test(text)) {
+    return 'glasses';
+  }
+  if (/\b(earring|earrings|ear stud|ear cuff|hoops)\b/i.test(text) || /(?:עגילים|עגיל|עגילי|أقراط|حلق)/i.test(text)) {
+    return 'earrings';
+  }
+  if (/\b(scarf|scarves|shawl|pashmina|wrap|necktie|tie|necklace|choker|pendant)\b/i.test(text) || /(?:צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|קולר|תליון|وشاح|ربطة)/i.test(text)) {
+    return 'scarf';
+  }
+  if (/\b(belt|belts|waistband|sash)\b/i.test(text) || /(?:חגורה|אבזם|חגור|חגורות|حزام)/i.test(text)) {
+    return 'belt';
+  }
+  if (/\b(glove|gloves|mitten|mittens)\b/i.test(text) || /(?:כפפות|כפפה|כפפות עור|قفازات)/i.test(text)) {
+    return 'gloves';
+  }
+  if (/\b(bag|bags|tote|purse|backpack|clutch|satchel|crossbody)\b/i.test(text) || /(?:תיק|תיקים|ארנק|ארנקים|תרמיל|ילקוט|حقيبة|شنطة)/i.test(text)) {
+    return 'bag';
+  }
+  return 'accessory';
+}
+
 export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const rawItems = useClosetItems({ prewarm: true });
   const items = (rawItems || []).filter(Boolean);
   const { calendarEvents: cachedCalendarEvents, prewarm: prewarmDaily } = useDailySuggestionsStore();
@@ -34,16 +88,50 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
   const [selectedTag, setSelectedTag] = useStoreState(shufflerUIStore, 'selectedTag');
   const [showSuggestions, setShowSuggestions] = useStoreState(shufflerUIStore, 'showSuggestions');
 
-  // New States for Weather, Location, Calendar, Rationale
-  const [coords, setCoords] = useStoreState(shufflerUIStore, 'coords');
-  const [weather, setWeather] = useStoreState(shufflerUIStore, 'weather');
-  const [includeWeather, setIncludeWeather] = useStoreState(shufflerUIStore, 'includeWeather');
+  // Weather, Location, Calendar, Rationale
+  const [coords] = useStoreState(shufflerUIStore, 'coords');
+  const [, setWeather] = useStoreState(shufflerUIStore, 'weather');
   const [includeCalendar, setIncludeCalendar] = useStoreState(shufflerUIStore, 'includeCalendar');
   const [calendarEvents, setCalendarEvents] = useStoreState(shufflerUIStore, 'calendarEvents');
   const [calendarLoading, setCalendarLoading] = useStoreState(shufflerUIStore, 'calendarLoading');
   const [aiRationale, setAiRationale] = useStoreState(shufflerUIStore, 'aiRationale');
 
-  // Switchable Calendar Events Sync (Uses cached store)
+  // Multi-Carousel Focus & Selection States
+  const [outerwearFocusIdx, setOuterwearFocusIdx] = useStoreState(shufflerUIStore, 'outerwearFocusIdx');
+  const [topFocusIdx, setTopFocusIdx] = useStoreState(shufflerUIStore, 'topFocusIdx');
+  const [fullBodyFocusIdx, setFullBodyFocusIdx] = useStoreState(shufflerUIStore, 'fullBodyFocusIdx');
+  const [bottomFocusIdx, setBottomFocusIdx] = useStoreState(shufflerUIStore, 'bottomFocusIdx');
+  const [shoeFocusIdx, setShoeFocusIdx] = useStoreState(shufflerUIStore, 'shoeFocusIdx');
+  const [accessoryFocusIdx, setAccessoryFocusIdx] = useStoreState(shufflerUIStore, 'accessoryFocusIdx');
+
+  const [outerwearSelectedIdx, setOuterwearSelectedIdx] = useStoreState(shufflerUIStore, 'outerwearSelectedIdx');
+  const [topSelectedIdx, setTopSelectedIdx] = useStoreState(shufflerUIStore, 'topSelectedIdx');
+  const [fullBodySelectedIdx, setFullBodySelectedIdx] = useStoreState(shufflerUIStore, 'fullBodySelectedIdx');
+  const [bottomSelectedIdx, setBottomSelectedIdx] = useStoreState(shufflerUIStore, 'bottomSelectedIdx');
+  const [shoeSelectedIdx, setShoeSelectedIdx] = useStoreState(shufflerUIStore, 'shoeSelectedIdx');
+  const [accessorySelectedIdx, setAccessorySelectedIdx] = useStoreState(shufflerUIStore, 'accessorySelectedIdx');
+
+  // Outfit Composition Modes
+  const [isFullBodyMode, setIsFullBodyMode] = useStoreState(shufflerUIStore, 'isFullBodyMode');
+  const [includeOuterwear, setIncludeOuterwear] = useStoreState(shufflerUIStore, 'includeOuterwear');
+  const [includeAccessory, setIncludeAccessory] = useStoreState(shufflerUIStore, 'includeAccessory');
+
+  // Active item detail floater & Avatar Modal
+  const [activeFloaterItemId, setActiveFloaterItemId] = useStoreState(shufflerUIStore, 'activeFloaterItemId');
+  const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
+
+  // Carousel APIs
+  const [outerwearApi, setOuterwearApi] = useState(null);
+  const [topApi, setTopApi] = useState(null);
+  const [fullBodyApi, setFullBodyApi] = useState(null);
+  const [bottomApi, setBottomApi] = useState(null);
+  const [shoeApi, setShoeApi] = useState(null);
+  const [accessoryApi, setAccessoryApi] = useState(null);
+
+  const [isSpinning, setIsSpinning] = useStoreState(shufflerUIStore, 'isSpinning');
+  const [saving, setSaving] = useStoreState(shufflerUIStore, 'saving');
+
+  // Switchable Calendar Events Sync
   useEffect(() => {
     if (includeCalendar) {
       if (cachedCalendarEvents && cachedCalendarEvents.length > 0) {
@@ -76,33 +164,38 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     new Set(items.flatMap(it => Array.isArray(it.tags) ? it.tags : []))
   ).filter(Boolean);
 
-  // Suggestions filtered by input text
   const tagSuggestions = tagInput
     ? allUniqueTags.filter(t => t.toLowerCase().includes(tagInput.toLowerCase()) && t !== selectedTag)
     : allUniqueTags;
 
-  // Categorize items
-  const tops = items.filter(it => it.category === 'Top' || it.category === 'Outerwear' || it.category === 'Full Body');
-  const bottoms = items.filter(it => it.category === 'Bottom');
-  const shoes = items.filter(it => it.category === 'Footwear');
+  // 1. Outwear, full-body, and accessories need their own carousels
+  const isMatchCategory = (it, catList) => {
+    if (!it || !it.category) return false;
+    const c = String(it.category).toLowerCase().trim().replace(/[-_]/g, ' ');
+    return catList.some(target => c === target.toLowerCase());
+  };
 
-  const filteredTops = tops.filter(it => {
-    if (selectedStyle && selectedStyle !== 'all' && it.dress_code !== selectedStyle) return false;
-    if (selectedTag && (!Array.isArray(it.tags) || !it.tags.includes(selectedTag))) return false;
-    return true;
-  });
-  const filteredBottoms = bottoms.filter(it => {
-    if (selectedStyle && selectedStyle !== 'all' && it.dress_code !== selectedStyle) return false;
-    if (selectedTag && (!Array.isArray(it.tags) || !it.tags.includes(selectedTag))) return false;
-    return true;
-  });
-  const filteredShoes = shoes.filter(it => {
+  const outerwears = items.filter(it => isMatchCategory(it, ['outerwear', 'jacket', 'coat', 'blazer', 'cardigan']));
+  const fullBodies = items.filter(it => isMatchCategory(it, ['full body', 'dress', 'dresses', 'one piece', 'sari', 'saree', 'jumpsuit', 'kaftan', 'abaya']));
+  const tops = items.filter(it => isMatchCategory(it, ['top', 'tops']) && !isMatchCategory(it, ['outerwear', 'full body', 'dress']));
+  const bottoms = items.filter(it => isMatchCategory(it, ['bottom', 'bottoms']));
+  const shoes = items.filter(it => isMatchCategory(it, ['footwear', 'shoes', 'shoe']));
+  const accessories = items.filter(it => isMatchCategory(it, ['accessories', 'accessory', 'headwear', 'jewelry', 'belt', 'watch', 'hat', 'glasses']));
+
+  const filterByPrefs = (list) => list.filter(it => {
     if (selectedStyle && selectedStyle !== 'all' && it.dress_code !== selectedStyle) return false;
     if (selectedTag && (!Array.isArray(it.tags) || !it.tags.includes(selectedTag))) return false;
     return true;
   });
 
-  // List duplication helper to enable Embla infinite loop / scrolling for small datasets
+  const filteredOuterwears = filterByPrefs(outerwears);
+  const filteredFullBodies = filterByPrefs(fullBodies);
+  const filteredTops = filterByPrefs(tops);
+  const filteredBottoms = filterByPrefs(bottoms);
+  const filteredShoes = filterByPrefs(shoes);
+  const filteredAccessories = filterByPrefs(accessories);
+
+  // Duplication helper for Embla infinite loops
   const getDuplicatedList = (list) => {
     if (!list || list.length === 0) return [];
     if (list.length >= 12) return list;
@@ -114,29 +207,12 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     return duplicated;
   };
 
+  const duplicatedOuterwears = getDuplicatedList(filteredOuterwears);
+  const duplicatedFullBodies = getDuplicatedList(filteredFullBodies);
   const duplicatedTops = getDuplicatedList(filteredTops);
   const duplicatedBottoms = getDuplicatedList(filteredBottoms);
   const duplicatedShoes = getDuplicatedList(filteredShoes);
-
-  // Focus tracking (which item is currently centered in each row)
-  const [topFocusIdx, setTopFocusIdx] = useStoreState(shufflerUIStore, 'topFocusIdx');
-  const [bottomFocusIdx, setBottomFocusIdx] = useStoreState(shufflerUIStore, 'bottomFocusIdx');
-  const [shoeFocusIdx, setShoeFocusIdx] = useStoreState(shufflerUIStore, 'shoeFocusIdx');
-
-  // Selection tracking (which item has been picked/selected)
-  const [topSelectedIdx, setTopSelectedIdx] = useStoreState(shufflerUIStore, 'topSelectedIdx');
-  const [bottomSelectedIdx, setBottomSelectedIdx] = useStoreState(shufflerUIStore, 'bottomSelectedIdx');
-  const [shoeSelectedIdx, setShoeSelectedIdx] = useStoreState(shufflerUIStore, 'shoeSelectedIdx');
-
-  // Active item detail floater
-  const [activeFloaterItemId, setActiveFloaterItemId] = useStoreState(shufflerUIStore, 'activeFloaterItemId');
-
-  const [topApi, setTopApi] = useState(null);
-  const [bottomApi, setBottomApi] = useState(null);
-  const [shoeApi, setShoeApi] = useState(null);
-
-  const [isSpinning, setIsSpinning] = useStoreState(shufflerUIStore, 'isSpinning');
-  const [saving, setSaving] = useStoreState(shufflerUIStore, 'saving');
+  const duplicatedAccessories = getDuplicatedList(filteredAccessories);
 
   const lastFilterRef = useRef({ style: selectedStyle, tag: selectedTag });
 
@@ -146,127 +222,127 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     const tagChanged = lastFilterRef.current.tag !== selectedTag;
 
     if (styleChanged || tagChanged) {
+      setOuterwearFocusIdx(0);
       setTopFocusIdx(0);
+      setFullBodyFocusIdx(0);
       setBottomFocusIdx(0);
       setShoeFocusIdx(0);
+      setAccessoryFocusIdx(0);
+
+      setOuterwearSelectedIdx(null);
       setTopSelectedIdx(null);
+      setFullBodySelectedIdx(null);
       setBottomSelectedIdx(null);
       setShoeSelectedIdx(null);
+      setAccessorySelectedIdx(null);
       setActiveFloaterItemId(null);
 
+      if (outerwearApi && filteredOuterwears.length > 0) outerwearApi.scrollTo(0, false);
       if (topApi && filteredTops.length > 0) topApi.scrollTo(0, false);
+      if (fullBodyApi && filteredFullBodies.length > 0) fullBodyApi.scrollTo(0, false);
       if (bottomApi && filteredBottoms.length > 0) bottomApi.scrollTo(0, false);
       if (shoeApi && filteredShoes.length > 0) shoeApi.scrollTo(0, false);
+      if (accessoryApi && filteredAccessories.length > 0) accessoryApi.scrollTo(0, false);
 
       lastFilterRef.current = { style: selectedStyle, tag: selectedTag };
     }
-  }, [selectedStyle, selectedTag, topApi, bottomApi, shoeApi, filteredTops.length, filteredBottoms.length, filteredShoes.length]);
+  }, [
+    selectedStyle, selectedTag,
+    outerwearApi, topApi, fullBodyApi, bottomApi, shoeApi, accessoryApi,
+    filteredOuterwears.length, filteredTops.length, filteredFullBodies.length,
+    filteredBottoms.length, filteredShoes.length, filteredAccessories.length
+  ]);
 
-  // Sync initial indices when items load
-  useEffect(() => {
-    if (duplicatedTops.length > 0 && topFocusIdx >= duplicatedTops.length) setTopFocusIdx(0);
-    if (duplicatedBottoms.length > 0 && bottomFocusIdx >= duplicatedBottoms.length) setBottomFocusIdx(0);
-    if (duplicatedShoes.length > 0 && shoeFocusIdx >= duplicatedShoes.length) setShoeFocusIdx(0);
-  }, [duplicatedTops.length, duplicatedBottoms.length, duplicatedShoes.length, topFocusIdx, bottomFocusIdx, shoeFocusIdx]);
-
-  // Global handler to clear selections and close floater when user starts scrolling any carousel
+  // Global handler to clear selections and close floater when scrolling
   const handleStartScroll = () => {
+    setOuterwearSelectedIdx(null);
     setTopSelectedIdx(null);
+    setFullBodySelectedIdx(null);
     setBottomSelectedIdx(null);
     setShoeSelectedIdx(null);
+    setAccessorySelectedIdx(null);
     setActiveFloaterItemId(null);
   };
 
-  // Sync Carousel API -> State (when user scrolls/swipes)
-  useEffect(() => {
-    if (!topApi) return;
+  // Bind Carousel API listeners
+  const setupCarouselListeners = (api, setFocusIdx, onSelectExtra) => {
+    if (!api) return;
     const onSelect = () => {
-      setTopFocusIdx(topApi.selectedScrollSnap());
+      setFocusIdx(api.selectedScrollSnap());
+      if (onSelectExtra) onSelectExtra();
     };
     const onPointerUp = () => {
-      const engine = topApi.internalEngine?.();
+      const engine = api.internalEngine?.();
       if (engine?.scrollBody) {
         engine.scrollBody.useFriction(0.65).useDuration(20);
       }
     };
-    topApi.on('select', onSelect);
-    topApi.on('scroll', handleStartScroll);
-    topApi.on('pointerUp', onPointerUp);
+    api.on('select', onSelect);
+    api.on('scroll', handleStartScroll);
+    api.on('pointerUp', onPointerUp);
     return () => {
-      topApi.off('select', onSelect);
-      topApi.off('scroll', handleStartScroll);
-      topApi.off('pointerUp', onPointerUp);
+      api.off('select', onSelect);
+      api.off('scroll', handleStartScroll);
+      api.off('pointerUp', onPointerUp);
     };
-  }, [topApi]);
+  };
 
+  // Outerwear listeners
+  useEffect(() => setupCarouselListeners(outerwearApi, setOuterwearFocusIdx, () => setIncludeOuterwear(true)), [outerwearApi]);
+
+  // Full Body listeners (activates full body mode, restricts bottoms)
+  useEffect(() => setupCarouselListeners(fullBodyApi, setFullBodyFocusIdx, () => setIsFullBodyMode(true)), [fullBodyApi]);
+
+  // Top listeners (activates separates mode, restricts full body)
+  useEffect(() => setupCarouselListeners(topApi, setTopFocusIdx, () => setIsFullBodyMode(false)), [topApi]);
+
+  // Bottom listeners (activates separates mode, restricts full body)
+  useEffect(() => setupCarouselListeners(bottomApi, setBottomFocusIdx, () => setIsFullBodyMode(false)), [bottomApi]);
+
+  // Shoes listeners
+  useEffect(() => setupCarouselListeners(shoeApi, setShoeFocusIdx), [shoeApi]);
+
+  // Accessories listeners
+  useEffect(() => setupCarouselListeners(accessoryApi, setAccessoryFocusIdx, () => setIncludeAccessory(true)), [accessoryApi]);
+
+  // Sync State -> Carousel API scrollTo
   useEffect(() => {
-    if (!bottomApi) return;
-    const onSelect = () => {
-      setBottomFocusIdx(bottomApi.selectedScrollSnap());
-    };
-    const onPointerUp = () => {
-      const engine = bottomApi.internalEngine?.();
-      if (engine?.scrollBody) {
-        engine.scrollBody.useFriction(0.65).useDuration(20);
-      }
-    };
-    bottomApi.on('select', onSelect);
-    bottomApi.on('scroll', handleStartScroll);
-    bottomApi.on('pointerUp', onPointerUp);
-    return () => {
-      bottomApi.off('select', onSelect);
-      bottomApi.off('scroll', handleStartScroll);
-      bottomApi.off('pointerUp', onPointerUp);
-    };
-  }, [bottomApi]);
+    if (outerwearApi && duplicatedOuterwears.length > 0 && outerwearSelectedIdx !== null) {
+      if (outerwearApi.selectedScrollSnap() !== outerwearSelectedIdx) outerwearApi.scrollTo(outerwearSelectedIdx, isSpinning);
+    }
+  }, [outerwearSelectedIdx, outerwearApi, duplicatedOuterwears.length, isSpinning]);
 
-  useEffect(() => {
-    if (!shoeApi) return;
-    const onSelect = () => {
-      setShoeFocusIdx(shoeApi.selectedScrollSnap());
-    };
-    const onPointerUp = () => {
-      const engine = shoeApi.internalEngine?.();
-      if (engine?.scrollBody) {
-        engine.scrollBody.useFriction(0.65).useDuration(20);
-      }
-    };
-    shoeApi.on('select', onSelect);
-    shoeApi.on('scroll', handleStartScroll);
-    shoeApi.on('pointerUp', onPointerUp);
-    return () => {
-      shoeApi.off('select', onSelect);
-      shoeApi.off('scroll', handleStartScroll);
-      shoeApi.off('pointerUp', onPointerUp);
-    };
-  }, [shoeApi]);
-
-  // Sync State -> Carousel API (when user triggers selection click or shuffle)
   useEffect(() => {
     if (topApi && duplicatedTops.length > 0 && topSelectedIdx !== null) {
-      if (topApi.selectedScrollSnap() !== topSelectedIdx) {
-        topApi.scrollTo(topSelectedIdx, isSpinning);
-      }
+      if (topApi.selectedScrollSnap() !== topSelectedIdx) topApi.scrollTo(topSelectedIdx, isSpinning);
     }
   }, [topSelectedIdx, topApi, duplicatedTops.length, isSpinning]);
 
   useEffect(() => {
+    if (fullBodyApi && duplicatedFullBodies.length > 0 && fullBodySelectedIdx !== null) {
+      if (fullBodyApi.selectedScrollSnap() !== fullBodySelectedIdx) fullBodyApi.scrollTo(fullBodySelectedIdx, isSpinning);
+    }
+  }, [fullBodySelectedIdx, fullBodyApi, duplicatedFullBodies.length, isSpinning]);
+
+  useEffect(() => {
     if (bottomApi && duplicatedBottoms.length > 0 && bottomSelectedIdx !== null) {
-      if (bottomApi.selectedScrollSnap() !== bottomSelectedIdx) {
-        bottomApi.scrollTo(bottomSelectedIdx, isSpinning);
-      }
+      if (bottomApi.selectedScrollSnap() !== bottomSelectedIdx) bottomApi.scrollTo(bottomSelectedIdx, isSpinning);
     }
   }, [bottomSelectedIdx, bottomApi, duplicatedBottoms.length, isSpinning]);
 
   useEffect(() => {
     if (shoeApi && duplicatedShoes.length > 0 && shoeSelectedIdx !== null) {
-      if (shoeApi.selectedScrollSnap() !== shoeSelectedIdx) {
-        shoeApi.scrollTo(shoeSelectedIdx, isSpinning);
-      }
+      if (shoeApi.selectedScrollSnap() !== shoeSelectedIdx) shoeApi.scrollTo(shoeSelectedIdx, isSpinning);
     }
   }, [shoeSelectedIdx, shoeApi, duplicatedShoes.length, isSpinning]);
 
-  // AI-driven, weather- and calendar-aware shuffler scout
+  useEffect(() => {
+    if (accessoryApi && duplicatedAccessories.length > 0 && accessorySelectedIdx !== null) {
+      if (accessoryApi.selectedScrollSnap() !== accessorySelectedIdx) accessoryApi.scrollTo(accessorySelectedIdx, isSpinning);
+    }
+  }, [accessorySelectedIdx, accessoryApi, duplicatedAccessories.length, isSpinning]);
+
+  // AI Planner Scout
   const handleShuffle = async () => {
     if (isSpinning) return;
 
@@ -276,15 +352,12 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
 
     let spinCount = 0;
     const spinTimer = setInterval(() => {
-      if (duplicatedTops.length > 1) {
-        topApi?.scrollTo(Math.floor(Math.random() * duplicatedTops.length), true);
-      }
-      if (duplicatedBottoms.length > 1) {
-        bottomApi?.scrollTo(Math.floor(Math.random() * duplicatedBottoms.length), true);
-      }
-      if (duplicatedShoes.length > 1) {
-        shoeApi?.scrollTo(Math.floor(Math.random() * duplicatedShoes.length), true);
-      }
+      if (duplicatedOuterwears.length > 1) outerwearApi?.scrollTo(Math.floor(Math.random() * duplicatedOuterwears.length), true);
+      if (duplicatedTops.length > 1) topApi?.scrollTo(Math.floor(Math.random() * duplicatedTops.length), true);
+      if (duplicatedFullBodies.length > 1) fullBodyApi?.scrollTo(Math.floor(Math.random() * duplicatedFullBodies.length), true);
+      if (duplicatedBottoms.length > 1) bottomApi?.scrollTo(Math.floor(Math.random() * duplicatedBottoms.length), true);
+      if (duplicatedShoes.length > 1) shoeApi?.scrollTo(Math.floor(Math.random() * duplicatedShoes.length), true);
+      if (duplicatedAccessories.length > 1) accessoryApi?.scrollTo(Math.floor(Math.random() * duplicatedAccessories.length), true);
       spinCount++;
     }, 120);
 
@@ -298,51 +371,66 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       };
 
       const res = await api.plannerScout(payload);
-
       clearInterval(spinTimer);
 
-      if (res.weather_summary) {
-        setWeather(res.weather_summary);
-      }
-      if (res.why) {
-        setAiRationale(res.why);
-      }
+      if (res.weather_summary) setWeather(res.weather_summary);
+      if (res.why) setAiRationale(res.why);
 
-      if (res.top_id) {
-        let tIdx = filteredTops.findIndex(it => it.id === res.top_id);
-        if (tIdx === -1) {
-          tIdx = tops.findIndex(it => it.id === res.top_id);
+      // Handle Full Body vs Separates
+      if (res.full_body_id) {
+        setIsFullBodyMode(true);
+        let fbIdx = filteredFullBodies.findIndex(it => it.id === res.full_body_id);
+        if (fbIdx === -1) fbIdx = fullBodies.findIndex(it => it.id === res.full_body_id);
+        if (fbIdx !== -1) {
+          setFullBodyFocusIdx(fbIdx);
+          fullBodyApi?.scrollTo(fbIdx, true);
+        }
+      } else {
+        setIsFullBodyMode(false);
+        if (res.top_id) {
+          let tIdx = filteredTops.findIndex(it => it.id === res.top_id);
+          if (tIdx === -1) tIdx = tops.findIndex(it => it.id === res.top_id);
           if (tIdx !== -1) {
-            setSelectedStyle('all');
-            setSelectedTag('');
-            setTagInput('');
+            setTopFocusIdx(tIdx);
+            topApi?.scrollTo(tIdx, true);
           }
         }
-        if (tIdx !== -1) {
-          setTopFocusIdx(tIdx);
-          topApi?.scrollTo(tIdx, true);
+        if (res.bottom_id) {
+          let bIdx = filteredBottoms.findIndex(it => it.id === res.bottom_id);
+          if (bIdx === -1) bIdx = bottoms.findIndex(it => it.id === res.bottom_id);
+          if (bIdx !== -1) {
+            setBottomFocusIdx(bIdx);
+            bottomApi?.scrollTo(bIdx, true);
+          }
         }
       }
 
-      if (res.bottom_id) {
-        let bIdx = filteredBottoms.findIndex(it => it.id === res.bottom_id);
-        if (bIdx === -1) {
-          bIdx = bottoms.findIndex(it => it.id === res.bottom_id);
-        }
-        if (bIdx !== -1) {
-          setBottomFocusIdx(bIdx);
-          bottomApi?.scrollTo(bIdx, true);
+      if (res.outerwear_id) {
+        setIncludeOuterwear(true);
+        let oIdx = filteredOuterwears.findIndex(it => it.id === res.outerwear_id);
+        if (oIdx === -1) oIdx = outerwears.findIndex(it => it.id === res.outerwear_id);
+        if (oIdx !== -1) {
+          setOuterwearFocusIdx(oIdx);
+          outerwearApi?.scrollTo(oIdx, true);
         }
       }
 
       if (res.shoes_id) {
         let sIdx = filteredShoes.findIndex(it => it.id === res.shoes_id);
-        if (sIdx === -1) {
-          sIdx = shoes.findIndex(it => it.id === res.shoes_id);
-        }
+        if (sIdx === -1) sIdx = shoes.findIndex(it => it.id === res.shoes_id);
         if (sIdx !== -1) {
           setShoeFocusIdx(sIdx);
           shoeApi?.scrollTo(sIdx, true);
+        }
+      }
+
+      if (res.accessory_id) {
+        setIncludeAccessory(true);
+        let aIdx = filteredAccessories.findIndex(it => it.id === res.accessory_id);
+        if (aIdx === -1) aIdx = accessories.findIndex(it => it.id === res.accessory_id);
+        if (aIdx !== -1) {
+          setAccessoryFocusIdx(aIdx);
+          accessoryApi?.scrollTo(aIdx, true);
         }
       }
 
@@ -365,16 +453,80 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     }
   };
 
-  const handleSave = async () => {
-    const selectedTop = filteredTops.length > 0 ? filteredTops[topFocusIdx % filteredTops.length] : null;
-    const selectedBottom = filteredBottoms.length > 0 ? filteredBottoms[bottomFocusIdx % filteredBottoms.length] : null;
-    const selectedShoe = filteredShoes.length > 0 ? filteredShoes[shoeFocusIdx % filteredShoes.length] : null;
+  // Compile active outfit pieces for save & preview
+  const currentOutfitPieces = useMemo(() => {
+    const list = [];
 
-    const outfitItems = [selectedTop, selectedBottom, selectedShoe].filter(Boolean);
-    if (outfitItems.length === 0) {
+    // Outerwear (overlaid over tops/dresses)
+    if (includeOuterwear && filteredOuterwears.length > 0) {
+      const it = filteredOuterwears[outerwearFocusIdx % filteredOuterwears.length];
+      if (it) list.push({ item: it, role: 'outerwear', roleKey: 'outerwear' });
+    }
+
+    // 2. Full Body vs Separates
+    if (isFullBodyMode) {
+      if (filteredFullBodies.length > 0) {
+        const it = filteredFullBodies[fullBodyFocusIdx % filteredFullBodies.length];
+        if (it) list.push({ item: it, role: 'dress', roleKey: 'dress' });
+      }
+    } else {
+      if (filteredTops.length > 0) {
+        const it = filteredTops[topFocusIdx % filteredTops.length];
+        if (it) list.push({ item: it, role: 'top', roleKey: 'top' });
+      }
+      if (filteredBottoms.length > 0) {
+        const it = filteredBottoms[bottomFocusIdx % filteredBottoms.length];
+        if (it) list.push({ item: it, role: 'bottom', roleKey: 'bottom' });
+      }
+    }
+
+    // Shoes
+    if (filteredShoes.length > 0) {
+      const it = filteredShoes[shoeFocusIdx % filteredShoes.length];
+      if (it) list.push({ item: it, role: 'shoes', roleKey: 'shoes' });
+    }
+
+    // 4. Accessories (specific anatomical role: watch, headwear, glasses, belt, etc.)
+    if (includeAccessory && filteredAccessories.length > 0) {
+      const it = filteredAccessories[accessoryFocusIdx % filteredAccessories.length];
+      if (it) {
+        const role = detectAccessoryRole(it);
+        list.push({ item: it, role, roleKey: role });
+      }
+    }
+
+    return list;
+  }, [
+    includeOuterwear, filteredOuterwears, outerwearFocusIdx,
+    isFullBodyMode, filteredFullBodies, fullBodyFocusIdx,
+    filteredTops, topFocusIdx,
+    filteredBottoms, bottomFocusIdx,
+    filteredShoes, shoeFocusIdx,
+    includeAccessory, filteredAccessories, accessoryFocusIdx
+  ]);
+
+  // Construct AvatarViewer map
+  const avatarPiecesMap = useMemo(() => {
+    const map = {};
+    currentOutfitPieces.forEach(({ item, roleKey }) => {
+      map[roleKey] = {
+        ...item,
+        role: roleKey,
+        image_url: bestImageUrl(item),
+        clean_image_url: item.clean_image_url || bestImageUrl(item),
+      };
+    });
+    return map;
+  }, [currentOutfitPieces]);
+
+  // Save Outfit
+  const handleSave = async () => {
+    if (currentOutfitPieces.length === 0) {
       toast.error(t('common.error'));
       return;
     }
+
+    const rawItemsList = currentOutfitPieces.map(g => g.item);
 
     const generateDescriptiveOutfitTitle = (items, translator) => {
       const colorList = items
@@ -404,7 +556,6 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       }
 
       const types = items.map(it => (it.item_type || it.title || '').toLowerCase());
-
       let vibe = translator('stylist.vibe.casual', { defaultValue: 'Casual' });
       let season = translator('stylist.season.daily', { defaultValue: 'Daily' });
 
@@ -428,11 +579,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
           ? translator('stylist.suffix.attire', { defaultValue: 'Attire' })
           : translator('stylist.suffix.hangout', { defaultValue: 'Hangout' });
 
-      if (colorStr) {
-        return `${vibe} ${colorStr} ${season} ${suffix}`;
-      } else {
-        return `${vibe} ${season} ${suffix}`;
-      }
+      return colorStr ? `${vibe} ${colorStr} ${season} ${suffix}` : `${vibe} ${season} ${suffix}`;
     };
 
     const generateDescriptiveOutfitDescription = (items, translator) => {
@@ -444,8 +591,8 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       });
     };
 
-    const descriptiveTitle = generateDescriptiveOutfitTitle(outfitItems, t);
-    const descriptiveDesc = generateDescriptiveOutfitDescription(outfitItems, t);
+    const descriptiveTitle = generateDescriptiveOutfitTitle(rawItemsList, t);
+    const descriptiveDesc = generateDescriptiveOutfitDescription(rawItemsList, t);
 
     setSaving(true);
     const body = {
@@ -453,10 +600,10 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       description: descriptiveDesc,
       source_workflow: 'scheduled',
       prompt: 'shuffled',
-      garments: outfitItems.map(it => ({
-        closet_item_id: it.id,
-        role: it.category === 'Top' || it.category === 'Outerwear' ? 'top' : it.category === 'Bottom' ? 'bottom' : it.category === 'Footwear' ? 'shoes' : 'accessory',
-        title: it.name || it.title || ''
+      garments: currentOutfitPieces.map(({ item, role }) => ({
+        closet_item_id: item.id,
+        role: role,
+        title: item.name || item.title || ''
       })),
       usage: {
         date: new Date().toISOString().split('T')[0],
@@ -481,22 +628,42 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
 
   const handleCloseFloater = () => {
     setActiveFloaterItemId(null);
+    setOuterwearSelectedIdx(null);
     setTopSelectedIdx(null);
+    setFullBodySelectedIdx(null);
     setBottomSelectedIdx(null);
     setShoeSelectedIdx(null);
+    setAccessorySelectedIdx(null);
   };
 
   const rowIcons = {
+    outerwear: <Layers className="shuffler-icon-sm shuffler-icon-accent" />,
     top: <Shirt className="shuffler-icon-sm shuffler-icon-accent" />,
+    full_body: <Sparkle className="shuffler-icon-sm shuffler-icon-accent" />,
     bottom: <Layers className="shuffler-icon-sm shuffler-icon-accent" />,
     shoes: <Footprints className="shuffler-icon-sm shuffler-icon-accent" />,
+    accessories: <Watch className="shuffler-icon-sm shuffler-icon-accent" />,
   };
 
-  const renderRow = (roleKey, label, list, focusIdx, selectedIdx, setIdx, setApi, api) => {
+  const renderRow = (roleKey, label, list, focusIdx, selectedIdx, setIdx, setApi, api, options = {}) => {
     const hasItems = list.length > 0;
     const duplicatedList = getDuplicatedList(list);
+    const {
+      isRestricted = false,
+      restrictionLabel = '',
+      onUnlock = null,
+      isOptional = false,
+      isIncluded = true,
+      onToggleInclude = null,
+    } = options;
 
     const handleItemClick = (itemIdx, item) => {
+      if (isRestricted && onUnlock) {
+        onUnlock();
+      }
+      if (isOptional && !isIncluded && onToggleInclude) {
+        onToggleInclude(true);
+      }
       if (itemIdx === focusIdx) {
         setIdx(itemIdx);
         setActiveFloaterItemId(item.id);
@@ -506,22 +673,70 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     };
 
     return (
-      <div className="flex flex-col items-start bg-primary-shadow p-[18px] rounded-[12px] border border-border w-full">
-        <div className="flex items-center gap-2 mb-3.5">
-          {rowIcons[roleKey]}
-          <span className="text-[12px] text-dark-brand font-extrabold">{label}</span>
+      <div className={`flex flex-col items-start p-[18px] rounded-[14px] border transition-all duration-200 w-full ${
+        isRestricted
+          ? 'bg-amber-50/40 border-amber-200/60'
+          : isOptional && !isIncluded
+            ? 'bg-muted/30 border-dashed border-border opacity-75'
+            : 'bg-primary-shadow border-border'
+      }`}>
+        <div className="flex items-center justify-between w-full mb-3.5 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            {rowIcons[roleKey]}
+            <span className="text-[13px] text-dark-brand font-extrabold">{label}</span>
+            {hasItems && (
+              <span className="text-[11px] text-muted-foreground font-semibold px-2 py-0.5 rounded-full bg-black/5">
+                {list.length}
+              </span>
+            )}
+          </div>
+
+          {/* Restriction banner or Optional switch */}
+          {isRestricted ? (
+            <div className="flex items-center gap-2 ms-auto">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                <Lock className="h-3 w-3 shrink-0" />
+                {restrictionLabel}
+              </span>
+              {onUnlock && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onUnlock}
+                  className="h-7 text-xs px-2.5 rounded-full border-amber-400 bg-white hover:bg-amber-50 text-amber-900"
+                >
+                  {t('stylist.activateSection', { defaultValue: 'Switch to this' })}
+                </Button>
+              )}
+            </div>
+          ) : isOptional ? (
+            <div className="flex items-center gap-2 ms-auto">
+              <span className="text-xs font-medium text-text-brand select-none cursor-pointer" onClick={() => onToggleInclude?.(!isIncluded)}>
+                {isIncluded ? t('common.enabled', { defaultValue: 'Included' }) : t('common.optional', { defaultValue: 'Optional' })}
+              </span>
+              <Switch
+                checked={isIncluded}
+                onCheckedChange={onToggleInclude}
+                disabled={isSpinning || !hasItems}
+              />
+            </div>
+          ) : null}
         </div>
-        <div className="w-full relative px-10 max-[480px]:px-0">
+
+        <div className={`w-full relative px-10 max-[480px]:px-0 transition-opacity duration-200 ${
+          isRestricted ? 'opacity-35 pointer-events-none' : isOptional && !isIncluded ? 'opacity-40' : 'opacity-100'
+        }`}>
           <Carousel
             setApi={setApi}
-            opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true, direction: i18n.dir() }}
+            opts={{ align: 'center', loop: true, watchDrag: !isSpinning && !isRestricted, dragFree: true, direction: i18n.dir() }}
             className="w-full"
           >
             <CarouselContent className="-ms-2.5">
               {hasItems ? (
                 duplicatedList.map((item, itemIdx) => {
                   const imageUrl = bestImageUrl(item);
-                  const isFocused = itemIdx === focusIdx;
+                  const isFocused = itemIdx === focusIdx && !isRestricted && (!isOptional || isIncluded);
                   const isSelected = itemIdx === selectedIdx;
                   return (
                     <CarouselItem
@@ -574,7 +789,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
               )}
             </CarouselContent>
 
-            {hasItems && list.length > 1 && (
+            {hasItems && list.length > 1 && !isRestricted && (
               <>
                 <Button
                   variant="outline"
@@ -584,9 +799,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                   onClick={() => api?.scrollPrev()}
                 > 
                   <ChevronLeft className="!h-4 !w-4" />
-                  <span className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 [clip:rect(0,0,0,0)]">
-                    {t('components.dressMeShuffler.previous_slide', { defaultValue: 'Previous slide' })}
-                  </span>
+                  <span className="sr-only">{t('components.dressMeShuffler.previous_slide', { defaultValue: 'Previous slide' })}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -596,9 +809,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                   onClick={() => api?.scrollNext()}
                 >
                   <ChevronRight className="!h-4 !w-4" />
-                  <span className="absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 [clip:rect(0,0,0,0)]">
-                    {t('components.dressMeShuffler.next_slide', { defaultValue: 'Next slide' })}
-                  </span>
+                  <span className="sr-only">{t('components.dressMeShuffler.next_slide', { defaultValue: 'Next slide' })}</span>
                 </Button>
               </>
             )}
@@ -610,8 +821,8 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* ============ LEFT PANEL: Planner ============ */}
       <div className="md:col-span-1">
-        {/* ============ LEFT PANEL: Planner ============ */}
         <div
           className="bg-white rounded-[20px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5"
           data-testid="shuffler-planner-sidebar"
@@ -626,6 +837,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
           <p className="mb-5 text-sm text-[var(--text-color)] leading-[22px] font-semibold">
             {t('stylist.planYourOutfitDesc', { defaultValue: 'Choose your schedule, style and preferred tag.' })}
           </p>
+
           <Button
             variant="outline"
             onClick={onOpenCalendar}
@@ -635,8 +847,9 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
           >
             <CalendarDays className="icon-accent !h-4 !w-4 text-[var(--primary-color)]" />
             <span>{t('calendar.viewCalendar', { defaultValue: 'View 7-Day Planner' })}</span>
-            <ChevronRight className="chevron-accent absolute right-4 !h-4 !w-4 text-[var(--primary-color)]" />
+            <ChevronRight className="chevron-accent absolute end-4 !h-4 !w-4 text-[var(--primary-color)]" />
           </Button>
+
           <div className="flex items-center justify-between p-[15px_20px] rounded-[12px] bg-primary-shadow border border-border w-full mb-5">
             <div className="flex items-center gap-2.5">
               <CalendarDays className="!h-[25px] !w-[25px] text-[var(--primary-color)]" />
@@ -653,6 +866,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
             </div>
             <Switch id="include-calendar" checked={includeCalendar} onCheckedChange={setIncludeCalendar} disabled={isSpinning} />
           </div>
+
           {includeCalendar && (
             <div className="w-full rounded-[14px] border border-[#ccc] bg-white p-[15px_20px] flex flex-col gap-2.5 text-start mb-[15px] animate-[shufflerFadeIn_0.2s_ease-out]">
               <div className="text-[10px] font-extrabold text-[#666] uppercase tracking-[0.08em]">
@@ -689,6 +903,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
               )}
             </div>
           )}
+
           <div className="flex flex-col gap-3.5">
             <div className="text-base font-extrabold text-[var(--dark-color)]">
               {t('stylist.outfitPreferences', { defaultValue: 'Outfit Preferences' })}
@@ -698,22 +913,18 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                 {t('stylist.tagFilterLabel', { defaultValue: 'Tag' })}
               </label>
               <div className="relative flex items-center">
-                <ShoppingBag className="absolute left-[14px] top-[16px] !h-3.5 !w-3.5 text-[var(--primary-color)] pointer-events-none" />
+                <ShoppingBag className="absolute start-[14px] top-[16px] !h-3.5 !w-3.5 text-[var(--primary-color)] pointer-events-none" />
                 <Input
                   value={tagInput}
                   onChange={(e) => {
                     setTagInput(e.target.value);
                     setShowSuggestions(true);
-                    if (!e.target.value) {
-                      setSelectedTag('');
-                    }
+                    if (!e.target.value) setSelectedTag('');
                   }}
                   onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => {
-                    setTimeout(() => setShowSuggestions(false), 200);
-                  }}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   placeholder={t('stylist.tagFilterPlaceholder', { defaultValue: 'e.g. Work, Gym, Casual' })}
-                  className="!pl-[35px]"
+                  className="!ps-[35px]"
                   disabled={isSpinning}
                 />
                 {tagInput && (
@@ -722,7 +933,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                       setTagInput('');
                       setSelectedTag('');
                     }}
-                    className="absolute right-3 text-primary-brand bg-transparent border-none cursor-pointer flex hover:text-[#1a1a1a]"
+                    className="absolute end-3 text-primary-brand bg-transparent border-none cursor-pointer flex hover:text-[#1a1a1a]"
                   >
                     <X className="!h-3.5 !w-3.5" />
                   </button>
@@ -757,36 +968,17 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
                 onValueChange={setSelectedStyle}
                 disabled={isSpinning}
               >
-                <SelectTrigger
-                >
-                  <SelectValue
-                    placeholder={t("stylist.selectStyle", {
-                      defaultValue: "Select Style",
-                    })}
-                  />
+                <SelectTrigger>
+                  <SelectValue placeholder={t("stylist.selectStyle", { defaultValue: "Select Style" })} />
                 </SelectTrigger>
-
                 <SelectContent>
                   {DRESS_CODE_OPTIONS.map((style) => (
                     <SelectItem
                       key={style}
                       value={style}
-                      className="
-                        text-[12px]
-                        rounded-[12px]
-                        font-semibold
-                        px-2.5
-                        py-[9px]
-                        text-text-brand
-                        hover:bg-primary-brand
-                        hover:text-white
-                      "
+                      className="text-[12px] rounded-[12px] font-semibold px-2.5 py-[9px] text-text-brand hover:bg-primary-brand hover:text-white"
                     >
-                      {style === "all"
-                        ? t("taxonomy.dress_code.all", {
-                          defaultValue: "All Styles",
-                        })
-                        : labelForDressCode(style, t)}
+                      {style === "all" ? t("taxonomy.dress_code.all", { defaultValue: "All Styles" }) : labelForDressCode(style, t)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -795,10 +987,11 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
           </div>
         </div>
       </div>
+
+      {/* ============ RIGHT PANEL: 6 Dedicated Carousels ============ */}
       <div className="md:col-span-3">
-        {/* ============ RIGHT PANEL: Builder ============ */}
         <div className="bg-white rounded-[20px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5 flex flex-col">
-          <div className="flex items-start justify-between gap-4 flex-wrap max-[480px]:gap-2">
+          <div className="flex items-start justify-between gap-4 flex-wrap max-[480px]:gap-2 mb-4">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--primary-color)]">
                 <Sparkles className="!h-3.5 !w-3.5 text-[var(--primary-color)]" />
@@ -807,24 +1000,158 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
               <h2 className="text-xl font-extrabold text-[var(--dark-color)] mt-2.5 mb-1 max-[480px]:text-[16px]">
                 {t('stylist.createTodaysLook', { defaultValue: "Create today's look" })}
               </h2>
-              <p className="mb-5 text-sm text-[var(--text-color)] leading-[22px] font-semibold max-[480px]:mb-2">
+              <p className="text-sm text-[var(--text-color)] leading-[22px] font-semibold max-[480px]:mb-2">
                 {t('stylist.swipeOrLetAi', { defaultValue: 'Swipe through your wardrobe or let AI select an outfit.' })}
               </p>
             </div>
-            <div className="flex items-center gap-1.5 max-[480px]:mb-5 border border-[#ece7de] rounded-xl px-3.5 py-2 text-[12.5px] font-bold text-[#1a1a1a] bg-white whitespace-nowrap">
-              <ShoppingBag className="!h-3.5 !w-3.5" />
-              <span>{t('stylist.itemsCount', { defaultValue: `${items.length} items`, count: items.length })}</span>
+
+            <div className="flex items-center gap-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAvatarPreviewOpen(true)}
+                className="rounded-full px-3.5 py-1.5 text-xs font-bold border-primary-brand text-primary-brand hover:bg-primary-brand hover:text-white transition-colors"
+              >
+                <Eye className="h-3.5 w-3.5 me-1" />
+                {t('stylist.tryOnAvatar', { defaultValue: 'Try on Avatar' })}
+              </Button>
+              <div className="flex items-center gap-1.5 border border-[#ece7de] rounded-full px-3.5 py-1.5 text-[12px] font-bold text-[#1a1a1a] bg-white whitespace-nowrap">
+                <ShoppingBag className="!h-3.5 !w-3.5" />
+                <span>{t('stylist.itemsCount', { defaultValue: `${items.length} items`, count: items.length })}</span>
+              </div>
             </div>
           </div>
 
+          {/* Mode Switch Pills */}
+          <div className="flex items-center gap-2 mb-4 p-1 bg-muted/30 rounded-xl w-fit border border-border">
+            <button
+              type="button"
+              onClick={() => setIsFullBodyMode(false)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                !isFullBodyMode
+                  ? 'bg-white text-dark-brand shadow-xs border border-border/80'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Shirt className="h-3.5 w-3.5" />
+              <span>{t('stylist.modeSeparates', { defaultValue: 'Separates (Top & Bottom)' })}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsFullBodyMode(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                isFullBodyMode
+                  ? 'bg-white text-dark-brand shadow-xs border border-border/80'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Sparkle className="h-3.5 w-3.5" />
+              <span>{t('stylist.modeFullBody', { defaultValue: 'Full Body (Dress / Jumpsuit / Sari)' })}</span>
+            </button>
+          </div>
+
+          {/* 6 Carousels */}
           <div className="flex flex-col gap-3.5 w-full" data-testid="shuffler-carousels-container">
-            {renderRow('top', labelForRole('top', t), filteredTops, topFocusIdx, topSelectedIdx, setTopSelectedIdx, setTopApi, topApi)}
-            {renderRow('bottom', labelForRole('bottom', t), filteredBottoms, bottomFocusIdx, bottomSelectedIdx, setBottomSelectedIdx, setBottomApi, bottomApi)}
-            {renderRow('shoes', labelForRole('shoes', t), filteredShoes, shoeFocusIdx, shoeSelectedIdx, setShoeSelectedIdx, setShoeApi, shoeApi)}
+            {/* 1. Outerwear Carousel */}
+            {renderRow(
+              'outerwear',
+              labelForRole('outerwear', t),
+              filteredOuterwears,
+              outerwearFocusIdx,
+              outerwearSelectedIdx,
+              setOuterwearSelectedIdx,
+              setOuterwearApi,
+              outerwearApi,
+              {
+                isOptional: true,
+                isIncluded: includeOuterwear,
+                onToggleInclude: setIncludeOuterwear,
+              }
+            )}
+
+            {/* 2. Full Body Carousel */}
+            {renderRow(
+              'full_body',
+              t('taxonomy.categories.full_body', { defaultValue: 'Full Body' }),
+              filteredFullBodies,
+              fullBodyFocusIdx,
+              fullBodySelectedIdx,
+              setFullBodySelectedIdx,
+              setFullBodyApi,
+              fullBodyApi,
+              {
+                isRestricted: !isFullBodyMode,
+                restrictionLabel: t('stylist.restrictedBySeparates', { defaultValue: 'Disabled for Top & Bottom separates' }),
+                onUnlock: () => setIsFullBodyMode(true),
+              }
+            )}
+
+            {/* 3. Top Carousel */}
+            {renderRow(
+              'top',
+              labelForRole('top', t),
+              filteredTops,
+              topFocusIdx,
+              topSelectedIdx,
+              setTopSelectedIdx,
+              setTopApi,
+              topApi,
+              {
+                isRestricted: isFullBodyMode,
+                restrictionLabel: t('stylist.restrictedByFullBody', { defaultValue: 'Disabled for Full-Body looks' }),
+                onUnlock: () => setIsFullBodyMode(false),
+              }
+            )}
+
+            {/* 4. Bottom Carousel */}
+            {renderRow(
+              'bottom',
+              labelForRole('bottom', t),
+              filteredBottoms,
+              bottomFocusIdx,
+              bottomSelectedIdx,
+              setBottomSelectedIdx,
+              setBottomApi,
+              bottomApi,
+              {
+                isRestricted: isFullBodyMode,
+                restrictionLabel: t('stylist.restrictedByFullBody', { defaultValue: 'Disabled for Full-Body looks' }),
+                onUnlock: () => setIsFullBodyMode(false),
+              }
+            )}
+
+            {/* 5. Shoes Carousel */}
+            {renderRow(
+              'shoes',
+              labelForRole('shoes', t),
+              filteredShoes,
+              shoeFocusIdx,
+              shoeSelectedIdx,
+              setShoeSelectedIdx,
+              setShoeApi,
+              shoeApi
+            )}
+
+            {/* 6. Accessories Carousel */}
+            {renderRow(
+              'accessories',
+              labelForRole('accessory', t),
+              filteredAccessories,
+              accessoryFocusIdx,
+              accessorySelectedIdx,
+              setAccessorySelectedIdx,
+              setAccessoryApi,
+              accessoryApi,
+              {
+                isOptional: true,
+                isIncluded: includeAccessory,
+                onToggleInclude: setIncludeAccessory,
+              }
+            )}
           </div>
 
           {aiRationale && (
-            <div className="p-[16px_18px] rounded-2xl border border-accent/20 bg-accent/5 text-start">
+            <div className="p-[16px_18px] rounded-2xl border border-accent/20 bg-accent/5 text-start mt-4">
               <span className="text-[13px] font-bold text-accent flex items-center gap-1.5 mb-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-accent shrink-0" />
                 {t('stylist.aiRationale', { defaultValue: "Stylist's Advice" })}
@@ -834,64 +1161,83 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
               </p>
             </div>
           )}
+
+          {/* Action Buttons */}
           <div className="flex items-center gap-3 mt-5">
             <Button
               onClick={handleShuffle}
               disabled={isSpinning}
               data-testid="shuffler-generate-btn"
-              className=" h-auto
-              w-full
-                          rounded-full
-                          border-0
-                          bg-[var(--primary-color)]
-                          px-7
-                          py-3
-                          font-sans
-                          text-sm
-                          font-medium
-                          text-white
-                          shadow-none
-                          transition-all
-                          duration-300
-                          hover:-translate-y-0.5
-                          hover:bg-[var(--primary-hover)]
-                          hover:text-white
-                          hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]">
+              className="h-auto w-full rounded-full border-0 bg-[var(--primary-color)] px-7 py-3 font-sans text-sm font-medium text-white shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
+            >
               <Sparkles className={`!h-3.5 !w-3.5 ${isSpinning ? 'animate-spin' : ''}`} />
               {t('stylist.refreshScout', { defaultValue: 'Generate New Outfit' })}
             </Button>
 
             <Button
               onClick={handleSave}
-              disabled={saving || isSpinning || (filteredTops.length === 0 && filteredBottoms.length === 0 && filteredShoes.length === 0)}
+              disabled={saving || isSpinning || currentOutfitPieces.length === 0}
               variant="outline"
               data-testid="shuffler-save-btn"
-              className="
-              w-full
-                        h-auto
-                        rounded-full
-                        border
-                        border-black/10
-                        bg-white
-                        px-7
-                        py-3
-                        font-sans
-                        text-sm
-                        font-semibold
-                        text-[var(--dark-color)]
-                        shadow-none
-                        transition-all
-                        duration-300
-                        hover:-translate-y-0.5
-                        hover:bg-white
-                        hover:text-[var(--primary-color)]
-                        hover:shadow-[var(--shadow-medium)]">
+              className="w-full h-auto rounded-full border border-black/10 bg-white px-7 py-3 font-sans text-sm font-semibold text-[var(--dark-color)] shadow-none transition-all duration-300 hover:-translate-y-0.5 hover:bg-white hover:text-[var(--primary-color)] hover:shadow-[var(--shadow-medium)]"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Save className="h-4 w-4 me-2" />}
               {t('common.save', { defaultValue: 'Save Outfit' })}
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Item Detail Floater */}
       <ItemFloater itemId={activeFloaterItemId} onClose={handleCloseFloater} fromOutfits={true} />
+
+      {/* Live Avatar Try-On Modal */}
+      <Dialog open={avatarPreviewOpen} onOpenChange={setAvatarPreviewOpen}>
+        <DialogContent className="sm:max-w-md p-6 rounded-2xl bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-dark-brand flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary-brand" />
+              {t('stylist.tryOnAvatar', { defaultValue: 'Try on Avatar' })}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full aspect-[4/5] bg-[#ece7de]/30 rounded-xl overflow-hidden border border-border my-2 flex items-center justify-center">
+            <AvatarViewer
+              shapeParams={user?.avatar_shape_params || {}}
+              measurements={user?.body_measurements || user?.measurements}
+              skinColor={user?.skin_tone}
+              sex={user?.sex || 'female'}
+              outfitItems={avatarPiecesMap}
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5 justify-center py-1">
+            {currentOutfitPieces.map(({ item, roleKey }, idx) => (
+              <span key={idx} className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-muted border border-border text-foreground flex items-center gap-1">
+                <span className="capitalize text-muted-foreground">{roleKey}:</span>
+                <span className="truncate max-w-[120px]">{item.title || item.name}</span>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-2">
+            <Button
+              onClick={() => {
+                setAvatarPreviewOpen(false);
+                handleSave();
+              }}
+              className="w-full rounded-full"
+            >
+              <Save className="h-4 w-4 me-1.5" />
+              {t('common.save', { defaultValue: 'Save Outfit' })}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setAvatarPreviewOpen(false)}
+              className="rounded-full px-5"
+            >
+              {t('common.close', { defaultValue: 'Close' })}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

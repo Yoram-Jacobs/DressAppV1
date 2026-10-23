@@ -3236,17 +3236,20 @@ export default function Stylist() {
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                               <div className="flex items-center gap-2">
                                 <h3 className="text-[20px] font-bold text-[var(--dark-color)]">
-                                  {t('stylist.calendar.outfit_canvas', { defaultValue: 'Saved Outfits' })}
+                                  {t('stylist.savedOutfits', { defaultValue: 'Saved Outfits' })}
                                 </h3>
                                 {outfits.length > 0 && (
-                                  <Badge variant="secondary" className="w-fit text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                                  <Badge variant="secondary" className="w-fit text-xs font-semibold px-2.5 py-0.5 rounded-full" dir="auto">
                                     {canvasSearchQuery
                                       ? t('stylist.calendar.resultsCount', {
                                           count: filteredCanvasOutfits.length,
                                           total: outfits.length,
                                           defaultValue: `Found ${filteredCanvasOutfits.length} of ${outfits.length} outfits`
                                         })
-                                      : `${outfits.length} outfits`}
+                                      : t('stylist.outfitsCount', {
+                                          count: outfits.length,
+                                          defaultValue: `${outfits.length} outfits`
+                                        })}
                                   </Badge>
                                 )}
                               </div>
@@ -3362,10 +3365,10 @@ export default function Stylist() {
                                 <PinchFeedbackBadge
                                   activeDensity={canvasFeedback}
                                   labels={{
-                                    1: "1 Column (Large)",
-                                    2: "2 Columns (Standard)",
-                                    3: "3 Columns (Compact)",
-                                    4: "4 Columns (Dense)",
+                                    1: t("closet.view1Col", { defaultValue: "1 Column (Large)" }),
+                                    2: t("closet.view2Cols", { defaultValue: "2 Columns (Standard)" }),
+                                    3: t("closet.view3Cols", { defaultValue: "3 Columns (Compact)" }),
+                                    4: t("closet.view4Cols", { defaultValue: "4 Columns (Dense)" }),
                                   }}
                                 />
                                 {filteredCanvasOutfits.map((o) => (
