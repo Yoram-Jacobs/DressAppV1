@@ -497,6 +497,8 @@ export default function DressingRoom3D({
                       hasOuterwear={hasOuterwear}
                       morphInfluences={morphInfluences}
                       footPose={footPose}
+                      showAvatar={showAvatar}
+                      standaloneMode={standaloneMode || !showAvatar}
                     />
                   );
                 })}

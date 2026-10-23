@@ -226,29 +226,68 @@ async function fetchAndCropTexture(url) {
 
   let minX = 0, maxX = w - 1, minY = 0, maxY = h - 1;
   let dominantColor = '#222226';
+  let isLightBg = false;
+  let bgR = 255, bgG = 255, bgB = 255;
 
   if (imgData) {
     const data = imgData.data;
+
+    // Detect solid/white background from 4 image corners
+    const cornerOffsets = [
+      (2 * w + 2) * 4,
+      (2 * w + (w - 3)) * 4,
+      ((h - 3) * w + 2) * 4,
+      ((h - 3) * w + (w - 3)) * 4,
+    ];
+    let crSum = 0, cgSum = 0, cbSum = 0, cCount = 0;
+    for (const off of cornerOffsets) {
+      if (off >= 0 && off < data.length - 4 && data[off + 3] > 40) {
+        crSum += data[off];
+        cgSum += data[off + 1];
+        cbSum += data[off + 2];
+        cCount++;
+      }
+    }
+    if (cCount > 0) {
+      bgR = crSum / cCount;
+      bgG = cgSum / cCount;
+      bgB = cbSum / cCount;
+      isLightBg = bgR > 215 && bgG > 215 && bgB > 215;
+    }
+
+    const isBgPixel = (r, g, b, a) => {
+      if (a < 35) return true;
+      if (isLightBg) {
+        const dist = Math.hypot(r - bgR, g - bgG, b - bgB);
+        if (dist < 42) return true;
+        if (r > 235 && g > 235 && b > 235) return true;
+      }
+      return false;
+    };
+
     let foundMinX = w, foundMaxX = 0, foundMinY = h, foundMaxY = 0;
     let sumR = 0, sumG = 0, sumB = 0, countDom = 0;
 
     for (let y = 0; y < h; y++) {
       const row = y * w * 4;
       for (let x = 0; x < w; x++) {
-        const a = data[row + x * 4 + 3];
-        if (a > 20) {
+        const off = row + x * 4;
+        const r = data[off];
+        const g = data[off + 1];
+        const b = data[off + 2];
+        const a = data[off + 3];
+
+        if (!isBgPixel(r, g, b, a)) {
           if (x < foundMinX) foundMinX = x;
           if (x > foundMaxX) foundMaxX = x;
           if (y < foundMinY) foundMinY = y;
           if (y > foundMaxY) foundMaxY = y;
 
-          // Sample center fabric
-          if (x > w * 0.35 && x < w * 0.65 && y > h * 0.25 && y < h * 0.75) {
-            sumR += data[row + x * 4];
-            sumG += data[row + x * 4 + 1];
-            sumB += data[row + x * 4 + 2];
-            countDom++;
-          }
+          // Sample genuine fabric / shoe leather
+          sumR += r;
+          sumG += g;
+          sumB += b;
+          countDom++;
         }
       }
     }
@@ -276,6 +315,22 @@ async function fetchAndCropTexture(url) {
   cropCanvas.height = cropH;
   const cropCtx = cropCanvas.getContext('2d');
   cropCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+  // If the catalog photo was on a white background, remove background pixels from cropCanvas
+  if (imgData && isLightBg) {
+    try {
+      const cImgData = cropCtx.getImageData(0, 0, cropW, cropH);
+      const cPx = cImgData.data;
+      for (let i = 0; i < cPx.length; i += 4) {
+        const r = cPx[i], g = cPx[i + 1], b = cPx[i + 2], a = cPx[i + 3];
+        const dist = Math.hypot(r - bgR, g - bgG, b - bgB);
+        if (a < 35 || dist < 42 || (r > 235 && g > 235 && b > 235)) {
+          cPx[i + 3] = 0; // Transparent
+        }
+      }
+      cropCtx.putImageData(cImgData, 0, 0);
+    } catch {}
+  }
 
   const texture = new THREE.CanvasTexture(cropCanvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -391,17 +446,19 @@ async function fetchAndCropTexture(url) {
     solidV = 0.5;
   }
 
-  // Gap-free variant for clothing shells: on every row that contains fabric, fill
-  // transparent holes between the garment's outer edges (e.g. the wedge between a
-  // sleeve and the body in flat-lay photos) and extend the edge colour outward, so
-  // flank and side-seam samples never land on see-through background. Rows with no
-  // fabric at all (above a strapless neckline, etc.) stay transparent.
+  // Gap-free variant for clothing shells:
+  // Fills interior holes (armhole cutouts, inner wedges) with smooth dominant fabric color.
+  // NO horizontal row-smear to eliminate barcode / zebra stripe distortion!
   let filledTexture = null;
   try {
     const fillData = cropCtx.getImageData(0, 0, cropW, cropH);
     const px = fillData.data;
-    const pad = Math.max(2, Math.round(cropW * 0.14));
-    const ALPHA_ON = 128;
+    const hexColor = dominantColor.replace('#', '');
+    const domR = parseInt(hexColor.substring(0, 2), 16) || 35;
+    const domG = parseInt(hexColor.substring(2, 4), 16) || 35;
+    const domB = parseInt(hexColor.substring(4, 6), 16) || 38;
+
+    const ALPHA_ON = 120;
     for (let cy = 0; cy < cropH; cy++) {
       const row = cy * cropW * 4;
       let left = -1;
@@ -412,27 +469,17 @@ async function fetchAndCropTexture(url) {
           right = cx;
         }
       }
-      if (left < 0) continue;
-      // Interior holes: carry the last opaque colour across
-      let lastO = row + left * 4;
-      for (let cx = left; cx <= right; cx++) {
-        const o = row + cx * 4;
-        if (px[o + 3] >= ALPHA_ON) {
-          lastO = o;
-        } else {
-          px[o] = px[lastO]; px[o + 1] = px[lastO + 1]; px[o + 2] = px[lastO + 2]; px[o + 3] = 255;
+      if (left >= 0 && right > left) {
+        // Interior holes between garment parts: fill with clean dominant fabric color
+        for (let cx = left; cx <= right; cx++) {
+          const o = row + cx * 4;
+          if (px[o + 3] < ALPHA_ON) {
+            px[o] = domR;
+            px[o + 1] = domG;
+            px[o + 2] = domB;
+            px[o + 3] = 255;
+          }
         }
-      }
-      // Outward edge extension
-      const lo = row + left * 4;
-      for (let cx = Math.max(0, left - pad); cx < left; cx++) {
-        const o = row + cx * 4;
-        px[o] = px[lo]; px[o + 1] = px[lo + 1]; px[o + 2] = px[lo + 2]; px[o + 3] = 255;
-      }
-      const ro = row + right * 4;
-      for (let cx = right + 1; cx <= Math.min(cropW - 1, right + pad); cx++) {
-        const o = row + cx * 4;
-        px[o] = px[ro]; px[o + 1] = px[ro + 1]; px[o + 2] = px[ro + 2]; px[o + 3] = 255;
       }
     }
     const fillCanvas = document.createElement('canvas');
@@ -689,6 +736,7 @@ export function createAnatomicalTopGeometry({
   layerOffset = 0.015,
   uSwatch = 0.50,
   vSwatch = 0.50,
+  standalone = false,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
@@ -774,7 +822,7 @@ export function createAnatomicalTopGeometry({
     }
   }
 
-  // 2. Left & Right Sleeves (following avatar arm trajectory parameterized by sleeveFactor: short, 3/4, or long)
+  // 2. Left & Right Sleeves (tailored elliptical contours, natural drape in standalone mode)
   if (hasAnySleeve) {
     const sides = [-1, 1]; // Left (-X), Right (+X)
     const nySleeve = Math.max(4, Math.round(10 * Math.min(1.0, sleeveFactor * 1.5)));
@@ -784,15 +832,16 @@ export function createAnatomicalTopGeometry({
     const fullYArmEnd = isMale ? 0.96 : 0.90;
     const yArmEnd = yArmStart - sleeveFactor * (yArmStart - fullYArmEnd);
 
-    const xArmStart = isMale ? 0.225 : 0.195;
-    const fullXArmEnd = isMale ? 0.280 : 0.255;
+    const xArmStart = isMale ? (standalone ? 0.210 : 0.225) : (standalone ? 0.185 : 0.195);
+    const fullXArmEnd = isMale ? (standalone ? 0.225 : 0.280) : (standalone ? 0.200 : 0.255);
     const xArmEnd = xArmStart + sleeveFactor * (fullXArmEnd - xArmStart);
 
-    const fullZArmEnd = 0.040;
+    const fullZArmEnd = standalone ? 0.025 : 0.040;
     const zArmEnd = 0.020 + sleeveFactor * (fullZArmEnd - 0.020);
 
-    const rArmStart = 0.060 + layerOffset;
-    const fullRArmEnd = 0.042 + layerOffset;
+    // Slim, tailored sleeve radii (eliminates barrel appearance)
+    const rArmStart = (standalone ? 0.045 : 0.050) + Math.min(0.010, layerOffset * 0.3);
+    const fullRArmEnd = (standalone ? 0.034 : 0.038) + Math.min(0.008, layerOffset * 0.2);
     const rArmEnd = rArmStart - sleeveFactor * (rArmStart - fullRArmEnd);
 
     // Sleeve UV runs from shoulder seam (0.85) down to cuff in the 2D photo
@@ -808,23 +857,25 @@ export function createAnatomicalTopGeometry({
         const xArm = side * (xArmStart + t * (xArmEnd - xArmStart));
         const zArm = 0.020 + t * (zArmEnd - 0.020);
         const rArm = rArmStart - t * (rArmStart - rArmEnd);
+        const rx = rArm * 0.84; // Elliptical tailored cross-section
+        const rz = rArm * 1.05;
 
         const vTex = 0.85 - t * (0.85 - vCuff);
         const uCenter = side === -1
-          ? 0.23 - t * uCuffOffset
-          : 0.77 + t * uCuffOffset;
+          ? 0.20 - t * uCuffOffset
+          : 0.80 + t * uCuffOffset;
 
         for (let j = 0; j <= nxSleeve; j++) {
           const uFrac = j / nxSleeve;
           const theta = -Math.PI + uFrac * 2 * Math.PI;
-          const x = xArm + rArm * Math.sin(theta);
+          const x = xArm + rx * Math.sin(theta);
           const y = yArm;
-          const z = zArm + rArm * Math.cos(theta);
+          const z = zArm + rz * Math.cos(theta);
           verts.push(x, y, z);
 
           const isFront = Math.cos(theta) >= 0;
           if (isFront) {
-            const uArm = uCenter + ((Math.sin(theta) + 1) * 0.5 - 0.5) * (0.14 * Math.min(1.0, sleeveFactor * 1.3));
+            const uArm = uCenter + Math.sin(theta) * 0.09 * Math.min(1.0, sleeveFactor);
             uvs.push(Math.max(0.01, Math.min(0.99, uArm)), Math.max(0.01, Math.min(0.99, vTex)));
           } else {
             uvs.push(
@@ -1138,8 +1189,16 @@ export function createAnatomicalBottomGeometry({
       verts.push(x, y, z);
 
       if (isFront) {
-        const uT = (Math.sin(theta) + 1) * 0.5;
-        uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
+        const flankFrac = Math.abs(Math.sin(theta));
+        if (flankFrac > 0.84) {
+          uvs.push(
+            Math.max(0.01, Math.min(0.99, uSwatch)),
+            Math.max(0.01, Math.min(0.99, vSwatch))
+          );
+        } else {
+          const uT = 0.5 + (Math.sin(theta) / 0.84) * 0.45;
+          uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0, Math.min(1, vTex)));
+        }
       } else {
         uvs.push(
           Math.max(0.01, Math.min(0.99, uSwatch)),
@@ -1188,11 +1247,18 @@ export function createAnatomicalBottomGeometry({
         verts.push(x, y, z);
 
         if (isFront) {
-          // Left leg: u in [0.05, 0.48]; Right leg: u in [0.52, 0.95]
-          const uLeg = side === -1
-            ? 0.05 + ((Math.sin(theta) + 1) * 0.5) * 0.43
-            : 0.52 + ((Math.sin(theta) + 1) * 0.5) * 0.43;
-          uvs.push(Math.max(0, Math.min(1, uLeg)), Math.max(0, Math.min(1, vTex)));
+          const flankFrac = Math.abs(Math.sin(theta));
+          if (flankFrac > 0.84) {
+            uvs.push(
+              Math.max(0.01, Math.min(0.99, uSwatch)),
+              Math.max(0.01, Math.min(0.99, vSwatch))
+            );
+          } else {
+            const legCenter = side === -1 ? 0.28 : 0.72;
+            const legSpan = 0.18;
+            const uLeg = legCenter + (Math.sin(theta) / 0.84) * legSpan;
+            uvs.push(Math.max(0.01, Math.min(0.99, uLeg)), Math.max(0, Math.min(1, vTex)));
+          }
         } else {
           uvs.push(
             Math.max(0.01, Math.min(0.99, uSwatch)),
@@ -1352,7 +1418,10 @@ export default function GarmentMesh3D({
   hasOuterwear = false,
   morphInfluences = null,
   footPose = null,
+  showAvatar = true,
+  standaloneMode = false,
 }) {
+  const isStandalone = Boolean(standaloneMode || !showAvatar);
   const {
     texture,
     opaqueTexture = null,
@@ -1413,6 +1482,7 @@ export default function GarmentMesh3D({
         layerOffset,
         uSwatch: solidU,
         vSwatch: solidV,
+        standalone: isStandalone,
       });
     }
 
@@ -1440,6 +1510,7 @@ export default function GarmentMesh3D({
         layerOffset,
         uSwatch: solidU,
         vSwatch: solidV,
+        standalone: isStandalone,
       });
     }
 
@@ -1523,7 +1594,11 @@ export default function GarmentMesh3D({
     <>
     {heelGeometry && (
       <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
-        <meshStandardMaterial color={dominantColor || '#1F1F22'} roughness={0.45} metalness={0.08} />
+        <meshStandardMaterial
+          color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B'}
+          roughness={0.35}
+          metalness={0.12}
+        />
       </mesh>
     )}
     <mesh
@@ -1534,18 +1609,20 @@ export default function GarmentMesh3D({
     >
       <meshStandardMaterial
         map={(rawSlot === 'shoes'
-          ? opaqueTexture || texture
+          ? (opaqueTexture || texture)
           : ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot)
-            ? filledTexture || texture
+            ? (filledTexture || texture)
             : texture) || null}
-        color={texture ? '#FFFFFF' : dominantColor || '#CBD5E1'}
+        color={rawSlot === 'shoes'
+          ? (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B')
+          : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
         transparent={rawSlot !== 'shoes'}
         alphaTest={rawSlot === 'shoes' ? 0 : 0.02}
         depthWrite={true}
         side={THREE.DoubleSide}
-        roughness={0.65}
-        metalness={0.04}
-        envMapIntensity={0.8}
+        roughness={rawSlot === 'shoes' ? 0.38 : 0.65}
+        metalness={rawSlot === 'shoes' ? 0.10 : 0.04}
+        envMapIntensity={rawSlot === 'shoes' ? 1.2 : 0.8}
         polygonOffset={true}
         polygonOffsetFactor={-1}
         polygonOffsetUnits={-1}
