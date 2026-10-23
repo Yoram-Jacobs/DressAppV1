@@ -250,17 +250,32 @@ export function LocationProvider({ children }) {
       const lat = Number(homeLoc.lat);
       const lng = Number(homeLoc.lng ?? homeLoc.lon);
       if (!isNaN(lat) && !isNaN(lng)) {
-        setState((s) => ({
-          ...s,
-          coords: { lat, lng },
-          accuracy_m: null,
-          city: homeLoc.city || addr?.city || s.city,
-          country: homeLoc.country || addr?.country || s.country,
-          country_code: (homeLoc.country_code || addr?.country_code || s.country_code || '').toUpperCase() || null,
-          isFallback: true,
-          source: 'contact_details',
-          lastUpdatedAt: homeLoc.updated_at || s.lastUpdatedAt || new Date().toISOString(),
-        }));
+        setState((s) => {
+          const next = {
+            ...s,
+            coords: { lat, lng },
+            accuracy_m: null,
+            city: homeLoc.city || addr?.city || s.city,
+            country: homeLoc.country || addr?.country || s.country,
+            country_code: (homeLoc.country_code || addr?.country_code || s.country_code || '').toUpperCase() || null,
+            isFallback: true,
+            source: 'contact_details',
+            lastUpdatedAt: homeLoc.updated_at || s.lastUpdatedAt || new Date().toISOString(),
+          };
+          // Bail out when nothing changed: a fresh `coords` object on every pass would
+          // retrigger this effect (it depends on state.coords) in an endless render loop
+          // for users whose browser denies geolocation.
+          const unchanged =
+            s.isFallback === true &&
+            s.source === 'contact_details' &&
+            s.coords?.lat === lat &&
+            s.coords?.lng === lng &&
+            s.city === next.city &&
+            s.country === next.country &&
+            s.country_code === next.country_code &&
+            s.lastUpdatedAt === next.lastUpdatedAt;
+          return unchanged ? s : next;
+        });
         return;
       }
     }

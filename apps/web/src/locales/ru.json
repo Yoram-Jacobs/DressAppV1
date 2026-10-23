@@ -5790,7 +5790,9 @@
     "show_avatar": "Показать аватар",
     "garment_view_badge": "3D-просмотр вещи",
     "avatar_studio_badge": "360° студия аватара",
-    "loading": "Подготовка вашей 3D-студии…"
+    "loading": "Подготовка вашей 3D-студии…",
+    "side_view": "Вид сбоку",
+    "back_view": "Вид сзади"
   },
   "stylistTour": {
     "step1": {

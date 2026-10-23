@@ -5788,7 +5788,9 @@
     "show_avatar": "显示形象",
     "garment_view_badge": "3D衣物展示",
     "avatar_studio_badge": "360° 形象试衣间",
-    "loading": "正在准备您的3D工作室…"
+    "loading": "正在准备您的3D工作室…",
+    "side_view": "侧面",
+    "back_view": "背面"
   },
   "stylistTour": {
     "step1": {

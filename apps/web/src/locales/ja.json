@@ -5789,7 +5789,9 @@
     "show_avatar": "アバターを表示",
     "garment_view_badge": "3Dアイテムビュー",
     "avatar_studio_badge": "360° アバタースタジオ",
-    "loading": "3Dスタジオを準備しています…"
+    "loading": "3Dスタジオを準備しています…",
+    "side_view": "側面",
+    "back_view": "背面"
   },
   "stylistTour": {
     "step1": {

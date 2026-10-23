@@ -5792,7 +5792,9 @@
     "show_avatar": "Toon avatar",
     "garment_view_badge": "3D-kledingweergave",
     "avatar_studio_badge": "360° Avatar Studio",
-    "loading": "Je 3D-studio wordt voorbereid…"
+    "loading": "Je 3D-studio wordt voorbereid…",
+    "side_view": "Zijaanzicht",
+    "back_view": "Achteraanzicht"
   },
   "stylistTour": {
     "step1": {

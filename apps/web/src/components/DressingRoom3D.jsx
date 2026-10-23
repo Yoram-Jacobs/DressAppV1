@@ -84,10 +84,10 @@ function StudioPedestal() {
 // ─── Camera Controller & Animated Transitions ───
 export const GARMENT_CAMERA_TARGETS = {
   shoes: { target: [0, 0.12, 0], pos: [0, 0.32, 0.95] },
-  bottom: { target: [0, 0.55, 0], pos: [0, 0.65, 1.45] },
-  top: { target: [0, 1.20, 0], pos: [0, 1.25, 1.35] },
-  outerwear: { target: [0, 1.15, 0], pos: [0, 1.20, 1.55] },
-  dress: { target: [0, 1.05, 0], pos: [0, 1.10, 1.75] },
+  bottom: { target: [0, 0.60, 0], pos: [0, 0.70, 1.95] },
+  top: { target: [0, 1.16, 0], pos: [0, 1.20, 1.65] },
+  outerwear: { target: [0, 1.00, 0], pos: [0, 1.05, 2.05] },
+  dress: { target: [0, 0.98, 0], pos: [0, 1.02, 2.10] },
   accessory: { target: [0, 1.15, 0], pos: [0, 1.20, 1.25] },
   full: { target: [0, 0.95, 0], pos: [0, 1.05, 2.5] },
 };
@@ -113,6 +113,20 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGa
       const slotConfig = GARMENT_CAMERA_TARGETS[activeGarmentSlot] || GARMENT_CAMERA_TARGETS.full;
       targetCamPos.current.set(...slotConfig.pos);
       targetLookAt.current.set(...slotConfig.target);
+    } else if (cameraPreset === 'back' || cameraPreset === 'side') {
+      // Same framing as the front view, but orbited to the back / side of the model
+      const base = (!showAvatar && GARMENT_CAMERA_TARGETS[activeGarmentSlot])
+        ? GARMENT_CAMERA_TARGETS[activeGarmentSlot]
+        : GARMENT_CAMERA_TARGETS.full;
+      const [px, py, pz] = base.pos;
+      const [tx, ty, tz] = base.target;
+      const dist = Math.hypot(px - tx, pz - tz);
+      if (cameraPreset === 'back') {
+        targetCamPos.current.set(tx, py, tz - dist);
+      } else {
+        targetCamPos.current.set(tx + dist, py, tz);
+      }
+      targetLookAt.current.set(tx, ty, tz);
     } else if (cameraPreset === 'reset') {
       if (!showAvatar && activeGarmentSlot) {
         const slotConfig = GARMENT_CAMERA_TARGETS[activeGarmentSlot] || GARMENT_CAMERA_TARGETS.full;
@@ -128,7 +142,27 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGa
   useFrame((_, delta) => {
     if (!cameraPreset) return;
     const lerpSpeed = Math.min(1, delta * 5);
-    camera.position.lerp(targetCamPos.current, lerpSpeed);
+    // Orbit around the look-at point (azimuth + radius + height) instead of cutting
+    // straight through the model when moving between front / side / back views.
+    const look = targetLookAt.current;
+    const cx = camera.position.x - look.x;
+    const cz = camera.position.z - look.z;
+    const dxT = targetCamPos.current.x - look.x;
+    const dzT = targetCamPos.current.z - look.z;
+    const a0 = Math.atan2(cx, cz);
+    const a1 = Math.atan2(dxT, dzT);
+    let da = a1 - a0;
+    while (da > Math.PI) da -= 2 * Math.PI;
+    while (da < -Math.PI) da += 2 * Math.PI;
+    const r0 = Math.hypot(cx, cz);
+    const r1 = Math.hypot(dxT, dzT);
+    const a = a0 + da * lerpSpeed;
+    const r = r0 + (r1 - r0) * lerpSpeed;
+    camera.position.set(
+      look.x + Math.sin(a) * r,
+      camera.position.y + (targetCamPos.current.y - camera.position.y) * lerpSpeed,
+      look.z + Math.cos(a) * r
+    );
 
     if (controlsRef.current) {
       controlsRef.current.target.lerp(targetLookAt.current, lerpSpeed);
@@ -597,6 +631,30 @@ export default function DressingRoom3D({
               >
                 <Footprints className="w-3.5 h-3.5 text-primary-brand" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.lower_body', { defaultValue: 'Lower Body' })}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCameraPreset('side')}
+                className="text-xs font-semibold text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5"
+                title={t('dressing_room_3d.side_view', { defaultValue: 'Side view' })}
+                data-testid="camera-side-btn"
+              >
+                <ChevronRight className="w-3.5 h-3.5 text-primary-brand" />
+                <span className="hidden sm:inline">{t('dressing_room_3d.side_view', { defaultValue: 'Side view' })}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCameraPreset('back')}
+                className="text-xs font-semibold text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5"
+                title={t('dressing_room_3d.back_view', { defaultValue: 'Back view' })}
+                data-testid="camera-back-btn"
+              >
+                <RotateCw className="w-3.5 h-3.5 text-primary-brand" />
+                <span className="hidden sm:inline">{t('dressing_room_3d.back_view', { defaultValue: 'Back view' })}</span>
               </Button>
 
               <div className="h-4 w-px bg-[#E5DFD5] mx-1" />

@@ -73,7 +73,7 @@ describe('silhouette shell builder', () => {
     const { nx, ny } = chooseGridResolution(1.0, 80);
     const mask = teeMask(nx, ny);
     const shell = buildSilhouetteShell({
-      mask, nx, ny, aspect: 1.0, slot: 'top', isMale: false,
+      mask, nx, ny, aspect: 1.0, slot: 'top', isMale: false, poseSleeves: false,
       yTop: 1.47, yBottom: 0.86, layerOffset: 0.022, getTorsoSlice, getLegSlice,
     });
     expect(shell.ok).toBe(true);
@@ -94,9 +94,67 @@ describe('silhouette shell builder', () => {
     const mid = Math.floor(ny * 0.55) * vw + Math.floor(nx / 2);
     expect(pf.getZ(mid)).toBeGreaterThan(pb.getZ(mid) + 0.1);
 
-    // sleeve tip: sheets (almost) meet -> thin sleeve instead of a barrel
+    // sleeve tip: much thinner than the chest -> a tapered sleeve instead of a barrel
     const sleeveIdx = Math.floor(ny * 0.12) * vw + Math.floor(nx * 0.06);
-    expect(pf.getZ(sleeveIdx) - pb.getZ(sleeveIdx)).toBeLessThan(0.1);
+    const sleeveGap = pf.getZ(sleeveIdx) - pb.getZ(sleeveIdx);
+    const chestGap = pf.getZ(mid) - pb.getZ(mid);
+    expect(sleeveGap).toBeLessThan(chestGap * 0.7);
+  });
+
+  test('moderately angled sleeves are swung down along the avatar arms', () => {
+    const { nx, ny } = chooseGridResolution(1.6, 80);
+    // Sleeves leave the shoulders at ~-48° (typical flat-lay photo)
+    const mask = paintMask(nx, ny, (u, v) => {
+      if (v <= 0.02) return false;
+      if (u > 0.36 && u < 0.64) return true;
+      if (u >= 0.02 && u <= 0.36) {
+        const lo = (0.36 - u) * 1.8;
+        return v >= lo && v <= lo + 0.18;
+      }
+      if (u >= 0.64 && u < 0.98) {
+        const lo = (u - 0.64) * 1.8;
+        return v >= lo && v <= lo + 0.18;
+      }
+      return false;
+    });
+    const common = {
+      mask, nx, ny, aspect: 1.6, slot: 'top', isMale: false,
+      yTop: 1.47, yBottom: 0.86, layerOffset: 0.022, getTorsoSlice, getLegSlice,
+    };
+    const raw = buildSilhouetteShell({ ...common, poseSleeves: false });
+    const posed = buildSilhouetteShell({ ...common, poseSleeves: true });
+    expect(raw.ok && posed.ok).toBe(true);
+    expect(posed.info.sleevePose.length).toBe(2);
+
+    const lowestSleeveY = (shell) => {
+      const p = shell.front.attributes.position;
+      let minY = Infinity;
+      for (let i = 0; i < p.count; i++) {
+        if (Math.abs(p.getX(i)) > 0.3) minY = Math.min(minY, p.getY(i));
+      }
+      return minY;
+    };
+    const maxAbsX = (shell) => {
+      const p = shell.front.attributes.position;
+      let m = 0;
+      for (let i = 0; i < p.count; i++) m = Math.max(m, Math.abs(p.getX(i)));
+      return m;
+    };
+    // sleeves now hang lower and no longer stick out sideways
+    expect(maxAbsX(posed)).toBeLessThan(maxAbsX(raw) - 0.04);
+    expect(posed.front.attributes.position.count).toBe(raw.front.attributes.position.count);
+    expect(Number.isFinite(lowestSleeveY(posed))).toBe(true);
+  });
+
+  test('fully raised / horizontal sleeves keep the photographed pose', () => {
+    const { nx, ny } = chooseGridResolution(1.6, 80);
+    const mask = paintMask(nx, ny, (u, v) => (v > 0.02 && ((u > 0.36 && u < 0.64) || (v < 0.22 && u > 0.02 && u < 0.98))));
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 1.6, slot: 'top', isMale: false,
+      yTop: 1.47, yBottom: 0.86, layerOffset: 0.022, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+    expect(shell.info.sleevePose).toHaveLength(0);
   });
 
   test('pants keep two legs and snap onto the avatar legs', () => {

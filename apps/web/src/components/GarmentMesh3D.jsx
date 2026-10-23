@@ -13,6 +13,7 @@ import {
   buildSilhouetteShell,
   chooseGridResolution,
   resampleAlphaMask,
+  extractRowRuns,
   isConsistentView,
 } from '@/lib/garmentSilhouette';
 
@@ -247,8 +248,13 @@ function buildBackTexture({ frontCanvas, backCanvas, dominantColor, patterned })
     ctx.fillStyle = dominantColor;
     ctx.fillRect(0, 0, W, H);
     if (backCanvas) {
+      // A back photo is seen from behind: mirror it so it lines up with the front cut-out
       ctx.globalCompositeOperation = 'source-atop';
+      ctx.save();
+      ctx.translate(W, 0);
+      ctx.scale(-1, 1);
       ctx.drawImage(backCanvas, 0, 0, W, H);
+      ctx.restore();
     }
     ctx.globalCompositeOperation = 'source-over';
   }
@@ -452,6 +458,28 @@ async function fetchAndCropTexture(url) {
     } catch {}
   }
 
+  // Trim the 1-2px semi-transparent halo that cut-outs carry (white catalog fringe)
+  try {
+    const eImg = cropCtx.getImageData(0, 0, cropW, cropH);
+    const eData = eImg.data;
+    for (let pass = 0; pass < 2; pass++) {
+      const kill = [];
+      for (let y = 0; y < cropH; y++) {
+        for (let x = 0; x < cropW; x++) {
+          const p = y * cropW + x;
+          if (eData[p * 4 + 3] === 0) continue;
+          const left = x > 0 ? eData[(p - 1) * 4 + 3] : 255;
+          const right = x < cropW - 1 ? eData[(p + 1) * 4 + 3] : 255;
+          const up = y > 0 ? eData[(p - cropW) * 4 + 3] : 255;
+          const down = y < cropH - 1 ? eData[(p + cropW) * 4 + 3] : 255;
+          if (Math.min(left, right, up, down) < 96) kill.push(p);
+        }
+      }
+      kill.forEach((p) => { eData[p * 4 + 3] = 0; });
+    }
+    cropCtx.putImageData(eImg, 0, 0);
+  } catch {}
+
   const texture = new THREE.CanvasTexture(cropCanvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.ClampToEdgeWrapping;
@@ -640,7 +668,12 @@ async function fetchAndCropTexture(url) {
     const alpha = new Uint8Array(cropW * cropH);
     for (let p = 0; p < alpha.length; p++) alpha[p] = sData[p * 4 + 3];
     const { nx, ny } = chooseGridResolution(aspect);
-    shellMask = { mask: resampleAlphaMask(alpha, cropW, cropH, nx, ny), nx, ny };
+    shellMask = {
+      mask: resampleAlphaMask(alpha, cropW, cropH, nx, ny),
+      runsByRow: extractRowRuns(alpha, cropW, cropH, nx, ny),
+      nx,
+      ny,
+    };
     canvasStats = computeCanvasStats(cropCanvas);
   } catch {
     shellMask = null;
@@ -1807,6 +1840,7 @@ export default function GarmentMesh3D({
     if (!visible || !shellFit || !shellMask) return null;
     try {
       const built = buildSilhouetteShell({
+        runsByRow: shellMask.runsByRow,
         mask: shellMask.mask,
         nx: shellMask.nx,
         ny: shellMask.ny,

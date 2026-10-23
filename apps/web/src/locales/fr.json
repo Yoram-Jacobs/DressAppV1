@@ -5781,7 +5781,9 @@
     "show_avatar": "Afficher avatar",
     "garment_view_badge": "Vue 3D du vêtement",
     "avatar_studio_badge": "Studio avatar 360°",
-    "loading": "Préparation de votre studio 3D…"
+    "loading": "Préparation de votre studio 3D…",
+    "side_view": "Vue de côté",
+    "back_view": "Vue de dos"
   },
   "stylistTour": {
     "step1": {

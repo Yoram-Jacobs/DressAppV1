@@ -7,8 +7,10 @@ import * as THREE from 'three';
  * pant legs and every other part of the real silhouette) the garment is rebuilt
  * from its own cut-out:
  *
- *   • The alpha mask of the (background-removed) photo is resampled onto a grid.
- *   • Every grid row is split into horizontal runs (torso, each sleeve, each leg).
+ *   • The alpha channel of the (background-removed) photo is scanned row by row.
+ *   • Every grid row is split into horizontal runs (torso, each sleeve, each leg)
+ *     with sub-cell accurate left/right ends, so the shell meets the photographed
+ *     outline exactly (no staircase edges).
  *   • Each run is inflated into an elliptical cross-section whose depth follows the
  *     avatar's body profile (torso slice / leg slice), so the garment keeps the
  *     photographed silhouette AND hugs the avatar's point cloud.
@@ -16,36 +18,16 @@ import * as THREE from 'three';
  *     the item group when available (otherwise a colour-consistent fallback).
  *
  * The functions here are pure (no DOM / canvas) so they can be unit-tested.
+ * A "run" is [a, b]: left / right boundary of fabric in grid-column units.
  */
 
-/** Downsamples an RGBA alpha channel to a (nx+1) x (ny+1) vertex mask. */
-export function resampleAlphaMask(alpha, w, h, nx, ny, threshold = 110) {
-  const vw = nx + 1;
-  const vh = ny + 1;
-  const out = new Uint8Array(vw * vh);
-  for (let j = 0; j < vh; j++) {
-    const y0 = Math.min(h - 1, Math.floor(((j - 0.5) / ny) * h));
-    const y1 = Math.min(h - 1, Math.max(y0, Math.floor(((j + 0.5) / ny) * h)));
-    for (let i = 0; i < vw; i++) {
-      const x0 = Math.min(w - 1, Math.floor(((i - 0.5) / nx) * w));
-      const x1 = Math.min(w - 1, Math.max(x0, Math.floor(((i + 0.5) / nx) * w)));
-      let sum = 0;
-      let cnt = 0;
-      const sy = Math.max(1, Math.floor((y1 - y0) / 3));
-      const sx = Math.max(1, Math.floor((x1 - x0) / 3));
-      for (let y = Math.max(0, y0); y <= y1; y += sy) {
-        for (let x = Math.max(0, x0); x <= x1; x += sx) {
-          sum += alpha[y * w + x];
-          cnt++;
-        }
-      }
-      out[j * vw + i] = cnt > 0 && sum / cnt >= threshold ? 1 : 0;
-    }
-  }
-  return out;
+/** Chooses a grid resolution that gives roughly square cells. */
+export function chooseGridResolution(aspect, ny = 104) {
+  const nx = Math.max(28, Math.min(112, Math.round(ny * aspect)));
+  return { nx, ny };
 }
 
-/** Contiguous runs of "on" cells in one mask row. */
+/** Converts a (nx+1)x(ny+1) vertex mask into integer runs (cell-centred boundaries). */
 export function rowRuns(mask, nx, j, minLen = 2) {
   const vw = nx + 1;
   const runs = [];
@@ -55,11 +37,62 @@ export function rowRuns(mask, nx, j, minLen = 2) {
     if (on && s < 0) s = i;
     if (!on && s >= 0) {
       const e = i - 1;
-      if (e - s + 1 >= minLen) runs.push([s, e]);
+      if (e - s + 1 >= minLen) runs.push([s - 0.5, e + 0.5]);
       s = -1;
     }
   }
   return runs;
+}
+
+/** Downsamples an alpha channel to a (nx+1) x (ny+1) vertex mask. */
+export function resampleAlphaMask(alpha, w, h, nx, ny, threshold = 110) {
+  const vw = nx + 1;
+  const vh = ny + 1;
+  const out = new Uint8Array(vw * vh);
+  for (let j = 0; j < vh; j++) {
+    const y = Math.min(h - 1, Math.max(0, Math.round((j / ny) * (h - 1))));
+    for (let i = 0; i < vw; i++) {
+      const x = Math.min(w - 1, Math.max(0, Math.round((i / nx) * (w - 1))));
+      out[j * vw + i] = alpha[y * w + x] >= threshold ? 1 : 0;
+    }
+  }
+  return out;
+}
+
+/**
+ * Sub-cell accurate runs of fabric for every grid row, measured on the full
+ * resolution alpha channel. Returns runsByRow[j] = [[a, b], ...] in grid columns.
+ */
+export function extractRowRuns(alpha, w, h, nx, ny, threshold = 110) {
+  const runsByRow = [];
+  const minRunPx = Math.max(2, (w / nx) * 1.2);
+  for (let j = 0; j <= ny; j++) {
+    const y = Math.min(h - 1, Math.max(0, Math.round((j / ny) * (h - 1))));
+    const row = y * w;
+    const px = [];
+    let s = -1;
+    for (let x = 0; x <= w; x++) {
+      const on = x < w && alpha[row + x] >= threshold;
+      if (on && s < 0) s = x;
+      if (!on && s >= 0) {
+        px.push([s, x - 1]);
+        s = -1;
+      }
+    }
+    // Merge runs separated by tiny gaps (anti-aliasing / hairline seams)
+    const merged = [];
+    px.forEach((r) => {
+      const last = merged[merged.length - 1];
+      if (last && r[0] - last[1] <= Math.max(2, w * 0.004)) last[1] = r[1];
+      else merged.push([r[0], r[1]]);
+    });
+    runsByRow.push(
+      merged
+        .filter(([x0, x1]) => x1 - x0 + 1 >= minRunPx)
+        .map(([x0, x1]) => [(x0 / (w - 1)) * nx, ((x1 + 1) / (w - 1)) * nx])
+    );
+  }
+  return runsByRow;
 }
 
 function percentile(values, p) {
@@ -73,17 +106,79 @@ function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
 }
 
-/** Chooses a grid resolution that gives roughly square cells. */
-export function chooseGridResolution(aspect, ny = 104) {
-  const nx = clamp(Math.round(ny * aspect), 28, 110);
-  return { nx, ny };
+function smoothstep01(t) {
+  const c = Math.max(0, Math.min(1, t));
+  return c * c * (3 - 2 * c);
+}
+
+/**
+ * Catalog photos show sleeves in all sorts of poses (arms raised, stretched out).
+ * The avatar's arms hang down, so each sleeve is swung about the shoulder joint until
+ * its cuff points along the avatar's arm. Torso vertices never move.
+ * Operates in place on the vertex x / y arrays.
+ */
+export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, getTorsoSlice }) {
+  const yShoulder = isMale ? 1.48 : 1.42;
+  const sh = getTorsoSlice(yShoulder, isMale);
+  const pivotX = sh.rx * 0.92;
+  const pivotY = yShoulder - 0.04;
+  const target = isMale ? { x: 0.285, y: 0.95 } : { x: 0.26, y: 0.90 };
+  const thetaTarget = Math.atan2(target.y - pivotY, target.x - pivotX);
+  const applied = [];
+
+  [-1, 1].forEach((side) => {
+    // The cuff is the fabric point farthest from the shoulder, outside the torso
+    let best = -1;
+    let bestR = 0;
+    for (let idx = 0; idx < vw * vh; idx++) {
+      if (!inside[idx]) continue;
+      const x = xs[idx] * side;
+      const y = ys[idx];
+      if (x <= 0 || y < 0.8) continue;
+      const torso = getTorsoSlice(y, isMale);
+      if (x <= torso.rx + layerOffset + 0.06) continue;
+      const r = Math.hypot(x - pivotX, y - pivotY);
+      if (r > bestR) {
+        bestR = r;
+        best = idx;
+      }
+    }
+    if (best < 0 || bestR < 0.12) return;
+
+    const thetaPhoto = Math.atan2(ys[best] - pivotY, xs[best] * side - pivotX);
+    const phi = thetaTarget - thetaPhoto;
+    // Small corrections only: swinging a fully raised arm through >50° folds the cloth,
+    // so those photos keep their original (faithful) sleeve pose.
+    if (Math.abs(phi) < 0.05 || Math.abs(phi) > 0.9) return;
+    const cos = Math.cos(phi);
+    const sin = Math.sin(phi);
+
+    for (let idx = 0; idx < vw * vh; idx++) {
+      const x = xs[idx] * side;
+      const y = ys[idx];
+      if (x <= 0 || y < 0.8) continue;
+      const torso = getTorsoSlice(y, isMale);
+      const r = Math.hypot(x - pivotX, y - pivotY);
+      const w = smoothstep01((x - (torso.rx + layerOffset)) / 0.06) * smoothstep01(r / 0.1);
+      if (w <= 0) continue;
+      const dxp = x - pivotX;
+      const dyp = y - pivotY;
+      const nx2 = pivotX + dxp * cos - dyp * sin;
+      const ny2 = pivotY + dxp * sin + dyp * cos;
+      xs[idx] = side * (x + (nx2 - x) * w);
+      ys[idx] = y + (ny2 - y) * w;
+    }
+    applied.push({ side, phiDeg: (phi * 180) / Math.PI });
+  });
+  return applied;
 }
 
 /**
  * Builds the front and back sheets of a silhouette shell.
  *
  * @param {object} p
- * @param {Uint8Array} p.mask      (nx+1)*(ny+1) vertex mask (1 = fabric)
+ * @param {Array}  [p.runsByRow]   sub-cell runs per grid row (preferred)
+ * @param {Uint8Array} [p.mask]    (nx+1)*(ny+1) vertex mask (used when runsByRow is absent)
  * @param {number} p.nx
  * @param {number} p.ny
  * @param {number} p.aspect        crop width / crop height of the photo
@@ -91,11 +186,13 @@ export function chooseGridResolution(aspect, ny = 104) {
  * @param {number} p.yTop          world y of the photo's top edge
  * @param {number} p.yBottom       world y of the photo's bottom edge
  * @param {number} p.layerOffset   clearance above the body surface (m)
+ * @param {boolean} [p.poseSleeves] swing sleeves down along the avatar's arms (default true for tops)
  * @param {Function} p.getTorsoSlice (y, isMale) => { rx, cz, rz }
  * @param {Function} p.getLegSlice   (y, isMale) => { cx, r, cz }
  */
 export function buildSilhouetteShell({
-  mask,
+  runsByRow: providedRuns = null,
+  mask = null,
   nx,
   ny,
   aspect,
@@ -105,6 +202,7 @@ export function buildSilhouetteShell({
   yTop,
   yBottom,
   layerOffset = 0.02,
+  poseSleeves = true,
   getTorsoSlice,
   getLegSlice,
 }) {
@@ -117,13 +215,13 @@ export function buildSilhouetteShell({
   // ── Row analysis ──
   const runsByRow = [];
   let total = 0;
-  let minCol = vw;
-  let maxCol = -1;
+  let minCol = Infinity;
+  let maxCol = -Infinity;
   for (let j = 0; j < vh; j++) {
-    const runs = rowRuns(mask, nx, j);
+    const runs = providedRuns ? (providedRuns[j] || []) : (mask ? rowRuns(mask, nx, j) : []);
     runsByRow.push(runs);
     runs.forEach(([a, b]) => {
-      total += b - a + 1;
+      total += b - a;
       if (a < minCol) minCol = a;
       if (b > maxCol) maxCol = b;
     });
@@ -131,6 +229,14 @@ export function buildSilhouetteShell({
   if (total < 120 || maxCol - minCol < 6) {
     return { ok: false, reason: 'mask_too_small' };
   }
+
+  // Which vertices lie inside the fabric (for smoothing / cell selection)
+  const inside = new Uint8Array(vw * vh);
+  runsByRow.forEach((runs, j) => {
+    runs.forEach(([a, b]) => {
+      for (let i = Math.max(0, Math.ceil(a)); i <= Math.min(nx, Math.floor(b)); i++) inside[j * vw + i] = 1;
+    });
+  });
 
   // ── Vertical placement ──
   // Bottoms: anchor the photographed crotch (where the legs split) onto the
@@ -174,7 +280,7 @@ export function buildSilhouetteShell({
     const runs = runsByRow[j];
     if (!runs.length) continue;
     let wCols = 0;
-    runs.forEach(([a, b]) => { wCols += b - a + 1; });
+    runs.forEach(([a, b]) => { wCols += b - a; });
     const wWorld = wCols * dxUniform;
     const y = rowY(j);
     const target = 2 * (bodyHalfAt(y) + layerOffset) * (isBottom ? 0.98 : 1.04);
@@ -187,15 +293,11 @@ export function buildSilhouetteShell({
   const colMid = (minCol + maxCol) / 2;
 
   // ── Per-row geometry ──
-  const frontPos = new Float32Array(vw * vh * 3);
-  const backPos = new Float32Array(vw * vh * 3);
   const offF = new Float32Array(vw * vh); // front depth offset (>= 0)
   const offB = new Float32Array(vw * vh); // back depth offset (>= 0)
   const baseZ = new Float32Array(vw * vh);
   const xs = new Float32Array(vw * vh);
   const ys = new Float32Array(vw * vh);
-
-  const rowHalfWorldSmooth = new Float32Array(vh);
 
   for (let j = 0; j < vh; j++) {
     const y = rowY(j);
@@ -222,8 +324,8 @@ export function buildSilhouetteShell({
         const c1 = (legRuns[1][0] + legRuns[1][1]) / 2;
         const k = Math.abs(i - c0) <= Math.abs(i - c1) ? 0 : 1;
         const ck = k === 0 ? c0 : c1;
-        const halfCols = (legRuns[k][1] - legRuns[k][0] + 1) / 2;
-        const legScale = clamp(((leg.r + layerOffset) * 1.0) / Math.max(1e-3, halfCols * dx), 0.8, 1.25);
+        const halfCols = (legRuns[k][1] - legRuns[k][0]) / 2;
+        const legScale = clamp((leg.r + layerOffset) / Math.max(1e-3, halfCols * dx), 0.8, 1.25);
         const side = k === 0 ? -1 : 1;
         const xLeg = side * leg.cx + (i - ck) * dx * legScale;
         x = x * (1 - blend) + xLeg * blend;
@@ -233,7 +335,7 @@ export function buildSilhouetteShell({
       baseZ[idx] = isBottom && belowCrotch ? leg.cz : torso.cz;
     }
 
-    // Depth profile per run (elliptical cross-section).
+    // Depth profile per run (elliptical cross-section, exactly closed at the outline).
     runs.forEach(([a, b]) => {
       const mid = (a + b) / 2;
       const half = Math.max(0.5, (b - a) / 2);
@@ -247,26 +349,25 @@ export function buildSilhouetteShell({
       }
       // Narrow parts (sleeves, straps) must not be thicker than they are wide
       const amp = Math.min(bodyRz, halfWorld * 1.05 + 0.012);
-      for (let i = a; i <= b; i++) {
+      for (let i = Math.max(0, Math.ceil(a)); i <= Math.min(nx, Math.floor(b)); i++) {
         const u = clamp((i - mid) / half, -1, 1);
         const hh = Math.sqrt(Math.max(0, 1 - u * u));
         offF[j * vw + i] = amp * hh;
         offB[j * vw + i] = (amp + 0.008) * hh;
       }
-      rowHalfWorldSmooth[j] = Math.max(rowHalfWorldSmooth[j], halfWorld);
     });
   }
 
-  // Vertical smoothing of the depth offsets (inside the mask only)
+  // Vertical smoothing of the depth offsets (inside the fabric only)
   for (let pass = 0; pass < 2; pass++) {
     const tmpF = new Float32Array(offF);
     const tmpB = new Float32Array(offB);
     for (let j = 1; j < vh - 1; j++) {
       for (let i = 0; i < vw; i++) {
         const idx = j * vw + i;
-        if (!mask[idx]) continue;
-        const up = mask[idx - vw] ? idx - vw : idx;
-        const dn = mask[idx + vw] ? idx + vw : idx;
+        if (!inside[idx]) continue;
+        const up = inside[idx - vw] ? idx - vw : idx;
+        const dn = inside[idx + vw] ? idx + vw : idx;
         tmpF[idx] = 0.25 * offF[up] + 0.5 * offF[idx] + 0.25 * offF[dn];
         tmpB[idx] = 0.25 * offB[up] + 0.5 * offB[idx] + 0.25 * offB[dn];
       }
@@ -275,6 +376,14 @@ export function buildSilhouetteShell({
     offB.set(tmpB);
   }
 
+  // Swing photographed sleeves down along the avatar's arms
+  let sleevePose = null;
+  if (poseSleeves && (slot === 'top' || slot === 'outerwear' || slot === 'dress')) {
+    sleevePose = retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, getTorsoSlice });
+  }
+
+  const frontPos = new Float32Array(vw * vh * 3);
+  const backPos = new Float32Array(vw * vh * 3);
   for (let idx = 0; idx < vw * vh; idx++) {
     frontPos[idx * 3] = xs[idx];
     frontPos[idx * 3 + 1] = ys[idx];
@@ -284,7 +393,9 @@ export function buildSilhouetteShell({
     backPos[idx * 3 + 2] = baseZ[idx] - offB[idx];
   }
 
-  // UVs: front maps the photo 1:1, back is mirrored (seen from behind)
+  // UVs: both sheets sample their texture at the same normalised position, so the
+  // back texture (which is baked mirrored, see buildBackTexture) always has exactly
+  // the same silhouette as the front photo and the two sheets close perfectly.
   const uvFront = new Float32Array(vw * vh * 2);
   const uvBack = new Float32Array(vw * vh * 2);
   for (let j = 0; j < vh; j++) {
@@ -294,21 +405,32 @@ export function buildSilhouetteShell({
       const v = 1 - j / ny;
       uvFront[idx * 2] = u;
       uvFront[idx * 2 + 1] = v;
-      uvBack[idx * 2] = 1 - u;
+      uvBack[idx * 2] = u;
       uvBack[idx * 2 + 1] = v;
     }
   }
 
-  // Index: keep every cell that touches fabric
+  // Index: keep every cell the fabric overlaps (in this row band or the next)
+  const cellHasFabric = (i, j) => {
+    const lo = i;
+    const hi = i + 1;
+    for (let r = j; r <= j + 1; r++) {
+      const runs = runsByRow[r];
+      for (let k = 0; k < runs.length; k++) {
+        if (runs[k][0] <= hi && runs[k][1] >= lo) return true;
+      }
+    }
+    return false;
+  };
   const frontIdx = [];
   const backIdx = [];
   for (let j = 0; j < ny; j++) {
     for (let i = 0; i < nx; i++) {
+      if (!cellHasFabric(i, j)) continue;
       const a = j * vw + i;
       const b = a + 1;
       const c = a + vw;
       const d = c + 1;
-      if (!(mask[a] || mask[b] || mask[c] || mask[d])) continue;
       // front faces +z (counter-clockwise seen from the front)
       frontIdx.push(a, c, b, b, c, d);
       backIdx.push(a, b, c, b, d, c);
@@ -329,7 +451,7 @@ export function buildSilhouetteShell({
     ok: true,
     front: makeGeo(frontPos, uvFront, frontIdx),
     back: makeGeo(backPos, uvBack, backIdx),
-    info: { nx, ny, crotchRow, sCorr, runsPerRow: runsByRow.map((r) => r.length) },
+    info: { nx, ny, crotchRow, sCorr, sleevePose, runsPerRow: runsByRow.map((r) => r.length) },
   };
 }
 
