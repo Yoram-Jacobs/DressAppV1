@@ -491,8 +491,11 @@ async function fetchAndCropTexture(url) {
 function useGarmentTexture(url) {
   const [data, setData] = useState({
     texture: null,
+    opaqueTexture: null,
+    filledTexture: null,
     dominantColor: '#222226',
     hasSleeves: true,
+    aspect: 1.0,
     solidU: 0.5,
     solidV: 0.5,
     bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
@@ -503,8 +506,11 @@ function useGarmentTexture(url) {
     if (!url) {
       setData({
         texture: null,
+        opaqueTexture: null,
+        filledTexture: null,
         dominantColor: '#222226',
         hasSleeves: true,
+        aspect: 1.0,
         bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
       });
       return;
@@ -523,8 +529,11 @@ function useGarmentTexture(url) {
           tex.colorSpace = THREE.SRGBColorSpace;
           setData({
             texture: tex,
+            opaqueTexture: tex,
+            filledTexture: tex,
             dominantColor: '#222226',
             hasSleeves: true,
+            aspect: 1.0,
             solidU: 0.5,
             solidV: 0.5,
             bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
@@ -540,6 +549,131 @@ function useGarmentTexture(url) {
   return data;
 }
 
+// ─── Sleeve Classification & Length Resolution ───
+
+/**
+ * Detects sleeve style and relative arm-coverage factor (0.0 = sleeveless, 1.0 = wrist)
+ * using garment taxonomy, multilingual name/description tokens, slot role, and silhouette aspect ratio.
+ */
+export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0 } = {}) {
+  const text = (garmentText || '').toLowerCase();
+
+  // 1. Explicit sleeveless keywords (highest precedence)
+  const isExplicitSleeveless =
+    text.includes('sleeveless') ||
+    text.includes('tank') ||
+    text.includes('vest') ||
+    text.includes('tube') ||
+    text.includes('camisole') ||
+    text.includes('halter') ||
+    text.includes('strapless') ||
+    text.includes('גופי') ||
+    text.includes('גופיה') ||
+    text.includes('גופייה') ||
+    text.includes('גופיית') ||
+    text.includes('וסט') ||
+    text.includes('סטרפלס') ||
+    text.includes('ללא שרוולים') ||
+    text.includes('sin mangas') ||
+    text.includes('sans manches') ||
+    text.includes('ärmellos') ||
+    text.includes('بدון أكمام');
+
+  if (isExplicitSleeveless) {
+    return { type: 'sleeveless', factor: 0.0 };
+  }
+
+  // 2. Cap sleeve keywords
+  const isCapSleeve =
+    text.includes('cap sleeve') ||
+    text.includes('cap-sleeve') ||
+    text.includes('שרוול כנף') ||
+    text.includes('שרוול קפון');
+
+  if (isCapSleeve) {
+    return { type: 'cap', factor: 0.18 };
+  }
+
+  // 3. Short sleeve / T-shirt / polo keywords
+  const isShortSleeve =
+    text.includes('t-shirt') ||
+    text.includes('tshirt') ||
+    text.includes('t shirt') ||
+    text.includes('tee') ||
+    text.includes('polo') ||
+    text.includes('short sleeve') ||
+    text.includes('short-sleeve') ||
+    text.includes('short_sleeve') ||
+    text.includes('חולצת טריקו') ||
+    text.includes('חולצת טי') ||
+    text.includes('טישרט') ||
+    text.includes('שרוול קצר') ||
+    text.includes('שרוולים קצרים') ||
+    text.includes('חולצה קצרה') ||
+    text.includes('manga corta') ||
+    text.includes('manches courtes') ||
+    text.includes('kurzarm') ||
+    text.includes('نصف كم') ||
+    text.includes('أكمام قصيرة');
+
+  if (isShortSleeve) {
+    return { type: 'short', factor: 0.36 };
+  }
+
+  // 4. Three-quarter sleeve keywords
+  const isThreeQuarter =
+    text.includes('3/4') ||
+    text.includes('three-quarter') ||
+    text.includes('three quarter') ||
+    text.includes('שרוול 3/4') ||
+    text.includes('שרוול שלושת רבעי');
+
+  if (isThreeQuarter) {
+    return { type: 'three_quarter', factor: 0.65 };
+  }
+
+  // 5. Long sleeve keywords / Outerwear / Knitwear
+  const isExplicitLong =
+    rawSlot === 'outerwear' ||
+    text.includes('long sleeve') ||
+    text.includes('long-sleeve') ||
+    text.includes('long_sleeve') ||
+    text.includes('sweater') ||
+    text.includes('pullover') ||
+    text.includes('cardigan') ||
+    text.includes('blazer') ||
+    text.includes('coat') ||
+    text.includes('jacket') ||
+    text.includes('hoodie') ||
+    text.includes('sweatshirt') ||
+    text.includes('סוודר') ||
+    text.includes('בלייזר') ||
+    text.includes("ג'קט") ||
+    text.includes("ז'קט") ||
+    text.includes('מעיל') ||
+    text.includes('קרדיגן') ||
+    text.includes("קפוצ'ון") ||
+    text.includes('שרוול ארוך') ||
+    text.includes('שרוולים ארוכים') ||
+    text.includes('manga larga') ||
+    text.includes('manches longues') ||
+    text.includes('langarm') ||
+    text.includes('كم طويل');
+
+  if (isExplicitLong) {
+    return { type: 'long', factor: 1.0 };
+  }
+
+  // 6. Silhouette aspect ratio fallback
+  if (aspect < 0.78) {
+    return { type: 'sleeveless', factor: 0.0 };
+  } else if (aspect < 1.20) {
+    return { type: 'short', factor: 0.36 };
+  } else {
+    return { type: 'long', factor: 1.0 };
+  }
+}
+
 // ─── 3D Parametric Body-Wrapping Geometry Builders ───
 
 /**
@@ -549,6 +683,7 @@ function useGarmentTexture(url) {
 export function createAnatomicalTopGeometry({
   isMale = false,
   hasSleeves = true,
+  sleeveFactor = 1.0,
   yTop = isMale ? 1.53 : 1.47,
   yBottom = isMale ? 0.88 : 0.84,
   layerOffset = 0.015,
@@ -564,6 +699,7 @@ export function createAnatomicalTopGeometry({
   const ny = 20;
   const nx = 28;
   const yShoulder = isMale ? 1.48 : 1.42;
+  const hasAnySleeve = hasSleeves && sleeveFactor > 0.05;
 
   for (let i = 0; i <= ny; i++) {
     const vNorm = i / ny;
@@ -584,8 +720,8 @@ export function createAnatomicalTopGeometry({
       uLeft = 0.22 + tNeck * (0.41 - 0.22);
       uRight = 0.78 - tNeck * (0.78 - 0.59);
     } else {
-      uLeft = hasSleeves ? 0.20 : 0.05;
-      uRight = hasSleeves ? 0.80 : 0.95;
+      uLeft = hasAnySleeve ? 0.20 : 0.05;
+      uRight = hasAnySleeve ? 0.80 : 0.95;
     }
 
     for (let j = 0; j <= nx; j++) {
@@ -638,16 +774,30 @@ export function createAnatomicalTopGeometry({
     }
   }
 
-  // 2. Left & Right Sleeves (following avatar's A-pose arm trajectory in 3D seamlessly from shoulder cap)
-  if (hasSleeves) {
+  // 2. Left & Right Sleeves (following avatar arm trajectory parameterized by sleeveFactor: short, 3/4, or long)
+  if (hasAnySleeve) {
     const sides = [-1, 1]; // Left (-X), Right (+X)
-    const nySleeve = 10;
+    const nySleeve = Math.max(4, Math.round(10 * Math.min(1.0, sleeveFactor * 1.5)));
     const nxSleeve = 14;
 
     const yArmStart = isMale ? 1.48 : 1.42;
-    const yArmEnd = isMale ? 0.96 : 0.90;
+    const fullYArmEnd = isMale ? 0.96 : 0.90;
+    const yArmEnd = yArmStart - sleeveFactor * (yArmStart - fullYArmEnd);
+
     const xArmStart = isMale ? 0.225 : 0.195;
-    const xArmEnd = isMale ? 0.280 : 0.255;
+    const fullXArmEnd = isMale ? 0.280 : 0.255;
+    const xArmEnd = xArmStart + sleeveFactor * (fullXArmEnd - xArmStart);
+
+    const fullZArmEnd = 0.040;
+    const zArmEnd = 0.020 + sleeveFactor * (fullZArmEnd - 0.020);
+
+    const rArmStart = 0.060 + layerOffset;
+    const fullRArmEnd = 0.042 + layerOffset;
+    const rArmEnd = rArmStart - sleeveFactor * (rArmStart - fullRArmEnd);
+
+    // Sleeve UV runs from shoulder seam (0.85) down to cuff in the 2D photo
+    const vCuff = 0.85 - sleeveFactor * (0.85 - 0.15);
+    const uCuffOffset = sleeveFactor * (0.23 - 0.08);
 
     sides.forEach((side) => {
       const startIdx = verts.length / 3;
@@ -656,14 +806,13 @@ export function createAnatomicalTopGeometry({
         const t = i / nySleeve;
         const yArm = yArmStart - t * (yArmStart - yArmEnd);
         const xArm = side * (xArmStart + t * (xArmEnd - xArmStart));
-        const zArm = 0.020 + t * (0.040 - 0.020);
-        const rArm = (0.060 - t * (0.060 - 0.042)) + layerOffset;
+        const zArm = 0.020 + t * (zArmEnd - 0.020);
+        const rArm = rArmStart - t * (rArmStart - rArmEnd);
 
-        // Sleeve UV runs from shoulder seam (0.85) down to cuff (0.15)
-        const vTex = 0.85 - t * (0.85 - 0.15);
+        const vTex = 0.85 - t * (0.85 - vCuff);
         const uCenter = side === -1
-          ? 0.23 - t * (0.23 - 0.08)
-          : 0.77 + t * (0.92 - 0.77);
+          ? 0.23 - t * uCuffOffset
+          : 0.77 + t * uCuffOffset;
 
         for (let j = 0; j <= nxSleeve; j++) {
           const uFrac = j / nxSleeve;
@@ -675,7 +824,7 @@ export function createAnatomicalTopGeometry({
 
           const isFront = Math.cos(theta) >= 0;
           if (isFront) {
-            const uArm = uCenter + ((Math.sin(theta) + 1) * 0.5 - 0.5) * 0.14;
+            const uArm = uCenter + ((Math.sin(theta) + 1) * 0.5 - 0.5) * (0.14 * Math.min(1.0, sleeveFactor * 1.3));
             uvs.push(Math.max(0.01, Math.min(0.99, uArm)), Math.max(0.01, Math.min(0.99, vTex)));
           } else {
             uvs.push(
@@ -714,6 +863,7 @@ export const createAnatomicalTorsoGeometry = (opts) => createAnatomicalTopGeomet
 export function createAnatomicalDressGeometry({
   isMale = false,
   hasSleeves = false,
+  sleeveFactor = 1.0,
   yTop = isMale ? 1.53 : 1.47,
   yBottom = 0.50,
   layerOffset = 0.018,
@@ -805,15 +955,29 @@ export function createAnatomicalDressGeometry({
   }
 
   // 2. Dress Sleeves (if dress has sleeves)
-  if (hasSleeves) {
+  const hasAnyDressSleeve = hasSleeves && sleeveFactor > 0.05;
+  if (hasAnyDressSleeve) {
     const sides = [-1, 1];
-    const nySleeve = 10;
+    const nySleeve = Math.max(4, Math.round(10 * Math.min(1.0, sleeveFactor * 1.5)));
     const nxSleeve = 12;
 
     const yArmStart = isMale ? 1.48 : 1.42;
-    const yArmEnd = isMale ? 0.96 : 0.90;
+    const fullYArmEnd = isMale ? 0.96 : 0.90;
+    const yArmEnd = yArmStart - sleeveFactor * (yArmStart - fullYArmEnd);
+
     const xArmStart = isMale ? 0.225 : 0.195;
-    const xArmEnd = isMale ? 0.280 : 0.255;
+    const fullXArmEnd = isMale ? 0.280 : 0.255;
+    const xArmEnd = xArmStart + sleeveFactor * (fullXArmEnd - xArmStart);
+
+    const fullZArmEnd = 0.040;
+    const zArmEnd = 0.020 + sleeveFactor * (fullZArmEnd - 0.020);
+
+    const rArmStart = 0.060 + layerOffset;
+    const fullRArmEnd = 0.042 + layerOffset;
+    const rArmEnd = rArmStart - sleeveFactor * (rArmStart - fullRArmEnd);
+
+    const vCuff = 0.85 - sleeveFactor * (0.85 - 0.20);
+    const uCuffOffset = sleeveFactor * (0.23 - 0.08);
 
     sides.forEach((side) => {
       const startIdx = verts.length / 3;
@@ -822,12 +986,12 @@ export function createAnatomicalDressGeometry({
         const t = i / nySleeve;
         const yArm = yArmStart - t * (yArmStart - yArmEnd);
         const xArm = side * (xArmStart + t * (xArmEnd - xArmStart));
-        const zArm = 0.020 + t * (0.040 - 0.020);
-        const rArm = (0.060 - t * (0.060 - 0.042)) + layerOffset;
-        const vTex = 0.85 - t * (0.85 - 0.20);
+        const zArm = 0.020 + t * (zArmEnd - 0.020);
+        const rArm = rArmStart - t * (rArmStart - rArmEnd);
+        const vTex = 0.85 - t * (0.85 - vCuff);
         const uCenter = side === -1
-          ? 0.23 - t * (0.23 - 0.08)
-          : 0.77 + t * (0.92 - 0.77);
+          ? 0.23 - t * uCuffOffset
+          : 0.77 + t * uCuffOffset;
 
         for (let j = 0; j <= nxSleeve; j++) {
           const uFrac = j / nxSleeve;
@@ -839,7 +1003,7 @@ export function createAnatomicalDressGeometry({
 
           const isFront = Math.cos(theta) >= 0;
           if (isFront) {
-            const uArm = uCenter + ((Math.sin(theta) + 1) * 0.5 - 0.5) * 0.14;
+            const uArm = uCenter + ((Math.sin(theta) + 1) * 0.5 - 0.5) * (0.14 * Math.min(1.0, sleeveFactor * 1.3));
             uvs.push(Math.max(0.01, Math.min(0.99, uArm)), Math.max(0.01, Math.min(0.99, vTex)));
           } else {
             uvs.push(
@@ -1195,6 +1359,7 @@ export default function GarmentMesh3D({
     filledTexture = null,
     dominantColor,
     hasSleeves: autoHasSleeves,
+    aspect = 1.0,
     solidU = 0.5,
     solidV = 0.5,
     shoeLayout = null,
@@ -1229,7 +1394,7 @@ export default function GarmentMesh3D({
     if (rawSlot === 'top') {
       const isCrop = garmentText.includes('crop') || garmentText.includes('sports_bra') || garmentText.includes('bralette') || garmentText.includes('קרופ') || garmentText.includes('חזיה');
       const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה');
-      const isSleeveless = garmentText.includes('sleeveless') || garmentText.includes('tank') || garmentText.includes('vest') || garmentText.includes('גופיה') || garmentText.includes('גופייה') || garmentText.includes('וסט') || !autoHasSleeves;
+      const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'top', aspect });
 
       // High collar at 1.47 (F) / 1.53 (M), shoulder seam overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
       const yTop = (isMale ? 1.53 : 1.47) + yShift;
@@ -1241,7 +1406,8 @@ export default function GarmentMesh3D({
 
       return createAnatomicalTopGeometry({
         isMale,
-        hasSleeves: !isSleeveless,
+        hasSleeves: sleeveStyle.type !== 'sleeveless' && autoHasSleeves,
+        sleeveFactor: sleeveStyle.factor,
         yTop,
         yBottom,
         layerOffset,
@@ -1254,7 +1420,7 @@ export default function GarmentMesh3D({
     if (rawSlot === 'outerwear') {
       const isLongCoat = garmentText.includes('overcoat') || garmentText.includes('trench') || garmentText.includes('duster') || garmentText.includes('מעיל ארוך') || garmentText.includes('cardigan') || garmentText.includes('קרדיגן');
       const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('עליונית קצרה') || (garmentText.includes('jacket') && garmentText.includes('crop'));
-      const isSleeveless = garmentText.includes('vest') || garmentText.includes('waistcoat') || garmentText.includes('וסט') || !autoHasSleeves;
+      const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'outerwear', aspect });
 
       // Outerwear collar stands at 1.48 (F) / 1.54 (M), shoulder line overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
       const yTop = (isMale ? 1.54 : 1.48) + yShift;
@@ -1267,7 +1433,8 @@ export default function GarmentMesh3D({
 
       return createAnatomicalTopGeometry({
         isMale,
-        hasSleeves: !isSleeveless,
+        hasSleeves: sleeveStyle.type !== 'sleeveless',
+        sleeveFactor: sleeveStyle.factor,
         yTop,
         yBottom,
         layerOffset,
@@ -1280,7 +1447,8 @@ export default function GarmentMesh3D({
     if (rawSlot === 'dress') {
       const isMini = garmentText.includes('mini') || garmentText.includes('קצרה');
       const isMaxi = garmentText.includes('maxi') || garmentText.includes('gown') || garmentText.includes('evening') || garmentText.includes('ארוכה') || garmentText.includes('מקסי');
-      const hasSleeves = autoHasSleeves && (garmentText.includes('long sleeve') || garmentText.includes('sleeve') || garmentText.includes('שרוול'));
+      const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'dress', aspect });
+      const hasDressSleeves = autoHasSleeves && (garmentText.includes('sleeve') || garmentText.includes('שרוול') || sleeveStyle.factor > 0);
 
       // Dress bodice top overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
       const yTop = (isMale ? 1.53 : 1.47) + yShift;
@@ -1290,7 +1458,8 @@ export default function GarmentMesh3D({
 
       return createAnatomicalDressGeometry({
         isMale,
-        hasSleeves,
+        hasSleeves: hasDressSleeves && sleeveStyle.type !== 'sleeveless',
+        sleeveFactor: sleeveStyle.factor,
         yTop,
         yBottom,
         layerOffset: 0.022 + rxShift,

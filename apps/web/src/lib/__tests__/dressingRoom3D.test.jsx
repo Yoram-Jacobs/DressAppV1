@@ -397,4 +397,70 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     };
     expect(resolveEffectiveGarmentUrl(itemWithOverlay)).toBe('https://example.com/clean.png');
   });
+
+  test('detectSleeveStyle accurately distinguishes T-shirts, long sleeves, and sleeveless items', () => {
+    const { detectSleeveStyle, createAnatomicalTopGeometry } = require('@/components/GarmentMesh3D');
+
+    // 1. T-shirts & short sleeves in Hebrew and English
+    const hebrewTShirt = detectSleeveStyle({ garmentText: 'חולצת טריקו שחורה מחוייטת מכונת ריצה', rawSlot: 'top' });
+    expect(hebrewTShirt.type).toBe('short');
+    expect(hebrewTShirt.factor).toBeCloseTo(0.36, 2);
+
+    const englishTShirt = detectSleeveStyle({ garmentText: 'Nike Dri-FIT Running T-Shirt', rawSlot: 'top' });
+    expect(englishTShirt.type).toBe('short');
+    expect(englishTShirt.factor).toBeCloseTo(0.36, 2);
+
+    const poloShirt = detectSleeveStyle({ garmentText: 'Classic Pique Polo Shirt', rawSlot: 'top' });
+    expect(poloShirt.type).toBe('short');
+
+    // 2. Sleeveless items
+    const tankTop = detectSleeveStyle({ garmentText: 'Ribbed Tank Top', rawSlot: 'top' });
+    expect(tankTop.type).toBe('sleeveless');
+    expect(tankTop.factor).toBe(0.0);
+
+    const hebrewTank = detectSleeveStyle({ garmentText: 'גופיית סבא מכותנה', rawSlot: 'top' });
+    expect(hebrewTank.type).toBe('sleeveless');
+    expect(hebrewTank.factor).toBe(0.0);
+
+    // 3. Long sleeves & outerwear
+    const blazer = detectSleeveStyle({ garmentText: 'Tailored Wool Blazer', rawSlot: 'outerwear' });
+    expect(blazer.type).toBe('long');
+    expect(blazer.factor).toBe(1.0);
+
+    const hebrewSweater = detectSleeveStyle({ garmentText: 'סוודר קשמיר שחור', rawSlot: 'top' });
+    expect(hebrewSweater.type).toBe('long');
+    expect(hebrewSweater.factor).toBe(1.0);
+
+    // 4. Geometry creation test: short sleeve vs long sleeve arm boundary
+    const shortSleeveGeo = createAnatomicalTopGeometry({ isMale: false, hasSleeves: true, sleeveFactor: 0.36 });
+    const longSleeveGeo = createAnatomicalTopGeometry({ isMale: false, hasSleeves: true, sleeveFactor: 1.0 });
+    const sleevelessGeo = createAnatomicalTopGeometry({ isMale: false, hasSleeves: false, sleeveFactor: 0.0 });
+
+    expect(shortSleeveGeo.getAttribute('position').count).toBeGreaterThan(sleevelessGeo.getAttribute('position').count);
+
+    // Find the minimum y position in the sleeve geometry (vertices after torso shell)
+    const getMinArmY = (geo) => {
+      const pos = geo.getAttribute('position').array;
+      // Torso mesh has (20 + 1) * (28 + 1) = 609 vertices = 1827 floats
+      const sleeveStartIdx = 21 * 29 * 3;
+      let minY = 999;
+      for (let i = sleeveStartIdx; i < pos.length; i += 3) {
+        const y = pos[i + 1];
+        if (y < minY) {
+          minY = y;
+        }
+      }
+      return minY;
+    };
+
+    const minShortY = getMinArmY(shortSleeveGeo);
+    const minLongY = getMinArmY(longSleeveGeo);
+
+    // Short sleeve ends around mid-bicep (y ~ 1.23m) well above elbow (1.16m)
+    expect(minShortY).toBeGreaterThan(1.20);
+    expect(minShortY).toBeLessThan(1.26);
+
+    // Long sleeve extends all the way down to wrist (y ~ 0.90m)
+    expect(minLongY).toBeCloseTo(0.90, 1);
+  });
 });
