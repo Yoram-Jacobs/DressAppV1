@@ -154,13 +154,16 @@ async def read_image_bytes_from_url(url: Optional[str]) -> Optional[bytes]:
     elif "/static/uploads/" in url:
         idx = url.find("/static/uploads/")
         relative_path = url[idx + len("/static/uploads/"):]
+        from app.services.security_validator import is_safe_file_path
         local_path = os.path.join(BUCKET_DIR, relative_path)
-        if os.path.exists(local_path):
+        if is_safe_file_path(BUCKET_DIR, local_path) and os.path.exists(local_path):
             try:
                 async with aiofiles.open(local_path, "rb") as f:
                     result_bytes = await f.read()
             except Exception as e:
                 logger.error("Failed to read local uploaded file: %s", e)
+        else:
+            logger.warning("Path traversal or unpermitted access blocked: %s", relative_path)
                 
     if not result_bytes and not url.startswith("data:"):
         try:
@@ -168,6 +171,11 @@ async def read_image_bytes_from_url(url: Optional[str]) -> Optional[bytes]:
             if url.startswith("/"):
                 backend_base = os.getenv("BACKEND_INTERNAL_URL") or os.getenv("BACKEND_URL") or "http://localhost:8001"
                 full_url = f"{backend_base.rstrip('/')}{url}"
+            else:
+                from app.services.security_validator import is_safe_external_url
+                if not is_safe_external_url(full_url):
+                    logger.warning("SSRF blocked in read_image_bytes_from_url: %s", full_url)
+                    return None
                 
             async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
                 resp = await client.get(full_url)

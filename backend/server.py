@@ -139,13 +139,19 @@ wiki_dir = ROOT_DIR.parent / "wiki"
 if wiki_dir.exists():
     app.mount("/wiki", StaticFiles(directory=str(wiki_dir)), name="wiki")
 
+# Production & development CORS origins (explicitly whitelisted, no wildcard regex)
+_cors_raw = os.environ.get(
+    "CORS_ORIGINS",
+    "https://dressapp.co,https://www.dressapp.co,http://localhost:3000,http://127.0.0.1:3000,http://localhost:8081",
+)
+_allowed_origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
-    allow_origin_regex=".*",
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_allowed_origins,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin"],
 )
 
 

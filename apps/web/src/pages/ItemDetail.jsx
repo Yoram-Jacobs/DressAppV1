@@ -513,7 +513,7 @@ function NullableSelect({ value, onChange, options, placeholder, testid, format,
 export default function ItemDetail() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const { isFree } = useTierLimits();
+  const { isFree, canAccessReanalyzer, aiReconstructionCredits } = useTierLimits();
   const { id } = useParams();
   const nav = useNavigate();
   const location = useLocation();
@@ -2879,7 +2879,7 @@ export default function ItemDetail() {
             {activeTab === 'ai' && (
               <div className="space-y-4">
                 <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border" data-testid="item-reanalyze-card">
-              {isFree ? (
+              {!canAccessReanalyzer ? (
                 <div>
                   <div className="flex items-center gap-3 p-5 border-b border-border bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent">
                     <div className="p-3 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
@@ -2937,10 +2937,23 @@ export default function ItemDetail() {
                 <div className="p-3 rounded-full bg-primary-shadow text-primary-brand dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
                   <RefreshCw className="h-5 w-5" />
                 </div>
-                <div>
-                  <span className="text-[14px] font-bold block text-dark-brand uppercase">
-                    {t('itemDetail.reanalyze.label', { defaultValue: 'Re-analyse photo' })}
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-[14px] font-bold block text-dark-brand uppercase">
+                      {t('itemDetail.reanalyze.label', { defaultValue: 'Re-analyse photo' })}
+                    </span>
+                    {isFree && (
+                      <Badge
+                        variant="outline"
+                        onClick={() => nav('/pricing')}
+                        className="cursor-pointer text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-300 hover:bg-amber-100 transition-colors"
+                        data-testid="item-reanalyze-credit-badge"
+                        title={t('pricing.creditsRemaining', { defaultValue: 'Credits remaining' })}
+                      >
+                        ⚡ {aiReconstructionCredits} {t('pricing.credits', { defaultValue: 'credits' })}
+                      </Badge>
+                    )}
+                  </div>
                   <span className="text-[12px] text-text-brand font-semibold block mt-0.5 normal-case">
                     {t('itemDetail.reanalyze.subtitle', { defaultValue: 'Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using AI Reconstructor.' })}
                   </span>

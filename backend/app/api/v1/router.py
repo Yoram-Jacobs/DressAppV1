@@ -40,9 +40,12 @@ async def health_check():
     return {"status": "ok"}
 
 
+from app.api.v1.internal import verify_internal_token
+from fastapi import Depends
+
 @api_v1_router.get("/dataset/distilled")
-async def get_distilled_dataset():
-    """Public high-speed endpoint for Colab fine-tuning to download distilled training dataset."""
+async def get_distilled_dataset(_: bool = Depends(verify_internal_token)):
+    """Protected high-speed endpoint for fine-tuning to download distilled training dataset."""
     from pathlib import Path
     from fastapi.responses import FileResponse
     from fastapi import HTTPException

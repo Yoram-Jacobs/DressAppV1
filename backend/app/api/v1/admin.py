@@ -216,9 +216,10 @@ async def list_users(
     db = get_db()
     flt: dict[str, Any] = {}
     if q:
+        safe_q = re.escape(q)
         flt["$or"] = [
-            {"email": {"$regex": q, "$options": "i"}},
-            {"display_name": {"$regex": q, "$options": "i"}},
+            {"email": {"$regex": safe_q, "$options": "i"}},
+            {"display_name": {"$regex": safe_q, "$options": "i"}},
         ]
     total = await db.users.count_documents(flt)
     items: list[dict[str, Any]] = []

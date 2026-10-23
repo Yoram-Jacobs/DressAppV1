@@ -23,9 +23,11 @@ def verify_internal_token(
     """Verify internal Bearer token matching EYES_API_TOKEN or settings secret."""
     expected_token = settings.EYES_API_TOKEN
     if not expected_token:
-        # If no internal token is configured, allow in dev or log security warning
-        logger.warning("EYES_API_TOKEN is not configured in backend settings")
-        return True
+        logger.error("EYES_API_TOKEN is not configured in backend settings. Access denied (fail-closed).")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Internal API authentication token is unconfigured",
+        )
 
     if not authorization:
         raise HTTPException(

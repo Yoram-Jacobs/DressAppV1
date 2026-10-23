@@ -97,6 +97,22 @@ def _build_state(
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
+ALLOWED_MOBILE_RETURN_SCHEMES = ("dressapp://", "exp://", "exps://")
+
+
+def _validate_return_url(url: str | None) -> str | None:
+    if not url or not isinstance(url, str):
+        return None
+    url_clean = url.strip()
+    if "\n" in url_clean or "\r" in url_clean or "\t" in url_clean:
+        return None
+    for prefix in ALLOWED_MOBILE_RETURN_SCHEMES:
+        if url_clean.startswith(prefix):
+            return url_clean
+    logger.warning("Rejected untrusted OAuth return_url: %s", url)
+    return None
+
+
 def _read_state(token: str, *, expected_purpose: str) -> dict[str, Any]:
     try:
         data = jwt.decode(
@@ -520,7 +536,7 @@ def _smart_error_redirect(
     to the standard web ``/auth/callback`` page.
     """
     if state_data and state_data.get("mobile"):
-        custom_return_url = state_data.get("return_url")
+        custom_return_url = _validate_return_url(state_data.get("return_url"))
         if custom_return_url:
             delimiter = "&" if ("#" in custom_return_url or "?" in custom_return_url) else "#"
             return RedirectResponse(f"{custom_return_url}{delimiter}error={reason}", status_code=307)
@@ -586,7 +602,7 @@ async def google_login_start(
             "mobile": bool(mobile),
             "redirect_uri": redirect_uri,
             "frontend_origin": frontend_origin,
-            "return_url": return_url,
+            "return_url": _validate_return_url(return_url) if mobile else None,
             "ref": ref,
         },
     )
@@ -925,7 +941,7 @@ async def _handle_login_callback(
         )
         params = urlencode({"token": jwt_token, "next": next_path})
 
-        custom_return_url = state_data.get("return_url")
+        custom_return_url = _validate_return_url(state_data.get("return_url"))
         if is_mobile:
             if custom_return_url:
                 delimiter = "&" if ("#" in custom_return_url or "?" in custom_return_url) else "#"

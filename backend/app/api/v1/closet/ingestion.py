@@ -409,6 +409,9 @@ async def analyze_item_image(
         import httpx
         for b64_or_url in payload.images_base64:
             if b64_or_url.startswith(("http://", "https://")):
+                from app.services.security_validator import is_safe_external_url
+                if not is_safe_external_url(b64_or_url):
+                    raise HTTPException(400, "Invalid or prohibited image URL destination in array")
                 try:
                     async with httpx.AsyncClient(timeout=30.0) as c:
                         resp = await c.get(b64_or_url, follow_redirects=True)
@@ -439,6 +442,9 @@ async def analyze_item_image(
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
     elif payload.image_url:
+        from app.services.security_validator import is_safe_external_url
+        if not is_safe_external_url(payload.image_url):
+            raise HTTPException(400, "Invalid or prohibited image URL destination")
         import httpx
         async with httpx.AsyncClient(timeout=30.0) as c:
             resp = await c.get(payload.image_url, follow_redirects=True)
@@ -506,11 +512,8 @@ async def analyze_item_image(
                     "message": f"You have reached your monthly limit of {NANO_BANANA_MONTHLY_LIMIT} Nano Banana studio reconstructions.",
                 },
             )
-    elif eff_mode in ("auto", "multi") and not payload.cutout_only:
-        if can_use_cluster_pipeline(user):
-            nb_remaining = get_available_reconstruction_credits(user)
-        else:
-            nb_remaining = 0
+    elif eff_mode in ("auto", "multi", "single") and not payload.cutout_only:
+        nb_remaining = get_available_reconstruction_credits(user)
 
     cost = len(raw_list) if (not payload.cutout_only and eff_mode != "mass") else 0
     if cost > 0 and not await deduct_user_credits(db, user, cost=cost):

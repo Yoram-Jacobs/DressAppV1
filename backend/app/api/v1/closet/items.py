@@ -430,8 +430,11 @@ async def save_closet_item_document(
     # the saved item gets its ``reconstructed_image_url`` patched in
     # seconds-to-minutes later. Nano Banana is restricted to users with their own Gemini key.
     from app.services.auth import resolve_user_custom_gemini_api_key
+    from app.services.credit_manager import get_available_reconstruction_credits, get_user_tier
     custom_gemini_key = resolve_user_custom_gemini_api_key(user)
-    if payload.needs_reconstruction and raw_bytes and custom_gemini_key:
+    user_tier = get_user_tier(user)
+    can_reconstruct = bool(custom_gemini_key or user_tier in ("manager", "professional") or get_available_reconstruction_credits(user) > 0)
+    if payload.needs_reconstruction and raw_bytes and can_reconstruct:
         if not doc.get("reconstruction_metadata") or not isinstance(doc.get("reconstruction_metadata"), dict):
             doc["reconstruction_metadata"] = {"deferred": True, "status": "pending"}
         else:

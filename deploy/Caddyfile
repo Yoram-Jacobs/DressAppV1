@@ -69,10 +69,16 @@ www.{$DOMAIN} {
         respond "ok" 200
     }
 
+    # Request body size limit to protect VPS RAM
+    request_body {
+        max_size 25MB
+    }
+
     # Reasonable security headers for a modern SPA.
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "DENY"
         Referrer-Policy           "strict-origin-when-cross-origin"
         Permissions-Policy        "camera=(self), microphone=(self), geolocation=()"
         -Server

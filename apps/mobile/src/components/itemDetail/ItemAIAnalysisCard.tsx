@@ -50,6 +50,8 @@ interface ItemAIAnalysisProps {
   onApplyImage?: (imageUrl: string) => void;
   onFocusInput?: () => void;
   isFree?: boolean;
+  canAccessReanalyzer?: boolean;
+  aiCredits?: number;
   onUpgradePress?: () => void;
 }
 
@@ -66,6 +68,8 @@ export function ItemAIAnalysisCard({
   onApplyImage,
   onFocusInput,
   isFree = false,
+  canAccessReanalyzer = true,
+  aiCredits,
   onUpgradePress,
 }: ItemAIAnalysisProps) {
   const { t } = useTranslation();
@@ -81,7 +85,8 @@ export function ItemAIAnalysisCard({
     onSendPrompt(text);
   };
 
-  if (isFree) {
+  const isLocked = isFree && !canAccessReanalyzer;
+  if (isLocked) {
     return (
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -160,9 +165,28 @@ export function ItemAIAnalysisCard({
             <Lucide.Sparkles size={18} color="#E8603C" />
           </View>
           <View style={styles.titleCol}>
-            <Text style={[styles.title, { color: colors.foreground }]}>
-              {t('itemDetail.reanalyze.label', { defaultValue: 'AI Vision & Inpainting' })}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.title, { color: colors.foreground }]}>
+                {t('itemDetail.reanalyze.label', { defaultValue: 'AI Vision & Inpainting' })}
+              </Text>
+              {isFree && typeof aiCredits === 'number' && (
+                <TouchableOpacity
+                  onPress={onUpgradePress}
+                  style={{
+                    backgroundColor: isDark ? 'rgba(234, 179, 8, 0.2)' : '#FEF3C7',
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: '#FDE68A',
+                  }}
+                >
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#D97706' }}>
+                    ⚡ {aiCredits}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
             <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
               {t('itemDetail.reanalyze.eyesBadge', { defaultValue: 'The Eyes / Gemini Vision' })}
             </Text>

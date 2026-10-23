@@ -208,7 +208,7 @@ export function ItemDetailScreen() {
   const { colors, isDark } = useTheme();
   const { prewarm, deleteItem } = useClosetStore();
   const { user } = useUserStore();
-  const { isFree } = useTierLimits();
+  const { isFree, canAccessReanalyzer, aiReconstructionCredits } = useTierLimits();
   const isRtl = I18nManager.isRTL;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -1397,6 +1397,8 @@ export function ItemDetailScreen() {
               }, 150);
             }}
             isFree={isFree}
+            canAccessReanalyzer={canAccessReanalyzer}
+            aiCredits={aiReconstructionCredits}
             onUpgradePress={() => (navigation as any).navigate('MeTab', { screen: 'Pricing' })}
           />
         )}

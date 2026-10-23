@@ -587,7 +587,7 @@ class Settings:
     )
 
     # --- Dev toggles ---
-    ALLOW_DEV_BYPASS: bool = os.environ.get("ALLOW_DEV_BYPASS", "true").lower() == "true"
+    ALLOW_DEV_BYPASS: bool = False
 
     # --- Admin allow-list (Phase T-Auth) ---
     # Comma-separated list of emails that should auto-receive the ``admin``

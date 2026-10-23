@@ -101,14 +101,15 @@ async def list_professionals(
             }
         )
     if q:
+        safe_q = re.escape(q)
         flt.setdefault("$and", []).append(
             {
                 "$or": [
-                    {"display_name": {"$regex": q, "$options": "i"}},
-                    {"first_name": {"$regex": q, "$options": "i"}},
-                    {"last_name": {"$regex": q, "$options": "i"}},
-                    {"professional.business.name": {"$regex": q, "$options": "i"}},
-                    {"professional.profession": {"$regex": q, "$options": "i"}},
+                    {"display_name": {"$regex": safe_q, "$options": "i"}},
+                    {"first_name": {"$regex": safe_q, "$options": "i"}},
+                    {"last_name": {"$regex": safe_q, "$options": "i"}},
+                    {"professional.business.name": {"$regex": safe_q, "$options": "i"}},
+                    {"professional.profession": {"$regex": safe_q, "$options": "i"}},
                 ]
             }
         )

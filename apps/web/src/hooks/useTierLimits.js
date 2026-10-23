@@ -67,6 +67,7 @@ export function useTierLimits() {
     ? Math.max(0, Math.min(rawBucketCredits, nanoBananaMonthlyRemaining))
     : nanoBananaMonthlyRemaining;
   const canAccessMassUpload = !isFree || aiReconstructionCredits >= minClusterCredits;
+  const canAccessReanalyzer = !isFree || aiReconstructionCredits > 0;
 
   const closetCapacityBonus = user?.closet_capacity_bonus || 0;
   const maxClosetSlots = isFree ? Math.min(150, 50 + closetCapacityBonus) : Infinity;
@@ -110,6 +111,7 @@ export function useTierLimits() {
     canAccessScheduler,
     canAccessMigration,
     canAccessMassUpload,
+    canAccessReanalyzer,
     aiReconstructionCredits,
     minClusterCredits,
     nanoBananaMonthlyLimit,

@@ -24,13 +24,26 @@ export function useTierLimits() {
   const canAccessMigration = !isFree;
 
   const minClusterCredits = 15;
-  const rawBucketCredits =
-    typeof (user as any)?.total_credits === 'number'
-      ? (user as any).total_credits
-      : typeof (user as any)?.ai_credits === 'number'
-      ? (user as any).ai_credits
-      : 0;
-  const canAccessMassUpload = !isFree || rawBucketCredits >= minClusterCredits;
+  const rawBucketCredits = (() => {
+    if (typeof (user as any)?.total_credits === 'number') return (user as any).total_credits;
+    if (typeof (user as any)?.ai_credits === 'number') return (user as any).ai_credits;
+    if (Array.isArray((user as any)?.credit_buckets)) {
+      const now = Date.now();
+      return (user as any).credit_buckets.reduce((sum: number, b: any) => {
+        if (!b || typeof b.amount !== 'number') return sum;
+        if (b.type === 'free' && b.expires_at) {
+          const exp = Date.parse(b.expires_at);
+          if (!Number.isNaN(exp) && now > exp) return sum;
+        }
+        return sum + b.amount;
+      }, 0);
+    }
+    return Number((user as any)?.ai_configuration?.current_credits || 0);
+  })();
+
+  const aiReconstructionCredits = isFree ? Math.max(0, rawBucketCredits) : 100;
+  const canAccessMassUpload = !isFree || aiReconstructionCredits >= minClusterCredits;
+  const canAccessReanalyzer = !isFree || aiReconstructionCredits > 0;
 
   const closetCapacityBonus = user?.closet_capacity_bonus || 0;
   const maxClosetSlots = isFree ? Math.min(150, 50 + closetCapacityBonus) : Infinity;
@@ -77,6 +90,8 @@ export function useTierLimits() {
     canAccessScheduler,
     canAccessMigration,
     canAccessMassUpload,
+    canAccessReanalyzer,
+    aiReconstructionCredits,
     minClusterCredits,
     maxClosetSlots,
     maxAiActionsPerDay,
