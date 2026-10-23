@@ -205,7 +205,9 @@ export default function DressingRoom3D({
   );
   const showAvatar = controlledShowAvatar !== undefined ? controlledShowAvatar : internalShowAvatar;
 
-  const handleToggleAvatar = useCallback(() => {
+  const handleToggleAvatar = useCallback((e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     const nextVal = !showAvatar;
     if (controlledShowAvatar === undefined) {
       setInternalShowAvatar(nextVal);
@@ -557,6 +559,7 @@ export default function DressingRoom3D({
 
               {/* Toggle Avatar / Garment-Only view (Zara 3D style) */}
               <Button
+                type="button"
                 variant={!showAvatar ? 'default' : 'ghost'}
                 size="sm"
                 onClick={handleToggleAvatar}
