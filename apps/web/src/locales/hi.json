@@ -5788,7 +5788,8 @@
     "garment_only": "केवल कपड़ा",
     "show_avatar": "अवतार दिखाएं",
     "garment_view_badge": "3D कपड़ा दृश्य",
-    "avatar_studio_badge": "360° अवतार स्टूडियो"
+    "avatar_studio_badge": "360° अवतार स्टूडियो",
+    "loading": "आपका 3D स्टूडियो तैयार हो रहा है…"
   },
   "stylistTour": {
     "step1": {

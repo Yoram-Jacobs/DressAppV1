@@ -143,6 +143,8 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGa
   return null;
 }
 
+const EMPTY_OBJ = Object.freeze({});
+
 /**
  * DressingRoom3D
  * 
@@ -185,12 +187,12 @@ export default function DressingRoom3D({
     [onOpenChange, onClose]
   );
 
-  const activeItems = garments || outfitItems || {};
-  const activeMeasurements = propMeasurements || profile?.measurements || {};
+  const activeItems = garments || outfitItems || EMPTY_OBJ;
+  const activeMeasurements = propMeasurements || profile?.measurements || EMPTY_OBJ;
   const activeSex = propSex || profile?.gender || profile?.sex || activeMeasurements?.gender || 'female';
   const activeSkinColor = propSkinColor || profile?.skin_tone || profile?.skinColor || '#E0AC69';
-  const activeHair = propHair || profile?.hair || {};
-  const activeShapeParams = propShapeParams || profile?.shape_params || profile?.shapeParams || {};
+  const activeHair = propHair || profile?.hair || EMPTY_OBJ;
+  const activeShapeParams = propShapeParams || profile?.shape_params || profile?.shapeParams || EMPTY_OBJ;
 
   const isMale = String(activeSex || activeMeasurements?.gender || '').toLowerCase() === 'male';
 
@@ -223,10 +225,22 @@ export default function DressingRoom3D({
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
 
+  // Parents (e.g. ItemDetail) rebuild the items object on every render. Key the
+  // normalized garments on a content signature so the 3D scene is not re-created
+  // (and suspended Canvas mounts are not restarted) by unrelated re-renders.
+  const itemsSignature = Object.entries(activeItems || {})
+    .map(([k, v]) => (v && typeof v === 'object'
+      ? [k, v.id, v.url, v.image_url, v.clean_image_url, v.category, v.sub_category, v.title, v.name, v.pattern,
+        (v.view_urls || []).join(','), (v.group_members || []).map((m) => m?.id).join(',')].join('~')
+      : `${k}~${v}`))
+    .join('|');
+  const activeItemsRef = useRef(activeItems);
+  activeItemsRef.current = activeItems;
+
   // Normalize active garment items from outfit / outfitItems / garments
   const activeGarments = useMemo(() => {
     const list = [];
-    const entries = Object.entries(activeItems || {});
+    const entries = Object.entries(activeItemsRef.current || {});
 
     entries.forEach(([slotKey, item]) => {
       if (!item) return;
@@ -269,7 +283,8 @@ export default function DressingRoom3D({
     });
 
     return list;
-  }, [activeItems]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsSignature]);
 
   // Worn footwear drives the foot pose (heels) and lifts the whole figure off the floor
   const footPose = useMemo(() => {
@@ -423,6 +438,13 @@ export default function DressingRoom3D({
               ? GARMENT_CAMERA_TARGETS[primarySlot]
               : GARMENT_CAMERA_TARGETS.full;
             return (
+          <Suspense
+            fallback={(
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-[#6B7280]" data-testid="dressing-room-3d-loading">
+                {t('dressing_room_3d.loading', { defaultValue: 'Preparing your 3D studio…' })}
+              </div>
+            )}
+          >
           <Canvas
             shadows
             camera={{
@@ -529,6 +551,7 @@ export default function DressingRoom3D({
               </group>
             </Suspense>
           </Canvas>
+          </Suspense>
             );
           })()}
 

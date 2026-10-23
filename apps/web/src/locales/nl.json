@@ -5791,7 +5791,8 @@
     "garment_only": "Alleen kledingstuk",
     "show_avatar": "Toon avatar",
     "garment_view_badge": "3D-kledingweergave",
-    "avatar_studio_badge": "360° Avatar Studio"
+    "avatar_studio_badge": "360° Avatar Studio",
+    "loading": "Je 3D-studio wordt voorbereid…"
   },
   "stylistTour": {
     "step1": {

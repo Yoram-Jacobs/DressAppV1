@@ -5780,7 +5780,8 @@
     "garment_only": "Vêtement seul",
     "show_avatar": "Afficher avatar",
     "garment_view_badge": "Vue 3D du vêtement",
-    "avatar_studio_badge": "Studio avatar 360°"
+    "avatar_studio_badge": "Studio avatar 360°",
+    "loading": "Préparation de votre studio 3D…"
   },
   "stylistTour": {
     "step1": {

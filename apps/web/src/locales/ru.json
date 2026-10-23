@@ -5789,7 +5789,8 @@
     "garment_only": "Только вещь",
     "show_avatar": "Показать аватар",
     "garment_view_badge": "3D-просмотр вещи",
-    "avatar_studio_badge": "360° студия аватара"
+    "avatar_studio_badge": "360° студия аватара",
+    "loading": "Подготовка вашей 3D-студии…"
   },
   "stylistTour": {
     "step1": {

@@ -5882,7 +5882,8 @@
     "garment_only": "בגד בלבד",
     "show_avatar": "הצג אווטאר",
     "garment_view_badge": "תצוגת תלת ממד לבגד",
-    "avatar_studio_badge": "סטודיו אווטאר 360°"
+    "avatar_studio_badge": "סטודיו אווטאר 360°",
+    "loading": "מכינים את סטודיו התלת-ממד שלך…"
   },
   "stylistTour": {
     "step1": {

@@ -5787,7 +5787,8 @@
     "garment_only": "Solo capo",
     "show_avatar": "Mostra avatar",
     "garment_view_badge": "Vista 3D del capo",
-    "avatar_studio_badge": "Studio avatar 360°"
+    "avatar_studio_badge": "Studio avatar 360°",
+    "loading": "Preparazione del tuo studio 3D…"
   },
   "stylistTour": {
     "step1": {
