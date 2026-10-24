@@ -4930,7 +4930,8 @@
     "webviewScanCompleteDesc": "הסריקה של {{appName}} הושלמה (זוהו {{count}} פריטי לבוש). הארון שלכם מתעדכן כעת!",
     "scanningInProgressBtn": "סורק...",
     "scanAndImportClosetBtn": "סריקה וייבוא הארון",
-    "itemsCountLabel": "מעל {{count}} פריטים"
+    "itemsCountLabel": "מעל {{count}} פריטים",
+    "floaterTooltip": "סוכן DressApp: גררו לכל מקום שלא יפריע. לחצו כשאתם בתצוגת רשת הארון."
   },
   "login_reminder": {
     "newTitle": "הארון שלך ריק — בוא/י נוסיף פריט ראשון!",
@@ -6003,5 +6004,39 @@
     "openHub": "מרכז קניות",
     "storeAssistant": "עוזר המידות של {{store}}",
     "noMeasurementsSaved": "לא נשמרו מידות גוף בפרופיל"
+  },
+  "migrationHub": {
+    "title": "מרכז העברת מלתחה",
+    "subtitle": "התחברו לאפליקציית המלתחה הקודמת שלכם, סגרו חלונות קופצים, עברו לתצוגת הארון ולחצו על סוכן DressApp להעברת הבגדים.",
+    "searchPlaceholder": "חפשו אפליקציית ארון או הזינו כתובת אתר (למשל Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "הפלטפורמות השמורות שלכם",
+    "curatedPlatforms": "פלטפורמות נתמכות להעברה",
+    "connectAndMonitor": "התחברות",
+    "openDirectTab": "פתיחה בלשונית ↗",
+    "loginNotice": "1. התחברו לחשבון • 2. סגרו חלונות קופצים • 3. עברו לרשת הארון • 4. לחצו על סוכן DressApp להעברה!",
+    "openInBrowser": "פתיחה בלשונית חדשה לצורך התחברות או מעקף חלונות קופצים",
+    "openFullSite": "פתיחה בלשונית",
+    "storeApp": "אפליקציה",
+    "migrateWardrobe": "העברת מלתחה",
+    "frameProtectedTitle": "{{name}} חוסמת הצגה ישירה במסגרת",
+    "frameProtectedDesc": "חלק מפלטפורמות המלתחה מגנות על תצוגה מוטמעת. ניתן לפתוח בלשונית חדשה או להעלות צילומי מסך של הארון בלחיצה אחת!",
+    "openExternalTab": "פתיחת {{name}} בלשונית חדשה ↗",
+    "uploadMediaFallback": "העלאת צילומי מסך או וידאו",
+    "agentSheetTitle": "סוכן העברת מלתחה מ-{{name}}",
+    "agentSheetDesc": "סורק את הבגדים המוצגים, מסיר רקעים, מתייג ושומר אותם ישירות בארון שלכם ב-DressApp.",
+    "liveAgentScanTab": "העברה חיה מרשת הארון",
+    "checklistTitle": "רשימת בדיקה לפני העברה",
+    "checkLogin": "מחוברים לחשבון ב-{{name}}",
+    "checkPopups": "כל החלונות הקופצים והעוגיות נסגרו",
+    "checkGrid": "רשת פריטי הארון מוצגת במסך",
+    "startMigrationBtn": "התחלת העברת המלתחה",
+    "scanningWardrobe": "סורק את רשת הארון...",
+    "harvestingCount": "דוגם פריטים... (נמצאו {{count}} כרטיסים)",
+    "harvestedBadge": "נקלטו {{count}} פריטים",
+    "migrationComplete": "✓ הועברו בהצלחה {{count}} פריטים לארון שלכם ב-DressApp!",
+    "openClosetBtn": "פתיחת הארון שלי",
+    "quickScreenshots": "העלאה מרוכזת של צילומי מסך ווידאו",
+    "quickScreenshotsDesc": "מעדיפים להעלות מגלריית התמונות? בחרו צילומי מסך או הקלטת מסך של הארון.",
+    "openHubBtn": "פתיחת מרכז העברת מלתחה"
   }
 }

@@ -24,8 +24,14 @@ export function ImportWardrobeSection({ onSelectAppForMigration }) {
       navigate('/pricing');
       return;
     }
+    if (app && app.name) {
+      navigate(`/migration?app=${encodeURIComponent(app.name)}`);
+      return;
+    }
     if (onSelectAppForMigration) {
       onSelectAppForMigration(app);
+    } else {
+      navigate('/migration');
     }
   };
 
@@ -115,6 +121,19 @@ export function ImportWardrobeSection({ onSelectAppForMigration }) {
               <ArrowRight className="w-3.5 h-3.5 text-primary-brand shrink-0 rtl:rotate-180" />
             </button>
           ))}
+        </div>
+
+        <div className="pt-2">
+          <Button
+            type="button"
+            onClick={() => handleStartImport(null)}
+            className="w-full bg-primary-brand hover:bg-primary-hover text-white text-xs font-bold h-9 rounded-xl shadow-xs flex items-center justify-center gap-1.5"
+            data-testid="profile-open-migration-hub-btn"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>{t('migrationHub.openHubBtn', { defaultValue: 'Open Wardrobe Migration Hub' })}</span>
+            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+          </Button>
         </div>
       </AccordionContent>
     </AccordionItem>

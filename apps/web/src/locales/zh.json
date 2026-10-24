@@ -4783,7 +4783,8 @@
     "webviewScanCompleteDesc": "{{appName}} 扫描完成（检测到 {{count}} 件衣物）。您的衣橱正在更新！",
     "scanningInProgressBtn": "正在扫描...",
     "scanAndImportClosetBtn": "扫描并导入衣橱",
-    "itemsCountLabel": "{{count}}+ 件单品"
+    "itemsCountLabel": "{{count}}+ 件单品",
+    "floaterTooltip": "DressApp 助手：可拖拽至任意位置以防遮挡。当停留在衣橱网格页面时点击即可。"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",
@@ -5908,5 +5909,39 @@
     "openHub": "购物中心",
     "storeAssistant": "{{store}} 尺码助手",
     "noMeasurementsSaved": "个人档案中尚未保存身材数据"
+  },
+  "migrationHub": {
+    "title": "衣橱数据迁移中心",
+    "subtitle": "连接您之前的衣橱应用，关闭弹窗，浏览到衣橱网格页面，让 DressApp 助手帮您自动迁移衣物。",
+    "searchPlaceholder": "搜索衣橱应用或输入网址（如 Whering、Acloset、Stylebook）...",
+    "savedPlatforms": "已保存的衣橱平台",
+    "curatedPlatforms": "支持迁移的平台",
+    "connectAndMonitor": "连接",
+    "openDirectTab": "在新标签页中打开 ↗",
+    "loginNotice": "1. 登录账号 • 2. 关闭所有弹窗 • 3. 打开衣橱网格 • 4. 点击 DressApp 助手图标开始迁移！",
+    "openInBrowser": "在新标签页打开以登录或绕过弹窗",
+    "openFullSite": "在标签页中打开",
+    "storeApp": "原生应用",
+    "migrateWardrobe": "迁移衣橱",
+    "frameProtectedTitle": "{{name}} 受到同源嵌入保护",
+    "frameProtectedDesc": "部分衣橱平台限制在画中画框架内浏览。您可以在新标签页打开其网页，或一键批量上传衣橱截图！",
+    "openExternalTab": "在新标签页打开 {{name}} ↗",
+    "uploadMediaFallback": "上传截图 / 视频",
+    "agentSheetTitle": "{{name}} 衣橱迁移助手",
+    "agentSheetDesc": "扫描可见衣物、自动抠图去除背景、添加属性标签并保存到您的 DressApp 衣橱中。",
+    "liveAgentScanTab": "实时网格迁移",
+    "checklistTitle": "迁移前确认清单",
+    "checkLogin": "已登录 {{name}} 账号",
+    "checkPopups": "已关闭所有弹窗、通知和 Cookie 提示",
+    "checkGrid": "屏幕上已清晰显示衣橱衣物网格",
+    "startMigrationBtn": "开始迁移衣橱",
+    "scanningWardrobe": "正在扫描衣橱网格...",
+    "harvestingCount": "正在采集衣物...（已找到 {{count}} 张卡片）",
+    "harvestedBadge": "已抓取 {{count}} 件衣物",
+    "migrationComplete": "✓ 已成功将 {{count}} 件衣物迁移至您的 DressApp 衣橱！",
+    "openClosetBtn": "打开我的衣橱",
+    "quickScreenshots": "批量上传截图与视频",
+    "quickScreenshotsDesc": "更喜欢从相册上传？请选择您衣橱的截图或屏幕录制视频。",
+    "openHubBtn": "打开衣橱迁移中心"
   }
 }

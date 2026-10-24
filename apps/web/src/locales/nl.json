@@ -4787,7 +4787,8 @@
     "webviewScanCompleteDesc": "Scannen van {{appName}} voltooid ({{count}} kledingstukken gevonden). Je kast wordt nu bijgewerkt!",
     "scanningInProgressBtn": "Scannen...",
     "scanAndImportClosetBtn": "Scannen & importeren",
-    "itemsCountLabel": "{{count}}+ items"
+    "itemsCountLabel": "{{count}}+ items",
+    "floaterTooltip": "DressApp Agent: Sleep naar een vrije plek. Tik zodra je op je kledingkastrooster bent."
   },
   "login_reminder": {
     "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",
@@ -5912,5 +5913,39 @@
     "openHub": "Shopping Hub",
     "storeAssistant": "{{store}} Maatassistent",
     "noMeasurementsSaved": "Geen maten opgeslagen in profiel"
+  },
+  "migrationHub": {
+    "title": "Kledingkast Migratie Hub",
+    "subtitle": "Koppel je vorige kledingkast-app, sluit pop-ups, navigeer naar je kledingrooster en laat de DressApp Agent je kleding migreren.",
+    "searchPlaceholder": "Zoek kledingkast-app of voer URL in (bijv. Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "Je kledingkastplatforms",
+    "curatedPlatforms": "Ondersteunde platforms",
+    "connectAndMonitor": "Verbinden",
+    "openDirectTab": "Open in tabblad ↗",
+    "loginNotice": "1. Inloggen • 2. Sluit alle pop-ups • 3. Ga naar je kledingrooster • 4. Tik op het DressApp Agent-icoon om te migreren!",
+    "openInBrowser": "Open in nieuw tabblad om in te loggen of pop-ups te omzeilen",
+    "openFullSite": "Open in tabblad",
+    "storeApp": "App openen",
+    "migrateWardrobe": "Kledingkast migreren",
+    "frameProtectedTitle": "{{name}} beschermt directe weergave in iframe",
+    "frameProtectedDesc": "Sommige platforms blokkeren iframes. Open de web-app in een nieuw tabblad of upload screenshots met 1 tik!",
+    "openExternalTab": "Open {{name}} in nieuw tabblad ↗",
+    "uploadMediaFallback": "Upload screenshots / video",
+    "agentSheetTitle": "{{name}} Kledingkast Migratie Agent",
+    "agentSheetDesc": "Scant zichtbare kledingstukken, verwijdert achtergronden, tagt items en slaat ze op in je DressApp-kast.",
+    "liveAgentScanTab": "Live raster-migratie",
+    "checklistTitle": "Controlelijst voor migratie",
+    "checkLogin": "Ingelogd bij {{name}}",
+    "checkPopups": "Alle pop-ups, modals en cookies gesloten",
+    "checkGrid": "Kledingrooster zichtbaar op het scherm",
+    "startMigrationBtn": "Start kledingkastmigratie",
+    "scanningWardrobe": "Kledingrooster scannen...",
+    "harvestingCount": "Kledingstukken verzamelen... ({{count}} kaarten gevonden)",
+    "harvestedBadge": "{{count}} kledingstukken vastgelegd",
+    "migrationComplete": "✓ {{count}} kledingstukken succesvol gemigreerd naar je DressApp-kast!",
+    "openClosetBtn": "Open mijn kledingkast",
+    "quickScreenshots": "Screenshots & video uploaden",
+    "quickScreenshotsDesc": "Liever uploaden vanuit je galerij? Kies screenshots of een schermopname van je kledingkast.",
+    "openHubBtn": "Open Kledingkast Migratie Hub"
   }
 }

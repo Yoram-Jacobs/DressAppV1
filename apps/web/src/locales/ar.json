@@ -4816,7 +4816,8 @@
     "webviewScanCompleteDesc": "اكتمل مسح {{appName}} (تم اكتشاف {{count}} قطع ملابس). يتم تحديث خزانتك الآن!",
     "scanningInProgressBtn": "جارٍ المسح...",
     "scanAndImportClosetBtn": "مسح واستيراد الخزانة",
-    "itemsCountLabel": "أكثر من {{count}} قطعة"
+    "itemsCountLabel": "أكثر من {{count}} قطعة",
+    "floaterTooltip": "وكيل DressApp: اسحب إلى أي مكان لتجنب حجب الشاشة. اضغط عندما تكون في شبكة الخزانة."
   },
   "login_reminder": {
     "newTitle": "خزانتك فارغة — فلنضف عنصرك الأول!",
@@ -5941,5 +5942,39 @@
     "openHub": "مركز التسوق",
     "storeAssistant": "مساعد المقاسات لـ {{store}}",
     "noMeasurementsSaved": "لم يتم حفظ قياسات في الملف الشخصي"
+  },
+  "migrationHub": {
+    "title": "مركز نقل الخزانة",
+    "subtitle": "اتصل بتطبيق خزانة ملابسك السابق، وأغلق النوافذ المنبثقة، وتصفح حتى شبكة الخزانة، واجعل وكيل DressApp ينقل ملابسك.",
+    "searchPlaceholder": "ابحث عن تطبيق الخزانة أو أدخل الرابط (مثل Whering، Acloset، Stylebook)...",
+    "savedPlatforms": "منصات الخزانة المحفوظة",
+    "curatedPlatforms": "المنصات المدعومة للنقل",
+    "connectAndMonitor": "اتصال",
+    "openDirectTab": "فتح في علامة تبويب ↗",
+    "loginNotice": "1. تسجيل الدخول • 2. إغلاق النوافذ المنبثقة • 3. الانتقال لشبكة الخزانة • 4. الضغط على أيقونة الوكيل للنقل!",
+    "openInBrowser": "فتح في علامة تبويب جديدة لتسجيل الدخول أو تجاوز النوافذ المنبثقة",
+    "openFullSite": "فتح في علامة تبويب",
+    "storeApp": "التطبيق الأصلي",
+    "migrateWardrobe": "نقل الخزانة",
+    "frameProtectedTitle": "{{name}} تحظر العرض المباشر داخل الإطار",
+    "frameProtectedDesc": "تحمي بعض المنصات التضمين داخل الإطارات. يمكنك فتح تطبيقها في علامة تبويب جديدة أو رفع لقطات شاشة لخزانتك بضغطة واحدة!",
+    "openExternalTab": "فتح {{name}} في علامة تبويب جديدة ↗",
+    "uploadMediaFallback": "رفع لقطات شاشة / فيديو",
+    "agentSheetTitle": "وكيل نقل خزانة {{name}}",
+    "agentSheetDesc": "يقوم بفحص الملابس المعروضة، وإزالة الخلفيات، وتصنيف القطع، وحفظها مباشرة في خزانة DressApp الخاصة بك.",
+    "liveAgentScanTab": "نقل مباشر من شبكة الخزانة",
+    "checklistTitle": "قائمة التحقق قبل النقل",
+    "checkLogin": "تم تسجيل الدخول إلى {{name}}",
+    "checkPopups": "تم إغلاق جميع النوافذ المنبثقة وملفات تعريف الارتباط",
+    "checkGrid": "شبكة عناصر الخزانة ظاهرة على الشاشة",
+    "startMigrationBtn": "بدء نقل الخزانة",
+    "scanningWardrobe": "جاري فحص شبكة الخزانة...",
+    "harvestingCount": "جاري جمع العناصر... (تم العثور على {{count}} بطاقة)",
+    "harvestedBadge": "تم التقاط {{count}} عنصر",
+    "migrationComplete": "✓ تم نقل {{count}} عنصر بنجاح إلى خزانة DressApp!",
+    "openClosetBtn": "فتح خزانتي",
+    "quickScreenshots": "رفع دفعة لقطات شاشة وفيديو",
+    "quickScreenshotsDesc": "هل تفضل الرفع من معرض الصور؟ حدد لقطات شاشة أو تسجيل شاشة لخزانتك.",
+    "openHubBtn": "فتح مركز نقل الخزانة"
   }
 }

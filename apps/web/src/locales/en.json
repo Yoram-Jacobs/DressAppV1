@@ -4793,7 +4793,8 @@
     "webviewScanCompleteDesc": "Finished scanning {{appName}} ({{count}} garments detected). Your closet is updating now!",
     "scanningInProgressBtn": "Scanning...",
     "scanAndImportClosetBtn": "Scan & Import Closet",
-    "itemsCountLabel": "{{count}}+ items"
+    "itemsCountLabel": "{{count}}+ items",
+    "floaterTooltip": "DressApp Agent: Drag anywhere out of the way. Tap when you are on your wardrobe grid."
   },
   "login_reminder": {
     "newTitle": "Your Closet is Empty — Let's Add Your First Item!",
@@ -5882,5 +5883,39 @@
     "openHub": "Shopping Hub",
     "storeAssistant": "{{store}} Size Assistant",
     "noMeasurementsSaved": "No profile measurements saved"
+  },
+  "migrationHub": {
+    "title": "Wardrobe Migration Hub",
+    "subtitle": "Connect your previous wardrobe app, close pop-ups, browse to your closet grid, and let the DressApp Agent migrate your clothes.",
+    "searchPlaceholder": "Search wardrobe app or enter web URL (e.g., Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "Your Wardrobe Platforms",
+    "curatedPlatforms": "Supported Competitor Platforms",
+    "connectAndMonitor": "Connect",
+    "openDirectTab": "Open in Tab ↗",
+    "loginNotice": "1. Sign in • 2. Close all pop-up screens • 3. Go to your wardrobe grid • 4. Tap the DressApp Agent icon to migrate!",
+    "openInBrowser": "Open in new tab to sign in or bypass pop-ups",
+    "openFullSite": "Open in Tab",
+    "storeApp": "Native App",
+    "migrateWardrobe": "Migrate Wardrobe",
+    "frameProtectedTitle": "{{name}} shields direct in-frame browsing",
+    "frameProtectedDesc": "Some wardrobe platforms protect in-frame embedding. You can open their web app in a new tab or batch-upload closet screenshots with 1 tap!",
+    "openExternalTab": "Open {{name}} in New Tab ↗",
+    "uploadMediaFallback": "Upload Screenshots / Video",
+    "agentSheetTitle": "{{name}} Wardrobe Migration Agent",
+    "agentSheetDesc": "Scans your visible clothes, removes backgrounds, tags items, and saves them to your DressApp closet.",
+    "liveAgentScanTab": "Live Grid Migration",
+    "checklistTitle": "Pre-Migration Checklist",
+    "checkLogin": "Logged in to {{name}}",
+    "checkPopups": "All pop-up screens, modals & cookies closed",
+    "checkGrid": "Wardrobe / closet grid visible on screen",
+    "startMigrationBtn": "Start Wardrobe Migration",
+    "scanningWardrobe": "Scanning wardrobe grid...",
+    "harvestingCount": "Harvesting items... ({{count}} cards found)",
+    "harvestedBadge": "{{count}} items captured",
+    "migrationComplete": "✓ {{count}} items migrated to your DressApp closet!",
+    "openClosetBtn": "Open My Closet",
+    "quickScreenshots": "Batch Upload Screenshots & Video",
+    "quickScreenshotsDesc": "Prefer uploading from camera roll? Select screenshots or screen recording of your closet.",
+    "openHubBtn": "Open Wardrobe Migration Hub"
   }
 }

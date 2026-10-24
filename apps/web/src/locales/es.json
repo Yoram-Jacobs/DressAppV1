@@ -4780,7 +4780,8 @@
     "webviewScanCompleteDesc": "Escaneo de {{appName}} finalizado ({{count}} prendas detectadas). ¡Tu armario se está actualizando!",
     "scanningInProgressBtn": "Escaneando...",
     "scanAndImportClosetBtn": "Escanear e importar armario",
-    "itemsCountLabel": "{{count}}+ prendas"
+    "itemsCountLabel": "{{count}}+ prendas",
+    "floaterTooltip": "Agente DressApp: Arrastre a cualquier lugar donde no estorbe. Toque cuando esté en la cuadrícula de su armario."
   },
   "login_reminder": {
     "newTitle": "Tu armario está vacío — ¡Añade tu primera prenda!",
@@ -5905,5 +5906,39 @@
     "openHub": "Centro de compras",
     "storeAssistant": "Asistente de tallas de {{store}}",
     "noMeasurementsSaved": "No hay medidas corporales guardadas"
+  },
+  "migrationHub": {
+    "title": "Centro de Migración de Armario",
+    "subtitle": "Conecte su app de armario anterior, cierre las ventanas emergentes, vaya a la cuadrícula de ropa y deje que el agente DressApp migre sus prendas.",
+    "searchPlaceholder": "Buscar app de armario o introducir URL (ej. Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "Sus plataformas de armario",
+    "curatedPlatforms": "Plataformas compatibles",
+    "connectAndMonitor": "Conectar",
+    "openDirectTab": "Abrir en pestaña ↗",
+    "loginNotice": "1. Iniciar sesión • 2. Cerrar ventanas emergentes • 3. Ir a la cuadrícula del armario • 4. ¡Tocar el icono del Agente DressApp para migrar!",
+    "openInBrowser": "Abrir en nueva pestaña para iniciar sesión o evitar ventanas emergentes",
+    "openFullSite": "Abrir en pestaña",
+    "storeApp": "App nativa",
+    "migrateWardrobe": "Migrar armario",
+    "frameProtectedTitle": "{{name}} bloquea la navegación integrada",
+    "frameProtectedDesc": "Algunas plataformas protegen la integración en marcos. ¡Puede abrir su web en una nueva pestaña o subir capturas de su armario en 1 toque!",
+    "openExternalTab": "Abrir {{name}} en nueva pestaña ↗",
+    "uploadMediaFallback": "Subir capturas / vídeo",
+    "agentSheetTitle": "Agente de migración de armario {{name}}",
+    "agentSheetDesc": "Escanea las prendas visibles, elimina los fondos, añade etiquetas y las guarda en su armario de DressApp.",
+    "liveAgentScanTab": "Migración en vivo de cuadrícula",
+    "checklistTitle": "Lista de comprobación previa",
+    "checkLogin": "Sesión iniciada en {{name}}",
+    "checkPopups": "Todas las ventanas emergentes y avisos cerrados",
+    "checkGrid": "Cuadrícula del armario visible en pantalla",
+    "startMigrationBtn": "Iniciar migración del armario",
+    "scanningWardrobe": "Escaneando cuadrícula del armario...",
+    "harvestingCount": "Recopilando prendas... ({{count}} tarjetas encontradas)",
+    "harvestedBadge": "{{count}} prendas capturadas",
+    "migrationComplete": "✓ ¡{{count}} prendas migradas con éxito a su armario DressApp!",
+    "openClosetBtn": "Abrir mi armario",
+    "quickScreenshots": "Subir capturas y vídeo por lotes",
+    "quickScreenshotsDesc": "¿Prefiere subir desde su galería? Seleccione capturas o una grabación de pantalla de su armario.",
+    "openHubBtn": "Abrir Centro de Migración"
   }
 }

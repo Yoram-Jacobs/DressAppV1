@@ -4784,7 +4784,8 @@
     "webviewScanCompleteDesc": "{{appName}} のスキャンが完了しました（{{count}} 点のアイテムを検出）。クローゼットを更新しています！",
     "scanningInProgressBtn": "スキャン中...",
     "scanAndImportClosetBtn": "スキャンしてインポート",
-    "itemsCountLabel": "{{count}}点以上"
+    "itemsCountLabel": "{{count}}点以上",
+    "floaterTooltip": "DressAppエージェント: 邪魔にならない場所にドラッグできます。ワードローブ一覧が表示されたらタップしてください。"
   },
   "login_reminder": {
     "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",
@@ -5909,5 +5910,39 @@
     "openHub": "ショッピングハブ",
     "storeAssistant": "{{store}} サイズアシスタント",
     "noMeasurementsSaved": "プロフィールにサイズが保存されていません"
+  },
+  "migrationHub": {
+    "title": "ワードローブ移行ハブ",
+    "subtitle": "以前のクローゼットアプリと連携し、ポップアップを閉じてワードローブ一覧を表示するだけで、DressAppエージェントが服を移行します。",
+    "searchPlaceholder": "ワードローブアプリを検索またはURLを入力（Whering、Acloset、Stylebookなど）...",
+    "savedPlatforms": "保存したプラットフォーム",
+    "curatedPlatforms": "対応プラットフォーム",
+    "connectAndMonitor": "連携する",
+    "openDirectTab": "新しいタブで開く ↗",
+    "loginNotice": "1. ログイン • 2. ポップアップを閉じる • 3. ワードローブ一覧を表示 • 4. DressAppエージェントをタップして移行開始！",
+    "openInBrowser": "ログインやポップアップ回避のために新しいタブで開く",
+    "openFullSite": "タブで開く",
+    "storeApp": "アプリで開く",
+    "migrateWardrobe": "ワードローブを移行",
+    "frameProtectedTitle": "{{name}}は画面内ブラウジングを保護しています",
+    "frameProtectedDesc": "一部のアプリは画面内表示を保護しています。新しいタブで開くか、1タップでスクリーンショットを一括インポートできます！",
+    "openExternalTab": "新しいタブで{{name}}を開く ↗",
+    "uploadMediaFallback": "スクショ / 動画をアップロード",
+    "agentSheetTitle": "{{name}} ワードローブ移行エージェント",
+    "agentSheetDesc": "表示されている洋服をスキャンし、背景を自動透過してタグ付けし、DressAppクローゼットに保存します。",
+    "liveAgentScanTab": "リアルタイム一覧移行",
+    "checklistTitle": "移行前チェックリスト",
+    "checkLogin": "{{name}}にログイン済み",
+    "checkPopups": "ポップアップ、お知らせ、Cookie通知をすべて閉じた",
+    "checkGrid": "クローゼットの洋服一覧が画面に表示されている",
+    "startMigrationBtn": "ワードローブ移行を開始",
+    "scanningWardrobe": "ワードローブ一覧をスキャン中...",
+    "harvestingCount": "アイテムを取得中...（{{count}}枚のカード検出）",
+    "harvestedBadge": "{{count}}着のアイテムを取得",
+    "migrationComplete": "✓ {{count}}着のアイテムをDressAppクローゼットに移行しました！",
+    "openClosetBtn": "マイ・クローゼットを開く",
+    "quickScreenshots": "スクショ＆動画の一括アップロード",
+    "quickScreenshotsDesc": "カメラロールからの移行をお好みですか？クローゼットのスクリーンショットまたは画面録画を選択してください。",
+    "openHubBtn": "ワードローブ移行ハブを開く"
   }
 }

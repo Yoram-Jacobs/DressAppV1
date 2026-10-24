@@ -1,15 +1,22 @@
-# Importação Rápida do Guarda-Roupa
+# Importar seu guarda-roupa existente
 
-Já tem fotos de roupas no telemóvel, talões digitais ou peças noutra aplicação? O **DressApp** permite importá-las rapidamente.
+Já utiliza outro app de guarda-roupa digital ou possui recibos de compras online? Você pode trazer todas as suas roupas para o DressApp em poucos minutos.
 
----
+## Formas de importar suas roupas
 
-## 1. Métodos de Importação
-- **Carregamento de várias fotos**: Selecione várias fotos da galeria de uma só vez; o sistema separa e analisa cada peça individualmente.
-- **Agente de Migração de outras apps (Planos Manager e Professional)**: Importe catálogos de 50+ peças de outras aplicações de guarda-roupa com recorte automático e proteção contra duplicados (exclusivo para assinantes Manager e Professional; utilizadores do plano Grátis têm limite de 50 peças no modelo local).
-- **Links de lojas e recibos**: Cole o link de um produto numa loja online para importar a imagem e os detalhes da peça.
+### 1. Agente de Migração e Central de Migração (Planos Manager e Professional)
+- Abra a **Central de Migração de Guarda-Roupa** (`/migration`) ou selecione **Importar guarda-roupa** nas configurações do seu **Perfil**.
+- **Escolha e conecte**: Selecione sua plataforma anterior (como Whering, Acloset, Stylebook, Smartli, Indyx, BeautyAI) ou digite a URL da sua conta.
+- **Navegador monitorado integrado**: O DressApp carrega a plataforma em uma sessão de navegação integrada e assistida.
+- **Feche pop-ups e navegue**: Entre na sua conta, feche avisos de cookies ou propagandas e navegue até a grade de roupas.
+- **Ícone flutuante arrastável do Agente DressApp**: Um ícone compacto do Agente DressApp flutua sobre a tela. Arraste-o para qualquer ponto livre para não cobrir campos ou botões de fechar.
+- **Toque para migrar**: Com a grade de roupas visível na tela, toque no ícone do Agente DressApp e clique em **Iniciar migração de guarda-roupa**.
+- **Processamento inteligente por IA**: O agente escaneia a grade, recorta cada peça, remove o fundo com GarmentVision, atribui etiquetas e salva tudo no seu closet DressApp.
+- **Opção alternativa com capturas / vídeo**: Você também pode enviar capturas de tela ou gravação de tela do seu guarda-roupa diretamente da sua galeria.
 
----
+### 2. Importar a partir de links de lojas ou recibos digitais
+- Cole o link de um produto de uma loja online ou envie uma captura ou recibo em PDF de confirmação do pedido.
+- O DressApp extrai automaticamente foto, marca, tamanho e preço de cada peça.
 
-## 2. Revisão e Gravação
-Após o processamento, reveja todas as peças detetadas, edite qualquer detalhe se necessário e guarde-as no seu guarda-roupa digital.
+### 3. Remoção automática de fundo e proteção contra duplicados
+- A IA do DressApp remove o fundo de cada peça importada, preenche categoria, cores e estação, e ignora duplicados automaticamente.

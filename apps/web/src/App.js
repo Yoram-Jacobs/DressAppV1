@@ -58,6 +58,7 @@ const AboutUs = lazy(() => import('@/pages/AboutUs'));
 const Onboarding = lazy(() => import('@/pages/Onboarding'));
 const ShareTarget = lazy(() => import('@/pages/ShareTarget'));
 const ShoppingHub = lazy(() => import('@/pages/ShoppingHub'));
+const MigrationHub = lazy(() => import('@/pages/MigrationHub'));
 
 /** Global listener for migration events from the bookmarklet or cross-tab BroadcastChannel. */
 function MigrationMessageListener() {
@@ -198,6 +199,8 @@ function App() {
                         <Route path="/shopping-assistant" element={<ShareTarget />} />
                         <Route path="/shopping" element={<ShoppingHub />} />
                         <Route path="/shopping-hub" element={<ShoppingHub />} />
+                        <Route path="/migration" element={<MigrationHub />} />
+                        <Route path="/wardrobe-migration" element={<MigrationHub />} />
                       </Route>
                     </Route>
                     

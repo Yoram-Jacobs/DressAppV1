@@ -818,17 +818,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       toast.error(t('migration.appNameRequired', { defaultValue: 'Please enter your previous wardrobe app name.' }));
       return;
     }
-    setStep('web_login');
+    onClose();
+    navigate(`/migration?app=${encodeURIComponent(appName.trim())}`);
   };
 
   const handleOpenPopupWindow = async () => {
-    const win = window.open(targetLoginUrl, '_blank');
-    if (win) {
-      win.opener = window;
-    }
-
-    toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} tab. Log in, go to your closet, then click the "DressApp Agent" bookmarklet.` }));
     onClose();
+    navigate(`/migration?app=${encodeURIComponent(appName.trim() || 'whering')}`);
   };
 
   const handleSelectScreenshotsOrVideo = async (e) => {

@@ -149,14 +149,11 @@ export default function Profile() {
 
 
   const handleOpenMigrationForApp = (app) => {
-    if (app) {
-      setMigrationInitialApp(app);
-      setMigrationInitialStep('web_login');
-    } else {
-      setMigrationInitialApp(null);
-      setMigrationInitialStep(null);
+    if (app && app.name) {
+      nav('/migration?app=' + encodeURIComponent(app.name));
+      return;
     }
-    setIsMigrationModalOpen(true);
+    nav('/migration');
   };
 
   return (

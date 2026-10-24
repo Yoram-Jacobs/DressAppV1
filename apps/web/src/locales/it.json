@@ -4783,7 +4783,8 @@
     "webviewScanCompleteDesc": "Scansione di {{appName}} completata ({{count}} capi rilevati). Il tuo guardaroba si sta aggiornando!",
     "scanningInProgressBtn": "Scansione...",
     "scanAndImportClosetBtn": "Scansiona e importa",
-    "itemsCountLabel": "{{count}}+ capi"
+    "itemsCountLabel": "{{count}}+ capi",
+    "floaterTooltip": "Agente DressApp: trascina dove non intralcia. Tocca quando sei nella griglia del guardaroba."
   },
   "login_reminder": {
     "newTitle": "Il tuo armadio è vuoto — Aggiungi il tuo primo capo!",
@@ -5908,5 +5909,39 @@
     "openHub": "Hub Shopping",
     "storeAssistant": "Assistente taglie {{store}}",
     "noMeasurementsSaved": "Nessuna misura salvata nel profilo"
+  },
+  "migrationHub": {
+    "title": "Hub di Migrazione Guardaroba",
+    "subtitle": "Collega la tua app guardaroba precedente, chiudi i popup, vai alla griglia dei vestiti e lascia che l'Agente DressApp importi i tuoi capi.",
+    "searchPlaceholder": "Cerca app guardaroba o inserisci URL (es. Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "Le tue piattaforme guardaroba",
+    "curatedPlatforms": "Piattaforme supportate",
+    "connectAndMonitor": "Collega",
+    "openDirectTab": "Apri in scheda ↗",
+    "loginNotice": "1. Accedi • 2. Chiudi tutti i popup • 3. Vai alla griglia guardaroba • 4. Tocca l'icona dell'Agente DressApp per migrare!",
+    "openInBrowser": "Apri in nuova scheda per accedere o aggirare i popup",
+    "openFullSite": "Apri in scheda",
+    "storeApp": "App nativa",
+    "migrateWardrobe": "Migra guardaroba",
+    "frameProtectedTitle": "{{name}} protegge l'integrazione diretta",
+    "frameProtectedDesc": "Alcune piattaforme bloccano gli iframe. Apri l'app in una nuova scheda o carica gli screenshot con 1 tocco!",
+    "openExternalTab": "Apri {{name}} in una nuova scheda ↗",
+    "uploadMediaFallback": "Carica screenshot / video",
+    "agentSheetTitle": "Agente di migrazione {{name}}",
+    "agentSheetDesc": "Scansiona i vestiti visibili, rimuove gli sfondi, applica i tag e li salva nel tuo armadio DressApp.",
+    "liveAgentScanTab": "Migrazione griglia dal vivo",
+    "checklistTitle": "Lista di controllo pre-migrazione",
+    "checkLogin": "Accesso effettuato su {{name}}",
+    "checkPopups": "Tutti i popup, modali e cookie chiusi",
+    "checkGrid": "Griglia del guardaroba visibile sullo schermo",
+    "startMigrationBtn": "Avvia migrazione guardaroba",
+    "scanningWardrobe": "Scansione griglia guardaroba in corso...",
+    "harvestingCount": "Raccolta capi... ({{count}} schede trovate)",
+    "harvestedBadge": "{{count}} capi catturati",
+    "migrationComplete": "✓ {{count}} capi migrati con successo nel tuo armadio DressApp!",
+    "openClosetBtn": "Apri il mio armadio",
+    "quickScreenshots": "Caricamento multiplo screenshot e video",
+    "quickScreenshotsDesc": "Preferisci caricare dalla galleria? Seleziona screenshot o registrazione schermo del tuo guardaroba.",
+    "openHubBtn": "Apri Hub di Migrazione Guardaroba"
   }
 }

@@ -4776,7 +4776,8 @@
     "webviewScanCompleteDesc": "Scan von {{appName}} abgeschlossen ({{count}} Kleidungsstücke erkannt). Ihr Kleiderschrank wird aktualisiert!",
     "scanningInProgressBtn": "Scannen...",
     "scanAndImportClosetBtn": "Scannen & Importieren",
-    "itemsCountLabel": "{{count}}+ Teile"
+    "itemsCountLabel": "{{count}}+ Teile",
+    "floaterTooltip": "DressApp Agent: Ziehen Sie ihn an eine freie Stelle. Tippen Sie darauf, sobald Sie sich in Ihrer Kleiderschrank-Übersicht befinden."
   },
   "login_reminder": {
     "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",
@@ -5901,5 +5902,39 @@
     "openHub": "Shopping Hub",
     "storeAssistant": "{{store}} Größen-Assistent",
     "noMeasurementsSaved": "Keine Körpermaße im Profil hinterlegt"
+  },
+  "migrationHub": {
+    "title": "Garderoben-Migrationszentrale",
+    "subtitle": "Verbinden Sie Ihre bisherige Kleiderschrank-App, schließen Sie Pop-ups, navigieren Sie zur Garderoben-Übersicht und starten Sie die automatische Migration mit dem DressApp Agenten.",
+    "searchPlaceholder": "Garderoben-App suchen oder Web-URL eingeben (z. B. Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "Ihre Garderoben-Plattformen",
+    "curatedPlatforms": "Unterstützte Plattformen",
+    "connectAndMonitor": "Verbinden",
+    "openDirectTab": "In Tab öffnen ↗",
+    "loginNotice": "1. Anmelden • 2. Pop-ups schließen • 3. Zur Garderoben-Übersicht navigieren • 4. DressApp Agent-Symbol antippen!",
+    "openInBrowser": "In neuem Tab öffnen, um sich anzumelden oder Pop-ups zu umgehen",
+    "openFullSite": "In Tab öffnen",
+    "storeApp": "App öffnen",
+    "migrateWardrobe": "Garderobe migrieren",
+    "frameProtectedTitle": "{{name}} schützt direktes In-Frame-Browsing",
+    "frameProtectedDesc": "Einige Garderoben-Plattformen blockieren iFrames. Öffnen Sie die Web-App in einem neuen Tab oder laden Sie Screenshots mit einem Klick hoch!",
+    "openExternalTab": "{{name}} in neuem Tab öffnen ↗",
+    "uploadMediaFallback": "Screenshots / Video hochladen",
+    "agentSheetTitle": "{{name}} Garderoben-Migrationsagent",
+    "agentSheetDesc": "Scannt sichtbare Kleidungsstücke, entfernt Hintergründe, taggt Artikel und speichert sie direkt in Ihrer DressApp-Garderobe.",
+    "liveAgentScanTab": "Live-Raster-Migration",
+    "checklistTitle": "Checkliste vor der Migration",
+    "checkLogin": "Bei {{name}} angemeldet",
+    "checkPopups": "Alle Pop-ups, Modals und Cookies geschlossen",
+    "checkGrid": "Kleiderschrank-Raster auf dem Bildschirm sichtbar",
+    "startMigrationBtn": "Garderoben-Migration starten",
+    "scanningWardrobe": "Garderoben-Raster wird gescannt...",
+    "harvestingCount": "Artikel werden erfasst... ({{count}} Karten gefunden)",
+    "harvestedBadge": "{{count}} Artikel erfasst",
+    "migrationComplete": "✓ {{count}} Artikel erfolgreich in Ihre DressApp-Garderobe migriert!",
+    "openClosetBtn": "Meinen Kleiderschrank öffnen",
+    "quickScreenshots": "Screenshots & Videos hochladen",
+    "quickScreenshotsDesc": "Lieber aus der Galerie hochladen? Wählen Sie Screenshots oder eine Bildschirmaufnahme Ihres Kleiderschranks.",
+    "openHubBtn": "Garderoben-Migrationszentrale öffnen"
   }
 }

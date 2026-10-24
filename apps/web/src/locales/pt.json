@@ -4783,7 +4783,8 @@
     "webviewScanCompleteDesc": "Escaneamento do {{appName}} concluído ({{count}} peças detectadas). Seu guarda-roupa está sendo atualizado!",
     "scanningInProgressBtn": "Escaneando...",
     "scanAndImportClosetBtn": "Escanear e importar",
-    "itemsCountLabel": "{{count}}+ peças"
+    "itemsCountLabel": "{{count}}+ peças",
+    "floaterTooltip": "Agente DressApp: Arraste para onde não atrapalhe. Toque quando estiver na grade do guarda-roupa."
   },
   "login_reminder": {
     "newTitle": "Seu armário está vazio — Adicione sua primeira peça!",
@@ -5908,5 +5909,39 @@
     "openHub": "Central de compras",
     "storeAssistant": "Assistente de tamanho {{store}}",
     "noMeasurementsSaved": "Nenhuma medida salva no perfil"
+  },
+  "migrationHub": {
+    "title": "Central de Migração de Guarda-Roupa",
+    "subtitle": "Conecte seu app de guarda-roupa anterior, feche os pop-ups, navegue até a grade de roupas e deixe o Agente DressApp migrar suas peças.",
+    "searchPlaceholder": "Pesquisar app de roupas ou inserir URL (ex.: Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "Suas plataformas de guarda-roupa",
+    "curatedPlatforms": "Plataformas compatíveis",
+    "connectAndMonitor": "Conectar",
+    "openDirectTab": "Abrir em aba ↗",
+    "loginNotice": "1. Fazer login • 2. Fechar todos os pop-ups • 3. Ir para a grade do guarda-roupa • 4. Tocar no ícone do Agente DressApp para migrar!",
+    "openInBrowser": "Abrir em nova aba para fazer login ou contornar pop-ups",
+    "openFullSite": "Abrir em aba",
+    "storeApp": "App nativo",
+    "migrateWardrobe": "Migrar guarda-roupa",
+    "frameProtectedTitle": "{{name}} bloqueia navegação integrada direta",
+    "frameProtectedDesc": "Algumas plataformas bloqueiam iframes. Você pode abrir o app em uma nova aba ou enviar capturas de tela com 1 toque!",
+    "openExternalTab": "Abrir {{name}} em nova aba ↗",
+    "uploadMediaFallback": "Enviar capturas / vídeo",
+    "agentSheetTitle": "Agente de migração de guarda-roupa {{name}}",
+    "agentSheetDesc": "Examina as roupas visíveis, remove fundos, adiciona etiquetas e salva tudo no seu closet DressApp.",
+    "liveAgentScanTab": "Migração ao vivo da grade",
+    "checklistTitle": "Lista de verificação pré-migração",
+    "checkLogin": "Conectado(a) ao {{name}}",
+    "checkPopups": "Todos os pop-ups, avisos e cookies fechados",
+    "checkGrid": "Grade do guarda-roupa visível na tela",
+    "startMigrationBtn": "Iniciar migração de guarda-roupa",
+    "scanningWardrobe": "Examinando grade do guarda-roupa...",
+    "harvestingCount": "Coletando itens... ({{count}} cartões encontrados)",
+    "harvestedBadge": "{{count}} peças capturadas",
+    "migrationComplete": "✓ {{count}} peças migradas com sucesso para o seu closet DressApp!",
+    "openClosetBtn": "Abrir meu closet",
+    "quickScreenshots": "Enviar capturas e vídeos em lote",
+    "quickScreenshotsDesc": "Prefere enviar da galeria? Selecione capturas de tela ou gravação de tela do seu guarda-roupa.",
+    "openHubBtn": "Abrir Central de Migração de Guarda-Roupa"
   }
 }

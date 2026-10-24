@@ -1,8 +1,22 @@
-# Je bestaande garderobe importeren
+# Je bestaande kledingkast importeren
 
-Gebruik je al een andere kledingkast-app of heb je digitale aankoopbonnen? Zet je bestaande garderobe binnen enkele minuten over naar DressApp.
+Gebruik je al een andere digitale kledingkast-app of heb je online aankoopbewijzen? Je kunt je volledige garderobe in enkele minuten overzetten naar DressApp.
 
-## Manieren om te importeren
-1. **Garderobe Migratie-agent vanuit een andere app (Manager & Professional)**: Open de importfunctie via je **Profiel** of het menu **Item toevoegen**, kies de bron-app en importeer automatisch 50+ items. Omdat Free-gebruikers een limiet van 50 items hebben en het lokale model gebruiken, is de Migratie-agent gereserveerd voor Manager en Professional.
-2. **Via winkellinks of digitale bonnen**: Plak een productlink van een webshop of upload een screenshot van je bestelling of een pdf-factuur.
-3. **Automatische achtergrondverwijdering & bescherming tegen dubbele items**: De AI van DressApp verwijdert de achtergrond van elk geïmporteerd item, vult categorie, kleuren en seizoen in en slaat dubbele items automatisch over.
+## Manieren om je kleding te importeren
+
+### 1. Kledingkast Migratie Agent & Migratie Hub (Manager- & Professional-abonnementen)
+- Open de **Kledingkast Migratie Hub** (`/migration`) of kies **Kledingkast importeren** in je **Profiel**-instellingen.
+- **Kiezen & Verbinden**: Kies je vorige kledingkastplatform (zoals Whering, Acloset, Stylebook, Smartli, Indyx, BeautyAI) of voer een web-URL in.
+- **Bewaakte in-app browser**: DressApp opent het platform in een geïntegreerde, ondersteunde browsersessie.
+- **Pop-ups sluiten & navigeren**: Log in op je account, sluit cookie- en promotiepop-ups en ga naar je kledingrooster.
+- **Verplaatsbaar DressApp Agent-icoon**: Een compact DressApp Agent-icoon zweeft over het scherm. Sleep het naar een vrije plek zodat inlogvelden en sluitknoppen vrij blijven.
+- **Tikken om te migreren**: Zodra je kledingrooster in beeld is, tik je op het DressApp Agent-icoon en klik je op **Start kledingkastmigratie**.
+- **Geautomatiseerde AI-verwerking**: De agent scant het rooster, snijdt elk kledingstuk uit, verwijdert achtergronden met GarmentVision, kent tags toe en bewaart alles direct in je DressApp-kast.
+- **Alternatief met screenshots of video**: Je kunt ook screenshots of een schermopname van je kledingkast direct vanuit je galerij uploaden.
+
+### 2. Importeren via winkel-links of digitale aankoopbewijzen
+- Plak een productlink van een kledingwebshop of upload een screenshot of PDF-ontvangstbewijs.
+- DressApp herkent automatisch de foto van het kledingstuk, het merk, de maat en de prijs.
+
+### 3. Automatische achtergrondverwijdering & duplicatenbescherming
+- De AI van DressApp verwijdert de achtergrond van elk geïmporteerd kledingstuk, vult categorie, kleuren en seizoen in en slaat dubbele artikelen automatisch over.
