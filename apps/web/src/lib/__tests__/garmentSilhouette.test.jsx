@@ -196,6 +196,46 @@ describe('silhouette shell builder', () => {
     expect(isConsistentView(front, { mean: [30, 30, 30], area: 0.55, aspect: 0.8 })).toBe(false);
     expect(isConsistentView(front, { mean: [118, 120, 124], area: 0.1, aspect: 0.8 })).toBe(false);
   });
+
+  test('A-line skirt closes watertight at slanted side seams and aligns front/back UVs', () => {
+    const { nx, ny } = chooseGridResolution(0.85, 80);
+    // Slanted A-line skirt: narrow at top waist (0.30..0.70), flaring wide to (0.08..0.92) at hem
+    const mask = paintMask(nx, ny, (u, v) => {
+      const halfSpan = 0.20 + 0.22 * v;
+      return v >= 0.02 && v <= 0.98 && Math.abs(u - 0.5) <= halfSpan;
+    });
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.85, slot: 'bottom', isMale: false, isSkirt: true,
+      yTop: 1.05, yBottom: 0.44, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const vw = nx + 1;
+    const pf = shell.front.attributes.position;
+    const pb = shell.back.attributes.position;
+    const uvf = shell.front.attributes.uv;
+    const uvb = shell.back.attributes.uv;
+
+    // Every boundary vertex outside the interior mask must have identical front/back 3D position
+    for (let j = 2; j < ny - 2; j++) {
+      const idxLeft = j * vw;
+      const idxRight = j * vw + nx;
+      expect(pf.getZ(idxLeft)).toBeCloseTo(pb.getZ(idxLeft), 5);
+      expect(pf.getZ(idxRight)).toBeCloseTo(pb.getZ(idxRight), 5);
+      // Waist/hip width must clear the avatar torso half-width at that height
+      const y = pf.getY(idxRight);
+      if (y >= 0.72 && y <= 1.02) {
+        const torso = getTorsoSlice(y, false);
+        expect(pf.getX(idxRight) - pf.getX(idxLeft)).toBeGreaterThan(2 * (torso.rx + 0.015));
+      }
+    }
+
+    // Front and back UVs must match 1:1 across the entire grid for pattern alignment
+    for (let i = 0; i < uvf.count; i++) {
+      expect(uvb.getX(i)).toBeCloseTo(uvf.getX(i), 5);
+      expect(uvb.getY(i)).toBeCloseTo(uvf.getY(i), 5);
+    }
+  });
 });
 
 describe('garment slot inference from the item name', () => {

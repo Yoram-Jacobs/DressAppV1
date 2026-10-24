@@ -227,35 +227,106 @@ function computeCanvasStats(canvas) {
 }
 
 /**
- * Builds the texture for the BACK sheet of a garment, aligned to the front cut-out:
- *   1. a back photo from the item group (when one is consistent with the front view)
- *   2. the mirrored front photo for patterned / graphic fabrics
- *   3. a solid fabric-coloured silhouette otherwise
+ * Dilates opaque edge RGB+alpha outward by `passes` pixels and bridges narrow interior
+ * scanline pinholes so boundary triangles of the 3D silhouette shell never clip or tear.
  */
-function buildBackTexture({ frontCanvas, backCanvas, dominantColor, patterned }) {
+function dilateCanvasEdges(canvas, passes = 6) {
+  try {
+    const W = canvas.width;
+    const H = canvas.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const img = ctx.getImageData(0, 0, W, H);
+    const d = img.data;
+
+    // 1. Solidify semi-opaque garment pixels and bridge tiny interior scanline slits (<= 3.5% width)
+    const maxGap = Math.max(3, Math.round(W * 0.035));
+    for (let y = 0; y < H; y++) {
+      const row = y * W;
+      let prevX = -1;
+      for (let x = 0; x < W; x++) {
+        const o = (row + x) * 4;
+        if (d[o + 3] >= 96) {
+          d[o + 3] = 255;
+          if (prevX >= 0 && x - prevX > 1 && x - prevX - 1 <= maxGap) {
+            const oL = (row + prevX) * 4;
+            const span = x - prevX;
+            for (let k = 1; k < span; k++) {
+              const t = k / span;
+              const oM = (row + prevX + k) * 4;
+              d[oM] = Math.round(d[oL] * (1 - t) + d[o] * t);
+              d[oM + 1] = Math.round(d[oL + 1] * (1 - t) + d[o + 1] * t);
+              d[oM + 2] = Math.round(d[oL + 2] * (1 - t) + d[o + 2] * t);
+              d[oM + 3] = 255;
+            }
+          }
+          prevX = x;
+        }
+      }
+    }
+
+    // 2. Outward 4-neighbour RGB+alpha edge bleed
+    for (let pass = 0; pass < passes; pass++) {
+      const prev = new Uint8ClampedArray(d);
+      for (let y = 0; y < H; y++) {
+        const row = y * W;
+        for (let x = 0; x < W; x++) {
+          const p = row + x;
+          const o = p * 4;
+          if (prev[o + 3] >= 200) continue;
+          let r = 0, g = 0, b = 0, cnt = 0;
+          if (x > 0 && prev[o - 1] >= 200) {
+            r += prev[o - 4]; g += prev[o - 3]; b += prev[o - 2]; cnt++;
+          }
+          if (x < W - 1 && prev[o + 7] >= 200) {
+            r += prev[o + 4]; g += prev[o + 5]; b += prev[o + 6]; cnt++;
+          }
+          if (y > 0 && prev[(p - W) * 4 + 3] >= 200) {
+            const uo = (p - W) * 4;
+            r += prev[uo]; g += prev[uo + 1]; b += prev[uo + 2]; cnt++;
+          }
+          if (y < H - 1 && prev[(p + W) * 4 + 3] >= 200) {
+            const doff = (p + W) * 4;
+            r += prev[doff]; g += prev[doff + 1]; b += prev[doff + 2]; cnt++;
+          }
+          if (cnt > 0) {
+            d[o] = Math.round(r / cnt);
+            d[o + 1] = Math.round(g / cnt);
+            d[o + 2] = Math.round(b / cnt);
+            d[o + 3] = 255;
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(img, 0, 0);
+  } catch {
+    // ignore canvas security/read errors in headless mocks
+  }
+}
+
+/**
+ * Builds the texture for the BACK sheet of a garment, aligned to the front cut-out:
+ *   1. Always starts with the front photo so fabric weave, shading, and plaid/stripe/print
+ *      patterns align 1:1 with the front sheet across the side seams and back view.
+ *   2. When a consistent back photo exists in the item group, lays the mirrored back
+ *      photo on top of the silhouette.
+ */
+function buildBackTexture({ frontCanvas, backCanvas }) {
   const W = frontCanvas.width;
   const H = frontCanvas.height;
   const out = document.createElement('canvas');
   out.width = W;
   out.height = H;
   const ctx = out.getContext('2d');
-  if (!backCanvas && patterned) {
-    ctx.drawImage(frontCanvas, 0, 0);
-  } else {
-    // Silhouette in the fabric colour, then lay the real back photo on top
-    ctx.drawImage(frontCanvas, 0, 0);
-    ctx.globalCompositeOperation = 'source-in';
-    ctx.fillStyle = dominantColor;
-    ctx.fillRect(0, 0, W, H);
-    if (backCanvas) {
-      // A back photo is seen from behind: mirror it so it lines up with the front cut-out
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.save();
-      ctx.translate(W, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(backCanvas, 0, 0, W, H);
-      ctx.restore();
-    }
+  ctx.drawImage(frontCanvas, 0, 0);
+  if (backCanvas) {
+    // A back photo is seen from behind: mirror it so it lines up with the front cut-out
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.save();
+    ctx.translate(W, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(backCanvas, 0, 0, W, H);
+    ctx.restore();
     ctx.globalCompositeOperation = 'source-over';
   }
   const tex = new THREE.CanvasTexture(out);
@@ -675,6 +746,10 @@ async function fetchAndCropTexture(url) {
       ny,
     };
     canvasStats = computeCanvasStats(cropCanvas);
+    // Dilate edge RGB+alpha outward after extracting the true silhouette runs so
+    // boundary triangles on the 3D shell never clip or tear along the side seam.
+    dilateCanvasEdges(cropCanvas, 6);
+    texture.needsUpdate = true;
   } catch {
     shellMask = null;
   }
@@ -743,7 +818,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
     fetchAndCropTexture(url)
       .then(async (res) => {
         if (!mounted || !res) return;
-        setData({ ...res, backTexture: null, backSource: null, ready: true });
+        setData({ ...res, backTexture: res.texture, backSource: 'front-aligned', ready: true });
 
         // ── Item group: look for a consistent back / side view ──
         if (!res.canvas || !res.shellMask) return;
@@ -762,15 +837,12 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
           }
         }
         if (!mounted) return;
-        const wantsPattern = patterned || (res.canvasStats?.stdev ?? 0) > 38;
         const backTexture = buildBackTexture({
           frontCanvas: res.canvas,
           backCanvas,
-          dominantColor: res.dominantColor,
-          patterned: wantsPattern,
         });
         setData((prev) => (prev.texture === res.texture
-          ? { ...prev, backTexture, backSource: backCanvas ? 'photo' : (wantsPattern ? 'mirror' : 'solid') }
+          ? { ...prev, backTexture, backSource: backCanvas ? 'photo' : 'front-aligned' }
           : prev));
       })
       .catch(() => {
@@ -997,27 +1069,10 @@ export function createAnatomicalTopGeometry({
         : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
-      if (isFront) {
-        const flankFrac = Math.abs(Math.sin(theta));
-        if (flankFrac > 0.82) {
-          // Flank boundary: seamless solid fabric swatch transitioning into back
-          uvs.push(
-            Math.max(0.01, Math.min(0.99, uSwatch + Math.sin(theta) * 0.02)),
-            Math.max(0.01, Math.min(0.99, vSwatch))
-          );
-        } else {
-          // Front photo projection
-          const uT = uLeft + ((Math.sin(theta) / 0.82 + 1) * 0.5) * (uRight - uLeft);
-          uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
-        }
-      } else {
-        // Back of jacket/shirt: seamless matching fabric (guaranteed 100% opaque)
-        const backSpread = Math.sin(theta) * 0.04;
-        uvs.push(
-          Math.max(0.01, Math.min(0.99, uSwatch + backSpread)),
-          Math.max(0.01, Math.min(0.99, vSwatch))
-        );
-      }
+      // Continuous 360° UV projection: front and back views share the same texture and pattern
+      // without side-flank UV jumps or tears.
+      const uT = uLeft + ((Math.sin(theta) + 1) * 0.5) * (uRight - uLeft);
+      uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0.01, Math.min(0.99, vTex)));
     }
   }
 
@@ -1082,16 +1137,8 @@ export function createAnatomicalTopGeometry({
           const z = zArm + rz * Math.cos(theta);
           verts.push(x, y, z);
 
-          const isFront = Math.cos(theta) >= 0;
-          if (isFront) {
-            const uArm = uCenter + Math.sin(theta) * 0.09 * Math.min(1.0, sleeveFactor);
-            uvs.push(Math.max(0.01, Math.min(0.99, uArm)), Math.max(0.01, Math.min(0.99, vTex)));
-          } else {
-            uvs.push(
-              Math.max(0.01, Math.min(0.99, uSwatch)),
-              Math.max(0.01, Math.min(0.99, vSwatch))
-            );
-          }
+          const uArm = uCenter + Math.sin(theta) * 0.09 * Math.min(1.0, sleeveFactor);
+          uvs.push(Math.max(0.01, Math.min(0.99, uArm)), Math.max(0.01, Math.min(0.99, vTex)));
         }
       }
 
@@ -1183,24 +1230,8 @@ export function createAnatomicalDressGeometry({
         : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
-      if (isFront) {
-        const flankFrac = Math.abs(Math.sin(theta));
-        if (flankFrac > 0.82) {
-          uvs.push(
-            Math.max(0.01, Math.min(0.99, uSwatch + Math.sin(theta) * 0.02)),
-            Math.max(0.01, Math.min(0.99, vSwatch))
-          );
-        } else {
-          const uT = uLeft + ((Math.sin(theta) / 0.82 + 1) * 0.5) * (uRight - uLeft);
-          uvs.push(Math.max(0, Math.min(1, uT)), Math.max(0, Math.min(1, vTex)));
-        }
-      } else {
-        const backSpread = Math.sin(theta) * 0.04;
-        uvs.push(
-          Math.max(0.01, Math.min(0.99, uSwatch + backSpread)),
-          Math.max(0.01, Math.min(0.99, vSwatch))
-        );
-      }
+      const uT = uLeft + ((Math.sin(theta) + 1) * 0.5) * (uRight - uLeft);
+      uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0.01, Math.min(0.99, vTex)));
     }
   }
 
@@ -1261,16 +1292,8 @@ export function createAnatomicalDressGeometry({
           const z = zArm + rArm * Math.cos(theta);
           verts.push(x, y, z);
 
-          const isFront = Math.cos(theta) >= 0;
-          if (isFront) {
-            const uArm = uCenter + ((Math.sin(theta) + 1) * 0.5 - 0.5) * (0.14 * Math.min(1.0, sleeveFactor * 1.3));
-            uvs.push(Math.max(0.01, Math.min(0.99, uArm)), Math.max(0.01, Math.min(0.99, vTex)));
-          } else {
-            uvs.push(
-              Math.max(0.01, Math.min(0.99, uSwatch)),
-              Math.max(0.01, Math.min(0.99, vSwatch))
-            );
-          }
+          const uArm = uCenter + ((Math.sin(theta) + 1) * 0.5 - 0.5) * (0.14 * Math.min(1.0, sleeveFactor * 1.3));
+          uvs.push(Math.max(0.01, Math.min(0.99, uArm)), Math.max(0.01, Math.min(0.99, vTex)));
         }
       }
 
@@ -1339,26 +1362,9 @@ export function createAnatomicalBottomGeometry({
           : cz - (rz + 0.010) * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
-        if (isFront) {
-          const flankFrac = Math.abs(Math.sin(theta));
-          if (flankFrac > 0.78) {
-            // Flank transitions into seamless solid fabric swatch (zero see-through side slit)
-            uvs.push(
-              Math.max(0.01, Math.min(0.99, uSwatch)),
-              Math.max(0.01, Math.min(0.99, vSwatch))
-            );
-          } else {
-            // Map front photo safely within opaque fabric width
-            const uT = 0.5 + (Math.sin(theta) / 0.78) * 0.38;
-            uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0, Math.min(1, vTex)));
-          }
-        } else {
-          // Back is rich solid fabric swatch
-          uvs.push(
-            Math.max(0.01, Math.min(0.99, uSwatch)),
-            Math.max(0.01, Math.min(0.99, vSwatch))
-          );
-        }
+        // Continuous 360° UV mapping so front and back views share the skirt texture & pattern
+        const uT = 0.5 + Math.sin(theta) * 0.42;
+        uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0.01, Math.min(0.99, vTex)));
       }
     }
 
@@ -1438,31 +1444,13 @@ export function createAnatomicalBottomGeometry({
           : cz - (rz + 0.008) * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
-        if (isFront) {
-          const flankFrac = Math.abs(Math.sin(theta));
-          if (flankFrac > 0.88) {
-            // Flank boundary transitions into seamless fabric swatch
-            uvs.push(
-              Math.max(0.01, Math.min(0.99, uSwatch)),
-              Math.max(0.01, Math.min(0.99, vSwatch))
-            );
-          } else {
-            // Map cleanly onto the respective leg column in the front photo
-            const legCenter = side === -1 ? 0.30 : 0.70;
-            const legSpan = 0.18;
-            const uLeg = legCenter + (Math.sin(theta) / 0.88) * (side === -1 ? legSpan : -legSpan);
-            uvs.push(
-              Math.max(0.02, Math.min(0.98, uLeg)),
-              Math.max(0.02, Math.min(0.98, vTex))
-            );
-          }
-        } else {
-          // Back of pants: rich solid denim fabric swatch
-          uvs.push(
-            Math.max(0.01, Math.min(0.99, uSwatch)),
-            Math.max(0.01, Math.min(0.99, vSwatch))
-          );
-        }
+        const legCenter = side === -1 ? 0.30 : 0.70;
+        const legSpan = 0.18;
+        const uLeg = legCenter + Math.sin(theta) * (side === -1 ? legSpan : -legSpan);
+        uvs.push(
+          Math.max(0.02, Math.min(0.98, uLeg)),
+          Math.max(0.02, Math.min(0.98, vTex))
+        );
       }
     }
 
@@ -1884,14 +1872,14 @@ export default function GarmentMesh3D({
   if (shellGeos && texture) {
     const shellMaterialProps = {
       color: '#FFFFFF',
-      alphaTest: 0.5,
+      alphaTest: 0.15,
       transparent: false,
       depthWrite: true,
       side: THREE.DoubleSide,
       roughness: 0.78,
       metalness: 0.02,
       envMapIntensity: 0.7,
-      alphaToCoverage: true,
+      alphaToCoverage: false,
     };
     return (
       <>

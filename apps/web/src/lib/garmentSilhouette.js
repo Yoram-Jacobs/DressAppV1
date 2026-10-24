@@ -79,17 +79,20 @@ export function extractRowRuns(alpha, w, h, nx, ny, threshold = 110) {
         s = -1;
       }
     }
-    // Merge runs separated by tiny gaps (anti-aliasing / hairline seams)
+    // Merge runs separated by tiny gaps (anti-aliasing / hairline seams / narrow armpit creases)
     const merged = [];
     px.forEach((r) => {
       const last = merged[merged.length - 1];
-      if (last && r[0] - last[1] <= Math.max(2, w * 0.004)) last[1] = r[1];
+      if (last && r[0] - last[1] <= Math.max(3, w * 0.03)) last[1] = r[1];
       else merged.push([r[0], r[1]]);
     });
     runsByRow.push(
       merged
         .filter(([x0, x1]) => x1 - x0 + 1 >= minRunPx)
-        .map(([x0, x1]) => [(x0 / (w - 1)) * nx, ((x1 + 1) / (w - 1)) * nx])
+        .map(([x0, x1]) => [
+          clamp((x0 / (w - 1)) * nx, 0, nx),
+          clamp(((x1 + 1) / (w - 1)) * nx, 0, nx),
+        ])
     );
   }
   return runsByRow;
@@ -291,6 +294,79 @@ export function buildSilhouetteShell({
     : clamp(percentile(ratios, 0.85), 0.72, 1.4);
   const dx = dxUniform * sCorr;
   const colMid = (minCol + maxCol) / 2;
+  const yShoulder = isMale ? 1.48 : 1.42;
+
+  // Per-row horizontal body-clearance scale for skirts / bottoms so A-line skirt waists
+  // never narrow inside the avatar's lateral hip/waist flanks.
+  const rowScaleArr = new Float32Array(vh);
+  for (let j = 0; j < vh; j++) {
+    rowScaleArr[j] = 1.0;
+    if (!isSkirt) continue;
+    const y = rowY(j);
+    const runs = runsByRow[j];
+    if (!runs.length || y < 0.68) continue;
+    let mainRun = runs[0];
+    let bestDist = Infinity;
+    runs.forEach((r) => {
+      const d = colMid < r[0] ? r[0] - colMid : colMid > r[1] ? colMid - r[1] : 0;
+      if (d < bestDist) {
+        bestDist = d;
+        mainRun = r;
+      }
+    });
+    const halfCols = Math.max(1, (mainRun[1] - mainRun[0]) * 0.5);
+    const reqHalf = (bodyHalfAt(y) + layerOffset) * 1.06;
+    if (halfCols * dx < reqHalf) {
+      rowScaleArr[j] = clamp(reqHalf / Math.max(1e-3, halfCols * dx), 1.0, 1.65);
+    }
+  }
+  if (isSkirt) {
+    for (let pass = 0; pass < 2; pass++) {
+      const tmp = new Float32Array(rowScaleArr);
+      for (let j = 1; j < vh - 1; j++) {
+        tmp[j] = 0.25 * rowScaleArr[j - 1] + 0.5 * rowScaleArr[j] + 0.25 * rowScaleArr[j + 1];
+      }
+      rowScaleArr.set(tmp);
+    }
+  }
+
+  // Helper: resolve the owning run [a, b] for vertex (i, j), including vertical cap rows
+  const distToRun = (col, r) => (col < r[0] ? r[0] - col : col > r[1] ? col - r[1] : 0);
+  const runsOverlap = (r1, r2) => r1[0] <= r2[1] + 1.5 && r2[0] <= r1[1] + 1.5;
+  const resolveVertexRun = (i, j) => {
+    const runs = runsByRow[j];
+    let bestCurr = null;
+    let bestCurrDist = Infinity;
+    for (let k = 0; k < runs.length; k++) {
+      const d = distToRun(i, runs[k]);
+      if (d < bestCurrDist) {
+        bestCurrDist = d;
+        bestCurr = runs[k];
+      }
+    }
+    if (bestCurr && bestCurrDist <= 1.5) return bestCurr;
+
+    // Check adjacent rows for vertical cap vertices (e.g. underside of a horizontal sleeve)
+    let bestAdj = null;
+    let bestAdjDist = Infinity;
+    for (let dj = -1; dj <= 1; dj += 2) {
+      const rj = j + dj;
+      if (rj < 0 || rj >= vh) continue;
+      const adjRuns = runsByRow[rj];
+      for (let k = 0; k < adjRuns.length; k++) {
+        const d = distToRun(i, adjRuns[k]);
+        if (d < bestAdjDist) {
+          bestAdjDist = d;
+          bestAdj = adjRuns[k];
+        }
+      }
+    }
+    if (bestAdj && bestAdjDist <= 1.5) {
+      if (bestCurr && runsOverlap(bestCurr, bestAdj)) return bestCurr;
+      return bestAdj;
+    }
+    return bestCurr || bestAdj;
+  };
 
   // ── Per-row geometry ──
   const offF = new Float32Array(vw * vh); // front depth offset (>= 0)
@@ -298,6 +374,7 @@ export function buildSilhouetteShell({
   const baseZ = new Float32Array(vw * vh);
   const xs = new Float32Array(vw * vh);
   const ys = new Float32Array(vw * vh);
+  const uCols = new Float32Array(vw * vh);
 
   for (let j = 0; j < vh; j++) {
     const y = rowY(j);
@@ -305,6 +382,7 @@ export function buildSilhouetteShell({
     const torso = getTorsoSlice(Math.max(0.5, y), isMale);
     const belowCrotch = y < yCrotchBody;
     const leg = belowCrotch ? getLegSlice(y, isMale) : null;
+    const dxRow = dx * rowScaleArr[j];
 
     // Leg warp: two big runs below the avatar crotch snap onto the avatar legs.
     let legRuns = null;
@@ -318,16 +396,21 @@ export function buildSilhouetteShell({
 
     for (let i = 0; i < vw; i++) {
       const idx = j * vw + i;
-      let x = (i - colMid) * dx;
+      const run = resolveVertexRun(i, j);
+      const col = run ? clamp(i, run[0], run[1]) : i;
+      const inset = run ? Math.min(0.35, (run[1] - run[0]) * 0.15) : 0;
+      uCols[idx] = run ? clamp(col, run[0] + inset, run[1] - inset) : i;
+
+      let x = (col - colMid) * dxRow;
       if (legRuns && blend > 0) {
         const c0 = (legRuns[0][0] + legRuns[0][1]) / 2;
         const c1 = (legRuns[1][0] + legRuns[1][1]) / 2;
-        const k = Math.abs(i - c0) <= Math.abs(i - c1) ? 0 : 1;
+        const k = Math.abs(col - c0) <= Math.abs(col - c1) ? 0 : 1;
         const ck = k === 0 ? c0 : c1;
-        const halfCols = (legRuns[k][1] - legRuns[k][0]) / 2;
-        const legScale = clamp((leg.r + layerOffset) / Math.max(1e-3, halfCols * dx), 0.8, 1.25);
+        const halfCols = Math.max(1, (legRuns[k][1] - legRuns[k][0]) / 2);
+        const legScale = clamp(((leg.r + layerOffset) * 1.05) / Math.max(1e-3, halfCols * dx), 0.8, 1.35);
         const side = k === 0 ? -1 : 1;
-        const xLeg = side * leg.cx + (i - ck) * dx * legScale;
+        const xLeg = side * leg.cx + (col - ck) * dx * legScale;
         x = x * (1 - blend) + xLeg * blend;
       }
       xs[idx] = x;
@@ -335,11 +418,11 @@ export function buildSilhouetteShell({
       baseZ[idx] = isBottom && belowCrotch ? leg.cz : torso.cz;
     }
 
-    // Depth profile per run (elliptical cross-section, exactly closed at the outline).
+    // Depth profile per run (elliptical cross-section, strictly closed at a and b).
     runs.forEach(([a, b]) => {
       const mid = (a + b) / 2;
       const half = Math.max(0.5, (b - a) / 2);
-      const halfWorld = half * dx;
+      const halfWorld = half * dxRow;
       let bodyRz;
       if (isBottom && belowCrotch) bodyRz = leg.r + layerOffset;
       else bodyRz = torso.rz + layerOffset;
@@ -349,27 +432,35 @@ export function buildSilhouetteShell({
       }
       // Narrow parts (sleeves, straps) must not be thicker than they are wide
       const amp = Math.min(bodyRz, halfWorld * 1.05 + 0.012);
-      for (let i = Math.max(0, Math.ceil(a)); i <= Math.min(nx, Math.floor(b)); i++) {
+      const isBodySpan = halfWorld >= torso.rx * 0.82;
+      const iStart = Math.max(0, Math.ceil(a + 0.02));
+      const iEnd = Math.min(nx, Math.floor(b - 0.02));
+      for (let i = iStart; i <= iEnd; i++) {
         const u = clamp((i - mid) / half, -1, 1);
-        const hh = Math.sqrt(Math.max(0, 1 - u * u));
+        const s = Math.max(0, 1 - u * u);
+        const edgeTaper = smoothstep01((1 - Math.abs(u)) / 0.08);
+        const hh = (isBodySpan ? Math.pow(s, 0.44) : Math.sqrt(s)) * edgeTaper;
         offF[j * vw + i] = amp * hh;
         offB[j * vw + i] = (amp + 0.008) * hh;
       }
     });
   }
 
-  // Vertical smoothing of the depth offsets (inside the fabric only)
+  // Vertical smoothing of the depth offsets (interior vertices only; boundary stays pinned to 0)
   for (let pass = 0; pass < 2; pass++) {
     const tmpF = new Float32Array(offF);
     const tmpB = new Float32Array(offB);
     for (let j = 1; j < vh - 1; j++) {
       for (let i = 0; i < vw; i++) {
         const idx = j * vw + i;
-        if (!inside[idx]) continue;
-        const up = inside[idx - vw] ? idx - vw : idx;
-        const dn = inside[idx + vw] ? idx + vw : idx;
-        tmpF[idx] = 0.25 * offF[up] + 0.5 * offF[idx] + 0.25 * offF[dn];
-        tmpB[idx] = 0.25 * offB[up] + 0.5 * offB[idx] + 0.25 * offB[dn];
+        if (!inside[idx] || offF[idx] <= 1e-5) continue;
+        const up = idx - vw;
+        const dn = idx + vw;
+        const smF = 0.25 * offF[up] + 0.5 * offF[idx] + 0.25 * offF[dn];
+        const smB = 0.25 * offB[up] + 0.5 * offB[idx] + 0.25 * offB[dn];
+        const nearEdge = !inside[idx - 1] || !inside[idx + 1] || !inside[up] || !inside[dn];
+        tmpF[idx] = nearEdge ? Math.min(smF, offF[idx] * 1.05) : smF;
+        tmpB[idx] = nearEdge ? Math.min(smB, offB[idx] * 1.05) : smB;
       }
     }
     offF.set(tmpF);
@@ -393,15 +484,14 @@ export function buildSilhouetteShell({
     backPos[idx * 3 + 2] = baseZ[idx] - offB[idx];
   }
 
-  // UVs: both sheets sample their texture at the same normalised position, so the
-  // back texture (which is baked mirrored, see buildBackTexture) always has exactly
-  // the same silhouette as the front photo and the two sheets close perfectly.
+  // UVs: both sheets sample their texture at the same normalised position, clamped
+  // inside the opaque run so boundary triangles never clip or tear along the seam.
   const uvFront = new Float32Array(vw * vh * 2);
   const uvBack = new Float32Array(vw * vh * 2);
   for (let j = 0; j < vh; j++) {
     for (let i = 0; i < vw; i++) {
       const idx = j * vw + i;
-      const u = i / nx;
+      const u = clamp(uCols[idx] / nx, 0, 1);
       const v = 1 - j / ny;
       uvFront[idx * 2] = u;
       uvFront[idx * 2 + 1] = v;
