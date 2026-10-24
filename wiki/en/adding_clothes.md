@@ -23,8 +23,9 @@ You can add clothes by taking live photos with your camera, uploading saved phot
 
 3. **How Free Users Unlock Cluster Uploading (15+ AI Reconstruction Credits)**:
    - Cluster garment uploading (mass pipeline) uses **Nano Banana** studio AI reconstruction for every detected piece (up to 15 garments per photo).
-   - Because Free accounts start with 5 free AI reconstruction credits, a single cluster photo would otherwise exhaust their starter allowance and leave many garments unreconstructed.
-   - Free users can purchase an **AI credit pack** on the Pricing page and unlock the Cluster pipeline whenever they hold **15 or more AI reconstruction credits**, or upgrade to a **Manager** or **Professional** plan.
+   - Free accounts receive **5 one-time AI reconstruction onboarding bonus credits** upon signup to test studio repairs and single-item re-analysis. Because a single cluster photo can contain up to 15 garments, it would immediately exhaust those 5 starter bonus credits and leave garments unreconstructed.
+   - Free users with any reconstruction credit balance (> 0) can use the AddItem re-analyzer (Nano Banana) or tap Reconstruct on individual pieces.
+   - Free users can purchase an **AI credit pack** (10, 50, or 100 credits) on the Pricing page and immediately unlock the Cluster pipeline whenever they hold **15 or more AI reconstruction credits**, or upgrade to a **Manager** or **Professional** plan (which includes 100 monthly Studio Reconstruction credits).
    - If a Free user with fewer than 15 AI reconstruction credits tries to upload a cluster of garments, DressApp displays a message suggesting they **skip the image, purchase an AI credit pack, or upgrade their plan**.
 
 4. **Automatic Background Removal & Smart Tagging**:

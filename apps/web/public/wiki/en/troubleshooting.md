@@ -7,8 +7,11 @@ Here are simple solutions to the most common questions when using DressApp:
 - **Easy fix**: Share your personal invite link from your **Profile** page to earn **+10 free slots** for every friend who registers, or upgrade to the **Manager** or **Professional** plan for unlimited closet space.
 
 ## 2. Why was my cluster photo (closet, hangers, shoe rack, or pile of clothes) blocked on the Free plan?
-- **Why it happens**: Cluster garment uploading (mass pipeline) uses **Nano Banana** AI reconstruction for every item in the photo. A single cluster photo can consume all of a Free user's AI reconstruction allowance at once, leaving many garments unreconstructed. Therefore, cluster uploading is forbidden on the Free plan.
-- **Easy fix**: Tap **Skip Image** and photograph garments individually or as a worn outfit, or tap **Upgrade Plan** to switch to the **Manager** or **Professional** plan and unlock full cluster uploading.
+- **Why it happens**: Cluster garment uploading (mass pipeline) uses **Nano Banana** AI studio reconstruction for every detected piece in the photo. Free accounts receive **5 one-time onboarding bonus reconstruction credits** upon signup. Because a single cluster photo can contain up to 15 garments, it would immediately deplete those 5 starter bonus credits and leave garments half-processed.
+- **Easy fix**:
+  - If you hold fewer than 15 AI reconstruction credits, tap **Skip Image** to photograph items individually or as a worn outfit.
+  - To unlock cluster uploading on the Free plan, purchase an **AI credit pack** on the **Pricing** page—having **15 or more AI reconstruction credits** immediately unlocks the Cluster pipeline.
+  - Alternatively, upgrade to the **Manager** or **Professional** plan for 100 monthly Studio Reconstruction credits and full cluster uploading capabilities.
 
 ## 3. Why did Cluster Upload skip an item or change a pattern or color?
 - **Why it happens**: Cluster garment uploading can identify and reconstruct garments hanging in the closet or on a hanger, a rack of shoes, or a pile of shirts using fewer photos, but it has five known fallbacks:

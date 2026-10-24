@@ -951,7 +951,7 @@ export default function HelpMenu({ initialTab, onClose }) {
                         }),
                         t("help.qa_step2", {
                           defaultValue:
-                            "**How do free credits work?** Free accounts receive **10 daily credits** (accumulating up to 300 over 30 days) for single-item and outfit scans plus stylist chats, along with **5 starter Studio Reconstruction credits**.",
+                            "**How do free credits work?** Free accounts receive **10 daily credits** (accumulating up to 300 over 30 days) for single-item and outfit scans plus stylist chats, along with **5 one-time AI reconstruction onboarding bonus credits** to try studio repairs (these do not renew monthly; additional credits never expire and can be purchased in credit packs).",
                         }),
                         t("help.qa_step3", {
                           defaultValue:
@@ -1711,7 +1711,7 @@ export default function HelpMenu({ initialTab, onClose }) {
                           {renderFormattedText(
                             t("help.tiers_free_desc", {
                               defaultValue:
-                                "Baseline limit of 50 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 starter AI reconstruction credits. Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
+                                "Baseline limit of 50 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 one-time AI reconstruction onboarding bonus credits. Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
                             }),
                           )}
                         </p>

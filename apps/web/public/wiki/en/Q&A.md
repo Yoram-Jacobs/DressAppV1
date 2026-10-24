@@ -12,7 +12,7 @@ Most people wear only **20% of their wardrobe 80% of the time** because their cl
 ### How DressApp Solves It
 DressApp removes manual work and morning decision fatigue with smart visual recognition and personal styling:
 - **Effortless Closet Digitization**: Take a photo of a single item, a full-body mirror outfit, or several clothes laid out together—or import from an online store link, receipt, product QR code, or another wardrobe app. DressApp automatically detects the photo type, removes backgrounds, separates multiple items, and fills in key details (Category, Color, Fabric, Cut, Season, Dress Code, and Warmth).
-- **Cumulative Free Credit System**: Free users receive **10 daily On-Premises AI Credits** that accumulate up to **300 credits over 30 days**, plus **5 free Studio Reconstruction Credits** when signing up. By photographing a few items a day over 5 days, you automatically have **50 credits** — enough to digitize a 50-item core wardrobe for free.
+- **Cumulative Free Credit System**: Free users receive **10 daily On-Premises AI Credits** that accumulate up to **300 credits over 30 days**, plus **5 one-time onboarding bonus Studio Reconstruction Credits** when signing up. By photographing a few items a day over 5 days, you automatically have **50 credits** — enough to digitize a 50-item core wardrobe for free.
 - **Personal Styling for Real Life**: Your AI Stylist combines the clothes in your closet, local weather forecasts, your calendar events, modesty preferences, and body measurements to suggest complete head-to-toe outfits or highlight missing wardrobe basics.
 
 ### Plans & Features at a Glance
@@ -22,7 +22,7 @@ DressApp removes manual work and morning decision fatigue with smart visual reco
 | **Closet Capacity** | **50 items** (up to **150** via friend invites) | **Unlimited** | **Unlimited** |
 | **AI Model** | **DressApp's On-Premises AI Model** | **Cutting-Edge AI Model** + Automatic On-Premises Fallback | **Cutting-Edge AI Model** + Automatic On-Premises Fallback |
 | **Daily AI Credits** | **10/day** (accumulates up to **300 / 30 days**) | **Unlimited** daily styling & garment scans | **Unlimited** daily styling & garment scans |
-| **Studio Reconstruction** | **5 free** starter credits (**15+ credits** via credit packs unlocks Cluster Upload) | **100 monthly** Studio Reconstruction credits | **100 monthly** Studio Reconstruction credits |
+| **Studio Reconstruction** | **5 one-time onboarding bonus credits** | **100 monthly** Studio Reconstruction credits | **100 monthly** Studio Reconstruction credits |
 | **Included Features** | Digital Closet, AI Stylist, Outfit Planner, Suitcase (+ Cluster Upload with 15+ AI credits) | + Cluster Upload, Wardrobe Migration Agent, Trend Scout, Marketplace | + Certified Experts Directory & Promotional Campaigns |
 
 ---
@@ -56,7 +56,7 @@ By Day 5, you will have **50 core items** in your digital closet — unlocking t
 ### Q: How do Free AI Credits work?
 **A:** Free users have two credit balances visible in **Profile**:
 1. **On-Premises AI Credits (10 Free Daily Credits)**: Used for everyday scanning and styling powered by **DressApp's on-premises AI model**. You receive **10 free credits every day**, and unused credits **accumulate for up to 30 days (up to 300 credits)** before resetting.
-2. **Studio Reconstruction Credits (5 Free Starter Credits)**: Used when you tap **Reconstruct** to turn a wrinkled or imperfectly lit garment photo into a clean, studio-quality catalog image using our **cutting-edge AI model**.
+2. **Studio Reconstruction Credits (5 One-Time Onboarding Bonus Credits)**: A one-time welcome bonus provided when you sign up to let you try out studio garment repairs and the AddItem re-analyzer (Nano Banana). These bonus credits do not renew each month. Free users can purchase non-expiring AI credit packs anytime on the Pricing page to top up, or upgrade to a Manager or Professional plan for 100 monthly Studio Reconstruction credits.
 
 ### Q: How many On-Premises AI Credits does each action use on the Free plan?
 **A:** Each action with DressApp's on-premises AI model uses **1 credit per garment or request**:
@@ -71,7 +71,7 @@ By Day 5, you will have **50 core items** in your digital closet — unlocking t
 
 ### Q: What happens if I run out of Studio Reconstruction credits or want unlimited daily AI?
 **A:** You have two flexible options on the **Pricing** page:
-- **Add-On Credit Packs (Never Expire)**: Purchase **10 credits ($3)**, **50 credits ($12)**, or **100 credits ($20)**. Purchased credits never expire, are only used after your included credits are spent, and **holding 15 or more AI reconstruction credits unlocks the Cluster Garment Upload pipeline on the Free plan**!
+- **Add-On Credit Packs (Never Expire)**: Purchase **10 credits ($3)**, **50 credits ($12)**, or **100 credits ($20)**. Purchased credits never expire, are only used after your included credits are spent, and **holding 15 or more AI reconstruction credits unlocks the Cluster Garment Upload pipeline on the Free plan**! Free users with any reconstruction credit balance (> 0) can also use the AddItem re-analyzer.
 - **Upgrade to Wardrobe Manager ($10/mo or $100/yr)**: Unlocks **unlimited closet space**, **unlimited daily styling and scans** powered by our **cutting-edge AI model**, **100 monthly Studio Reconstruction credits**, **Cluster Garment Uploading** (closets, hangers, shoe racks, and shirt piles), the **Wardrobe Migration Agent**, morning outfit notifications, **Trend Scout**, and the **Marketplace**.
 
 ### Q: What happens if I demote from Manager or Professional back to the Free plan?

@@ -11,7 +11,7 @@ As a Free plan user, DressApp gives you two dedicated credit pools so you can di
 | Credit Pool | Allocation & Rollover | What It Powers | Cost per Action |
 | :--- | :--- | :--- | :--- |
 | **On-Premises AI Credits** *(DressApp's On-Premises AI Model)* | **10 free credits / day**, cumulative over up to **30 days (up to 300 credits)**, then resets | Garment scanning, multi-item detection, AI Stylist chat, and Suitcase packing | • **Single garment scan**: 1 credit — • **Multi-item photo scan (e.g., 5 garments)**: 5 credits (1 per garment) — • **AI Stylist request**: 1 credit — • **Suitcase packing**: 1 credit per garment selected |
-| **Studio Reconstruction Credits** *(Cutting-Edge AI Model)* | **5 free onboarding credits** (top up anytime on the Pricing page) | Studio-grade garment reconstruction, crop repair, and image touch-ups | • **1 Reconstruction credit** per studio image enhancement |
+| **Studio Reconstruction Credits** *(Cutting-Edge AI Model)* | **5 one-time onboarding bonus credits** (top up anytime with credit packs on the Pricing page) | Studio-grade garment reconstruction, crop repair, and AddItem re-analysis | • **1 Reconstruction credit** per studio image enhancement or re-analysis |
 
 > **Tip:** **Why Cumulative Credits Matter for Onboarding:** Because your **10 daily On-Premises AI Credits** accumulate up to **300 credits over 30 days**, you never lose a day's progress if you prefer to photograph clothes in batches. After just **5 days**, you will have **50 credits**—the exact amount needed to digitize a complete 50-item Free Plan closet!
 
@@ -19,7 +19,26 @@ As a Free plan user, DressApp gives you two dedicated credit pools so you can di
 
 ## 2. Garment Photography Best Practices
 
-When you upload a photo, DressApp's AI automatically detects whether your image shows a **single garment**, a **full outfit you are wearing**, or **several garments laid out together**. It removes the background, identifies the colors, and recognizes the garment's cut and style. Taking clean, well-lit photos ensures accurate cutouts and color recognition on the first try—saving your **5 Studio Reconstruction Credits** for truly tricky items.
+When you upload a photo, DressApp's AI automatically detects whether your image shows a **single garment**, a **full outfit you are wearing**, or a **cluster of garments** (available on **Manager** and **Professional** plans, as well as to **Free users who possess 15 or more AI reconstruction credits**). Taking clean, well-lit photos ensures accurate cutouts and color recognition on the first try—saving your **Studio Reconstruction Credits** for when you really need them.
+
+### Cluster Garment Uploading (Manager & Professional Plans, or Free Users with 15+ AI Reconstruction Credits)
+
+Cluster garment uploading (mass pipeline) is a revolutionary feature that lets you take photos directly in your physical closet, use far fewer photos, and digitize your wardrobe in no time. It can identify and reconstruct:
+- **Garments hanging in the closet or on a hanger**
+- **A rack of shoes**
+- **A pile of shirts or folded clothes**
+- **Multiple garments arranged together** (not just garments spread on a bed!)
+
+> **How Free Users Unlock Cluster Uploading (15+ AI Reconstruction Credits):** Cluster garment uploading uses **Nano Banana** studio AI reconstruction and can process up to 15 garments from a single photo. Free accounts start with **5 one-time onboarding bonus reconstruction credits** to test studio repairs on individual items. A single cluster photo would immediately exhaust these starter bonus credits halfway through. Free users can purchase an **AI credit pack** on the Pricing page and immediately unlock the Cluster pipeline whenever their balance is **15 or more AI reconstruction credits**, or upgrade to a **Manager** or **Professional** plan (which includes 100 monthly Studio Reconstruction credits). Free users with any reconstruction credit balance (> 0) can also use the AddItem re-analyzer. If a Free user with fewer than 15 AI reconstruction credits uploads a cluster photo, DressApp prompts them to **skip the image, top up AI credits, or upgrade their plan**.
+
+**Cluster Uploading Fallbacks & Best Practices:**
+1. **Stick to Solid Colors & Simple Patterns**: Cluster upload is great for solid colors or very simple plaid or striped patterns. It cannot analyze hidden prints and fine details—photograph intricate prints individually.
+2. **Garment Condition**: The reconstructed studio image rarely reflects the current physical condition or wear of the garment.
+3. **Check for Skipped Garments**: It may skip some garments in dense or overlapping clusters.
+4. **Watch for Hallucinated Patterns or Colors**: It can occasionally hallucinate patterns and colors on partially hidden pieces—always review the item card before saving.
+5. **Mind Your Reconstruction Credits**: Every reconstructed piece consumes reconstruction credits.
+
+> **Plan Demotion Note:** If a Manager or Professional user later demotes to the Free plan, they lose their extra closet slots, **leaving only the last 50 added items in their closet**. DressApp warns you about losing older closet assets and asks for confirmation before completing any planned demotion.
 
 ### The 4 Golden Rules of Flat-Lay Photography
 

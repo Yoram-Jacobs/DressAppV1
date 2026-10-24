@@ -22,7 +22,7 @@ DressApp nimmt Ihnen die manuelle Arbeit und die morgendliche Entscheidungsschwi
 | **Schrankkapazität** | **50 Teile** (bis zu **150** durch Freundeseinladungen) | **Unbegrenzt** | **Unbegrenzt** |
 | **KI-Modell** | **DressApps eigenes KI-Modell** | **Hochmodernes KI-Modell** + automatischer interner Rückfallschutz | **Hochmodernes KI-Modell** + automatischer interner Rückfallschutz |
 | **Tägliche KI-Credits** | **10/Tag** (kumulativ bis **300 / 30 Tage**) | **Unbegrenzt** für tägliches Styling & Kleidungsscans | **Unbegrenzt** für tägliches Styling & Kleidungsscans |
-| **Studio-Rekonstruktion** | **5 kostenlose** Start-Credits | **100 monatliche** Studio-Rekonstruktions-Credits | **100 monatliche** Studio-Rekonstruktions-Credits |
+| **Studio-Rekonstruktion** | **5 einmalige Onboarding-Bonus-Credits** | **100 monatliche** Studio-Rekonstruktions-Credits | **100 monatliche** Studio-Rekonstruktions-Credits |
 | **Enthaltene Funktionen** | Digitaler Schrank, Stylist, Outfit-Planer, Koffer | + Schneller Schrank-Import, Trend-Entdecker, Marktplatz | + Expertenverzeichnis & Werbekampagnen |
 
 ---
@@ -71,7 +71,7 @@ Nach 5 Tagen haben Sie **50 Grundteile** digitalisiert – die Basis für tausen
 
 ### F: Was passiert, wenn meine Studio-Rekonstruktions-Credits aufgebraucht sind oder ich unbegrenzte KI-Nutzung möchte?
 **A:** Auf der **Preisseite** haben Sie zwei flexible Möglichkeiten:
-- **Zusatz-Credit-Pakete kaufen (verfallen nie)**: Kaufen Sie **10 Credits ($3)**, **50 Credits ($12)** oder **100 Credits ($20)**. Gekaufte Credits verfallen nie und werden erst genutzt, wenn Ihre kostenlosen oder monatlichen Credits aufgebraucht sind.
+- **Zusatz-Credit-Pakete kaufen (verfallen nie)**: Kaufen Sie **10 Credits ($3)**, **50 Credits ($12)** oder **100 Credits ($20)**. Gekaufte Credits verfallen nie, werden erst nach den Bonus-Credits genutzt, und der Besitz von **15 oder mehr KI-Rekonstruktions-Credits schaltet den Sammel-Upload im kostenlosen Tarif frei**! Kostenlose Nutzer mit einem Guthaben von mehr als 0 Credits können zudem den AddItem Re-Analyzer nutzen.
 - **Upgrade auf Garderoben-Manager ($10/Monat oder $100/Jahr)**: Schaltet **unbegrenzten Platz im Kleiderschrank**, **unbegrenztes tägliches Styling und Scannen** mit unserem **hochmodernen KI-Modell**, **100 monatliche Studio-Rekonstruktions-Credits**, morgendliche Outfit-Benachrichtigungen, **Trend-Entdecker** und den **Marktplatz** frei.
 
 ### F: Was passiert, wenn ich von Manager oder Professional zurück in den Free-Tarif wechsle?

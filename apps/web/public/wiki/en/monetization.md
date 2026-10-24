@@ -6,7 +6,9 @@ DressApp offers a generous Free plan alongside flexible monthly and annual subsc
 
 1. **Free Plan**:
    - Store up to **50 closet items** for free—and expand your closet up to **150 items** by sharing your referral link with friends (**+10 free slots** for every friend who signs up).
-   - Powered right out of the box by **DressApp's on-premises AI model** (**10 daily credits**, accumulating up to **300 credits over 30 days**) plus **5 starter Studio Reconstruction credits**.
+   - Powered right out of the box by **DressApp's on-premises AI model** (**10 daily credits**, accumulating up to **300 credits over 30 days**).
+   - Includes **5 one-time AI reconstruction onboarding bonus credits** upon signup to try out studio repairs and the AddItem re-analyzer.
+   - Additional AI reconstruction credits can be purchased at any time via non-expiring credit packs (10, 50, or 100 credits) on the Pricing page. Free users with any reconstruction credit balance (> 0) can use the AddItem re-analyzer.
    - Supports single-garment photos and full-outfit photos worn by a person out of the box. **Cluster garment uploading** (closets, hangers, shoe racks, or piles of shirts) unlocks on the Free plan whenever you hold **15 or more AI reconstruction credits** (available via AI credit packs on the Pricing page), ensuring a single cluster photo never runs out of credits mid-batch.
 
 2. **Manager Plan ($10/month or $100/year)**:
