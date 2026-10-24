@@ -66,6 +66,13 @@ from app.config import settings
 from app.services.auth import get_current_user, get_current_user_optional, AuthenticatedUser
 from app.services import provider_activity
 
+try:
+    from bs4 import BeautifulSoup  # type: ignore
+    _HAS_BS4 = True
+except Exception:
+    BeautifulSoup = None  # type: ignore
+    _HAS_BS4 = False
+
 # Gemini 2.5 Flash — the closet pipeline's universal vision model.
 # Imported defensively so dev environments without google-genai still
 # load this module (the analyze-chart endpoint will return a clear
@@ -174,11 +181,12 @@ INPUT
 
 WHAT TO DO
 ----------
-1. OCR the size chart in the image. Extract:
-   - The column headers (e.g. "Bust", "Chest", "Waist", "Hip", "Shoulder", "Length", "Sleeve", "Bottom").
-   - The units (cm, in, or both).
-   - The size labels in the first column (S/M/L/EU 38/...).
-   - The numeric value(s) in each cell. Cells may hold a single number (a garment dimension) OR a range like "86-90" (a body-measurement bracket).
+1. OCR the size chart in the image. Determine the table orientation:
+   - HORIZONTAL SIZES (e.g. Zara): The top row lists the sizes (S, M, L, XL or 36, 38, 40) and the left column lists body areas (Chest, Waist, Hip, Total length).
+   - VERTICAL SIZES (e.g. ASOS): The left column lists the sizes (S, M, L or 36, 38, 40) and the top row lists body areas (Bust, Waist, Hip).
+   NEVER treat an area header (such as "Total", "Length", "Chest", "Waist", "Hip") as a size label!
+   Notice if measurements are flat/half-circumference (e.g. waist around 30-40 cm) vs full body circumferences (60-100 cm).
+   Extract the units (cm, in, or both) and the numeric value(s) in each cell.
 2. The user's measurements have been **pre-expanded server-side** so every common chart-column synonym is already populated. For example ``chest`` and ``bust`` carry the same value; ``shoulder``, ``shoulders`` and ``shoulder_width`` carry the same value; ``foot_length`` and ``insole`` carry the same value. Do a case-insensitive substring match between each chart column header and the JSON keys to find the user's value for that column. **NEVER** answer "measurements were not provided" if any column header matches any JSON key.
 3. For each row, check whether relevant user measurements fit — applying garment-category rules:
 
@@ -669,6 +677,388 @@ def _detect_category(garment_type: str | None, chart_text: str) -> str:
     return "upper" if has_upper else ("footwear" if has_foot else "unknown")
 
 
+
+# ----------------------- flexible matrix chart engine -----------------
+_KNOWN_SIZE_TOKENS = {
+    "xxs", "xs", "s", "m", "l", "xl", "xxl", "xxxl", "2xl", "3xl", "4xl", "5xl",
+    "0x", "1x", "2x", "3x", "4x", "os", "one size", "onesize", "free", "regular", "petite", "tall",
+    "xs/s", "s/m", "m/l", "l/xl", "xl/xxl", "xs-s", "s-m", "m-l", "l-xl",
+}
+
+_NUMERIC_SIZE_RANGES = [
+    (0, 24),    # US/UK clothing sizes 00, 0, 2, 4, 6... 24
+    (30, 64),   # EU/IT clothing sizes 32, 34, 36... 60 or waist inches 30..44
+]
+
+_KNOWN_AREA_KEYWORDS = {
+    # Upper
+    "chest", "bust", "underbust", "shoulder", "shoulders", "across shoulder",
+    "sleeve", "sleeves", "sleeve length", "armhole", "bicep", "wrist", "neck", "collar",
+    "pecho", "busto", "hombro", "manga", "brust", "schulter", "ärmel", "poitrine", "épaule", "manche",
+    # Lower
+    "waist", "hip", "hips", "inseam", "outseam", "thigh", "rise", "front rise", "back rise",
+    "cintura", "cadera", "tiro", "muslo", "taille", "hüfte", "bein", "schritt",
+    # Lengths
+    "length", "total length", "body length", "dress length", "back length", "center back",
+    "longitud", "largo", "länge", "longueur",
+    # Footwear
+    "foot", "foot length", "insole", "heel to toe", "longitud pie", "fußlänge",
+}
+
+_CORNER_AREA_HINTS = {
+    "area", "areas", "measurement", "measurements", "product measurement", "product measurements",
+    "dimension", "dimensions", "medida", "medidas", "maße", "mesure", "mesures",
+}
+
+_CORNER_SIZE_HINTS = {
+    "size", "sizes", "talla", "tallas", "größe", "größen", "taille", "tailles",
+}
+
+_RESERVED_AREA_WORDS = {
+    "total", "length", "total length", "area", "chest", "bust", "waist", "hip", "hips",
+    "shoulder", "shoulders", "sleeve", "sleeves", "inseam", "outseam", "thigh", "neck",
+    "cm", "in", "inch", "inches", "size", "sizes", "dimension", "dimensions",
+}
+
+_CANONICAL_AREA_SYNONYMS = {
+    "foot_length": ("foot length", "foot", "insole", "heel to toe", "fußlänge", "longitud pie"),
+    "chest": ("chest", "bust", "underbust", "pecho", "busto", "brust", "poitrine"),
+    "waist": ("waist", "cintura", "taille"),
+    "hip": ("hip", "hips", "cadera", "hüfte"),
+    "shoulder": ("shoulder", "shoulders", "across shoulder", "hombro", "schulter", "épaule"),
+    "inseam": ("inseam", "inside leg", "schritt", "tiro"),
+    "sleeve": ("sleeve", "sleeve length", "manga", "ärmel", "manche"),
+    "length": ("total length", "body length", "dress length", "back length", "center back", "longitud", "largo", "länge", "longueur", "length"),
+}
+
+
+def _is_size_token(tok: str) -> bool:
+    t = tok.strip().lower()
+    if not t or t in _RESERVED_AREA_WORDS:
+        return False
+    if t in _KNOWN_SIZE_TOKENS:
+        return True
+    if re.match(r"^(?:eu|us|uk|fr|it|size)\s*[:#-]?\s*([a-z0-9/.-]+)$", t):
+        return True
+    try:
+        val = float(t)
+        if any(lo <= val <= hi for lo, hi in _NUMERIC_SIZE_RANGES) or (3.5 <= val <= 16.0) or (35.0 <= val <= 50.0):
+            return True
+    except ValueError:
+        pass
+    return False
+
+
+def _is_area_token(tok: str) -> bool:
+    t = tok.strip().lower()
+    if not t:
+        return False
+    return any(k in t for k in _KNOWN_AREA_KEYWORDS)
+
+
+def _normalize_area_field(area_name: str) -> str | None:
+    al = area_name.strip().lower()
+    for canonical, syns in _CANONICAL_AREA_SYNONYMS.items():
+        if any(s in al for s in syns):
+            return canonical
+    return None
+
+
+def _parse_cell_range(cell: str) -> tuple[float, float] | None:
+    m = _RANGE_RE.search(cell)
+    if m:
+        try:
+            lo = float(m.group("lo").replace(",", "."))
+            hi = float(m.group("hi").replace(",", "."))
+            return (min(lo, hi), max(lo, hi))
+        except ValueError:
+            pass
+    nums = _SINGLE_NUM_RE.findall(cell)
+    if nums:
+        try:
+            val = float(nums[0].replace(",", "."))
+            return (val, val)
+        except ValueError:
+            pass
+    return None
+
+
+def _parse_table_grid(text_or_html: str) -> list[list[str]]:
+    """Parse HTML table or delimited text into a clean 2D string grid."""
+    if not text_or_html:
+        return []
+    if "<table" in text_or_html.lower() and BeautifulSoup is not None:
+        try:
+            soup = BeautifulSoup(text_or_html, "html.parser")
+            table = soup.find("table")
+            if table:
+                grid = []
+                for tr in table.find_all("tr"):
+                    row = [c.get_text(" ", strip=True) for c in tr.find_all(["th", "td"])]
+                    if any(row):
+                        grid.append(row)
+                if len(grid) >= 2:
+                    return grid
+        except Exception:
+            pass
+
+    lines = [ln.strip() for ln in text_or_html.splitlines() if ln.strip()]
+    grid = []
+    for ln in lines:
+        if "\t" in ln:
+            cells = [c.strip() for c in ln.split("\t") if c.strip()]
+        elif "|" in ln:
+            cells = [c.strip() for c in ln.split("|") if c.strip()]
+        elif "  " in ln:
+            cells = [c.strip() for c in re.split(r"\s{2,}", ln) if c.strip()]
+        else:
+            cells = [c.strip() for c in ln.split() if c.strip()]
+        if cells:
+            grid.append(cells)
+    return grid
+
+
+def _classify_table_axes(grid: list[list[str]]) -> str:
+    """Decide whether sizes are in top column headers or left row headers."""
+    if len(grid) < 2 or len(grid[0]) < 2:
+        return "UNKNOWN"
+    corner = grid[0][0].strip().lower()
+    top_headers = [c.strip() for c in grid[0][1:]]
+    left_headers = [grid[r][0].strip() for r in range(1, len(grid)) if len(grid[r]) > 0]
+
+    top_size_score = sum(1.0 for h in top_headers if _is_size_token(h))
+    top_area_score = sum(1.0 for h in top_headers if _is_area_token(h))
+    left_size_score = sum(1.0 for h in left_headers if _is_size_token(h))
+    left_area_score = sum(1.0 for h in left_headers if _is_area_token(h))
+
+    if any(k in corner for k in _CORNER_AREA_HINTS):
+        left_area_score += 2.5
+        top_size_score += 1.5
+    if any(k in corner for k in _CORNER_SIZE_HINTS):
+        left_size_score += 2.5
+        top_area_score += 1.5
+
+    horizontal_score = top_size_score + left_area_score
+    vertical_score = left_size_score + top_area_score
+
+    if horizontal_score > vertical_score and top_size_score > 0:
+        return "HORIZONTAL_SIZES"
+    if vertical_score >= horizontal_score and left_size_score > 0:
+        return "VERTICAL_SIZES"
+    return "UNKNOWN"
+
+
+def _canonicalize_matrix_chart(grid: list[list[str]], orientation: str) -> list[dict[str, Any]]:
+    """Transform 2D grid into standard size list with area measurements."""
+    sizes: list[dict[str, Any]] = []
+    if orientation == "HORIZONTAL_SIZES":
+        # Columns are sizes (top_headers = grid[0][1:])
+        # Rows are areas (left_headers = grid[1:][0])
+        for c in range(1, len(grid[0])):
+            label = grid[0][c].strip()
+            if not label or label.lower() in _RESERVED_AREA_WORDS or _is_area_token(label):
+                continue
+            meas: dict[str, tuple[float, float]] = {}
+            for r in range(1, len(grid)):
+                if c >= len(grid[r]):
+                    continue
+                area_raw = grid[r][0].strip()
+                field = _normalize_area_field(area_raw)
+                if not field:
+                    continue
+                rng = _parse_cell_range(grid[r][c])
+                if rng:
+                    meas[field] = rng
+            if meas:
+                sizes.append({"label": label, "measurements": meas, "raw": label})
+    elif orientation == "VERTICAL_SIZES":
+        # Rows are sizes (left_headers = grid[1:][0])
+        # Columns are areas (top_headers = grid[0][1:])
+        for r in range(1, len(grid)):
+            label = grid[r][0].strip()
+            if not label or label.lower() in _RESERVED_AREA_WORDS or _is_area_token(label):
+                continue
+            meas: dict[str, tuple[float, float]] = {}
+            for c in range(1, len(grid[r])):
+                if c >= len(grid[0]):
+                    continue
+                area_raw = grid[0][c].strip()
+                field = _normalize_area_field(area_raw)
+                if not field:
+                    continue
+                rng = _parse_cell_range(grid[r][c])
+                if rng:
+                    meas[field] = rng
+            if meas:
+                sizes.append({"label": label, "measurements": meas, "raw": label})
+
+    # Flat garment measurement detection (half circumference):
+    # In retail apparel (Zara, Shein, etc.), "Product measurements" table cells
+    # for chest/waist/hip around 25-55 cm represent half-circumferences.
+    all_circ_vals = []
+    for s in sizes:
+        for f in ("chest", "waist", "hip"):
+            if f in s["measurements"]:
+                all_circ_vals.append(s["measurements"][f][1])
+    is_flat = bool(all_circ_vals and all(v <= 58.0 for v in all_circ_vals))
+    if is_flat:
+        for s in sizes:
+            for f in ("chest", "waist", "hip"):
+                if f in s["measurements"]:
+                    lo, hi = s["measurements"][f]
+                    s["measurements"][f] = (lo * 2.0, hi * 2.0)
+
+    return sizes
+
+
+def _match_canonical_sizes(
+    sizes: list[dict[str, Any]],
+    user_measurements: dict[str, Any],
+    garment_type: str | None = None,
+) -> dict[str, Any] | None:
+    if not sizes or not user_measurements:
+        return None
+
+    user_vals: dict[str, float] = {}
+    for k, v in user_measurements.items():
+        if isinstance(v, (int, float)):
+            field = _normalize_area_field(str(k))
+            if field:
+                user_vals[field] = float(v)
+
+    # Footwear check
+    if garment_type and garment_type.lower() in _FOOTWEAR_TYPES:
+        foot_len_raw = (
+            user_measurements.get("foot_length")
+            or user_measurements.get("foot_len")
+            or user_measurements.get("foot")
+        )
+        foot_len = float(foot_len_raw) if foot_len_raw and isinstance(foot_len_raw, (int, float, str)) and str(foot_len_raw).replace(".", "", 1).isdigit() else None
+        shoe_sz = str(user_measurements.get("shoe_size") or "").strip().upper()
+
+        if foot_len:
+            chosen_i = None
+            for i, s in enumerate(sizes):
+                if "foot_length" in s["measurements"]:
+                    lo, hi = s["measurements"]["foot_length"]
+                    if lo <= foot_len <= hi or foot_len <= hi:
+                        chosen_i = i
+                        break
+            if chosen_i is not None:
+                chosen = sizes[chosen_i]
+                smaller_alt = sizes[chosen_i - 1] if chosen_i > 0 else None
+                larger_alt = sizes[chosen_i + 1] if chosen_i + 1 < len(sizes) else None
+                alts = []
+                if smaller_alt:
+                    alts.append({"size": smaller_alt["label"].upper(), "fit": "snug"})
+                if larger_alt:
+                    alts.append({"size": larger_alt["label"].upper(), "fit": "loose"})
+                return {
+                    "recommended_size": chosen["label"].upper(),
+                    "confidence": 0.65,
+                    "garment_type": "shoes",
+                    "size_chart_units": "cm",
+                    "matched_columns": ["foot_length"],
+                    "reasoning": f"Heuristic match: your foot length ({foot_len:g} cm) fits size {chosen['label'].upper()}.",
+                    "alternatives": alts,
+                }
+        if shoe_sz:
+            for s in sizes:
+                if s["label"].upper() == shoe_sz or shoe_sz in s["label"].upper():
+                    return {
+                        "recommended_size": s["label"].upper(),
+                        "confidence": 0.65,
+                        "garment_type": "shoes",
+                        "size_chart_units": "cm",
+                        "matched_columns": ["shoe_size"],
+                        "reasoning": f"Heuristic match: size {s['label'].upper()} matches your standard shoe size ({shoe_sz}).",
+                        "alternatives": [],
+                    }
+
+    if not user_vals:
+        # Fallback to usual size label match
+        usual_size = str(user_measurements.get("shirt_size") or user_measurements.get("pants_size") or "").strip().upper()
+        if usual_size:
+            for s in sizes:
+                if s["label"].upper() == usual_size:
+                    return {
+                        "recommended_size": s["label"].upper(),
+                        "confidence": 0.55,
+                        "garment_type": garment_type or "apparel",
+                        "size_chart_units": "cm",
+                        "matched_columns": ["usual_size"],
+                        "reasoning": f"Heuristic match: size {s['label'].upper()} matches your standard size ({usual_size}).",
+                        "alternatives": [],
+                    }
+        return None
+
+    # Apparel matching
+    category = _detect_category(garment_type, "")
+    if category == "upper":
+        relevant = [f for f in ("chest", "shoulder") if f in user_vals]
+    elif category == "lower":
+        relevant = [f for f in ("waist", "hip", "inseam") if f in user_vals]
+    else:
+        relevant = [f for f in ("chest", "waist", "hip") if f in user_vals]
+
+    if not relevant:
+        relevant = list(user_vals.keys())
+
+    chosen_i = None
+    EASE_CM = 1.5
+
+    for i, s in enumerate(sizes):
+        fits_all = True
+        checked_any = False
+        for f in relevant:
+            if f in s["measurements"]:
+                checked_any = True
+                _, hi = s["measurements"][f]
+                u_val = user_vals[f]
+                if f in ("length", "inseam"):
+                    continue
+                if u_val > hi + EASE_CM:
+                    fits_all = False
+                    break
+        if fits_all and checked_any:
+            chosen_i = i
+            break
+
+    if chosen_i is None:
+        chosen_i = len(sizes) - 1
+
+    chosen = sizes[chosen_i]
+    smaller_alt = sizes[chosen_i - 1] if chosen_i > 0 else None
+    larger_alt = sizes[chosen_i + 1] if chosen_i + 1 < len(sizes) else None
+
+    alts = []
+    if smaller_alt:
+        alts.append({"size": smaller_alt["label"].upper(), "fit": "snug"})
+    if larger_alt:
+        alts.append({"size": larger_alt["label"].upper(), "fit": "loose"})
+
+    matched_cols = [f for f in relevant if f in chosen["measurements"]]
+    primary_field = matched_cols[0] if matched_cols else "measurements"
+
+    if len(matched_cols) >= 2:
+        reason = (
+            f"Heuristic match: size {chosen['label'].upper()} comfortably accommodates both your "
+            f"{matched_cols[0]} ({user_vals[matched_cols[0]]:g} cm) and {matched_cols[1]} ({user_vals[matched_cols[1]]:g} cm)."
+        )
+    else:
+        reason = f"Heuristic match: size {chosen['label'].upper()} fits your {primary_field} ({user_vals.get(primary_field, 0):g} cm)."
+
+    return {
+        "recommended_size": chosen["label"].upper(),
+        "confidence": 0.65,
+        "garment_type": garment_type or ("shirt" if category == "upper" else ("pants" if category == "lower" else "dress")),
+        "size_chart_units": "cm",
+        "matched_columns": matched_cols,
+        "reasoning": reason,
+        "alternatives": alts,
+    }
+
+
 def _heuristic_match(
     *,
     chart_text: str,
@@ -680,6 +1070,17 @@ def _heuristic_match(
     for upper-body tops, foot length for shoes, waist/hip for pants)."""
     if not chart_text or not measurements:
         return None
+
+    # --- Phase 1: Flexible 2D Table Matrix Engine ---
+    grid = _parse_table_grid(chart_text)
+    if len(grid) >= 2 and len(grid[0]) >= 2:
+        orientation = _classify_table_axes(grid)
+        if orientation in ("HORIZONTAL_SIZES", "VERTICAL_SIZES"):
+            canonical_sizes = _canonicalize_matrix_chart(grid, orientation)
+            if canonical_sizes:
+                rec = _match_canonical_sizes(canonical_sizes, measurements, garment_type)
+                if rec is not None:
+                    return rec
 
     category = _detect_category(garment_type, chart_text)
 
@@ -715,7 +1116,12 @@ def _heuristic_match(
         if not m:
             continue
         label = m.group(1)
-        if label.lower() in HEADER_TOKENS or label.lower() == "size:":
+        if (
+            label.lower() in HEADER_TOKENS
+            or label.lower() == "size:"
+            or label.lower() in _RESERVED_AREA_WORDS
+            or _is_area_token(label)
+        ):
             continue
         ranges: list[tuple[float, float]] = []
         for lo_s, hi_s in _RANGE_RE.findall(ln):

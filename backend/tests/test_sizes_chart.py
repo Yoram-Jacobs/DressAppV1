@@ -177,3 +177,90 @@ async def test_analyze_url_endpoint():
         assert res.product.brand == "Zara"
         assert res.recommendation.recommended_size == "M"
         assert "chest" in res.recommendation.matched_columns
+
+
+
+def test_zara_transposed_chart_recommendation():
+    """Zara size chart has AREA in corner, sizes across columns (S, M, L), and body parts down rows.
+    Must recommend L (or M), and MUST NEVER recommend 'TOTAL' as a size."""
+    zara_chart = """
+    AREA\tS\tM\tL
+    Chest\t36.5\t37.5\t38.5
+    Waist\t33.5\t34.5\t35.5
+    Hip\t46.5\t47.5\t48.5
+    Total length\t75.0\t76.0\t77.0
+    """
+    user_measurements = {
+        "shoulder": 36.9,
+        "waist": 72,
+        "chest": 74,
+        "hip": 94,
+    }
+
+    result = _heuristic_match(
+        chart_text=zara_chart,
+        measurements=user_measurements,
+        garment_type="dress",
+    )
+    assert result is not None
+    assert result["recommended_size"] == "L"
+    assert result["recommended_size"] != "TOTAL"
+    assert "TOTAL" not in result["reasoning"]
+    assert "waist" in result["matched_columns"] or "chest" in result["matched_columns"]
+
+
+def test_zara_html_table_transposed():
+    """HTML table format from Zara with <th>AREA</th><th>S</th><th>M</th><th>L</th>."""
+    html_table = """
+    <table>
+      <thead>
+        <tr><th>AREA</th><th>S</th><th>M</th><th>L</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Chest</td><td>36.5</td><td>37.5</td><td>38.5</td></tr>
+        <tr><td>Waist</td><td>33.5</td><td>34.5</td><td>35.5</td></tr>
+        <tr><td>Hip</td><td>46.5</td><td>47.5</td><td>48.5</td></tr>
+        <tr><td>Total length</td><td>75.0</td><td>76.0</td><td>77.0</td></tr>
+      </tbody>
+    </table>
+    """
+    user_measurements = {
+        "shoulder": 36.9,
+        "waist": 72,
+        "chest": 74,
+        "hip": 94,
+    }
+
+    result = _heuristic_match(
+        chart_text=html_table,
+        measurements=user_measurements,
+        garment_type="dress",
+    )
+    assert result is not None
+    assert result["recommended_size"] == "L"
+    assert result["recommended_size"] != "TOTAL"
+
+
+def test_numeric_transposed_chart():
+    """Numeric sizes across columns (AREA | 36 | 38 | 40 | 42) must transpose correctly."""
+    numeric_chart = """
+    AREA | 36 | 38 | 40 | 42
+    Waist | 34 | 36 | 38 | 40
+    Hip | 46 | 48 | 50 | 52
+    Total length | 98 | 99 | 100 | 101
+    """
+    user_measurements = {
+        "waist": 75,
+        "hip": 99,
+    }
+
+    result = _heuristic_match(
+        chart_text=numeric_chart,
+        measurements=user_measurements,
+        garment_type="pants",
+    )
+    assert result is not None
+    # 38 flat waist is 72 cm (tight for 75), 40 flat waist is 76 cm (fits 75 cm)
+    assert result["recommended_size"] == "40"
+    assert result["recommended_size"] != "TOTAL"
+    assert result["recommended_size"] != "LENGTH"

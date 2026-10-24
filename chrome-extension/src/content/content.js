@@ -772,10 +772,25 @@ async function cropAndAnalyze(rect, targetEl = null) {
       return;
     }
 
+    let sendHtml = fallbackHtml;
+    let sendText = fallbackText;
+    if (!sendHtml && targetEl) {
+      try {
+        const tbl = targetEl.tagName?.toLowerCase() === 'table' ? targetEl : targetEl.querySelector('table');
+        if (tbl) {
+          sendHtml = tbl.outerHTML;
+          sendText = tbl.innerText || tbl.textContent;
+        } else {
+          sendHtml = targetEl.outerHTML;
+          sendText = targetEl.innerText || targetEl.textContent;
+        }
+      } catch (_) {}
+    }
+
     await _sendForAnalysis({
       chart_screenshot_b64: cropped,
-      chart_html: cropped ? null : fallbackHtml,
-      chart_text: cropped ? null : fallbackText,
+      chart_html: sendHtml || null,
+      chart_text: sendText || null,
       garment_type: generic.detectGarmentType(document),
     });
   } catch (e) {
