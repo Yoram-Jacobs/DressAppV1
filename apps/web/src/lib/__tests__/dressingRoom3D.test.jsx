@@ -145,7 +145,7 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(screen.getByText('Minimalist White Sneakers')).toBeInTheDocument();
   });
 
-  test('DressingRoom3D camera controls trigger view presets and auto-rotate turnaround', () => {
+  test('DressingRoom3D camera controls trigger view presets, side/back views, and auto-rotate turnaround', () => {
     render(
       <DressingRoom3D
         open={true}
@@ -158,18 +158,29 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     const fullBtn = screen.getByTitle('Full Body');
     const upperBtn = screen.getByTitle('Upper Body');
     const lowerBtn = screen.getByTitle('Lower Body');
+    const sideBtn = screen.getByTestId('camera-side-btn');
+    const backBtn = screen.getByTestId('camera-back-btn');
     const rotateBtn = screen.getByTitle('360° Rotate');
     const resetBtn = screen.getByTitle('Reset View');
 
     expect(fullBtn).toBeInTheDocument();
     expect(upperBtn).toBeInTheDocument();
     expect(lowerBtn).toBeInTheDocument();
+    expect(sideBtn).toBeInTheDocument();
+    expect(backBtn).toBeInTheDocument();
     expect(rotateBtn).toBeInTheDocument();
     expect(resetBtn).toBeInTheDocument();
 
     fireEvent.click(upperBtn);
+    fireEvent.click(sideBtn);
+    fireEvent.click(backBtn);
+    fireEvent.click(lowerBtn);
     fireEvent.click(rotateBtn);
     fireEvent.click(resetBtn);
+
+    // Canvas pointer interaction releases camera preset so dragging rotates 360 smoothly
+    const canvas = screen.getByTestId('mock-three-canvas');
+    fireEvent.pointerDown(canvas);
   });
 
   test('Garment layer visibility toggling in DressingRoom3D hides and shows items', () => {

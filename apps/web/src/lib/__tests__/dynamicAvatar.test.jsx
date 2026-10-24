@@ -1,6 +1,6 @@
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import DynamicAvatar, {
   computeMorphInfluences,
   resolveHairProperties,
@@ -38,6 +38,7 @@ jest.mock('framer-motion', () => ({
 // Mock Three.js & @react-three/fiber for JSDOM unit testing
 jest.mock('@react-three/fiber', () => ({
   Canvas: ({ children }) => <div data-testid="mock-webgl-canvas">{children}</div>,
+  useFrame: jest.fn(),
   useThree: () => ({
     gl: {
       setSize: jest.fn(),
@@ -153,6 +154,37 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     const avatarRoot = screen.getByTestId('dynamic-3d-avatar');
     expect(avatarRoot).toBeInTheDocument();
     expect(avatarRoot).toHaveAttribute('data-gender', 'male');
+  });
+
+  test('DynamicAvatar interactive mode enables touch-zone pointer events for 360 drag and rotate', () => {
+    window.WebGLRenderingContext = function () {};
+    window.PointerEvent = window.MouseEvent;
+    render(
+      <DynamicAvatar
+        height={170}
+        waist={72}
+        gender="female"
+        interactive={true}
+      />
+    );
+
+    const touchZone = screen.getByTestId('interactive-avatar-touch-zone');
+    expect(touchZone).toBeInTheDocument();
+    expect(touchZone.className).toContain('pointer-events-auto');
+    expect(touchZone.className).toContain('cursor-grab');
+
+    // Simulate drag gesture
+    fireEvent.pointerDown(touchZone, { clientX: 100, pointerId: 1 });
+    fireEvent.pointerMove(touchZone, { clientX: 150, pointerId: 1 });
+    fireEvent.pointerUp(touchZone, { pointerId: 1 });
+
+    // Reset rotation button appears when rotated
+    const resetBtn = screen.getByTestId('reset-avatar-rotation-btn');
+    expect(resetBtn).toBeInTheDocument();
+
+    // Clicking reset rotation clears rotation and hides button
+    fireEvent.click(resetBtn);
+    expect(screen.queryByTestId('reset-avatar-rotation-btn')).toBeNull();
   });
 
   test('computeMorphInfluences accurately calculates morph weights', () => {

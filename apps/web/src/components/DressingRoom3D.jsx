@@ -94,13 +94,48 @@ export const GARMENT_CAMERA_TARGETS = {
   full: { target: [0, 0.95, 0], pos: [0, 1.05, 2.5] },
 };
 
-function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGarmentSlot, showAvatar }) {
+function CameraController({
+  cameraPreset,
+  setCameraPreset,
+  controlsRef,
+  activeGarmentSlot,
+  showAvatar,
+  initialTarget,
+  onUserInteraction,
+}) {
   const { camera } = useThree();
   const targetCamPos = useRef(new THREE.Vector3(0, 1.05, 2.5));
   const targetLookAt = useRef(new THREE.Vector3(0, 0.95, 0));
+  const frameCount = useRef(0);
+
+  // Initialize controls target once on mount
+  useEffect(() => {
+    if (controlsRef?.current && initialTarget) {
+      controlsRef.current.target.set(...initialTarget);
+      controlsRef.current.update();
+    }
+  }, [controlsRef, initialTarget]);
+
+  // When user interacts with OrbitControls (starts dragging / rotating / pinching),
+  // instantly release programmatic animation so drag-to-rotate is completely uninhibited.
+  useEffect(() => {
+    const controls = controlsRef?.current;
+    if (!controls) return;
+    const handleUserStart = () => {
+      setCameraPreset(null);
+      onUserInteraction?.();
+    };
+    controls.addEventListener('start', handleUserStart);
+    return () => {
+      controls.removeEventListener('start', handleUserStart);
+    };
+  }, [controlsRef, setCameraPreset, onUserInteraction]);
 
   useEffect(() => {
     if (!cameraPreset) return;
+    frameCount.current = 0;
+
+    const currentTarget = controlsRef?.current ? controlsRef.current.target : targetLookAt.current;
 
     if (cameraPreset === 'full') {
       targetCamPos.current.set(0, 1.05, 2.5);
@@ -116,13 +151,18 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGa
       targetCamPos.current.set(...slotConfig.pos);
       targetLookAt.current.set(...slotConfig.target);
     } else if (cameraPreset === 'back' || cameraPreset === 'side') {
-      // Same framing as the front view, but orbited to the back / side of the model
+      // Orbit around the current target or the model center
+      const cy = currentTarget.y || 0.95;
       const base = (!showAvatar && GARMENT_CAMERA_TARGETS[activeGarmentSlot])
         ? GARMENT_CAMERA_TARGETS[activeGarmentSlot]
-        : GARMENT_CAMERA_TARGETS.full;
-      const [px, py, pz] = base.pos;
-      const [tx, ty, tz] = base.target;
-      const dist = Math.hypot(px - tx, pz - tz);
+        : { target: [0, cy, 0], pos: [0, camera.position.y || 1.05, 2.5] };
+      const px = camera.position.x || base.pos[0];
+      const py = camera.position.y || base.pos[1];
+      const pz = camera.position.z || base.pos[2];
+      const tx = currentTarget.x ?? base.target[0];
+      const ty = cy;
+      const tz = currentTarget.z ?? base.target[2];
+      const dist = Math.max(1.2, Math.hypot(px - tx, pz - tz) || 2.5);
       if (cameraPreset === 'back') {
         targetCamPos.current.set(tx, py, tz - dist);
       } else {
@@ -139,11 +179,12 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGa
         targetLookAt.current.set(0, 0.95, 0);
       }
     }
-  }, [cameraPreset, activeGarmentSlot, showAvatar]);
+  }, [cameraPreset, activeGarmentSlot, showAvatar, controlsRef, camera]);
 
   useFrame((_, delta) => {
     if (!cameraPreset) return;
-    const lerpSpeed = Math.min(1, delta * 5);
+    frameCount.current += 1;
+    const lerpSpeed = Math.min(1, delta * 6);
     // Orbit around the look-at point (azimuth + radius + height) instead of cutting
     // straight through the model when moving between front / side / back views.
     const look = targetLookAt.current;
@@ -166,12 +207,20 @@ function CameraController({ cameraPreset, setCameraPreset, controlsRef, activeGa
       look.z + Math.cos(a) * r
     );
 
-    if (controlsRef.current) {
+    if (controlsRef?.current) {
       controlsRef.current.target.lerp(targetLookAt.current, lerpSpeed);
       controlsRef.current.update();
     }
 
-    if (camera.position.distanceTo(targetCamPos.current) < 0.02) {
+    const distToTarget = camera.position.distanceTo(targetCamPos.current);
+    if (distToTarget < 0.05 || frameCount.current > 45) {
+      if (distToTarget < 0.12) {
+        camera.position.copy(targetCamPos.current);
+      }
+      if (controlsRef?.current) {
+        controlsRef.current.target.copy(targetLookAt.current);
+        controlsRef.current.update();
+      }
       setCameraPreset(null);
     }
   });
@@ -250,6 +299,7 @@ export default function DressingRoom3D({
   const handleToggleAvatar = useCallback((e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
+    setAutoRotate(false);
     const nextVal = !showAvatar;
     if (controlledShowAvatar === undefined) {
       setInternalShowAvatar(nextVal);
@@ -380,6 +430,7 @@ export default function DressingRoom3D({
   }, []);
 
   const handleResetCamera = useCallback(() => {
+    setAutoRotate(false);
     setCameraPreset('reset');
   }, []);
 
@@ -498,7 +549,8 @@ export default function DressingRoom3D({
               alpha: true,
               powerPreference: 'high-performance',
             }}
-            className="w-full h-full cursor-grab active:cursor-grabbing"
+            className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
+            onPointerDown={() => setCameraPreset(null)}
           >
             {/* Creamy boutique background */}
             <color attach="background" args={['#FAF7F2']} />
@@ -528,14 +580,17 @@ export default function DressingRoom3D({
 
             <OrbitControls
               ref={controlsRef}
-              target={initialCamConfig.target}
-              minPolarAngle={Math.PI / 3.4}
-              maxPolarAngle={Math.PI / 2.05}
+              makeDefault
+              minPolarAngle={Math.PI / 6}
+              maxPolarAngle={Math.PI / 1.88}
               minDistance={0.5}
-              maxDistance={3.8}
-              enablePan={false}
+              maxDistance={4.2}
+              enablePan={true}
+              panSpeed={0.8}
+              enableRotate={true}
+              rotateSpeed={1.0}
               enableDamping={true}
-              dampingFactor={0.06}
+              dampingFactor={0.08}
               autoRotate={autoRotate}
               autoRotateSpeed={1.8}
             />
@@ -546,6 +601,8 @@ export default function DressingRoom3D({
               controlsRef={controlsRef}
               activeGarmentSlot={primarySlot}
               showAvatar={showAvatar}
+              initialTarget={initialCamConfig.target}
+              onUserInteraction={() => setAutoRotate(false)}
             />
 
             <Suspense fallback={null}>
@@ -607,59 +664,94 @@ export default function DressingRoom3D({
           <div className="absolute bottom-5 inset-x-0 z-10 flex justify-center pointer-events-none px-4">
             <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 bg-white/92 backdrop-blur-md rounded-2xl border border-[#E5DFD5] shadow-xl">
               <Button
-                variant="ghost"
+                variant={cameraPreset === 'full' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setCameraPreset('full')}
-                className="text-xs font-semibold text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5"
+                onClick={() => {
+                  setAutoRotate(false);
+                  setCameraPreset('full');
+                }}
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                  cameraPreset === 'full'
+                    ? 'bg-primary-brand text-white shadow-md'
+                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                }`}
                 title={t('dressing_room_3d.full_body', { defaultValue: 'Full Body' })}
               >
-                <User className="w-3.5 h-3.5 text-primary-brand" />
+                <User className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.full_body', { defaultValue: 'Full Body' })}</span>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={cameraPreset === 'upper' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setCameraPreset('upper')}
-                className="text-xs font-semibold text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5"
+                onClick={() => {
+                  setAutoRotate(false);
+                  setCameraPreset('upper');
+                }}
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                  cameraPreset === 'upper'
+                    ? 'bg-primary-brand text-white shadow-md'
+                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                }`}
                 title={t('dressing_room_3d.upper_body', { defaultValue: 'Upper Body' })}
               >
-                <Shirt className="w-3.5 h-3.5 text-primary-brand" />
+                <Shirt className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.upper_body', { defaultValue: 'Upper Body' })}</span>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={cameraPreset === 'lower' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setCameraPreset('lower')}
-                className="text-xs font-semibold text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5"
+                onClick={() => {
+                  setAutoRotate(false);
+                  setCameraPreset('lower');
+                }}
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                  cameraPreset === 'lower'
+                    ? 'bg-primary-brand text-white shadow-md'
+                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                }`}
                 title={t('dressing_room_3d.lower_body', { defaultValue: 'Lower Body' })}
               >
-                <Footprints className="w-3.5 h-3.5 text-primary-brand" />
+                <Footprints className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.lower_body', { defaultValue: 'Lower Body' })}</span>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={cameraPreset === 'side' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setCameraPreset('side')}
-                className="text-xs font-semibold text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5"
+                onClick={() => {
+                  setAutoRotate(false);
+                  setCameraPreset('side');
+                }}
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                  cameraPreset === 'side'
+                    ? 'bg-primary-brand text-white shadow-md'
+                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                }`}
                 title={t('dressing_room_3d.side_view', { defaultValue: 'Side view' })}
                 data-testid="camera-side-btn"
               >
-                <ChevronRight className="w-3.5 h-3.5 text-primary-brand" />
+                <ChevronRight className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.side_view', { defaultValue: 'Side view' })}</span>
               </Button>
 
               <Button
-                variant="ghost"
+                variant={cameraPreset === 'back' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setCameraPreset('back')}
-                className="text-xs font-semibold text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5"
+                onClick={() => {
+                  setAutoRotate(false);
+                  setCameraPreset('back');
+                }}
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                  cameraPreset === 'back'
+                    ? 'bg-primary-brand text-white shadow-md'
+                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                }`}
                 title={t('dressing_room_3d.back_view', { defaultValue: 'Back view' })}
                 data-testid="camera-back-btn"
               >
-                <RotateCw className="w-3.5 h-3.5 text-primary-brand" />
+                <RotateCw className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.back_view', { defaultValue: 'Back view' })}</span>
               </Button>
 

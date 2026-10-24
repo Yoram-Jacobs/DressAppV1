@@ -2,6 +2,7 @@ import React, { Suspense, useMemo, useEffect, useRef, useState, useCallback } fr
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { RotateCcw } from 'lucide-react';
 
 const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair3';
 const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair3';
@@ -726,6 +727,7 @@ function Realistic3DAvatarMesh({
   height,
   signature,
   interactive = false,
+  rotationY = 0,
 }) {
   const modelUrl = isMale ? MALE_GLB_URL : FEMALE_GLB_URL;
   const { scene } = useGLTF(modelUrl);
@@ -823,11 +825,14 @@ function Realistic3DAvatarMesh({
             camera.lookAt(0, 0, 0);
             camera.updateProjectionMatrix();
           }
+          const prevRot = groupRef.current ? groupRef.current.rotation.y : 0;
+          if (groupRef.current) groupRef.current.rotation.y = 0;
           gl.setSize(400, 900, false);
           gl.setClearColor(0x000000, 0);
           gl.clear();
           gl.render(threeScene, camera);
           const dataUrl = gl.domElement?.toDataURL?.('image/png');
+          if (groupRef.current) groupRef.current.rotation.y = prevRot;
           if (dataUrl && dataUrl.length > 8000) {
             notifySnapshotSubscribers(signature, dataUrl);
             return;
@@ -871,7 +876,12 @@ function Realistic3DAvatarMesh({
   if (!clonedScene) return null;
 
   return (
-    <group ref={groupRef} position={transform.position} scale={transform.scale}>
+    <group
+      ref={groupRef}
+      position={transform.position}
+      scale={transform.scale}
+      rotation={[0, rotationY, 0]}
+    >
       <primitive object={clonedScene} />
     </group>
   );
@@ -1095,6 +1105,47 @@ export default function DynamicAvatar({
   const [canMountWebGL, setCanMountWebGL] = useState(false);
   const acquiredSlotRef = useRef(false);
 
+  const [avatarRotationY, setAvatarRotationY] = useState(0);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const startRotRef = useRef(0);
+
+  const handleAvatarPointerDown = useCallback((e) => {
+    if (!interactive) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+    startRotRef.current = avatarRotationY;
+    if (e.currentTarget?.setPointerCapture && e.pointerId !== undefined) {
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {}
+    }
+  }, [interactive, avatarRotationY]);
+
+  const handleAvatarPointerMove = useCallback((e) => {
+    if (!interactive || !isDraggingRef.current) return;
+    const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+    const deltaX = clientX - startXRef.current;
+    // Map ~260px horizontal drag across avatar card to 360° (2*PI) rotation
+    const newRot = startRotRef.current + (deltaX / 260) * Math.PI * 2;
+    setAvatarRotationY(newRot);
+  }, [interactive]);
+
+  const handleAvatarPointerUp = useCallback((e) => {
+    if (!interactive) return;
+    isDraggingRef.current = false;
+    if (e.currentTarget?.releasePointerCapture && e.pointerId !== undefined) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {}
+    }
+  }, [interactive]);
+
+  const handleResetRotation = useCallback((e) => {
+    e?.stopPropagation?.();
+    setAvatarRotationY(0);
+  }, []);
+
   const acquireSlot = useCallback(() => {
     if (
       !acquiredSlotRef.current &&
@@ -1201,7 +1252,18 @@ export default function DynamicAvatar({
 
       {/* 3D Realistic Human Avatar Canvas (mounts when interactive or generating snapshot) */}
       {canUseWebGL && canMountWebGL && (
-        <div className="absolute inset-0 w-full h-full pointer-events-none z-[2]">
+        <div
+          className={`absolute inset-0 w-full h-full z-[2] ${
+            interactive
+              ? 'pointer-events-auto cursor-grab active:cursor-grabbing touch-none'
+              : 'pointer-events-none'
+          }`}
+          onPointerDown={handleAvatarPointerDown}
+          onPointerMove={handleAvatarPointerMove}
+          onPointerUp={handleAvatarPointerUp}
+          onPointerCancel={handleAvatarPointerUp}
+          data-testid="interactive-avatar-touch-zone"
+        >
           <Canvas
             orthographic
             camera={{
@@ -1232,10 +1294,25 @@ export default function DynamicAvatar({
                 height={height}
                 signature={avatarSignature}
                 interactive={interactive}
+                rotationY={avatarRotationY}
               />
             </Suspense>
           </Canvas>
         </div>
+      )}
+
+      {/* Floating Reset Rotation Button when interactive and rotated */}
+      {interactive && Math.abs(avatarRotationY) > 0.05 && (
+        <button
+          type="button"
+          onClick={handleResetRotation}
+          className="absolute bottom-2 end-2 z-10 p-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 shadow border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-all cursor-pointer"
+          title="Reset rotation"
+          aria-label="Reset avatar rotation"
+          data-testid="reset-avatar-rotation-btn"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+        </button>
       )}
 
       {/* Cached 3D Avatar Snapshot (double-buffered image fallback when Canvas is not active or initial frame is loading) */}
