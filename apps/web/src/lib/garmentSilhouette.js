@@ -150,24 +150,28 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
 
     const thetaPhoto = Math.atan2(ys[best] - pivotY, xs[best] * side - pivotX);
     const phi = thetaTarget - thetaPhoto;
-    // Small corrections only: swinging a fully raised arm through >50° folds the cloth,
-    // so those photos keep their original (faithful) sleeve pose.
-    if (Math.abs(phi) < 0.05 || Math.abs(phi) > 0.9) return;
+    // Retarget photographed sleeves (flat-lay, raised, or outstretched) down along the avatar arms.
+    if (Math.abs(phi) < 0.05 || Math.abs(phi) > 1.95) return;
     const cos = Math.cos(phi);
     const sin = Math.sin(phi);
+    const yWrist = isMale ? 0.93 : 0.89;
 
     for (let idx = 0; idx < vw * vh; idx++) {
       const x = xs[idx] * side;
       const y = ys[idx];
-      if (x <= 0 || y < 0.8) continue;
+      if (x <= 0 || y < 0.75) continue;
       const torso = getTorsoSlice(y, isMale);
       const r = Math.hypot(x - pivotX, y - pivotY);
-      const w = smoothstep01((x - (torso.rx + layerOffset)) / 0.06) * smoothstep01(r / 0.1);
+      const w = smoothstep01((x - (torso.rx + layerOffset)) / 0.05) * smoothstep01(r / 0.08);
       if (w <= 0) continue;
       const dxp = x - pivotX;
       const dyp = y - pivotY;
       const nx2 = pivotX + dxp * cos - dyp * sin;
-      const ny2 = pivotY + dxp * sin + dyp * cos;
+      let ny2 = pivotY + dxp * sin + dyp * cos;
+      // Do not allow sleeve fabric to drape past the wrist over the avatar's hands
+      if (ny2 < yWrist) {
+        ny2 = yWrist + (ny2 - yWrist) * 0.15;
+      }
       xs[idx] = side * (x + (nx2 - x) * w);
       ys[idx] = y + (ny2 - y) * w;
     }
@@ -345,6 +349,15 @@ export function buildSilhouetteShell({
   const yHeadTop = isMale ? 1.74 : 1.70;
 
   const rowY = (j) => {
+    if (isBottom && !isStandalone && crotchRow > jFabricTop) {
+      if (j <= jFabricTop) return yTop;
+      if (j <= crotchRow) {
+        return yTop + (yCrotchBody - yTop) * ((j - jFabricTop) / Math.max(1, crotchRow - jFabricTop));
+      }
+      const bRow = jFabricBottom > crotchRow ? jFabricBottom : ny;
+      if (j >= bRow) return yBottom;
+      return yCrotchBody + (yBottom - yCrotchBody) * ((j - crotchRow) / Math.max(1, bRow - crotchRow));
+    }
     if (crotchRow > 0) {
       if (j <= crotchRow) return yTop + (yCrotchBody - yTop) * (j / crotchRow);
       return yCrotchBody + (yBottom - yCrotchBody) * ((j - crotchRow) / (ny - crotchRow));
@@ -390,6 +403,7 @@ export function buildSilhouetteShell({
     if (wWorld > 1e-3) ratios.push(target / wWorld);
   }
 
+  const colMid = (minCol + maxCol) / 2;
   let sCorr;
   if (isStandalone) {
     sCorr = 1.0;
@@ -437,14 +451,57 @@ export function buildSilhouetteShell({
     const maxHipClear = hipClearance.length ? Math.max(...hipClearance) : 1.0;
     sCorr = clamp(Math.max(sWaist, maxHipClear), 0.90, 2.80);
   } else if (isBottom) {
-    sCorr = clamp(percentile(ratios, 0.5), 0.8, 1.25);
+    // Bottoms: align waistband width with avatar waist measurement (waistTorso.rx + layerOffset)
+    const waistTorso = getTorsoSlice(yTop, isMale);
+    const reqWaistHalf = (waistTorso.rx + layerOffset) * 1.02;
+    const fabricHeight = Math.max(1, jFabricBottom - jFabricTop);
+    const waistScanEnd = Math.min(vh - 1, jFabricTop + Math.max(2, Math.floor(0.12 * fabricHeight)));
+    const topWidths = [];
+    for (let j = jFabricTop; j <= waistScanEnd; j++) {
+      const runs = runsByRow[j];
+      if (!runs || !runs.length) continue;
+      let minA = Infinity, maxB = -Infinity;
+      runs.forEach(([a, b]) => {
+        if (a < minA) minA = a;
+        if (b > maxB) maxB = b;
+      });
+      if (maxB > minA) topWidths.push(maxB - minA);
+    }
+    const waistCols = topWidths.length ? percentile(topWidths, 0.60) : nx * 0.4;
+    const waistHalfWorld = Math.max(1e-3, 0.5 * waistCols * dxUniform);
+    const sWaist = reqWaistHalf / waistHalfWorld;
+    sCorr = clamp(sWaist, 0.75, 1.25);
+  } else if (isTopOrBody) {
+    // Tops, Outerwear, Full Body: align torso trunk & shoulders to avatar body (wrap body, NOT hands/arms)
+    const fabricHeight = Math.max(1, jFabricBottom - jFabricTop);
+    const trunkWidths = [];
+    const tStart = Math.min(vh - 1, jFabricTop + Math.floor(0.35 * fabricHeight));
+    const tEnd = Math.min(vh - 1, jFabricTop + Math.floor(0.80 * fabricHeight));
+    for (let j = tStart; j <= tEnd; j++) {
+      const runs = runsByRow[j];
+      if (!runs || !runs.length) continue;
+      let bestRun = runs[0];
+      let bestDist = Math.abs((bestRun[0] + bestRun[1]) / 2 - colMid);
+      for (let k = 1; k < runs.length; k++) {
+        const d = Math.abs((runs[k][0] + runs[k][1]) / 2 - colMid);
+        if (d < bestDist) {
+          bestDist = d;
+          bestRun = runs[k];
+        }
+      }
+      trunkWidths.push(bestRun[1] - bestRun[0]);
+    }
+    const trunkCols = trunkWidths.length ? percentile(trunkWidths, 0.50) : nx * 0.45;
+    const trunkHalfWorld = Math.max(1e-3, 0.5 * trunkCols * dxUniform);
+    const targetTrunkHalf = (getTorsoSlice(1.15, isMale).rx + layerOffset) * 1.02;
+    const sTrunk = targetTrunkHalf / trunkHalfWorld;
+    sCorr = clamp(sTrunk, 0.68, 1.35);
   } else {
     sCorr = clamp(percentile(ratios, 0.85), 0.72, 1.4);
   }
 
   // Single uniform dx across all rows: garments maintain their photographed silhouette 1:1
   const dx = dxUniform * sCorr;
-  const colMid = (minCol + maxCol) / 2;
   const yShoulder = isMale ? 1.48 : 1.42;
 
   // Helper: resolve the owning run [a, b] for vertex (i, j), including vertical cap rows
@@ -518,7 +575,25 @@ export function buildSilhouetteShell({
       uCols[idx] = run ? clamp(col, run[0] + inset, run[1] - inset) : i;
 
       let x = (col - colMid) * dx;
-      if (legRuns && blend > 0) {
+      if (isBottom && !isStandalone && y >= yCrotchBody) {
+        // Taper pants smoothly above pelvis to align with avatar waist measurement (no shoulder-wide cylinder)
+        const tWaist = clamp((y - yCrotchBody) / Math.max(0.01, yTop - yCrotchBody), 0, 1);
+        const slice = getTorsoSlice(y, isMale);
+        const targetHalf = (slice.rx + layerOffset) * 1.02;
+        let rMinA = Infinity, rMaxB = -Infinity;
+        if (runs && runs.length) {
+          runs.forEach(([a, b]) => {
+            if (a < rMinA) rMinA = a;
+            if (b > rMaxB) rMaxB = b;
+          });
+        }
+        const rMid = Number.isFinite(rMinA) ? (rMinA + rMaxB) / 2 : colMid;
+        const rHalf = Number.isFinite(rMinA) ? Math.max(1, (rMaxB - rMinA) / 2) : 1;
+        const currentHalf = rHalf * dx;
+        const targetRowHalf = targetHalf * (1 + 0.05 * (1 - tWaist));
+        const fitScale = Math.min(1.0, targetRowHalf / Math.max(1e-3, currentHalf));
+        x = (col - rMid) * dx * fitScale;
+      } else if (legRuns && blend > 0) {
         const c0 = (legRuns[0][0] + legRuns[0][1]) / 2;
         const c1 = (legRuns[1][0] + legRuns[1][1]) / 2;
         const k = Math.abs(col - c0) <= Math.abs(col - c1) ? 0 : 1;
@@ -531,7 +606,7 @@ export function buildSilhouetteShell({
       }
       xs[idx] = x;
       ys[idx] = y;
-      baseZ[idx] = isBottom && belowCrotch ? leg.cz : torso.cz;
+      baseZ[idx] = isStandalone ? 0 : (isBottom && belowCrotch ? leg.cz : torso.cz);
     }
 
     // Depth profile per run (elliptical cross-section, strictly closed at a and b).
@@ -539,53 +614,69 @@ export function buildSilhouetteShell({
       const mid = (a + b) / 2;
       const half = Math.max(0.5, (b - a) / 2);
       const halfWorld = half * dx;
-      let bodyRz;
-      if (isBottom && belowCrotch) bodyRz = leg.r + layerOffset;
-      else if (isSkirt) {
-        // Skirt drapes smoothly downwards from waistband to hem, proportional to width,
-        // avoiding waist-pinching cylindrical indentation.
-        const waistRz = (torso ? torso.rz : 0.14) + layerOffset;
-        bodyRz = Math.max(waistRz, 0.38 * halfWorld);
+
+      let bodyRzFront, bodyRzBack;
+      if (isBottom && belowCrotch) {
+        bodyRzFront = (leg.rzFront || leg.r) + layerOffset;
+        bodyRzBack = (leg.rzBack || leg.r) + layerOffset;
+      } else if (isSkirt) {
+        const waistRzFront = ((torso ? torso.rzFront : null) || 0.12) + layerOffset;
+        const waistRzBack = ((torso ? torso.rzBack : null) || 0.10) + layerOffset;
+        bodyRzFront = Math.max(waistRzFront, 0.38 * halfWorld);
+        bodyRzBack = Math.max(waistRzBack, 0.35 * halfWorld);
       } else if (isStandalone) {
-        bodyRz = Math.min(0.12, Math.max(0.04, 0.32 * halfWorld));
+        // Uniform depth for standalone view to prevent multi-run fold/rib distortion
+        bodyRzFront = Math.min(0.065, Math.max(0.035, 0.20 * halfWorld));
+        bodyRzBack = Math.min(0.045, Math.max(0.025, 0.14 * halfWorld));
       } else {
-        bodyRz = torso.rz + layerOffset;
+        bodyRzFront = (torso.rzFront || torso.rz) + layerOffset;
+        bodyRzBack = (torso.rzBack || torso.rz) + layerOffset;
       }
+
       // Dresses / long coats flare below the hips
       if (!isBottom && !isSkirt && !isStandalone && y < 0.84) {
-        bodyRz = Math.max(bodyRz, 0.5 * halfWorld);
+        bodyRzFront = Math.max(bodyRzFront, 0.45 * halfWorld);
+        bodyRzBack = Math.max(bodyRzBack, 0.45 * halfWorld);
       }
-      // Narrow parts (sleeves, straps) must not be thicker than they are wide
-      const amp = Math.min(bodyRz, halfWorld * 1.05 + 0.012);
+
+      // Sleeves & narrow parts: cap depth so sleeves are cylindrical arm tubes, not fat barrels
+      const ampFront = Math.min(bodyRzFront, halfWorld * 1.05 + 0.012);
+      const ampBack = Math.min(bodyRzBack, halfWorld * 1.05 + 0.012);
+
       const isBodySpan = !isSkirt && !isStandalone && halfWorld >= torso.rx * 0.82;
       const iStart = Math.max(0, Math.ceil(a + 0.02));
       const iEnd = Math.min(nx, Math.floor(b - 0.02));
+
       for (let i = iStart; i <= iEnd; i++) {
         const u = clamp((i - mid) / half, -1, 1);
         const s = Math.max(0, 1 - u * u);
         const edgeTaper = smoothstep01((1 - Math.abs(u)) / 0.08);
-        const hh = (isBodySpan ? Math.pow(s, 0.44) : Math.sqrt(s)) * edgeTaper;
-        offF[j * vw + i] = amp * hh;
-        offB[j * vw + i] = (amp + 0.008) * hh;
+        const hhFront = (isBodySpan ? Math.pow(s, 0.44) : Math.sqrt(s)) * edgeTaper;
+        // Anatomical human back is flatter across thoracic spine without bust peak
+        const hhBack = (isBodySpan ? Math.pow(s, 0.28) : Math.pow(s, 0.38)) * edgeTaper;
+        offF[j * vw + i] = ampFront * hhFront;
+        offB[j * vw + i] = ampBack * hhBack;
       }
     });
   }
 
-  // Vertical smoothing of the depth offsets (interior vertices only; boundary stays pinned to 0)
-  for (let pass = 0; pass < 2; pass++) {
+  // 4-pass Laplacian smoothing of the depth offsets (interior vertices only; boundary stays pinned to 0)
+  for (let pass = 0; pass < 4; pass++) {
     const tmpF = new Float32Array(offF);
     const tmpB = new Float32Array(offB);
     for (let j = 1; j < vh - 1; j++) {
-      for (let i = 0; i < vw; i++) {
+      for (let i = 1; i < vw - 1; i++) {
         const idx = j * vw + i;
         if (!inside[idx] || offF[idx] <= 1e-5) continue;
         const up = idx - vw;
         const dn = idx + vw;
-        const smF = 0.25 * offF[up] + 0.5 * offF[idx] + 0.25 * offF[dn];
-        const smB = 0.25 * offB[up] + 0.5 * offB[idx] + 0.25 * offB[dn];
-        const nearEdge = !inside[idx - 1] || !inside[idx + 1] || !inside[up] || !inside[dn];
-        tmpF[idx] = nearEdge ? Math.min(smF, offF[idx] * 1.05) : smF;
-        tmpB[idx] = nearEdge ? Math.min(smB, offB[idx] * 1.05) : smB;
+        const lf = idx - 1;
+        const rt = idx + 1;
+        if (!inside[up] || !inside[dn] || !inside[lf] || !inside[rt]) continue;
+        const smF = 0.125 * (offF[up] + offF[dn] + offF[lf] + offF[rt]) + 0.5 * offF[idx];
+        const smB = 0.125 * (offB[up] + offB[dn] + offB[lf] + offB[rt]) + 0.5 * offB[idx];
+        tmpF[idx] = smF;
+        tmpB[idx] = smB;
       }
     }
     offF.set(tmpF);

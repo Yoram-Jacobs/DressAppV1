@@ -21,44 +21,47 @@ import {
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
 export const TORSO_PROFILE_FEMALE = [
-  { y: 1.46, rx: 0.130, cz: 0.025, rz: 0.090 }, // High collar / neck base
-  { y: 1.42, rx: 0.195, cz: 0.030, rz: 0.115 }, // Shoulder line / clavicle (overlays avatar shoulder line)
-  { y: 1.36, rx: 0.235, cz: 0.038, rz: 0.138 }, // Upper chest
-  { y: 1.25, rx: 0.238, cz: 0.055, rz: 0.162 }, // Bust peak (front Z reaches +0.217, back reaches -0.102)
-  { y: 1.15, rx: 0.222, cz: 0.048, rz: 0.145 }, // Under-bust
-  { y: 1.05, rx: 0.212, cz: 0.040, rz: 0.138 }, // Natural waist
-  { y: 0.95, rx: 0.226, cz: 0.030, rz: 0.148 }, // Upper hips / glutes
-  { y: 0.84, rx: 0.230, cz: 0.025, rz: 0.145 }, // Pelvis / crotch
-  { y: 0.65, rx: 0.245, cz: 0.025, rz: 0.155 }, // Upper thigh flare (for skirts/dresses)
+  { y: 1.46, rx: 0.130, cz: 0.035, rz: 0.080, rzFront: 0.080, rzBack: 0.065 }, // High collar / neck base
+  { y: 1.42, rx: 0.195, cz: 0.020, rz: 0.095, rzFront: 0.095, rzBack: 0.065 }, // Shoulder line / clavicle
+  { y: 1.36, rx: 0.235, cz: 0.025, rz: 0.125, rzFront: 0.125, rzBack: 0.075 }, // Upper chest
+  { y: 1.25, rx: 0.238, cz: 0.048, rz: 0.155, rzFront: 0.155, rzBack: 0.068 }, // Bust peak (front chest reaches forward, back is flat thoracic spine - NO bust on back!)
+  { y: 1.15, rx: 0.222, cz: 0.050, rz: 0.128, rzFront: 0.128, rzBack: 0.062 }, // Under-bust
+  { y: 1.05, rx: 0.212, cz: 0.046, rz: 0.118, rzFront: 0.118, rzBack: 0.065 }, // Natural waist
+  { y: 0.95, rx: 0.226, cz: 0.035, rz: 0.125, rzFront: 0.088, rzBack: 0.118 }, // Upper hips / glutes (glutes extend backward)
+  { y: 0.84, rx: 0.230, cz: 0.030, rz: 0.120, rzFront: 0.082, rzBack: 0.095 }, // Pelvis / crotch
+  { y: 0.65, rx: 0.245, cz: 0.025, rz: 0.140, rzFront: 0.090, rzBack: 0.105 }, // Upper thigh flare (skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
-  { y: 1.52, rx: 0.145, cz: 0.025, rz: 0.100 }, // High collar / neck base
-  { y: 1.48, rx: 0.225, cz: 0.028, rz: 0.125 }, // Shoulder line / clavicle (overlays avatar shoulder line)
-  { y: 1.42, rx: 0.260, cz: 0.025, rz: 0.155 }, // Shoulders / upper chest
-  { y: 1.30, rx: 0.250, cz: 0.040, rz: 0.165 }, // Chest / pecs peak
-  { y: 1.18, rx: 0.240, cz: 0.042, rz: 0.152 }, // Rib cage
-  { y: 1.08, rx: 0.235, cz: 0.040, rz: 0.145 }, // Waist
-  { y: 0.96, rx: 0.245, cz: 0.035, rz: 0.160 }, // Upper hips / glutes
-  { y: 0.86, rx: 0.250, cz: 0.030, rz: 0.160 }, // Pelvis / crotch
-  { y: 0.70, rx: 0.245, cz: 0.025, rz: 0.155 }, // Thigh flare
+  { y: 1.52, rx: 0.145, cz: 0.020, rz: 0.090, rzFront: 0.090, rzBack: 0.080 }, // High collar / neck base
+  { y: 1.48, rx: 0.225, cz: 0.015, rz: 0.115, rzFront: 0.115, rzBack: 0.090 }, // Shoulder line / clavicle
+  { y: 1.42, rx: 0.260, cz: 0.020, rz: 0.140, rzFront: 0.140, rzBack: 0.100 }, // Shoulders / upper chest
+  { y: 1.30, rx: 0.250, cz: 0.030, rz: 0.155, rzFront: 0.155, rzBack: 0.095 }, // Chest / pecs peak
+  { y: 1.18, rx: 0.240, cz: 0.038, rz: 0.130, rzFront: 0.130, rzBack: 0.080 }, // Rib cage
+  { y: 1.08, rx: 0.235, cz: 0.040, rz: 0.120, rzFront: 0.120, rzBack: 0.078 }, // Waist
+  { y: 0.96, rx: 0.245, cz: 0.038, rz: 0.135, rzFront: 0.088, rzBack: 0.125 }, // Upper hips / glutes
+  { y: 0.86, rx: 0.250, cz: 0.032, rz: 0.130, rzFront: 0.085, rzBack: 0.115 }, // Pelvis / crotch
+  { y: 0.70, rx: 0.245, cz: 0.025, rz: 0.135, rzFront: 0.085, rzBack: 0.105 }, // Thigh flare
 ];
 
 export const LEG_PROFILE_FEMALE = [
-  { y: 0.82, cx: 0.105, r: 0.095, cz: 0.040 }, // Crotch / upper thigh
-  { y: 0.65, cx: 0.112, r: 0.082, cz: 0.042 }, // Mid thigh
-  { y: 0.50, cx: 0.128, r: 0.070, cz: 0.038 }, // Knee
-  { y: 0.35, cx: 0.151, r: 0.065, cz: 0.020 }, // Calf
-  { y: 0.20, cx: 0.165, r: 0.048, cz: 0.025 }, // Lower calf
-  { y: 0.10, cx: 0.165, r: 0.046, cz: 0.042 }, // Ankle
+  { y: 0.82, cx: 0.105, r: 0.095, cz: 0.032, rzBack: 0.100 }, // Crotch / upper thigh
+  { y: 0.65, cx: 0.112, r: 0.084, cz: 0.038, rzBack: 0.088 }, // Mid thigh
+  { y: 0.50, cx: 0.128, r: 0.072, cz: 0.032, rzBack: 0.078 }, // Knee
+  { y: 0.40, cx: 0.138, r: 0.068, cz: 0.003, rzBack: 0.076 }, // Back of knee / upper calf (z reaches -0.055)
+  { y: 0.30, cx: 0.145, r: 0.065, cz: 0.010, rzBack: 0.072 }, // Calf (z reaches -0.044)
+  { y: 0.20, cx: 0.160, r: 0.050, cz: 0.018, rzBack: 0.056 }, // Lower calf
+  { y: 0.10, cx: 0.165, r: 0.046, cz: 0.025, rzBack: 0.048 }, // Ankle
 ];
 
 export const LEG_PROFILE_MALE = [
-  { y: 0.86, cx: 0.105, r: 0.100, cz: 0.045 }, // Crotch
-  { y: 0.70, cx: 0.118, r: 0.088, cz: 0.035 }, // Mid thigh
-  { y: 0.50, cx: 0.130, r: 0.076, cz: 0.022 }, // Knee
-  { y: 0.30, cx: 0.142, r: 0.068, cz: 0.012 }, // Calf
-  { y: 0.10, cx: 0.155, r: 0.052, cz: 0.010 }, // Ankle
+  { y: 0.86, cx: 0.105, r: 0.100, cz: 0.038, rzBack: 0.102 }, // Crotch
+  { y: 0.70, cx: 0.118, r: 0.090, cz: 0.035, rzBack: 0.098 }, // Mid thigh
+  { y: 0.50, cx: 0.130, r: 0.078, cz: -0.003, rzBack: 0.088 }, // Knee (male z reaches -0.074, cz=-0.003)
+  { y: 0.40, cx: 0.136, r: 0.074, cz: -0.022, rzBack: 0.092 }, // Back of knee / upper calf (z reaches -0.083)
+  { y: 0.30, cx: 0.142, r: 0.068, cz: -0.025, rzBack: 0.082 }, // Calf (z reaches -0.074)
+  { y: 0.20, cx: 0.150, r: 0.056, cz: -0.023, rzBack: 0.070 }, // Lower calf (z reaches -0.061)
+  { y: 0.10, cx: 0.155, r: 0.052, cz: -0.010, rzBack: 0.055 }, // Ankle
 ];
 
 /**

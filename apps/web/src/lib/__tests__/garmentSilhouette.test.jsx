@@ -148,7 +148,7 @@ describe('silhouette shell builder', () => {
     expect(Number.isFinite(lowestSleeveY(posed))).toBe(true);
   });
 
-  test('fully raised / horizontal sleeves keep the photographed pose', () => {
+  test('horizontal flat-lay sleeves are retargeted down along the avatar arms', () => {
     const { nx, ny } = chooseGridResolution(1.6, 80);
     const mask = paintMask(nx, ny, (u, v) => (v > 0.02 && ((u > 0.36 && u < 0.64) || (v < 0.22 && u > 0.02 && u < 0.98))));
     const shell = buildSilhouetteShell({
@@ -156,7 +156,7 @@ describe('silhouette shell builder', () => {
       yTop: 1.47, yBottom: 0.86, layerOffset: 0.022, getTorsoSlice, getLegSlice,
     });
     expect(shell.ok).toBe(true);
-    expect(shell.info.sleevePose).toHaveLength(0);
+    expect(shell.info.sleevePose).toHaveLength(2);
   });
 
   test('pants keep two legs and snap onto the avatar legs', () => {
