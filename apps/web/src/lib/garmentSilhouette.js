@@ -328,6 +328,12 @@ export function buildSilhouetteShell({
   // ── Horizontal scale & Shoulder line detection ──
   const dxUniform = (aspect * hWorld) / nx;
 
+  // Find the first and last rows that actually contain fabric
+  let jFabricTop = 0;
+  while (jFabricTop < vh && (!runsByRow[jFabricTop] || !runsByRow[jFabricTop].length)) jFabricTop++;
+  let jFabricBottom = vh - 1;
+  while (jFabricBottom >= 0 && (!runsByRow[jFabricBottom] || !runsByRow[jFabricBottom].length)) jFabricBottom--;
+
   // Tops, Hoodies, Coats, Dresses: Map garment shoulder line directly to avatar shoulders.
   // Hoodies photographed hanging from the hood have the hood extending upward above the shoulders.
   const isTopOrBody = slot === 'top' || slot === 'outerwear' || slot === 'dress';
@@ -356,6 +362,12 @@ export function buildSilhouetteShell({
       const cHood = theoreticalHeadHeight > 1e-3 ? Math.min(1.0, headRoom / theoreticalHeadHeight) : 1.0;
       return yShoulderAvatar + ((detectedShoulder - j) / torsoRows) * bodyHeight * cHood;
     }
+    if (isSkirt && !isStandalone && jFabricBottom > jFabricTop) {
+      // Skirt waistband alignment: top fabric row aligns 1:1 with avatar waistline (yTop)
+      if (j <= jFabricTop) return yTop;
+      if (j >= jFabricBottom) return yBottom;
+      return yTop - ((j - jFabricTop) / (jFabricBottom - jFabricTop)) * hWorld;
+    }
     return yTop - (j / ny) * hWorld;
   };
 
@@ -382,26 +394,48 @@ export function buildSilhouetteShell({
   if (isStandalone) {
     sCorr = 1.0;
   } else if (isSkirt) {
-    // For skirts, ensure the waistband and upper hip region clear the avatar torso uniformly
-    // without forcing the garment into a cylindrical figure or pinching the silhouette.
-    const skirtClearance = [];
-    for (let j = 0; j < Math.floor(vh * 0.40); j++) {
+    // For skirts, align the waistband with the avatar's waistline and waist size,
+    // and ensure the skirt clears the hips while maintaining its true photographed silhouette.
+    const yWaist = yTop;
+    const waistTorso = getTorsoSlice(yWaist, isMale);
+    const reqWaistHalf = (waistTorso.rx + layerOffset) * 1.04;
+
+    // Measure waistband width across the top rows where fabric has stabilized (top 15% of fabric rows)
+    const fabricHeight = Math.max(1, jFabricBottom - jFabricTop);
+    const waistScanEnd = Math.min(vh - 1, jFabricTop + Math.max(3, Math.floor(0.15 * fabricHeight)));
+    const topWidths = [];
+    for (let j = jFabricTop; j <= waistScanEnd; j++) {
       const runs = runsByRow[j];
-      if (!runs.length) continue;
-      const y = rowY(j);
-      let mainRun = runs[0];
-      let bestDist = Infinity;
-      runs.forEach((r) => {
-        const mid = 0.5 * (r[0] + r[1]);
-        const d = Math.abs(mid - 0.5 * nx);
-        if (d < bestDist) { bestDist = d; mainRun = r; }
+      if (!runs || !runs.length) continue;
+      let minA = Infinity, maxB = -Infinity;
+      runs.forEach(([a, b]) => {
+        if (a < minA) minA = a;
+        if (b > maxB) maxB = b;
       });
-      const halfCols = Math.max(1, (mainRun[1] - mainRun[0]) * 0.5);
-      const reqHalf = (bodyHalfAt(y) + layerOffset) * 1.04;
-      skirtClearance.push(reqHalf / Math.max(1e-3, halfCols * dxUniform));
+      if (maxB > minA) topWidths.push(maxB - minA);
     }
-    const maxClear = skirtClearance.length ? Math.max(...skirtClearance) : 1.0;
-    sCorr = clamp(maxClear, 0.90, 2.5);
+    const waistCols = topWidths.length ? percentile(topWidths, 0.80) : nx * 0.4;
+    const waistHalfWorld = Math.max(1e-3, 0.5 * waistCols * dxUniform);
+    const sWaist = reqWaistHalf / waistHalfWorld;
+
+    // Check hips clearance (rows across top 45% of fabric)
+    const hipClearance = [];
+    const hipScanEnd = Math.min(vh - 1, jFabricTop + Math.floor(0.45 * fabricHeight));
+    for (let j = jFabricTop; j <= hipScanEnd; j++) {
+      const runs = runsByRow[j];
+      if (!runs || !runs.length) continue;
+      const y = rowY(j);
+      let minA = Infinity, maxB = -Infinity;
+      runs.forEach(([a, b]) => {
+        if (a < minA) minA = a;
+        if (b > maxB) maxB = b;
+      });
+      const halfCols = Math.max(1, (maxB - minA) * 0.5);
+      const reqHalf = (bodyHalfAt(y) + layerOffset) * 1.04;
+      hipClearance.push(reqHalf / Math.max(1e-3, halfCols * dxUniform));
+    }
+    const maxHipClear = hipClearance.length ? Math.max(...hipClearance) : 1.0;
+    sCorr = clamp(Math.max(sWaist, maxHipClear), 0.90, 2.80);
   } else if (isBottom) {
     sCorr = clamp(percentile(ratios, 0.5), 0.8, 1.25);
   } else {

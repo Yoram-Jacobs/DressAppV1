@@ -1705,7 +1705,7 @@ export default function GarmentMesh3D({
   showAvatar = true,
   standaloneMode = false,
 }) {
-  const isStandalone = Boolean(standaloneMode || !showAvatar);
+  const isStandalone = Boolean(!showAvatar);
   const patternLabel = String(garment?.pattern || garment?.rawItem?.pattern || '').toLowerCase().trim();
   const isPatterned = Boolean(patternLabel) && !/^(solid|plain|—|-|none|חלק|אחיד)$/i.test(patternLabel);
   const {

@@ -577,7 +577,7 @@ export default function DressingRoom3D({
                       morphInfluences={morphInfluences}
                       footPose={footPose}
                       showAvatar={showAvatar}
-                      standaloneMode={standaloneMode || !showAvatar}
+                      standaloneMode={!showAvatar}
                     />
                   );
                 })}

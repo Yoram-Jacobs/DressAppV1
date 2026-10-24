@@ -456,4 +456,51 @@ describe('shoulder line detection and hoodie mapping', () => {
     expect(wMid).toBeGreaterThan(wWaist);
     expect(wHem).toBeGreaterThan(wMid);
   });
+
+  test('skirt top aligns precisely with avatar waistline (y=1.05) and waist width', () => {
+    const { nx, ny } = chooseGridResolution(0.83, 80);
+    // Skirt mask starting at row 5 (v ~ 0.06) down to row 75 (v ~ 0.94)
+    // with waistband width = 0.46 of grid, flaring to 0.75 at hem
+    const mask = paintMask(nx, ny, (u, v) => {
+      if (v < 0.06 || v > 0.94) return false;
+      const vNorm = (v - 0.06) / (0.94 - 0.06);
+      const halfSpan = 0.23 + 0.15 * vNorm;
+      return Math.abs(u - 0.5) <= halfSpan;
+    });
+
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.83, slot: 'bottom', isMale: false, isSkirt: true, isStandalone: false,
+      yTop: 1.05, yBottom: 0.44, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const pf = shell.front.attributes.position;
+    const vw = nx + 1;
+
+    // 1. First row with fabric must sit right at the avatar waistline (y = 1.05)
+    let firstFabricJ = -1;
+    for (let j = 0; j <= ny; j++) {
+      for (let i = 0; i <= nx; i++) {
+        if (mask[j * vw + i]) { firstFabricJ = j; break; }
+      }
+      if (firstFabricJ >= 0) break;
+    }
+    expect(firstFabricJ).toBeGreaterThan(0);
+    const midIdx = firstFabricJ * vw + Math.floor(nx / 2);
+    expect(pf.getY(midIdx)).toBeCloseTo(1.05, 2);
+
+    // 2. Skirt waistband width must match the avatar waist size (~0.46m)
+    let minX = Infinity, maxX = -Infinity;
+    for (let i = 0; i <= nx; i++) {
+      const idx = firstFabricJ * vw + i;
+      if (mask[idx]) {
+        minX = Math.min(minX, pf.getX(idx));
+        maxX = Math.max(maxX, pf.getX(idx));
+      }
+    }
+    const waistWidth = maxX - minX;
+    // Avatar waist slice has rx ~ 0.212, so total width with clearance is ~0.46m - 0.48m
+    expect(waistWidth).toBeGreaterThanOrEqual(0.44);
+    expect(waistWidth).toBeLessThanOrEqual(0.52);
+  });
 });
