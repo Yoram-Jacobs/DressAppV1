@@ -68,6 +68,8 @@ RUN pip install --no-cache-dir \
       --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ \
       -r requirements-ml.txt
 
+RUN pip install --no-cache-dir trimesh==5.2.0
+
 # --- Application code ------------------------------------------------
 COPY backend/ ./backend/
 COPY apps/web/src/locales/ /app/frontend/src/locales/

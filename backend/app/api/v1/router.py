@@ -98,3 +98,6 @@ api_v1_router.include_router(daily_proposals.router)
 api_v1_router.include_router(weather.router)
 api_v1_router.include_router(image_generation.router)
 api_v1_router.include_router(internal.router)
+
+from service import v1_models_router as tryon3d_models_router
+api_v1_router.include_router(tryon3d_models_router)
