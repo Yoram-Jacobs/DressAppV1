@@ -152,7 +152,7 @@ export function ShoppingAssistant() {
             <span className="pointer-events-none">{t('profile.bookmarkletBtnName', { defaultValue: 'DressApp Assistant' })}</span>
           </a>
           <span className="text-[12px] font-semibold text-text-brand italic text-start" dir="auto">
-            {t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
+            {t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." })}
           </span>
         </div>
       )}
