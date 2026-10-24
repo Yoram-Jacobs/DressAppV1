@@ -1,4 +1,4 @@
-import React, { useId, useMemo } from 'react';
+import React, { useId, useMemo, useState, useEffect } from 'react';
 import { resolveMediaUrl } from '@/lib/itemImage';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
@@ -7,7 +7,16 @@ import {
   getFullAvatarAnatomy,
   buildAvatarSvgSilhouettePaths,
   resolveHairProperties,
+  computeMorphInfluences,
+  getCachedSnapshot,
+  snapshotSubscribers,
 } from './DynamicAvatar';
+import {
+  getTopTopography,
+  getBottomTopography,
+  getOuterwearTopography,
+  getDressTopography,
+} from './AvatarViewer2D';
 
 /**
  * Normalizes an outfit piece to get its transparent studio image URL.
@@ -112,43 +121,11 @@ function buildFemaleHairSvg(anatomy) {
 }
 
 /**
- * Builds modest activewear underwear paths for the studio mannequin.
- */
-function buildUnderwearPaths(anatomy, isMale) {
-  const { X0, yChest, yWaist, yHip, yCrotch, wChest, wWaist, wHip } = anatomy;
-
-  const topBand = !isMale
-    ? [
-        `M ${X0 - wChest * 0.88},${yChest - 8}`,
-        `C ${X0 - wChest * 0.4},${yChest - 12} ${X0 + wChest * 0.4},${yChest - 12} ${X0 + wChest * 0.88},${yChest - 8}`,
-        `C ${X0 + wChest * 0.82},${yChest + 18} ${X0 + wWaist * 0.8},${yWaist - 6} ${X0 + wWaist * 0.75},${yWaist - 4}`,
-        `C ${X0 + wWaist * 0.3},${yWaist - 2} ${X0 - wWaist * 0.3},${yWaist - 2} ${X0 - wWaist * 0.75},${yWaist - 4}`,
-        `C ${X0 - wWaist * 0.8},${yWaist - 6} ${X0 - wChest * 0.82},${yChest + 18} ${X0 - wChest * 0.88},${yChest - 8}`,
-        `Z`,
-      ].join(' ')
-    : null;
-
-  const yShortsTop = yWaist + (yHip - yWaist) * 0.45;
-  const yShortsBottom = yCrotch + 10;
-  const shortsPath = [
-    `M ${X0 - wHip * 0.92},${yShortsTop}`,
-    `C ${X0 - wHip * 0.4},${yShortsTop + 1} ${X0 + wHip * 0.4},${yShortsTop + 1} ${X0 + wHip * 0.92},${yShortsTop}`,
-    `C ${X0 + wHip * 0.96},${yShortsTop + (yShortsBottom - yShortsTop) * 0.5} ${X0 + wHip * 0.85},${yShortsBottom - 2} ${X0 + wHip * 0.78},${yShortsBottom}`,
-    `C ${X0 + wHip * 0.45},${yShortsBottom + 2} ${X0 + 10},${yShortsBottom - 4} ${X0},${yCrotch + 4}`,
-    `C ${X0 - 10},${yShortsBottom - 4} ${X0 - wHip * 0.45},${yShortsBottom + 2} ${X0 - wHip * 0.78},${yShortsBottom}`,
-    `C ${X0 - wHip * 0.85},${yShortsBottom - 2} ${X0 - wHip * 0.96},${yShortsTop + (yShortsBottom - yShortsTop) * 0.5} ${X0 - wHip * 0.92},${yShortsTop}`,
-    `Z`,
-  ].join(' ');
-
-  return { topBand, shortsPath };
-}
-
-/**
  * OutfitPiecePreview
  *
  * Lightweight, zero-WebGL, high-performance outfit layout component.
- * Renders the outfit pieces directly fitted onto the user's anatomical mannequin
- * with zero bottleneck, instant rendering, and accurate proportions.
+ * Renders the outfit pieces directly overlaying the avatar (at z-[10] through z-[50]),
+ * with the avatar positioned underneath at z-[1], matching the live studio layout.
  */
 export default function OutfitPiecePreview({
   outfit,
@@ -158,6 +135,7 @@ export default function OutfitPiecePreview({
   sex,
   skinColor,
   measurements,
+  shapeParams,
   hair,
   showAvatar = true,
 }) {
@@ -195,11 +173,9 @@ export default function OutfitPiecePreview({
     storedUser?.measurements ||
     {};
 
-  const rawHair =
-    hair ||
-    effectiveProfile?.hair ||
-    storedUser?.hair ||
-    {};
+  const rawHair = useMemo(() => {
+    return hair || effectiveProfile?.hair || storedUser?.hair || {};
+  }, [hair, effectiveProfile?.hair, storedUser?.hair]);
 
   const anatomy = useMemo(() => {
     return getFullAvatarAnatomy({
@@ -231,7 +207,49 @@ export default function OutfitPiecePreview({
     () => (isMale ? buildMaleHairSvg(anatomy) : buildFemaleHairSvg(anatomy)),
     [anatomy, isMale]
   );
-  const underwearPaths = useMemo(() => buildUnderwearPaths(anatomy, isMale), [anatomy, isMale]);
+
+  const morphInfluences = useMemo(
+    () =>
+      computeMorphInfluences({
+        height: rawMeasurements?.height,
+        shoulders: rawMeasurements?.shoulders,
+        chest: rawMeasurements?.chest,
+        waist: rawMeasurements?.waist,
+        hip: rawMeasurements?.hip,
+        armLength: rawMeasurements?.armLength,
+        inseam: rawMeasurements?.inseam,
+        footLength: rawMeasurements?.footLength,
+        isMale,
+        shapeParams,
+        hair: rawHair,
+      }),
+    [rawMeasurements, isMale, shapeParams, rawHair]
+  );
+
+  const avatarSignature = useMemo(() => {
+    const morphKey = Object.entries(morphInfluences)
+      .map(([k, v]) => `${k}:${Number(v || 0).toFixed(2)}`)
+      .join('|');
+    return `v6_prop_${isMale ? 'M' : 'F'}_${effectiveSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(rawMeasurements?.height) || 170}_${morphKey}`;
+  }, [isMale, effectiveSkinColor, hairProps.color, hairProps.roughness, rawMeasurements?.height, morphInfluences]);
+
+  const [snapshotUrl, setSnapshotUrl] = useState(() => getCachedSnapshot(avatarSignature));
+
+  useEffect(() => {
+    const cached = getCachedSnapshot(avatarSignature);
+    if (cached) {
+      setSnapshotUrl(cached);
+    }
+    const handleSnapshot = (sig, dataUrl) => {
+      if (sig === avatarSignature) {
+        setSnapshotUrl(dataUrl);
+      }
+    };
+    snapshotSubscribers.add(handleSnapshot);
+    return () => {
+      snapshotSubscribers.delete(handleSnapshot);
+    };
+  }, [avatarSignature]);
 
   // Extract and categorize items into slots
   const slots = useMemo(() => {
@@ -296,6 +314,12 @@ export default function OutfitPiecePreview({
     return categorized;
   }, [outfit, outfitItems]);
 
+  const hasOuterwear = Boolean(slots.outerwear && slots.outerwear.imageUrl);
+  const bottomTopo = useMemo(() => getBottomTopography(slots.bottom), [slots.bottom]);
+  const dressTopo = useMemo(() => getDressTopography(slots.dress), [slots.dress]);
+  const topTopo = useMemo(() => getTopTopography(slots.top, hasOuterwear), [slots.top, hasOuterwear]);
+  const outerwearTopo = useMemo(() => getOuterwearTopography(slots.outerwear), [slots.outerwear]);
+
   const hasDress = Boolean(slots.dress);
   const totalPlaced =
     (slots.headwear ? 1 : 0) +
@@ -327,253 +351,270 @@ export default function OutfitPiecePreview({
   return (
     <div
       className={cn(
-        'relative w-full h-full overflow-hidden select-none bg-gradient-to-b from-stone-50/70 via-stone-100/60 to-stone-200/50 dark:from-slate-900/80 dark:via-slate-900/60 dark:to-slate-800/80',
+        'relative w-full h-full overflow-hidden select-none flex items-center justify-center bg-gradient-to-b from-stone-50/70 via-stone-100/60 to-stone-200/50 dark:from-slate-900/80 dark:via-slate-900/60 dark:to-slate-800/80',
         className
       )}
       data-testid="outfit-piece-preview"
     >
-      {/* Anatomical Mannequin Avatar Base (Zero-WebGL, Instant 0ms Render) */}
-      {showAvatar && (
-        <svg
-          viewBox="0 0 200 450"
-          className="absolute inset-0 w-full h-full pointer-events-none z-[2] select-none"
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id={`mannequin-skin-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={effectiveSkinColor} stopOpacity="0.96" />
-              <stop offset="100%" stopColor={effectiveSkinColor} stopOpacity="0.88" />
-            </linearGradient>
-            <filter id={`mannequin-shadow-${uid}`} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodOpacity="0.08" />
-            </filter>
-          </defs>
-
-          {/* Pedestal / ground shadow under feet */}
-          <ellipse
-            cx={anatomy.X0}
-            cy={anatomy.yFeet + 3}
-            rx={Math.max(26, anatomy.wHip * 0.85)}
-            ry={5}
-            fill="rgba(0, 0, 0, 0.08)"
-          />
-
-          {/* Left & Right Arms */}
-          <g fill={`url(#mannequin-skin-${uid})`} stroke="rgba(0,0,0,0.06)" strokeWidth="0.6">
-            <path d={svgPaths.armPathL} />
-            <path d={svgPaths.armPathR} />
-          </g>
-
-          {/* Torso & Legs Body */}
-          <path
-            d={svgPaths.bodyPath}
-            fill={`url(#mannequin-skin-${uid})`}
-            stroke="rgba(0,0,0,0.06)"
-            strokeWidth="0.6"
-          />
-
-          {/* Modest studio undergarments base (matches 3D dressing room modesty activewear) */}
-          <g fill="#20242C" opacity="0.92">
-            {underwearPaths.topBand && !hasDress && !slots.top && (
-              <path d={underwearPaths.topBand} />
-            )}
-            {underwearPaths.shortsPath && !hasDress && !slots.bottom && (
-              <path d={underwearPaths.shortsPath} />
-            )}
-          </g>
-
-          {/* Neck / Collarbone subtle lines */}
-          <path
-            d={`M ${anatomy.X0 - anatomy.wNeck * 1.2} ${anatomy.yShoulders + 4} Q ${anatomy.X0} ${anatomy.yShoulders + 9} ${anatomy.X0 + anatomy.wNeck * 1.2} ${anatomy.yShoulders + 4}`}
-            fill="none"
-            stroke="rgba(0, 0, 0, 0.12)"
-            strokeWidth="0.75"
-            strokeLinecap="round"
-          />
-
-          {/* Head */}
-          <path
-            d={svgPaths.headPath}
-            fill={`url(#mannequin-skin-${uid})`}
-            stroke="rgba(0,0,0,0.06)"
-            strokeWidth="0.6"
-          />
-
-          {/* Stylish Hair Silhouette */}
-          <path
-            d={hairSvgPath}
-            fill={activeHairColor}
-            opacity="0.94"
-          />
-
-          {/* Minimalist Mannequin Eyes and Lips hint */}
-          <g stroke="rgba(0, 0, 0, 0.18)" strokeWidth="0.8" strokeLinecap="round" fill="none">
-            <line
-              x1={anatomy.X0 - 11}
-              y1={anatomy.yHeadTop + (anatomy.yChin - anatomy.yHeadTop) * 0.48}
-              x2={anatomy.X0 - 4}
-              y2={anatomy.yHeadTop + (anatomy.yChin - anatomy.yHeadTop) * 0.48}
+      {/* 200x450 Coordinate Frame: Locks Avatar and All Garments in 1:1 Anatomical Alignment */}
+      <div className="relative h-full w-auto aspect-[200/450] max-h-full max-w-full flex items-center justify-center mx-auto select-none">
+        
+        {/* ─── Layer 1: Avatar Base (Rendered UNDER all clothing layers at zIndex 1) ─── */}
+        {showAvatar && (
+          snapshotUrl ? (
+            <img
+              src={snapshotUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+              style={{ zIndex: 1 }}
             />
-            <line
-              x1={anatomy.X0 + 4}
-              y1={anatomy.yHeadTop + (anatomy.yChin - anatomy.yHeadTop) * 0.48}
-              x2={anatomy.X0 + 11}
-              y2={anatomy.yHeadTop + (anatomy.yChin - anatomy.yHeadTop) * 0.48}
-            />
-            <line
-              x1={anatomy.X0 - 5}
-              y1={anatomy.yHeadTop + (anatomy.yChin - anatomy.yHeadTop) * 0.78}
-              x2={anatomy.X0 + 5}
-              y2={anatomy.yHeadTop + (anatomy.yChin - anatomy.yHeadTop) * 0.78}
-            />
-          </g>
-        </svg>
-      )}
-
-      {/* Headwear */}
-      {slots.headwear && (
-        <div
-          className="absolute top-[2%] left-1/2 -translate-x-1/2 w-[34%] h-[15%] z-30 pointer-events-none flex items-center justify-center"
-          title={slots.headwear.title || slots.headwear.name}
-        >
-          <img
-            src={slots.headwear.imageUrl}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-contain filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.12)] transition-transform duration-200"
-          />
-        </div>
-      )}
-
-      {/* Dress Mode */}
-      {hasDress ? (
-        <div
-          className="absolute top-[11%] left-1/2 -translate-x-1/2 w-[72%] h-[72%] z-15 pointer-events-none flex items-center justify-center"
-          title={slots.dress.title || slots.dress.name}
-        >
-          <img
-            src={slots.dress.imageUrl}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)] transition-transform duration-200"
-          />
-        </div>
-      ) : (
-        <>
-          {/* Bottom */}
-          {slots.bottom && (
-            <div
-              className={cn(
-                'absolute left-1/2 -translate-x-1/2 pointer-events-none flex items-center justify-center z-12',
-                slots.top
-                  ? 'top-[41%] w-[64%] h-[46%]'
-                  : 'top-[41%] w-[64%] h-[48%]'
-              )}
-              title={slots.bottom.title || slots.bottom.name}
+          ) : (
+            <svg
+              viewBox="0 0 200 450"
+              className="absolute inset-0 w-full h-full pointer-events-none select-none"
+              style={{ zIndex: 1 }}
+              preserveAspectRatio="xMidYMid meet"
+              aria-hidden="true"
             >
-              <img
-                src={slots.bottom.imageUrl}
-                alt=""
-                loading="lazy"
-                className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200"
-              />
-            </div>
-          )}
+              <defs>
+                <linearGradient id={`mannequin-skin-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={effectiveSkinColor} stopOpacity="0.96" />
+                  <stop offset="100%" stopColor={effectiveSkinColor} stopOpacity="0.88" />
+                </linearGradient>
+              </defs>
 
-          {/* Top */}
-          {slots.top && (
-            <div
+              {/* Pedestal shadow under feet */}
+              <ellipse
+                cx={anatomy.X0}
+                cy={anatomy.yFeet + 3}
+                rx={Math.max(26, anatomy.wHip * 0.85)}
+                ry={5}
+                fill="rgba(0, 0, 0, 0.08)"
+              />
+
+              {/* Left & Right Arms */}
+              <g fill={`url(#mannequin-skin-${uid})`} stroke="rgba(0,0,0,0.06)" strokeWidth="0.6">
+                <path d={svgPaths.armPathL} />
+                <path d={svgPaths.armPathR} />
+              </g>
+
+              {/* Torso & Legs Body */}
+              <path
+                d={svgPaths.bodyPath}
+                fill={`url(#mannequin-skin-${uid})`}
+                stroke="rgba(0,0,0,0.06)"
+                strokeWidth="0.6"
+              />
+
+              {/* Modest studio undergarments base */}
+              <path
+                d={`M ${anatomy.X0 - anatomy.wHip * 0.9},${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} C ${anatomy.X0} ${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} ${anatomy.X0} ${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} ${anatomy.X0 + anatomy.wHip * 0.9},${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} L ${anatomy.X0 + anatomy.wHip * 0.78},${anatomy.yCrotch + 10} C ${anatomy.X0} ${anatomy.yCrotch + 4} ${anatomy.X0} ${anatomy.yCrotch + 4} ${anatomy.X0 - anatomy.wHip * 0.78},${anatomy.yCrotch + 10} Z`}
+                fill="#20242C"
+                opacity="0.85"
+              />
+
+              {/* Neck / Collarbone line */}
+              <path
+                d={`M ${anatomy.X0 - anatomy.wNeck * 1.2} ${anatomy.yShoulders + 4} Q ${anatomy.X0} ${anatomy.yShoulders + 9} ${anatomy.X0 + anatomy.wNeck * 1.2} ${anatomy.yShoulders + 4}`}
+                fill="none"
+                stroke="rgba(0, 0, 0, 0.12)"
+                strokeWidth="0.75"
+                strokeLinecap="round"
+              />
+
+              {/* Head */}
+              <path
+                d={svgPaths.headPath}
+                fill={`url(#mannequin-skin-${uid})`}
+                stroke="rgba(0,0,0,0.06)"
+                strokeWidth="0.6"
+              />
+
+              {/* Stylish Hair */}
+              <path
+                d={hairSvgPath}
+                fill={activeHairColor}
+                opacity="0.94"
+              />
+            </svg>
+          )
+        )}
+
+        {/* ─── Layer 2: Garments OVERLAYING the Avatar (zIndex 10 - 50) ─── */}
+
+        {/* Bottom (Pants, Skirts, Shorts) -> zIndex 10 */}
+        {slots.bottom && !hasDress && (
+          <div
+            className={cn(
+              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
+              bottomTopo.classes
+            )}
+            style={{ zIndex: 10 }}
+            title={slots.bottom.title || slots.bottom.name}
+          >
+            <img
+              src={slots.bottom.imageUrl}
+              alt=""
+              loading="lazy"
               className={cn(
-                'absolute left-1/2 -translate-x-1/2 pointer-events-none flex items-center justify-center z-16',
-                slots.bottom
-                  ? 'top-[9%] w-[70%] h-[44%]'
-                  : 'top-[10%] w-[70%] h-[46%]'
+                'w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200',
+                bottomTopo.align || 'object-bottom',
+                'object-contain'
               )}
-              title={slots.top.title || slots.top.name}
-            >
-              <img
-                src={slots.top.imageUrl}
-                alt=""
-                loading="lazy"
-                className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200"
-              />
-            </div>
-          )}
-        </>
-      )}
+            />
+          </div>
+        )}
 
-      {/* Outerwear (Jackets, Blazers, Coats) */}
-      {slots.outerwear && (
-        <div
-          className="absolute top-[8%] left-1/2 -translate-x-1/2 w-[78%] h-[50%] z-22 pointer-events-none flex items-center justify-center"
-          title={slots.outerwear.title || slots.outerwear.name}
-        >
-          <img
-            src={slots.outerwear.imageUrl}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-contain filter drop-shadow-[0_6px_10px_rgba(0,0,0,0.16)] transition-transform duration-200"
-          />
-        </div>
-      )}
+        {/* Footwear / Shoes -> zIndex 15 */}
+        {slots.shoes && (
+          <div
+            className="absolute bottom-[0.5%] left-1/2 -translate-x-1/2 w-[76%] h-[16%] pointer-events-none flex items-center justify-center"
+            style={{ zIndex: 15 }}
+            title={slots.shoes.title || slots.shoes.name}
+          >
+            <img
+              src={slots.shoes.imageUrl}
+              alt=""
+              loading="lazy"
+              className="w-full h-full object-contain object-bottom filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)] transition-transform duration-200"
+            />
+          </div>
+        )}
 
-      {/* Belt */}
-      {slots.belt && (
-        <div
-          className="absolute top-[40%] left-1/2 -translate-x-1/2 w-[56%] h-[6%] z-25 pointer-events-none flex items-center justify-center"
-          title={slots.belt.title || slots.belt.name}
-        >
-          <img
-            src={slots.belt.imageUrl}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.14)]"
-          />
-        </div>
-      )}
+        {/* Dress Mode -> zIndex 20 */}
+        {hasDress && (
+          <div
+            className={cn(
+              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
+              dressTopo.classes
+            )}
+            style={{ zIndex: 20 }}
+            title={slots.dress.title || slots.dress.name}
+          >
+            <img
+              src={slots.dress.imageUrl}
+              alt=""
+              loading="lazy"
+              className={cn(
+                'w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)] transition-transform duration-200',
+                dressTopo.align || 'object-top',
+                'object-contain'
+              )}
+            />
+          </div>
+        )}
 
-      {/* Footwear / Shoes */}
-      {slots.shoes && (
-        <div
-          className="absolute bottom-[2%] left-1/2 -translate-x-1/2 w-[62%] h-[17%] z-20 pointer-events-none flex items-center justify-center"
-          title={slots.shoes.title || slots.shoes.name}
-        >
-          <img
-            src={slots.shoes.imageUrl}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)] transition-transform duration-200"
-          />
-        </div>
-      )}
+        {/* Top (Shirts, Tees, Blouses, Sweaters) -> zIndex 20 */}
+        {slots.top && !hasDress && (
+          <div
+            className={cn(
+              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
+              topTopo.classes
+            )}
+            style={{ zIndex: 20 }}
+            title={slots.top.title || slots.top.name}
+          >
+            <img
+              src={slots.top.imageUrl}
+              alt=""
+              loading="lazy"
+              className={cn(
+                'w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200',
+                topTopo.align || 'object-top',
+                'object-contain'
+              )}
+            />
+          </div>
+        )}
 
-      {/* Bag */}
-      {slots.bag && (
-        <div
-          className="absolute bottom-[16%] right-[3%] w-[28%] h-[26%] z-26 pointer-events-none flex items-center justify-center"
-          title={slots.bag.title || slots.bag.name}
-        >
-          <img
-            src={slots.bag.imageUrl}
-            alt=""
-            loading="lazy"
-            className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.16)]"
-          />
-        </div>
-      )}
+        {/* Belt -> zIndex 25 */}
+        {slots.belt && (
+          <div
+            className="absolute top-[41%] left-1/2 -translate-x-1/2 w-[62%] h-[5%] pointer-events-none flex items-center justify-center"
+            style={{ zIndex: 25 }}
+            title={slots.belt.title || slots.belt.name}
+          >
+            <img
+              src={slots.belt.imageUrl}
+              alt=""
+              loading="lazy"
+              className="w-full h-full object-contain object-center filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.14)]"
+            />
+          </div>
+        )}
 
-      {/* Single item fallback if neither top/bottom/dress were matched */}
-      {!slots.top && !slots.bottom && !slots.dress && !slots.outerwear && slots.others.length > 0 && (
-        <div className="absolute inset-0 p-4 flex items-center justify-center pointer-events-none z-10">
-          <img
-            src={slots.others[0].imageUrl}
-            alt=""
-            loading="lazy"
-            className="max-w-[85%] max-h-[85%] object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)]"
-          />
-        </div>
-      )}
+        {/* Outerwear (Jackets, Blazers, Coats, Cardigans) -> zIndex 30 */}
+        {slots.outerwear && (
+          <div
+            className={cn(
+              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
+              outerwearTopo.classes
+            )}
+            style={{ zIndex: 30 }}
+            title={slots.outerwear.title || slots.outerwear.name}
+          >
+            <img
+              src={slots.outerwear.imageUrl}
+              alt=""
+              loading="lazy"
+              className={cn(
+                'w-full h-full filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.16)] transition-transform duration-200',
+                outerwearTopo.align || 'object-top',
+                'object-contain'
+              )}
+            />
+          </div>
+        )}
+
+        {/* Bag -> zIndex 35 */}
+        {slots.bag && (
+          <div
+            className="absolute top-[44%] right-[-6%] w-[38%] h-[30%] pointer-events-none flex items-center justify-center"
+            style={{ zIndex: 35 }}
+            title={slots.bag.title || slots.bag.name}
+          >
+            <img
+              src={slots.bag.imageUrl}
+              alt=""
+              loading="lazy"
+              className="w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.16)]"
+            />
+          </div>
+        )}
+
+        {/* Headwear -> zIndex 50 */}
+        {slots.headwear && (
+          <div
+            className="absolute top-[3.5%] left-1/2 -translate-x-1/2 w-[34%] aspect-square pointer-events-none flex items-center justify-center"
+            style={{ zIndex: 50 }}
+            title={slots.headwear.title || slots.headwear.name}
+          >
+            <img
+              src={slots.headwear.imageUrl}
+              alt=""
+              loading="lazy"
+              className="w-full h-full object-contain object-bottom filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.12)] transition-transform duration-200"
+            />
+          </div>
+        )}
+
+        {/* Fallback for unclassified single items */}
+        {!slots.top && !slots.bottom && !slots.dress && !slots.outerwear && slots.others.length > 0 && (
+          <div
+            className="absolute inset-0 p-4 flex items-center justify-center pointer-events-none"
+            style={{ zIndex: 20 }}
+          >
+            <img
+              src={slots.others[0].imageUrl}
+              alt=""
+              loading="lazy"
+              className="max-w-[85%] max-h-[85%] object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)]"
+            />
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }

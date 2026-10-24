@@ -10,7 +10,7 @@ const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair3';
 // so grids with 40+ Saved Outfit cards can render the 3D avatar instantaneously without
 // exceeding the browser's 8-16 active WebGL context limit.
 const rendered3DAvatarSnapshotCache = new Map();
-const snapshotSubscribers = new Set();
+export const snapshotSubscribers = new Set();
 const slotReleaseSubscribers = new Set();
 let activeWebGLCanvasCount = 0;
 const MAX_CONCURRENT_WEBGL_CANVASES = 2;
