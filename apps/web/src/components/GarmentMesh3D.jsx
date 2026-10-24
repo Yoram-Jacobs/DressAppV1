@@ -1391,10 +1391,10 @@ export function createAnatomicalBottomGeometry({
   if (isSkirt) {
     const ny = 18;
     const nx = 28;
-    const waistSlice = getTorsoSlice(0.88, isMale);
-    const rxWaist = (waistSlice ? waistSlice.rx : 0.23) + layerOffset;
-    const rzWaist = (waistSlice ? waistSlice.rz : 0.14) + layerOffset;
-    const cz = waistSlice ? waistSlice.cz : 0.03;
+    const waistSlice = getTorsoSlice(yTop, isMale);
+    const rxWaist = (waistSlice ? waistSlice.rx : 0.212) + layerOffset;
+    const rzWaist = (waistSlice ? ((waistSlice.rzFront || 0.118) + (waistSlice.rzBack || 0.065)) * 0.5 : 0.0915) + layerOffset;
+    const cz = waistSlice ? waistSlice.cz : 0.046;
 
     for (let i = 0; i <= ny; i++) {
       const vNorm = i / ny;

@@ -503,4 +503,44 @@ describe('shoulder line detection and hoodie mapping', () => {
     expect(waistWidth).toBeGreaterThanOrEqual(0.44);
     expect(waistWidth).toBeLessThanOrEqual(0.52);
   });
+
+  test('skirt with arched/noisy waistband top rows sits tightly on avatar waist and never doubles in width', () => {
+    const { nx, ny } = chooseGridResolution(0.85, 80);
+    // Skirt with a narrow arched peak (v ~ 0.04..0.06 with only 2-3 pixels),
+    // and main waistband stabilized at width ~ 0.44 of grid, flaring to 0.78 at hem.
+    const mask = paintMask(nx, ny, (u, v) => {
+      if (v < 0.04 || v > 0.94) return false;
+      if (v < 0.06) {
+        // Narrow top arc / hanger artifact
+        return Math.abs(u - 0.5) <= 0.04;
+      }
+      const vNorm = (v - 0.06) / (0.94 - 0.06);
+      const halfSpan = 0.22 + 0.17 * vNorm;
+      return Math.abs(u - 0.5) <= halfSpan;
+    });
+
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.85, slot: 'bottom', isMale: false, isSkirt: true, isStandalone: false,
+      yTop: 1.05, yBottom: 0.44, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const pf = shell.front.attributes.position;
+    const vw = nx + 1;
+
+    // Check width across the main stabilized waistband row (v ~ 0.08)
+    const jWaist = Math.floor(ny * 0.08);
+    let minX = Infinity, maxX = -Infinity;
+    for (let i = 0; i <= nx; i++) {
+      const idx = jWaist * vw + i;
+      if (mask[idx]) {
+        minX = Math.min(minX, pf.getX(idx));
+        maxX = Math.max(maxX, pf.getX(idx));
+      }
+    }
+    const waistWidth = maxX - minX;
+    // Skirt sits tightly on avatar waist: ~0.44m - 0.50m (never 0.90m - 1.20m!)
+    expect(waistWidth).toBeGreaterThanOrEqual(0.42);
+    expect(waistWidth).toBeLessThanOrEqual(0.52);
+  });
 });
