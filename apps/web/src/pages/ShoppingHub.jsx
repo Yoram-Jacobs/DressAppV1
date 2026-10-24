@@ -559,10 +559,10 @@ export default function ShoppingHub() {
               <Globe className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-dark-brand leading-tight">
+              <h1 className="font-bold text-lg text-dark-brand leading-tight" dir="auto">
                 {t('shoppingHub.title', { defaultValue: 'DressApp Shopping Hub' })}
               </h1>
-              <p className="text-xs text-text-brand mt-1">
+              <p className="text-xs text-text-brand mt-1" dir="auto">
                 {t('shoppingHub.subtitle', {
                   defaultValue: 'Shop your favorite fashion platforms with real-time size recommendations matching your body measurements.',
                 })}
@@ -574,22 +574,23 @@ export default function ShoppingHub() {
         <CardContent className="p-5 space-y-5">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-muted-foreground absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Input
               type="text"
+              dir="auto"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('shoppingHub.searchPlaceholder', {
                 defaultValue: 'Search Zara, ASOS, H&M, SHEIN, Nike, or enter any store URL...',
               })}
-              className="ps-10 pe-10 h-11 bg-sand/30 border-border text-xs rounded-xl"
+              className="ps-10 pe-10 h-11 bg-sand/30 border-border text-xs rounded-xl text-start"
               data-testid="shopping-hub-search"
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-dark-brand p-1"
+                className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-dark-brand p-1"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -603,11 +604,11 @@ export default function ShoppingHub() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <h3 className="font-bold text-xs uppercase tracking-wider text-dark-brand">
+                <h3 className="font-bold text-xs uppercase tracking-wider text-dark-brand" dir="auto">
                   {t('shoppingHub.savedPlatforms', { defaultValue: 'Saved Platforms' })}
                 </h3>
               </div>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground" dir="auto">
                 {savedStores.length} {t('shoppingHub.pinned', { defaultValue: 'pinned' })}
               </span>
             </div>
@@ -706,11 +707,19 @@ export default function ShoppingHub() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <h4 className="font-bold text-sm text-dark-brand truncate">{store.name}</h4>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground uppercase font-semibold">
-                        {store.category.replace('_', ' ')}
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border text-muted-foreground uppercase font-semibold" dir="auto">
+                        {store.category === 'fast_fashion'
+                          ? t('shoppingHub.catFastFashion', { defaultValue: 'Fast Fashion' })
+                          : store.category === 'marketplaces'
+                          ? t('shoppingHub.catMarketplaces', { defaultValue: 'Marketplaces' })
+                          : store.category === 'contemporary'
+                          ? t('shoppingHub.catContemporary', { defaultValue: 'Contemporary & Luxury' })
+                          : store.category === 'sportswear'
+                          ? t('shoppingHub.catSportswear', { defaultValue: 'Sportswear' })
+                          : store.category.replace('_', ' ')}
                       </Badge>
                     </div>
-                    <span className="text-xs text-text-brand block truncate mt-0.5">{store.domain}</span>
+                    <span className="text-xs text-text-brand block truncate mt-0.5" dir="ltr">{store.domain}</span>
                   </div>
                 </div>
 
@@ -719,7 +728,7 @@ export default function ShoppingHub() {
                     type="button"
                     onClick={() => toggleSaveStore(store.id)}
                     className="p-2 text-muted-foreground hover:text-amber-500 rounded-lg hover:bg-secondary transition-colors"
-                    title={isSaved ? 'Remove from saved' : 'Save platform'}
+                    title={isSaved ? t('shoppingHub.unpin', { defaultValue: 'Remove from saved' }) : t('shoppingHub.pin', { defaultValue: 'Save platform' })}
                   >
                     <Star className={`w-4 h-4 ${isSaved ? 'text-amber-500 fill-amber-500' : ''}`} />
                   </button>
