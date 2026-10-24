@@ -1774,7 +1774,7 @@
             "avatarGenerationDesc": "Generato dalle tue misurazioni corporee qui sotto.",
             "measurementsDesc": "Vestibilità delle taglie (altezza, torace, vita e cucitura interna)",
             "hairDesc": "Proprietà di lunghezza, tipo, stile e colore dei capelli",
-            "identityDesc": "Nome, indirizzo e-mail e data di nascita",
+            "identityDesc": "Dati personali, misure del corpo, avatar per prova virtuale e DNA di stile",
             "contactDesc": "Numero di telefono, indirizzo di consegna e localizzazione",
             "demographicsDesc": "Genere, background professionale e stato civile",
             "preferencesDesc": "Scale di misurazione predefinite per taglie, lunghezze e pesi",
@@ -1785,7 +1785,9 @@
             "scheduler": "Pianificatore outfit",
             "subscription": "Abbonamento e crediti IA",
             "shopping": "Assistente shopping IA",
-            "developer": "Strumenti sviluppatore e cache"
+            "developer": "Strumenti sviluppatore e cache",
+            "subscriptionDesc": "Livello di abbonamento, crediti di ricostruzione, sincronizzazione calendario e posizioni",
+            "moreDesc": "Pianificazione automatica outfit, assistente shopping, importazione guardaroba e inviti"
         },
         "firstName": "Nome",
         "lastName": "Cognome",
@@ -2128,7 +2130,10 @@
         "groups": {
             "identity": "Identità",
             "subscription": "Abbonamento",
-            "more": "Altro"
+            "more": "Altro",
+            "identityDesc": "Dati personali, misure del corpo, avatar per prova virtuale e DNA di stile",
+            "subscriptionDesc": "Livello di abbonamento, crediti di ricostruzione, sincronizzazione calendario e posizioni",
+            "moreDesc": "Pianificazione automatica outfit, assistente shopping, importazione guardaroba e inviti"
         },
         "inviteWebTab": "Link web",
         "invitePlayStoreTab": "Link Google Play",

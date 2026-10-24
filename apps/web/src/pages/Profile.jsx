@@ -304,7 +304,7 @@ export default function Profile() {
                       6
                     </span>
                   </div>
-                  <span className="text-xs text-text-brand block mt-0.5">
+                  <span className="text-xs text-text-brand block mt-0.5" dir="auto">
                     {t('profile.sections.identityDesc', { defaultValue: 'Personal details, body measurements, virtual fitting avatar, and style DNA' })}
                   </span>
                 </div>
@@ -348,7 +348,7 @@ export default function Profile() {
                       {isTester ? 5 : 4}
                     </span>
                   </div>
-                  <span className="text-xs text-text-brand block mt-0.5">
+                  <span className="text-xs text-text-brand block mt-0.5" dir="auto">
                     {t('profile.sections.subscriptionDesc', { defaultValue: 'Membership tier, reconstruction credits, calendar sync, and locations' })}
                   </span>
                 </div>
@@ -406,7 +406,7 @@ export default function Profile() {
                       4
                     </span>
                   </div>
-                  <span className="text-xs text-text-brand block mt-0.5">
+                  <span className="text-xs text-text-brand block mt-0.5" dir="auto">
                     {t('profile.sections.moreDesc', { defaultValue: 'Automated outfit scheduling, shopping assistant, catalog import, and invites' })}
                   </span>
                 </div>

@@ -1794,7 +1794,7 @@
             "avatarGenerationDesc": "Generiert aus deinen Körpermaßen unten.",
             "measurementsDesc": "Passformen für Kleidungsgrößen (Größe, Brust, Taille und Innennähte)",
             "hairDesc": "Haarlänge, -typ, -stil und Farbeigenschaften",
-            "identityDesc": "Ihr Name, Ihre E-Mail-Adresse und Ihr Geburtsdatum",
+            "identityDesc": "Persönliche Daten, Körpermaße, virtueller Anprobe-Avatar und Stil-DNA",
             "contactDesc": "Telefonnummer, Lieferadresse und Lokalisierung",
             "demographicsDesc": "Geschlecht, beruflicher Hintergrund und persönlicher Status",
             "preferencesDesc": "Standard-Maßstäbe für Größen, Längen und Gewichte",
@@ -1805,7 +1805,9 @@
             "scheduler": "Outfit-Planer",
             "subscription": "Abonnement & KI-Guthaben",
             "shopping": "KI-Shopping-Assistent",
-            "developer": "Entwickler- & Cache-Tools"
+            "developer": "Entwickler- & Cache-Tools",
+            "subscriptionDesc": "Mitgliedschaftsstufe, Rekonstruktions-Credits, Kalendersynchronisierung und Standorte",
+            "moreDesc": "Automatische Outfit-Planung, Einkaufsassistent, Kleiderschrank-Import und Einladungen"
         },
         "firstName": "Vorname",
         "lastName": "Nachname",
@@ -2143,7 +2145,10 @@
         "groups": {
             "identity": "Identität",
             "subscription": "Abonnement",
-            "more": "Mehr"
+            "more": "Mehr",
+            "identityDesc": "Persönliche Daten, Körpermaße, virtueller Anprobe-Avatar und Stil-DNA",
+            "subscriptionDesc": "Mitgliedschaftsstufe, Rekonstruktions-Credits, Kalendersynchronisierung und Standorte",
+            "moreDesc": "Automatische Outfit-Planung, Einkaufsassistent, Kleiderschrank-Import und Einladungen"
         },
         "inviteWebTab": "Web-Link",
         "invitePlayStoreTab": "Google Play-Link",

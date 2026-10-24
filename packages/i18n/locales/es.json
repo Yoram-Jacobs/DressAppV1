@@ -1774,7 +1774,7 @@
             "avatarGenerationDesc": "Generado a partir de tus medidas corporales a continuación.",
             "measurementsDesc": "Ajustes de tallas de prendas (altura, pecho, cintura y entrepierna)",
             "hairDesc": "Propiedades de longitud, tipo, estilo y color del cabello",
-            "identityDesc": "Su nombre, dirección de correo electrónico y fecha de nacimiento",
+            "identityDesc": "Datos personales, medidas corporales, avatar de prueba virtual y ADN de estilo",
             "contactDesc": "Número de teléfono, dirección de entrega y localización",
             "demographicsDesc": "Género, antecedentes profesionales y estado civil",
             "preferencesDesc": "Escalas de medición predeterminadas para tallas, longitudes y pesos",
@@ -1785,7 +1785,9 @@
             "scheduler": "Programador de looks",
             "subscription": "Suscripción y créditos IA",
             "shopping": "Asistente de compras IA",
-            "developer": "Herramientas de desarrollador y caché"
+            "developer": "Herramientas de desarrollador y caché",
+            "subscriptionDesc": "Nivel de suscripción, créditos de reconstrucción, sincronización de calendario y ubicaciones",
+            "moreDesc": "Planificación automática de conjuntos, asistente de compras, importación de armario e invitaciones"
         },
         "firstName": "Nombre",
         "lastName": "Apellido",
@@ -2128,7 +2130,10 @@
         "groups": {
             "identity": "Identidad",
             "subscription": "Suscripción",
-            "more": "Más"
+            "more": "Más",
+            "identityDesc": "Datos personales, medidas corporales, avatar de prueba virtual y ADN de estilo",
+            "subscriptionDesc": "Nivel de suscripción, créditos de reconstrucción, sincronización de calendario y ubicaciones",
+            "moreDesc": "Planificación automática de conjuntos, asistente de compras, importación de armario e invitaciones"
         },
         "inviteWebTab": "Enlace web",
         "invitePlayStoreTab": "Enlace de Google Play",

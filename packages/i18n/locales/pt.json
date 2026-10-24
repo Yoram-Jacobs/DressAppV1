@@ -1774,7 +1774,7 @@
             "avatarGenerationDesc": "Gerado a partir das suas medidas corporais abaixo.",
             "measurementsDesc": "Ajustes de tamanhos de roupas (altura, peito, cintura e costura interna)",
             "hairDesc": "Propriedades de comprimento, tipo, estilo e cor do cabelo",
-            "identityDesc": "Seu nome, endereço de e-mail e data de nascimento",
+            "identityDesc": "Dados pessoais, medidas corporais, avatar de prova virtual e DNA de estilo",
             "contactDesc": "Número de telefone, endereço de entrega e localização",
             "demographicsDesc": "Gênero, histórico profissional e estado civil",
             "preferencesDesc": "Unidades de medida padrão para tamanhos, comprimentos e pesos",
@@ -1785,7 +1785,9 @@
             "scheduler": "Agendador de looks",
             "subscription": "Assinatura e créditos de IA",
             "shopping": "Assistente de compras IA",
-            "developer": "Ferramentas de desenvolvedor e cache"
+            "developer": "Ferramentas de desenvolvedor e cache",
+            "subscriptionDesc": "Plano de assinatura, créditos de reconstrução, sincronização de agenda e locais",
+            "moreDesc": "Agendamento automático de looks, assistente de compras, importação de closet e convites"
         },
         "firstName": "Primeiro nome",
         "lastName": "Sobrenome",
@@ -2128,7 +2130,10 @@
         "groups": {
             "identity": "Identidade",
             "subscription": "Assinatura",
-            "more": "Mais"
+            "more": "Mais",
+            "identityDesc": "Dados pessoais, medidas corporais, avatar de prova virtual e DNA de estilo",
+            "subscriptionDesc": "Plano de assinatura, créditos de reconstrução, sincronização de agenda e locais",
+            "moreDesc": "Agendamento automático de looks, assistente de compras, importação de closet e convites"
         },
         "inviteWebTab": "Link da web",
         "invitePlayStoreTab": "Link do Google Play",

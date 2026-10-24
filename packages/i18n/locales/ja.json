@@ -1774,7 +1774,7 @@
             "avatarGenerationDesc": "以下の身体測定値から生成されます。",
             "measurementsDesc": "衣類のサイズフィット（身長、胸囲、ウエスト、股下）",
             "hairDesc": "髪の長さ、タイプ、スタイル、色の特性",
-            "identityDesc": "名前、メールアドレス、生年月日",
+            "identityDesc": "基本情報、身体サイズ、バーチャル試着アバター、スタイルDNA",
             "contactDesc": "電話番号、配送先住所、ローカリゼーション",
             "demographicsDesc": "性別、職業、個人ステータス",
             "preferencesDesc": "サイズ、長さ、重量のデフォルト測定単位",
@@ -1785,7 +1785,9 @@
             "scheduler": "コーデスケジュール",
             "subscription": "プラン＆AIクレジット",
             "shopping": "AI ショッピングアシスタント",
-            "developer": "開発者・キャッシュ設定"
+            "developer": "開発者・キャッシュ設定",
+            "subscriptionDesc": "会員プラン、画像再構築クレジット、カレンダー同期、登録場所",
+            "moreDesc": "コーデ自動スケジュール、ショッピングアシスタント、クローゼット移行、友達招待"
         },
         "firstName": "名",
         "lastName": "姓",
@@ -2128,7 +2130,10 @@
         "groups": {
             "identity": "アイデンティティ",
             "subscription": "サブスクリプション",
-            "more": "その他"
+            "more": "その他",
+            "identityDesc": "基本情報、身体サイズ、バーチャル試着アバター、スタイルDNA",
+            "subscriptionDesc": "会員プラン、画像再構築クレジット、カレンダー同期、登録場所",
+            "moreDesc": "コーデ自動スケジュール、ショッピングアシスタント、クローゼット移行、友達招待"
         },
         "inviteWebTab": "Webリンク",
         "invitePlayStoreTab": "Google Playリンク",

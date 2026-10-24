@@ -1799,7 +1799,7 @@
         "settingsTitle": "System Preferences",
         "sections": {
             "identity": "Identity",
-            "identityDesc": "Your name, email address, and date of birth",
+            "identityDesc": "Personal details, body measurements, virtual fitting avatar, and style DNA",
             "contact": "Contact",
             "contactDesc": "Phone number, delivery address, and localization",
             "demographics": "Identity & Demographics",
@@ -1821,7 +1821,9 @@
             "scheduler": "Outfit Scheduler",
             "subscription": "Subscription & AI Credits",
             "shopping": "AI Shopping Assistant",
-            "developer": "Developer & Cache Tools"
+            "developer": "Developer & Cache Tools",
+            "subscriptionDesc": "Membership tier, reconstruction credits, calendar sync, and locations",
+            "moreDesc": "Automated outfit scheduling, shopping assistant, catalog import, and invites"
         },
         "firstName": "First name",
         "lastName": "Last name",
@@ -2137,7 +2139,10 @@
         "groups": {
             "identity": "Identity",
             "subscription": "Subscription",
-            "more": "More"
+            "more": "More",
+            "identityDesc": "Personal details, body measurements, virtual fitting avatar, and style DNA",
+            "subscriptionDesc": "Membership tier, reconstruction credits, calendar sync, and locations",
+            "moreDesc": "Automated outfit scheduling, shopping assistant, catalog import, and invites"
         },
         "inviteWebTab": "Web Link",
         "invitePlayStoreTab": "Google Play Link",

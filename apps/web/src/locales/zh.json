@@ -1787,7 +1787,7 @@
             "preferences": "偏好设置",
             "measurementsDesc": "服装尺码适合度（身高、胸围、腰围和内缝长）",
             "hairDesc": "发长、发质、发型和颜色属性",
-            "identityDesc": "您的姓名、电子邮件地址和出生日期",
+            "identityDesc": "个人资料、身体尺寸、虚拟试衣模特与风格DNA",
             "contactDesc": "电话号码、收货地址和本地化设置",
             "demographicsDesc": "性别、职业背景及个人状况",
             "preferencesDesc": "尺码、长度和重量的默认度量单位",
@@ -1798,7 +1798,9 @@
             "scheduler": "每日穿搭排程",
             "subscription": "会员订阅与 AI 积分",
             "shopping": "AI 导购助手",
-            "developer": "开发者与缓存工具"
+            "developer": "开发者与缓存工具",
+            "subscriptionDesc": "会员级别、重建模特积分、日历同步与常驻地点",
+            "moreDesc": "每日穿搭自动调度、购物助手、衣橱导入与好友邀请"
         },
         "firstName": "名",
         "lastName": "姓",
@@ -2143,7 +2145,10 @@
         "groups": {
             "identity": "身份信息",
             "subscription": "订阅会员",
-            "more": "更多"
+            "more": "更多",
+            "identityDesc": "个人资料、身体尺寸、虚拟试衣模特与风格DNA",
+            "subscriptionDesc": "会员级别、重建模特积分、日历同步与常驻地点",
+            "moreDesc": "每日穿搭自动调度、购物助手、衣橱导入与好友邀请"
         },
         "inviteWebTab": "网页链接",
         "invitePlayStoreTab": "Google Play 链接",

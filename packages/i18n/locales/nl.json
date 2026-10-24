@@ -1799,7 +1799,7 @@
         "settingsTitle": "Systeemvoorkeuren",
         "sections": {
             "identity": "Identiteit",
-            "identityDesc": "Je naam, e-mailadres en geboortedatum",
+            "identityDesc": "Persoonlijke gegevens, lichaamsmaten, virtuele pasavatar en stijl-DNA",
             "contact": "Contact",
             "contactDesc": "Telefoonnummer, afleveradres en lokalisatie",
             "demographics": "Identiteit & Demografie",
@@ -1821,7 +1821,9 @@
             "scheduler": "Outfit planner",
             "subscription": "Abonnement & AI Credits",
             "shopping": "AI Winkelassistent",
-            "developer": "Ontwikkelaars- & Cache-tools"
+            "developer": "Ontwikkelaars- & Cache-tools",
+            "subscriptionDesc": "Lidmaatschapsniveau, reconstructie-credits, agendasynchronisatie en locaties",
+            "moreDesc": "Automatische outfitplanning, winkelassistent, kledingkastimport en uitnodigingen"
         },
         "firstName": "Voornaam",
         "lastName": "Achternaam",
@@ -2128,7 +2130,10 @@
         "groups": {
             "identity": "Identiteit",
             "subscription": "Abonnement",
-            "more": "Meer"
+            "more": "Meer",
+            "identityDesc": "Persoonlijke gegevens, lichaamsmaten, virtuele pasavatar en stijl-DNA",
+            "subscriptionDesc": "Lidmaatschapsniveau, reconstructie-credits, agendasynchronisatie en locaties",
+            "moreDesc": "Automatische outfitplanning, winkelassistent, kledingkastimport en uitnodigingen"
         },
         "inviteWebTab": "Weblink",
         "invitePlayStoreTab": "Google Play-link",
