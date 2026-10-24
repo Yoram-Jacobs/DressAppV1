@@ -5842,6 +5842,8 @@
         "pastedClipboard": "Pasted from clipboard. Tap Analyze to proceed.",
         "clipboardError": "Clipboard access denied. Please paste manually.",
         "chartAnalyzed": "Size chart analyzed successfully!",
-        "chartError": "Could not parse size chart from image. Please try a clearer screenshot."
+        "chartError": "Could not parse size chart from image. Please try a clearer screenshot.",
+        "invalidUrl": "Please enter a valid product URL (e.g. https://www.zara.com/...)",
+        "addError": "Failed to add item to closet."
     }
 }

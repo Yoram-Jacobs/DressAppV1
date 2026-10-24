@@ -230,10 +230,10 @@ export default function ShareTarget() {
               <Sparkles className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-dark-brand leading-tight">
+              <h1 className="font-bold text-lg text-dark-brand leading-tight" dir="auto">
                 {t('shareTarget.title', { defaultValue: 'Check Size from Retail Link' })}
               </h1>
-              <p className="text-xs text-text-brand mt-1">
+              <p className="text-xs text-text-brand mt-1" dir="auto">
                 {t('shareTarget.subtitle', {
                   defaultValue: 'Shared from Zara, ASOS, SHEIN, H&M, or any store via your mobile share sheet.',
                 })}
@@ -245,16 +245,17 @@ export default function ShareTarget() {
         <CardContent className="p-5 space-y-5">
           {/* Link Input Section */}
           <form onSubmit={handleSubmit} className="space-y-2.5">
-            <label className="text-xs font-semibold text-dark-brand block">
+            <label className="text-xs font-semibold text-dark-brand block text-start" dir="auto">
               {t('shareTarget.inputLabel', { defaultValue: 'Store Product Link' })}
             </label>
             <div className="flex gap-2">
               <Input
                 type="url"
+                dir="ltr"
                 value={inputUrl}
                 onChange={(e) => setInputUrl(e.target.value)}
                 placeholder="https://www.zara.com/product/..."
-                className="text-xs bg-sand/30 border-border h-10"
+                className="text-xs bg-sand/30 border-border h-10 text-start"
                 disabled={loading}
                 data-testid="share-target-input"
               />
@@ -275,7 +276,7 @@ export default function ShareTarget() {
               </Button>
             </div>
             <div className="flex items-center justify-between text-[11px] text-text-brand pt-1">
-              <span>{t('shareTarget.supportedStores', { defaultValue: 'Works with Zara, ASOS, H&M, SHEIN, Mango, Uniqlo & more' })}</span>
+              <span dir="auto">{t('shareTarget.supportedStores', { defaultValue: 'Works with Zara, ASOS, H&M, SHEIN, Mango, Uniqlo & more' })}</span>
               <button
                 type="button"
                 onClick={handlePasteClipboard}
@@ -292,18 +293,18 @@ export default function ShareTarget() {
             <div className="flex items-center gap-2">
               <Ruler className="w-4 h-4 text-primary-brand shrink-0" />
               {hasMeasurements ? (
-                <span className="text-dark-brand font-medium">
+                <span className="text-dark-brand font-medium truncate" dir="auto">
                   {t('shareTarget.measurementsActive', {
                     defaultValue: 'Using stored body measurements: ',
                   })}
-                  <span className="text-muted-foreground font-normal">
-                    {measurements.chest && `Chest ${measurements.chest}cm `}
-                    {measurements.waist && `· Waist ${measurements.waist}cm `}
-                    {measurements.hip && `· Hips ${measurements.hip}cm`}
+                  <span className="text-muted-foreground font-normal" dir="auto">
+                    {measurements.chest && `${t('profile.chest', { defaultValue: 'Chest' })} ${measurements.chest}cm `}
+                    {measurements.waist && `· ${t('profile.waist', { defaultValue: 'Waist' })} ${measurements.waist}cm `}
+                    {measurements.hip && `· ${t('profile.hips', { defaultValue: 'Hips' })} ${measurements.hip}cm`}
                   </span>
                 </span>
               ) : (
-                <span className="text-amber-800 font-medium">
+                <span className="text-amber-800 font-medium" dir="auto">
                   {t('shareTarget.noMeasurements', {
                     defaultValue: 'No body measurements found. Add them to your profile for exact sizing.',
                   })}
