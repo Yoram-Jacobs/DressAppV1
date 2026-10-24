@@ -1388,20 +1388,19 @@ export function createAnatomicalBottomGeometry({
   if (isSkirt) {
     const ny = 18;
     const nx = 28;
+    const waistSlice = getTorsoSlice(0.88, isMale);
+    const rxWaist = (waistSlice ? waistSlice.rx : 0.23) + layerOffset;
+    const rzWaist = (waistSlice ? waistSlice.rz : 0.14) + layerOffset;
+    const cz = waistSlice ? waistSlice.cz : 0.03;
+
     for (let i = 0; i <= ny; i++) {
       const vNorm = i / ny;
       const y = yTop - vNorm * (yTop - yHem);
-      const slice = getTorsoSlice(Math.max(0.84, y), isMale);
 
-      let rx = slice.rx + layerOffset;
-      let rz = slice.rz + layerOffset;
-      const cz = slice.cz;
-
-      if (y < 0.84) {
-        const flareRatio = Math.pow((0.84 - y) / (0.84 - yHem), 1.15);
-        rx += flareRatio * 0.15;
-        rz += flareRatio * 0.11;
-      }
+      // Smooth monotonic drape from waistband to hem (avoids hourglass waist indentation)
+      const flareRatio = Math.pow(vNorm, 1.15);
+      const rx = rxWaist + flareRatio * 0.18;
+      const rz = rzWaist + flareRatio * 0.14;
 
       const vTex = 1.0 - vNorm;
 
@@ -1889,9 +1888,11 @@ export default function GarmentMesh3D({
         slot: rawSlot,
         isMale,
         isSkirt: shellFit.isSkirt,
+        isStandalone,
         yTop: shellFit.yTop,
         yBottom: shellFit.yBottom,
         layerOffset: shellFit.layerOffset,
+        poseSleeves: !isStandalone,
         getTorsoSlice,
         getLegSlice,
       });
@@ -1900,7 +1901,7 @@ export default function GarmentMesh3D({
       console.warn('Silhouette shell unavailable, using procedural fallback:', err);
       return null;
     }
-  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale]);
+  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone]);
   const shellGeos = useMemo(() => {
     if (!shell) return null;
     return {

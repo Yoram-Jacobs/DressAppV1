@@ -17,6 +17,7 @@ import {
   buildSilhouetteShell,
   isConsistentView,
   synthesizeBackFabricData,
+  detectGarmentShoulderRow,
 } from '@/lib/garmentSilhouette';
 import {
   getTorsoSlice,
@@ -367,5 +368,92 @@ describe('back fabric synthesis (synthesizeBackFabricData)', () => {
     expect(data[idxPocket]).toBe(data[idxMirror]);
     expect(data[idxPocket + 1]).toBe(data[idxMirror + 1]);
     expect(data[idxPocket + 2]).toBe(data[idxMirror + 2]);
+  });
+});
+
+describe('shoulder line detection and hoodie mapping', () => {
+  test('maps flat-lay/hanged hoodie shoulders to the avatar shoulder line', () => {
+    const nx = 64;
+    const ny = 100;
+    // Hoodie mask:
+    // rows 0..37: narrow hood in center (u in [0.42, 0.58])
+    // rows 38..100: shoulders and torso (u in [0.15, 0.85])
+    const mask = paintMask(nx, ny, (u, v) => {
+      if (v < 0.38) return u >= 0.42 && u <= 0.58;
+      return u >= 0.15 && u <= 0.85;
+    });
+
+    const shoulderRow = detectGarmentShoulderRow(
+      Array.from({ length: ny + 1 }, (_, j) => rowRuns(mask, nx, j)),
+      nx,
+      ny,
+      (0.85 * 0.61) / nx
+    );
+    expect(shoulderRow).toBeGreaterThanOrEqual(35);
+    expect(shoulderRow).toBeLessThanOrEqual(40);
+
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.85, slot: 'top', isMale: false,
+      yTop: 1.47, yBottom: 0.86, layerOffset: 0.022, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const pf = shell.front.attributes.position;
+    const vw = nx + 1;
+
+    // 1. The garment's shoulder row sits right at the avatar's shoulder line (~1.42)
+    const midCol = Math.floor(nx / 2);
+    const shoulderIdx = shoulderRow * vw + midCol;
+    expect(pf.getY(shoulderIdx)).toBeCloseTo(1.42, 2);
+
+    // 2. The hood extends upward above the shoulders toward the avatar head
+    const topIdx = midCol;
+    expect(pf.getY(topIdx)).toBeGreaterThan(1.60);
+
+    // 3. The hem sits at the avatar hip height (~0.86)
+    const hemIdx = ny * vw + midCol;
+    expect(pf.getY(hemIdx)).toBeCloseTo(0.86, 2);
+  });
+
+  test('skirts preserve linear A-line silhouette without waist pinching or hourglass indentation', () => {
+    const { nx, ny } = chooseGridResolution(0.85, 80);
+    // Pure linear A-line skirt: span increases linearly from waist (0.40) to hem (0.84)
+    const mask = paintMask(nx, ny, (u, v) => {
+      const halfSpan = 0.20 + 0.22 * v;
+      return v >= 0.02 && v <= 0.98 && Math.abs(u - 0.5) <= halfSpan;
+    });
+
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.85, slot: 'bottom', isMale: false, isSkirt: true,
+      yTop: 1.05, yBottom: 0.44, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const pf = shell.front.attributes.position;
+    const vw = nx + 1;
+
+    // Check skirt width at waist (v=0.1), mid (v=0.5), and hem (v=0.9)
+    const getRowWidth = (j) => {
+      let minX = Infinity;
+      let maxX = -Infinity;
+      for (let i = 0; i <= nx; i++) {
+        const idx = j * vw + i;
+        if (mask[idx]) {
+          minX = Math.min(minX, pf.getX(idx));
+          maxX = Math.max(maxX, pf.getX(idx));
+        }
+      }
+      return maxX - minX;
+    };
+
+    const wWaist = getRowWidth(Math.floor(ny * 0.1));
+    const wMid = getRowWidth(Math.floor(ny * 0.5));
+    const wHem = getRowWidth(Math.floor(ny * 0.9));
+
+    // Mid width must be exactly the linear midpoint between waist and hem (no hourglass pinch!)
+    const expectedMid = (wWaist + wHem) / 2;
+    expect(wMid).toBeCloseTo(expectedMid, 1);
+    expect(wMid).toBeGreaterThan(wWaist);
+    expect(wHem).toBeGreaterThan(wMid);
   });
 });

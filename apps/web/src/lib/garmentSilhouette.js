@@ -177,6 +177,68 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
 }
 
 /**
+ * Detects the row index of the garment's shoulder line in the photographed silhouette.
+ *
+ * For tops, hoodies, coats, and full-body garments:
+ *   - Garments photographed hanging from the hood, on a hanger, or with a high hood
+ *     start with a narrow top (hood / hanger loop, width <= 0.18m in world space and <= 26% of grid width).
+ *   - The shoulder line is the row where the garment expands outward into the shoulders/sleeves.
+ *   - Garments without a hood (crewneck tees, tanks, strapless) start wide or reach the
+ *     shoulders within the top 5-10% of rows.
+ */
+export function detectGarmentShoulderRow(runsByRow, nx, ny, dxUniform = 0.007) {
+  if (!runsByRow || !runsByRow.length) return 0;
+  const vh = ny + 1;
+  const widths = new Float32Array(vh);
+  for (let j = 0; j < vh; j++) {
+    const runs = runsByRow[j];
+    if (runs && runs.length) {
+      let minA = Infinity;
+      let maxB = -Infinity;
+      for (let k = 0; k < runs.length; k++) {
+        if (runs[k][0] < minA) minA = runs[k][0];
+        if (runs[k][1] > maxB) maxB = runs[k][1];
+      }
+      widths[j] = Math.max(0, maxB - minA);
+    }
+  }
+
+  // Max width across the upper-to-mid torso (rows 15% to 65%)
+  const jStart = Math.floor(0.15 * ny);
+  const jEnd = Math.floor(0.65 * ny);
+  let wMax = 0;
+  for (let j = jStart; j <= jEnd; j++) {
+    if (widths[j] > wMax) wMax = widths[j];
+  }
+  if (wMax <= 0) return 0;
+
+  // Check top rows (rows 0 to 8%):
+  // A hood or hanger is narrow (width <= 0.18m in world space, and <= 26% of grid width)
+  let topMaxW = 0;
+  const topRows = Math.max(1, Math.floor(0.08 * ny));
+  for (let j = 0; j < topRows; j++) {
+    if (widths[j] > topMaxW) topMaxW = widths[j];
+  }
+  const topWorldW = topMaxW * dxUniform;
+  const topFrac = topMaxW / nx;
+  const isNarrowHeadOrHanger = topWorldW <= 0.18 && topFrac <= 0.26;
+  if (!isNarrowHeadOrHanger) {
+    // Garment top is a normal collar, boat-neck, or shoulders (not a hanging hood)
+    return 0;
+  }
+
+  // Scan downward from top to find where width expands to the shoulder line (>= 68% of wMax)
+  const maxScan = Math.floor(0.55 * ny);
+  for (let j = 0; j <= maxScan; j++) {
+    if (widths[j] >= 0.68 * wMax) {
+      return j;
+    }
+  }
+
+  return 0;
+}
+
+/**
  * Builds the front and back sheets of a silhouette shell.
  *
  * @param {object} p
@@ -190,6 +252,7 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
  * @param {number} p.yBottom       world y of the photo's bottom edge
  * @param {number} p.layerOffset   clearance above the body surface (m)
  * @param {boolean} [p.poseSleeves] swing sleeves down along the avatar's arms (default true for tops)
+ * @param {boolean} [p.isStandalone] viewing garment alone without avatar (3D Garment View)
  * @param {Function} p.getTorsoSlice (y, isMale) => { rx, cz, rz }
  * @param {Function} p.getLegSlice   (y, isMale) => { cx, r, cz }
  */
@@ -202,6 +265,7 @@ export function buildSilhouetteShell({
   slot,
   isMale = false,
   isSkirt = false,
+  isStandalone = false,
   yTop,
   yBottom,
   layerOffset = 0.02,
@@ -241,9 +305,8 @@ export function buildSilhouetteShell({
     });
   });
 
-  // ── Vertical placement ──
-  // Bottoms: anchor the photographed crotch (where the legs split) onto the
-  // avatar's crotch so the legs line up with the avatar legs.
+  // ── Vertical placement & Shoulder line mapping ──
+  // Bottoms: anchor the photographed crotch onto avatar crotch.
   let crotchRow = -1;
   if (isBottom) {
     for (let j = Math.floor(ny * 0.12); j < ny - 6; j++) {
@@ -261,16 +324,41 @@ export function buildSilhouetteShell({
     }
     if (crotchRow >= 0 && crotchRow < ny * 0.18) crotchRow = -1;
   }
+
+  // ── Horizontal scale & Shoulder line detection ──
+  const dxUniform = (aspect * hWorld) / nx;
+
+  // Tops, Hoodies, Coats, Dresses: Map garment shoulder line directly to avatar shoulders.
+  // Hoodies photographed hanging from the hood have the hood extending upward above the shoulders.
+  const isTopOrBody = slot === 'top' || slot === 'outerwear' || slot === 'dress';
+  const detectedShoulder = isTopOrBody ? detectGarmentShoulderRow(runsByRow, nx, ny, dxUniform) : 0;
+  const shoulderFrac = detectedShoulder / ny;
+  const hasHoodOrHanger = !isStandalone && shoulderFrac >= 0.12;
+
+  const yShoulderAvatar = isMale ? 1.45 : 1.42;
+  const yHeadTop = isMale ? 1.74 : 1.70;
+
   const rowY = (j) => {
     if (crotchRow > 0) {
       if (j <= crotchRow) return yTop + (yCrotchBody - yTop) * (j / crotchRow);
       return yCrotchBody + (yBottom - yCrotchBody) * ((j - crotchRow) / (ny - crotchRow));
     }
+    if (hasHoodOrHanger) {
+      // Pinned shoulder alignment: row detectedShoulder sits exactly on avatar shoulders.
+      const torsoRows = ny - detectedShoulder;
+      const bodyHeight = yShoulderAvatar - yBottom;
+      if (j >= detectedShoulder) {
+        return yShoulderAvatar - ((j - detectedShoulder) / torsoRows) * bodyHeight;
+      }
+      // Rows above the shoulder (hood / extended collar) drape upward toward avatar head.
+      const theoreticalHeadHeight = (detectedShoulder / torsoRows) * bodyHeight;
+      const headRoom = yHeadTop - yShoulderAvatar;
+      const cHood = theoreticalHeadHeight > 1e-3 ? Math.min(1.0, headRoom / theoreticalHeadHeight) : 1.0;
+      return yShoulderAvatar + ((detectedShoulder - j) / torsoRows) * bodyHeight * cHood;
+    }
     return yTop - (j / ny) * hWorld;
   };
 
-  // ── Horizontal scale: match the garment's torso width to the avatar ──
-  const dxUniform = (aspect * hWorld) / nx;
   const bodyHalfAt = (y) => {
     if (isBottom && y < yCrotchBody) {
       const leg = getLegSlice(y, isMale);
@@ -289,46 +377,41 @@ export function buildSilhouetteShell({
     const target = 2 * (bodyHalfAt(y) + layerOffset) * (isBottom ? 0.98 : 1.04);
     if (wWorld > 1e-3) ratios.push(target / wWorld);
   }
-  const sCorr = isBottom
-    ? clamp(percentile(ratios, 0.5), 0.8, 1.25)
-    : clamp(percentile(ratios, 0.85), 0.72, 1.4);
+
+  let sCorr;
+  if (isStandalone) {
+    sCorr = 1.0;
+  } else if (isSkirt) {
+    // For skirts, ensure the waistband and upper hip region clear the avatar torso uniformly
+    // without forcing the garment into a cylindrical figure or pinching the silhouette.
+    const skirtClearance = [];
+    for (let j = 0; j < Math.floor(vh * 0.40); j++) {
+      const runs = runsByRow[j];
+      if (!runs.length) continue;
+      const y = rowY(j);
+      let mainRun = runs[0];
+      let bestDist = Infinity;
+      runs.forEach((r) => {
+        const mid = 0.5 * (r[0] + r[1]);
+        const d = Math.abs(mid - 0.5 * nx);
+        if (d < bestDist) { bestDist = d; mainRun = r; }
+      });
+      const halfCols = Math.max(1, (mainRun[1] - mainRun[0]) * 0.5);
+      const reqHalf = (bodyHalfAt(y) + layerOffset) * 1.04;
+      skirtClearance.push(reqHalf / Math.max(1e-3, halfCols * dxUniform));
+    }
+    const maxClear = skirtClearance.length ? Math.max(...skirtClearance) : 1.0;
+    sCorr = clamp(maxClear, 0.90, 2.5);
+  } else if (isBottom) {
+    sCorr = clamp(percentile(ratios, 0.5), 0.8, 1.25);
+  } else {
+    sCorr = clamp(percentile(ratios, 0.85), 0.72, 1.4);
+  }
+
+  // Single uniform dx across all rows: garments maintain their photographed silhouette 1:1
   const dx = dxUniform * sCorr;
   const colMid = (minCol + maxCol) / 2;
   const yShoulder = isMale ? 1.48 : 1.42;
-
-  // Per-row horizontal body-clearance scale for skirts / bottoms so A-line skirt waists
-  // never narrow inside the avatar's lateral hip/waist flanks.
-  const rowScaleArr = new Float32Array(vh);
-  for (let j = 0; j < vh; j++) {
-    rowScaleArr[j] = 1.0;
-    if (!isSkirt) continue;
-    const y = rowY(j);
-    const runs = runsByRow[j];
-    if (!runs.length || y < 0.68) continue;
-    let mainRun = runs[0];
-    let bestDist = Infinity;
-    runs.forEach((r) => {
-      const d = colMid < r[0] ? r[0] - colMid : colMid > r[1] ? colMid - r[1] : 0;
-      if (d < bestDist) {
-        bestDist = d;
-        mainRun = r;
-      }
-    });
-    const halfCols = Math.max(1, (mainRun[1] - mainRun[0]) * 0.5);
-    const reqHalf = (bodyHalfAt(y) + layerOffset) * 1.06;
-    if (halfCols * dx < reqHalf) {
-      rowScaleArr[j] = clamp(reqHalf / Math.max(1e-3, halfCols * dx), 1.0, 1.65);
-    }
-  }
-  if (isSkirt) {
-    for (let pass = 0; pass < 2; pass++) {
-      const tmp = new Float32Array(rowScaleArr);
-      for (let j = 1; j < vh - 1; j++) {
-        tmp[j] = 0.25 * rowScaleArr[j - 1] + 0.5 * rowScaleArr[j] + 0.25 * rowScaleArr[j + 1];
-      }
-      rowScaleArr.set(tmp);
-    }
-  }
 
   // Helper: resolve the owning run [a, b] for vertex (i, j), including vertical cap rows
   const distToRun = (col, r) => (col < r[0] ? r[0] - col : col > r[1] ? col - r[1] : 0);
@@ -382,7 +465,6 @@ export function buildSilhouetteShell({
     const torso = getTorsoSlice(Math.max(0.5, y), isMale);
     const belowCrotch = y < yCrotchBody;
     const leg = belowCrotch ? getLegSlice(y, isMale) : null;
-    const dxRow = dx * rowScaleArr[j];
 
     // Leg warp: two big runs below the avatar crotch snap onto the avatar legs.
     let legRuns = null;
@@ -401,7 +483,7 @@ export function buildSilhouetteShell({
       const inset = run ? Math.min(0.35, (run[1] - run[0]) * 0.15) : 0;
       uCols[idx] = run ? clamp(col, run[0] + inset, run[1] - inset) : i;
 
-      let x = (col - colMid) * dxRow;
+      let x = (col - colMid) * dx;
       if (legRuns && blend > 0) {
         const c0 = (legRuns[0][0] + legRuns[0][1]) / 2;
         const c1 = (legRuns[1][0] + legRuns[1][1]) / 2;
@@ -422,17 +504,26 @@ export function buildSilhouetteShell({
     runs.forEach(([a, b]) => {
       const mid = (a + b) / 2;
       const half = Math.max(0.5, (b - a) / 2);
-      const halfWorld = half * dxRow;
+      const halfWorld = half * dx;
       let bodyRz;
       if (isBottom && belowCrotch) bodyRz = leg.r + layerOffset;
-      else bodyRz = torso.rz + layerOffset;
-      // Skirts / dresses / long coats flare below the hips
-      if (!isBottom && y < 0.84) {
+      else if (isSkirt) {
+        // Skirt drapes smoothly downwards from waistband to hem, proportional to width,
+        // avoiding waist-pinching cylindrical indentation.
+        const waistRz = (torso ? torso.rz : 0.14) + layerOffset;
+        bodyRz = Math.max(waistRz, 0.38 * halfWorld);
+      } else if (isStandalone) {
+        bodyRz = Math.min(0.12, Math.max(0.04, 0.32 * halfWorld));
+      } else {
+        bodyRz = torso.rz + layerOffset;
+      }
+      // Dresses / long coats flare below the hips
+      if (!isBottom && !isSkirt && !isStandalone && y < 0.84) {
         bodyRz = Math.max(bodyRz, 0.5 * halfWorld);
       }
       // Narrow parts (sleeves, straps) must not be thicker than they are wide
       const amp = Math.min(bodyRz, halfWorld * 1.05 + 0.012);
-      const isBodySpan = halfWorld >= torso.rx * 0.82;
+      const isBodySpan = !isSkirt && !isStandalone && halfWorld >= torso.rx * 0.82;
       const iStart = Math.max(0, Math.ceil(a + 0.02));
       const iEnd = Math.min(nx, Math.floor(b - 0.02));
       for (let i = iStart; i <= iEnd; i++) {
