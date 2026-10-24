@@ -2184,7 +2184,17 @@
         "onPremCreditsNote": "10 أرصدة يومية • تتراكم حتى 300 خلال 30 يوماً (رصيد واحد لكل قطعة أو طلب للمنسق أو قطعة في الحقيبة)",
         "aiCreditsBalanceLabel": "رصيد العرض البصري",
         "aiCreditsAvailableCount": "{{count}} متاح",
-        "topUpCredits": "شحن الرصيد"
+        "topUpCredits": "شحن الرصيد",
+        "getOnGooglePlay": "احصل على DressApp من Google Play",
+        "mobileReady": "جاهز للجوال",
+        "mobileShareTitle": "مشاركة الجوال وفاحص الروابط",
+        "mobileShareDesc": "تتسوق من هاتفك؟ اضغط على مشاركة في Safari أو Chrome واختر DressApp لمعرفة المقاس فوراً، أو الصق رابط أي قطعة مباشرة.",
+        "openMobileAssistant": "فحص المقاس",
+        "bookmarkletBtnName": "مساعد DressApp",
+        "addToChrome": "إضافة إلى Chrome",
+        "recommendedDesktop": "موصى به للكمبيوتر",
+        "connectExtension": "ربط الإضافة",
+        "alreadyInstalled": "مثبت بالفعل؟"
     },
     "admin": {
         "title": "الإدارة",

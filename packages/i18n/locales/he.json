@@ -2215,7 +2215,17 @@
         "onPremCreditsNote": "10 קרדיטים ביום • נצברים עד 300 במשך 30 יום (קרדיט 1 לכל בגד, בקשה לסטייליסט או פריט במזוודה)",
         "aiCreditsBalanceLabel": "קרדיטים להדמיה ויזואלית",
         "aiCreditsAvailableCount": "{{count}} זמינים",
-        "topUpCredits": "טעינת קרדיטים"
+        "topUpCredits": "טעינת קרדיטים",
+        "getOnGooglePlay": "הורידו את DressApp ב-Google Play",
+        "mobileReady": "מותאם לנייד",
+        "mobileShareTitle": "שיתוף מהנייד ובדיקת קישורים",
+        "mobileShareDesc": "קונים מהנייד? הקישו על 'שיתוף' ב-Safari או ב-Chrome ובחרו ב-DressApp לקבלת מידה מיידית, או הדביקו קישור לפריט ישירות.",
+        "openMobileAssistant": "בדיקת מידות",
+        "bookmarkletBtnName": "עוזר DressApp",
+        "addToChrome": "הוספה ל-Chrome",
+        "recommendedDesktop": "מומלץ למחשב",
+        "connectExtension": "חיבור התוסף לחשבון",
+        "alreadyInstalled": "התוסף כבר מותקן?"
     },
     "admin": {
         "title": "ניהול",

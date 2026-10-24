@@ -2199,7 +2199,17 @@
         "onPremCreditsNote": "+10 tägliche Credits • Kumulativ bis zu 300 über 30 Tage (1 Credit pro Kleidungsstück, Stylist-Prompt oder Koffer-Artikel)",
         "aiCreditsBalanceLabel": "Credits für virtuelle Anprobe",
         "aiCreditsAvailableCount": "{{count}} verfügbar",
-        "topUpCredits": "Aufladen"
+        "topUpCredits": "Aufladen",
+        "getOnGooglePlay": "DressApp bei Google Play holen",
+        "mobileReady": "Mobiloptimiert",
+        "mobileShareTitle": "Mobiles Teilen & Link-Prüfung",
+        "mobileShareDesc": "Einkaufen am Smartphone? Tippen Sie in Safari oder Chrome auf Teilen und wählen Sie DressApp für sofortige Größenberatung, oder fügen Sie einen Produktlink direkt ein.",
+        "openMobileAssistant": "Größenprüfer öffnen",
+        "bookmarkletBtnName": "DressApp-Assistent",
+        "addToChrome": "Zu Chrome hinzufügen",
+        "recommendedDesktop": "Empfohlen für Desktop",
+        "connectExtension": "Erweiterung verbinden",
+        "alreadyInstalled": "Bereits installiert?"
     },
     "admin": {
         "title": "Admin",

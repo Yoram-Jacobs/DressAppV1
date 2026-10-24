@@ -2184,7 +2184,17 @@
         "onPremCreditsNote": "+10 दैनिक क्रेडिट • 30 दिनों में 300 तक संचयी (प्रति कपड़ा, स्टाइलिस्ट प्रॉम्प्ट या सूटकेस आइटम 1 क्रेडिट)",
         "aiCreditsBalanceLabel": "वर्चुअल ट्राई-ऑन क्रेडिट",
         "aiCreditsAvailableCount": "{{count}} उपलब्ध",
-        "topUpCredits": "टॉप अप करें"
+        "topUpCredits": "टॉप अप करें",
+        "getOnGooglePlay": "Google Play पर DressApp प्राप्त करें",
+        "mobileReady": "मोबाइल तैयार",
+        "mobileShareTitle": "मोबाइल शेयर शीट और लिंक परीक्षक",
+        "mobileShareDesc": "फ़ोन पर खरीदारी कर रहे हैं? Safari या Chrome में 'शेयर' पर टैप करें और तुरंत साइज़िंग के लिए DressApp चुनें, या किसी भी कपड़े का लिंक सीधे पेस्ट करें।",
+        "openMobileAssistant": "साइज़ चेकर शुरू करें",
+        "bookmarkletBtnName": "DressApp सहायक",
+        "addToChrome": "Chrome में जोड़ें",
+        "recommendedDesktop": "डेस्कटॉप के लिए अनुशंसित",
+        "connectExtension": "एक्सटेंशन कनेक्ट करें",
+        "alreadyInstalled": "पहले से इंस्टॉल है?"
     },
     "admin": {
         "title": "व्यवस्थापक",

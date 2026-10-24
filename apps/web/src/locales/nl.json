@@ -2199,7 +2199,17 @@
         "onPremCreditsNote": "+10 dagelijks tegoed • Cumulatief tot 300 over 30 dagen (1 tegoed per kledingstuk, stylist-prompt of koffer-item)",
         "aiCreditsBalanceLabel": "Credits voor Virtueel Passen",
         "aiCreditsAvailableCount": "{{count}} beschikbaar",
-        "topUpCredits": "Opwaarderen"
+        "topUpCredits": "Opwaarderen",
+        "getOnGooglePlay": "Download DressApp op Google Play",
+        "mobileReady": "Mobiel gereed",
+        "mobileShareTitle": "Mobiel delen & linkcontrole",
+        "mobileShareDesc": "Shoppen op je mobiel? Tik op Delen in Safari of Chrome en kies DressApp voor direct maatadvies, of plak direct een link van het kledingstuk.",
+        "openMobileAssistant": "Maatcontrole openen",
+        "bookmarkletBtnName": "DressApp Assistent",
+        "addToChrome": "Toevoegen aan Chrome",
+        "recommendedDesktop": "Aanbevolen voor desktop",
+        "connectExtension": "Extensie koppelen",
+        "alreadyInstalled": "Al geïnstalleerd?"
     },
     "admin": {
         "title": "Beheerder",

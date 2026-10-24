@@ -2184,7 +2184,17 @@
         "onPremCreditsNote": "毎日+10クレジット • 30日間で最大300まで累積（衣類分析・スタイリスト質問・スーツケース1点につき1クレジット）",
         "aiCreditsBalanceLabel": "バーチャル試着クレジット",
         "aiCreditsAvailableCount": "{{count}} 利用可能",
-        "topUpCredits": "チャージ"
+        "topUpCredits": "チャージ",
+        "getOnGooglePlay": "Google PlayでDressAppを入手",
+        "mobileReady": "モバイル対応",
+        "mobileShareTitle": "モバイル共有＆リンクチェッカー",
+        "mobileShareDesc": "スマートフォンでお買い物中ですか？SafariやChromeで「共有」をタップしてDressAppを選択すると、即座にサイズを確認できます。商品のURLを直接貼り付けることも可能です。",
+        "openMobileAssistant": "サイズチェッカーを起動",
+        "bookmarkletBtnName": "DressApp アシスタント",
+        "addToChrome": "Chromeに追加",
+        "recommendedDesktop": "デスクトップ推奨",
+        "connectExtension": "拡張機能を接続",
+        "alreadyInstalled": "インストール済みですか？"
     },
     "admin": {
         "title": "管理",

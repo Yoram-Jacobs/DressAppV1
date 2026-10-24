@@ -2184,7 +2184,17 @@
         "onPremCreditsNote": "每日 +10 积分 • 30 天内最高累计 300 积分（每件衣物、每次造型师提问或每件行李箱单品消耗 1 积分）",
         "aiCreditsBalanceLabel": "虚拟试穿积分",
         "aiCreditsAvailableCount": "{{count}} 可用",
-        "topUpCredits": "充值"
+        "topUpCredits": "充值",
+        "getOnGooglePlay": "在 Google Play 下载 DressApp",
+        "mobileReady": "适配移动端",
+        "mobileShareTitle": "移动分享面板与链接检测",
+        "mobileShareDesc": "在手机上购物？在 Safari 或 Chrome 中点击“分享”并选择 DressApp 即可即时获取尺码建议，或直接粘贴商品链接。",
+        "openMobileAssistant": "启动尺码检测",
+        "bookmarkletBtnName": "DressApp 助手",
+        "addToChrome": "添加至 Chrome",
+        "recommendedDesktop": "桌面端推荐",
+        "connectExtension": "连接扩展程序",
+        "alreadyInstalled": "已经安装？"
     },
     "admin": {
         "title": "管理",

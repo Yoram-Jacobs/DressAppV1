@@ -2187,7 +2187,14 @@
         "topUpCredits": "Top Up",
         "mobileShareTitle": "Mobile Share Sheet & Link Checker",
         "mobileShareDesc": "Shopping on your phone? Tap Share in Safari or Chrome and select DressApp for instant sizing, or paste any garment link directly.",
-        "openMobileAssistant": "Launch Size Checker"
+        "openMobileAssistant": "Launch Size Checker",
+        "getOnGooglePlay": "Get DressApp on Google Play",
+        "mobileReady": "Mobile Ready",
+        "bookmarkletBtnName": "DressApp Assistant",
+        "addToChrome": "Add to Chrome",
+        "recommendedDesktop": "Recommended for Desktop",
+        "connectExtension": "Connect Extension",
+        "alreadyInstalled": "Already installed?"
     },
     "admin": {
         "title": "Admin",

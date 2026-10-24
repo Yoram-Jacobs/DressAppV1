@@ -2184,7 +2184,17 @@
         "onPremCreditsNote": "+10 кредитов в день • Накапливаются до 300 за 30 дней (1 кредит за вещь, запрос стилисту или предмет в чемодане)",
         "aiCreditsBalanceLabel": "Кредиты виртуальной примерки",
         "aiCreditsAvailableCount": "Доступно: {{count}}",
-        "topUpCredits": "Пополнить"
+        "topUpCredits": "Пополнить",
+        "getOnGooglePlay": "Скачать DressApp в Google Play",
+        "mobileReady": "Готово для мобильных",
+        "mobileShareTitle": "Мобильный шеринг и проверка ссылок",
+        "mobileShareDesc": "Покупаете с телефона? Нажмите «Поделиться» в Safari или Chrome и выберите DressApp для мгновенного подбора размера, либо вставьте прямую ссылку на товар.",
+        "openMobileAssistant": "Проверить размер",
+        "bookmarkletBtnName": "Ассистент DressApp",
+        "addToChrome": "Установить в Chrome",
+        "recommendedDesktop": "Рекомендуется для ПК",
+        "connectExtension": "Подключить расширение",
+        "alreadyInstalled": "Уже установлено?"
     },
     "admin": {
         "title": "Админ",

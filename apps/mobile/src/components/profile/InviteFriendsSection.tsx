@@ -53,7 +53,7 @@ export function InviteFriendsSection({ userId }: InviteProps) {
     try {
       const shareMessage = `${t('profile.inviteShareMessage', {
         defaultValue: "I'm using DressApp to organize my closet and style outfits with AI! Join here:",
-      })} ${webInviteUrl}\n\nGet DressApp on Google Play: ${playStoreInviteUrl}`;
+      })} ${webInviteUrl}\n\n${t('profile.getOnGooglePlay', { defaultValue: 'Get DressApp on Google Play' })}: ${playStoreInviteUrl}`;
       await Share.share({
         title: t('profile.inviteSubject', { defaultValue: 'Join me on DressApp' }),
         message: shareMessage,

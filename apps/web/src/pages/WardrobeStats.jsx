@@ -275,7 +275,8 @@ export default function WardrobeStats() {
     const inviteUrl = user?.id ? `${window.location.origin}/?ref=${user.id}` : `${window.location.origin}/?ref=invite`;
     const playStoreUrl = getGooglePlayAffiliateUrl(user?.id);
     const bodyText = t('profile.inviteBody', { defaultValue: 'Share your personal referral link to invite friends. You both receive bonus AI credits!' });
-    const shareMessage = `${bodyText} ${inviteUrl}\n\nGet DressApp on Google Play: ${playStoreUrl}`;
+    const playStoreLabel = t('profile.getOnGooglePlay', { defaultValue: 'Get DressApp on Google Play' });
+    const shareMessage = ${bodyText} \n\n: ;
     const payload = {
       title: t('profile.inviteSubject', { defaultValue: 'Join me on DressApp' }),
       text: shareMessage,

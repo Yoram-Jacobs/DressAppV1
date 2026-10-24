@@ -2199,7 +2199,17 @@
         "onPremCreditsNote": "+10 créditos diarios • Acumulables hasta 300 en 30 días (1 crédito por prenda, consulta al estilista o prenda en maleta)",
         "aiCreditsBalanceLabel": "Créditos de Prueba Virtual",
         "aiCreditsAvailableCount": "{{count}} disponibles",
-        "topUpCredits": "Recargar"
+        "topUpCredits": "Recargar",
+        "getOnGooglePlay": "Consigue DressApp en Google Play",
+        "mobileReady": "Listo para móvil",
+        "mobileShareTitle": "Hoja de compartir móvil y verificador de enlaces",
+        "mobileShareDesc": "¿Comprando desde el móvil? Toca Compartir en Safari o Chrome y selecciona DressApp para ver tu talla al instante, o pega el enlace de la prenda directamente.",
+        "openMobileAssistant": "Abrir comprobador de tallas",
+        "bookmarkletBtnName": "Asistente DressApp",
+        "addToChrome": "Añadir a Chrome",
+        "recommendedDesktop": "Recomendado para ordenador",
+        "connectExtension": "Conectar extensión",
+        "alreadyInstalled": "¿Ya la tienes instalada?"
     },
     "admin": {
         "title": "Administrador",

@@ -35,7 +35,8 @@ export function InviteFriendsButton() {
   const share = async () => {
     setBusy(true);
     const bodyText = t('profile.inviteBody');
-    const shareMessage = `${bodyText} ${inviteUrl}\n\nGet DressApp on Google Play: ${playStoreUrl}`;
+    const playStoreLabel = t('profile.getOnGooglePlay', { defaultValue: 'Get DressApp on Google Play' });
+    const shareMessage = `${bodyText} ${inviteUrl}\n\n${playStoreLabel}: ${playStoreUrl}`;
     const payload = {
       title: t('profile.inviteSubject'),
       text: shareMessage,
@@ -96,7 +97,7 @@ export function InviteFriendsButton() {
               rel="noopener noreferrer"
               className="inline-flex text-[12px] font-bold text-primary-brand hover:underline"
             >
-              Get DressApp on Google Play
+              {t('profile.getOnGooglePlay', { defaultValue: 'Get DressApp on Google Play' })}
             </a>
           </div>
           <div className="shrink-0 w-full sm:w-auto">
