@@ -660,11 +660,11 @@ export function buildSilhouetteShell({
         bodyRzBack = (leg.rzBack || leg.r) + layerOffset;
       } else if (isSkirt) {
         // Skirt covers torso, hips and buttocks down to the hem.
-        // Above the pelvis (y >= 0.84), back depth follows the glute profile (avatar glutes reach z = -0.101m)
-        const baseRzFront = ((torso ? torso.rzFront : null) || 0.095) + layerOffset;
-        // Guarantee ample back clearance across the buttocks region (y between 0.80 and 1.02)
-        const buttockClearance = (y <= 1.02 && y >= 0.80) ? 0.138 : 0.095;
-        const baseRzBack = Math.max(((torso ? torso.rzBack : null) || 0.095), buttockClearance) + layerOffset;
+        // Guarantee ample front AND back clearance across the pelvic/buttocks/thigh region (y between 0.75 and 1.05)
+        const frontClearance = (y <= 1.05 && y >= 0.75) ? 0.136 : 0.110;
+        const baseRzFront = Math.max(((torso ? torso.rzFront : null) || 0.110), frontClearance) + layerOffset;
+        const buttockClearance = (y <= 1.05 && y >= 0.75) ? 0.140 : 0.110;
+        const baseRzBack = Math.max(((torso ? torso.rzBack : null) || 0.110), buttockClearance) + layerOffset;
 
         // Below the pelvis (y < 0.84), flare depth proportionally to skirt silhouette flare
         const flareProgress = clamp((0.84 - y) / Math.max(0.01, 0.84 - yBottom), 0, 1);
@@ -685,11 +685,12 @@ export function buildSilhouetteShell({
         bodyRzBack = Math.max(bodyRzBack, 0.45 * halfWorld);
       }
 
-      // Sleeves & narrow parts: cap depth so sleeves are cylindrical arm tubes, not fat barrels
-      const ampFront = Math.min(bodyRzFront, halfWorld * 1.05 + 0.012);
-      const ampBack = Math.min(bodyRzBack, halfWorld * 1.05 + 0.012);
+      const isBodySpan = !isStandalone && (halfWorld >= torso.rx * 0.78 || isSkirt);
+      // Sleeves & narrow parts: cap depth so sleeves are cylindrical arm tubes, not fat barrels.
+      // Do NOT clamp the torso trunk (isBodySpan) so chest, belly, and scapulae have full clearance without penetration.
+      const ampFront = isBodySpan ? bodyRzFront : Math.min(bodyRzFront, halfWorld * 1.05 + 0.012);
+      const ampBack = isBodySpan ? bodyRzBack : Math.min(bodyRzBack, halfWorld * 1.05 + 0.012);
 
-      const isBodySpan = !isStandalone && (halfWorld >= torso.rx * 0.80 || isSkirt);
       const iStart = Math.max(0, Math.ceil(a + 0.02));
       const iEnd = Math.min(nx, Math.floor(b - 0.02));
 
@@ -697,9 +698,10 @@ export function buildSilhouetteShell({
         const u = clamp((i - mid) / half, -1, 1);
         const s = Math.max(0, 1 - u * u);
         const edgeTaper = smoothstep01((1 - Math.abs(u)) / 0.08);
-        const hhFront = (isBodySpan ? Math.pow(s, 0.44) : Math.sqrt(s)) * edgeTaper;
-        // Anatomical human back is flatter across thoracic spine without bust peak
-        const hhBack = (isBodySpan ? Math.pow(s, 0.28) : Math.pow(s, 0.38)) * edgeTaper;
+        // Broad cylindrical drape across the torso/thigh span prevents premature narrowing and skin holes
+        const hhFront = (isBodySpan ? Math.pow(s, 0.30) : Math.sqrt(s)) * edgeTaper;
+        // Flat anatomical back drape across thoracic spine and scapulae
+        const hhBack = (isBodySpan ? Math.pow(s, 0.26) : Math.pow(s, 0.38)) * edgeTaper;
         offF[j * vw + i] = ampFront * hhFront;
         offB[j * vw + i] = ampBack * hhBack;
       }
