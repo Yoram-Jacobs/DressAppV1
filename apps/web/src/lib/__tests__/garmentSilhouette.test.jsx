@@ -16,6 +16,7 @@ import {
   chooseGridResolution,
   buildSilhouetteShell,
   isConsistentView,
+  synthesizeBackFabricData,
 } from '@/lib/garmentSilhouette';
 import {
   getTorsoSlice,
@@ -257,5 +258,114 @@ describe('garment slot inference from the item name', () => {
     expect(pants.yBottom).toBeLessThan(0.2);
     const coat = resolveShellFit({ rawSlot: 'outerwear', garmentText: 'wool overcoat', isMale: false });
     expect(coat.yBottom).toBeLessThan(0.6);
+  });
+});
+
+describe('back fabric synthesis (synthesizeBackFabricData)', () => {
+  test('excludes graphics, prints and zippers while preserving horizontal stripes', () => {
+    const w = 100;
+    const h = 100;
+    const data = new Uint8ClampedArray(w * h * 4);
+
+    // Torso: x from 20 to 80, y from 10 to 90
+    // Horizontal stripes: alternating navy [20, 35, 75] and white [240, 240, 245] every 10 rows
+    for (let y = 10; y < 90; y++) {
+      const isNavy = Math.floor(y / 10) % 2 === 0;
+      const r = isNavy ? 20 : 240;
+      const g = isNavy ? 35 : 240;
+      const b = isNavy ? 75 : 245;
+      for (let x = 20; x <= 80; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = r;
+        data[idx + 1] = g;
+        data[idx + 2] = b;
+        data[idx + 3] = 255;
+      }
+    }
+
+    // Add metallic zipper down center: x in [48..52], y in [15..85]
+    for (let y = 15; y < 85; y++) {
+      for (let x = 48; x <= 52; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = 180; data[idx + 1] = 180; data[idx + 2] = 190;
+      }
+    }
+
+    // Add bright yellow chest graphic print: x in [35..65], y in [35..55]
+    for (let y = 35; y <= 55; y++) {
+      for (let x = 35; x <= 65; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = 255; data[idx + 1] = 210; data[idx + 2] = 20;
+      }
+    }
+
+    // Synthesize back fabric
+    synthesizeBackFabricData(data, w, h);
+
+    // 1. Center zipper in navy stripe row (e.g. y = 25, x = 50) must be restored to navy
+    const idxZipNavy = (25 * w + 50) * 4;
+    expect(data[idxZipNavy]).toBeCloseTo(20, -1);
+    expect(data[idxZipNavy + 1]).toBeCloseTo(35, -1);
+    expect(data[idxZipNavy + 2]).toBeCloseTo(75, -1);
+
+    // 2. Center zipper in white stripe row (e.g. y = 75, x = 50) must be restored to white
+    const idxZipWhite = (75 * w + 50) * 4;
+    expect(data[idxZipWhite]).toBeGreaterThan(200);
+    expect(data[idxZipWhite + 1]).toBeGreaterThan(200);
+    expect(data[idxZipWhite + 2]).toBeGreaterThan(200);
+
+    // 3. Graphic print area on navy row (y = 45 is in row 40..49, which is navy)
+    // Center of graphic (x = 50, y = 45) must NOT be yellow! It must be navy!
+    const idxGraphicNavy = (45 * w + 50) * 4;
+    expect(data[idxGraphicNavy]).toBeLessThan(60);
+    expect(data[idxGraphicNavy + 1]).toBeLessThan(60);
+    expect(data[idxGraphicNavy + 2]).toBeCloseTo(75, -1);
+
+    // 4. Graphic print area on white row (y = 52 is in row 50..59, which is white)
+    // Center of graphic (x = 50, y = 52) must be white, not yellow!
+    const idxGraphicWhite = (52 * w + 50) * 4;
+    expect(data[idxGraphicWhite]).toBeGreaterThan(200);
+    expect(data[idxGraphicWhite + 1]).toBeGreaterThan(200);
+    expect(data[idxGraphicWhite + 2]).toBeGreaterThan(200);
+  });
+
+  test('excludes asymmetric breast pockets and preserves plaid pattern', () => {
+    const w = 100;
+    const h = 100;
+    const data = new Uint8ClampedArray(w * h * 4);
+
+    // Plaid pattern across torso: x in 20..80, y in 10..90
+    // Red [180, 30, 30] and Green [20, 100, 30] blocks of 12x12 px
+    for (let y = 10; y < 90; y++) {
+      const yBand = Math.floor(y / 12) % 2;
+      for (let x = 20; x <= 80; x++) {
+        const xBand = Math.floor((x - 20) / 12) % 2;
+        const isRed = (yBand === 0 && xBand === 0) || (yBand === 1 && xBand === 1);
+        const idx = (y * w + x) * 4;
+        data[idx] = isRed ? 180 : 20;
+        data[idx + 1] = isRed ? 30 : 100;
+        data[idx + 2] = 30;
+        data[idx + 3] = 255;
+      }
+    }
+
+    // Add a contrasting breast pocket on the right chest: x in [56..70], y in [25..45]
+    for (let y = 25; y <= 45; y++) {
+      for (let x = 56; x <= 70; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = 230; data[idx + 1] = 230; data[idx + 2] = 230;
+      }
+    }
+
+    synthesizeBackFabricData(data, w, h);
+
+    // Pocket area at (x=63, y=30): was white [230, 230, 230], must now match the mirrored plaid color!
+    const idxPocket = (30 * w + 63) * 4;
+    expect(data[idxPocket]).not.toBe(230);
+    // At y=30, x=63: mirrored position is xMirror = 20 + 80 - 63 = 37.
+    const idxMirror = (30 * w + 37) * 4;
+    expect(data[idxPocket]).toBe(data[idxMirror]);
+    expect(data[idxPocket + 1]).toBe(data[idxMirror + 1]);
+    expect(data[idxPocket + 2]).toBe(data[idxMirror + 2]);
   });
 });

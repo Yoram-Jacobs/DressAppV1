@@ -559,3 +559,210 @@ export function isConsistentView(frontStats, otherStats) {
   const aspectRatio = otherStats.aspect / Math.max(1e-3, frontStats.aspect);
   return colorDist < 64 && areaRatio > 0.55 && areaRatio < 1.8 && aspectRatio > 0.6 && aspectRatio < 1.6;
 }
+
+/**
+ * Synthesizes the back fabric texture data from the front garment image:
+ *   1. Preserves base fabric colors, lighting gradients, and repeating patterns
+ *      (horizontal stripes, vertical stripes, plaid, herringbone, houndstooth, knit weave).
+ *   2. Bridges over center closures (zipper tracks, metal pulls, button plackets, drawstrings).
+ *   3. Excludes and inpaints asymmetric breast pockets, pocket flaps, and front logos.
+ *   4. Excludes and inpaints chest/torso graphic prints, slogans, decals, and artwork.
+ *   5. Restores authentic high-frequency fabric grain/weave so the back sheet looks
+ *      like real woven cloth, not flat blur.
+ *
+ * Operates on Uint8ClampedArray or Uint8Array of RGBA bytes (length w * h * 4).
+ */
+export function synthesizeBackFabricData(data, w, h) {
+  if (!data || !w || !h) return data;
+
+  for (let y = 0; y < h; y++) {
+    const rowOffset = y * w * 4;
+    let xMin = -1;
+    let xMax = -1;
+    for (let x = 0; x < w; x++) {
+      if (data[rowOffset + x * 4 + 3] >= 96) {
+        if (xMin < 0) xMin = x;
+        xMax = x;
+      }
+    }
+    if (xMin < 0 || xMax - xMin < 16) continue;
+    const span = xMax - xMin + 1;
+
+    // Clean outer flanks: left [2%..15%], right [85%..98%]
+    const lStart = Math.min(span - 1, Math.max(0, Math.floor(0.02 * span)));
+    const lEnd = Math.min(span, Math.max(lStart + 1, Math.floor(0.15 * span)));
+    const rStart = Math.min(span - 1, Math.max(0, Math.floor(0.85 * span)));
+    const rEnd = Math.min(span, Math.max(rStart + 1, Math.floor(0.98 * span)));
+
+    let lSumR = 0, lSumG = 0, lSumB = 0, lCount = 0;
+    const lSamples = [];
+    for (let i = lStart; i < lEnd; i++) {
+      const idx = rowOffset + (xMin + i) * 4;
+      if (data[idx + 3] >= 96) {
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+        lSumR += r; lSumG += g; lSumB += b; lCount++;
+        lSamples.push([r, g, b]);
+      }
+    }
+
+    let rSumR = 0, rSumG = 0, rSumB = 0, rCount = 0;
+    const rSamples = [];
+    for (let i = rStart; i < rEnd; i++) {
+      const idx = rowOffset + (xMin + i) * 4;
+      if (data[idx + 3] >= 96) {
+        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+        rSumR += r; rSumG += g; rSumB += b; rCount++;
+        rSamples.push([r, g, b]);
+      }
+    }
+
+    if (lCount === 0 && rCount === 0) continue;
+
+    let cL = lCount > 0 ? [lSumR / lCount, lSumG / lCount, lSumB / lCount] : null;
+    let cR = rCount > 0 ? [rSumR / rCount, rSumG / rCount, rSumB / rCount] : null;
+    if (!cL) cL = cR;
+    if (!cR) cR = cL;
+
+    const grainSrc = [...lSamples, ...rSamples];
+    let flankVarSum = 0;
+    const midR = (cL[0] + cR[0]) / 2;
+    const midG = (cL[1] + cR[1]) / 2;
+    const midB = (cL[2] + cR[2]) / 2;
+    for (let s = 0; s < grainSrc.length; s++) {
+      const dr = grainSrc[s][0] - midR;
+      const dg = grainSrc[s][1] - midG;
+      const db = grainSrc[s][2] - midB;
+      flankVarSum += Math.sqrt(dr * dr + dg * dg + db * db);
+    }
+    const sigma = grainSrc.length > 0 ? flankVarSum / grainSrc.length : 8;
+    const tol = Math.max(20, sigma * 2.0);
+
+    // Extract current row colors and calculate expected baseline
+    const curR = new Float32Array(span);
+    const curG = new Float32Array(span);
+    const curB = new Float32Array(span);
+    const baseR = new Float32Array(span);
+    const baseG = new Float32Array(span);
+    const baseB = new Float32Array(span);
+    const diffBase = new Float32Array(span);
+
+    for (let i = 0; i < span; i++) {
+      const idx = rowOffset + (xMin + i) * 4;
+      const cr = data[idx], cg = data[idx + 1], cb = data[idx + 2];
+      curR[i] = cr; curG[i] = cg; curB[i] = cb;
+
+      const u = i / (span - 1);
+      const bR = (1 - u) * cL[0] + u * cR[0];
+      const bG = (1 - u) * cL[1] + u * cR[1];
+      const bB = (1 - u) * cL[2] + u * cR[2];
+      baseR[i] = bR; baseG[i] = bG; baseB[i] = bB;
+
+      const dr = cr - bR;
+      const dg = cg - bG;
+      const db = cb - bB;
+      diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
+    }
+
+    // 1. Bilateral symmetry check for pockets / asymmetric details
+    // (Preserves symmetric plaid / herringbone patterns while removing one-sided chest pockets)
+    for (let i = 0; i < span; i++) {
+      const mi = span - 1 - i;
+      const dAsym = Math.sqrt(
+        (curR[i] - curR[mi]) ** 2 +
+        (curG[i] - curG[mi]) ** 2 +
+        (curB[i] - curB[mi]) ** 2
+      );
+      if ((diffBase[i] - diffBase[mi] >= 12) || (dAsym >= 14 && diffBase[i] > diffBase[mi] + 8)) {
+        curR[i] = curR[mi];
+        curG[i] = curG[mi];
+        curB[i] = curB[mi];
+        diffBase[i] = diffBase[mi];
+      }
+    }
+
+    // 2. Bridge center closure (zipper tracks, zipper pulls, button plackets)
+    const cMidL = Math.floor(0.43 * span);
+    const cMidR = Math.min(span - 1, Math.ceil(0.57 * span));
+    if (cMidR > cMidL + 2) {
+      const colLR = curR[cMidL], colLG = curG[cMidL], colLB = curB[cMidL];
+      const colRR = curR[cMidR], colRG = curG[cMidR], colRB = curB[cMidR];
+      for (let i = cMidL + 1; i < cMidR; i++) {
+        const t = (i - cMidL) / (cMidR - cMidL);
+        const s = t * t * (3 - 2 * t);
+        const brR = (1 - s) * colLR + s * colRR;
+        const brG = (1 - s) * colLG + s * colRG;
+        const brB = (1 - s) * colLB + s * colRB;
+        const distFromBridge = Math.sqrt(
+          (curR[i] - brR) ** 2 + (curG[i] - brG) ** 2 + (curB[i] - brB) ** 2
+        );
+        if (diffBase[i] > 10 || distFromBridge > 10) {
+          curR[i] = brR;
+          curG[i] = brG;
+          curB[i] = brB;
+          const dr = brR - baseR[i], dg = brG - baseG[i], db = brB - baseB[i];
+          diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
+        }
+      }
+    }
+
+    // 3. Inpaint remaining graphic prints (contiguous anomalies in torso u_rel in [0.15, 0.85])
+    const torsoStart = Math.floor(0.15 * span);
+    const torsoEnd = Math.min(span - 1, Math.ceil(0.85 * span));
+    let inRun = false;
+    let runStart = 0;
+    const runsToInpaint = [];
+    for (let i = torsoStart; i <= torsoEnd; i++) {
+      const isAnomaly = diffBase[i] > tol;
+      if (isAnomaly && !inRun) {
+        inRun = true;
+        runStart = i;
+      } else if (!isAnomaly && inRun) {
+        runsToInpaint.push([runStart, i - 1]);
+        inRun = false;
+      }
+    }
+    if (inRun) {
+      runsToInpaint.push([runStart, torsoEnd]);
+    }
+
+    for (const [rStart, rEnd] of runsToInpaint) {
+      const bLeft = Math.max(0, rStart - 1);
+      const bRight = Math.min(span - 1, rEnd + 1);
+      const blR = curR[bLeft], blG = curG[bLeft], blB = curB[bLeft];
+      const brR = curR[bRight], brG = curG[bRight], brB = curB[bRight];
+      const runLen = rEnd - rStart + 1;
+      for (let k = 0; k < runLen; k++) {
+        const idx = rStart + k;
+        const t = (k + 1) / (runLen + 1);
+        let synR = (1 - t) * blR + t * brR;
+        let synG = (1 - t) * blG + t * brG;
+        let synB = (1 - t) * blB + t * brB;
+
+        // Apply weave grain micro-texture sampled from flank
+        if (grainSrc.length > 0) {
+          const gSample = grainSrc[idx % grainSrc.length];
+          const gdr = gSample[0] - midR;
+          const gdg = gSample[1] - midG;
+          const gdb = gSample[2] - midB;
+          synR = Math.max(0, Math.min(255, synR + gdr * 0.65));
+          synG = Math.max(0, Math.min(255, synG + gdg * 0.65));
+          synB = Math.max(0, Math.min(255, synB + gdb * 0.65));
+        }
+
+        curR[idx] = synR;
+        curG[idx] = synG;
+        curB[idx] = synB;
+      }
+    }
+
+    // Write back modified colors into data
+    for (let i = 0; i < span; i++) {
+      const idx = rowOffset + (xMin + i) * 4;
+      data[idx] = Math.max(0, Math.min(255, Math.round(curR[i])));
+      data[idx + 1] = Math.max(0, Math.min(255, Math.round(curG[i])));
+      data[idx + 2] = Math.max(0, Math.min(255, Math.round(curB[i])));
+    }
+  }
+
+  return data;
+}

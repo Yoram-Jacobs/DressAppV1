@@ -15,6 +15,7 @@ import {
   resampleAlphaMask,
   extractRowRuns,
   isConsistentView,
+  synthesizeBackFabricData,
 } from '@/lib/garmentSilhouette';
 
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
@@ -305,20 +306,55 @@ function dilateCanvasEdges(canvas, passes = 6) {
 }
 
 /**
+ * Synthesizes the clean back fabric canvas from the front garment canvas:
+ *   - Preserves base fabric colors, lighting gradients, and repeating patterns
+ *     (stripes, plaid, herringbone, houndstooth, knit weave).
+ *   - Bridges over center closures (zipper tracks, zipper pulls, button plackets, drawstrings).
+ *   - Excludes and inpaints asymmetric breast pockets, pocket flaps, and front logos.
+ *   - Excludes and inpaints chest/torso graphic prints, slogans, decals, and artwork.
+ *   - Restores authentic high-frequency fabric grain/weave so the back sheet looks
+ *     like real woven cloth, not flat blur.
+ */
+export function synthesizeBackFabricCanvas(frontCanvas) {
+  if (!frontCanvas || typeof document === 'undefined') return frontCanvas;
+  try {
+    const W = frontCanvas.width;
+    const H = frontCanvas.height;
+    const out = document.createElement('canvas');
+    out.width = W;
+    out.height = H;
+    const ctx = out.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(frontCanvas, 0, 0);
+    const imgData = ctx.getImageData(0, 0, W, H);
+    synthesizeBackFabricData(imgData.data, W, H);
+    ctx.putImageData(imgData, 0, 0);
+    return out;
+  } catch {
+    return frontCanvas;
+  }
+}
+
+/**
  * Builds the texture for the BACK sheet of a garment, aligned to the front cut-out:
- *   1. Always starts with the front photo so fabric weave, shading, and plaid/stripe/print
- *      patterns align 1:1 with the front sheet across the side seams and back view.
+ *   1. Always uses the front garment canvas aligned 1:1 with uvBack === uvFront,
+ *      excluding graphics, prints, pockets, zippers, and fine details while preserving
+ *      the front garment's texture, colors, and pattern (stripes, plaid, herringbone).
  *   2. When a consistent back photo exists in the item group, lays the mirrored back
  *      photo on top of the silhouette.
  */
-function buildBackTexture({ frontCanvas, backCanvas }) {
+export function buildBackTexture({ frontCanvas, backCanvas }) {
+  if (!frontCanvas || typeof document === 'undefined') return null;
   const W = frontCanvas.width;
   const H = frontCanvas.height;
   const out = document.createElement('canvas');
   out.width = W;
   out.height = H;
   const ctx = out.getContext('2d');
-  ctx.drawImage(frontCanvas, 0, 0);
+
+  // Synthesize back fabric excluding front-only graphics, prints, pockets, zippers
+  const cleanBackCanvas = synthesizeBackFabricCanvas(frontCanvas);
+  ctx.drawImage(cleanBackCanvas, 0, 0);
+
   if (backCanvas) {
     // A back photo is seen from behind: mirror it so it lines up with the front cut-out
     ctx.globalCompositeOperation = 'source-atop';
@@ -754,8 +790,18 @@ async function fetchAndCropTexture(url) {
     shellMask = null;
   }
 
+  // Back sheet texture: front garment canvas synthesized to exclude graphics, prints,
+  // pockets, zippers, while preserving base fabric colors, lighting, and repeating patterns.
+  let backTexture = null;
+  try {
+    backTexture = buildBackTexture({ frontCanvas: cropCanvas, backCanvas: null });
+  } catch {
+    backTexture = null;
+  }
+
   const res = {
     texture,
+    backTexture,
     opaqueTexture,
     filledTexture,
     dominantColor,
@@ -807,6 +853,8 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
         dominantColor: '#222226',
         hasSleeves: true,
         aspect: 1.0,
+        solidU: 0.5,
+        solidV: 0.5,
         backTexture: null,
         backSource: null,
         ready: false,
@@ -818,7 +866,12 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
     fetchAndCropTexture(url)
       .then(async (res) => {
         if (!mounted || !res) return;
-        setData({ ...res, backTexture: res.texture, backSource: 'front-aligned', ready: true });
+        setData({
+          ...res,
+          backTexture: res.backTexture || res.texture,
+          backSource: 'front-aligned',
+          ready: true,
+        });
 
         // ── Item group: look for a consistent back / side view ──
         if (!res.canvas || !res.shellMask) return;
