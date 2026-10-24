@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   Ruler,
   Lock,
+  ExternalLink,
+  Info,
 } from 'lucide-react';
 
 const CURATED_PLATFORMS = [
@@ -368,6 +370,16 @@ export default function ShoppingHub() {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => window.open(activeBrowserStore.url, '_blank', 'noopener,noreferrer')}
+              className="text-amber-400 hover:text-amber-300 hover:bg-slate-800 h-8 px-2.5 text-xs font-semibold"
+              title={t('shoppingHub.openInBrowser', { defaultValue: 'Open in new tab to sign in or bypass pop-ups' })}
+            >
+              <ExternalLink className="w-3.5 h-3.5 me-1" />
+              <span className="hidden sm:inline">{t('shoppingHub.openFullSite', { defaultValue: 'Open in Tab' })}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => launchNativeApp(activeBrowserStore)}
               className="text-sky-400 hover:text-sky-300 hover:bg-slate-800 h-8 px-2 text-xs"
               title={t('shoppingHub.openInApp', { defaultValue: 'Open in Store App' })}
@@ -395,6 +407,25 @@ export default function ShoppingHub() {
           </div>
         </div>
 
+        {/* Quick Notice Banner for Pop-ups & Login */}
+        <div className="bg-amber-500/15 border-b border-amber-500/20 px-3 py-1.5 flex items-center justify-between text-[11px] text-amber-900 bg-amber-50 shrink-0">
+          <div className="flex items-center gap-1.5 truncate">
+            <Info className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+            <span className="truncate">
+              {t('shoppingHub.loginNotice', {
+                defaultValue: "Can't close pop-up or need to sign in? Tap 'Open in Tab' to shop directly with your saved store account.",
+              })}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.open(activeBrowserStore.url, '_blank', 'noopener,noreferrer')}
+            className="font-bold underline hover:no-underline shrink-0 ms-2 text-amber-800 flex items-center gap-1"
+          >
+            <span>{t('shoppingHub.openDirectTab', { defaultValue: 'Open in Tab ↗' })}</span>
+          </button>
+        </div>
+
         {/* Embedded Web View */}
         <div className="flex-1 relative bg-sand/30 overflow-hidden">
           {!iframeError ? (
@@ -402,7 +433,7 @@ export default function ShoppingHub() {
               src={activeBrowserStore.url}
               title={activeBrowserStore.name}
               className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-top-navigation-by-user-activation allow-downloads"
               onError={() => setIframeError(true)}
             />
           ) : null}
@@ -646,10 +677,19 @@ export default function ShoppingHub() {
                     <Button
                       size="sm"
                       onClick={() => launchStore(store)}
-                      className="w-full bg-primary-brand hover:bg-primary-hover text-white text-[11px] font-semibold h-7 rounded-lg shadow-xs"
+                      className="flex-1 bg-primary-brand hover:bg-primary-hover text-white text-[11px] font-semibold h-7 rounded-lg shadow-xs"
                     >
                       <Sparkles className="w-3 h-3 me-1" />
                       {t('shoppingHub.shop', { defaultValue: 'Shop' })}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(store.url, '_blank', 'noopener,noreferrer')}
+                      className="h-7 px-2 border-border text-[11px] text-muted-foreground hover:text-dark-brand"
+                      title={t('shoppingHub.openExternal', { defaultValue: 'Open in new tab' })}
+                    >
+                      <ExternalLink className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
@@ -733,6 +773,15 @@ export default function ShoppingHub() {
                     <Star className={`w-4 h-4 ${isSaved ? 'text-amber-500 fill-amber-500' : ''}`} />
                   </button>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(store.url, '_blank', 'noopener,noreferrer')}
+                    className="h-8 px-2.5 border-border text-xs text-muted-foreground hover:text-dark-brand"
+                    title={t('shoppingHub.openExternal', { defaultValue: 'Open in new tab' })}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Button>
                   <Button
                     size="sm"
                     onClick={() => launchStore(store)}
