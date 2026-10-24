@@ -633,7 +633,11 @@ function Realistic3DAvatarMesh({
     const clone = scene.clone(true);
     clone.traverse((node) => {
       if (node.isMesh && node.material) {
-        node.material = node.material.clone();
+        if (Array.isArray(node.material)) {
+          node.material = node.material.map((m) => (m ? m.clone() : m));
+        } else {
+          node.material = node.material.clone();
+        }
       }
     });
     return clone;
@@ -685,8 +689,9 @@ function Realistic3DAvatarMesh({
     clonedScene.traverse((node) => {
       if (!node.isMesh) return;
 
-      const mat = node.material;
-      if (mat) {
+      const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
+      mats.forEach((mat) => {
+        if (!mat) return;
         const matName = String(mat.name || '').toLowerCase();
         if (matName.includes('skin')) {
           mat.color.copy(skinThreeColor);
@@ -741,7 +746,7 @@ function Realistic3DAvatarMesh({
           mat.roughness = 0.5;
           mat.needsUpdate = true;
         }
-      }
+      });
 
       // Apply body + hair morph target influences (resetting inactive targets to 0)
       const dict = node.morphTargetDictionary;
@@ -1207,22 +1212,13 @@ export default function DynamicAvatar({
         />
       )}
 
-      {/* 200x450 Coordinate Frame & Instant Anatomical Silhouette Mannequin */}
+      {/* 200x450 Coordinate Frame */}
       <svg
         viewBox="0 0 200 450"
         className="w-full h-full pointer-events-none z-[1] block select-none"
         style={{ maxHeight: '100%' }}
         aria-hidden="true"
       >
-        {/* Instantaneous Anatomical SVG Silhouette Mannequin (visible on startup until 3D snapshot finishes rendering) */}
-        {!snapshotUrl && !interactive && (
-          <g fill={activeSkinColor} opacity={0.94} className="transition-opacity duration-300">
-            <path d={svgPaths.armPathR} />
-            <path d={svgPaths.armPathL} />
-            <path d={svgPaths.bodyPath} />
-            <path d={svgPaths.headPath} />
-          </g>
-        )}
         <rect width="200" height="450" fill="none" opacity="0" />
         {showGuideLines && (
           <g className="text-slate-400/35 dark:text-slate-500/35 stroke-current stroke-[0.75] stroke-dasharray-[2,3]">

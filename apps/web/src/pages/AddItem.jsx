@@ -6207,7 +6207,12 @@ export default function AddItem() {
               onClose={() => setIs3DPreviewOpen(false)}
               outfitItems={preview3DItems}
               garments={preview3DItems}
-              profile={user?.profile || {}}
+              profile={user?.profile || user || {}}
+              sex={user?.gender || user?.sex || 'female'}
+              skinColor={user?.skin_tone}
+              hair={user?.hair}
+              shapeParams={user?.avatar_shape_params || {}}
+              measurements={user?.body_measurements || user?.measurements}
             />
           </Suspense>
         )}

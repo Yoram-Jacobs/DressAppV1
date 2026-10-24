@@ -3354,7 +3354,12 @@ export default function ItemDetail() {
               onClose={() => setIs3DOpen(false)}
               outfitItems={studio3DItems}
               garments={studio3DItems}
-              profile={user?.profile || {}}
+              profile={user?.profile || user || {}}
+              sex={user?.gender || user?.sex || 'female'}
+              skinColor={user?.skin_tone}
+              hair={user?.hair}
+              shapeParams={user?.avatar_shape_params || {}}
+              measurements={user?.body_measurements || user?.measurements}
               initialShowAvatar={false}
               standaloneMode={true}
               focusedSlot={Object.keys(studio3DItems)[0]}

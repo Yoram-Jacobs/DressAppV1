@@ -2326,7 +2326,12 @@ export default function Closet() {
               onClose={() => setIs3DStudioOpen(false)}
               outfitItems={studio3DItems}
               garments={studio3DItems}
-              profile={user?.profile || {}}
+              profile={user?.profile || user || {}}
+              sex={user?.gender || user?.sex || 'female'}
+              skinColor={user?.skin_tone}
+              hair={user?.hair}
+              shapeParams={user?.avatar_shape_params || {}}
+              measurements={user?.body_measurements || user?.measurements}
               onItemClick={(it) => {
                 setIs3DStudioOpen(false);
                 if (it?.id) {

@@ -76,7 +76,11 @@ export default function AvatarMesh3D({
     const clone = scene.clone(true);
     clone.traverse((node) => {
       if (node.isMesh && node.material) {
-        node.material = node.material.clone();
+        if (Array.isArray(node.material)) {
+          node.material = node.material.map((m) => (m ? m.clone() : m));
+        } else {
+          node.material = node.material.clone();
+        }
       }
       if (node.isMesh && node.geometry) {
         node.userData.originalGeometry = node.geometry;
@@ -132,8 +136,9 @@ export default function AvatarMesh3D({
       node.castShadow = castShadow;
       node.receiveShadow = receiveShadow;
 
-      const mat = node.material;
-      if (mat) {
+      const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
+      mats.forEach((mat) => {
+        if (!mat) return;
         const matName = String(mat.name || '').toLowerCase();
         if (matName.includes('skin')) {
           mat.color.copy(skinThreeColor);
@@ -188,7 +193,7 @@ export default function AvatarMesh3D({
           mat.roughness = 0.5;
           mat.needsUpdate = true;
         }
-      }
+      });
 
       // Apply body and hair morph target influences
       const dict = node.morphTargetDictionary;

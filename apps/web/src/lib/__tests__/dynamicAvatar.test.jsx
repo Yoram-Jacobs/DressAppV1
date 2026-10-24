@@ -9,6 +9,8 @@ import DynamicAvatar, {
 import { useProfileForm } from '@/components/profile/useProfileForm';
 import { renderHook, act } from '@testing-library/react';
 import AvatarViewer from '@/components/AvatarViewer';
+import OutfitPiecePreview from '@/components/OutfitPiecePreview';
+import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
 
 // Mock react-i18next
 jest.mock('react-i18next', () => ({
@@ -220,5 +222,78 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     const maleResolved = resolveHairProperties(result.current.form.hair, true);
     expect(maleResolved.color).toBe('#181412');
     expect(Object.values(maleResolved.morphs).every((v) => v === 0)).toBe(true);
+  });
+
+  test('DynamicAvatar in non-interactive mode never renders old 2D SVG silhouette mannequin paths', () => {
+    const { container } = render(
+      <DynamicAvatar
+        height={170}
+        gender="male"
+        interactive={false}
+      />
+    );
+
+    // Verify no SVG paths with activeSkinColor or bodyPath exist
+    const svgPaths = container.querySelectorAll('svg path');
+    expect(svgPaths.length).toBe(0);
+
+    const mannequinGroups = container.querySelectorAll('g[fill]');
+    expect(mannequinGroups.length).toBe(0);
+  });
+
+  test('OutfitPiecePreview renders layered pieces instantly with zero WebGL Canvas overhead', () => {
+    const mockOutfitItems = {
+      top_0: {
+        id: 'item-top-1',
+        name: 'Classic White Shirt',
+        role: 'top',
+        clean_image_url: 'https://example.com/top.png',
+      },
+      bottom_1: {
+        id: 'item-bottom-1',
+        name: 'Dark Chinos',
+        role: 'bottom',
+        clean_image_url: 'https://example.com/bottom.png',
+      },
+      shoes_2: {
+        id: 'item-shoes-1',
+        name: 'Leather Loafers',
+        role: 'shoes',
+        clean_image_url: 'https://example.com/shoes.png',
+      },
+    };
+
+    const { container } = render(
+      <OutfitPiecePreview outfitItems={mockOutfitItems} />
+    );
+
+    const root = screen.getByTestId('outfit-piece-preview');
+    expect(root).toBeInTheDocument();
+
+    // Verify 3 piece images are rendered without WebGL Canvas or SVG paths
+    const images = container.querySelectorAll('img');
+    expect(images.length).toBe(3);
+    expect(container.querySelector('[data-testid="mock-webgl-canvas"]')).toBeNull();
+    expect(container.querySelectorAll('svg path').length).toBe(0);
+  });
+
+  test('OutfitAvatarViewer uses lightweight OutfitPiecePreview when interactive is false', () => {
+    const mockOutfitItems = {
+      top_0: {
+        id: 'top-1',
+        role: 'top',
+        clean_image_url: 'https://example.com/top.png',
+      },
+    };
+
+    const { container } = render(
+      <OutfitAvatarViewer
+        outfitItemsMap={mockOutfitItems}
+        interactive={false}
+      />
+    );
+
+    expect(screen.getByTestId('outfit-piece-preview')).toBeInTheDocument();
+    expect(container.querySelector('[data-testid="dynamic-3d-avatar"]')).toBeNull();
   });
 });

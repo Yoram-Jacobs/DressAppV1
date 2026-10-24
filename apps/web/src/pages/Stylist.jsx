@@ -70,6 +70,7 @@ import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
 import AvatarViewer from '@/components/AvatarViewer';
+import OutfitPiecePreview from '@/components/OutfitPiecePreview';
 import DressingRoom3D from '@/components/DressingRoom3D';
 import { labelForRole, labelForDressCode } from '@/lib/taxonomy';
 import { OutfitRecommendationCard } from '@/components/stylist/OutfitRecommendationCard';
@@ -2909,7 +2910,7 @@ export default function Stylist() {
                 shapeParams={user?.avatar_shape_params || {}}
                 measurements={user?.body_measurements || user?.measurements}
                 skinColor={user?.skin_tone}
-                sex={user?.sex || 'female'}
+                sex={user?.gender || user?.sex || 'female'}
                 outfitItems={getOutfitPiecesMap(selectedOutfitForDetail, closetItems)}
                 interactive={true}
               />
@@ -3122,7 +3123,7 @@ export default function Stylist() {
             outfit={selectedOutfitForDetail}
             outfitItems={getOutfitPiecesMap(selectedOutfitForDetail, closetItems)}
             measurements={user?.body_measurements || user?.measurements}
-            sex={user?.sex || 'female'}
+            sex={user?.gender || user?.sex || 'female'}
             skinColor={user?.skin_tone}
             hair={user?.hair}
             shapeParams={user?.avatar_shape_params || {}}
@@ -3384,12 +3385,9 @@ export default function Stylist() {
                                     }}
                                     className="relative overflow-hidden rounded-[12px] bg-white border border-border shadow-sm hover:shadow-md transition-smooth cursor-pointer"
                                   >
-                                    <div className="relative w-full aspect-[4/5] bg-[#ddd] overflow-hidden shrink-0">
-                                      <AvatarViewer
-                                        shapeParams={user?.avatar_shape_params || {}}
-                                        measurements={user?.body_measurements || user?.measurements}
-                                        skinColor={user?.skin_tone}
-                                        sex={user?.sex || 'female'}
+                                    <div className="relative w-full aspect-[4/5] bg-stone-100 overflow-hidden shrink-0">
+                                      <OutfitPiecePreview
+                                        outfit={o}
                                         outfitItems={getOutfitPiecesMap(o, closetItems)}
                                       />
                                     </div>
@@ -3830,11 +3828,8 @@ export default function Stylist() {
                                     <div className="w-full flex-grow aspect-[4/5] rounded-[12px] overflow-hidden relative flex items-center justify-center bg-accent-beige">
                                       {dayOutfit ? (
                                         <div className="absolute inset-0 scale-[0.95]">
-                                          <AvatarViewer
-                                            shapeParams={user?.avatar_shape_params || {}}
-                                            measurements={user?.body_measurements || user?.measurements}
-                                            skinColor={user?.skin_tone}
-                                            sex={user?.sex || 'female'}
+                                          <OutfitPiecePreview
+                                            outfit={dayOutfit}
                                             outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
                                           />
                                         </div>
@@ -4011,11 +4006,8 @@ export default function Stylist() {
                         {dayOutfit ? (
                           <>
                             <div className="absolute inset-0 scale-[0.9]">
-                              <AvatarViewer
-                                shapeParams={user?.avatar_shape_params || {}}
-                                measurements={user?.body_measurements || user?.measurements}
-                                skinColor={user?.skin_tone}
-                                sex={user?.sex || 'female'}
+                              <OutfitPiecePreview
+                                outfit={dayOutfit}
                                 outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
                               />
                             </div>
@@ -4060,11 +4052,8 @@ export default function Stylist() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-12 h-12 bg-secondary/10 rounded-full overflow-hidden border border-border shrink-0">
-                          <AvatarViewer
-                            shapeParams={user?.avatar_shape_params || {}}
-                            measurements={user?.body_measurements || user?.measurements}
-                            skinColor={user?.skin_tone}
-                            sex={user?.sex || 'female'}
+                          <OutfitPiecePreview
+                            outfit={dayOutfit}
                             outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
                           />
                         </div>
@@ -4109,11 +4098,7 @@ export default function Stylist() {
                         className="flex flex-col items-center rounded-[12px] border border-border hover:border-primary-brand cursor-pointer text-center group transition-all relative overflow-hidden"
                       >
                         <div className="w-full aspect-[4/5] bg-accent-beige overflow-hidden relative shrink-0">
-                          <AvatarViewer
-                            shapeParams={user?.avatar_shape_params || {}}
-                            measurements={user?.body_measurements || user?.measurements}
-                            skinColor={user?.skin_tone}
-                            sex={user?.sex || 'female'}
+                          <OutfitPiecePreview
                             outfitItems={getRecommendationPiecesMap(rec, closetItems)}
                           />
                         </div>
@@ -4159,11 +4144,8 @@ export default function Stylist() {
                             )}
                           >
                             <div className="w-full aspect-[4/5] bg-accent-beige overflow-hidden relative shrink-0">
-                              <AvatarViewer
-                                shapeParams={user?.avatar_shape_params || {}}
-                                measurements={user?.body_measurements || user?.measurements}
-                                skinColor={user?.skin_tone}
-                                sex={user?.sex || 'female'}
+                              <OutfitPiecePreview
+                                outfit={o}
                                 outfitItems={getOutfitPiecesMap(o, closetItems)}
                               />
                               {isAlreadyScheduled && (

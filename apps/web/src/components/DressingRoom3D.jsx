@@ -4,6 +4,7 @@ import { OrbitControls, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth';
 import {
   X,
   RotateCw,
@@ -221,12 +222,15 @@ export default function DressingRoom3D({
     [onOpenChange, onClose]
   );
 
+  const { user } = useAuth?.() || {};
+  const effectiveProfile = profile || user?.profile || user || EMPTY_OBJ;
+
   const activeItems = garments || outfitItems || EMPTY_OBJ;
-  const activeMeasurements = propMeasurements || profile?.measurements || EMPTY_OBJ;
-  const activeSex = propSex || profile?.gender || profile?.sex || activeMeasurements?.gender || 'female';
-  const activeSkinColor = propSkinColor || profile?.skin_tone || profile?.skinColor || '#E0AC69';
-  const activeHair = propHair || profile?.hair || EMPTY_OBJ;
-  const activeShapeParams = propShapeParams || profile?.shape_params || profile?.shapeParams || EMPTY_OBJ;
+  const activeMeasurements = propMeasurements || effectiveProfile?.measurements || effectiveProfile?.body_measurements || user?.body_measurements || user?.measurements || EMPTY_OBJ;
+  const activeSex = propSex || effectiveProfile?.gender || effectiveProfile?.sex || effectiveProfile?.gender_identity || user?.gender || user?.sex || activeMeasurements?.gender || 'female';
+  const activeSkinColor = propSkinColor || effectiveProfile?.skin_tone || effectiveProfile?.skinColor || user?.skin_tone || '#E0AC69';
+  const activeHair = propHair || effectiveProfile?.hair || user?.hair || EMPTY_OBJ;
+  const activeShapeParams = propShapeParams || effectiveProfile?.shape_params || effectiveProfile?.shapeParams || user?.avatar_shape_params || EMPTY_OBJ;
 
   const isMale = String(activeSex || activeMeasurements?.gender || '').toLowerCase() === 'male';
 
