@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Sparkles, Globe, Bookmark, Info, Smartphone, ArrowRight, ExternalLink } from 'lucide-react';
+import { Sparkles, Globe, Smartphone, ArrowRight, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 
 export const CHROME_EXTENSION_STORE_URL =
   'https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp';
@@ -100,7 +99,7 @@ export function ShoppingAssistant() {
       <p className="text-[12px] text-text-brand font-semibold leading-relaxed text-start" dir="auto">
         {t('profile.mobileShareDesc', { defaultValue: 'Shopping on your phone? Tap Share in Safari or Chrome and select DressApp for instant sizing, or paste any garment link directly.' })}
       </p>
-      <div className="pt-1">
+      <div className="flex flex-wrap items-center gap-2 pt-1">
         <Button
           type="button"
           size="sm"
@@ -112,50 +111,18 @@ export function ShoppingAssistant() {
           <span>{t('profile.openMobileAssistant', { defaultValue: 'Launch Size Checker' })}</span>
           <ArrowRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
         </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/shopping')}
+          className="h-8 text-xs font-semibold rounded-lg border-border hover:bg-sand/30 inline-flex items-center gap-1.5"
+          data-testid="profile-open-shopping-hub-btn"
+        >
+          <span>{t('shoppingHub.openHub', { defaultValue: 'Shopping Hub' })}</span>
+          <ArrowRight className="w-3 h-3 shrink-0 rtl:rotate-180" />
+        </Button>
       </div>
-    </div>
-  );
-
-  const renderBookmarkletCard = () => (
-    <div key="bookmarklet" className="space-y-2 rounded-[12px] bg-white border border-border p-3">
-      <div className="flex items-center gap-2">
-        <Bookmark className="h-5 w-5 text-primary-brand shrink-0" />
-        <h4 className="font-bold text-[14px] text-dark-brand">{t('profile.bookmarkletTitle', { defaultValue: 'Universal Bookmarklet' })}</h4>
-      </div>
-      <p className="text-[12px] text-text-brand font-semibold leading-relaxed text-start" dir="auto">
-        {t('profile.bookmarkletDesc', { defaultValue: "Drag the button below to your bookmarks bar. On mobile, add it to your bookmarks and name it 'DressApp Shopping Assistant'. Click it when on any product page." })}
-      </p>
-      
-      {'ontouchstart' in window ? (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-accent-beige border border-border">
-          <Info className="w-4 h-4 text-text-brand shrink-0" />
-          <span className="text-[11px] text-text-brand font-semibold text-start" dir="auto">
-            {t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' })}
-          </span>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          <a
-            ref={(el) => {
-              if (el) {
-                el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();");
-              }
-            }}
-            title={`👗 ${t('profile.bookmarkletBtnName', { defaultValue: 'DressApp Assistant' })}`}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary-brand px-4 py-2 text-[12px] font-semibold text-white shadow hover:bg-primary-hover transition-colors cursor-grab active:cursor-grabbing select-none"
-            onClick={(e) => {
-              e.preventDefault();
-              toast.info(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
-            }}
-          >
-            <span className="pointer-events-none">👗</span>
-            <span className="pointer-events-none">{t('profile.bookmarkletBtnName', { defaultValue: 'DressApp Assistant' })}</span>
-          </a>
-          <span className="text-[12px] font-semibold text-text-brand italic text-start" dir="auto">
-            {t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." })}
-          </span>
-        </div>
-      )}
     </div>
   );
 
@@ -184,13 +151,11 @@ export function ShoppingAssistant() {
           <>
             {renderChromeExtensionCard(true)}
             {renderMobileShareCard(false)}
-            {renderBookmarkletCard()}
           </>
         ) : (
           <>
             {renderMobileShareCard(true)}
             {renderChromeExtensionCard(false)}
-            {renderBookmarkletCard()}
           </>
         )}
       </AccordionContent>
