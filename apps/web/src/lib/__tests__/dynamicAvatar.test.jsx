@@ -270,11 +270,12 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     const root = screen.getByTestId('outfit-piece-preview');
     expect(root).toBeInTheDocument();
 
-    // Verify 3 piece images are rendered without WebGL Canvas or SVG paths
+    // Verify 3 piece images and anatomical mannequin avatar base are rendered without WebGL Canvas
     const images = container.querySelectorAll('img');
     expect(images.length).toBe(3);
     expect(container.querySelector('[data-testid="mock-webgl-canvas"]')).toBeNull();
-    expect(container.querySelectorAll('svg path').length).toBe(0);
+    // Anatomical avatar mannequin paths (head, body, arms) are rendered under the garments
+    expect(container.querySelectorAll('svg path').length).toBeGreaterThan(0);
   });
 
   test('OutfitAvatarViewer uses lightweight OutfitPiecePreview when interactive is false', () => {

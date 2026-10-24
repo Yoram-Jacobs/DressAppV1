@@ -37,6 +37,11 @@ export default function OutfitAvatarViewer({
         <OutfitPiecePreview
           outfitItems={outfitItemsMap}
           onItemClick={onItemClick}
+          shapeParams={shapeParams}
+          measurements={measurements}
+          skinColor={skinColor}
+          hair={hair}
+          sex={sex}
         />
       )}
       {badgeContent && (

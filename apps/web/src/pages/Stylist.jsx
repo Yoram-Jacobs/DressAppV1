@@ -3389,6 +3389,10 @@ export default function Stylist() {
                                       <OutfitPiecePreview
                                         outfit={o}
                                         outfitItems={getOutfitPiecesMap(o, closetItems)}
+                                        sex={user?.gender || user?.sex}
+                                        skinColor={user?.skin_tone}
+                                        measurements={user?.body_measurements || user?.measurements}
+                                        hair={user?.hair}
                                       />
                                     </div>
                                     <div className="p-2">

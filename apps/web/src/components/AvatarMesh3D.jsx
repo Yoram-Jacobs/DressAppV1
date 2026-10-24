@@ -2,7 +2,9 @@ import React, { useMemo, useEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { poseAvatarGeometry } from '@/lib/footwearFit';
 import * as THREE from 'three';
-import { resolveHairProperties } from './DynamicAvatar';
+import { resolveHairProperties, applyAvatarAppearance } from './DynamicAvatar';
+
+export { applyAvatarAppearance };
 
 export const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair3';
 export const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair3';
@@ -39,6 +41,8 @@ export function getAvatarMetricTransform({ isMale = false, height = 170, morphIn
   };
 }
 
+
+
 /**
  * AvatarMesh3D
  * 
@@ -70,7 +74,8 @@ export default function AvatarMesh3D({
     return resolveHairProperties(hair, isMale);
   }, [providedHairProps, hair, isMale]);
 
-  // Clone GLTF scene and its materials so morph targets & colors don't conflict across canvases
+  // Clone GLTF scene and its materials, immediately applying custom avatar appearance
+  // synchronously so Three.js NEVER renders an unstyled default avatar (eliminating the blink).
   const clonedScene = useMemo(() => {
     if (!scene) return null;
     const clone = scene.clone(true);
@@ -86,8 +91,18 @@ export default function AvatarMesh3D({
         node.userData.originalGeometry = node.geometry;
       }
     });
+
+    applyAvatarAppearance(clone, {
+      skinColor,
+      hairProps,
+      isMale,
+      morphInfluences,
+      castShadow,
+      receiveShadow,
+    });
+
     return clone;
-  }, [scene]);
+  }, [scene, skinColor, hairProps, isMale, morphInfluences, castShadow, receiveShadow]);
 
   // Heeled footwear: re-pose the feet (heel raised, pivot about the ball of the foot).
   // Works on per-instance geometry copies so the shared GLTF stays untouched.
@@ -118,97 +133,16 @@ export default function AvatarMesh3D({
     return getAvatarMetricTransform({ isMale, height, morphInfluences });
   }, [height, isMale, morphInfluences, meterScale]);
 
-  // Update materials, morph targets, and shadows
+  // Reactive updates for prop changes (ensures re-rendering when colors or morphs update)
   useEffect(() => {
     if (!clonedScene) return;
-
-    const rawSkin = skinColor || '#E0AC69';
-    const activeSkin = String(rawSkin).trim().toLowerCase() === '#9ca3af' ? '#E0AC69' : rawSkin;
-    const skinThreeColor = new THREE.Color(activeSkin);
-    const nailColor = skinThreeColor.clone().lerp(new THREE.Color('#F5CAC3'), 0.35);
-    const activeHairColor = hairProps?.color || (isMale ? '#181412' : '#3B2316');
-    const activeHairRoughness = hairProps?.roughness ?? (isMale ? 0.48 : 0.38);
-    const activeHairMetalness = hairProps?.metalness ?? 0.04;
-
-    clonedScene.traverse((node) => {
-      if (!node.isMesh) return;
-
-      node.castShadow = castShadow;
-      node.receiveShadow = receiveShadow;
-
-      const mats = Array.isArray(node.material) ? node.material : (node.material ? [node.material] : []);
-      mats.forEach((mat) => {
-        if (!mat) return;
-        const matName = String(mat.name || '').toLowerCase();
-        if (matName.includes('skin')) {
-          mat.color.copy(skinThreeColor);
-          mat.roughness = 0.52;
-          mat.metalness = 0.04;
-          mat.needsUpdate = true;
-        } else if (matName.includes('nails')) {
-          mat.color.copy(nailColor);
-          mat.roughness = 0.35;
-          mat.metalness = 0.05;
-          mat.needsUpdate = true;
-        } else if (matName.includes('generic')) {
-          // Modest studio activewear bra & briefs set (chic graphite charcoal with soft matte fabric finish)
-          mat.color.set('#20242C');
-          mat.roughness = 0.68;
-          mat.metalness = 0.04;
-          mat.needsUpdate = true;
-        } else if (matName.includes('cornea')) {
-          mat.transparent = true;
-          mat.opacity = 0.18;
-          mat.roughness = 0.05;
-          mat.depthWrite = false;
-          mat.needsUpdate = true;
-        } else if (matName.includes('iris')) {
-          mat.color.set('#4A6B82');
-          mat.roughness = 0.15;
-          mat.needsUpdate = true;
-        } else if (matName.includes('pupil')) {
-          mat.color.set('#090A0F');
-          mat.roughness = 0.1;
-          mat.needsUpdate = true;
-        } else if (matName.includes('human_eyes')) {
-          mat.color.set('#F8FAFC');
-          mat.roughness = 0.15;
-          mat.needsUpdate = true;
-        } else if (matName.includes('eyelash')) {
-          mat.color.set('#1E1B18');
-          mat.transparent = true;
-          mat.opacity = 0.85;
-          mat.needsUpdate = true;
-        } else if (matName.includes('hair')) {
-          mat.color.set(activeHairColor);
-          mat.roughness = activeHairRoughness;
-          mat.metalness = activeHairMetalness;
-          mat.needsUpdate = true;
-        } else if (matName.includes('teeth')) {
-          mat.color.set('#F8F5F0');
-          mat.roughness = 0.2;
-          mat.needsUpdate = true;
-        } else if (matName.includes('tongue')) {
-          mat.color.set('#B85D65');
-          mat.roughness = 0.5;
-          mat.needsUpdate = true;
-        }
-      });
-
-      // Apply body and hair morph target influences
-      const dict = node.morphTargetDictionary;
-      const influences = node.morphTargetInfluences;
-      if (dict && influences && morphInfluences) {
-        for (let i = 0; i < influences.length; i += 1) {
-          influences[i] = 0;
-        }
-        Object.entries(morphInfluences).forEach(([targetName, val]) => {
-          const idx = dict[targetName] ?? dict[`${targetName} `];
-          if (idx !== undefined && idx < influences.length) {
-            influences[idx] = val;
-          }
-        });
-      }
+    applyAvatarAppearance(clonedScene, {
+      skinColor,
+      hairProps,
+      isMale,
+      morphInfluences,
+      castShadow,
+      receiveShadow,
     });
   }, [clonedScene, skinColor, hairProps, isMale, morphInfluences, castShadow, receiveShadow]);
 
