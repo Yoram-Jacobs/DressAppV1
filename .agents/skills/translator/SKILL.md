@@ -2,12 +2,11 @@
 name: translator
 description: >
   Translates DressApp codebase files (markdown, JSON locales, user manuals) into
-  all 13 supported languages. Use this skill when the user types "/translate" or
-  asks to translate, localize, or internationalize any content. Triggers include:
-  "/translate", "translate this", "localize", "i18n translate", "translate to
-  Hebrew", "translate to all languages", "add translations", "translate wiki",
-  "translate help files", "translate user manual". Always activate this skill when
-  the user types "/translate" followed by file paths or content descriptions.
+  all 13 supported languages. Prevents English wording and numbers in RTL languages
+  from corrupting sentence structure, and follows grammar rules. Scans translated files
+  after each translation to fix typos, miswording, broken sentences, grammar mistakes,
+  and incorrect meaning. Use this skill when the user types "/translate" or asks to
+  translate, localize, or internationalize any content.
 ---
 
 # Translator Skill
@@ -15,7 +14,7 @@ description: >
 You are a professional codebase translator specializing in DressApp's
 localization pipeline. You translate markdown documentation, JSON locale files,
 and user-facing content into all 13 supported languages while preserving
-formatting, tone, and technical accuracy.
+formatting, tone, grammatical integrity, and technical accuracy.
 
 ---
 
@@ -24,15 +23,15 @@ formatting, tone, and technical accuracy.
 | Code | Language | Direction | Notes |
 |------|----------|-----------|-------|
 | `en` | English | LTR | Base language |
-| `he` | Hebrew | RTL | Gender-neutral preferred |
-| `ar` | Arabic | RTL | Gender-neutral preferred |
-| `de` | German | LTR | Watch for compound words |
+| `he` | Hebrew | RTL | Gender-neutral preferred; protect RTL structure |
+| `ar` | Arabic | RTL | Gender-neutral preferred; protect RTL structure |
+| `de` | German | LTR | Watch for compound words; formal "Sie" |
 | `es` | Spanish | LTR | Latin America neutral |
 | `fr` | French | LTR | Formal "vous" register |
 | `hi` | Hindi | LTR | Devanagari script |
-| `it` | Italian | LTR | |
-| `ja` | Japanese | LTR | Honorifics context |
-| `nl` | Dutch | LTR | |
+| `it` | Italian | LTR | Standard Italian |
+| `ja` | Japanese | LTR | Honorifics context; polite form (です/ます) |
+| `nl` | Dutch | LTR | Standard Dutch |
 | `pt` | Portuguese | LTR | Brazilian variant |
 | `ru` | Russian | LTR | Cyrillic script |
 | `zh` | Chinese | LTR | Simplified characters |
@@ -47,8 +46,8 @@ Determine what needs translation:
 
 | Source Type | Location | Target Location |
 |-------------|----------|-----------------|
-| Wiki markdown | `wiki/en/{topic}.md` | `wiki/{lang}/{topic}.md` + `frontend/public/wiki/{lang}/{topic}.md` |
-| JSON locale keys | `frontend/src/locales/en.json` | `frontend/src/locales/{lang}.json` |
+| Wiki markdown | `wiki/en/{topic}.md` | `wiki/{lang}/{topic}.md` + `apps/web/public/wiki/{lang}/{topic}.md` |
+| JSON locale keys | `apps/web/src/locales/en.json` (or `frontend/src/locales/en.json`) | `apps/web/src/locales/{lang}.json` |
 | User manual | `User-manual.md` | `User-manual_{lang}.md` (if applicable) |
 | Help menu (Layer 1) | `HelpMenu.jsx` keys in `en.json` | Same JSON files, all locales |
 
@@ -58,7 +57,7 @@ Always read the English source file first to understand:
 - Content structure and formatting
 - Technical terms that should remain consistent
 - Markdown syntax (headers, code blocks, links)
-- i18n key patterns
+- i18n key patterns and placeholders (e.g. `{name}`, `{{count}}`)
 
 ### Step 3: Translate Content
 
@@ -74,25 +73,28 @@ For each target language, apply these rules:
 #### JSON Locale Files
 - Translate all user-facing string values
 - Keep keys in English (they are identifiers, not display text)
-- Preserve JSON structure and formatting (4-space indent)
+- Preserve JSON structure and formatting
 - Maintain placeholder variables exactly (e.g., `{name}`, `{{count}}`)
 - Keep markdown formatting in translated strings (e.g., `**bold**`)
 
 #### User Manuals
-- Translate all content except code blocks
+- Translate all prose content except code blocks
 - Keep file paths, commands, and code examples in English
-- Adapt screenshots references if locale-specific images exist
+- Adapt screenshot references if locale-specific images exist
 - Maintain document structure and section numbering
 
-### Step 4: Special Translation Rules
+---
 
-#### RTL Languages (Hebrew, Arabic)
-- Use gender-neutral language where possible
-- Avoid gendered forms in instructions
-- Test that markdown renders correctly in RTL context
+### Step 4: Special Translation & Language Rules
+
+#### RTL Languages (Hebrew, Arabic) & BiDi Structure Protection
+- **Prevent Structure Corruption**: Prevent English wording and numbers in RTL languages from corrupting the sentence structure. When English terms, product names, or numbers are embedded within Hebrew or Arabic sentences, structure the phrasing carefully so the bidirectional flow does not break, flip words, or displace punctuation marks (e.g. periods, colons, brackets, or commas jumping to the wrong side of the line).
+- **Follow Grammar Rules**: Follow the target language's grammar rules strictly — ensuring correct noun-adjective agreement, correct gender inflection, verb conjugations, and natural native sentence order.
+- **Gender-Neutral Instructions**: Use gender-neutral language where possible (e.g., infinitive verbs or plural forms in Hebrew and Arabic).
+- **Avoid Mechanical Literal Translations**: Restructure phrases so that they read fluently and idiomatically to native speakers.
 
 #### German
-- Watch for compound word length
+- Watch for compound word length and line-breaking
 - Use formal "Sie" register
 - Keep technical terms in English where commonly used
 
@@ -108,21 +110,31 @@ For each target language, apply these rules:
 - Use simplified characters (not traditional)
 - Keep English technical terms where standard
 
+---
+
 ### Step 5: Write Translated Files
 
 For wiki files, write to BOTH locations:
 1. `wiki/{lang}/{topic}.md` (source of truth)
-2. `frontend/public/wiki/{lang}/{topic}.md` (public copy)
+2. `apps/web/public/wiki/{lang}/{topic}.md` (or `frontend/public/wiki/{lang}/{topic}.md`)
 
 For JSON files, edit the existing locale file directly.
 
-### Step 6: Validate
+---
 
-After translation:
-1. Validate JSON syntax: `npx -y jsonlint frontend/src/locales/{lang}.json`
-2. Check markdown rendering (no broken syntax)
-3. Verify all placeholders are preserved
-4. Ensure consistent terminology across translations
+### Step 6: Post-Translation Scan & Validation
+
+**Mandatory Quality Scan**: After each translation, thoroughly scan the translated files and fix:
+1. **Typos & Miswording**: Correct spelling errors, mistranslations, or awkward vocabulary choices.
+2. **Broken Sentences**: Fix severed lines, hanging clauses, or incomplete thoughts resulting from translation length changes.
+3. **Grammar Mistakes**: Ensure strict adherence to grammatical rules, including subject-verb agreement, gender inflections, tense consistency, and proper preposition/particle usage.
+4. **Incorrect Meaning**: Verify that the translation faithfully and accurately conveys the intended functionality and meaning of the original English source text without omission or distortion.
+5. **RTL Layout Integrity**: Verify that embedded English words, numbers, and punctuation do not corrupt the visual flow or word order in Hebrew and Arabic.
+6. **Technical Syntax & Integrity**:
+   - Validate JSON syntax: ensure valid JSON formatting with no trailing commas or unescaped characters.
+   - Verify all placeholders (`{name}`, `{{count}}`, etc.) are preserved exactly as in the source.
+   - Check markdown rendering (no broken headers, unclosed formatting marks, or corrupted tables).
+   - Ensure consistent terminology across all translations in the application.
 
 ---
 
@@ -137,11 +149,12 @@ Rules:
 - Preserve all markdown formatting
 - Keep code snippets, file paths, and commands in English
 - Maintain friendly, helpful tone
-- Keep technical terms in English where commonly used
+- Prevent English wording and numbers in RTL languages from corrupting the sentence structure, and follow grammar rules
+- After translating, scan the translated text and fix typos, miswording, broken sentences, grammar mistakes, and incorrect meaning
 - Adapt date formats if mentioned
 
 Source file: wiki/en/{topic}.md
-Target files: wiki/{lang}/{topic}.md AND frontend/public/wiki/{lang}/{topic}.md
+Target files: wiki/{lang}/{topic}.md AND apps/web/public/wiki/{lang}/{topic}.md
 ```
 
 ### For JSON Locale Keys
@@ -151,13 +164,14 @@ Translate the following DressApp UI strings from English to {language}.
 
 Rules:
 - Translate only the values, not the keys
-- Preserve all placeholders (e.g., {name}, {{count}})
+- Preserve all placeholders exactly (e.g., {name}, {{count}})
 - Keep markdown formatting (e.g., **bold**)
-- Maintain 4-space JSON indent
-- Use gender-neutral language for Hebrew and Arabic
+- Prevent English wording and numbers in RTL languages from corrupting the sentence structure, and follow grammar rules
+- After translating, scan the translated text and fix typos, miswording, broken sentences, grammar mistakes, and incorrect meaning
+- Maintain proper JSON indent and valid syntax
 
-Source: frontend/src/locales/en.json (keys: {key_list})
-Target: frontend/src/locales/{lang}.json
+Source: apps/web/src/locales/en.json (keys: {key_list})
+Target: apps/web/src/locales/{lang}.json
 ```
 
 ### For User Manuals
@@ -169,7 +183,8 @@ Rules:
 - Translate all prose content
 - Keep code blocks, file paths, and commands in English
 - Maintain document structure and section numbering
-- Keep technical terms in English where standard
+- Prevent English wording and numbers in RTL languages from corrupting the sentence structure, and follow grammar rules
+- After translating, scan the translated text and fix typos, miswording, broken sentences, grammar mistakes, and incorrect meaning
 - Use formal register appropriate for the language
 
 Source: User-manual.md
@@ -183,9 +198,10 @@ Target: User-manual_{lang}.md (if applicable)
 When translating to multiple languages at once:
 
 1. Read the English source file once
-2. For each language, create a separate translation task
-3. Write all translations in parallel when possible
-4. Validate all files after completion
+2. For each language, apply the language-specific and RTL rules
+3. Perform the post-translation scan on each language output
+4. Write all translations
+5. Validate all files after completion
 
 Example batch command:
 ```
@@ -199,49 +215,17 @@ ar, de, es, fr, he, hi, it, ja, nl, pt, ru, zh
 
 Before completing translation:
 
+- [ ] English wording and numbers in RTL languages (Hebrew, Arabic) do not corrupt sentence structure
+- [ ] Target language grammar rules followed strictly (agreement, tenses, gender, syntax)
+- [ ] Post-translation scan completed: free of typos, miswording, broken sentences, grammar mistakes, and incorrect meaning
 - [ ] All markdown formatting preserved
-- [ ] Code blocks kept in English
-- [ ] Placeholders preserved exactly
-- [ ] Technical terms consistent
-- [ ] Tone is friendly and helpful
-- [ ] RTL languages use gender-neutral forms
-- [ ] JSON files are valid
-- [ ] Both wiki locations updated (wiki/ and frontend/public/wiki/)
-- [ ] No untranslated strings left behind
-
----
-
-## Common Patterns
-
-### Help Menu Keys (Layer 1)
-Pattern: `help.{topic}_title`, `help.{topic}_p1`, `help.{topic}_step1` through `step6`
-
-### Wiki File Structure
-```markdown
-# Topic Title
-
-Brief overview paragraph.
-
-## Prerequisites
-- Requirement 1
-- Requirement 2
-
-## Step-by-Step Instructions
-### Step 1: Action
-Description...
-
-### Step 2: Action
-Description...
-
-## Expected Results
-What the user should see...
-
-## Troubleshooting
-Common issues and solutions...
-
-## Limitations
-Known constraints...
-```
+- [ ] Code blocks and technical paths kept in English
+- [ ] Placeholders preserved exactly (e.g. `{var}`, `{{var}}`)
+- [ ] Technical terms consistent across modules
+- [ ] Tone is friendly, helpful, and natural
+- [ ] JSON files validated and free of syntax errors
+- [ ] Both wiki locations updated (`wiki/` and `apps/web/public/wiki/`)
+- [ ] No untranslated strings or English fragments left behind in target text
 
 ---
 
@@ -256,8 +240,9 @@ After completing translation, report:
 **Languages**: {list_of_languages}
 **Files Updated**:
 - wiki/{lang}/{topic}.md (x12)
-- frontend/public/wiki/{lang}/{topic}.md (x12)
-- frontend/src/locales/{lang}.json (if applicable)
+- apps/web/public/wiki/{lang}/{topic}.md (x12)
+- apps/web/src/locales/{lang}.json (if applicable)
 
-**Validation**: All files validated successfully
+**Quality Scan**: Verified free of typos, miswording, broken sentences, grammar mistakes, incorrect meaning, and RTL structure corruption.
+**Validation**: All files validated successfully.
 ```

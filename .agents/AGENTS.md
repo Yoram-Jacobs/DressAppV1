@@ -56,7 +56,7 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 
 | Command | Skill | Description |
 |---------|-------|-------------|
-| `/translate` | [translator](skills/translator/SKILL.md) | Translate markdown, JSON locales, and user manuals into all 13 languages |
+| `/translate` | [translator](skills/translator/SKILL.md) | Translate markdown, JSON locales, and user manuals into all 13 languages with RTL protection and post-scan quality assurance |
 | `/prune` | [codebase-pruning](skills/codebase-pruning/SKILL.md) | Deep codebase pruning and dead-code elimination |
 | `/strategy` | [strategy-consultant](skills/strategy-consultant/SKILL.md) | Strategic analysis and decision-making framework |
 | `/i18n` | [i18next-localizer](skills/i18next-localizer/SKILL.md) | UI/UX inspection across 12 languages |
