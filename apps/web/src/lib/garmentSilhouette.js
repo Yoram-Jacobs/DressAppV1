@@ -405,6 +405,7 @@ export function buildSilhouetteShell({
 
   const colMid = (minCol + maxCol) / 2;
   let waistCenterCol = colMid;
+  let sWaistSkirt = 1.0;
   let sCorr;
   if (isStandalone) {
     sCorr = 1.0;
@@ -457,6 +458,7 @@ export function buildSilhouetteShell({
     waistCenterCol = topCenters.length ? percentile(topCenters, 0.50) : colMid;
     const waistHalfWorld = Math.max(1e-3, 0.5 * waistCols * dxUniform);
     const sWaist = reqWaistHalf / waistHalfWorld;
+    sWaistSkirt = sWaist;
 
     // Check hips clearance ONLY in the pelvic/hip zone (20% to 50% down the fabric height).
     // Never include the narrow top waistband rows, which would artificially inflate the scale!
@@ -478,7 +480,7 @@ export function buildSilhouetteShell({
     }
     const maxHipClear = hipClearance.length ? Math.max(...hipClearance) : sWaist;
     // Bounded hip clearance: waistband fit dominates to ensure the skirt sits tightly on avatar waist
-    const sHipBounded = Math.min(sWaist * 1.10, maxHipClear);
+    const sHipBounded = Math.min(sWaist * 1.05, maxHipClear);
     sCorr = clamp(Math.max(sWaist, sHipBounded), 0.45, 2.20);
   } else if (isBottom) {
     // Bottoms: align waistband width with avatar waist measurement (waistTorso.rx + layerOffset)
@@ -608,7 +610,10 @@ export function buildSilhouetteShell({
       if (isSkirt && !isStandalone) {
         const tSkirt = clamp((yTop - y) / Math.max(0.01, hWorld), 0, 1);
         const rowMid = waistCenterCol * (1 - tSkirt) + colMid * tSkirt;
-        x = (col - rowMid) * dx;
+        // Skirt waistband sits tightly on avatar waist measurement without doubling:
+        // If sCorr was scaled up for hip clearance, gently taper the top waistband rows to strictly adhere to sWaist
+        const waistFitFactor = tSkirt < 0.15 ? (sWaistSkirt / sCorr) + (1 - sWaistSkirt / sCorr) * (tSkirt / 0.15) : 1.0;
+        x = (col - rowMid) * dx * waistFitFactor;
       } else if (isBottom && !isStandalone && y >= yCrotchBody) {
         // Taper pants smoothly above pelvis to align with avatar waist measurement (no shoulder-wide cylinder)
         const tWaist = clamp((y - yCrotchBody) / Math.max(0.01, yTop - yCrotchBody), 0, 1);
@@ -654,12 +659,17 @@ export function buildSilhouetteShell({
         bodyRzFront = (leg.rzFront || leg.r) + layerOffset;
         bodyRzBack = (leg.rzBack || leg.r) + layerOffset;
       } else if (isSkirt) {
-        const waistRzFront = ((torso ? torso.rzFront : null) || 0.118) + layerOffset;
-        const waistRzBack = ((torso ? torso.rzBack : null) || 0.065) + layerOffset;
+        // Skirt covers torso, hips and buttocks down to the hem.
+        // Above the pelvis (y >= 0.84), back depth follows the glute profile (avatar glutes reach z = -0.101m)
+        const baseRzFront = ((torso ? torso.rzFront : null) || 0.095) + layerOffset;
+        // Guarantee ample back clearance across the buttocks region (y between 0.80 and 1.02)
+        const buttockClearance = (y <= 1.02 && y >= 0.80) ? 0.138 : 0.095;
+        const baseRzBack = Math.max(((torso ? torso.rzBack : null) || 0.095), buttockClearance) + layerOffset;
+
         // Below the pelvis (y < 0.84), flare depth proportionally to skirt silhouette flare
         const flareProgress = clamp((0.84 - y) / Math.max(0.01, 0.84 - yBottom), 0, 1);
-        bodyRzFront = waistRzFront + flareProgress * Math.max(0, 0.32 * halfWorld - waistRzFront);
-        bodyRzBack = waistRzBack + flareProgress * Math.max(0, 0.30 * halfWorld - waistRzBack);
+        bodyRzFront = baseRzFront + flareProgress * Math.max(0, 0.32 * halfWorld - baseRzFront);
+        bodyRzBack = baseRzBack + flareProgress * Math.max(0, 0.32 * halfWorld - baseRzBack);
       } else if (isStandalone) {
         // Uniform depth for standalone view to prevent multi-run fold/rib distortion
         bodyRzFront = Math.min(0.065, Math.max(0.035, 0.20 * halfWorld));
@@ -679,7 +689,7 @@ export function buildSilhouetteShell({
       const ampFront = Math.min(bodyRzFront, halfWorld * 1.05 + 0.012);
       const ampBack = Math.min(bodyRzBack, halfWorld * 1.05 + 0.012);
 
-      const isBodySpan = !isSkirt && !isStandalone && halfWorld >= torso.rx * 0.82;
+      const isBodySpan = !isStandalone && (halfWorld >= torso.rx * 0.80 || isSkirt);
       const iStart = Math.max(0, Math.ceil(a + 0.02));
       const iEnd = Math.min(nx, Math.floor(b - 0.02));
 

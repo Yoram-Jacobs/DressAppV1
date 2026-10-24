@@ -25,11 +25,11 @@ export const TORSO_PROFILE_FEMALE = [
   { y: 1.42, rx: 0.195, cz: 0.020, rz: 0.095, rzFront: 0.095, rzBack: 0.065 }, // Shoulder line / clavicle
   { y: 1.36, rx: 0.235, cz: 0.025, rz: 0.125, rzFront: 0.125, rzBack: 0.075 }, // Upper chest
   { y: 1.25, rx: 0.238, cz: 0.048, rz: 0.155, rzFront: 0.155, rzBack: 0.068 }, // Bust peak (front chest reaches forward, back is flat thoracic spine - NO bust on back!)
-  { y: 1.15, rx: 0.222, cz: 0.050, rz: 0.128, rzFront: 0.128, rzBack: 0.062 }, // Under-bust
-  { y: 1.05, rx: 0.212, cz: 0.046, rz: 0.118, rzFront: 0.118, rzBack: 0.065 }, // Natural waist
-  { y: 0.95, rx: 0.226, cz: 0.035, rz: 0.125, rzFront: 0.088, rzBack: 0.118 }, // Upper hips / glutes (glutes extend backward)
-  { y: 0.84, rx: 0.230, cz: 0.030, rz: 0.120, rzFront: 0.082, rzBack: 0.095 }, // Pelvis / crotch
-  { y: 0.65, rx: 0.245, cz: 0.025, rz: 0.140, rzFront: 0.090, rzBack: 0.105 }, // Upper thigh flare (skirts/dresses)
+  { y: 1.15, rx: 0.180, cz: 0.050, rz: 0.128, rzFront: 0.128, rzBack: 0.062 }, // Under-bust
+  { y: 1.05, rx: 0.142, cz: 0.046, rz: 0.118, rzFront: 0.096, rzBack: 0.096 }, // Natural waist (true point cloud rx: 0.142m, 28.4cm coronal span)
+  { y: 0.95, rx: 0.175, cz: 0.025, rz: 0.130, rzFront: 0.088, rzBack: 0.130 }, // Upper hips / glutes (glutes extend to z = -0.101m)
+  { y: 0.84, rx: 0.170, cz: 0.020, rz: 0.120, rzFront: 0.082, rzBack: 0.115 }, // Pelvis / crotch
+  { y: 0.65, rx: 0.205, cz: 0.025, rz: 0.140, rzFront: 0.090, rzBack: 0.110 }, // Upper thigh flare (skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
@@ -37,11 +37,11 @@ export const TORSO_PROFILE_MALE = [
   { y: 1.48, rx: 0.225, cz: 0.015, rz: 0.115, rzFront: 0.115, rzBack: 0.090 }, // Shoulder line / clavicle
   { y: 1.42, rx: 0.260, cz: 0.020, rz: 0.140, rzFront: 0.140, rzBack: 0.100 }, // Shoulders / upper chest
   { y: 1.30, rx: 0.250, cz: 0.030, rz: 0.155, rzFront: 0.155, rzBack: 0.095 }, // Chest / pecs peak
-  { y: 1.18, rx: 0.240, cz: 0.038, rz: 0.130, rzFront: 0.130, rzBack: 0.080 }, // Rib cage
-  { y: 1.08, rx: 0.235, cz: 0.040, rz: 0.120, rzFront: 0.120, rzBack: 0.078 }, // Waist
-  { y: 0.96, rx: 0.245, cz: 0.038, rz: 0.135, rzFront: 0.088, rzBack: 0.125 }, // Upper hips / glutes
-  { y: 0.86, rx: 0.250, cz: 0.032, rz: 0.130, rzFront: 0.085, rzBack: 0.115 }, // Pelvis / crotch
-  { y: 0.70, rx: 0.245, cz: 0.025, rz: 0.135, rzFront: 0.085, rzBack: 0.105 }, // Thigh flare
+  { y: 1.18, rx: 0.185, cz: 0.038, rz: 0.130, rzFront: 0.130, rzBack: 0.080 }, // Rib cage
+  { y: 1.08, rx: 0.150, cz: 0.042, rz: 0.120, rzFront: 0.108, rzBack: 0.098 }, // Waist (true point cloud rx: 0.150m, 30cm coronal span)
+  { y: 0.96, rx: 0.180, cz: 0.025, rz: 0.135, rzFront: 0.088, rzBack: 0.135 }, // Upper hips / glutes (glutes extend to z = -0.114m)
+  { y: 0.86, rx: 0.182, cz: 0.020, rz: 0.130, rzFront: 0.085, rzBack: 0.118 }, // Pelvis / crotch
+  { y: 0.70, rx: 0.205, cz: 0.025, rz: 0.135, rzFront: 0.085, rzBack: 0.110 }, // Thigh flare
 ];
 
 export const LEG_PROFILE_FEMALE = [

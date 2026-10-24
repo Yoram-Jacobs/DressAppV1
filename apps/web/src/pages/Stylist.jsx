@@ -869,7 +869,7 @@ export default function Stylist() {
           if (!isAlreadyShowingThisProp && !userDismissedDetail) {
             setSelectedOutfitForDetail(proposalToOutfit(matchingProp, activeDateStr));
           }
-        } else if (!selectedOutfitForDetail && !userDismissedDetail) {
+        } else if (!selectedOutfitForDetail && !userDismissedDetail && canAccessScheduler) {
           generateDailyProposalAction(false, 'daily', activeDateStr).then(prop => {
             if (prop && (prop.items || []).length > 0) {
               setSelectedOutfitForDetail(proposalToOutfit(prop, prop?.date || activeDateStr));
@@ -892,7 +892,7 @@ export default function Stylist() {
           setSelectedOutfitForDetail(proposalToOutfit(matchingProp, activeDateStr));
         } else if (dailyProposal && (dailyProposal.items || []).length > 0) {
           setSelectedOutfitForDetail(proposalToOutfit(dailyProposal, dailyProposal.date || activeDateStr));
-        } else {
+        } else if (canAccessScheduler) {
           generateDailyProposalAction(false, 'daily', activeDateStr).then(prop => {
             if (prop && (prop.items || []).length > 0) {
               setSelectedOutfitForDetail(proposalToOutfit(prop, prop?.date || activeDateStr));

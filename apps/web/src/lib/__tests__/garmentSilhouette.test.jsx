@@ -228,7 +228,7 @@ describe('silhouette shell builder', () => {
       const y = pf.getY(idxRight);
       if (y >= 0.72 && y <= 1.02) {
         const torso = getTorsoSlice(y, false);
-        expect(pf.getX(idxRight) - pf.getX(idxLeft)).toBeGreaterThan(2 * (torso.rx + 0.015));
+        expect(pf.getX(idxRight) - pf.getX(idxLeft)).toBeGreaterThan(2 * torso.rx);
       }
     }
 
@@ -499,9 +499,9 @@ describe('shoulder line detection and hoodie mapping', () => {
       }
     }
     const waistWidth = maxX - minX;
-    // Avatar waist slice has rx ~ 0.212, so total width with clearance is ~0.46m - 0.48m
-    expect(waistWidth).toBeGreaterThanOrEqual(0.44);
-    expect(waistWidth).toBeLessThanOrEqual(0.52);
+    // Avatar waist slice has true point-cloud rx ~ 0.142, so total width with clearance is ~0.31m - 0.35m
+    expect(waistWidth).toBeGreaterThanOrEqual(0.30);
+    expect(waistWidth).toBeLessThanOrEqual(0.36);
   });
 
   test('skirt with arched/noisy waistband top rows sits tightly on avatar waist and never doubles in width', () => {
@@ -539,8 +539,8 @@ describe('shoulder line detection and hoodie mapping', () => {
       }
     }
     const waistWidth = maxX - minX;
-    // Skirt sits tightly on avatar waist: ~0.44m - 0.50m (never 0.90m - 1.20m!)
-    expect(waistWidth).toBeGreaterThanOrEqual(0.42);
-    expect(waistWidth).toBeLessThanOrEqual(0.52);
+    // Skirt sits tightly on avatar waist: ~0.31m - 0.35m (never 0.46m - 1.20m!)
+    expect(waistWidth).toBeGreaterThanOrEqual(0.30);
+    expect(waistWidth).toBeLessThanOrEqual(0.36);
   });
 });

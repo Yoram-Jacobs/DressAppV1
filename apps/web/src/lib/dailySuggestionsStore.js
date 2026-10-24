@@ -4,9 +4,48 @@
  * Prevents continuous GET re-fetching on navigation returns.
  */
 import { useSyncExternalStore } from 'react';
-import { api } from '@/lib/api';
+import { api, userStore } from '@/lib/api';
 
 const FRESH_MS = 15 * 60 * 1000; // 15 minutes cache window
+
+/**
+ * Check if the user has access to daily proposals/scheduler based on subscription tier,
+ * active trial, or tester/admin roles. Matches backend check_scheduler_access logic.
+ */
+export function hasDailyProposalAccess(user) {
+  if (!user) return false;
+  const sub = user.subscription || {};
+  const isActive = Boolean(sub.is_active);
+  const planType = (sub.plan_type || 'free').toLowerCase();
+  const tier = (sub.tier || 'free').toLowerCase();
+  const isTester = Boolean(sub.is_tester || planType === 'tester' || user.roles?.includes('tester'));
+  const isAdmin = Boolean(user.roles?.includes('admin'));
+  if (isTester || isAdmin) return true;
+
+  // 1. Check active trial in trial_info
+  const trial = user.trial_info || {};
+  if (trial.is_active && trial.expires_at) {
+    try {
+      const exp = new Date(trial.expires_at).getTime();
+      if (!Number.isNaN(exp) && exp > Date.now()) return true;
+    } catch { /* ignore */ }
+  }
+
+  // 2. Check active paid subscription
+  if (isActive && planType !== 'free') {
+    if (sub.expires_at) {
+      try {
+        const exp = new Date(sub.expires_at).getTime();
+        if (!Number.isNaN(exp) && exp <= Date.now()) return false;
+      } catch { /* ignore */ }
+    }
+    if (['pro', 'manager', 'business', 'professional'].includes(tier) ||
+        ['pro', 'manager', 'business', 'professional'].includes(planType)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 let _state = {
   proposals: [],
@@ -16,6 +55,7 @@ let _state = {
   lastSync: 0,
   loading: false,
   error: null,
+  accessDenied: false,
 };
 
 const _listeners = new Set();
@@ -46,11 +86,18 @@ export const dailySuggestionsStore = {
       return _state;
     }
     _set({ loading: true, error: null });
+
+    const currentUser = userStore?.get?.();
+    const canAccessProposal = !_state.accessDenied && hasDailyProposalAccess(currentUser);
+
     try {
       const [dailyPropRes, calStatus, notifRes, calEventsRes] = await Promise.allSettled([
-        api.getDailyProposal
+        canAccessProposal && api.getDailyProposal
           ? api.getDailyProposal().catch((err) => {
-              if (err?.response?.status === 403) return null;
+              if (err?.response?.status === 403) {
+                _state.accessDenied = true;
+                return null;
+              }
               throw err;
             })
           : Promise.resolve(null),
@@ -85,37 +132,57 @@ export const dailySuggestionsStore = {
   },
 
   async act(action, proposalId, date) {
+    const currentUser = userStore?.get?.();
+    if (!hasDailyProposalAccess(currentUser)) return null;
+
     if (api.actOnDailyProposal) {
-      const updated = await api.actOnDailyProposal(action, proposalId, date);
-      if (updated) {
-        if (action === 'wear') {
-          _set({
-            proposals: [updated, ...(_state.proposals || []).filter(p => p.id !== updated.id)],
-            dailyProposal: updated,
-          });
-        } else {
-          _set({
-            proposals: _state.proposals.map(p => (p.id === updated.id ? updated : p)),
-            dailyProposal: updated,
-          });
+      try {
+        const updated = await api.actOnDailyProposal(action, proposalId, date);
+        if (updated) {
+          if (action === 'wear') {
+            _set({
+              proposals: [updated, ...(_state.proposals || []).filter(p => p.id !== updated.id)],
+              dailyProposal: updated,
+            });
+          } else {
+            _set({
+              proposals: _state.proposals.map(p => (p.id === updated.id ? updated : p)),
+              dailyProposal: updated,
+            });
+          }
         }
+        return updated;
+      } catch (err) {
+        if (err?.response?.status === 403) {
+          _set({ accessDenied: true });
+        }
+        throw err;
       }
-      return updated;
     }
   },
 
   async generate(force = true, occasion = 'daily', date = null) {
+    const currentUser = userStore?.get?.();
+    if (!hasDailyProposalAccess(currentUser)) return null;
+
     if (api.generateDailyProposal) {
-      const targetDate = date || _state.dailyProposal?.date;
-      const proposal = await api.generateDailyProposal(force, occasion, targetDate);
-      if (proposal) {
-        const nextProps = [proposal, ...(_state.proposals || []).filter(p => p.id !== proposal.id && p.date !== proposal.date)];
-        _set({
-          proposals: nextProps,
-          dailyProposal: proposal,
-        });
+      try {
+        const targetDate = date || _state.dailyProposal?.date;
+        const proposal = await api.generateDailyProposal(force, occasion, targetDate);
+        if (proposal) {
+          const nextProps = [proposal, ...(_state.proposals || []).filter(p => p.id !== proposal.id && p.date !== proposal.date)];
+          _set({
+            proposals: nextProps,
+            dailyProposal: proposal,
+          });
+        }
+        return proposal;
+      } catch (err) {
+        if (err?.response?.status === 403) {
+          _set({ accessDenied: true });
+        }
+        throw err;
       }
-      return proposal;
     }
   },
 
@@ -140,6 +207,7 @@ export const dailySuggestionsStore = {
       lastSync: 0,
       loading: false,
       error: null,
+      accessDenied: false,
     };
     _notify();
   },
