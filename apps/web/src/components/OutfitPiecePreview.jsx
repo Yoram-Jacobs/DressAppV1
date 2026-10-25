@@ -230,7 +230,7 @@ export default function OutfitPiecePreview({
     const morphKey = Object.entries(morphInfluences)
       .map(([k, v]) => `${k}:${Number(v || 0).toFixed(2)}`)
       .join('|');
-    return `v6_prop_${isMale ? 'M' : 'F'}_${effectiveSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(rawMeasurements?.height) || 170}_${morphKey}`;
+    return `v7_prop_${isMale ? 'M' : 'F'}_${effectiveSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(rawMeasurements?.height) || 170}_${morphKey}`;
   }, [isMale, effectiveSkinColor, hairProps.color, hairProps.roughness, rawMeasurements?.height, morphInfluences]);
 
   const [snapshotUrl, setSnapshotUrl] = useState(() => getCachedSnapshot(avatarSignature));

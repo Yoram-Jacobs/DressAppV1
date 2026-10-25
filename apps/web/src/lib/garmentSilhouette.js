@@ -692,11 +692,14 @@ export function buildSilhouetteShell({
           const halfCols = Math.max(1, (legRuns[k][1] - legRuns[k][0]) / 2);
           // Scale leg so it wraps the avatar limb while strictly preventing inner cuffs from crossing x = 0 (trouser crunch)
           const targetLegRadius = (leg.r + layerOffset) * 1.05;
-          const maxScaleNoOverlap = Math.max(0.4, (leg.cx - 0.008) / Math.max(1e-3, halfCols * dx));
-          const legScale = clamp(targetLegRadius / Math.max(1e-3, halfCols * dx), 0.5, Math.min(1.35, maxScaleNoOverlap));
+          const maxScaleNoOverlap = Math.max(0.4, (leg.cx - 0.022) / Math.max(1e-3, halfCols * dx));
+          const legScale = clamp(targetLegRadius / Math.max(1e-3, halfCols * dx), 0.5, Math.min(1.25, maxScaleNoOverlap));
           const side = k === 0 ? -1 : 1;
           const xLeg = side * leg.cx + (col - ck) * dx * legScale;
-          x = xPelvisBase * (1 - blend) + xLeg * blend;
+          // Smooth monotonic outer contour: outer hip must not flare beyond pelvis width
+          const maxOuter = Math.max(targetPelvisHalf, leg.cx + targetLegRadius);
+          const clampedLegX = clamp(xLeg, -maxOuter, maxOuter);
+          x = xPelvisBase * (1 - blend) + clampedLegX * blend;
         } else {
           x = xPelvisBase;
         }
@@ -743,9 +746,9 @@ export function buildSilhouetteShell({
         bodyRzBack = Math.max(bodyRzBack, 0.45 * halfWorld);
       }
 
-      const isBodySpan = !isStandalone && (halfWorld >= torso.rx * 0.78 || isSkirt);
+      const isBodySpan = !isStandalone && (halfWorld >= torso.rx * 0.78 || isSkirt || (!isBottom && y >= 1.38));
       // Sleeves & narrow parts: cap depth so sleeves are cylindrical arm tubes, not fat barrels.
-      // Do NOT clamp the torso trunk (isBodySpan) so chest, belly, and scapulae have full clearance without penetration.
+      // Do NOT clamp the torso trunk or shoulders (isBodySpan) so chest, belly, and scapulae have full clearance without penetration.
       const ampFront = isBodySpan ? bodyRzFront : Math.min(bodyRzFront, halfWorld * 1.05 + 0.012);
       const ampBack = isBodySpan ? bodyRzBack : Math.min(bodyRzBack, halfWorld * 1.05 + 0.012);
 
@@ -759,7 +762,7 @@ export function buildSilhouetteShell({
         // Broad cylindrical drape across the torso/thigh span prevents premature narrowing and skin holes
         const hhFront = (isBodySpan ? Math.pow(s, 0.30) : Math.sqrt(s)) * edgeTaper;
         // Flat anatomical back drape across thoracic spine and scapulae
-        const hhBack = (isBodySpan ? Math.pow(s, 0.26) : Math.pow(s, 0.38)) * edgeTaper;
+        const hhBack = (isBodySpan ? Math.pow(s, 0.08) : Math.pow(s, 0.20)) * edgeTaper;
         offF[j * vw + i] = ampFront * hhFront;
         offB[j * vw + i] = ampBack * hhBack;
       }
@@ -827,14 +830,15 @@ export function buildSilhouetteShell({
     const lo = i;
     const hi = i + 1;
 
-    // For pants/bottoms: do not bridge across the crotch void between two separated legs
+    // For pants/bottoms: do not bridge across the crotch void ONLY when BOTH adjacent rows have separated legs
     if (isBottom) {
+      const currRuns = runsByRow[j];
       const nextRuns = runsByRow[j + 1];
-      if (nextRuns && nextRuns.length >= 2) {
-        // If next row has >= 2 leg runs, check if column interval [lo, hi] falls entirely in the crotch gap
-        const r0End = nextRuns[0][1];
-        const r1Start = nextRuns[1][0];
-        if (lo >= r0End && hi <= r1Start) return false;
+      if (currRuns && currRuns.length >= 2 && nextRuns && nextRuns.length >= 2) {
+        // When both rows are separated legs, do not bridge the space between leg 0 and leg 1
+        const gapStart = Math.min(currRuns[0][1], nextRuns[0][1]);
+        const gapEnd = Math.max(currRuns[1][0], nextRuns[1][0]);
+        if (lo >= gapStart && hi <= gapEnd) return false;
       }
     }
 
