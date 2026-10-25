@@ -5766,6 +5766,29 @@
       "oauthTip": "Nota: Quando colleghi Google Calendar, Google potrebbe mostrare una schermata \"App non verificata\". Fai clic su \"Avanzate\" e poi su \"Vai a DressApp\" per approvare l'accesso."
     }
   },
+  "stylistTour": {
+    "step1": {
+      "badge": "Passo 1 di 4 • La tua capsula iniziale",
+      "title": "Abbina e combina capi singoli",
+      "desc": "I tuoi capi iniziali sono organizzati in righe per top, pantaloni/gonne e scarpe. Scorri o clicca sulle frecce per testare combinazioni adatte alle tue proporzioni personali."
+    },
+    "step2": {
+      "badge": "Passo 2 di 4 • Mix IA con un clic",
+      "title": "Generazione istantanea di outfit con l'IA",
+      "desc": "Clicca su \"Genera nuovo outfit\" in qualsiasi momento. DressApp valuta teoria dei colori, stagionalità e proporzioni corporee per creare un look armonioso in pochi secondi."
+    },
+    "step3": {
+      "badge": "Passo 3 di 4 • Sincronizzazione agenda e impegni",
+      "title": "Vestiti per la tua vera giornata",
+      "desc": "Attiva \"Agenda di oggi\" per abbinare gli outfit alle riunioni di Google Calendar, oppure scegli un'occasione (Lavoro, Casual, Festa, Palestra) per un dress code su misura."
+    },
+    "step4": {
+      "badge": "Passo 4 di 4 • Salva ed esplora",
+      "title": "Salva outfit e visita il tuo armadio",
+      "desc": "Ti piace un outfit? Clicca su \"Salva outfit\" per aggiungerlo al tuo Lookbook. Quando vuoi fotografare e aggiungere i tuoi vestiti reali, vai al tuo Armadio!",
+      "closetBtn": "Esplora il mio armadio"
+    }
+  },
   "dressing_room_3d": {
     "title": "Camerino virtuale 3D",
     "subtitle": "Studio di prova virtuale interattivo a 360°",

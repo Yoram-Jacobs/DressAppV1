@@ -5775,6 +5775,29 @@
       "oauthTip": "Remarque : Lors de la connexion à Google Calendar, Google peut afficher un écran \"Application non vérifiée\". Cliquez sur \"Paramètres avancés\" puis sur \"Accéder à DressApp\" pour approuver l'accès."
     }
   },
+  "stylistTour": {
+    "step1": {
+      "badge": "Étape 1 sur 4 • Votre garde-robe capsule initiale",
+      "title": "Associez et combinez vos pièces",
+      "desc": "Vos vêtements de départ sont organisés en hauts, bas et chaussures. Faites glisser ou cliquez sur les flèches pour essayer différentes combinaisons adaptées à votre morphologie."
+    },
+    "step2": {
+      "badge": "Étape 2 sur 4 • Mélange IA en un clic",
+      "title": "Génération instantanée de tenues par IA",
+      "desc": "Cliquez sur « Générer une nouvelle tenue » à tout moment. DressApp évalue l'harmonie des couleurs, la saison et vos proportions pour composer un look parfait en quelques secondes."
+    },
+    "step3": {
+      "badge": "Étape 3 sur 4 • Synchronisation de l'agenda",
+      "title": "Habillez-vous selon votre journée réelle",
+      "desc": "Activez « Programme du jour » pour adapter vos tenues à vos réunions Google Calendar, ou choisissez une occasion (Travail, Décontracté, Soirée, Sport) pour un style sur mesure."
+    },
+    "step4": {
+      "badge": "Étape 4 sur 4 • Sauvegardez et explorez",
+      "title": "Enregistrez vos looks et découvrez votre dressing",
+      "desc": "Une tenue vous plaît ? Cliquez sur « Enregistrer la tenue » pour l'ajouter à votre Lookbook. Dès que vous souhaitez photographier vos vrais vêtements, rendez-vous dans votre Dressing !",
+      "closetBtn": "Explorer mon dressing"
+    }
+  },
   "dressing_room_3d": {
     "title": "Cabine d'essayage 3D",
     "subtitle": "Studio virtuel interactif d'essayage à 360°",

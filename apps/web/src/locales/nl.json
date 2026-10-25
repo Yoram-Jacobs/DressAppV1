@@ -5786,6 +5786,29 @@
       "oauthTip": "Opmerking: Bij het koppelen van Google Calendar kan Google het scherm \"Niet-geverifieerde app\" weergeven. Klik op \"Geavanceerd\" en vervolgens op \"Naar DressApp gaan\" om toegang te verlenen."
     }
   },
+  "stylistTour": {
+    "step1": {
+      "badge": "Stap 1 van 4 • Je startcapsule",
+      "title": "Mix & match losse kledingstukken",
+      "desc": "Je startkleding is ingedeeld in rijen voor bovenkleding, onderkleding en schoenen. Veeg of klik op de pijlen om combinaties te proberen die zijn afgestemd op je persoonlijke verhoudingen."
+    },
+    "step2": {
+      "badge": "Stap 2 van 4 • AI-shuffle met één klik",
+      "title": "Directe AI-outfitcreatie",
+      "desc": "Klik op elk moment op \"Nieuwe outfit genereren\". DressApp beoordeelt kleurtheorie, seizoen en je lichaamsverhoudingen om binnen enkele seconden een complete outfit samen te stellen."
+    },
+    "step3": {
+      "badge": "Stap 3 van 4 • Agenda & afsprakensynchronisatie",
+      "title": "Gekleed voor jouw echte dag",
+      "desc": "Schakel \"Agenda van vandaag\" in om outfits af te stemmen op je Google Agenda-afspraken, of kies een gelegenheid (Werk, Casual, Feest, Sport) voor passende kledingvoorschriften."
+    },
+    "step4": {
+      "badge": "Stap 4 van 4 • Opslaan & ontdekken",
+      "title": "Outfits opslaan en je kledingkast bezoeken",
+      "desc": "Blij met een outfit? Klik op \"Outfit opslaan\" om deze aan je Lookbook toe te voegen. Zodra je klaar bent om je echte kleding te fotograferen, ga je naar je Kledingkast!",
+      "closetBtn": "Mijn kledingkast ontdekken"
+    }
+  },
   "dressing_room_3d": {
     "title": "3D-paskamer",
     "subtitle": "Interactieve virtuele 360°-passtudio",

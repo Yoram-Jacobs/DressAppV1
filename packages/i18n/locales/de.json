@@ -5759,6 +5759,29 @@
       "oauthTip": "Hinweis: Beim Verbinden von Google Calendar zeigt Google möglicherweise einen Bildschirm \"Nicht verifizierte App\" an. Klicken Sie auf \"Erweitert\" und dann auf \"Zu DressApp wechseln\", um den Zugriff zu genehmigen."
     }
   },
+  "stylistTour": {
+    "step1": {
+      "badge": "Schritt 1 von 4 • Deine Starter-Kapsel",
+      "title": "Kombiniere Einzelstücke nach Wunsch",
+      "desc": "Deine Startkleidung ist in Oberteile, Unterteile und Schuhe unterteilt. Wische oder klicke auf die Pfeile, um Kombinationen passend zu deinen persönlichen Proportionen zu testen."
+    },
+    "step2": {
+      "badge": "Schritt 2 von 4 • KI-Shuffle mit einem Klick",
+      "title": "Sofortige KI-Outfit-Generierung",
+      "desc": "Klicke jederzeit auf „Neues Outfit generieren“. DressApp analysiert Farbtheorie, Saisonalität und deine Körperproportionen, um in Sekundenschnelle ein harmonisches Outfit zu kreieren."
+    },
+    "step3": {
+      "badge": "Schritt 3 von 4 • Kalender- & Termin-Synchronisierung",
+      "title": "Perfekt gekleidet für deinen Tag",
+      "desc": "Aktiviere „Heutige Agenda“, um Outfits auf deine Google-Kalender-Termine abzustimmen, oder wähle einen Anlass (Arbeit, Freizeit, Party, Sport) für passende Dresscodes."
+    },
+    "step4": {
+      "badge": "Schritt 4 von 4 • Speichern & Entdecken",
+      "title": "Outfits speichern & Kleiderschrank besuchen",
+      "desc": "Gefällt dir ein Outfit? Klicke auf „Outfit speichern“, um es deinem Lookbook hinzuzufügen. Sobald du deine eigene Kleidung fotografieren möchtest, wechsle in deinen Kleiderschrank!",
+      "closetBtn": "Meinen Kleiderschrank erkunden"
+    }
+  },
   "dressing_room_3d": {
     "title": "3D-Ankleidezimmer",
     "subtitle": "Interaktives virtuelles 360°-Anpassungsstudio",
