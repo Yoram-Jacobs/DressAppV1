@@ -5846,7 +5846,9 @@
     "chartAnalyzed": "尺码表分析成功！",
     "chartError": "无法从图片中识别尺码表，请尝试截取更清晰的图像。",
     "invalidUrl": "请输入有效的商品网址（如 https://www.zara.com/...）",
-    "addError": "添加商品到衣橱失败。"
+    "addError": "添加商品到衣橱失败。",
+    "uploadDirectTitle": "有尺码表的屏幕截图吗？",
+    "uploadDirectSubtitle": "拍摄或上传来自速卖通、Zara或任何商店的尺码表截图，AI将立即与您的身体尺寸进行匹配。"
   },
   "shoppingHub": {
     "title": "DressApp 购物中心",

@@ -479,7 +479,8 @@ export default function ShoppingHub() {
     setAnalyzingUrl(true);
     setAnalysisResult(null);
     try {
-      const data = await api.misc.analyzeUrl({
+      const analyzeUrlFn = api.misc?.analyzeUrl || api.analyzeUrl;
+      const data = await analyzeUrlFn({
         url: targetUrl,
         user_preferred_units: user?.profile?.preferred_units || 'cm',
       });

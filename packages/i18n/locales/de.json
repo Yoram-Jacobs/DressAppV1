@@ -5839,7 +5839,9 @@
     "chartAnalyzed": "Größentabelle erfolgreich ausgewertet!",
     "chartError": "Größentabelle im Bild nicht lesbar. Bitte einen schärferen Screenshot wählen.",
     "invalidUrl": "Bitte eine gültige Produkt-URL eingeben (z. B. https://www.zara.com/...)",
-    "addError": "Hinzufügen zum Kleiderschrank fehlgeschlagen."
+    "addError": "Hinzufügen zum Kleiderschrank fehlgeschlagen.",
+    "uploadDirectTitle": "Haben Sie einen Screenshot der Größentabelle?",
+    "uploadDirectSubtitle": "Machen Sie ein Foto oder laden Sie die Größentabelle von AliExpress, Zara oder einem beliebigen Shop hoch. Die KI gleicht Ihre Körpermaße sofort ab."
   },
   "shoppingHub": {
     "title": "DressApp Shopping Hub",

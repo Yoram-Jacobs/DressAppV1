@@ -48,6 +48,7 @@ Object.assign(callableStylist, stylist);
 export const api = buildApi();
 api.outfits = outfits;
 api.closet = closet;
+api.misc = misc;
 api.stylist = callableStylist;
 
 // ============================================================

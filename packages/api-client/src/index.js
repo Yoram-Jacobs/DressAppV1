@@ -74,6 +74,7 @@ export function buildApi() {
   };
   merged.outfits = outfits;
   merged.closet = closet;
+  merged.misc = misc;
 
   // Make merged.stylist both callable as a function (api.stylist(formData))
   // and accessible as a namespace (api.stylist.transcribeAudio(...)).

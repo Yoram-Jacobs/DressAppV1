@@ -5843,7 +5843,9 @@
     "chartAnalyzed": "¡Tabla de tallas analizada con éxito!",
     "chartError": "No se pudo leer la tabla en la imagen. Prueba con una captura más clara.",
     "invalidUrl": "Introduce una URL válida de producto (ej. https://www.zara.com/...)",
-    "addError": "Error al añadir la prenda al armario."
+    "addError": "Error al añadir la prenda al armario.",
+    "uploadDirectTitle": "¿Tienes una captura de la tabla de tallas?",
+    "uploadDirectSubtitle": "Toma o sube una foto de la tabla de tallas de AliExpress, Zara o cualquier tienda. La IA comparará tus medidas al instante."
   },
   "shoppingHub": {
     "title": "Centro de Compras DressApp",

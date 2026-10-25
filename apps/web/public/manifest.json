@@ -42,7 +42,7 @@
       "files": [
         {
           "name": "media",
-          "accept": ["image/*"]
+          "accept": ["image/*", "image/jpeg", "image/png", "image/webp", ".jpg", ".jpeg", ".png", ".webp"]
         }
       ]
     }

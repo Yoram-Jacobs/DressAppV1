@@ -5875,7 +5875,9 @@
     "chartAnalyzed": "Maattabel succesvol geanalyseerd!",
     "chartError": "Kon geen maattabel vinden in afbeelding. Probeer een scherpere screenshot.",
     "invalidUrl": "Voer een geldige product-URL in (bijv. https://www.zara.com/...)",
-    "addError": "Toevoegen aan kledingkast mislukt."
+    "addError": "Toevoegen aan kledingkast mislukt.",
+    "uploadDirectTitle": "Heeft u een screenshot van de maattabel?",
+    "uploadDirectSubtitle": "Maak of upload een foto van de maattabel van AliExpress, Zara of een andere winkel. AI vergelijkt direct uw lichaamsmaten."
   },
   "shoppingHub": {
     "title": "DressApp Shopping Hub",

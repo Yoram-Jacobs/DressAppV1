@@ -46,18 +46,34 @@ self.addEventListener('fetch', function(event) {
       (async function() {
         try {
           var formData = await event.request.formData();
+          var file = null;
           var mediaFiles = formData.getAll('media');
           if (!mediaFiles || mediaFiles.length === 0) {
             mediaFiles = formData.getAll('files');
           }
-          var file = mediaFiles && mediaFiles.length > 0 ? mediaFiles[0] : null;
+          if (mediaFiles && mediaFiles.length > 0 && mediaFiles[0].size > 0) {
+            file = mediaFiles[0];
+          }
+          if (!file) {
+            for (var pair of formData.entries()) {
+              var val = pair[1];
+              if (val && typeof val === 'object' && val.size > 0) {
+                file = val;
+                break;
+              }
+            }
+          }
           var sharedUrl = formData.get('url') || '';
           var sharedText = formData.get('text') || '';
           var sharedTitle = formData.get('title') || '';
 
           if (file && file.size > 0) {
             await storeSharedMedia(file);
-            return Response.redirect('/share-target?shared_media=1', 303);
+            var target = new URL('/share-target?shared_media=1', self.location.origin);
+            if (sharedUrl) target.searchParams.set('url', sharedUrl);
+            if (sharedText) target.searchParams.set('text', sharedText);
+            if (sharedTitle) target.searchParams.set('title', sharedTitle);
+            return Response.redirect(target.href, 303);
           }
 
           var target = new URL('/share-target', self.location.origin);

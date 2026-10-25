@@ -69,7 +69,8 @@ export default function ShareTarget() {
     setAddedItem(null);
 
     try {
-      const data = await api.misc.analyzeUrl({
+      const analyzeUrlFn = api.misc?.analyzeUrl || api.analyzeUrl;
+      const data = await analyzeUrlFn({
         url: targetUrl,
         title: targetTitle || undefined,
         user_preferred_units: user?.profile?.preferred_units || 'cm',
@@ -95,7 +96,8 @@ export default function ShareTarget() {
       reader.onload = async () => {
         const b64Data = reader.result.split(',')[1];
         try {
-          const chartData = await api.misc.analyzeChart({
+          const analyzeChartFn = api.misc?.analyzeChart || api.analyzeChart;
+          const chartData = await analyzeChartFn({
             chart_screenshot_b64: b64Data,
             garment_type: result?.product?.garment_type || undefined,
             store: result?.product?.brand || undefined,
@@ -104,7 +106,7 @@ export default function ShareTarget() {
           setResult((prev) => ({
             product: prev?.product || {
               url: inputUrl,
-              title: t('shareTarget.customChartTitle', { defaultValue: 'Shared Size Chart' }),
+              title: sharedTitle || t('shareTarget.customChartTitle', { defaultValue: 'Shared Size Chart' }),
               brand: prev?.product?.brand || 'Store',
               store: prev?.product?.brand || 'Store',
             },
@@ -122,7 +124,34 @@ export default function ShareTarget() {
     } catch {
       setManualUploading(false);
     }
-  }, [inputUrl, result?.product?.brand, result?.product?.garment_type, t, user?.profile?.preferred_units]);
+  }, [inputUrl, result?.product?.brand, result?.product?.garment_type, sharedTitle, t, user?.profile?.preferred_units]);
+
+  // Handle paste image from clipboard anywhere on page
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            processScreenshotFile(file);
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [processScreenshotFile]);
+
+  const handleBack = () => {
+    if (window.history?.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/shopping');
+    }
+  };
 
   // Auto-trigger when landing with shared URL/text or shared screenshot from native OS Share sheet
   useEffect(() => {
@@ -228,7 +257,7 @@ export default function ShareTarget() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="text-text-brand hover:text-dark-brand -ms-2"
           data-testid="share-target-back-btn"
         >
@@ -263,6 +292,14 @@ export default function ShareTarget() {
         </div>
 
         <CardContent className="p-5 space-y-5">
+          {/* Always mounted hidden file picker for screenshots */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleScreenshotUpload}
+          />
           {/* Link Input Section */}
           <form onSubmit={handleSubmit} className="space-y-2.5">
             <label className="text-xs font-semibold text-dark-brand block text-start" dir="auto">
@@ -361,14 +398,53 @@ export default function ShareTarget() {
 
           {/* Error Message */}
           {error && !loading && !manualUploading && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3" data-testid="share-target-error">
-              <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="font-bold text-xs text-destructive">{error}</p>
-                <p className="text-[11px] text-text-brand">
-                  {t('shareTarget.errorHint', { defaultValue: 'Tip: You can take a screenshot of the size chart on the retailer page and upload it below.' })}
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3" data-testid="share-target-error">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-bold text-xs text-destructive">{error}</p>
+                  <p className="text-[11px] text-text-brand">
+                    {t('shareTarget.errorHint', { defaultValue: 'Tip: You can take a screenshot of the size chart on the retailer page and upload it below.' })}
+                  </p>
+                </div>
+              </div>
+              <div className="pt-1">
+                <Button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full bg-primary-brand hover:bg-primary-hover text-white font-medium text-xs h-9 shadow-xs"
+                  data-testid="share-target-error-upload-btn"
+                >
+                  <Upload className="w-4 h-4 me-1.5" />
+                  {t('shareTarget.uploadScreenshot', { defaultValue: 'Upload Size Chart Screenshot' })}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Initial Direct Upload Screenshot Prompt (shown before search/result) */}
+          {!result && !error && !loading && !manualUploading && (
+            <div className="rounded-xl border border-dashed border-primary-brand/30 bg-primary-brand/5 p-4 text-center space-y-2.5" data-testid="share-target-direct-upload-card">
+              <div className="w-10 h-10 rounded-full bg-primary-brand/10 text-primary-brand flex items-center justify-center mx-auto">
+                <Camera className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-xs text-dark-brand">
+                  {t('shareTarget.uploadDirectTitle', { defaultValue: 'Have a Screenshot of the Size Chart?' })}
+                </p>
+                <p className="text-[11px] text-text-brand mt-0.5">
+                  {t('shareTarget.uploadDirectSubtitle', { defaultValue: 'Snap or select a photo of the size chart from AliExpress, Zara, or any store app. Gemini AI will match your body measurements instantly.' })}
                 </p>
               </div>
+              <Button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="bg-primary-brand hover:bg-primary-hover text-white font-medium text-xs h-9 px-4 shadow-xs"
+                data-testid="share-target-direct-upload-btn"
+              >
+                <Upload className="w-3.5 h-3.5 me-1.5" />
+                {t('shareTarget.uploadScreenshot', { defaultValue: 'Upload Size Chart Screenshot' })}
+              </Button>
             </div>
           )}
 
@@ -547,13 +623,6 @@ export default function ShareTarget() {
                   </div>
 
                   <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleScreenshotUpload}
-                    />
                     <Button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}

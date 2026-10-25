@@ -5872,7 +5872,9 @@
     "chartAnalyzed": "サイズ表の解析が完了しました！",
     "chartError": "画像からサイズ表を読み取れませんでした。より鮮明な画像をお試しください。",
     "invalidUrl": "有効な商品URLを入力してください（例: https://www.zara.com/...）",
-    "addError": "クローゼットへの追加に失敗しました。"
+    "addError": "クローゼットへの追加に失敗しました。",
+    "uploadDirectTitle": "サイズチャートのスクリーンショットはお持ちですか？",
+    "uploadDirectSubtitle": "AliExpress、Zara、またはその他の店舗のサイズ表を撮影またはアップロードしてください。AIが体型データを即座に照合します。"
   },
   "shoppingHub": {
     "title": "DressApp ショッピングハブ",

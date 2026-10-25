@@ -5868,7 +5868,9 @@
     "chartAnalyzed": "Size chart analyzed successfully!",
     "chartError": "Could not parse size chart from image. Please try a clearer screenshot.",
     "invalidUrl": "Please enter a valid product URL (e.g. https://www.zara.com/...)",
-    "addError": "Failed to add item to closet."
+    "addError": "Failed to add item to closet.",
+    "uploadDirectTitle": "Have a Screenshot of the Size Chart?",
+    "uploadDirectSubtitle": "Snap or select a photo of the size chart from AliExpress, Zara, or any store. AI matches your body measurements instantly."
   },
   "shoppingHub": {
     "title": "DressApp Shopping Hub",

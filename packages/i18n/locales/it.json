@@ -5846,7 +5846,9 @@
     "chartAnalyzed": "Tabella taglie analizzata con successo!",
     "chartError": "Impossibile leggere la tabella dall'immagine. Prova con uno screenshot più nitido.",
     "invalidUrl": "Inserisci un URL prodotto valido (es. https://www.zara.com/...)",
-    "addError": "Aggiunta al guardaroba non riuscita."
+    "addError": "Aggiunta al guardaroba non riuscita.",
+    "uploadDirectTitle": "Hai uno screenshot della tabella delle taglie?",
+    "uploadDirectSubtitle": "Scatta o carica una foto della guida alle taglie da AliExpress, Zara o qualsiasi negozio. L'IA confronterà subito le tue misure."
   },
   "shoppingHub": {
     "title": "Hub Shopping DressApp",

@@ -5839,7 +5839,9 @@
     "chartAnalyzed": "Guide des tailles analysé avec succès !",
     "chartError": "Impossible de lire le guide des tailles sur l'image. Essayez avec une capture plus nette.",
     "invalidUrl": "Veuillez entrer une URL de produit valide (ex. https://www.zara.com/...)",
-    "addError": "Échec de l'ajout au dressing."
+    "addError": "Échec de l'ajout au dressing.",
+    "uploadDirectTitle": "Vous avez une capture d'écran du guide des tailles ?",
+    "uploadDirectSubtitle": "Prenez ou sélectionnez une photo du guide des tailles d'AliExpress, Zara ou toute boutique. L'IA analyse vos mesures instantanément."
   },
   "shoppingHub": {
     "title": "Centre de Shopping DressApp",
