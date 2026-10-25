@@ -12,7 +12,6 @@ import { ShoppingFloater } from '@/components/ShoppingFloater';
 import {
   Search,
   Star,
-  Smartphone,
   Globe,
   Sparkles,
   ArrowLeft,
@@ -459,19 +458,6 @@ export default function ShoppingHub() {
     setAnalysisResult(null);
   }, []);
 
-  // Launch store in native app / external browser
-  const launchNativeApp = useCallback((store) => {
-    if (store.appScheme) {
-      window.location.href = store.appScheme;
-      setTimeout(() => {
-        // Fallback to web link if native app doesn't open
-        window.open(store.url, '_blank', 'noopener,noreferrer');
-      }, 1200);
-    } else {
-      window.open(store.url, '_blank', 'noopener,noreferrer');
-    }
-  }, []);
-
   // Auto-launch if store query param present
   useEffect(() => {
     const storeParam = searchParams.get('store');
@@ -680,20 +666,6 @@ export default function ShoppingHub() {
               </span>
             </Button>
 
-            {/* Store App - compact on mobile, full on md */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => launchNativeApp(activeBrowserStore)}
-              className="text-sky-400 hover:text-sky-300 hover:bg-slate-800 h-9 w-9 md:w-auto md:px-2.5 p-0 flex items-center justify-center text-xs font-semibold rounded-lg"
-              title={t('shoppingHub.openInApp', { defaultValue: 'Open in Store App' })}
-            >
-              <Smartphone className="w-4 h-4 md:me-1.5 shrink-0" />
-              <span className="hidden md:inline">
-                {t('shoppingHub.storeApp', { defaultValue: 'Store App' })}
-              </span>
-            </Button>
-
             {/* Size Assistant button - ALWAYS shrink-0, NEVER truncated! */}
             <Button
               variant="ghost"
@@ -889,8 +861,8 @@ export default function ShoppingHub() {
                     </div>
                   </div>
 
-                  {/* 1-Tap Launch Buttons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {/* 1-Tap Launch Button */}
+                  <div className="pt-1">
                     <Button
                       size="lg"
                       onClick={() =>
@@ -902,22 +874,7 @@ export default function ShoppingHub() {
                       <span>
                         {t('shoppingHub.openStoreWeb', {
                           store: activeBrowserStore.name,
-                          defaultValue: `Open ${activeBrowserStore.name} in Tab ↗`,
-                        })}
-                      </span>
-                    </Button>
-
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onClick={() => launchNativeApp(activeBrowserStore)}
-                      className="w-full border-border text-dark-brand text-xs font-bold h-11 rounded-xl flex items-center justify-center gap-2 hover:bg-secondary"
-                    >
-                      <Smartphone className="w-4 h-4 text-sky-500" />
-                      <span>
-                        {t('shoppingHub.openStoreApp', {
-                          store: activeBrowserStore.name,
-                          defaultValue: `Open ${activeBrowserStore.name} App 📱`,
+                          defaultValue: `Open ${activeBrowserStore.name} in Browser ↗`,
                         })}
                       </span>
                     </Button>
@@ -1110,25 +1067,75 @@ export default function ShoppingHub() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
+                <form onSubmit={handleGarmentUrlSubmit} className="space-y-2">
                   <label className="text-xs font-semibold text-dark-brand block">
                     {t('shoppingHub.checkGarmentUrl', {
-                      defaultValue: 'Have a specific garment link?',
+                      defaultValue: 'Check a Specific Garment:',
                     })}
                   </label>
-                  <Button
-                    onClick={() => {
-                      setAssistantModalOpen(false);
-                      navigate('/shopping-assistant');
-                    }}
-                    className="w-full bg-primary-brand hover:bg-primary-hover text-white text-xs font-semibold h-10 rounded-xl"
-                  >
-                    <Sparkles className="w-4 h-4 me-1.5" />
-                    {t('shoppingHub.launchUrlChecker', {
-                      defaultValue: 'Open Full Size Scanner',
-                    })}
-                  </Button>
-                </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="url"
+                      dir="ltr"
+                      value={garmentUrl}
+                      onChange={(e) => setGarmentUrl(e.target.value)}
+                      placeholder={t('shoppingHub.pasteStoreLink', {
+                        store: activeBrowserStore.name,
+                        defaultValue: `Paste product link from ${activeBrowserStore.name}...`,
+                      })}
+                      className="h-10 text-xs bg-sand/30 border-border rounded-xl"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={analyzingUrl || !garmentUrl.trim()}
+                      className="h-10 px-4 bg-primary-brand hover:bg-primary-hover text-white text-xs font-bold rounded-xl shrink-0"
+                    >
+                      {analyzingUrl ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        t('shoppingHub.analyzeGarment', { defaultValue: 'Check Size' })
+                      )}
+                    </Button>
+                  </div>
+                </form>
+
+                {analysisResult && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/60 p-3.5 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-900 truncate">
+                        {analysisResult.product?.title ||
+                          analysisResult.item?.name ||
+                          activeBrowserStore.name}
+                      </span>
+                      <Badge className="bg-emerald-600 text-white font-bold text-xs">
+                        {analysisResult.recommendation?.recommended_size ||
+                          analysisResult.recommended_size ||
+                          'Size M'}
+                      </Badge>
+                    </div>
+                    {(analysisResult.recommendation?.reasoning ||
+                      analysisResult.recommendation?.fit_summary) && (
+                      <p className="text-emerald-800 leading-relaxed">
+                        {analysisResult.recommendation.reasoning ||
+                          analysisResult.recommendation.fit_summary}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setAssistantModalOpen(false);
+                    navigate('/shopping-assistant');
+                  }}
+                  className="w-full border-border text-dark-brand hover:bg-secondary text-xs font-semibold h-10 rounded-xl"
+                >
+                  <Camera className="w-4 h-4 me-1.5 text-primary-brand" />
+                  {t('shoppingHub.launchUrlChecker', {
+                    defaultValue: 'Open Size Chart Image Scanner',
+                  })}
+                </Button>
               </div>
             </Card>
           </div>
