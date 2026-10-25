@@ -63,7 +63,7 @@ export function resampleAlphaMask(alpha, w, h, nx, ny, threshold = 110) {
  * Sub-cell accurate runs of fabric for every grid row, measured on the full
  * resolution alpha channel. Returns runsByRow[j] = [[a, b], ...] in grid columns.
  */
-export function extractRowRuns(alpha, w, h, nx, ny, threshold = 110) {
+export function extractRowRuns(alpha, w, h, nx, ny, threshold = 80) {
   const runsByRow = [];
   const minRunPx = Math.max(2, (w / nx) * 1.2);
   for (let j = 0; j <= ny; j++) {
@@ -83,7 +83,7 @@ export function extractRowRuns(alpha, w, h, nx, ny, threshold = 110) {
     const merged = [];
     px.forEach((r) => {
       const last = merged[merged.length - 1];
-      if (last && r[0] - last[1] <= Math.max(3, w * 0.03)) last[1] = r[1];
+      if (last && r[0] - last[1] <= Math.max(3, w * 0.035)) last[1] = r[1];
       else merged.push([r[0], r[1]]);
     });
     runsByRow.push(
@@ -95,6 +95,41 @@ export function extractRowRuns(alpha, w, h, nx, ny, threshold = 110) {
         ])
     );
   }
+
+  // Vertical bridge across dropped interior rows (e.g. horizontal creases, graphics, or alpha dropouts)
+  let firstFabric = 0;
+  while (firstFabric <= ny && (!runsByRow[firstFabric] || !runsByRow[firstFabric].length)) firstFabric++;
+  let lastFabric = ny;
+  while (lastFabric >= 0 && (!runsByRow[lastFabric] || !runsByRow[lastFabric].length)) lastFabric--;
+
+  for (let j = firstFabric + 1; j < lastFabric; j++) {
+    if (!runsByRow[j] || runsByRow[j].length === 0) {
+      // Find previous valid row
+      let prevJ = j - 1;
+      while (prevJ >= firstFabric && (!runsByRow[prevJ] || !runsByRow[prevJ].length)) prevJ--;
+      // Find next valid row
+      let nextJ = j + 1;
+      while (nextJ <= lastFabric && (!runsByRow[nextJ] || !runsByRow[nextJ].length)) nextJ++;
+
+      if (prevJ >= firstFabric && nextJ <= lastFabric && (nextJ - prevJ) <= 6) {
+        const t = (j - prevJ) / (nextJ - prevJ);
+        const prevRuns = runsByRow[prevJ];
+        const nextRuns = runsByRow[nextJ];
+        if (prevRuns.length === nextRuns.length) {
+          runsByRow[j] = prevRuns.map((r, k) => [
+            r[0] * (1 - t) + nextRuns[k][0] * t,
+            r[1] * (1 - t) + nextRuns[k][1] * t,
+          ]);
+        } else {
+          // If counts differ (e.g. near armpit or crotch), bridge bounding span
+          const minA = Math.min(...prevRuns.map(r => r[0])) * (1 - t) + Math.min(...nextRuns.map(r => r[0])) * t;
+          const maxB = Math.max(...prevRuns.map(r => r[1])) * (1 - t) + Math.max(...nextRuns.map(r => r[1])) * t;
+          runsByRow[j] = [[minA, maxB]];
+        }
+      }
+    }
+  }
+
   return runsByRow;
 }
 
@@ -632,16 +667,39 @@ export function buildSilhouetteShell({
         const targetRowHalf = targetHalf * (1 + 0.05 * (1 - tWaist));
         const fitScale = Math.min(1.0, targetRowHalf / Math.max(1e-3, currentHalf));
         x = (col - rMid) * dx * fitScale;
-      } else if (legRuns && blend > 0) {
-        const c0 = (legRuns[0][0] + legRuns[0][1]) / 2;
-        const c1 = (legRuns[1][0] + legRuns[1][1]) / 2;
-        const k = Math.abs(col - c0) <= Math.abs(col - c1) ? 0 : 1;
-        const ck = k === 0 ? c0 : c1;
-        const halfCols = Math.max(1, (legRuns[k][1] - legRuns[k][0]) / 2);
-        const legScale = clamp(((leg.r + layerOffset) * 1.05) / Math.max(1e-3, halfCols * dx), 0.8, 1.35);
-        const side = k === 0 ? -1 : 1;
-        const xLeg = side * leg.cx + (col - ck) * dx * legScale;
-        x = x * (1 - blend) + xLeg * blend;
+      } else if (isBottom && !isStandalone && belowCrotch) {
+        // Pelvis base taper at crotch level connects seamlessly without triangular outward flare wings
+        const crotchSlice = getTorsoSlice(yCrotchBody, isMale);
+        const targetPelvisHalf = (crotchSlice.rx + layerOffset) * 1.05;
+        let rMinA = Infinity, rMaxB = -Infinity;
+        if (runs && runs.length) {
+          runs.forEach(([a, b]) => {
+            if (a < rMinA) rMinA = a;
+            if (b > rMaxB) rMaxB = b;
+          });
+        }
+        const rMid = Number.isFinite(rMinA) ? (rMinA + rMaxB) / 2 : colMid;
+        const rHalf = Number.isFinite(rMinA) ? Math.max(1, (rMaxB - rMinA) / 2) : 1;
+        const currentHalf = rHalf * dx;
+        const pelvisScale = Math.min(1.0, targetPelvisHalf / Math.max(1e-3, currentHalf));
+        const xPelvisBase = (col - rMid) * dx * pelvisScale;
+
+        if (legRuns && blend > 0) {
+          const c0 = (legRuns[0][0] + legRuns[0][1]) / 2;
+          const c1 = (legRuns[1][0] + legRuns[1][1]) / 2;
+          const k = Math.abs(col - c0) <= Math.abs(col - c1) ? 0 : 1;
+          const ck = k === 0 ? c0 : c1;
+          const halfCols = Math.max(1, (legRuns[k][1] - legRuns[k][0]) / 2);
+          // Scale leg so it wraps the avatar limb while strictly preventing inner cuffs from crossing x = 0 (trouser crunch)
+          const targetLegRadius = (leg.r + layerOffset) * 1.05;
+          const maxScaleNoOverlap = Math.max(0.4, (leg.cx - 0.008) / Math.max(1e-3, halfCols * dx));
+          const legScale = clamp(targetLegRadius / Math.max(1e-3, halfCols * dx), 0.5, Math.min(1.35, maxScaleNoOverlap));
+          const side = k === 0 ? -1 : 1;
+          const xLeg = side * leg.cx + (col - ck) * dx * legScale;
+          x = xPelvisBase * (1 - blend) + xLeg * blend;
+        } else {
+          x = xPelvisBase;
+        }
       }
       xs[idx] = x;
       ys[idx] = y;
@@ -768,6 +826,18 @@ export function buildSilhouetteShell({
   const cellHasFabric = (i, j) => {
     const lo = i;
     const hi = i + 1;
+
+    // For pants/bottoms: do not bridge across the crotch void between two separated legs
+    if (isBottom) {
+      const nextRuns = runsByRow[j + 1];
+      if (nextRuns && nextRuns.length >= 2) {
+        // If next row has >= 2 leg runs, check if column interval [lo, hi] falls entirely in the crotch gap
+        const r0End = nextRuns[0][1];
+        const r1Start = nextRuns[1][0];
+        if (lo >= r0End && hi <= r1Start) return false;
+      }
+    }
+
     for (let r = j; r <= j + 1; r++) {
       const runs = runsByRow[r];
       for (let k = 0; k < runs.length; k++) {

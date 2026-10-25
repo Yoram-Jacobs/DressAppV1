@@ -34,9 +34,9 @@ export const TORSO_PROFILE_FEMALE = [
 
 export const TORSO_PROFILE_MALE = [
   { y: 1.52, rx: 0.145, cz: 0.015, rz: 0.100, rzFront: 0.100, rzBack: 0.100 }, // High collar / neck base
-  { y: 1.48, rx: 0.225, cz: 0.015, rz: 0.115, rzFront: 0.115, rzBack: 0.115 }, // Shoulder line / clavicle
-  { y: 1.42, rx: 0.260, cz: 0.015, rz: 0.140, rzFront: 0.135, rzBack: 0.135 }, // Shoulders / upper chest
-  { y: 1.30, rx: 0.250, cz: 0.025, rz: 0.155, rzFront: 0.155, rzBack: 0.145 }, // Chest / pecs peak & scapulae (back reaches z = -0.114m)
+  { y: 1.48, rx: 0.225, cz: 0.015, rz: 0.125, rzFront: 0.120, rzBack: 0.125 }, // Shoulder line / clavicle (back scapulae reaches z = -0.083m)
+  { y: 1.42, rx: 0.260, cz: 0.015, rz: 0.145, rzFront: 0.140, rzBack: 0.145 }, // Shoulders / upper chest (back reaches z = -0.110m)
+  { y: 1.30, rx: 0.250, cz: 0.025, rz: 0.160, rzFront: 0.160, rzBack: 0.150 }, // Chest / pecs peak & scapulae (back reaches z = -0.114m)
   { y: 1.18, rx: 0.185, cz: 0.038, rz: 0.130, rzFront: 0.130, rzBack: 0.115 }, // Rib cage
   { y: 1.08, rx: 0.150, cz: 0.040, rz: 0.125, rzFront: 0.125, rzBack: 0.120 }, // Waist (true point cloud rx: 0.150m, 30cm coronal span)
   { y: 0.96, rx: 0.180, cz: 0.020, rz: 0.140, rzFront: 0.138, rzBack: 0.142 }, // Upper hips / glutes (glutes extend to z = -0.114m)
@@ -55,7 +55,8 @@ export const LEG_PROFILE_FEMALE = [
 ];
 
 export const LEG_PROFILE_MALE = [
-  { y: 0.86, cx: 0.105, r: 0.100, cz: 0.038, rzBack: 0.102 }, // Crotch
+  { y: 0.86, cx: 0.110, r: 0.100, cz: 0.038, rzBack: 0.115 }, // Crotch (glutes / upper thigh reach z = -0.096m)
+  { y: 0.78, cx: 0.115, r: 0.095, cz: 0.036, rzBack: 0.105 }, // Upper thigh
   { y: 0.70, cx: 0.118, r: 0.090, cz: 0.035, rzBack: 0.098 }, // Mid thigh
   { y: 0.50, cx: 0.130, r: 0.078, cz: -0.003, rzBack: 0.088 }, // Knee (male z reaches -0.074, cz=-0.003)
   { y: 0.40, cx: 0.136, r: 0.074, cz: -0.022, rzBack: 0.092 }, // Back of knee / upper calf (z reaches -0.083)
@@ -249,7 +250,7 @@ function dilateCanvasEdges(canvas, passes = 6) {
       let prevX = -1;
       for (let x = 0; x < W; x++) {
         const o = (row + x) * 4;
-        if (d[o + 3] >= 96) {
+        if (d[o + 3] >= 80) {
           d[o + 3] = 255;
           if (prevX >= 0 && x - prevX > 1 && x - prevX - 1 <= maxGap) {
             const oL = (row + prevX) * 4;
@@ -264,6 +265,32 @@ function dilateCanvasEdges(canvas, passes = 6) {
             }
           }
           prevX = x;
+        }
+      }
+    }
+
+    // 1b. Bridge vertical gaps across interior rows (e.g. horizontal cuts/creases across torso <= 4% height)
+    const maxVertGap = Math.max(2, Math.round(H * 0.04));
+    for (let x = 0; x < W; x++) {
+      let prevY = -1;
+      for (let y = 0; y < H; y++) {
+        const o = (y * W + x) * 4;
+        if (d[o + 3] >= 128) {
+          if (prevY >= 0 && y - prevY > 1 && y - prevY - 1 <= maxVertGap) {
+            const oTop = (prevY * W + x) * 4;
+            const spanY = y - prevY;
+            for (let k = 1; k < spanY; k++) {
+              const t = k / spanY;
+              const oM = ((prevY + k) * W + x) * 4;
+              if (d[oM + 3] < 128) {
+                d[oM] = Math.round(d[oTop] * (1 - t) + d[o] * t);
+                d[oM + 1] = Math.round(d[oTop + 1] * (1 - t) + d[o + 1] * t);
+                d[oM + 2] = Math.round(d[oTop + 2] * (1 - t) + d[o + 2] * t);
+                d[oM + 3] = 255;
+              }
+            }
+          }
+          prevY = y;
         }
       }
     }
