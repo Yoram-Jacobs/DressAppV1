@@ -756,27 +756,38 @@ export function buildSilhouetteShell({
   for (let j = 0; j < vh; j++) {
     const y = rowY(j);
     const runs = runsByRow[j];
+    const effectiveRuns = (runs && runs.length)
+      ? runs
+      : (runsByRow[clamp(j, jFabricTop, jFabricBottom)] || []);
     const torso = getTorsoSlice(Math.max(0.5, y), isMale);
     const leg = isBottom ? getLegSlice(Math.min(yCrotchBody, y), isMale) : null;
     const crotchBlend = isBottom ? smoothstep01((yCrotchBody + 0.03 - y) / 0.06) : 0;
 
-    const legRuns = isBottom && j >= crotchRow ? getValidLegPair(runs) : null;
+    const legRuns = isBottom && j >= crotchRow ? getValidLegPair(effectiveRuns) : null;
 
     let rMinA = Infinity, rMaxB = -Infinity;
-    if (runs && runs.length) {
-      runs.forEach(([a, b]) => {
+    if (effectiveRuns && effectiveRuns.length) {
+      effectiveRuns.forEach(([a, b]) => {
         if (a < rMinA) rMinA = a;
         if (b > rMaxB) rMaxB = b;
       });
     }
     const rMid = Number.isFinite(rMinA) ? (rMinA + rMaxB) / 2 : colMid;
-    const rHalf = Number.isFinite(rMinA) ? Math.max(1, (rMaxB - rMinA) / 2) : 1;
+    const rHalf = Number.isFinite(rMinA)
+      ? Math.max(Math.max(3, 0.12 * nx), (rMaxB - rMinA) / 2)
+      : Math.max(4, 0.25 * nx);
 
     for (let i = 0; i < vw; i++) {
       const idx = j * vw + i;
       const run = resolveVertexRun(i, j);
       const col = run ? clamp(i, run[0], run[1]) : i;
-      uCols[idx] = col;
+      if (run && !isSkirt) {
+        const spanW = Math.max(0, run[1] - run[0]);
+        const uvInset = spanW >= 8 ? Math.min(3.2, spanW * 0.075) : 0;
+        uCols[idx] = clamp(col, run[0] + uvInset, run[1] - uvInset);
+      } else {
+        uCols[idx] = col;
+      }
 
       let x = (col - colMid) * dx;
       if (isSkirt && !isStandalone) {
@@ -794,7 +805,7 @@ export function buildSilhouetteShell({
         const currentHalf = rHalf * dx;
         const maxAllowedHalf = minTargetHalf * (1.02 + (isShortBottom ? 0.22 : 0.15) * (1 - tWaist));
         const targetRowHalf = clamp(currentHalf, minTargetHalf, maxAllowedHalf);
-        const fitScale = targetRowHalf / Math.max(1e-3, currentHalf);
+        const fitScale = clamp(targetRowHalf / Math.max(1e-3, currentHalf), 0.50, 2.20);
         const xCont = (col - rMid) * dx * fitScale;
 
         if (legRuns) {
@@ -884,8 +895,8 @@ export function buildSilhouetteShell({
 
       const isShoulderZone = !isBottom && !isSkirt && y >= (isMale ? 1.35 : 1.29);
       const isBodySpan = isBottom || isSkirt || halfWorld >= torso.rx * 0.72 || isShoulderZone;
-      const ampFront = isBodySpan ? bodyRzFront : Math.min(bodyRzFront, halfWorld * 1.05 + 0.012);
-      const ampBack = isBodySpan ? bodyRzBack : Math.min(bodyRzBack, halfWorld * 1.05 + 0.012);
+      const ampFront = isBodySpan ? bodyRzFront * 1.05 : Math.min(bodyRzFront, halfWorld * 1.05 + 0.012);
+      const ampBack = isBodySpan ? bodyRzBack * 1.05 : Math.min(bodyRzBack, halfWorld * 1.05 + 0.012);
 
       // For sloped shoulder rows near the top of shirts/jackets, normalize u against the full shoulder span
       // so diagonal shoulder edges retain full anterior/posterior clavicle & scapula depth.
@@ -899,13 +910,14 @@ export function buildSilhouetteShell({
       for (let i = iStart; i <= iEnd; i++) {
         const u = clamp((i - mid) / effectiveHalf, -1, 1);
         const s = Math.max(0, 1 - u * u);
-        const taperWidth = isBottom ? 0.08 : 0.12;
+        // Smooth 0.18..0.20 flank taper distributes side Z-curvature over 6-9 grid columns
+        // instead of dropping over 2 columns (eliminating horizontal barcode streaks in side view).
+        const taperWidth = isBottom ? 0.18 : 0.20;
         const edgeTaper = isShoulderZone
-          ? smoothstep01((1 - Math.abs(u)) / 0.05)
+          ? smoothstep01((1 - Math.abs(u)) / 0.06)
           : smoothstep01((1 - Math.abs(u)) / taperWidth);
-        const hhFront = (isBottom ? Math.pow(s, 0.38) : (isBodySpan ? Math.pow(s, 0.44) : Math.sqrt(s))) * edgeTaper;
-        // Natural anatomical back curvature (0.42 power instead of flat box) eliminates robot torso
-        const hhBack = (isBottom ? Math.pow(s, 0.36) : (isBodySpan ? Math.pow(s, 0.42) : Math.pow(s, 0.44))) * edgeTaper;
+        const hhFront = (isBottom ? Math.pow(s, 0.46) : (isBodySpan ? Math.pow(s, 0.46) : Math.sqrt(s))) * edgeTaper;
+        const hhBack = (isBottom ? Math.pow(s, 0.44) : (isBodySpan ? Math.pow(s, 0.44) : Math.pow(s, 0.46))) * edgeTaper;
         offF[j * vw + i] = ampFront * hhFront;
         offB[j * vw + i] = ampBack * hhBack;
       }
@@ -978,15 +990,31 @@ export function buildSilhouetteShell({
       const yTarget = getAvatarShoulderRidgeY(absX, isMale);
       const yActual = ys[jFirst * vw + i];
       const dy = clamp(yTarget - yActual, -0.12, 0.12) * shoulderWeight;
-      if (Math.abs(dy) < 1e-4) continue;
 
-      // Apply anchor shift to cap rows above jFirst and decay smoothly down to chest/armpit
-      for (let j = 0; j < jFirst; j++) {
-        ys[j * vw + i] += dy;
+      // Guarantee full anterior/posterior deltoid & trapezius depth on the top shoulder rows
+      // (jFirst .. jFirst + 4) so sloped shoulder seams never pinch to z=0 inside the deltoid!
+      const shSlice = getTorsoSlice(yTarget, isMale);
+      const radialShelf = clamp(1 - Math.pow(absX / (maxShoulderX + 0.045), 2), 0.55, 1.0);
+      const minShFront = (shSlice.rzFront + layerOffset) * radialShelf * shoulderWeight;
+      const minShBack = (shSlice.rzBack + layerOffset) * radialShelf * shoulderWeight;
+      for (let dj = 0; dj <= 4 && jFirst + dj < vh; dj++) {
+        const sIdx = (jFirst + dj) * vw + i;
+        if (!inside[sIdx]) continue;
+        offF[sIdx] = Math.max(offF[sIdx], minShFront);
+        offB[sIdx] = Math.max(offB[sIdx], minShBack);
       }
-      for (let dj = 0; dj <= decayRows && jFirst + dj < vh; dj++) {
-        const w = 1 - smoothstep01(dj / decayRows);
-        ys[(jFirst + dj) * vw + i] += dy * w;
+
+      if (Math.abs(dy) >= 1e-4) {
+        // Apply anchor shift to cap rows above jFirst and decay smoothly down to chest/armpit
+        for (let j = 0; j < jFirst; j++) {
+          ys[j * vw + i] += dy + 0.014 * shoulderWeight;
+        }
+        for (let dj = 0; dj <= decayRows && jFirst + dj < vh; dj++) {
+          const w = 1 - smoothstep01(dj / decayRows);
+          ys[(jFirst + dj) * vw + i] += dy * w;
+        }
+      } else if (jFirst > 0) {
+        ys[(jFirst - 1) * vw + i] = Math.max(ys[(jFirst - 1) * vw + i], ys[jFirst * vw + i] + 0.014 * shoulderWeight);
       }
     }
   }

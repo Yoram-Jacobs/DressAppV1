@@ -670,7 +670,9 @@ async function fetchAndCropTexture(url) {
       }
     } catch {}
 
-    // Strip residual low-saturation light-gray studio border fringes attached to non-gray garments
+    // Flood-fill inward from exterior background (and image borders) into connected
+    // low-saturation light-gray/white studio background pockets attached to non-white garments
+    // (e.g. concave pocket indentations along the side of cargo shorts).
     try {
       let coreR = 0, coreG = 0, coreB = 0, coreCount = 0;
       const step = Math.max(1, Math.floor(Math.sqrt((w * h) / 4000)));
@@ -691,30 +693,52 @@ async function fetchAndCropTexture(url) {
         coreB /= coreCount;
         const coreLum = 0.299 * coreR + 0.587 * coreG + 0.114 * coreB;
         const coreChroma = Math.max(coreR, coreG, coreB) - Math.min(coreR, coreG, coreB);
-        // Only strip light-gray studio fringes if the core garment itself is not light gray/white
+        // Only strip light-gray/white studio background pockets if the core garment itself is not light gray/white
         if (coreLum < 155 || coreChroma > 24) {
-          for (let pass = 0; pass < 3; pass++) {
-            const toClear = [];
-            for (let y = 0; y < h; y++) {
-              for (let x = 0; x < w; x++) {
-                const p = y * w + x;
-                if (bgMask[p]) continue;
-                const touchesBg =
-                  x === 0 || x === w - 1 || y === 0 || y === h - 1 ||
-                  bgMask[p - 1] || bgMask[p + 1] || bgMask[p - w] || bgMask[p + w];
-                if (!touchesBg) continue;
-                const o = p * 4;
-                const r = data[o], g = data[o + 1], b = data[o + 2];
-                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-                const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
-                if (lum >= 158 && chroma <= 22 && distCore > 42) {
-                  toClear.push(p);
-                }
+          const isStudioFringe = (p) => {
+            const o = p * 4;
+            const r = data[o], g = data[o + 1], b = data[o + 2];
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+            const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+            const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
+            return lum >= 138 && chroma <= 32 && distCore > 42;
+          };
+          const fQueue = new Int32Array(w * h);
+          let fHead = 0;
+          let fTail = 0;
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const p = y * w + x;
+              if (bgMask[p]) continue;
+              const touchesBg =
+                x === 0 || x === w - 1 || y === 0 || y === h - 1 ||
+                bgMask[p - 1] || bgMask[p + 1] || bgMask[p - w] || bgMask[p + w];
+              if (touchesBg && isStudioFringe(p)) {
+                bgMask[p] = 1;
+                fQueue[fTail++] = p;
               }
             }
-            if (!toClear.length) break;
-            for (let k = 0; k < toClear.length; k++) bgMask[toClear[k]] = 1;
+          }
+          while (fHead < fTail) {
+            const p = fQueue[fHead++];
+            const x = p % w;
+            const y = (p - x) / w;
+            if (x > 0 && !bgMask[p - 1] && isStudioFringe(p - 1)) {
+              bgMask[p - 1] = 1;
+              fQueue[fTail++] = p - 1;
+            }
+            if (x < w - 1 && !bgMask[p + 1] && isStudioFringe(p + 1)) {
+              bgMask[p + 1] = 1;
+              fQueue[fTail++] = p + 1;
+            }
+            if (y > 0 && !bgMask[p - w] && isStudioFringe(p - w)) {
+              bgMask[p - w] = 1;
+              fQueue[fTail++] = p - w;
+            }
+            if (y < h - 1 && !bgMask[p + w] && isStudioFringe(p + w)) {
+              bgMask[p + w] = 1;
+              fQueue[fTail++] = p + w;
+            }
           }
         }
       }
@@ -783,6 +807,7 @@ async function fetchAndCropTexture(url) {
   }
 
   // Trim the 1-2px semi-transparent halo that cut-outs carry (white catalog fringe)
+  // AND despill / strip any residual light-gray background rim along each row's left/right fabric edges.
   try {
     const eImg = cropCtx.getImageData(0, 0, cropW, cropH);
     const eData = eImg.data;
@@ -801,6 +826,100 @@ async function fetchAndCropTexture(url) {
       }
       kill.forEach((p) => { eData[p * 4 + 3] = 0; });
     }
+
+    // Per-row edge despill & light-fringe trim: compares outer 15% of each span against
+    // adjacent interior fabric (15%..28% inward) to strip remaining gray/white cutout rims
+    // and replace the outermost 4 edge pixels' RGB with clean local fabric color.
+    for (let y = 0; y < cropH; y++) {
+      const row = y * cropW;
+      let x = 0;
+      while (x < cropW) {
+        while (x < cropW && eData[(row + x) * 4 + 3] < 110) x++;
+        if (x >= cropW) break;
+        const a = x;
+        while (x < cropW && eData[(row + x) * 4 + 3] >= 110) x++;
+        const b = x - 1;
+        const span = b - a + 1;
+        if (span < 16) continue;
+
+        const d0 = Math.max(3, Math.min(14, Math.floor(span * 0.14)));
+        const d1 = Math.max(d0 + 2, Math.min(24, Math.floor(span * 0.28)));
+
+        // Left interior reference
+        let lR = 0, lG = 0, lB = 0, lN = 0;
+        for (let cx = a + d0; cx <= Math.min(b, a + d1); cx++) {
+          const o = (row + cx) * 4;
+          if (eData[o + 3] >= 180) {
+            lR += eData[o]; lG += eData[o + 1]; lB += eData[o + 2]; lN++;
+          }
+        }
+        // Right interior reference
+        let rR = 0, rG = 0, rB = 0, rN = 0;
+        for (let cx = Math.max(a, b - d1); cx <= b - d0; cx++) {
+          const o = (row + cx) * 4;
+          if (eData[o + 3] >= 180) {
+            rR += eData[o]; rG += eData[o + 1]; rB += eData[o + 2]; rN++;
+          }
+        }
+
+        let newA = a;
+        if (lN > 0) {
+          lR /= lN; lG /= lN; lB /= lN;
+          const lLum = 0.299 * lR + 0.587 * lG + 0.114 * lB;
+          const lChroma = Math.max(lR, lG, lB) - Math.min(lR, lG, lB);
+          for (let cx = a; cx < a + d0; cx++) {
+            const o = (row + cx) * 4;
+            const r = eData[o], g = eData[o + 1], bl = eData[o + 2];
+            const lum = 0.299 * r + 0.587 * g + 0.114 * bl;
+            const ch = Math.max(r, g, bl) - Math.min(r, g, bl);
+            if (lum - lLum > 24 && ch <= lChroma + 14) {
+              eData[o + 3] = 0;
+              newA = cx + 1;
+            } else {
+              break;
+            }
+          }
+          for (let cx = newA; cx <= Math.min(b, newA + 4); cx++) {
+            const o = (row + cx) * 4;
+            const lum = 0.299 * eData[o] + 0.587 * eData[o + 1] + 0.114 * eData[o + 2];
+            if (lum - lLum > 14) {
+              eData[o] = Math.round(lR);
+              eData[o + 1] = Math.round(lG);
+              eData[o + 2] = Math.round(lB);
+            }
+          }
+        }
+
+        let newB = b;
+        if (rN > 0) {
+          rR /= rN; rG /= rN; rB /= rN;
+          const rLum = 0.299 * rR + 0.587 * rG + 0.114 * rB;
+          const rChroma = Math.max(rR, rG, rB) - Math.min(rR, rG, rB);
+          for (let cx = b; cx > b - d0; cx--) {
+            const o = (row + cx) * 4;
+            const r = eData[o], g = eData[o + 1], bl = eData[o + 2];
+            const lum = 0.299 * r + 0.587 * g + 0.114 * bl;
+            const ch = Math.max(r, g, bl) - Math.min(r, g, bl);
+            if (lum - rLum > 24 && ch <= rChroma + 14) {
+              eData[o + 3] = 0;
+              newB = cx - 1;
+            } else {
+              break;
+            }
+          }
+          for (let cx = Math.max(newA, newB - 4); cx <= newB; cx++) {
+            const o = (row + cx) * 4;
+            const lum = 0.299 * eData[o] + 0.587 * eData[o + 1] + 0.114 * eData[o + 2];
+            if (lum - rLum > 14) {
+              eData[o] = Math.round(rR);
+              eData[o + 1] = Math.round(rG);
+              eData[o + 2] = Math.round(rB);
+            }
+          }
+        }
+      }
+    }
+
     cropCtx.putImageData(eImg, 0, 0);
   } catch {}
 

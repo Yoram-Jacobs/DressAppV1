@@ -675,6 +675,10 @@ describe('shoulder line detection and hoodie mapping', () => {
     const expectedRidgeY = getAvatarShoulderRidgeY(Math.abs(xPos), true);
     expect(yPos).toBeCloseTo(expectedRidgeY, 2);
 
+    // Outer shoulder first fabric row must maintain full anterior/posterior deltoid depth (never pinch to 0)
+    const pbAnchored = shellAnchored.back.attributes.position;
+    expect(pf.getZ(idx) - pbAnchored.getZ(idx)).toBeGreaterThan(0.14);
+
     // Strapless dress/top should NOT be pulled up to the shoulder ridge when yTop is at the bust (1.30)
     const shellStrapless = buildSilhouetteShell({
       mask, nx, ny, aspect: 0.85, slot: 'dress', isMale: false, isStrapless: true, isStandalone: false,
@@ -788,6 +792,11 @@ describe('shoulder line detection and hoodie mapping', () => {
     for (let j = Math.floor(ny * 0.25); j < Math.floor(ny * 0.75); j++) {
       const diff = Math.abs(getRowSpan(j + 1) - getRowSpan(j));
       expect(diff).toBeLessThan(0.025);
+    }
+
+    // 3. Cap rows above jFabricTop and below jFabricBottom must never blow up or spike outward
+    for (let vIdx = 0; vIdx < pf.count; vIdx++) {
+      expect(Math.abs(pf.getX(vIdx))).toBeLessThan(0.38);
     }
   });
 });
