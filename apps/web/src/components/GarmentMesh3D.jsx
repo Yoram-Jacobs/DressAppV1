@@ -595,7 +595,8 @@ async function fetchAndCropTexture(url) {
     };
     bgMask = new Uint8Array(w * h);
     for (let p = 0; p < w * h; p++) {
-      if (data[p * 4 + 3] < 35) bgMask[p] = 1;
+      // Treat semi-transparent cutout fringe / ghost shards (< 110 alpha) as background
+      if (data[p * 4 + 3] < 110) bgMask[p] = 1;
     }
     if (isLightBg) {
       const stack = new Int32Array(w * h);
@@ -618,6 +619,106 @@ async function fetchAndCropTexture(url) {
         if (y < h - 1) push(p + w);
       }
     }
+
+    // Connected-component island filter: remove detached cutout shards / floating background remnants
+    // (any disconnected component smaller than 12% of the main garment component is marked as background).
+    try {
+      const visited = new Uint8Array(w * h);
+      const compQueue = new Int32Array(w * h);
+      const components = [];
+      let maxCompSize = 0;
+
+      for (let p = 0; p < w * h; p++) {
+        if (bgMask[p] || visited[p]) continue;
+        visited[p] = 1;
+        let head = 0;
+        let tail = 0;
+        compQueue[tail++] = p;
+        while (head < tail) {
+          const curr = compQueue[head++];
+          const cx = curr % w;
+          const cy = (curr - cx) / w;
+          for (let dy = -1; dy <= 1; dy++) {
+            const ny = cy + dy;
+            if (ny < 0 || ny >= h) continue;
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dx === 0 && dy === 0) continue;
+              const nx = cx + dx;
+              if (nx < 0 || nx >= w) continue;
+              const np = ny * w + nx;
+              if (!bgMask[np] && !visited[np]) {
+                visited[np] = 1;
+                compQueue[tail++] = np;
+              }
+            }
+          }
+        }
+        if (tail > maxCompSize) maxCompSize = tail;
+        components.push(compQueue.slice(0, tail));
+      }
+
+      if (components.length > 1 && maxCompSize > 0) {
+        const minKeepSize = Math.max(24, Math.floor(maxCompSize * 0.12));
+        for (let c = 0; c < components.length; c++) {
+          const comp = components[c];
+          if (comp.length < minKeepSize) {
+            for (let k = 0; k < comp.length; k++) {
+              bgMask[comp[k]] = 1;
+            }
+          }
+        }
+      }
+    } catch {}
+
+    // Strip residual low-saturation light-gray studio border fringes attached to non-gray garments
+    try {
+      let coreR = 0, coreG = 0, coreB = 0, coreCount = 0;
+      const step = Math.max(1, Math.floor(Math.sqrt((w * h) / 4000)));
+      for (let y = Math.floor(h * 0.2); y < Math.floor(h * 0.8); y += step) {
+        for (let x = Math.floor(w * 0.2); x < Math.floor(w * 0.8); x += step) {
+          const p = y * w + x;
+          if (!bgMask[p] && data[p * 4 + 3] >= 200) {
+            coreR += data[p * 4];
+            coreG += data[p * 4 + 1];
+            coreB += data[p * 4 + 2];
+            coreCount++;
+          }
+        }
+      }
+      if (coreCount > 20) {
+        coreR /= coreCount;
+        coreG /= coreCount;
+        coreB /= coreCount;
+        const coreLum = 0.299 * coreR + 0.587 * coreG + 0.114 * coreB;
+        const coreChroma = Math.max(coreR, coreG, coreB) - Math.min(coreR, coreG, coreB);
+        // Only strip light-gray studio fringes if the core garment itself is not light gray/white
+        if (coreLum < 155 || coreChroma > 24) {
+          for (let pass = 0; pass < 3; pass++) {
+            const toClear = [];
+            for (let y = 0; y < h; y++) {
+              for (let x = 0; x < w; x++) {
+                const p = y * w + x;
+                if (bgMask[p]) continue;
+                const touchesBg =
+                  x === 0 || x === w - 1 || y === 0 || y === h - 1 ||
+                  bgMask[p - 1] || bgMask[p + 1] || bgMask[p - w] || bgMask[p + w];
+                if (!touchesBg) continue;
+                const o = p * 4;
+                const r = data[o], g = data[o + 1], b = data[o + 2];
+                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                const chroma = Math.max(r, g, b) - Math.min(r, g, b);
+                const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
+                if (lum >= 158 && chroma <= 22 && distCore > 42) {
+                  toClear.push(p);
+                }
+              }
+            }
+            if (!toClear.length) break;
+            for (let k = 0; k < toClear.length; k++) bgMask[toClear[k]] = 1;
+          }
+        }
+      }
+    } catch {}
 
     let foundMinX = w, foundMaxX = 0, foundMinY = h, foundMaxY = 0;
     let sumR = 0, sumG = 0, sumB = 0, countDom = 0;
@@ -665,8 +766,8 @@ async function fetchAndCropTexture(url) {
   const cropCtx = cropCanvas.getContext('2d');
   cropCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
 
-  // Remove the connected catalog backdrop from the crop (keeps interior whites intact)
-  if (imgData && isLightBg && bgMask) {
+  // Remove background, detached cutout shards, and studio fringes from the crop (keeps interior whites intact)
+  if (imgData && bgMask) {
     try {
       const cImgData = cropCtx.getImageData(0, 0, cropW, cropH);
       const cPx = cImgData.data;
@@ -883,16 +984,12 @@ async function fetchAndCropTexture(url) {
   opaqueTexture.wrapT = THREE.ClampToEdgeWrapping;
   opaqueTexture.needsUpdate = true;
 
-  // Silhouette mask (grid resolution) + colour statistics for the silhouette shell builder
+  // Silhouette mask (grid resolution) + colour statistics for the silhouette shell builder:
+  // Extract from the clean, un-padded cutout BEFORE edge padding so detached shards or
+  // padded borders never bloat the 3D silhouette or trigger false leg splits.
   let shellMask = null;
   let canvasStats = null;
   try {
-    // Mirror pad edge RGB outward horizontally to preserve fabric texture/grain along the flank,
-    // then bridge pinholes and solidify semi-opaque edge pixels.
-    mirrorPadEdges(cropCanvas, 24);
-    dilateCanvasEdges(cropCanvas, 4);
-    texture.needsUpdate = true;
-
     const sData = cropCtx.getImageData(0, 0, cropW, cropH).data;
     const alpha = new Uint8Array(cropW * cropH);
     for (let p = 0; p < alpha.length; p++) alpha[p] = sData[p * 4 + 3];
@@ -904,6 +1001,12 @@ async function fetchAndCropTexture(url) {
       ny,
     };
     canvasStats = computeCanvasStats(cropCanvas);
+
+    // Gently mirror-pad edge RGB outward by a few pixels AFTER mask extraction
+    // so UV boundary vertices never sample transparent edge pixels.
+    mirrorPadEdges(cropCanvas, 4);
+    dilateCanvasEdges(cropCanvas, 2);
+    texture.needsUpdate = true;
   } catch {
     shellMask = null;
   }

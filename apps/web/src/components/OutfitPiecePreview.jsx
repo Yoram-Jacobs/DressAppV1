@@ -1,16 +1,9 @@
-import React, { useId, useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { resolveMediaUrl } from '@/lib/itemImage';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { userStore } from '@/lib/api';
-import {
-  getFullAvatarAnatomy,
-  buildAvatarSvgSilhouettePaths,
-  resolveHairProperties,
-  computeMorphInfluences,
-  getCachedSnapshot,
-  snapshotSubscribers,
-} from './DynamicAvatar';
+import DynamicAvatar from './DynamicAvatar';
 import {
   getTopTopography,
   getBottomTopography,
@@ -85,47 +78,11 @@ function categorizePiece(piece, roleHint = '') {
 }
 
 /**
- * Builds a chic cropped hairstyle for male avatar.
- */
-function buildMaleHairSvg(anatomy) {
-  const { X0, yHeadTop, yChin } = anatomy;
-  const headHeight = yChin - yHeadTop;
-  const headWidth = headHeight * 0.68;
-  return [
-    `M ${X0 - headWidth * 0.95},${yHeadTop + headHeight * 0.40}`,
-    `C ${X0 - headWidth * 1.02},${yHeadTop + headHeight * 0.12} ${X0 - headWidth * 0.6},${yHeadTop - 5} ${X0},${yHeadTop - 5}`,
-    `C ${X0 + headWidth * 0.6},${yHeadTop - 5} ${X0 + headWidth * 1.02},${yHeadTop + headHeight * 0.12} ${X0 + headWidth * 0.95},${yHeadTop + headHeight * 0.40}`,
-    `C ${X0 + headWidth * 0.88},${yHeadTop + headHeight * 0.44} ${X0 + headWidth * 0.80},${yHeadTop + headHeight * 0.28} ${X0 + headWidth * 0.52},${yHeadTop + headHeight * 0.22}`,
-    `C ${X0 + headWidth * 0.20},${yHeadTop + headHeight * 0.18} ${X0 - headWidth * 0.20},${yHeadTop + headHeight * 0.18} ${X0 - headWidth * 0.52},${yHeadTop + headHeight * 0.22}`,
-    `C ${X0 - headWidth * 0.80},${yHeadTop + headHeight * 0.28} ${X0 - headWidth * 0.88},${yHeadTop + headHeight * 0.44} ${X0 - headWidth * 0.95},${yHeadTop + headHeight * 0.40}`,
-    `Z`,
-  ].join(' ');
-}
-
-/**
- * Builds an elegant modern hairstyle for female avatar.
- */
-function buildFemaleHairSvg(anatomy) {
-  const { X0, yHeadTop, yChin } = anatomy;
-  const headHeight = yChin - yHeadTop;
-  const headWidth = headHeight * 0.68;
-  return [
-    `M ${X0 - headWidth * 1.05},${yHeadTop + headHeight * 0.70}`,
-    `C ${X0 - headWidth * 1.08},${yHeadTop + headHeight * 0.20} ${X0 - headWidth * 0.70},${yHeadTop - 6} ${X0},${yHeadTop - 6}`,
-    `C ${X0 + headWidth * 0.70},${yHeadTop - 6} ${X0 + headWidth * 1.08},${yHeadTop + headHeight * 0.20} ${X0 + headWidth * 1.05},${yHeadTop + headHeight * 0.70}`,
-    `C ${X0 + headWidth * 0.90},${yHeadTop + headHeight * 0.80} ${X0 + headWidth * 0.78},${yHeadTop + headHeight * 0.38} ${X0 + headWidth * 0.48},${yHeadTop + headHeight * 0.22}`,
-    `C ${X0 + headWidth * 0.15},${yHeadTop + headHeight * 0.16} ${X0 - headWidth * 0.15},${yHeadTop + headHeight * 0.16} ${X0 - headWidth * 0.48},${yHeadTop + headHeight * 0.22}`,
-    `C ${X0 - headWidth * 0.78},${yHeadTop + headHeight * 0.38} ${X0 - headWidth * 0.90},${yHeadTop + headHeight * 0.80} ${X0 - headWidth * 1.05},${yHeadTop + headHeight * 0.70}`,
-    `Z`,
-  ].join(' ');
-}
-
-/**
  * OutfitPiecePreview
  *
- * Lightweight, zero-WebGL, high-performance outfit layout component.
- * Renders the outfit pieces directly overlaying the avatar (at z-[10] through z-[50]),
- * with the avatar positioned underneath at z-[1], matching the live studio layout.
+ * High-performance outfit card component for Saved Outfits & Daily Suggestions.
+ * Renders the canonical 3D DynamicAvatar (using shared WebGL snapshot pooling)
+ * at Layer 1 (z-[1]), and overlays the outfit pieces directly on top (z-[10]..z-[50]).
  */
 export default function OutfitPiecePreview({
   outfit,
@@ -139,9 +96,6 @@ export default function OutfitPiecePreview({
   hair,
   showAvatar = true,
 }) {
-  const reactUid = useId();
-  const uid = reactUid ? reactUid.replace(/:/g, '') : 'prev';
-
   // User profile resolution with instant local fallback
   const { user } = useAuth?.() || {};
   const storedUser = user || userStore?.get?.() || {};
@@ -154,7 +108,6 @@ export default function OutfitPiecePreview({
     storedUser?.sex ||
     storedUser?.gender ||
     'female';
-  const isMale = String(effectiveSex).toLowerCase() === 'male';
 
   const rawSkin =
     skinColor ||
@@ -177,79 +130,12 @@ export default function OutfitPiecePreview({
     return hair || effectiveProfile?.hair || storedUser?.hair || {};
   }, [hair, effectiveProfile?.hair, storedUser?.hair]);
 
-  const anatomy = useMemo(() => {
-    return getFullAvatarAnatomy({
-      height: rawMeasurements?.height,
-      shoulders: rawMeasurements?.shoulders,
-      chest: rawMeasurements?.chest,
-      waist: rawMeasurements?.waist,
-      hip: rawMeasurements?.hip,
-      armLength: rawMeasurements?.armLength,
-      inseam: rawMeasurements?.inseam,
-      footLength: rawMeasurements?.footLength,
-      gender: effectiveSex,
-    });
-  }, [
-    rawMeasurements?.height,
-    rawMeasurements?.shoulders,
-    rawMeasurements?.chest,
-    rawMeasurements?.waist,
-    rawMeasurements?.hip,
-    rawMeasurements?.armLength,
-    rawMeasurements?.inseam,
-    rawMeasurements?.footLength,
-    effectiveSex,
-  ]);
-
-  const svgPaths = useMemo(() => buildAvatarSvgSilhouettePaths(anatomy), [anatomy]);
-  const hairProps = useMemo(() => resolveHairProperties(rawHair, isMale), [rawHair, isMale]);
-  const hairSvgPath = useMemo(
-    () => (isMale ? buildMaleHairSvg(anatomy) : buildFemaleHairSvg(anatomy)),
-    [anatomy, isMale]
-  );
-
-  const morphInfluences = useMemo(
-    () =>
-      computeMorphInfluences({
-        height: rawMeasurements?.height,
-        shoulders: rawMeasurements?.shoulders,
-        chest: rawMeasurements?.chest,
-        waist: rawMeasurements?.waist,
-        hip: rawMeasurements?.hip,
-        armLength: rawMeasurements?.armLength,
-        inseam: rawMeasurements?.inseam,
-        footLength: rawMeasurements?.footLength,
-        isMale,
-        shapeParams,
-        hair: rawHair,
-      }),
-    [rawMeasurements, isMale, shapeParams, rawHair]
-  );
-
-  const avatarSignature = useMemo(() => {
-    const morphKey = Object.entries(morphInfluences)
-      .map(([k, v]) => `${k}:${Number(v || 0).toFixed(2)}`)
-      .join('|');
-    return `v7_prop_${isMale ? 'M' : 'F'}_${effectiveSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(rawMeasurements?.height) || 170}_${morphKey}`;
-  }, [isMale, effectiveSkinColor, hairProps.color, hairProps.roughness, rawMeasurements?.height, morphInfluences]);
-
-  const [snapshotUrl, setSnapshotUrl] = useState(() => getCachedSnapshot(avatarSignature));
-
-  useEffect(() => {
-    const cached = getCachedSnapshot(avatarSignature);
-    if (cached) {
-      setSnapshotUrl(cached);
-    }
-    const handleSnapshot = (sig, dataUrl) => {
-      if (sig === avatarSignature) {
-        setSnapshotUrl(dataUrl);
-      }
-    };
-    snapshotSubscribers.add(handleSnapshot);
-    return () => {
-      snapshotSubscribers.delete(handleSnapshot);
-    };
-  }, [avatarSignature]);
+  const effectiveShapeParams =
+    shapeParams ||
+    effectiveProfile?.shape_params ||
+    effectiveProfile?.shapeParams ||
+    storedUser?.avatar_shape_params ||
+    {};
 
   // Extract and categorize items into slots
   const slots = useMemo(() => {
@@ -346,8 +232,6 @@ export default function OutfitPiecePreview({
     );
   }
 
-  const activeHairColor = hairProps?.color || (isMale ? '#181412' : '#3B2316');
-
   return (
     <div
       className={cn(
@@ -356,89 +240,30 @@ export default function OutfitPiecePreview({
       )}
       data-testid="outfit-piece-preview"
     >
-      {/* 200x450 Coordinate Frame: Locks Avatar and All Garments in 1:1 Anatomical Alignment */}
+      {/* 200x450 Coordinate Frame: Locks 3D Avatar and All Garments in 1:1 Anatomical Alignment */}
       <div className="relative h-full w-auto aspect-[200/450] max-h-full max-w-full flex items-center justify-center mx-auto select-none">
         
-        {/* ─── Layer 1: Avatar Base (Rendered UNDER all clothing layers at zIndex 1) ─── */}
+        {/* ─── Layer 1: Canonical 3D Avatar Base (Rendered UNDER all clothing layers at zIndex 1) ─── */}
         {showAvatar && (
-          snapshotUrl ? (
-            <img
-              src={snapshotUrl}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-              style={{ zIndex: 1 }}
+          <div className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+            <DynamicAvatar
+              height={rawMeasurements?.height}
+              shoulders={rawMeasurements?.shoulders}
+              chest={rawMeasurements?.chest}
+              waist={rawMeasurements?.waist}
+              hip={rawMeasurements?.hip || rawMeasurements?.hips}
+              armLength={rawMeasurements?.armLength || rawMeasurements?.arm_length}
+              inseam={rawMeasurements?.inseam}
+              footLength={rawMeasurements?.footLength}
+              gender={effectiveSex}
+              skinColor={effectiveSkinColor}
+              hair={rawHair}
+              shapeParams={effectiveShapeParams}
+              showGuideLines={false}
+              interactive={false}
+              className="h-full w-auto aspect-[200/450] max-h-full max-w-full mx-auto"
             />
-          ) : (
-            <svg
-              viewBox="0 0 200 450"
-              className="absolute inset-0 w-full h-full pointer-events-none select-none"
-              style={{ zIndex: 1 }}
-              preserveAspectRatio="xMidYMid meet"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient id={`mannequin-skin-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor={effectiveSkinColor} stopOpacity="0.96" />
-                  <stop offset="100%" stopColor={effectiveSkinColor} stopOpacity="0.88" />
-                </linearGradient>
-              </defs>
-
-              {/* Pedestal shadow under feet */}
-              <ellipse
-                cx={anatomy.X0}
-                cy={anatomy.yFeet + 3}
-                rx={Math.max(26, anatomy.wHip * 0.85)}
-                ry={5}
-                fill="rgba(0, 0, 0, 0.08)"
-              />
-
-              {/* Left & Right Arms */}
-              <g fill={`url(#mannequin-skin-${uid})`} stroke="rgba(0,0,0,0.06)" strokeWidth="0.6">
-                <path d={svgPaths.armPathL} />
-                <path d={svgPaths.armPathR} />
-              </g>
-
-              {/* Torso & Legs Body */}
-              <path
-                d={svgPaths.bodyPath}
-                fill={`url(#mannequin-skin-${uid})`}
-                stroke="rgba(0,0,0,0.06)"
-                strokeWidth="0.6"
-              />
-
-              {/* Modest studio undergarments base */}
-              <path
-                d={`M ${anatomy.X0 - anatomy.wHip * 0.9},${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} C ${anatomy.X0} ${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} ${anatomy.X0} ${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} ${anatomy.X0 + anatomy.wHip * 0.9},${anatomy.yWaist + (anatomy.yHip - anatomy.yWaist) * 0.45} L ${anatomy.X0 + anatomy.wHip * 0.78},${anatomy.yCrotch + 10} C ${anatomy.X0} ${anatomy.yCrotch + 4} ${anatomy.X0} ${anatomy.yCrotch + 4} ${anatomy.X0 - anatomy.wHip * 0.78},${anatomy.yCrotch + 10} Z`}
-                fill="#20242C"
-                opacity="0.85"
-              />
-
-              {/* Neck / Collarbone line */}
-              <path
-                d={`M ${anatomy.X0 - anatomy.wNeck * 1.2} ${anatomy.yShoulders + 4} Q ${anatomy.X0} ${anatomy.yShoulders + 9} ${anatomy.X0 + anatomy.wNeck * 1.2} ${anatomy.yShoulders + 4}`}
-                fill="none"
-                stroke="rgba(0, 0, 0, 0.12)"
-                strokeWidth="0.75"
-                strokeLinecap="round"
-              />
-
-              {/* Head */}
-              <path
-                d={svgPaths.headPath}
-                fill={`url(#mannequin-skin-${uid})`}
-                stroke="rgba(0,0,0,0.06)"
-                strokeWidth="0.6"
-              />
-
-              {/* Stylish Hair */}
-              <path
-                d={hairSvgPath}
-                fill={activeHairColor}
-                opacity="0.94"
-              />
-            </svg>
-          )
+          </div>
         )}
 
         {/* ─── Layer 2: Garments OVERLAYING the Avatar (zIndex 10 - 50) ─── */}

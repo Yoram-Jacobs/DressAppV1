@@ -196,6 +196,8 @@ docker compose up -d --force-recreate eyes
 | [`backend/app/services/clothing_parser.py`](backend/app/services/clothing_parser.py) | Local SegFormer-b2 garment splitter |
 | [`backend/app/services/background_matting.py`](backend/app/services/background_matting.py) | Local U2-Net transparent alpha background matting |
 | [`apps/web/`](apps/web/) | React 19 SPA (source for the `dressapp-frontend` container) |
+| [`apps/web/public/models/avatar_female_1.glb`](apps/web/public/models/avatar_female_1.glb) | **Canonical Female 3D Avatar Model** — high-detail MBLab parametric GLB mesh with body + hair shape keys (`tall`, `short`, `heavy`, `thin`, `busty`, `waist_thick`, `waist_thin`, `hips_wide`, `hips_narrow`, `shoulders_wide`, `shoulders_narrow`, `hair_*`). |
+| [`apps/web/public/models/avatar_male_1.glb`](apps/web/public/models/avatar_male_1.glb) | **Canonical Male 3D Avatar Model** — high-detail MBLab parametric GLB mesh with smooth $C^\infty$ rear/side haircut and full body + hair shape keys. |
 | [`apps/mobile/`](apps/mobile/) | Expo 53 / React Native 0.79 cross-platform mobile application |
 | [`packages/`](packages/) | Turborepo shared isomorphic packages (`api-client`, `i18n`, `types`) |
 | [`inference-server/eyes/`](inference-server/eyes/) | Source of the `dressapp-eyes` container |
@@ -212,6 +214,7 @@ docker compose up -d --force-recreate eyes
 
 ## Frontend & Localization Guidelines
 
+- **Canonical 3D Avatar Rule (Locked):** All avatar surfaces across the web application (`DynamicAvatar.jsx`, `AvatarViewer2D.jsx`, `OutfitPiecePreview.jsx`, `OutfitAvatarViewer.jsx`, `AvatarMesh3D.jsx`, `DressingRoom3D.jsx`) MUST exclusively render the canonical 3D GLB human avatars (`/models/avatar_female_1.glb` and `/models/avatar_male_1.glb`). Legacy 2D Bezier SVG mannequin silhouettes (`buildAvatarSvgSilhouettePaths`, `buildMaleHairSvg`, `buildFemaleHairSvg`, `mannequin-skin`) and the old `base_avatar_female.glb` model have been permanently deleted and must never be reintroduced or used as a fallback.
 - **i18next Localization Rule:** Never use positional fallback string arguments in translation calls, i.e., avoid `t('key', 'default')`. Always use standard options-based syntax with `{ defaultValue: 'default' }` (e.g., `t('key', { defaultValue: 'default' })`) to align with translation parsers and taxonomy helper methods. Avoid hardcoded user-facing display strings in frontend components. Canonical translations live in [`packages/i18n/`](packages/i18n/).
 - **useSyncExternalStore Rule:** Introduced in React 18 and fully utilized in React 19, `useSyncExternalStore` is the official, thread-safe way to subscribe to data sources that live outside of React (like the browser's `localStorage` API). This approach ensures that your state stays instantly synchronized across multiple components and across different browser tabs via the `storage` event (see [`apps/web/src/lib/closetStore.js`](apps/web/src/lib/closetStore.js)).
 

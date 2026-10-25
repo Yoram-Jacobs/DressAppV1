@@ -748,4 +748,46 @@ describe('shoulder line detection and hoodie mapping', () => {
     });
     expect(shellWithSide.ok).toBe(true);
   });
+
+  test('shorts with stray cutout shards and touching upper thighs prune detached shards and avoid horizontal slicing or gray UV sampling', () => {
+    const { nx, ny } = chooseGridResolution(0.95, 80);
+    // Cargo shorts mask:
+    // - Main shorts body spans u in [0.18, 0.82] from v = 0.05 to v = 0.94, with a small leg notch only below v = 0.82
+    // - Detached cutout shard on the left edge (u in [0.02, 0.08]) on rows v in [0.40, 0.65]
+    const mask = paintMask(nx, ny, (u, v) => {
+      if (v < 0.05 || v > 0.94) return false;
+      if (v >= 0.40 && v <= 0.65 && u >= 0.02 && u <= 0.08) return true; // stray gray shard
+      if (v > 0.82 && Math.abs(u - 0.5) < 0.05) return false; // bottom hem notch
+      return u >= 0.18 && u <= 0.82;
+    });
+
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.95, slot: 'bottom', isMale: true, isSkirt: false, isStandalone: false,
+      yTop: 1.08, yBottom: 0.48, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const vw = nx + 1;
+    const pf = shell.front.attributes.position;
+    const uvf = shell.front.attributes.uv;
+
+    // 1. UV U-coordinates across the shorts body must never sample the stray shard at u <= 0.10
+    const midRow = Math.floor(ny * 0.52);
+    for (let i = Math.ceil(nx * 0.18); i <= Math.floor(nx * 0.82); i++) {
+      const idx = midRow * vw + i;
+      expect(uvf.getX(idx)).toBeGreaterThanOrEqual(0.15);
+    }
+
+    // 2. Outer width across consecutive rows from pelvis (v=0.30) through cargo pocket zone (v=0.65)
+    // must vary smoothly with zero horizontal slicing jumps (> 0.025m between adjacent rows)
+    const getRowSpan = (j) => {
+      const iL = Math.ceil(nx * 0.20);
+      const iR = Math.floor(nx * 0.80);
+      return pf.getX(j * vw + iR) - pf.getX(j * vw + iL);
+    };
+    for (let j = Math.floor(ny * 0.25); j < Math.floor(ny * 0.75); j++) {
+      const diff = Math.abs(getRowSpan(j + 1) - getRowSpan(j));
+      expect(diff).toBeLessThan(0.025);
+    }
+  });
 });

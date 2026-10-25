@@ -273,7 +273,7 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     expect(mannequinGroups.length).toBe(0);
   });
 
-  test('OutfitPiecePreview renders layered pieces instantly with zero WebGL Canvas overhead', () => {
+  test('OutfitPiecePreview renders canonical DynamicAvatar and layered pieces with zero legacy 2D SVG mannequin paths', () => {
     const mockOutfitItems = {
       top_0: {
         id: 'item-top-1',
@@ -302,15 +302,14 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     const root = screen.getByTestId('outfit-piece-preview');
     expect(root).toBeInTheDocument();
 
-    // Verify 3 piece images and anatomical mannequin avatar base are rendered without WebGL Canvas
+    // Verify 3 piece images and canonical DynamicAvatar base are rendered with zero legacy SVG mannequin paths
     const images = container.querySelectorAll('img');
-    expect(images.length).toBe(3);
-    expect(container.querySelector('[data-testid="mock-webgl-canvas"]')).toBeNull();
-    // Anatomical avatar mannequin paths (head, body, arms) are rendered under the garments
-    expect(container.querySelectorAll('svg path').length).toBeGreaterThan(0);
+    expect(images.length).toBeGreaterThanOrEqual(3);
+    expect(container.querySelector('[data-testid="dynamic-3d-avatar"]')).toBeInTheDocument();
+    expect(container.querySelectorAll('svg path').length).toBe(0);
   });
 
-  test('OutfitAvatarViewer uses lightweight OutfitPiecePreview when interactive is false', () => {
+  test('OutfitAvatarViewer uses OutfitPiecePreview backed by DynamicAvatar when interactive is false', () => {
     const mockOutfitItems = {
       top_0: {
         id: 'top-1',
@@ -327,6 +326,7 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     );
 
     expect(screen.getByTestId('outfit-piece-preview')).toBeInTheDocument();
-    expect(container.querySelector('[data-testid="dynamic-3d-avatar"]')).toBeNull();
+    expect(container.querySelector('[data-testid="dynamic-3d-avatar"]')).toBeInTheDocument();
+    expect(container.querySelectorAll('svg path').length).toBe(0);
   });
 });
