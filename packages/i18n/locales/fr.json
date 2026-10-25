@@ -4019,10 +4019,10 @@
     "learnMore": "En savoir plus",
     "shopping_assistant_title": "Assistante d'achat",
     "shopping_assistant_p1": "Trouvez la coupe idéale lors de vos achats en ligne sur Zara, ASOS et d'autres magasins partenaires.",
-    "shopping_assistant_step1": "Installez l'**extension Chrome DressApp** à partir du Web Store.",
+    "shopping_assistant_step1": "Installez l'**extension Chrome DressApp** sur votre ordinateur ou ouvrez le **Centre d'achats** sur votre téléphone.",
     "shopping_assistant_step2": "Accédez à n’importe quelle page de détails de vêtement sur un site partenaire.",
     "shopping_assistant_step3": "L'assistant lit et analyse automatiquement le guide des tailles affiché sur la page du produit.",
-    "shopping_assistant_step4": "Il vérifie vos **mesures corporelles** stockées dans les détails de votre profil.",
+    "shopping_assistant_step4": "Sur mobile, naviguez directement dans le **Centre d'achats** avec l'assistant flottant ou appuyez sur **Partager → DressApp** dans votre navigateur mobile.",
     "shopping_assistant_step5": "Il vous recommande la meilleure taille, en mettant en évidence la comparaison des ajustements.",
     "shopping_assistant_step6": "Cliquez sur **Ajouter au placard** pour importer le brouillon de l'article directement dans votre application.",
     "import_wardrobe_title": "Importer votre garde-robe",
@@ -5867,7 +5867,7 @@
     "openStoreDirect": "Ouvrir l'application / le site {{store}}",
     "pasteProductLink": "Vérifier le lien d'un vêtement",
     "howToMatch": "Comment trouver votre taille :",
-    "howToMatchDesc": "1. Parcourez un vêtement dans cette boutique.\n2. Appuyez sur le mètre ruban flottant ou partagez le lien.\n3. DressApp compare le guide des tailles de la marque avec vos mensurations !",
+    "howToMatchDesc": "1. Parcourez n'importe quel vêtement dans cette boutique.\n2. Appuyez sur le mètre ruban flottant ou partagez le lien avec DressApp.\n3. DressApp fait correspondre le tableau des tailles de la marque à vos mensurations !",
     "checkGarmentUrl": "Vous avez le lien d'un vêtement ?",
     "launchUrlChecker": "Ouvrir le scanner de taille",
     "customStoreTitle": "Acheter sur une autre boutique",
@@ -5877,5 +5877,8 @@
     "openHub": "Centre de shopping",
     "storeAssistant": "Assistant de taille {{store}}",
     "noMeasurementsSaved": "Aucune mensuration enregistrée"
+  },
+  "about": {
+    "feature6_desc": "Extension Chrome pour ordinateur et assistant de shopping mobile analysant les guides des tailles en ligne pour vous recommander la taille idéale avant d'acheter."
   }
 }

@@ -4041,10 +4041,10 @@
     "learnMore": "Scopri di più",
     "shopping_assistant_title": "Assistente agli acquisti",
     "shopping_assistant_p1": "Trova l'abbigliamento perfetto quando fai acquisti online su Zara, ASOS e altri negozi partner.",
-    "shopping_assistant_step1": "Installa l'**Estensione DressApp Chrome** dal Web Store.",
+    "shopping_assistant_step1": "Installa l'**Estensione Chrome di DressApp** sul tuo computer o apri lo **Shopping Hub** sul tuo smartphone.",
     "shopping_assistant_step2": "Passare alla pagina dei dettagli dell'indumento su un sito partner.",
     "shopping_assistant_step3": "L'assistente legge e analizza automaticamente la tabella delle taglie presente nella pagina del prodotto.",
-    "shopping_assistant_step4": "Controlla le tue **misure corporee** memorizzate nei dettagli del tuo profilo.",
+    "shopping_assistant_step4": "Su mobile, naviga direttamente nello **Shopping Hub** con l'assistente fluttuante oppure tocca **Condividi → DressApp** nel tuo browser mobile.",
     "shopping_assistant_step5": "Ti consiglia la taglia migliore per te, evidenziando il confronto delle vestibilità.",
     "shopping_assistant_step6": "Fai clic su **Aggiungi all'armadio** per importare la bozza dell'articolo direttamente nella tua app.",
     "import_wardrobe_title": "Importa il tuo guardaroba",
@@ -5784,25 +5784,25 @@
   },
   "stylistTour": {
     "step1": {
-      "badge": "Passo 1 di 4 • La tua capsula iniziale",
-      "title": "Abbina e combina capi singoli",
-      "desc": "I tuoi capi iniziali sono organizzati in righe per top, pantaloni/gonne e scarpe. Scorri o clicca sulle frecce per testare combinazioni adatte alle tue proporzioni personali."
+      "badge": "Passo 1 di 4 • La tua Capsule Iniziale",
+      "title": "Abbina Capi Singoli",
+      "desc": "I tuoi capi iniziali sono organizzati in Top, Pantaloni e Scarpe. Scorri o clicca sulle frecce per testare combinazioni adatte alla tua corporatura."
     },
     "step2": {
-      "badge": "Passo 2 di 4 • Mix IA con un clic",
-      "title": "Generazione istantanea di outfit con l'IA",
-      "desc": "Clicca su \"Genera nuovo outfit\" in qualsiasi momento. DressApp valuta teoria dei colori, stagionalità e proporzioni corporee per creare un look armonioso in pochi secondi."
+      "badge": "Passo 2 di 4 • Shuffle IA in Un Clic",
+      "title": "Creazione Outfit IA Istantanea",
+      "desc": "Clicca su \"Genera nuovo outfit\" in qualsiasi momento. DressApp analizza armocromia, stagionalità e corporatura per armonizzare il tuo look."
     },
     "step3": {
-      "badge": "Passo 3 di 4 • Sincronizzazione agenda e impegni",
-      "title": "Vestiti per la tua vera giornata",
-      "desc": "Attiva \"Agenda di oggi\" per abbinare gli outfit alle riunioni di Google Calendar, oppure scegli un'occasione (Lavoro, Casual, Festa, Palestra) per un dress code su misura."
+      "badge": "Passo 3 di 4 • Sincronizzazione Agenda",
+      "title": "Vestiti per la tua Giornata Reale",
+      "desc": "Attiva \"Agenda di oggi\" per abbinare gli outfit agli impegni di Google Calendar, o scegli un'occasione (Lavoro, Casual, Festa, Sport)."
     },
     "step4": {
-      "badge": "Passo 4 di 4 • Salva ed esplora",
-      "title": "Salva outfit e visita il tuo armadio",
-      "desc": "Ti piace un outfit? Clicca su \"Salva outfit\" per aggiungerlo al tuo Lookbook. Quando vuoi fotografare e aggiungere i tuoi vestiti reali, vai al tuo Armadio!",
-      "closetBtn": "Esplora il mio armadio"
+      "badge": "Passo 4 di 4 • Salva ed Esplora",
+      "title": "Salva Outfit ed Esplora il tuo Guardaroba",
+      "desc": "Ti piace il look? Clicca su \"Salva outfit\". Quando vorrai fotografare e aggiungere i tuoi veri vestiti, visita il tuo Guardaroba!",
+      "closetBtn": "Esplora il mio Guardaroba"
     }
   },
   "dressing_room_3d": {
@@ -5830,29 +5830,6 @@
     "loading": "Preparazione del tuo studio 3D…",
     "side_view": "Vista laterale",
     "back_view": "Vista posteriore"
-  },
-  "stylistTour": {
-    "step1": {
-      "badge": "Passo 1 di 4 • La tua Capsule Iniziale",
-      "title": "Abbina Capi Singoli",
-      "desc": "I tuoi capi iniziali sono organizzati in Top, Pantaloni e Scarpe. Scorri o clicca sulle frecce per testare combinazioni adatte alla tua corporatura."
-    },
-    "step2": {
-      "badge": "Passo 2 di 4 • Shuffle IA in Un Clic",
-      "title": "Creazione Outfit IA Istantanea",
-      "desc": "Clicca su \"Genera nuovo outfit\" in qualsiasi momento. DressApp analizza armocromia, stagionalità e corporatura per armonizzare il tuo look."
-    },
-    "step3": {
-      "badge": "Passo 3 di 4 • Sincronizzazione Agenda",
-      "title": "Vestiti per la tua Giornata Reale",
-      "desc": "Attiva \"Agenda di oggi\" per abbinare gli outfit agli impegni di Google Calendar, o scegli un'occasione (Lavoro, Casual, Festa, Sport)."
-    },
-    "step4": {
-      "badge": "Passo 4 di 4 • Salva ed Esplora",
-      "title": "Salva Outfit ed Esplora il tuo Guardaroba",
-      "desc": "Ti piace il look? Clicca su \"Salva outfit\". Quando vorrai fotografare e aggiungere i tuoi veri vestiti, visita il tuo Guardaroba!",
-      "closetBtn": "Esplora il mio Guardaroba"
-    }
   },
   "dressingRoom": {
     "title": "Camerino 3D",
@@ -5922,7 +5899,7 @@
     "openStoreDirect": "Apri App / Web di {{store}}",
     "pasteProductLink": "Verifica il link di un capo",
     "howToMatch": "Come trovare la tua taglia:",
-    "howToMatchDesc": "1. Cerca un capo in questo negozio.\n2. Tocca il metro a nastro fluttuante o condividi il link.\n3. DressApp confronta la tabella taglie con le tue misure fisiche!",
+    "howToMatchDesc": "1. Sfoglia qualsiasi capo in questo negozio.\n2. Tocca il metro a nastro fluttuante o condividi il link con DressApp.\n3. DressApp confronta la tabella delle taglie del brand con le tue misure corporee!",
     "checkGarmentUrl": "Hai il link di un capo?",
     "launchUrlChecker": "Apri lo scanner taglie",
     "customStoreTitle": "Acquista su un altro negozio",
@@ -6002,5 +5979,8 @@
     "quickScreenshots": "Caricamento multiplo screenshot e video",
     "quickScreenshotsDesc": "Preferisci caricare dalla galleria? Seleziona screenshot o registrazione schermo del tuo guardaroba.",
     "openHubBtn": "Apri Hub di Migrazione Guardaroba"
+  },
+  "about": {
+    "feature6_desc": "Estensione Chrome per desktop e assistente allo shopping mobile che scansionano le tabelle delle taglie sui negozi online, offrendo consigli di vestibilità personalizzati."
   }
 }

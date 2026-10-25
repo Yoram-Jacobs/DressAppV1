@@ -1,119 +1,101 @@
 # Shopping Assistant
 
-Koop slim online en vind de exacte maat die past bij je lichaamsafmetingen.
+Shop smart online and find the exact sizing matching your physical body measurements.
 
-## Overzicht
-De DressApp Shopping Assistant helpt je de perfecte maat te vinden bij online winkelen. Het werkt op twee manieren:
-- **Chrome-extensie**: Een volledige extensie voor desktop Chrome-browsers
-- **Mobiel bookmarklet**: Een lichtgewicht bookmarklet voor telefoons en tablets
+## Overview
+The DressApp Shopping Assistant helps you find the perfect size when shopping online. It works in two ways:
+- **Chrome Extension**: A full-featured extension for desktop Chrome browsers
+- **Mobile Shopping Hub & Native Share Sheet**: Instant size checks directly on your phone or tablet
 
-Beide opties scannen maattabellen op retailwebsites, vergelijken ze met je opgeslagen lichaamsafmetingen en raden direct je beste pasvorm aan. Geen gissen meer — gewoon zelfverzekerd winkelen!
+Both options scan size charts on retail websites, compare them with your saved body measurements, and recommend your best fit instantly. No more guessing — just confident shopping!
 
-## Voorwaarden
-- Een actief DressApp-account
-- Opgeslagen lichaamsafmetingen (lengte, gewicht, taille, voetlengte) in je profielinstellingen
-- Voor Chrome-extensie: Google Chrome browser op desktop
-- Voor mobiel bookmarklet: Elke moderne mobiele browser (Safari, Chrome, etc.)
+## Prerequisites
+- An active DressApp user account
+- Stored body measurements (height, weight, waist, foot length) in your Profile settings
+- For Desktop: Google Chrome browser
+- For Mobile: Any modern mobile browser (Chrome, Safari, Edge, etc.)
 
-## Optie A: Chrome-extensie (Aanbevolen)
+## Option A: Desktop Chrome Extension (Recommended for PC/Mac)
 
-### Installatie
-1. Ga naar [dressapp.co/extension/connect](https://dressapp.co/extension/connect)
-2. Klik op **"Verbinden met DressApp"** om je account te koppelen
-3. De extensie wordt automatisch geïnstalleerd in Chrome
-4. Zoek het DressApp-pictogram in de werkbalk van je browser
+### Installation
+1. Install the official extension directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp)
+2. Click **"Add to Chrome"**
+3. Open the extension popup from your browser toolbar and click **"Connect to DressApp"** to link your account
+4. You are all set! Sizing recommendations will now appear automatically on supported shopping sites.
 
-### Gebruik
-1. **Bezoek een ondersteunde winkel** (SHEIN, AliExpress, Zara, Asos, H&M, etc.)
-2. **Zoek de DressApp-knop** — je ziet:
-   - Een zwevende knop-linksonder (`* DressApp`)
-   - OF een inline-knop naast de maatselectie (`* DressApp size`)
-3. **Klik op de knop** — de extensie automatisch:
-   - Scant de pagina op maattabellen
-   - Analyseert de tabel met AI
-   - Toont je gepersonaliseerde maataanbeveling
-4. **Bekijk je resultaat** — een kaart verschijnt met:
-   - Je aanbevolen maat (bijv. "Maat 38")
-   - Vertrouwensniveau (bijv. "90% vertrouwen")
-   - Welke metingen overeenkomen (borst, taille, etc.)
-   - Alternatieve maten als je een lossere of strakkere pasvorm preferneert
+### How to Use
+1. **Visit any supported store** (SHEIN, AliExpress, Zara, Asos, H&M, etc.)
+2. **Look for the DressApp button** — you'll see either:
+   - A floating button in the bottom-left corner (`* DressApp`)
+   - OR an inline button next to the size selector (`* DressApp size`)
+3. **Click the button** — the extension automatically:
+   - Scans the page for size charts
+   - Analyzes the chart using AI
+   - Shows your personalized size recommendation
+4. **See your result** — a card appears showing:
+   - Your recommended size (e.g., "Size 38")
+   - Confidence level (e.g., "90% confident")
+   - Which measurements matched (bust, waist, etc.)
+   - Alternative sizes if you prefer a looser or tighter fit
 
-## Optie B: Mobiel bookmarklet
+## Option B: Mobile Shopping Hub & Native Share Sheet (For Mobile Phones)
 
-### Installatie
-1. Ga op je telefoon naar je DressApp-profielpagina
-2. Zoek de sectie **Shopping Assistant**
-3. Kopieerde verstrekte bookmarklet-code
-4. Voeg deze toe aan je mobiele browser-bladwijzers:
-   - **Safari (iOS)**: Tik op de Deel-knop → "Voeg toe aan bladwijzers"
-   - **Chrome (Android)**: Tik op de drie punten → "Bladwijzer" of "Toevoegen aan startscherm"
+On mobile, you do not need to install extensions, copy scripts, or edit bookmarks. You have two frictionless paths:
 
-### Gebruik
-1. **Bezoek een ondersteunde winkel** in je mobiele browser
-2. **Navigeer naar een productpagina** met maatinformatie
-3. **Open je bladwijzers** en tik op het DressApp-bookmarklet
-4. **Verleen toestemming** indien gevraagd (het bookmarklet moet de pagina lezen)
-5. **Bekijk je aanbeveling** — een kaart verschijnt met je beste maatovereenkomst
+### Path 1: Inside DressApp's Shopping Hub
+1. Open the **Shopping Hub** inside DressApp (`/shopping`).
+2. Select any fashion platform (Zara, ASOS, Mango, AliExpress, etc.) or paste any store URL.
+3. Your personalized brand sizes (**Top / Shirt**, **Bottoms / Pants**, **Footwear**) are pre-calculated and displayed immediately.
+4. Tap the **floating tape-measure assistant** anytime on screen to analyze specific garments or scan size tables right in place!
 
-## Handmatig bijsnijden (als automatische detectie niet werkt)
+### Path 2: In Mobile Chrome, Safari, or Retail Apps
+1. When browsing Zara, ASOS, or any store in your mobile browser or store app, find a garment you love.
+2. Tap the browser's native **Share** button (the arrow icon in Safari or 3-dots `⋮` → **Share** in Chrome).
+3. Tap **DressApp** from the share menu.
+4. DressApp opens instantly, matches the garment against your body measurements, and recommends your best fit!
+5. **Tip**: If a store hides measurements behind pop-ups, snap a screenshot and tap **Share → DressApp** on the screenshot preview—DressApp's Gemini Vision OCR reads the table automatically.
 
-Soms zijn maattabellen verborgen of in ongebruikelijke formaten. Geen probleem!
+## What You'll See
 
-1. Klik op de DressApp-knop of het bookmarklet
-2. Als er automatisch geen tabel wordt gevonden, zie je **"Trek een kader rond de maattabel"**
-3. **Tik en houd vast** om een kader te tekenen rond het maattabelgebied
-4. Pas het kader indien nodig aan
-5. Tik op **Apply** om te bevestigen
-6. De assistant analyseert het bijgesneden gebied en toont je aanbeveling
+### Size Recommendation Card
+- Recommended size with confidence percentage
+- Why this size fits your measurements
+- Alternative sizes (e.g., "M for a snug fit" or "L for a relaxed fit")
 
-## Wat je zult zien
+### Warning Cards
+- If your profile measurements seem unusual, you'll get a friendly heads-up
+- If you're not logged in, you'll be prompted to connect your account
 
-### Maataanbevelingskaart
-- Aanbevolen maat met vertrouwenspercentage
-- Waarom deze maat bij je metingen past
-- Alternatieve maten (bijv. "M voor een strakke pasvorm" of "L voor een lossere pasvorm")
+## Expected Results
+Accurate, real-time size recommendations rendered directly on retail store product descriptions, eliminating returns due to sizing issues.
 
-### Waarschuwingskaarten
-- Als je lichaamsafmetingen ongebruikelijk lijken, krijg je een vriendelijke waarschuwing
-- Als je niet bent ingelogd, wordt je gevraagd je account te koppelen
-
-## Verwachte resultaten
-Accurate, realtime maataanbevelingen die direct worden weergegeven op productbeschrijving van retailwinkels, waardoor retouren door maatproblemen worden geëlimineerd.
-
-## Ondersteunde winkels
-Deze Shopping Assistant werkt op de meeste e-commerce-websites, waaronder:
+## Supported Stores
+The Shopping Assistant works on most e-commerce sites, including:
 - SHEIN
 - AliExpress
 - Zara
 - Asos
 - H&M
-- En nog veel meer!
+- Mango
+- Nike
+- Uniqlo
+- And many more!
 
-## Probleemoplossing
+## Troubleshooting
 
-### Chrome-extensie
-- **DressApp-knop niet zichtbaar?** Vernieuw de pagina en wacht een paar seconden tot de extensie is geladen.
-- **"No clear match"-bericht?** Probeer een smaller kader te tekenen alleen rond het maattabelgebied (gebruik handmatig bijsnijden).
-- **"DressApp was just updated"?** Vernieuw de pagina om de nieuwste versie te laden.
-- **Toestemmingsverzoeken?** De extensie kan toestemming vragen om de pagina te lezen — dit is normaal en vereist om maattabellen te analyseren.
+### Desktop Chrome Extension
+- **No DressApp button visible?** Refresh the page and wait a few seconds for the extension to load.
+- **"No clear match" message?** Try drawing a tighter box around just the size chart area (use Manual Crop).
+- **"DressApp was just updated"?** Refresh the page to load the latest version.
+- **Permission requests?** The extension may ask for permission to read the page — this is normal and required to analyze size charts.
 
-### Mobiel bookmarklet
-- **Bookmarklet werkt niet?** Zorg ervoor dat je op een productpagina bent met maatinformatie.
-- **Geen aanbeveling verschijnt?** Probeer de pagina te vernieuwen en opnieuw op het bookmarklet te tikken.
-- **Kader tekenen werkt niet?** Zorg ervoor dat je tikt en vasthoudt, dan sleept om het kader te tekenen.
+### Mobile Shopping
+- **DressApp not showing in your phone's Share sheet?** Open DressApp once on your mobile home screen to let Android/iOS register the share target.
+- **Store link protected by anti-bot verification?** Simply take a screenshot of the size chart table and tap **Share → DressApp** or upload it into the Shopping Assistant.
+- **Wrong size recommended?** Double-check that your body measurements (chest, waist, hip, inseam, foot length) are up to date in your Profile.
 
-### Algemene problemen
-- **Geen aanbevelingsbadge verschijnt**: Zorg ervoor dat je bent ingelogd op je account in de extensie-popup of het bookmarklet.
-- **Metingen leeg**: Ga terug naar je profielinstellingen en vul alle metingsvelden in (lengte, gewicht, taille, voetlengte).
-- **Verkeerde maat aanbevolen?** Controleer of je lichaamsafmetingen up-to-date zijn in je profilo.
-
-## Privacy en beveiliging
-- Je lichaamsafmetingen worden veilig opgeslagen in je DressApp-account
-- De assistant leest alleen maattabelgegevens van productpagina's
-- Geen persoonlijke winkelgegevens worden gedeeld met derden
-- Je kunt de extensie op elk moment loskoppelen vanuit je DressApp-profiel
-
-## Beperkingen
-- Maattabelanalyse is beperkt tot ondersteunde winkels
-- Het mobiel bookmarklet heeft minder functies dan de Chrome-extensie
-- Sommige winkels met aangepaste maattabelformaten vereisen mogelijk handmatig bijsnijden
+## Privacy & Security
+- Your body measurements are stored securely in your DressApp account
+- The assistant only reads size chart data from product pages
+- No personal shopping data is shared with third parties
+- You can disconnect the extension anytime from your DressApp profile

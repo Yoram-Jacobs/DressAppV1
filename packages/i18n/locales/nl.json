@@ -4026,10 +4026,10 @@
     "learnMore": "Meer informatie",
     "shopping_assistant_title": "Winkelassistent",
     "shopping_assistant_p1": "Vind de perfecte kledingmaat wanneer u online winkelt bij Zara, ASOS en andere partnerwinkels.",
-    "shopping_assistant_step1": "Installeer de **DressApp Chrome-extensie** vanuit de Web Store.",
+    "shopping_assistant_step1": "Installeer de **DressApp Chrome-extensie** op uw computer of open de **Shopping Hub** op uw telefoon.",
     "shopping_assistant_step2": "Navigeer naar een kledingdetailspagina op een partnersite.",
     "shopping_assistant_step3": "De assistent leest en analyseert automatisch de maattabel op de productpagina.",
-    "shopping_assistant_step4": "Het controleert uw **lichaamsafmetingen** die zijn opgeslagen in uw profielgegevens.",
+    "shopping_assistant_step4": "Browse op uw telefoon direct binnen de **Shopping Hub** met de zwevende assistent, of tik op **Delen → DressApp** in uw mobiele browser.",
     "shopping_assistant_step5": "Het adviseert de beste maat voor u, waarbij de pasvormvergelijking wordt benadrukt.",
     "shopping_assistant_step6": "Klik op **Toevoegen aan kast** om het itemconcept rechtstreeks naar uw app te importeren.",
     "import_wardrobe_title": "Importeer je garderobe",
@@ -5878,7 +5878,7 @@
     "openStoreDirect": "Open {{store}} app / website",
     "pasteProductLink": "Kledinglink controleren",
     "howToMatch": "Hoe vind je jouw maat:",
-    "howToMatchDesc": "1. Bekijk een kledingstuk in deze winkel.\n2. Tik op het zwevende meetlint of deel de link.\n3. DressApp vergelijkt de maattabel van het merk met jouw lichaamsmaten!",
+    "howToMatchDesc": "1. Bekijk een kledingstuk in deze winkel.\n2. Tik op het zwevende meetlint of deel de link met DressApp.\n3. DressApp vergelijkt de maattabel van het merk met uw lichaamsafmetingen!",
     "checkGarmentUrl": "Heb je een specifieke kledinglink?",
     "launchUrlChecker": "Open maatscanner",
     "customStoreTitle": "Winkelen op andere website",
@@ -5888,5 +5888,8 @@
     "openHub": "Shopping Hub",
     "storeAssistant": "{{store}} Maatassistent",
     "noMeasurementsSaved": "Geen maten opgeslagen in profiel"
+  },
+  "about": {
+    "feature6_desc": "Desktop Chrome-extensie en mobiele winkelassistent die maattabellen in webwinkels scannen voor persoonlijk maatadvies voordat u koopt."
   }
 }

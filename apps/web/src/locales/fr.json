@@ -4034,10 +4034,10 @@
     "learnMore": "En savoir plus",
     "shopping_assistant_title": "Assistante d'achat",
     "shopping_assistant_p1": "Trouvez la coupe idéale lors de vos achats en ligne sur Zara, ASOS et d'autres magasins partenaires.",
-    "shopping_assistant_step1": "Installez l'**extension Chrome DressApp** à partir du Web Store.",
+    "shopping_assistant_step1": "Installez l'**extension Chrome DressApp** sur votre ordinateur ou ouvrez le **Centre d'achats** sur votre téléphone.",
     "shopping_assistant_step2": "Accédez à n’importe quelle page de détails de vêtement sur un site partenaire.",
     "shopping_assistant_step3": "L'assistant lit et analyse automatiquement le guide des tailles affiché sur la page du produit.",
-    "shopping_assistant_step4": "Il vérifie vos **mesures corporelles** stockées dans les détails de votre profil.",
+    "shopping_assistant_step4": "Sur mobile, naviguez directement dans le **Centre d'achats** avec l'assistant flottant ou appuyez sur **Partager → DressApp** dans votre navigateur mobile.",
     "shopping_assistant_step5": "Il vous recommande la meilleure taille, en mettant en évidence la comparaison des ajustements.",
     "shopping_assistant_step6": "Cliquez sur **Ajouter au placard** pour importer le brouillon de l'article directement dans votre application.",
     "import_wardrobe_title": "Importer votre garde-robe",
@@ -5777,25 +5777,25 @@
   },
   "stylistTour": {
     "step1": {
-      "badge": "Étape 1 sur 4 • Votre garde-robe capsule initiale",
-      "title": "Associez et combinez vos pièces",
-      "desc": "Vos vêtements de départ sont organisés en hauts, bas et chaussures. Faites glisser ou cliquez sur les flèches pour essayer différentes combinaisons adaptées à votre morphologie."
+      "badge": "Étape 1 sur 4 • Votre Capsule de Départ",
+      "title": "Assortir les Pièces",
+      "desc": "Vos vêtements de départ sont organisés en rangées : Hauts, Bas et Chaussures. Balayez ou cliquez sur les flèches pour tester des combinaisons adaptées à vos proportions."
     },
     "step2": {
-      "badge": "Étape 2 sur 4 • Mélange IA en un clic",
-      "title": "Génération instantanée de tenues par IA",
-      "desc": "Cliquez sur « Générer une nouvelle tenue » à tout moment. DressApp évalue l'harmonie des couleurs, la saison et vos proportions pour composer un look parfait en quelques secondes."
+      "badge": "Étape 2 sur 4 • Mix IA en Un Clic",
+      "title": "Génération Instantanée par IA",
+      "desc": "Cliquez sur \"Générer une nouvelle tenue\" à tout moment. DressApp analyse la théorie des couleurs, la saison et votre silhouette pour harmoniser votre look."
     },
     "step3": {
-      "badge": "Étape 3 sur 4 • Synchronisation de l'agenda",
-      "title": "Habillez-vous selon votre journée réelle",
-      "desc": "Activez « Programme du jour » pour adapter vos tenues à vos réunions Google Calendar, ou choisissez une occasion (Travail, Décontracté, Soirée, Sport) pour un style sur mesure."
+      "badge": "Étape 3 sur 4 • Synchronisation d'Agenda",
+      "title": "Habillez-vous pour Votre Journée",
+      "desc": "Activez \"Agenda du jour\" pour adapter votre tenue à vos réunions Google Calendar, ou choisissez une occasion (Travail, Décontracté, Fête, Sport)."
     },
     "step4": {
-      "badge": "Étape 4 sur 4 • Sauvegardez et explorez",
-      "title": "Enregistrez vos looks et découvrez votre dressing",
-      "desc": "Une tenue vous plaît ? Cliquez sur « Enregistrer la tenue » pour l'ajouter à votre Lookbook. Dès que vous souhaitez photographier vos vrais vêtements, rendez-vous dans votre Dressing !",
-      "closetBtn": "Explorer mon dressing"
+      "badge": "Étape 4 sur 4 • Sauvegarder et Explorer",
+      "title": "Sauvegardez vos Tenues & Visitez votre Garde-robe",
+      "desc": "Vous aimez cette tenue ? Cliquez sur \"Enregistrer la tenue\". Dès que vous êtes prêt à photographier vos vrais vêtements, rendez-vous dans votre Garde-robe !",
+      "closetBtn": "Explorer ma Garde-robe"
     }
   },
   "dressing_room_3d": {
@@ -5823,29 +5823,6 @@
     "loading": "Préparation de votre studio 3D…",
     "side_view": "Vue de côté",
     "back_view": "Vue de dos"
-  },
-  "stylistTour": {
-    "step1": {
-      "badge": "Étape 1 sur 4 • Votre Capsule de Départ",
-      "title": "Assortir les Pièces",
-      "desc": "Vos vêtements de départ sont organisés en rangées : Hauts, Bas et Chaussures. Balayez ou cliquez sur les flèches pour tester des combinaisons adaptées à vos proportions."
-    },
-    "step2": {
-      "badge": "Étape 2 sur 4 • Mix IA en Un Clic",
-      "title": "Génération Instantanée par IA",
-      "desc": "Cliquez sur \"Générer une nouvelle tenue\" à tout moment. DressApp analyse la théorie des couleurs, la saison et votre silhouette pour harmoniser votre look."
-    },
-    "step3": {
-      "badge": "Étape 3 sur 4 • Synchronisation d'Agenda",
-      "title": "Habillez-vous pour Votre Journée",
-      "desc": "Activez \"Agenda du jour\" pour adapter votre tenue à vos réunions Google Calendar, ou choisissez une occasion (Travail, Décontracté, Fête, Sport)."
-    },
-    "step4": {
-      "badge": "Étape 4 sur 4 • Sauvegarder et Explorer",
-      "title": "Sauvegardez vos Tenues & Visitez votre Garde-robe",
-      "desc": "Vous aimez cette tenue ? Cliquez sur \"Enregistrer la tenue\". Dès que vous êtes prêt à photographier vos vrais vêtements, rendez-vous dans votre Garde-robe !",
-      "closetBtn": "Explorer ma Garde-robe"
-    }
   },
   "dressingRoom": {
     "title": "Cabine d'essayage 3D",
@@ -5915,7 +5892,7 @@
     "openStoreDirect": "Ouvrir l'application / le site {{store}}",
     "pasteProductLink": "Vérifier le lien d'un vêtement",
     "howToMatch": "Comment trouver votre taille :",
-    "howToMatchDesc": "1. Parcourez un vêtement dans cette boutique.\n2. Appuyez sur le mètre ruban flottant ou partagez le lien.\n3. DressApp compare le guide des tailles de la marque avec vos mensurations !",
+    "howToMatchDesc": "1. Parcourez n'importe quel vêtement dans cette boutique.\n2. Appuyez sur le mètre ruban flottant ou partagez le lien avec DressApp.\n3. DressApp fait correspondre le tableau des tailles de la marque à vos mensurations !",
     "checkGarmentUrl": "Vous avez le lien d'un vêtement ?",
     "launchUrlChecker": "Ouvrir le scanner de taille",
     "customStoreTitle": "Acheter sur une autre boutique",
@@ -5995,5 +5972,8 @@
     "quickScreenshots": "Importer des captures ou vidéos",
     "quickScreenshotsDesc": "Vous préférez importer depuis votre galerie ? Choisissez des captures ou un enregistrement vidéo de votre dressing.",
     "openHubBtn": "Ouvrir le Hub de migration"
+  },
+  "about": {
+    "feature6_desc": "Extension Chrome pour ordinateur et assistant de shopping mobile analysant les guides des tailles en ligne pour vous recommander la taille idéale avant d'acheter."
   }
 }

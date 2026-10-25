@@ -1,119 +1,101 @@
-# Einkaufsassistent
+# Shopping Assistant
 
-Kaufen Sie online intelligent und finden Sie die exakte Größe, die zu Ihren körperlichen Maßen passt.
+Shop smart online and find the exact sizing matching your physical body measurements.
 
-## Überblick
-Der DressApp Einkaufsassistent hilft Ihnen, die perfekte Größe beim Online-Shopping zu finden. Er funktioniert auf zwei Arten:
-- **Chrome-Erweiterung**: Eine vollwertige Erweiterung für Desktop-Chrome-Browser
-- **Mobile Lesezeichen**: Ein leichtes Lesezeichen für Handys und Tablets
+## Overview
+The DressApp Shopping Assistant helps you find the perfect size when shopping online. It works in two ways:
+- **Chrome Extension**: A full-featured extension for desktop Chrome browsers
+- **Mobile Shopping Hub & Native Share Sheet**: Instant size checks directly on your phone or tablet
 
-Beide Optionen scannen Größentabellen auf Einzelhandelswebseiten, vergleichen sie mit Ihren gespeicherten Körpermaßen und empfehlen sofort Ihre beste Passform. Kein Rätseln mehr — nur sicheres Einkaufen!
+Both options scan size charts on retail websites, compare them with your saved body measurements, and recommend your best fit instantly. No more guessing — just confident shopping!
 
-## Voraussetzungen
-- Ein aktives DressApp-Benutzerkonto
-- Gespeicherte Körpermaße (Höhe, Gewicht, Taille, Fußlänge) in Ihren Profileinstellungen
-- Für Chrome-Erweiterung: Google Chrome Browser auf Desktop
-- Für mobiles Lesezeichen: Jeder moderne Mobile Browser (Safari, Chrome, etc.)
+## Prerequisites
+- An active DressApp user account
+- Stored body measurements (height, weight, waist, foot length) in your Profile settings
+- For Desktop: Google Chrome browser
+- For Mobile: Any modern mobile browser (Chrome, Safari, Edge, etc.)
 
-## Option A: Chrome-Erweiterung (Empfohlen)
-
-### Installation
-1. Besuchen Sie [dressapp.co/extension/connect](https://dressapp.co/extension/connect)
-2. Klicken Sie auf **"Mit DressApp verbinden"**, um Ihr Konto zu verknüpfen
-3. Die Erweiterung wird automatisch in Chrome installiert
-4. Suchen Sie nach dem DressApp-Symbol in der Symbolleiste Ihres Browsers
-
-### Verwendung
-1. **Besuchen Sie ein unterstütztes Geschäft** (SHEIN, AliExpress, Zara, Asos, H&M, usw.)
-2. **Suchen Sie nach der DressApp-Schaltfläche** — Sie sehen entweder:
-   - Eine schwebende Schaltfläche in der unteren linken Ecke (`* DressApp`)
-   - ODER eine Inline-Schaltfläche neben der Größenauswahl (`* DressApp size`)
-3. **Klicken Sie auf die Schaltfläche** — die Erweiterung automatisch:
-   - Scannt die Seite nach Größentabellen
-   - Analysiert die Tabelle mit KI
-   - Zeigt Ihre personalisierte Größenempfehlung an
-4. **Sehen Sie Ihr Ergebnis** — eine Karte erscheint mit:
-   - Ihrer empfohlenen Größe (z.B. "Größe 38")
-   - Vertrauensniveau (z.B. "90% Vertrauen")
-   - Welche Maße übereinstimmen (Brust, Taille, usw.)
-   - Alternative Größen, wenn Sie eine lockere oder engere Passform bevorzugen
-
-## Option B: Mobiles Lesezeichen
+## Option A: Desktop Chrome Extension (Recommended for PC/Mac)
 
 ### Installation
-1. Gehen Sie auf Ihrem Handy zu Ihrer DressApp-Profilseite
-2. Finden Sie den Abschnitt **Einkaufsassistent**
-3. Kopieren Sie den bereitgestellten Lesezeichen-Code
-4. Fügen Sie ihn zu den Lesezeichen Ihres Mobile Browsers hinzu:
-   - **Safari (iOS)**: Tippen Sie auf die Share-Schaltfläche → "Zu Lesezeichen hinzufügen"
-   - **Chrome (Android)**: Tippen Sie auf die drei Punkte → "Lesezeichen" oder "Zum Startbildschirm hinzufügen"
+1. Install the official extension directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp)
+2. Click **"Add to Chrome"**
+3. Open the extension popup from your browser toolbar and click **"Connect to DressApp"** to link your account
+4. You are all set! Sizing recommendations will now appear automatically on supported shopping sites.
 
-### Verwendung
-1. **Besuchen Sie ein unterstütztes Geschäft** in Ihrem Mobile Browser
-2. **Navigieren Sie zu einer Produktseite** mit Größeninformationen
-3. **Öffnen Sie Ihre Lesezeichen** und tippen Sie auf das DressApp-Lesezeichen
-4. **Erteilen Sie die Berechtigung**, wenn gefragt (das Lesezeichen muss die Seite lesen)
-5. **Sehen Sie Ihre Empfehlung** — eine Karte erscheint mit Ihrer besten Größenübereinstimmung
+### How to Use
+1. **Visit any supported store** (SHEIN, AliExpress, Zara, Asos, H&M, etc.)
+2. **Look for the DressApp button** — you'll see either:
+   - A floating button in the bottom-left corner (`* DressApp`)
+   - OR an inline button next to the size selector (`* DressApp size`)
+3. **Click the button** — the extension automatically:
+   - Scans the page for size charts
+   - Analyzes the chart using AI
+   - Shows your personalized size recommendation
+4. **See your result** — a card appears showing:
+   - Your recommended size (e.g., "Size 38")
+   - Confidence level (e.g., "90% confident")
+   - Which measurements matched (bust, waist, etc.)
+   - Alternative sizes if you prefer a looser or tighter fit
 
-## Manuelles Zuschneiden (falls die automatische Erkennung nicht funktioniert)
+## Option B: Mobile Shopping Hub & Native Share Sheet (For Mobile Phones)
 
-Manchmal sind Größentabellen versteckt oder in ungewöhnlichen Formaten. Kein Problem!
+On mobile, you do not need to install extensions, copy scripts, or edit bookmarks. You have two frictionless paths:
 
-1. Klicken Sie auf die DressApp-Schaltfläche oder das Lesezeichen
-2. Wenn keine Tabelle automatisch gefunden wird, sehen Sie **"Zeichnen Sie eine Box um die Größentabelle"**
-3. **Tippen und halten Sie**, um eine Box um den Bereich der Größentabelle zu zeichnen
-4. Passen Sie die Box bei Bedarf an
-5. Tippen Sie auf **Apply**, um zu bestätigen
-6. Der Assistent analysiert den zugeschnittenen Bereich und zeigt Ihre Empfehlung an
+### Path 1: Inside DressApp's Shopping Hub
+1. Open the **Shopping Hub** inside DressApp (`/shopping`).
+2. Select any fashion platform (Zara, ASOS, Mango, AliExpress, etc.) or paste any store URL.
+3. Your personalized brand sizes (**Top / Shirt**, **Bottoms / Pants**, **Footwear**) are pre-calculated and displayed immediately.
+4. Tap the **floating tape-measure assistant** anytime on screen to analyze specific garments or scan size tables right in place!
 
-## Was Sie sehen werden
+### Path 2: In Mobile Chrome, Safari, or Retail Apps
+1. When browsing Zara, ASOS, or any store in your mobile browser or store app, find a garment you love.
+2. Tap the browser's native **Share** button (the arrow icon in Safari or 3-dots `⋮` → **Share** in Chrome).
+3. Tap **DressApp** from the share menu.
+4. DressApp opens instantly, matches the garment against your body measurements, and recommends your best fit!
+5. **Tip**: If a store hides measurements behind pop-ups, snap a screenshot and tap **Share → DressApp** on the screenshot preview—DressApp's Gemini Vision OCR reads the table automatically.
 
-### Größenempfehlungskarte
-- Empfohlene Größe mit Vertrauensprozent
-- Warum diese Größe zu Ihren Maßen passt
-- Alternative Größen (z.B. "M für eine enge Passform" oder "L für eine lockere Passform")
+## What You'll See
 
-### Warnkarten
-- Wenn Ihre Körpermaße ungewöhnlich erscheinen, erhalten Sie eine freundliche Warnung
-- Wenn Sie nicht angemeldet sind, werden Sie aufgefordert, Ihr Konto zu verknüpfen
+### Size Recommendation Card
+- Recommended size with confidence percentage
+- Why this size fits your measurements
+- Alternative sizes (e.g., "M for a snug fit" or "L for a relaxed fit")
 
-## Erwartete Ergebnisse
-Präzise Echtzeit-Größenempfehlungen, die direkt auf den Produktbeschreibungen von Einzelhandelsgeschäften angezeigt werden und Retouren aufgrund von Größenproblemen eliminieren.
+### Warning Cards
+- If your profile measurements seem unusual, you'll get a friendly heads-up
+- If you're not logged in, you'll be prompted to connect your account
 
-## Unterstützte Geschäfte
-Der Einkaufsassistent funktioniert auf den meisten E-Commerce-Websites, darunter:
+## Expected Results
+Accurate, real-time size recommendations rendered directly on retail store product descriptions, eliminating returns due to sizing issues.
+
+## Supported Stores
+The Shopping Assistant works on most e-commerce sites, including:
 - SHEIN
 - AliExpress
 - Zara
 - Asos
 - H&M
-- Und viele weitere!
+- Mango
+- Nike
+- Uniqlo
+- And many more!
 
-## Fehlerbehebung
+## Troubleshooting
 
-### Chrome-Erweiterung
-- **Keine DressApp-Schaltfläche sichtbar?** Aktualisieren Sie die Seite und warten Sie ein paar Sekunden, bis die Erweiterung geladen ist.
-- **"No clear match"-Meldung?** Versuchen Sie, eine engere Box nur um den Bereich der Größentabelle zu zeichnen (verwenden Sie manuelles Zuschneiden).
-- **"DressApp was just updated"?** Aktualisieren Sie die Seite, um die neueste Version zu laden.
-- **Berechtigungsanfragen?** Die Erweiterung kann um Erlaubnis bitten, die Seite zu lesen — dies ist normal und erforderlich, um Größentabellen zu analysieren.
+### Desktop Chrome Extension
+- **No DressApp button visible?** Refresh the page and wait a few seconds for the extension to load.
+- **"No clear match" message?** Try drawing a tighter box around just the size chart area (use Manual Crop).
+- **"DressApp was just updated"?** Refresh the page to load the latest version.
+- **Permission requests?** The extension may ask for permission to read the page — this is normal and required to analyze size charts.
 
-### Mobiles Lesezeichen
-- **Lesezeichen funktioniert nicht?** Stellen Sie sicher, dass Sie sich auf einer Produktseite mit Größeninformationen befinden.
-- **Keine Empfehlung erscheint?** Versuchen Sie, die Seite zu aktualisieren und erneut auf das Lesezeichen zu tippen.
-- **Box-Zeichnen funktioniert nicht?** Stellen Sie sicher, dass Sie tippen und halten, dann zeichnen, um die Box zu erstellen.
+### Mobile Shopping
+- **DressApp not showing in your phone's Share sheet?** Open DressApp once on your mobile home screen to let Android/iOS register the share target.
+- **Store link protected by anti-bot verification?** Simply take a screenshot of the size chart table and tap **Share → DressApp** or upload it into the Shopping Assistant.
+- **Wrong size recommended?** Double-check that your body measurements (chest, waist, hip, inseam, foot length) are up to date in your Profile.
 
-### Allgemeine Probleme
-- **Kein Empfehlungs-Badge erscheint**: Stellen Sie sicher, dass Sie in Ihrem Konto im Popup der Erweiterung oder dem Lesezeichen angemeldet sind.
-- **Maße leer**: Gehen Sie zurück zu Ihren Profileinstellungen und füllen Sie alle Maßfelder aus (Höhe, Gewicht, Taille, Fußlänge).
-- **Falsche Größe empfohlen?** Überprüfen Sie, ob Ihre Körpermaße in Ihrem Profil aktuell sind.
-
-## Datenschutz und Sicherheit
-- Ihre Körpermaße werden sicher in Ihrem DressApp-Konto gespeichert
-- Der Assistent liest nur Größentabellen-Daten von Produktseiten
-- Keine persönlichen Einkaufsdaten werden an Dritte weitergegeben
-- Sie können die Erweiterung jederzeit über Ihr DressApp-Profil trennen
-
-## Einschränkungen
-- Die Analyse von Größentabellen ist auf unterstützte Geschäfte beschränkt
-- Das mobile Lesezeichen hat weniger Funktionen als die Chrome-Erweiterung
-- Einige Geschäfte mit benutzerdefinierten Größentabellen-Formaten erfordern möglicherweise manuelles Zuschneiden
+## Privacy & Security
+- Your body measurements are stored securely in your DressApp account
+- The assistant only reads size chart data from product pages
+- No personal shopping data is shared with third parties
+- You can disconnect the extension anytime from your DressApp profile

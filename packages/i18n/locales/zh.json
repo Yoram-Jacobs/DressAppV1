@@ -4026,10 +4026,10 @@
     "learnMore": "了解更多",
     "shopping_assistant_title": "购物助理",
     "shopping_assistant_p1": "在 Zara、ASOS 和其他合作商店网上购物时，找到最合身的服装。",
-    "shopping_assistant_step1": "从网上应用店安装 **DressApp Chrome 扩展**。",
+    "shopping_assistant_step1": "在电脑上安装 **DressApp Chrome 扩展程序**，或在手机上打开**购物中心 (Shopping Hub)**。",
     "shopping_assistant_step2": "导航至合作伙伴网站上的任何服装详细信息页面。",
     "shopping_assistant_step3": "购物助手会自动读取并解析商品页面上的尺码表。",
-    "shopping_assistant_step4": "它会检查您的个人资料详细信息中存储的**身体测量数据**。",
+    "shopping_assistant_step4": "在手机上，您可以直接在带有悬浮助手的**购物中心**中浏览，或者在手机浏览器中点击**分享 → DressApp**。",
     "shopping_assistant_step5": "它会为您推荐最佳尺码，并突出显示合身比较。",
     "shopping_assistant_step6": "单击 **添加到壁橱** 将项目草稿直接导入到您的应用程序中。",
     "import_wardrobe_title": "导入您的衣橱",
@@ -5874,7 +5874,7 @@
     "openStoreDirect": "打开 {{store}} 应用 / 网页",
     "pasteProductLink": "查询任意服装链接",
     "howToMatch": "如何获取适合您的尺码：",
-    "howToMatchDesc": "1. 在网店中浏览任意服饰。\n2. 点击悬浮卷尺图标或分享链接。\n3. DressApp 会将品牌尺码表与您的身体尺寸进行智能匹配！",
+    "howToMatchDesc": "1. 在此商店中浏览任何服饰。\n2. 点击悬浮卷尺按钮或将链接分享至 DressApp。\n3. DressApp 将根据您的身体测量数据精准匹配品牌尺码表！",
     "checkGarmentUrl": "已有具体的服装链接？",
     "launchUrlChecker": "打开完整尺码扫描器",
     "customStoreTitle": "在自定义平台购物",
@@ -5884,5 +5884,8 @@
     "openHub": "购物中心",
     "storeAssistant": "{{store}} 尺码助手",
     "noMeasurementsSaved": "个人档案中尚未保存身材数据"
+  },
+  "about": {
+    "feature6_desc": "电脑端 Chrome 扩展程序与移动端购物助手，能够自动扫描电商网站的尺码表，在购买前为您提供即时且个性化的合身推荐。"
   }
 }

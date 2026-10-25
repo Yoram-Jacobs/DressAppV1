@@ -4041,10 +4041,10 @@
     "learnMore": "Meer informatie",
     "shopping_assistant_title": "Winkelassistent",
     "shopping_assistant_p1": "Vind de perfecte kledingmaat wanneer u online winkelt bij Zara, ASOS en andere partnerwinkels.",
-    "shopping_assistant_step1": "Installeer de **DressApp Chrome-extensie** vanuit de Web Store.",
+    "shopping_assistant_step1": "Installeer de **DressApp Chrome-extensie** op uw computer of open de **Shopping Hub** op uw telefoon.",
     "shopping_assistant_step2": "Navigeer naar een kledingdetailspagina op een partnersite.",
     "shopping_assistant_step3": "De assistent leest en analyseert automatisch de maattabel op de productpagina.",
-    "shopping_assistant_step4": "Het controleert uw **lichaamsafmetingen** die zijn opgeslagen in uw profielgegevens.",
+    "shopping_assistant_step4": "Browse op uw telefoon direct binnen de **Shopping Hub** met de zwevende assistent, of tik op **Delen → DressApp** in uw mobiele browser.",
     "shopping_assistant_step5": "Het adviseert de beste maat voor u, waarbij de pasvormvergelijking wordt benadrukt.",
     "shopping_assistant_step6": "Klik op **Toevoegen aan kast** om het itemconcept rechtstreeks naar uw app te importeren.",
     "import_wardrobe_title": "Importeer je garderobe",
@@ -5788,25 +5788,25 @@
   },
   "stylistTour": {
     "step1": {
-      "badge": "Stap 1 van 4 • Je startcapsule",
-      "title": "Mix & match losse kledingstukken",
-      "desc": "Je startkleding is ingedeeld in rijen voor bovenkleding, onderkleding en schoenen. Veeg of klik op de pijlen om combinaties te proberen die zijn afgestemd op je persoonlijke verhoudingen."
+      "badge": "Stap 1 van 4 • Jouw Starter Capsule",
+      "title": "Combineer Kledingstukken",
+      "desc": "Je startkleding is ingedeeld in rijen voor Tops, Broeken en Schoenen. Veeg of klik op de pijlen om combinaties te testen die passen bij jouw figuur."
     },
     "step2": {
-      "badge": "Stap 2 van 4 • AI-shuffle met één klik",
-      "title": "Directe AI-outfitcreatie",
-      "desc": "Klik op elk moment op \"Nieuwe outfit genereren\". DressApp beoordeelt kleurtheorie, seizoen en je lichaamsverhoudingen om binnen enkele seconden een complete outfit samen te stellen."
+      "badge": "Stap 2 van 4 • AI Shuffle in Eén Klik",
+      "title": "Directe AI Outfit Creatie",
+      "desc": "Klik op \"Genereer nieuwe outfit\". DressApp analyseert kleurentheorie, seizoenen en lichaamsproporties om binnen enkele seconden een complete look te maken."
     },
     "step3": {
-      "badge": "Stap 3 van 4 • Agenda & afsprakensynchronisatie",
-      "title": "Gekleed voor jouw echte dag",
-      "desc": "Schakel \"Agenda van vandaag\" in om outfits af te stemmen op je Google Agenda-afspraken, of kies een gelegenheid (Werk, Casual, Feest, Sport) voor passende kledingvoorschriften."
+      "badge": "Stap 3 van 4 • Agenda & Planning Sync",
+      "title": "Gekleed voor Jouw Echte Dag",
+      "desc": "Schakel \"Agenda van vandaag\" in om outfits af te stemmen op Google Calendar-afspraken, of kies een gelegenheid (Werk, Casual, Feest, Sport)."
     },
     "step4": {
-      "badge": "Stap 4 van 4 • Opslaan & ontdekken",
-      "title": "Outfits opslaan en je kledingkast bezoeken",
-      "desc": "Blij met een outfit? Klik op \"Outfit opslaan\" om deze aan je Lookbook toe te voegen. Zodra je klaar bent om je echte kleding te fotograferen, ga je naar je Kledingkast!",
-      "closetBtn": "Mijn kledingkast ontdekken"
+      "badge": "Stap 4 van 4 • Bewaren & Verkennen",
+      "title": "Bewaar Outfits & Bekijk je Kledingkast",
+      "desc": "Blij met je outfit? Klik op \"Outfit opslaan\". Zodra je klaar bent om je echte kleding te fotograferen, ga je naar je Kledingkast!",
+      "closetBtn": "Verken Mijn Kledingkast"
     }
   },
   "dressing_room_3d": {
@@ -5834,29 +5834,6 @@
     "loading": "Je 3D-studio wordt voorbereid…",
     "side_view": "Zijaanzicht",
     "back_view": "Achteraanzicht"
-  },
-  "stylistTour": {
-    "step1": {
-      "badge": "Stap 1 van 4 • Jouw Starter Capsule",
-      "title": "Combineer Kledingstukken",
-      "desc": "Je startkleding is ingedeeld in rijen voor Tops, Broeken en Schoenen. Veeg of klik op de pijlen om combinaties te testen die passen bij jouw figuur."
-    },
-    "step2": {
-      "badge": "Stap 2 van 4 • AI Shuffle in Eén Klik",
-      "title": "Directe AI Outfit Creatie",
-      "desc": "Klik op \"Genereer nieuwe outfit\". DressApp analyseert kleurentheorie, seizoenen en lichaamsproporties om binnen enkele seconden een complete look te maken."
-    },
-    "step3": {
-      "badge": "Stap 3 van 4 • Agenda & Planning Sync",
-      "title": "Gekleed voor Jouw Echte Dag",
-      "desc": "Schakel \"Agenda van vandaag\" in om outfits af te stemmen op Google Calendar-afspraken, of kies een gelegenheid (Werk, Casual, Feest, Sport)."
-    },
-    "step4": {
-      "badge": "Stap 4 van 4 • Bewaren & Verkennen",
-      "title": "Bewaar Outfits & Bekijk je Kledingkast",
-      "desc": "Blij met je outfit? Klik op \"Outfit opslaan\". Zodra je klaar bent om je echte kleding te fotograferen, ga je naar je Kledingkast!",
-      "closetBtn": "Verken Mijn Kledingkast"
-    }
   },
   "dressingRoom": {
     "title": "3D-paskamer",
@@ -5926,7 +5903,7 @@
     "openStoreDirect": "Open {{store}} app / website",
     "pasteProductLink": "Kledinglink controleren",
     "howToMatch": "Hoe vind je jouw maat:",
-    "howToMatchDesc": "1. Bekijk een kledingstuk in deze winkel.\n2. Tik op het zwevende meetlint of deel de link.\n3. DressApp vergelijkt de maattabel van het merk met jouw lichaamsmaten!",
+    "howToMatchDesc": "1. Bekijk een kledingstuk in deze winkel.\n2. Tik op het zwevende meetlint of deel de link met DressApp.\n3. DressApp vergelijkt de maattabel van het merk met uw lichaamsafmetingen!",
     "checkGarmentUrl": "Heb je een specifieke kledinglink?",
     "launchUrlChecker": "Open maatscanner",
     "customStoreTitle": "Winkelen op andere website",
@@ -6006,5 +5983,8 @@
     "quickScreenshots": "Screenshots & video uploaden",
     "quickScreenshotsDesc": "Liever uploaden vanuit je galerij? Kies screenshots of een schermopname van je kledingkast.",
     "openHubBtn": "Open Kledingkast Migratie Hub"
+  },
+  "about": {
+    "feature6_desc": "Desktop Chrome-extensie en mobiele winkelassistent die maattabellen in webwinkels scannen voor persoonlijk maatadvies voordat u koopt."
   }
 }

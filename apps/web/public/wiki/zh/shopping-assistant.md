@@ -1,119 +1,101 @@
-# 购物助手
+# Shopping Assistant
 
-在线智能购物，找到与您身体尺寸完全匹配的尺码。
+Shop smart online and find the exact sizing matching your physical body measurements.
 
-## 概述
-DressApp 购物助手帮助您在线购物时找到完美尺码。它有两种工作方式：
-- **Chrome 扩展程序**：适用于桌面 Chrome 浏览器的全功能扩展
-- **移动书签**：适用于手机和平板电脑的轻量级书签
+## Overview
+The DressApp Shopping Assistant helps you find the perfect size when shopping online. It works in two ways:
+- **Chrome Extension**: A full-featured extension for desktop Chrome browsers
+- **Mobile Shopping Hub & Native Share Sheet**: Instant size checks directly on your phone or tablet
 
-两种选项都会扫描零售网站上的尺码表，与您保存的身体尺寸进行比较，并立即推荐最适合您的尺码。不再需要猜测——只需自信购物！
+Both options scan size charts on retail websites, compare them with your saved body measurements, and recommend your best fit instantly. No more guessing — just confident shopping!
 
-## 前提条件
-- 活跃的 DressApp 用户帐户
-- 在个人资料设置中保存的身体尺寸（身高、体重、腰围、脚长）
-- Chrome 扩展程序：桌面上的 Google Chrome 浏览器
-- 移动书签：任何现代移动浏览器（Safari、Chrome 等）
+## Prerequisites
+- An active DressApp user account
+- Stored body measurements (height, weight, waist, foot length) in your Profile settings
+- For Desktop: Google Chrome browser
+- For Mobile: Any modern mobile browser (Chrome, Safari, Edge, etc.)
 
-## 选项 A：Chrome 扩展程序（推荐）
+## Option A: Desktop Chrome Extension (Recommended for PC/Mac)
 
-### 安装
-1. 访问 [dressapp.co/extension/connect](https://dressapp.co/extension/connect)
-2. 点击 **"连接到 DressApp"** 以链接您的帐户
-3. 扩展程序会自动安装到 Chrome 中
-4. 在浏览器工具栏中查找 DressApp 图标
+### Installation
+1. Install the official extension directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp)
+2. Click **"Add to Chrome"**
+3. Open the extension popup from your browser toolbar and click **"Connect to DressApp"** to link your account
+4. You are all set! Sizing recommendations will now appear automatically on supported shopping sites.
 
-### 使用方法
-1. **访问任何支持的商店**（SHEIN、AliExpress、Zara、Asos、H&M 等）
-2. **查找 DressApp 按钮** - 您会看到：
-   - 左下角的浮动按钮（`* DressApp`）
-   - 或尺码选择器旁边的内联按钮（`* DressApp size`）
-3. **点击按钮** - 扩展程序会自动：
-   - 扫描页面查找尺码表
-   - 使用 AI 分析表格
-   - 显示您的个性化尺码推荐
-4. **查看结果** - 出现一张卡片显示：
-   - 推荐尺码（例如 "尺码 38"）
-   - 置信度水平（例如 "90% 置信度"）
-   - 哪些尺寸匹配（胸围、腰围等）
-   - 如果您喜欢更宽松或更紧身的版型，还有替代尺码
+### How to Use
+1. **Visit any supported store** (SHEIN, AliExpress, Zara, Asos, H&M, etc.)
+2. **Look for the DressApp button** — you'll see either:
+   - A floating button in the bottom-left corner (`* DressApp`)
+   - OR an inline button next to the size selector (`* DressApp size`)
+3. **Click the button** — the extension automatically:
+   - Scans the page for size charts
+   - Analyzes the chart using AI
+   - Shows your personalized size recommendation
+4. **See your result** — a card appears showing:
+   - Your recommended size (e.g., "Size 38")
+   - Confidence level (e.g., "90% confident")
+   - Which measurements matched (bust, waist, etc.)
+   - Alternative sizes if you prefer a looser or tighter fit
 
-## 选项 B：移动书签
+## Option B: Mobile Shopping Hub & Native Share Sheet (For Mobile Phones)
 
-### 安装
-1. 在手机上，访问您的 DressApp 个人资料页面
-2. 找到 **购物助手** 部分
-3. 复制提供的书签代码
-4. 将其添加到移动浏览器的书签中：
-   - **Safari (iOS)**：点击共享按钮 → "添加到书签"
-   - **Chrome (Android)**：点击三个点 → "书签" 或 "添加到主屏幕"
+On mobile, you do not need to install extensions, copy scripts, or edit bookmarks. You have two frictionless paths:
 
-### 使用方法
-1. **在移动浏览器中访问任何支持的商店**
-2. **导航到包含尺码信息的产品页面**
-3. **打开书签** 并点击 DressApp 书签
-4. **授予权限**（如果提示，书签需要读取页面）
-5. **查看推荐** - 出现一张卡片，显示您的最佳尺码匹配
+### Path 1: Inside DressApp's Shopping Hub
+1. Open the **Shopping Hub** inside DressApp (`/shopping`).
+2. Select any fashion platform (Zara, ASOS, Mango, AliExpress, etc.) or paste any store URL.
+3. Your personalized brand sizes (**Top / Shirt**, **Bottoms / Pants**, **Footwear**) are pre-calculated and displayed immediately.
+4. Tap the **floating tape-measure assistant** anytime on screen to analyze specific garments or scan size tables right in place!
 
-## 手动裁剪（如果自动检测不起作用）
+### Path 2: In Mobile Chrome, Safari, or Retail Apps
+1. When browsing Zara, ASOS, or any store in your mobile browser or store app, find a garment you love.
+2. Tap the browser's native **Share** button (the arrow icon in Safari or 3-dots `⋮` → **Share** in Chrome).
+3. Tap **DressApp** from the share menu.
+4. DressApp opens instantly, matches the garment against your body measurements, and recommends your best fit!
+5. **Tip**: If a store hides measurements behind pop-ups, snap a screenshot and tap **Share → DressApp** on the screenshot preview—DressApp's Gemini Vision OCR reads the table automatically.
 
-有时尺码表隐藏或格式不常见。没问题！
+## What You'll See
 
-1. 点击 DressApp 按钮或书签
-2. 如果未自动找到表格，您会看到 **"在尺码表周围拖动一个框"**
-3. **点击并按住** 在尺码表区域周围绘制一个框
-4. 根据需要调整框
-5. 点击 **Apply** 确认
-6. 助手分析裁剪区域并显示推荐
+### Size Recommendation Card
+- Recommended size with confidence percentage
+- Why this size fits your measurements
+- Alternative sizes (e.g., "M for a snug fit" or "L for a relaxed fit")
 
-## 您将看到的内容
+### Warning Cards
+- If your profile measurements seem unusual, you'll get a friendly heads-up
+- If you're not logged in, you'll be prompted to connect your account
 
-### 尺码推荐卡片
-- 带置信百分比的推荐尺码
-- 为什么这个尺码适合您的尺寸
-- 替代尺码（例如 "M 适合紧身版型" 或 "L 适合宽松版型"）
+## Expected Results
+Accurate, real-time size recommendations rendered directly on retail store product descriptions, eliminating returns due to sizing issues.
 
-### 警告卡片
-- 如果您的身体尺寸看起来异常，您会收到友好的提醒
-- 如果您未登录，会提示您链接帐户
-
-## 预期结果
-准确、实时的尺码推荐直接显示在零售店产品描述上，消除因尺码问题导致的退货。
-
-## 支持的商店
-购物助手适用于大多数电子商务网站，包括：
+## Supported Stores
+The Shopping Assistant works on most e-commerce sites, including:
 - SHEIN
 - AliExpress
 - Zara
 - Asos
 - H&M
-- 以及更多！
+- Mango
+- Nike
+- Uniqlo
+- And many more!
 
-## 故障排除
+## Troubleshooting
 
-### Chrome 扩展程序
-- **DressApp 按钮不可见？** 刷新页面并等待几秒钟让扩展程序加载。
-- **"No clear match" 消息？** 尝试在尺码表区域周围绘制更紧的框（使用手动裁剪）。
-- **"DressApp was just updated"？** 刷新页面以加载最新版本。
-- **权限请求？** 扩展程序可能会请求读取页面的权限 - 这是正常的，分析尺码表所需。
+### Desktop Chrome Extension
+- **No DressApp button visible?** Refresh the page and wait a few seconds for the extension to load.
+- **"No clear match" message?** Try drawing a tighter box around just the size chart area (use Manual Crop).
+- **"DressApp was just updated"?** Refresh the page to load the latest version.
+- **Permission requests?** The extension may ask for permission to read the page — this is normal and required to analyze size charts.
 
-### 移动书签
-- **书签不起作用？** 确保您在包含尺码信息的产品页面上。
-- **未出现推荐？** 尝试刷新页面并再次点击书签。
-- **绘制框不起作用？** 确保您点击并按住，然后拖动以绘制框。
+### Mobile Shopping
+- **DressApp not showing in your phone's Share sheet?** Open DressApp once on your mobile home screen to let Android/iOS register the share target.
+- **Store link protected by anti-bot verification?** Simply take a screenshot of the size chart table and tap **Share → DressApp** or upload it into the Shopping Assistant.
+- **Wrong size recommended?** Double-check that your body measurements (chest, waist, hip, inseam, foot length) are up to date in your Profile.
 
-### 一般问题
-- **未出现推荐徽章**：确保您在扩展程序弹出窗口或书签中登录了帐户。
-- **尺寸为空**：返回个人资料设置并填写所有尺寸字段（身高、体重、腰围、脚长）。
-- **推荐了错误的尺码？** 请检查您的身体尺寸在个人资料中是否是最新的。
-
-## 隐私与安全
-- 您的身体尺寸安全存储在您的 DressApp 帐户中
-- 助手仅读取产品页面上的尺码表数据
-- 不与第三方共享个人购物数据
-- 您可以随时从 DressApp 个人资料中断开扩展程序
-
-## 限制
-- 尺码表分析仅限于支持的商店
-- 移动书签的功能比 Chrome 扩展程序少
-- 某些具有自定义尺码表格式的商店可能需要手动裁剪
+## Privacy & Security
+- Your body measurements are stored securely in your DressApp account
+- The assistant only reads size chart data from product pages
+- No personal shopping data is shared with third parties
+- You can disconnect the extension anytime from your DressApp profile

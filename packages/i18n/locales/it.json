@@ -4026,10 +4026,10 @@
     "learnMore": "Scopri di più",
     "shopping_assistant_title": "Assistente agli acquisti",
     "shopping_assistant_p1": "Trova l'abbigliamento perfetto quando fai acquisti online su Zara, ASOS e altri negozi partner.",
-    "shopping_assistant_step1": "Installa l'**Estensione DressApp Chrome** dal Web Store.",
+    "shopping_assistant_step1": "Installa l'**Estensione Chrome di DressApp** sul tuo computer o apri lo **Shopping Hub** sul tuo smartphone.",
     "shopping_assistant_step2": "Passare alla pagina dei dettagli dell'indumento su un sito partner.",
     "shopping_assistant_step3": "L'assistente legge e analizza automaticamente la tabella delle taglie presente nella pagina del prodotto.",
-    "shopping_assistant_step4": "Controlla le tue **misure corporee** memorizzate nei dettagli del tuo profilo.",
+    "shopping_assistant_step4": "Su mobile, naviga direttamente nello **Shopping Hub** con l'assistente fluttuante oppure tocca **Condividi → DressApp** nel tuo browser mobile.",
     "shopping_assistant_step5": "Ti consiglia la taglia migliore per te, evidenziando il confronto delle vestibilità.",
     "shopping_assistant_step6": "Fai clic su **Aggiungi all'armadio** per importare la bozza dell'articolo direttamente nella tua app.",
     "import_wardrobe_title": "Importa il tuo guardaroba",
@@ -5874,7 +5874,7 @@
     "openStoreDirect": "Apri App / Web di {{store}}",
     "pasteProductLink": "Verifica il link di un capo",
     "howToMatch": "Come trovare la tua taglia:",
-    "howToMatchDesc": "1. Cerca un capo in questo negozio.\n2. Tocca il metro a nastro fluttuante o condividi il link.\n3. DressApp confronta la tabella taglie con le tue misure fisiche!",
+    "howToMatchDesc": "1. Sfoglia qualsiasi capo in questo negozio.\n2. Tocca il metro a nastro fluttuante o condividi il link con DressApp.\n3. DressApp confronta la tabella delle taglie del brand con le tue misure corporee!",
     "checkGarmentUrl": "Hai il link di un capo?",
     "launchUrlChecker": "Apri lo scanner taglie",
     "customStoreTitle": "Acquista su un altro negozio",
@@ -5884,5 +5884,8 @@
     "openHub": "Hub Shopping",
     "storeAssistant": "Assistente taglie {{store}}",
     "noMeasurementsSaved": "Nessuna misura salvata nel profilo"
+  },
+  "about": {
+    "feature6_desc": "Estensione Chrome per desktop e assistente allo shopping mobile che scansionano le tabelle delle taglie sui negozi online, offrendo consigli di vestibilità personalizzati."
   }
 }

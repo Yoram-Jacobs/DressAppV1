@@ -4019,10 +4019,10 @@
     "learnMore": "Mehr erfahren",
     "shopping_assistant_title": "Einkaufsassistent",
     "shopping_assistant_p1": "Finden Sie beim Online-Einkauf bei Zara, ASOS und anderen Partnergeschäften die perfekte Passform für Ihre Kleidung.",
-    "shopping_assistant_step1": "Installieren Sie die **DressApp Chrome Extension** aus dem Web Store.",
+    "shopping_assistant_step1": "Installieren Sie die **DressApp Chrome-Erweiterung** auf Ihrem Computer oder öffnen Sie den **Shopping Hub** auf Ihrem Smartphone.",
     "shopping_assistant_step2": "Navigieren Sie zu einer beliebigen Kleidungsstück-Detailseite auf einer Partner-Website.",
     "shopping_assistant_step3": "Der Assistent liest und analysiert automatisch die Größentabelle auf der Produktseite.",
-    "shopping_assistant_step4": "Es überprüft Ihre **Körpermaße**, die in Ihren Profildetails gespeichert sind.",
+    "shopping_assistant_step4": "Navigieren Sie auf dem Smartphone direkt im **Shopping Hub** mit dem schwebenden Assistenten oder tippen Sie im mobilen Browser auf **Teilen → DressApp**.",
     "shopping_assistant_step5": "Es empfiehlt Ihnen die beste Größe und hebt den Passformvergleich hervor.",
     "shopping_assistant_step6": "Klicken Sie auf **Zum Schrank hinzufügen**, um den Artikelentwurf direkt in Ihre App zu importieren.",
     "import_wardrobe_title": "Kleiderschrank importieren",
@@ -5867,7 +5867,7 @@
     "openStoreDirect": "{{store}} App / Web öffnen",
     "pasteProductLink": "Beliebigen Artikellink prüfen",
     "howToMatch": "So findest du deine Größe:",
-    "howToMatchDesc": "1. Stöbere nach einem Kleidungsstück im Shop.\n2. Tippe auf das schwebende Maßband oder teile den Link.\n3. DressApp gleicht die Größentabelle der Marke mit deinen Maßen ab!",
+    "howToMatchDesc": "1. Durchstöbern Sie beliebige Kleidungsstücke in diesem Shop.\n2. Tippen Sie auf das schwebende Maßband oder teilen Sie den Link mit DressApp.\n3. DressApp gleicht die Größentabelle der Marke mit Ihren Körpermaßen ab!",
     "checkGarmentUrl": "Hast du einen konkreten Artikellink?",
     "launchUrlChecker": "Größen-Scanner öffnen",
     "customStoreTitle": "In eigenem Shop einkaufen",
@@ -5877,5 +5877,8 @@
     "openHub": "Shopping Hub",
     "storeAssistant": "{{store}} Größen-Assistent",
     "noMeasurementsSaved": "Keine Körpermaße im Profil hinterlegt"
+  },
+  "about": {
+    "feature6_desc": "Desktop-Chrome-Erweiterung und mobiler Einkaufsassistent, die Größentabellen in Online-Shops scannen und personalisierte Größenempfehlungen vor dem Kauf liefern."
   }
 }

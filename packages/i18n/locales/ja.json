@@ -4026,10 +4026,10 @@
     "learnMore": "詳しく見る",
     "shopping_assistant_title": "ショッピングアシスタント",
     "shopping_assistant_p1": "ZARA、ASOS、その他のパートナー ストアでオンライン ショッピングをするときに、ぴったりの服を見つけてください。",
-    "shopping_assistant_step1": "Web ストアから **DressApp Chrome 拡張機能** をインストールします。",
+    "shopping_assistant_step1": "パソコンに **DressApp Chrome 拡張機能** をインストールするか、スマートフォンで **Shopping Hub** を開きます。",
     "shopping_assistant_step2": "パートナー サイトの衣服の詳細ページに移動します。",
     "shopping_assistant_step3": "アシスタントが商品ページのサイズ表を自動的に読み取って解析します。",
-    "shopping_assistant_step4": "プロフィールの詳細に保存されている**身体測定値**をチェックします。",
+    "shopping_assistant_step4": "スマートフォンでは、フローティングアシスタントのある **Shopping Hub** 内で直接閲覧するか、ブラウザで **共有 → DressApp** をタップします。",
     "shopping_assistant_step5": "フィット感の比較を強調しながら、あなたに最適なサイズを推奨します。",
     "shopping_assistant_step6": "[**クローゼットに追加**] をクリックして、アイテムの下書きをアプリに直接インポートします。",
     "import_wardrobe_title": "ワードローブをインポート",
@@ -5875,7 +5875,7 @@
     "openStoreDirect": "{{store}} アプリ / Webを開く",
     "pasteProductLink": "商品のリンクを確認",
     "howToMatch": "サイズの確認方法:",
-    "howToMatchDesc": "1. このショップで商品を探します。\n2. 画面上のメジャーアイコンをタップするかリンクを共有します。\n3. DressAppがブランドのサイズ表とあなたの実寸を照合します！",
+    "howToMatchDesc": "1. このストアの衣類を閲覧します。\n2. フローティングメジャーをタップするか、リンクを DressApp に共有します。\n3. DressApp がブランドのサイズ表とあなたの身体測定値を照合します！",
     "checkGarmentUrl": "商品のリンクをお持ちですか？",
     "launchUrlChecker": "サイズスキャナーを開く",
     "customStoreTitle": "カスタムショップでお買い物",
@@ -5885,5 +5885,8 @@
     "openHub": "ショッピングハブ",
     "storeAssistant": "{{store}} サイズアシスタント",
     "noMeasurementsSaved": "プロフィールにサイズが保存されていません"
+  },
+  "about": {
+    "feature6_desc": "デスクトップ用 Chrome 拡張機能とモバイルショッピングアシスタントが、ECサイトのサイズ表をスキャンして購入前に最適なサイズを提案します。"
   }
 }

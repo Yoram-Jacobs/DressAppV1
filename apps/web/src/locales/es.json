@@ -4034,10 +4034,10 @@
     "learnMore": "Más información",
     "shopping_assistant_title": "Asistente de compras",
     "shopping_assistant_p1": "Encuentre la ropa perfecta cuando compre en línea en Zara, ASOS y otras tiendas asociadas.",
-    "shopping_assistant_step1": "Instale la **Extensión DressApp para Chrome** desde la tienda web.",
+    "shopping_assistant_step1": "Instala la **Extensión de Chrome de DressApp** en tu ordenador o abre el **Centro de Compras** en tu móvil.",
     "shopping_assistant_step2": "Navegue a la página de detalles de cualquier prenda en un sitio asociado.",
     "shopping_assistant_step3": "El asistente lee y analiza automáticamente la tabla de tallas de la página del producto.",
-    "shopping_assistant_step4": "Comprueba tus **medidas corporales** almacenadas en los detalles de tu perfil.",
+    "shopping_assistant_step4": "En el móvil, navega directamente en el **Centro de Compras** con el asistente flotante o toca **Compartir → DressApp** en tu navegador móvil.",
     "shopping_assistant_step5": "Te recomienda la mejor talla para ti, destacando la comparación de ajuste.",
     "shopping_assistant_step6": "Haz clic en **Agregar al armario** para importar el borrador del artículo directamente a tu aplicación.",
     "import_wardrobe_title": "Importar tu guardarropa",
@@ -5781,25 +5781,25 @@
   },
   "stylistTour": {
     "step1": {
-      "badge": "Paso 1 de 4 • Tu cápsula inicial",
-      "title": "Combina prendas individuales",
-      "desc": "Tus prendas iniciales están organizadas en filas de partes superiores, inferiores y calzado. Desliza o haz clic en las flechas para explorar y probar combinaciones ajustadas a tus proporciones."
+      "badge": "Paso 1 de 4 • Tu Cápsula Inicial",
+      "title": "Combina Prendas Separadas",
+      "desc": "Tus prendas iniciales están organizadas en filas de Tops, Pantalones y Calzado. Desliza o usa las flechas para explorar y probar combinaciones adaptadas a tus proporciones."
     },
     "step2": {
-      "badge": "Paso 2 de 4 • Combinación con IA en un clic",
-      "title": "Generación instantánea de conjuntos con IA",
-      "desc": "Haz clic en \"Generar nuevo conjunto\" en cualquier momento. DressApp evalúa la teoría del color, la temporada y tus proporciones corporales para crear un look armónico en segundos."
+      "badge": "Paso 2 de 4 • Mezcla IA con Un Clic",
+      "title": "Generación Instantánea con IA",
+      "desc": "Haz clic en \"Generar nuevo atuendo\" cuando quieras. DressApp evalúa la teoría del color, la temporada y tu figura para crear un look perfecto en segundos."
     },
     "step3": {
-      "badge": "Paso 3 de 4 • Sincronización con agenda y calendario",
-      "title": "Vístete para tu día real",
-      "desc": "Activa \"Agenda de hoy\" para combinar conjuntos con tus reuniones de Google Calendar, o elige una ocasión (Trabajo, Casual, Fiesta, Gimnasio) para códigos de vestimenta a medida."
+      "badge": "Paso 3 de 4 • Sincronización de Agenda",
+      "title": "Vístete para tu Día Real",
+      "desc": "Activa \"Agenda de hoy\" para coordinar looks con tus citas de Google Calendar, o elige una ocasión (Trabajo, Casual, Fiesta, Gimnasio)."
     },
     "step4": {
-      "badge": "Paso 4 de 4 • Guarda y explora",
-      "title": "Guarda conjuntos y visita tu armario",
-      "desc": "¿Te encanta un conjunto? Haz clic en \"Guardar conjunto\" para añadirlo a tu Lookbook. Cuando quieras fotografiar y añadir tu ropa real, ¡entra a tu Armario!",
-      "closetBtn": "Explorar mi armario"
+      "badge": "Paso 4 de 4 • Guardar y Explorar",
+      "title": "Guarda Atuendos y Visita tu Armario",
+      "desc": "¿Te encanta el atuendo? Haz clic en \"Guardar atuendo\". Cuando quieras fotografiar y añadir tu ropa real, ¡ve a tu Armario!",
+      "closetBtn": "Explorar mi Armario"
     }
   },
   "dressing_room_3d": {
@@ -5827,29 +5827,6 @@
     "loading": "Preparando tu estudio 3D…",
     "side_view": "Vista lateral",
     "back_view": "Vista trasera"
-  },
-  "stylistTour": {
-    "step1": {
-      "badge": "Paso 1 de 4 • Tu Cápsula Inicial",
-      "title": "Combina Prendas Separadas",
-      "desc": "Tus prendas iniciales están organizadas en filas de Tops, Pantalones y Calzado. Desliza o usa las flechas para explorar y probar combinaciones adaptadas a tus proporciones."
-    },
-    "step2": {
-      "badge": "Paso 2 de 4 • Mezcla IA con Un Clic",
-      "title": "Generación Instantánea con IA",
-      "desc": "Haz clic en \"Generar nuevo atuendo\" cuando quieras. DressApp evalúa la teoría del color, la temporada y tu figura para crear un look perfecto en segundos."
-    },
-    "step3": {
-      "badge": "Paso 3 de 4 • Sincronización de Agenda",
-      "title": "Vístete para tu Día Real",
-      "desc": "Activa \"Agenda de hoy\" para coordinar looks con tus citas de Google Calendar, o elige una ocasión (Trabajo, Casual, Fiesta, Gimnasio)."
-    },
-    "step4": {
-      "badge": "Paso 4 de 4 • Guardar y Explorar",
-      "title": "Guarda Atuendos y Visita tu Armario",
-      "desc": "¿Te encanta el atuendo? Haz clic en \"Guardar atuendo\". Cuando quieras fotografiar y añadir tu ropa real, ¡ve a tu Armario!",
-      "closetBtn": "Explorar mi Armario"
-    }
   },
   "dressingRoom": {
     "title": "Probador 3D",
@@ -5919,7 +5896,7 @@
     "openStoreDirect": "Abrir App / Web de {{store}}",
     "pasteProductLink": "Comprobar enlace de una prenda",
     "howToMatch": "Cómo obtener tu talla:",
-    "howToMatchDesc": "1. Explora cualquier prenda en esta tienda.\n2. Toca la cinta métrica flotante o comparte el enlace.\n3. ¡DressApp compara la tabla de tallas con tus medidas físicas!",
+    "howToMatchDesc": "1. Navega por cualquier prenda de esta tienda.\n2. Toca el botón flotante de la cinta métrica o comparte el enlace con DressApp.\n3. ¡DressApp compara la tabla de tallas de la marca con tus medidas corporales!",
     "checkGarmentUrl": "¿Tienes el enlace de una prenda?",
     "launchUrlChecker": "Abrir escáner de tallas",
     "customStoreTitle": "Comprar en otra tienda",
@@ -5999,5 +5976,8 @@
     "quickScreenshots": "Subir capturas y vídeo por lotes",
     "quickScreenshotsDesc": "¿Prefiere subir desde su galería? Seleccione capturas o una grabación de pantalla de su armario.",
     "openHubBtn": "Abrir Centro de Migración"
+  },
+  "about": {
+    "feature6_desc": "Extensión de Chrome para ordenador y asistente de compras móvil que escanea tablas de tallas en tiendas online, ofreciendo recomendaciones de tallas personalizadas antes de comprar."
   }
 }

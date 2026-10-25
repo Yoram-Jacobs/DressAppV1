@@ -4034,10 +4034,10 @@
     "learnMore": "Mehr erfahren",
     "shopping_assistant_title": "Einkaufsassistent",
     "shopping_assistant_p1": "Finden Sie beim Online-Einkauf bei Zara, ASOS und anderen Partnergeschäften die perfekte Passform für Ihre Kleidung.",
-    "shopping_assistant_step1": "Installieren Sie die **DressApp Chrome Extension** aus dem Web Store.",
+    "shopping_assistant_step1": "Installieren Sie die **DressApp Chrome-Erweiterung** auf Ihrem Computer oder öffnen Sie den **Shopping Hub** auf Ihrem Smartphone.",
     "shopping_assistant_step2": "Navigieren Sie zu einer beliebigen Kleidungsstück-Detailseite auf einer Partner-Website.",
     "shopping_assistant_step3": "Der Assistent liest und analysiert automatisch die Größentabelle auf der Produktseite.",
-    "shopping_assistant_step4": "Es überprüft Ihre **Körpermaße**, die in Ihren Profildetails gespeichert sind.",
+    "shopping_assistant_step4": "Navigieren Sie auf dem Smartphone direkt im **Shopping Hub** mit dem schwebenden Assistenten oder tippen Sie im mobilen Browser auf **Teilen → DressApp**.",
     "shopping_assistant_step5": "Es empfiehlt Ihnen die beste Größe und hebt den Passformvergleich hervor.",
     "shopping_assistant_step6": "Klicken Sie auf **Zum Schrank hinzufügen**, um den Artikelentwurf direkt in Ihre App zu importieren.",
     "import_wardrobe_title": "Kleiderschrank importieren",
@@ -5778,23 +5778,23 @@
   "stylistTour": {
     "step1": {
       "badge": "Schritt 1 von 4 • Deine Starter-Kapsel",
-      "title": "Kombiniere Einzelstücke nach Wunsch",
-      "desc": "Deine Startkleidung ist in Oberteile, Unterteile und Schuhe unterteilt. Wische oder klicke auf die Pfeile, um Kombinationen passend zu deinen persönlichen Proportionen zu testen."
+      "title": "Kombiniere Einzelteile",
+      "desc": "Deine Starter-Kleidungsstücke sind in Reihen für Oberteile, Hosen und Schuhe sortiert. Wische oder klicke auf die Pfeile, um Kombinationen für deine Proportionen zu testen."
     },
     "step2": {
       "badge": "Schritt 2 von 4 • KI-Shuffle mit einem Klick",
-      "title": "Sofortige KI-Outfit-Generierung",
-      "desc": "Klicke jederzeit auf „Neues Outfit generieren“. DressApp analysiert Farbtheorie, Saisonalität und deine Körperproportionen, um in Sekundenschnelle ein harmonisches Outfit zu kreieren."
+      "title": "Sofortige KI-Outfit-Erstellung",
+      "desc": "Klicke jederzeit auf \"Neues Outfit generieren\". DressApp bewertet Farbtheorie, Saison und Körperform, um ein harmonisches Outfit zusammenzustellen."
     },
     "step3": {
-      "badge": "Schritt 3 von 4 • Kalender- & Termin-Synchronisierung",
+      "badge": "Schritt 3 von 4 • Kalender & Agenda-Sync",
       "title": "Perfekt gekleidet für deinen Tag",
-      "desc": "Aktiviere „Heutige Agenda“, um Outfits auf deine Google-Kalender-Termine abzustimmen, oder wähle einen Anlass (Arbeit, Freizeit, Party, Sport) für passende Dresscodes."
+      "desc": "Aktiviere \"Heutige Agenda\", um Outfits an Google Calendar-Termine anzupassen, oder wähle einen Anlass (Büro, Freizeit, Party, Sport)."
     },
     "step4": {
       "badge": "Schritt 4 von 4 • Speichern & Entdecken",
-      "title": "Outfits speichern & Kleiderschrank besuchen",
-      "desc": "Gefällt dir ein Outfit? Klicke auf „Outfit speichern“, um es deinem Lookbook hinzuzufügen. Sobald du deine eigene Kleidung fotografieren möchtest, wechsle in deinen Kleiderschrank!",
+      "title": "Outfits speichern & Kleiderschrank erkunden",
+      "desc": "Gefällt dir das Outfit? Klicke auf \"Outfit speichern\". Sobald du bereit bist, deine echte Kleidung zu fotografieren, wechsle zu deinem Kleiderschrank!",
       "closetBtn": "Meinen Kleiderschrank erkunden"
     }
   },
@@ -5823,29 +5823,6 @@
     "loading": "3D-Studio wird vorbereitet…",
     "side_view": "Seitenansicht",
     "back_view": "Rückansicht"
-  },
-  "stylistTour": {
-    "step1": {
-      "badge": "Schritt 1 von 4 • Deine Starter-Kapsel",
-      "title": "Kombiniere Einzelteile",
-      "desc": "Deine Starter-Kleidungsstücke sind in Reihen für Oberteile, Hosen und Schuhe sortiert. Wische oder klicke auf die Pfeile, um Kombinationen für deine Proportionen zu testen."
-    },
-    "step2": {
-      "badge": "Schritt 2 von 4 • KI-Shuffle mit einem Klick",
-      "title": "Sofortige KI-Outfit-Erstellung",
-      "desc": "Klicke jederzeit auf \"Neues Outfit generieren\". DressApp bewertet Farbtheorie, Saison und Körperform, um ein harmonisches Outfit zusammenzustellen."
-    },
-    "step3": {
-      "badge": "Schritt 3 von 4 • Kalender & Agenda-Sync",
-      "title": "Perfekt gekleidet für deinen Tag",
-      "desc": "Aktiviere \"Heutige Agenda\", um Outfits an Google Calendar-Termine anzupassen, oder wähle einen Anlass (Büro, Freizeit, Party, Sport)."
-    },
-    "step4": {
-      "badge": "Schritt 4 von 4 • Speichern & Entdecken",
-      "title": "Outfits speichern & Kleiderschrank erkunden",
-      "desc": "Gefällt dir das Outfit? Klicke auf \"Outfit speichern\". Sobald du bereit bist, deine echte Kleidung zu fotografieren, wechsle zu deinem Kleiderschrank!",
-      "closetBtn": "Meinen Kleiderschrank erkunden"
-    }
   },
   "dressingRoom": {
     "title": "3D-Umkleidekabine",
@@ -5915,7 +5892,7 @@
     "openStoreDirect": "{{store}} App / Web öffnen",
     "pasteProductLink": "Beliebigen Artikellink prüfen",
     "howToMatch": "So findest du deine Größe:",
-    "howToMatchDesc": "1. Stöbere nach einem Kleidungsstück im Shop.\n2. Tippe auf das schwebende Maßband oder teile den Link.\n3. DressApp gleicht die Größentabelle der Marke mit deinen Maßen ab!",
+    "howToMatchDesc": "1. Durchstöbern Sie beliebige Kleidungsstücke in diesem Shop.\n2. Tippen Sie auf das schwebende Maßband oder teilen Sie den Link mit DressApp.\n3. DressApp gleicht die Größentabelle der Marke mit Ihren Körpermaßen ab!",
     "checkGarmentUrl": "Hast du einen konkreten Artikellink?",
     "launchUrlChecker": "Größen-Scanner öffnen",
     "customStoreTitle": "In eigenem Shop einkaufen",
@@ -5995,5 +5972,8 @@
     "quickScreenshots": "Screenshots & Videos hochladen",
     "quickScreenshotsDesc": "Lieber aus der Galerie hochladen? Wählen Sie Screenshots oder eine Bildschirmaufnahme Ihres Kleiderschranks.",
     "openHubBtn": "Garderoben-Migrationszentrale öffnen"
+  },
+  "about": {
+    "feature6_desc": "Desktop-Chrome-Erweiterung und mobiler Einkaufsassistent, die Größentabellen in Online-Shops scannen und personalisierte Größenempfehlungen vor dem Kauf liefern."
   }
 }

@@ -219,7 +219,7 @@ Already have your wardrobe saved in another app? Don't re-photograph everything!
 ### Step 12: Shopping Assistant Browser Extension
 Never buy the wrong size online again!
 
-1. Install the **DressApp Shopping Assistant** from [dressapp.co/extension/connect](https://dressapp.co/extension/connect) or add the mobile shopping bookmarklet.
+1. Install the **DressApp Chrome Extension** from [dressapp.co/extension/connect](https://dressapp.co/extension/connect) or open the **Shopping Hub** on your mobile device.
 2. When shopping on stores like **SHEIN**, **AliExpress**, **Zara**, **ASOS**, or **H&M**, click the floating **DressApp Size** button on any product page.
 3. The extension reads the store's size chart, compares it to your saved body measurements, and recommends your best-fitting size with confidence scores.
 4. If a size chart is hidden, use the **Drag Box** tool to outline the chart manually.

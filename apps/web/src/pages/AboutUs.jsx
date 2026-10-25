@@ -64,7 +64,7 @@ export default function AboutUs() {
       id: 'shopping',
       icon: ShoppingBag,
       title: t('about.feature6_title', { defaultValue: 'Smart Shopping Assistant' }),
-      desc: t('about.feature6_desc', { defaultValue: 'Desktop extension and mobile bookmarklet that scans product size charts across e-commerce storefronts, delivering instant personalized size confidence before you buy.' }),
+      desc: t('about.feature6_desc', { defaultValue: 'Desktop Chrome extension and mobile shopping assistant that scans product size charts across e-commerce storefronts, delivering instant personalized size confidence before you buy.' }),
       tag: t('about.feature6_tag', { defaultValue: 'Browser Intelligence' })
     },
     {

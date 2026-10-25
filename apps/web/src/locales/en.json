@@ -4021,10 +4021,10 @@
     "learnMore": "Learn more",
     "shopping_assistant_title": "Online Shopping Size Assistant",
     "shopping_assistant_p1": "Find your best size when shopping online by comparing store size charts with your body measurements:",
-    "shopping_assistant_step1": "Install the **DressApp Browser Extension** on your computer or save the **Mobile Bookmark** on your phone from your Profile page.",
+    "shopping_assistant_step1": "Install the **DressApp Chrome Extension** on your computer, or open **Shopping Hub** on your phone.",
     "shopping_assistant_step2": "Make sure your body measurements (Height, Weight, Waist, and Foot Length) are saved in your Profile.",
     "shopping_assistant_step3": "Visit your favorite online clothing store and open any product page that has a size chart.",
-    "shopping_assistant_step4": "Click the **DressApp** button on the page (or open your saved mobile bookmark).",
+    "shopping_assistant_step4": "On mobile, browse directly inside **Shopping Hub** with the floating assistant, or tap **Share → DressApp** in your mobile browser.",
     "shopping_assistant_step5": "If a store uses a custom size chart layout, simply drag a box around the size chart on screen.",
     "shopping_assistant_step6": "View your recommended size, fit confidence, and advice on whether to size up or down for a looser or tighter fit!",
     "import_wardrobe_title": "Importing Your Existing Wardrobe",
@@ -5896,7 +5896,7 @@
     "openStoreDirect": "Open {{store}} App / Web",
     "pasteProductLink": "Check Any Garment Link",
     "howToMatch": "How to Get Your Size:",
-    "howToMatchDesc": "1. Browse any garment in this store.\n2. Tap the tape roller floater or share the link.\n3. DressApp matches the brand size chart against your physical measurements!",
+    "howToMatchDesc": "1. Browse any garment in this store.\n2. Tap the tape roller floater or share the link with DressApp.\n3. DressApp matches the brand size chart against your physical measurements!",
     "checkGarmentUrl": "Have a specific garment link?",
     "launchUrlChecker": "Open Full Size Scanner",
     "customStoreTitle": "Shop on Custom Platform",
@@ -5976,5 +5976,8 @@
     "quickScreenshots": "Batch Upload Screenshots & Video",
     "quickScreenshotsDesc": "Prefer uploading from camera roll? Select screenshots or screen recording of your closet.",
     "openHubBtn": "Open Wardrobe Migration Hub"
+  },
+  "about": {
+    "feature6_desc": "Desktop Chrome extension and mobile shopping assistant that scans product size charts across e-commerce storefronts, delivering instant personalized size confidence before you buy."
   }
 }
