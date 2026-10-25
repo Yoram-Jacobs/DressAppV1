@@ -4,8 +4,8 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { RotateCcw } from 'lucide-react';
 
-const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair4_fix';
-const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair4_fix';
+const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair5_smooth';
+const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair5_smooth';
 
 // Cache rendered 3D WebGL snapshots (`data:image/png;base64,...`) keyed by avatar signature
 // so grids with 40+ Saved Outfit cards can render the 3D avatar instantaneously without
@@ -1094,7 +1094,7 @@ export default function DynamicAvatar({
     const morphKey = Object.entries(morphInfluences)
       .map(([k, v]) => `${k}:${Number(v || 0).toFixed(2)}`)
       .join('|');
-    return `v7_prop_${isMale ? 'M' : 'F'}_${activeSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(height) || 170}_${morphKey}`;
+    return `v8_prop_${isMale ? 'M' : 'F'}_${activeSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(height) || 170}_${morphKey}`;
   }, [isMale, activeSkinColor, hairProps.color, hairProps.roughness, height, morphInfluences]);
 
   const svgPaths = useMemo(() => buildAvatarSvgSilhouettePaths(anatomy), [anatomy]);

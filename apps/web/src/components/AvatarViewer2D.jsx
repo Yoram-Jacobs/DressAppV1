@@ -1416,32 +1416,52 @@ export default function AvatarViewer2D({
         let slot = resolveSlot(effectiveRole, item, closetItem);
         if (!slot) return;
 
-        if (closetItem && closetItem.group_id) {
-          const groupItems = allClosetItems.filter(it => it && it.group_id === closetItem.group_id);
+        const groupId = item.group_id || closetItem?.group_id || null;
+        let groupSameSlotUrls = [];
+        if (groupId) {
+          const groupItems = allClosetItems.filter(it => it && it.group_id === groupId);
           const categories = new Set(groupItems.map(it => String(it.category || '').toLowerCase().trim()));
           
           if (categories.size > 1) {
+            const bySlot = {};
             groupItems.forEach(gItem => {
               const gSlot = resolveSlot(gItem.category, gItem, gItem);
               if (gSlot) {
-                res[gSlot] = {
-                  url: resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.reconstructed_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url),
-                  placeholder: resolveMediaUrl(gItem.placeholder_data_url || null),
-                  id: gItem.id || gItem._id,
-                  category: gItem.category || '',
-                  sub_category: gItem.sub_category || '',
-                  item_type: gItem.item_type || '',
-                  name: gItem.name || gItem.title || '',
-                  color: gItem.color || '',
-                  hex_color: gItem.hex_color || '',
-                  colors: gItem.colors || null,
-                  pattern: gItem.pattern || '',
-                  material: gItem.material || '',
-                  avatar_fit: gItem.avatar_fit || null,
-                };
+                if (!bySlot[gSlot]) bySlot[gSlot] = [];
+                bySlot[gSlot].push(gItem);
               }
             });
+            Object.entries(bySlot).forEach(([gSlot, slotGroupItems]) => {
+              const gItem = slotGroupItems[0];
+              const gUrl = resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.reconstructed_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url);
+              const extraUrls = slotGroupItems
+                .slice(1)
+                .map(m => resolveMediaUrl(bestImageUrl(m) || m.clean_image_url || m.reconstructed_image_url || m.image_data_url || m.segmented_image_url || m.image_url || m.original_image_url))
+                .filter(u => u && u !== gUrl);
+              res[gSlot] = {
+                url: gUrl,
+                placeholder: resolveMediaUrl(gItem.placeholder_data_url || null),
+                id: gItem.id || gItem._id,
+                group_id: groupId,
+                view_urls: extraUrls,
+                category: gItem.category || '',
+                sub_category: gItem.sub_category || '',
+                item_type: gItem.item_type || '',
+                name: gItem.name || gItem.title || '',
+                color: gItem.color || '',
+                hex_color: gItem.hex_color || '',
+                colors: gItem.colors || null,
+                pattern: gItem.pattern || '',
+                material: gItem.material || '',
+                avatar_fit: gItem.avatar_fit || null,
+              };
+            });
             return;
+          } else if (groupItems.length > 1) {
+            groupSameSlotUrls = groupItems
+              .filter(m => (m.id || m._id) !== (closetItem?.id || closetItem?._id || itemId))
+              .map(m => resolveMediaUrl(bestImageUrl(m) || m.clean_image_url || m.reconstructed_image_url || m.image_data_url || m.segmented_image_url || m.image_url || m.original_image_url))
+              .filter(Boolean);
           }
         }
  
@@ -1461,10 +1481,18 @@ export default function AvatarViewer2D({
           closetItem?.original_image_url
         );
 
+        const combinedViewUrls = Array.from(new Set([
+          ...(Array.isArray(item.view_urls) ? item.view_urls.map(resolveMediaUrl) : []),
+          ...(Array.isArray(closetItem?.view_urls) ? closetItem.view_urls.map(resolveMediaUrl) : []),
+          ...groupSameSlotUrls,
+        ].filter(u => u && u !== garmentUrl)));
+
         res[slot] = {
            url: garmentUrl,
            placeholder: resolveMediaUrl(item.placeholder_data_url || item.placeholder || closetItem?.placeholder_data_url || null),
            id: item.closet_item_id || item.id || closetItem?.id || closetItem?._id || null,
+           group_id: groupId,
+           view_urls: combinedViewUrls,
            category: item.category || closetItem?.category || '',
            sub_category: item.sub_category || closetItem?.sub_category || '',
            item_type: item.item_type || closetItem?.item_type || '',

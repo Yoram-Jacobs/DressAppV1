@@ -6,8 +6,8 @@ import { resolveHairProperties, applyAvatarAppearance } from './DynamicAvatar';
 
 export { applyAvatarAppearance };
 
-export const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair4_fix';
-export const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair4_fix';
+export const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair5_smooth';
+export const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair5_smooth';
 
 // Metric scaling and floor positioning helper for the 3D human avatar model
 export function getAvatarMetricTransform({ isMale = false, height = 170, morphInfluences = {} } = {}) {

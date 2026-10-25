@@ -15,54 +15,58 @@ import {
   resampleAlphaMask,
   extractRowRuns,
   isConsistentView,
+  classifyGroupView,
+  extractSideProfile,
   synthesizeBackFabricData,
 } from '@/lib/garmentSilhouette';
 
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
 export const TORSO_PROFILE_FEMALE = [
-  { y: 1.46, rx: 0.130, cz: 0.038, rz: 0.100, rzFront: 0.100, rzBack: 0.100 }, // High collar / neck base
-  { y: 1.42, rx: 0.195, cz: 0.015, rz: 0.095, rzFront: 0.095, rzBack: 0.085 }, // Shoulder line / clavicle
-  { y: 1.36, rx: 0.235, cz: 0.020, rz: 0.125, rzFront: 0.120, rzBack: 0.110 }, // Upper chest / scapulae top
-  { y: 1.25, rx: 0.238, cz: 0.045, rz: 0.155, rzFront: 0.145, rzBack: 0.125 }, // Bust peak & scapulae (back reaches z = -0.066m)
-  { y: 1.15, rx: 0.180, cz: 0.050, rz: 0.128, rzFront: 0.125, rzBack: 0.098 }, // Under-bust (belly reaches z = 0.155m)
-  { y: 1.05, rx: 0.142, cz: 0.045, rz: 0.125, rzFront: 0.125, rzBack: 0.105 }, // Natural waist (true point cloud rx: 0.142m, front reaches z = 0.149m)
-  { y: 0.95, rx: 0.175, cz: 0.020, rz: 0.135, rzFront: 0.132, rzBack: 0.138 }, // Upper hips / glutes (front thighs reach z = 0.141m, glutes reach z = -0.101m)
-  { y: 0.84, rx: 0.170, cz: 0.010, rz: 0.130, rzFront: 0.125, rzBack: 0.130 }, // Pelvis / crotch / thighs (front reaches z = 0.117m, glutes reach z = -0.100m)
-  { y: 0.65, rx: 0.205, cz: 0.025, rz: 0.140, rzFront: 0.115, rzBack: 0.120 }, // Upper thigh flare (skirts/dresses)
+  { y: 1.46, rx: 0.125, cz: 0.030, rz: 0.082, rzFront: 0.082, rzBack: 0.075 }, // High collar / neck base
+  { y: 1.42, rx: 0.192, cz: 0.015, rz: 0.078, rzFront: 0.078, rzBack: 0.072 }, // Shoulder line / clavicle (zMin=-0.045, zMax=+0.067)
+  { y: 1.36, rx: 0.215, cz: 0.020, rz: 0.098, rzFront: 0.098, rzBack: 0.090 }, // Upper chest / scapulae top (zMin=-0.063, zMax=+0.100)
+  { y: 1.25, rx: 0.210, cz: 0.052, rz: 0.124, rzFront: 0.126, rzBack: 0.114 }, // Bust peak & scapulae (zMin=-0.057, zMax=+0.170)
+  { y: 1.15, rx: 0.174, cz: 0.054, rz: 0.106, rzFront: 0.110, rzBack: 0.094 }, // Under-bust (zMin=-0.028, zMax=+0.155)
+  { y: 1.05, rx: 0.142, cz: 0.048, rz: 0.104, rzFront: 0.108, rzBack: 0.096 }, // Natural waist (rx=0.142, zMin=-0.042, zMax=+0.147)
+  { y: 0.95, rx: 0.176, cz: 0.024, rz: 0.126, rzFront: 0.126, rzBack: 0.128 }, // Upper hips / glutes (zMin=-0.101, zMax=+0.141)
+  { y: 0.82, rx: 0.174, cz: 0.018, rz: 0.120, rzFront: 0.118, rzBack: 0.120 }, // Pelvis / crotch (zMin=-0.100, zMax=+0.121)
+  { y: 0.65, rx: 0.205, cz: 0.032, rz: 0.112, rzFront: 0.110, rzBack: 0.105 }, // Upper thigh flare (skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
-  { y: 1.52, rx: 0.145, cz: 0.010, rz: 0.110, rzFront: 0.110, rzBack: 0.120 }, // High collar / neck base
-  { y: 1.48, rx: 0.225, cz: 0.008, rz: 0.135, rzFront: 0.130, rzBack: 0.145 }, // Shoulder line / clavicle (back scapulae reaches z = -0.083m)
-  { y: 1.42, rx: 0.260, cz: 0.010, rz: 0.155, rzFront: 0.145, rzBack: 0.160 }, // Shoulders / upper chest (back reaches z = -0.110m)
-  { y: 1.30, rx: 0.250, cz: 0.018, rz: 0.165, rzFront: 0.165, rzBack: 0.170 }, // Chest / pecs peak & scapulae (back reaches z = -0.114m)
-  { y: 1.18, rx: 0.185, cz: 0.025, rz: 0.140, rzFront: 0.135, rzBack: 0.145 }, // Rib cage
-  { y: 1.08, rx: 0.150, cz: 0.025, rz: 0.135, rzFront: 0.130, rzBack: 0.140 }, // Waist (true point cloud rx: 0.150m, 30cm coronal span)
-  { y: 0.96, rx: 0.180, cz: 0.015, rz: 0.155, rzFront: 0.140, rzBack: 0.160 }, // Upper hips / glutes (glutes extend to z = -0.114m)
-  { y: 0.86, rx: 0.182, cz: 0.015, rz: 0.155, rzFront: 0.135, rzBack: 0.155 }, // Pelvis / crotch
-  { y: 0.70, rx: 0.205, cz: 0.025, rz: 0.135, rzFront: 0.115, rzBack: 0.120 }, // Thigh flare
+  { y: 1.52, rx: 0.145, cz: 0.016, rz: 0.088, rzFront: 0.085, rzBack: 0.082 }, // High collar / neck base (zMin=-0.059, zMax=+0.092)
+  { y: 1.48, rx: 0.220, cz: 0.008, rz: 0.098, rzFront: 0.096, rzBack: 0.096 }, // Shoulder line / clavicle (zMin=-0.083, zMax=+0.096)
+  { y: 1.42, rx: 0.235, cz: 0.013, rz: 0.122, rzFront: 0.124, rzBack: 0.122 }, // Shoulders / upper chest (zMin=-0.110, zMax=+0.135)
+  { y: 1.30, rx: 0.215, cz: 0.027, rz: 0.140, rzFront: 0.142, rzBack: 0.138 }, // Chest / pecs peak & scapulae (zMin=-0.113, zMax=+0.168)
+  { y: 1.18, rx: 0.178, cz: 0.036, rz: 0.116, rzFront: 0.118, rzBack: 0.112 }, // Rib cage / lumbar taper (zMin=-0.066, zMax=+0.148)
+  { y: 1.08, rx: 0.150, cz: 0.038, rz: 0.114, rzFront: 0.118, rzBack: 0.108 }, // Waist (rx=0.150, zMin=-0.062, zMax=+0.149)
+  { y: 0.96, rx: 0.180, cz: 0.025, rz: 0.134, rzFront: 0.138, rzBack: 0.132 }, // Upper hips / glutes (zMin=-0.103, zMax=+0.153)
+  { y: 0.86, rx: 0.182, cz: 0.020, rz: 0.130, rzFront: 0.132, rzBack: 0.124 }, // Pelvis / crotch (zMin=-0.096, zMax=+0.128)
+  { y: 0.70, rx: 0.205, cz: 0.028, rz: 0.120, rzFront: 0.120, rzBack: 0.112 }, // Thigh flare
 ];
 
 export const LEG_PROFILE_FEMALE = [
-  { y: 0.82, cx: 0.105, r: 0.095, cz: 0.032, rzBack: 0.100 }, // Crotch / upper thigh
-  { y: 0.65, cx: 0.112, r: 0.084, cz: 0.038, rzBack: 0.088 }, // Mid thigh
-  { y: 0.50, cx: 0.128, r: 0.072, cz: 0.032, rzBack: 0.078 }, // Knee
-  { y: 0.40, cx: 0.138, r: 0.068, cz: 0.003, rzBack: 0.076 }, // Back of knee / upper calf (z reaches -0.055)
-  { y: 0.30, cx: 0.145, r: 0.065, cz: 0.010, rzBack: 0.072 }, // Calf (z reaches -0.044)
-  { y: 0.20, cx: 0.160, r: 0.050, cz: 0.018, rzBack: 0.056 }, // Lower calf
-  { y: 0.10, cx: 0.165, r: 0.046, cz: 0.025, rzBack: 0.048 }, // Ankle
+  { y: 0.82, cx: 0.100, r: 0.094, cz: 0.024, rzFront: 0.115, rzBack: 0.115 }, // Crotch / upper thigh (zMin=-0.080, zMax=+0.121)
+  { y: 0.75, cx: 0.104, r: 0.090, cz: 0.034, rzFront: 0.105, rzBack: 0.098 }, // Upper-mid thigh (zMin=-0.057, zMax=+0.118)
+  { y: 0.65, cx: 0.112, r: 0.082, cz: 0.040, rzFront: 0.092, rzBack: 0.088 }, // Mid thigh (zMin=-0.032, zMax=+0.115)
+  { y: 0.50, cx: 0.128, r: 0.072, cz: 0.036, rzFront: 0.078, rzBack: 0.076 }, // Knee (zMin=-0.022, zMax=+0.100)
+  { y: 0.40, cx: 0.138, r: 0.068, cz: 0.003, rzFront: 0.072, rzBack: 0.076 }, // Back of knee / upper calf (z reaches -0.055)
+  { y: 0.30, cx: 0.145, r: 0.064, cz: 0.010, rzFront: 0.066, rzBack: 0.070 }, // Calf (z reaches -0.044)
+  { y: 0.20, cx: 0.160, r: 0.052, cz: 0.020, rzFront: 0.052, rzBack: 0.054 }, // Lower calf
+  { y: 0.10, cx: 0.165, r: 0.048, cz: 0.035, rzFront: 0.065, rzBack: 0.055 }, // Ankle
 ];
 
 export const LEG_PROFILE_MALE = [
-  { y: 0.86, cx: 0.110, r: 0.100, cz: 0.025, rzBack: 0.135 }, // Crotch (glutes / upper thigh reach z = -0.096m)
-  { y: 0.78, cx: 0.115, r: 0.095, cz: 0.025, rzBack: 0.125 }, // Upper thigh
-  { y: 0.70, cx: 0.118, r: 0.090, cz: 0.025, rzBack: 0.115 }, // Mid thigh
-  { y: 0.50, cx: 0.130, r: 0.078, cz: -0.005, rzBack: 0.105 }, // Knee (male z reaches -0.074, cz=-0.005)
-  { y: 0.40, cx: 0.136, r: 0.074, cz: -0.020, rzBack: 0.105 }, // Back of knee / upper calf (z reaches -0.083)
-  { y: 0.30, cx: 0.142, r: 0.068, cz: -0.025, rzBack: 0.082 }, // Calf (z reaches -0.074)
-  { y: 0.20, cx: 0.150, r: 0.056, cz: -0.023, rzBack: 0.070 }, // Lower calf (z reaches -0.061)
-  { y: 0.10, cx: 0.155, r: 0.052, cz: -0.010, rzBack: 0.055 }, // Ankle
+  { y: 0.86, cx: 0.102, r: 0.096, cz: 0.022, rzFront: 0.125, rzBack: 0.125 }, // Crotch (zMin=-0.096, zMax=+0.128)
+  { y: 0.78, cx: 0.105, r: 0.094, cz: 0.032, rzFront: 0.116, rzBack: 0.105 }, // Upper thigh (zMin=-0.053, zMax=+0.128)
+  { y: 0.70, cx: 0.108, r: 0.088, cz: 0.036, rzFront: 0.108, rzBack: 0.096 }, // Mid thigh (zMin=-0.046, zMax=+0.124)
+  { y: 0.58, cx: 0.118, r: 0.080, cz: 0.022, rzFront: 0.095, rzBack: 0.090 }, // Lower thigh
+  { y: 0.50, cx: 0.130, r: 0.076, cz: -0.003, rzFront: 0.085, rzBack: 0.095 }, // Knee (zMin=-0.074, zMax=+0.068)
+  { y: 0.40, cx: 0.134, r: 0.072, cz: -0.020, rzFront: 0.075, rzBack: 0.088 }, // Back of knee / upper calf (zMin=-0.083)
+  { y: 0.30, cx: 0.138, r: 0.068, cz: -0.024, rzFront: 0.068, rzBack: 0.076 }, // Calf (zMin=-0.074)
+  { y: 0.20, cx: 0.146, r: 0.058, cz: -0.022, rzFront: 0.056, rzBack: 0.064 }, // Lower calf (zMin=-0.061)
+  { y: 0.10, cx: 0.148, r: 0.054, cz: 0.002, rzFront: 0.068, rzBack: 0.068 }, // Ankle
 ];
 
 /**
@@ -243,8 +247,9 @@ function dilateCanvasEdges(canvas, passes = 6) {
     const img = ctx.getImageData(0, 0, W, H);
     const d = img.data;
 
-    // 1. Solidify semi-opaque garment pixels and bridge interior scanline slits (<= 35% width)
-    const maxGap = Math.max(8, Math.round(W * 0.35));
+    // 1. Solidify semi-opaque garment pixels and bridge tiny interior pinholes (<= 1.8% width)
+    // Never bridge across separated pant legs or sleeve gaps!
+    const maxGap = Math.max(2, Math.round(W * 0.018));
     for (let y = 0; y < H; y++) {
       const row = y * W;
       let prevX = -1;
@@ -269,11 +274,12 @@ function dilateCanvasEdges(canvas, passes = 6) {
       }
     }
 
-    // 1b. Bridge vertical gaps across interior rows (e.g. horizontal cuts/creases across torso <= 15% height)
-    const maxVertGap = Math.max(6, Math.round(H * 0.15));
+    // 1b. Bridge vertical gaps across interior rows in the upper half (e.g. horizontal cuts/creases across chest graphics <= 7% height)
+    const maxVertGap = Math.max(4, Math.round(H * 0.07));
+    const maxVertBridgeY = Math.round(H * 0.55);
     for (let x = 0; x < W; x++) {
       let prevY = -1;
-      for (let y = 0; y < H; y++) {
+      for (let y = 0; y < maxVertBridgeY; y++) {
         const o = (y * W + x) * 4;
         if (d[o + 3] >= 128) {
           if (prevY >= 0 && y - prevY > 1 && y - prevY - 1 <= maxVertGap) {
@@ -379,14 +385,15 @@ export function buildBackTexture({ frontCanvas, backCanvas }) {
   const out = document.createElement('canvas');
   out.width = W;
   out.height = H;
-  const ctx = out.getContext('2d');
+  const ctx = out.getContext('2d', { willReadFrequently: true });
 
   // Synthesize back fabric excluding front-only graphics, prints, pockets, zippers
   const cleanBackCanvas = synthesizeBackFabricCanvas(frontCanvas);
   ctx.drawImage(cleanBackCanvas, 0, 0);
 
   if (backCanvas) {
-    // A back photo is seen from behind: mirror it so it lines up with the front cut-out
+    // A back photo is seen from behind: mirror it and align its horizontal opaque spans
+    // row-by-row onto the front silhouette so back seams/pockets/yoke match the 3D shell 1:1.
     ctx.globalCompositeOperation = 'source-atop';
     ctx.save();
     ctx.translate(W, 0);
@@ -869,6 +876,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
     solidV: 0.5,
     backTexture: null,
     backSource: null,
+    sideProfile: null,
     ready: false,
     bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
   });
@@ -888,6 +896,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
         solidV: 0.5,
         backTexture: null,
         backSource: null,
+        sideProfile: null,
         ready: false,
         bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
       });
@@ -901,20 +910,25 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
           ...res,
           backTexture: res.backTexture || res.texture,
           backSource: 'front-aligned',
+          sideProfile: null,
           ready: true,
         });
 
-        // ── Item group: look for a consistent back / side view ──
+        // ── Item group: inspect additional POV images for back and side views ──
         if (!res.canvas || !res.shellMask) return;
         let backCanvas = null;
+        let sideProfile = null;
         const candidates = extraKey ? extraKey.split('|') : [];
         for (const u of candidates) {
-          if (u === url) continue;
+          if (!u || u === url) continue;
           try {
             const other = await fetchAndCropTexture(u);
-            if (other?.canvas && isConsistentView(res.canvasStats, other.canvasStats)) {
+            if (!other?.canvas) continue;
+            const viewRole = classifyGroupView(res.canvasStats, other.canvasStats, u);
+            if (!backCanvas && (viewRole === 'back' || isConsistentView(res.canvasStats, other.canvasStats))) {
               backCanvas = other.canvas;
-              break;
+            } else if (!sideProfile && viewRole === 'side' && other.shellMask) {
+              sideProfile = extractSideProfile(other.shellMask, other.aspect, res.aspect);
             }
           } catch {
             // ignore unusable view
@@ -926,7 +940,12 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
           backCanvas,
         });
         setData((prev) => (prev.texture === res.texture
-          ? { ...prev, backTexture, backSource: backCanvas ? 'photo' : 'front-aligned' }
+          ? {
+              ...prev,
+              backTexture,
+              backSource: backCanvas ? 'photo' : 'front-aligned',
+              sideProfile: sideProfile || prev.sideProfile,
+            }
           : prev));
       })
       .catch(() => {
@@ -947,6 +966,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
             solidV: 0.5,
             backTexture: null,
             backSource: null,
+            sideProfile: null,
             ready: true,
             bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
           });
@@ -1678,13 +1698,15 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
  */
 export function resolveShellFit({ rawSlot, garmentText = '', isMale = false, hasOuterwear = false } = {}) {
   const has = (...words) => words.some((w) => garmentText.includes(w));
+  const isStrapless = has('strapless', 'tube', 'bandeau', 'סטרפלס', 'בנדו', 'sans bretelles', 'trägerlos', 'palabra de honor');
   if (rawSlot === 'top') {
     const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
     const isLongline = has('kurta', 'tunic', 'longline', 'thobe', 'טוניקה');
     let yBottom = isMale ? 0.90 : 0.86;
     if (isCrop) yBottom = isMale ? 1.18 : 1.12;
     if (isLongline) yBottom = isMale ? 0.75 : 0.70;
-    return { yTop: isMale ? 1.53 : 1.47, yBottom, layerOffset: hasOuterwear ? 0.016 : 0.022, isSkirt: false };
+    const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
+    return { yTop, yBottom, layerOffset: hasOuterwear ? 0.016 : 0.022, isSkirt: false, isStrapless };
   }
   if (rawSlot === 'outerwear') {
     const isLong = has('overcoat', 'trench', 'duster', 'מעיל ארוך', 'cardigan', 'קרדיגן', 'coat', 'parka', 'robe');
@@ -1692,7 +1714,7 @@ export function resolveShellFit({ rawSlot, garmentText = '', isMale = false, has
     let yBottom = isMale ? 0.88 : 0.84;
     if (isLong) yBottom = isMale ? 0.52 : 0.48;
     if (isCrop) yBottom = isMale ? 1.15 : 1.10;
-    return { yTop: isMale ? 1.54 : 1.48, yBottom, layerOffset: isMale ? 0.038 : 0.034, isSkirt: false };
+    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.036 : 0.032, isSkirt: false, isStrapless: false };
   }
   if (rawSlot === 'dress') {
     const isMini = has('mini', 'קצרה');
@@ -1700,7 +1722,8 @@ export function resolveShellFit({ rawSlot, garmentText = '', isMale = false, has
     let yBottom = isMale ? 0.55 : 0.50;
     if (isMini) yBottom = isMale ? 0.78 : 0.74;
     if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
-    return { yTop: isMale ? 1.53 : 1.47, yBottom, layerOffset: 0.022, isSkirt: false };
+    const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
+    return { yTop, yBottom, layerOffset: 0.022, isSkirt: false, isStrapless };
   }
   if (rawSlot === 'bottom') {
     const isSkirt = has('skirt', 'חצאית');
@@ -1712,7 +1735,7 @@ export function resolveShellFit({ rawSlot, garmentText = '', isMale = false, has
     if (isSkirt) yBottom = isMale ? 0.48 : 0.44;
     if (isMini) yBottom = isMale ? 0.76 : 0.72;
     if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
-    return { yTop: isMale ? 1.08 : 1.05, yBottom, layerOffset: 0.018, isSkirt };
+    return { yTop: isMale ? 1.08 : 1.05, yBottom, layerOffset: 0.018, isSkirt, isStrapless: false };
   }
   return null;
 }
@@ -1751,6 +1774,7 @@ export default function GarmentMesh3D({
     shoeLayout = null,
     shellMask = null,
     backTexture = null,
+    sideProfile = null,
     ready: textureReady = false,
   } = useGarmentTexture(garment?.url, garment?.extraViews, isPatterned);
 
@@ -1897,10 +1921,12 @@ export default function GarmentMesh3D({
   }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV, footwearSpec, shoeLayout]);
 
   const geometry = useMemo(() => {
-    const morphed = applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences);
+    const morphed = isStandalone
+      ? baseGeometry
+      : applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences);
     // Footwear follows the heeled foot pose applied to the avatar
     return rawSlot === 'shoes' ? poseGeometry(morphed, footPose) : morphed;
-  }, [baseGeometry, morphField, morphInfluences, rawSlot, footPose]);
+  }, [baseGeometry, morphField, morphInfluences, rawSlot, footPose, isStandalone]);
 
   // ── Silhouette shell: the garment keeps its own photographed outline ──
   const shellFit = useMemo(
@@ -1919,11 +1945,13 @@ export default function GarmentMesh3D({
         slot: rawSlot,
         isMale,
         isSkirt: shellFit.isSkirt,
+        isStrapless: Boolean(shellFit.isStrapless),
         isStandalone,
         yTop: shellFit.yTop,
         yBottom: shellFit.yBottom,
         layerOffset: shellFit.layerOffset,
         poseSleeves: !isStandalone,
+        sideProfile,
         getTorsoSlice,
         getLegSlice,
       });
@@ -1932,14 +1960,17 @@ export default function GarmentMesh3D({
       console.warn('Silhouette shell unavailable, using procedural fallback:', err);
       return null;
     }
-  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone]);
+  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone, sideProfile]);
   const shellGeos = useMemo(() => {
     if (!shell) return null;
+    if (isStandalone) {
+      return { front: shell.front, back: shell.back };
+    }
     return {
       front: applyAvatarMorphsToGeometry(shell.front, morphField, morphInfluences),
       back: applyAvatarMorphsToGeometry(shell.back, morphField, morphInfluences),
     };
-  }, [shell, morphField, morphInfluences]);
+  }, [shell, morphField, morphInfluences, isStandalone]);
 
   const heelGeometry = useMemo(
     () => (rawSlot === 'shoes' && visible ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose }) : null),

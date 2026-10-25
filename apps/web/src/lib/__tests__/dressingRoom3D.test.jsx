@@ -379,16 +379,18 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(normalizeGarmentRole('item_0', 'cultural', 'Thobe')).toBe('dress');
     expect(normalizeGarmentRole('item_0', 'cultural', 'Kurta')).toBe('top');
 
-    // 5. Profile calibration checks: shoulders & collar heights
+    // 5. Profile calibration checks: shoulders & collar heights (aligned to torso acromion, not wrapping arms)
     const collarFemale = TORSO_PROFILE_FEMALE.find((p) => p.y >= 1.45);
     expect(collarFemale.y).toBeCloseTo(1.46, 2);
     const shoulderFemale = TORSO_PROFILE_FEMALE.find((p) => p.y === 1.36);
-    expect(shoulderFemale.rx).toBeGreaterThanOrEqual(0.23);
+    expect(shoulderFemale.rx).toBeGreaterThanOrEqual(0.21);
+    expect(shoulderFemale.rx).toBeLessThanOrEqual(0.225);
 
     const collarMale = TORSO_PROFILE_MALE.find((p) => p.y >= 1.50);
     expect(collarMale.y).toBeCloseTo(1.52, 2);
     const shoulderMale = TORSO_PROFILE_MALE.find((p) => p.y === 1.42);
-    expect(shoulderMale.rx).toBeGreaterThanOrEqual(0.25);
+    expect(shoulderMale.rx).toBeGreaterThanOrEqual(0.23);
+    expect(shoulderMale.rx).toBeLessThanOrEqual(0.245);
   });
 
   test('resolveEffectiveGarmentUrl resolves clean avatar overlay url for starter items', () => {

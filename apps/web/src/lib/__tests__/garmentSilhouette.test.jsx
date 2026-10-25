@@ -16,8 +16,11 @@ import {
   chooseGridResolution,
   buildSilhouetteShell,
   isConsistentView,
+  classifyGroupView,
+  extractSideProfile,
   synthesizeBackFabricData,
   detectGarmentShoulderRow,
+  getAvatarShoulderRidgeY,
 } from '@/lib/garmentSilhouette';
 import {
   getTorsoSlice,
@@ -542,5 +545,112 @@ describe('shoulder line detection and hoodie mapping', () => {
     // Skirt sits tightly on avatar waist: ~0.31m - 0.35m (never 0.46m - 1.20m!)
     expect(waistWidth).toBeGreaterThanOrEqual(0.30);
     expect(waistWidth).toBeLessThanOrEqual(0.36);
+  });
+
+  test('strict shoulder anchor locks sloped/tilted upper-body garment shoulders to the avatar shoulder line (except strapless)', () => {
+    const nx = 64;
+    const ny = 80;
+    // Steeply sloped-shoulder shirt where shoulder fabric starts lower at v = 0.14 on outer shoulders
+    const mask = paintMask(nx, ny, (u, v) => {
+      const distFromCenter = Math.abs(u - 0.5);
+      if (distFromCenter > 0.36) return false;
+      const topV = 0.04 + (distFromCenter / 0.36) * 0.12;
+      return v >= topV && v <= 0.94;
+    });
+
+    const shellAnchored = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.85, slot: 'top', isMale: true, isStrapless: false, isStandalone: false,
+      yTop: 1.50, yBottom: 0.86, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shellAnchored.ok).toBe(true);
+
+    const pf = shellAnchored.front.attributes.position;
+    const vw = nx + 1;
+
+    // Check outer shoulder column (u ~ 0.25 -> i = 16): first fabric vertex must sit right on getAvatarShoulderRidgeY
+    const col = 16;
+    let firstJ = -1;
+    for (let j = 0; j <= ny; j++) {
+      if (mask[j * vw + col]) { firstJ = j; break; }
+    }
+    expect(firstJ).toBeGreaterThan(0);
+    const idx = firstJ * vw + col;
+    const xPos = pf.getX(idx);
+    const yPos = pf.getY(idx);
+    const expectedRidgeY = getAvatarShoulderRidgeY(Math.abs(xPos), true);
+    expect(yPos).toBeCloseTo(expectedRidgeY, 2);
+
+    // Strapless dress/top should NOT be pulled up to the shoulder ridge when yTop is at the bust (1.30)
+    const shellStrapless = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.85, slot: 'dress', isMale: false, isStrapless: true, isStandalone: false,
+      yTop: 1.30, yBottom: 0.55, layerOffset: 0.020, getTorsoSlice, getLegSlice,
+    });
+    expect(shellStrapless.ok).toBe(true);
+    const pfStrapless = shellStrapless.front.attributes.position;
+    expect(pfStrapless.getY(idx)).toBeLessThan(1.32);
+  });
+
+  test('pants anchor strictly to waist and crotch, never split above crotch line, and preserve pelvis volume in avatar and standalone modes', () => {
+    const { nx, ny } = chooseGridResolution(0.58, 96);
+    const mask = pantsMask(nx, ny);
+
+    const shellAvatar = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.58, slot: 'bottom', isMale: true, isSkirt: false, isStandalone: false,
+      yTop: 1.08, yBottom: 0.11, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shellAvatar.ok).toBe(true);
+
+    const pf = shellAvatar.front.attributes.position;
+    const pb = shellAvatar.back.attributes.position;
+    const vw = nx + 1;
+    const midCol = Math.floor(nx / 2);
+
+    // 1. Crotch row must map directly to male crotch line (y = 0.86)
+    const crotchJ = shellAvatar.info.crotchRow;
+    expect(crotchJ).toBeGreaterThan(0);
+    const crotchY = pf.getY(crotchJ * vw + midCol);
+    expect(crotchY).toBeCloseTo(0.86, 2);
+
+    // 2. Pelvis depth just above the crotch must never deflate below thigh depth
+    const pelvisJ = Math.max(2, crotchJ - 3);
+    const pelvisCenterIdx = pelvisJ * vw + midCol;
+    const pelvisDepth = pf.getZ(pelvisCenterIdx) - pb.getZ(pelvisCenterIdx);
+    expect(pelvisDepth).toBeGreaterThan(0.22);
+
+    // 3. Standalone mode preserves proportional pelvis-to-leg depth ratio
+    const shellStandalone = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.58, slot: 'bottom', isMale: true, isSkirt: false, isStandalone: true,
+      yTop: 1.08, yBottom: 0.11, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shellStandalone.ok).toBe(true);
+    const pfS = shellStandalone.front.attributes.position;
+    const pbS = shellStandalone.back.attributes.position;
+    const standalonePelvisDepth = pfS.getZ(pelvisCenterIdx) - pbS.getZ(pelvisCenterIdx);
+    expect(standalonePelvisDepth).toBeGreaterThan(0.18);
+  });
+
+  test('item group multi-POV: classifyGroupView distinguishes back vs side views and extractSideProfile guides 3D depth', () => {
+    const frontStats = { mean: [90, 100, 120], area: 0.48, aspect: 0.78, spanRatio: 0.72 };
+    const backStats = { mean: [88, 98, 118], area: 0.47, aspect: 0.77, spanRatio: 0.71 };
+    const sideStats = { mean: [92, 101, 119], area: 0.25, aspect: 0.41, spanRatio: 0.38 };
+
+    expect(classifyGroupView(frontStats, backStats)).toBe('back');
+    expect(classifyGroupView(frontStats, sideStats)).toBe('side');
+
+    // Construct a synthetic side-view shellMask ({ runsByRow, nx })
+    const sideNx = 32, sideNy = 32;
+    const sideMask = paintMask(sideNx, sideNy, (u, v) => v >= 0.06 && v <= 0.94 && u >= 0.30 && u <= 0.70);
+    const sideRunsByRow = Array.from({ length: sideNy + 1 }, (_, j) => rowRuns(sideMask, sideNx, j));
+    const sideProfile = extractSideProfile({ runsByRow: sideRunsByRow, nx: sideNx }, 0.45, 0.80);
+    expect(sideProfile).not.toBeNull();
+    expect(sideProfile.ratios).toHaveLength(sideNy + 1);
+
+    const { nx, ny } = chooseGridResolution(0.8, 64);
+    const mask = teeMask(nx, ny);
+    const shellWithSide = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.8, slot: 'top', isMale: false, sideProfile,
+      yTop: 1.47, yBottom: 0.86, layerOffset: 0.022, getTorsoSlice, getLegSlice,
+    });
+    expect(shellWithSide.ok).toBe(true);
   });
 });

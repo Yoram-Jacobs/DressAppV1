@@ -97,10 +97,18 @@ function buildField(scene) {
 
   const grid = new Map();
   for (let i = 0; i < count; i++) {
+    const bx = basePositions[i * 3];
+    const by = basePositions[i * 3 + 1];
+    const bz = basePositions[i * 3 + 2];
+    // Exclude hanging forearms, wrists, hands, and fingers (|x| > 0.188m at y in 0.70..1.28m)
+    // so waist, pelvis, hip, and thigh garment vertices never inherit stationary hand morph weights.
+    if (Math.abs(bx) > 0.188 && by >= 0.70 && by <= 1.28) {
+      continue;
+    }
     const key = cellKey(
-      Math.floor(basePositions[i * 3] / CELL),
-      Math.floor(basePositions[i * 3 + 1] / CELL),
-      Math.floor(basePositions[i * 3 + 2] / CELL)
+      Math.floor(bx / CELL),
+      Math.floor(by / CELL),
+      Math.floor(bz / CELL)
     );
     let bucket = grid.get(key);
     if (!bucket) {
@@ -189,7 +197,26 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences) {
       oz += w * dz;
       wSum += w;
     }
-    pos.setXYZ(vi, x + ox / wSum, y + oy / wSum, z + oz / wSum);
+    let dxFinal = ox / wSum;
+    let dyFinal = oy / wSum;
+    let dzFinal = oz / wSum;
+
+    // Guarantee full envelope clearance when body-mass expansion morphs are active
+    // so peak quadriceps/pelvis/belly expansions never poke through off-center garment vertices.
+    const heavyInf = Math.max(0, Number(influences.heavy) || 0);
+    const waistInf = Math.max(0, Number(influences.waist_thick) || 0);
+    const hipsInf = Math.max(0, Number(influences.hips_wide) || 0);
+    if ((heavyInf > 0 || waistInf > 0 || hipsInf > 0) && y >= 0.48 && y <= 1.42) {
+      if (z > 0.025) {
+        const minFrontPush = heavyInf * 0.028 + waistInf * 0.010 + hipsInf * 0.008;
+        if (dzFinal < minFrontPush) dzFinal = minFrontPush;
+      } else if (z < -0.025) {
+        const minBackPush = -(heavyInf * 0.022 + waistInf * 0.008 + hipsInf * 0.010);
+        if (dzFinal > minBackPush) dzFinal = minBackPush;
+      }
+    }
+
+    pos.setXYZ(vi, x + dxFinal, y + dyFinal, z + dzFinal);
   }
   pos.needsUpdate = true;
   out.computeVertexNormals();

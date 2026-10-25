@@ -30,6 +30,7 @@ import AvatarMesh3D, { getAvatarMetricTransform } from './AvatarMesh3D';
 import GarmentMesh3D, { normalizeGarmentRole } from './GarmentMesh3D';
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
+import { closetStore } from '@/lib/closetStore';
 import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFit';
 
 // ─── Creamy Boutique Studio Pedestal & Room ───
@@ -320,7 +321,7 @@ export default function DressingRoom3D({
   // (and suspended Canvas mounts are not restarted) by unrelated re-renders.
   const itemsSignature = Object.entries(activeItems || {})
     .map(([k, v]) => (v && typeof v === 'object'
-      ? [k, v.id, v.url, v.image_url, v.clean_image_url, v.category, v.sub_category, v.title, v.name, v.pattern,
+      ? [k, v.id, v.group_id, v.url, v.image_url, v.clean_image_url, v.category, v.sub_category, v.title, v.name, v.pattern,
         (v.view_urls || []).join(','), (v.group_members || []).map((m) => m?.id).join(',')].join('~')
       : `${k}~${v}`))
     .join('|');
@@ -331,11 +332,12 @@ export default function DressingRoom3D({
   const activeGarments = useMemo(() => {
     const list = [];
     const entries = Object.entries(activeItemsRef.current || {});
+    const allClosetItems = (closetStore?.getSnapshot?.()?.items || []).filter(Boolean);
 
     entries.forEach(([slotKey, item]) => {
       if (!item) return;
       const g = typeof item === 'object' ? item : { id: item, slot: slotKey };
-      if (!g.url && !g.image_url) return;
+      if (!g.url && !g.image_url && !g.clean_image_url) return;
       const normSlot = normalizeGarmentRole(
         slotKey,
         g.category,
@@ -347,16 +349,53 @@ export default function DressingRoom3D({
       const extraViews = [];
       const seenViews = new Set([frontUrl]);
       const pushView = (u) => {
-        if (u && !seenViews.has(u)) {
-          seenViews.add(u);
-          extraViews.push(u);
+        if (!u) return;
+        const resolved = typeof u === 'string'
+          ? u
+          : (resolveEffectiveGarmentUrl(u) || u.clean_image_url || u.url || u.image_url);
+        if (resolved && !seenViews.has(resolved)) {
+          seenViews.add(resolved);
+          extraViews.push(resolved);
         }
       };
       (Array.isArray(g.view_urls) ? g.view_urls : []).forEach(pushView);
+      (Array.isArray(g.additional_images) ? g.additional_images : []).forEach(pushView);
+      (Array.isArray(g.images) ? g.images : []).forEach(pushView);
+      (Array.isArray(g.views) ? g.views : []).forEach(pushView);
+      if (g.back_image_url) pushView(g.back_image_url);
+      if (g.rear_image_url) pushView(g.rear_image_url);
+      if (g.side_image_url) pushView(g.side_image_url);
+      if (g.profile_image_url) pushView(g.profile_image_url);
       (Array.isArray(g.group_members) ? g.group_members : []).forEach((m) => {
         if (!m || m.id === g.id) return;
-        pushView(resolveEffectiveGarmentUrl(m) || m.clean_image_url || m.image_url);
+        pushView(m);
       });
+      (Array.isArray(g.group_items) ? g.group_items : []).forEach((m) => {
+        if (!m || m.id === g.id) return;
+        pushView(m);
+      });
+
+      // Also check closetStore for item group siblings with the same garment role/category
+      const itemId = g.id || g._id || g.closet_item_id;
+      const closetMatch = itemId
+        ? allClosetItems.find((it) => (it.id || it._id) === itemId)
+        : null;
+      const effectiveGroupId = g.group_id || closetMatch?.group_id;
+      if (effectiveGroupId && allClosetItems.length > 0) {
+        allClosetItems.forEach((sibling) => {
+          const sibId = sibling.id || sibling._id;
+          if (!sibling || sibId === itemId) return;
+          if (sibling.group_id !== effectiveGroupId && sibId !== effectiveGroupId) return;
+          const sibSlot = normalizeGarmentRole(
+            sibling.category || slotKey,
+            sibling.category,
+            sibling.name || sibling.title || sibling.sub_category || sibling.item_type
+          );
+          if (sibSlot === normSlot) {
+            pushView(sibling);
+          }
+        });
+      }
 
       list.push({
         slot: normSlot,
