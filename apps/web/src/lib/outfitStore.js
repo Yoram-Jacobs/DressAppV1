@@ -48,7 +48,7 @@ function saveState(state) {
   
   if (state.items && state.items.length > 0) {
     setItem('outfit_items', state.items.filter(Boolean)).catch(e => console.error('Failed to save outfits to IndexedDB', e));
-  } else if (state.items && state.items.length === 0 && state.lastFullSync) {
+  } else if (state.items && state.items.length === 0 && state.isLoaded && state.lastFullSync) {
     setItem('outfit_items', []).catch(e => console.error('Failed to clear outfits from IndexedDB', e));
   }
 }
@@ -58,9 +58,13 @@ let _state = loadState();
 let _idbPromise = typeof window !== 'undefined' ? getItem('outfit_items').then(items => {
   if (items && items.length > 0 && _state.items.length === 0) {
     _state.items = items.filter(Boolean);
-    _notify();
   }
-}).catch(e => console.error('Failed to load outfits from IndexedDB', e)) : Promise.resolve();
+  _state.isLoaded = true;
+  _notify();
+}).catch(e => {
+  console.error('Failed to load outfits from IndexedDB', e);
+  _state.isLoaded = true;
+}) : Promise.resolve();
 
 const _listeners = new Set();
 const _deletedIds = new Set();
@@ -124,13 +128,13 @@ export const outfitStore = {
     await _idbPromise;
     if (!force && _state.loading) return _state.items;
     if (!force && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
-      if (!(_state.items.length === 0 && _state.total > 0)) {
+      if (_state.items && _state.items.length > 0) {
         return _state.items;
       }
     }
     _set({ loading: true, error: null });
     try {
-      const res = await api.listSavedOutfits();
+      const res = await api.listSavedOutfits({ limit: 500 });
       const rawItems = Array.isArray(res) ? res : (res.outfits || []);
       const next = rawItems.filter(Boolean).filter((it) => !_deletedIds.has(it.id)).sort(_byCreatedDesc);
       const now = Date.now();
@@ -139,11 +143,12 @@ export const outfitStore = {
         total: res.total || next.length,
         lastFullSync: now,
         lastIncSync: now,
+        isLoaded: true,
       });
 
       return next;
     } catch (err) {
-      _set({ error: err });
+      _set({ error: err, isLoaded: true });
       throw err;
     } finally {
       _set({ loading: false });

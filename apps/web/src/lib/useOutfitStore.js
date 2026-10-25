@@ -13,7 +13,7 @@ export const removeOutfit = outfitStore.remove.bind(outfitStore);
 export const replaceAllOutfits = outfitStore.replaceAll.bind(outfitStore);
 export const resetOutfitStore = outfitStore.reset.bind(outfitStore);
 
-export function useOutfitStore({ prewarm = false } = {}) {
+export function useOutfitStore({ prewarm = true } = {}) {
   const snap = useSyncExternalStore(
     _subscribe,
     _getSnapshot,

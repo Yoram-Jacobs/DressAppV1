@@ -432,7 +432,13 @@ export default function Stylist() {
   const messagesEndRef = useRef(null);
   const lastAssistantRef = useRef(null);
   // Outfits, Notifications, and Calendar states
-  const { items: outfits, loading: outfitsLoading, incrementalSync, upsert, remove } = useOutfitStore();
+  const { items: outfits, loading: outfitsLoading, incrementalSync, upsert, remove } = useOutfitStore({ prewarm: true });
+  useEffect(() => {
+    if (user && (!outfits || outfits.length === 0)) {
+      prewarmOutfits({ force: true }).catch(() => {});
+    }
+  }, [user]);
+
   const [notifications, setNotifications] = useStoreState(stylistUIStore, 'notifications');
   const [calendarStartDate, setCalendarStartDate] = useStoreState(stylistUIStore, 'calendarStartDate');
   const [dragOverDay, setDragOverDay] = useStoreState(stylistUIStore, 'dragOverDay');

@@ -67,12 +67,21 @@ def _safe_doc(doc: dict) -> dict:
 @router.get("")
 async def list_saved_outfits(
     user: dict = Depends(get_current_user),
-    limit: int = 50,
+    limit: int = 500,
 ) -> dict[str, Any]:
     """Get all saved outfits for the user."""
     db = get_db()
-    cursor = db.outfits.find({"user_id": user["id"]}).sort([("created_at", -1)]).limit(limit)
+    uid = user["id"]
+    u_obj_id = str(user.get("_id", ""))
+    user_filter = {"$or": [{"user_id": uid}, {"user_id": u_obj_id}]} if u_obj_id else {"user_id": uid}
+    cursor = db.outfits.find(user_filter).sort([("created_at", -1)]).limit(limit)
     rows = [doc async for doc in cursor]
+
+    for r in rows:
+        if not r.get("garments") and r.get("items"):
+            r["garments"] = r.get("items")
+        elif not r.get("items") and r.get("garments"):
+            r["items"] = r.get("garments")
 
     # Collect all closet_item_ids from the returned outfits to verify existence
     item_ids = set()
@@ -102,7 +111,7 @@ async def list_saved_outfits(
                 ]
 
         # Only retain outfits that still have valid garments
-        rows = [r for r in rows if len(r.get("garments", [])) > 0]
+        rows = [r for r in rows if len(r.get("garments", [])) > 0 or len(r.get("items", [])) > 0]
 
     return {"outfits": [_safe_doc(r) for r in rows]}
 
@@ -111,7 +120,7 @@ async def list_saved_outfits(
 async def search_saved_outfits(
     q: str,
     user: dict = Depends(get_current_user),
-    limit: int = 50,
+    limit: int = 500,
 ) -> dict[str, Any]:
     """Vibe search over user's saved outfits by query (occasion, vibe, garment, color, or notes)."""
     db = get_db()
