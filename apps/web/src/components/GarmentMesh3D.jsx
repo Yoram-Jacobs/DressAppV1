@@ -18,6 +18,7 @@ import {
   classifyGroupView,
   extractSideProfile,
   synthesizeBackFabricData,
+  resolveBottomLength,
 } from '@/lib/garmentSilhouette';
 
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
@@ -233,6 +234,84 @@ function computeCanvasStats(canvas) {
   const meanLum = lum.length ? lum.reduce((a, v) => a + v, 0) / lum.length : 128;
   const variance = lum.length ? lum.reduce((a, v) => a + (v - meanLum) * (v - meanLum), 0) / lum.length : 0;
   return { mean, area: n / (sw * sh), aspect, stdev: Math.sqrt(variance) };
+}
+
+/**
+ * Mirrors opaque garment pixels horizontally outward by `padDistance` pixels along each row.
+ * Unlike nearest-neighbour smearing, mirror padding preserves the natural fabric grain, weave,
+ * texture, and color variations seamlessly across the silhouette flank so side views never smear.
+ */
+function mirrorPadEdges(canvas, padDistance = 24) {
+  try {
+    const W = canvas.width;
+    const H = canvas.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const img = ctx.getImageData(0, 0, W, H);
+    const d = img.data;
+
+    for (let y = 0; y < H; y++) {
+      const row = y * W;
+      const spans = [];
+      let inSpan = false;
+      let spanStart = 0;
+      for (let x = 0; x < W; x++) {
+        const a = d[(row + x) * 4 + 3];
+        if (a >= 120) {
+          if (!inSpan) {
+            inSpan = true;
+            spanStart = x;
+          }
+        } else {
+          if (inSpan) {
+            spans.push([spanStart, x - 1]);
+            inSpan = false;
+          }
+        }
+      }
+      if (inSpan) {
+        spans.push([spanStart, W - 1]);
+      }
+
+      for (let s = 0; s < spans.length; s++) {
+        const [a, b] = spans[s];
+        const spanLen = b - a + 1;
+        if (spanLen < 2) continue;
+
+        // Mirror to the left into transparent margin
+        const leftLimit = s === 0 ? 0 : Math.floor((spans[s - 1][1] + a) / 2) + 1;
+        const padL = Math.min(padDistance, a - leftLimit);
+        for (let k = 1; k <= padL; k++) {
+          const targetX = a - k;
+          const targetO = (row + targetX) * 4;
+          if (d[targetO + 3] >= 200) continue;
+          const srcX = Math.min(b, a + ((k - 1) % spanLen));
+          const srcO = (row + srcX) * 4;
+          d[targetO] = d[srcO];
+          d[targetO + 1] = d[srcO + 1];
+          d[targetO + 2] = d[srcO + 2];
+          d[targetO + 3] = 255;
+        }
+
+        // Mirror to the right into transparent margin
+        const rightLimit = s === spans.length - 1 ? W - 1 : Math.ceil((b + spans[s + 1][0]) / 2) - 1;
+        const padR = Math.min(padDistance, rightLimit - b);
+        for (let k = 1; k <= padR; k++) {
+          const targetX = b + k;
+          const targetO = (row + targetX) * 4;
+          if (d[targetO + 3] >= 200) continue;
+          const srcX = Math.max(a, b - ((k - 1) % spanLen));
+          const srcO = (row + srcX) * 4;
+          d[targetO] = d[srcO];
+          d[targetO + 1] = d[srcO + 1];
+          d[targetO + 2] = d[srcO + 2];
+          d[targetO + 3] = 255;
+        }
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  } catch (err) {
+    console.warn('mirrorPadEdges failed:', err);
+  }
 }
 
 /**
@@ -808,9 +887,10 @@ async function fetchAndCropTexture(url) {
   let shellMask = null;
   let canvasStats = null;
   try {
-    // Dilate edge RGB+alpha outward and bridge slits FIRST so the true silhouette runs
-    // and texture map are both 100% solid without any interior cuts or dropouts!
-    dilateCanvasEdges(cropCanvas, 6);
+    // Mirror pad edge RGB outward horizontally to preserve fabric texture/grain along the flank,
+    // then bridge pinholes and solidify semi-opaque edge pixels.
+    mirrorPadEdges(cropCanvas, 24);
+    dilateCanvasEdges(cropCanvas, 4);
     texture.needsUpdate = true;
 
     const sData = cropCtx.getImageData(0, 0, cropW, cropH).data;
@@ -1696,7 +1776,14 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
  * Vertical placement + clearance of a garment shell for each clothing slot,
  * expressed in the avatar's base (un-morphed) metric space.
  */
-export function resolveShellFit({ rawSlot, garmentText = '', isMale = false, hasOuterwear = false } = {}) {
+export function resolveShellFit({
+  rawSlot,
+  garmentText = '',
+  isMale = false,
+  hasOuterwear = false,
+  garment = null,
+  aspect = 0.55,
+} = {}) {
   const has = (...words) => words.some((w) => garmentText.includes(w));
   const isStrapless = has('strapless', 'tube', 'bandeau', 'סטרפלס', 'בנדו', 'sans bretelles', 'trägerlos', 'palabra de honor');
   if (rawSlot === 'top') {
@@ -1727,15 +1814,21 @@ export function resolveShellFit({ rawSlot, garmentText = '', isMale = false, has
   }
   if (rawSlot === 'bottom') {
     const isSkirt = has('skirt', 'חצאית');
-    const isShorts = has('shorts', 'ברמודה', 'קצרים', 'שורטס');
-    const isMini = isSkirt && has('mini', 'קצרה');
-    const isMaxi = isSkirt && has('maxi', 'ארוכה', 'מקסי');
-    let yBottom = isMale ? 0.11 : 0.10;
-    if (isShorts) yBottom = isMale ? 0.58 : 0.54;
-    if (isSkirt) yBottom = isMale ? 0.48 : 0.44;
-    if (isMini) yBottom = isMale ? 0.76 : 0.72;
-    if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
-    return { yTop: isMale ? 1.08 : 1.05, yBottom, layerOffset: 0.018, isSkirt, isStrapless: false };
+    const { lengthType, yBottom } = resolveBottomLength({
+      garment,
+      garmentText,
+      aspect,
+      isMale,
+      isSkirt,
+    });
+    return {
+      yTop: isMale ? 1.08 : 1.05,
+      yBottom,
+      layerOffset: 0.018,
+      isSkirt,
+      isStrapless: false,
+      lengthType,
+    };
   }
   return null;
 }
@@ -1930,8 +2023,8 @@ export default function GarmentMesh3D({
 
   // ── Silhouette shell: the garment keeps its own photographed outline ──
   const shellFit = useMemo(
-    () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear }),
-    [rawSlot, garmentText, isMale, hasOuterwear]
+    () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear, garment, aspect }),
+    [rawSlot, garmentText, isMale, hasOuterwear, garment, aspect]
   );
   const shell = useMemo(() => {
     if (!visible || !shellFit || !shellMask) return null;

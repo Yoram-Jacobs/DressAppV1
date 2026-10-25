@@ -21,6 +21,7 @@ import {
   synthesizeBackFabricData,
   detectGarmentShoulderRow,
   getAvatarShoulderRidgeY,
+  resolveBottomLength,
 } from '@/lib/garmentSilhouette';
 import {
   getTorsoSlice,
@@ -262,6 +263,100 @@ describe('garment slot inference from the item name', () => {
     expect(pants.yBottom).toBeLessThan(0.2);
     const coat = resolveShellFit({ rawSlot: 'outerwear', garmentText: 'wool overcoat', isMale: false });
     expect(coat.yBottom).toBeLessThan(0.6);
+  });
+
+  test('resolveBottomLength and resolveShellFit respect shorts, bermudas, capris, and cutout aspect ratio', () => {
+    // 1. Cargo shorts / knee length
+    const cargoShorts = resolveShellFit({
+      rawSlot: 'bottom',
+      garment: { name: 'Cargo Shorts', length: 'knee_length' },
+      garmentText: 'cargo shorts',
+      aspect: 0.85,
+      isMale: true,
+    });
+    expect(cargoShorts.lengthType).toBe('bermuda');
+    expect(cargoShorts.yBottom).toBeCloseTo(0.48, 2);
+
+    // 2. Running / swim shorts (high aspect ratio)
+    const swimShorts = resolveShellFit({
+      rawSlot: 'bottom',
+      garment: { name: 'Swim Trunks' },
+      garmentText: 'swim trunks',
+      aspect: 1.1,
+      isMale: true,
+    });
+    expect(swimShorts.lengthType).toBe('shorts');
+    expect(swimShorts.yBottom).toBeCloseTo(0.60, 2);
+
+    // 3. Capri / 7/8 pants
+    const capri = resolveShellFit({
+      rawSlot: 'bottom',
+      garment: { name: 'Cropped 7/8 Chinos' },
+      garmentText: 'cropped chinos 7/8',
+      aspect: 0.65,
+      isMale: false,
+    });
+    expect(capri.lengthType).toBe('capri');
+    expect(capri.yBottom).toBeCloseTo(0.28, 2);
+
+    // 4. Hebrew keywords detection (ברמודה / שורטס / עד הברך)
+    const hebrewBermuda = resolveBottomLength({
+      garmentText: 'מכנסי ברמודה לגבר עד הברך',
+      aspect: 0.8,
+      isMale: true,
+    });
+    expect(hebrewBermuda.lengthType).toBe('bermuda');
+    expect(hebrewBermuda.yBottom).toBe(0.48);
+  });
+
+  test('silhouette shell generates smooth organic humanoid chest and seamless flank normals', () => {
+    const nx = 48;
+    const ny = 64;
+    // Paint a tee
+    const mask = paintMask(nx, ny, (u, v) => {
+      // Collar cutout
+      if (v < 0.08 && Math.abs(u - 0.5) < 0.14) return false;
+      // Shoulders & torso
+      if (v >= 0.04 && v <= 0.90 && Math.abs(u - 0.5) <= 0.28) return true;
+      // Sleeves
+      if (v >= 0.08 && v <= 0.38 && Math.abs(u - 0.5) <= 0.44) return true;
+      return false;
+    });
+
+    const shell = buildSilhouetteShell({
+      mask,
+      nx,
+      ny,
+      aspect: 0.90,
+      slot: 'top',
+      isMale: true,
+      yTop: 1.52,
+      yBottom: 0.90,
+      layerOffset: 0.02,
+      getTorsoSlice,
+      getLegSlice,
+    });
+
+    expect(shell.ok).toBe(true);
+    const fNorm = shell.front.attributes.normal.array;
+    const bNorm = shell.back.attributes.normal.array;
+    expect(fNorm.length).toBeGreaterThan(0);
+    expect(bNorm.length).toBe(fNorm.length);
+
+    // Check boundary vertices: normals between front and back must match seamlessly with z ~ 0
+    let checkedBoundaries = 0;
+    for (let idx = 0; idx < (nx + 1) * (ny + 1); idx++) {
+      const p = idx * 3;
+      // At boundary vertices where normal Z is close to 0, front and back nx, ny must be identical
+      if (Math.abs(fNorm[p + 2]) < 1e-3 && Math.abs(bNorm[p + 2]) < 1e-3) {
+        if (Math.hypot(fNorm[p], fNorm[p + 1]) > 0.5) {
+          expect(fNorm[p]).toBeCloseTo(bNorm[p], 3);
+          expect(fNorm[p + 1]).toBeCloseTo(bNorm[p + 1], 3);
+          checkedBoundaries++;
+        }
+      }
+    }
+    expect(checkedBoundaries).toBeGreaterThan(10);
   });
 });
 

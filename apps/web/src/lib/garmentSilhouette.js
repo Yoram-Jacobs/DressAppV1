@@ -169,6 +169,72 @@ export function getAvatarShoulderRidgeY(absX, isMale = false) {
 }
 
 /**
+ * Piecewise linear interpolation across anatomical depth & contour profiles.
+ */
+export function resolveBottomLength({
+  garment = null,
+  garmentText = '',
+  aspect = 0.55,
+  isMale = false,
+  isSkirt = false,
+} = {}) {
+  const g = garment || {};
+  const metaText = `${g.length || ''} ${g.bottom_length || ''} ${g.item_length || ''} ${g.metadata?.length || ''} ${garmentText}`.toLowerCase();
+
+  if (isSkirt) {
+    const isMini = /\b(mini|micro|קצרה|מיני)\b/i.test(metaText);
+    const isMaxi = /\b(maxi|gown|long|ארוכה|מקסי)\b/i.test(metaText);
+    if (isMini) return { lengthType: 'mini_skirt', yBottom: isMale ? 0.76 : 0.72 };
+    if (isMaxi) return { lengthType: 'maxi_skirt', yBottom: isMale ? 0.16 : 0.12 };
+    return { lengthType: 'midi_skirt', yBottom: isMale ? 0.48 : 0.44 };
+  }
+
+  // Bottoms (pants, shorts, culottes, etc.)
+  // 1. Explicit keywords in metadata or title
+  const isMiniShorts = /\b(hot\s*pants|micro\s*short|mini\s*short|קצרצר|ביקיני|תחתונים|brief|thong|bikini)\b/i.test(metaText);
+  const isBermudaOrKnee = /\b(bermuda|knee|knee-high|knee_length|knee-length|ברמודה|עד הברך|ברך)\b/i.test(metaText);
+  const isShortsText = /\b(short|shorts|trunk|trunks|boxer|boxers|swim_short|שורט|שורטס|קצרים|מכנסי ים|מכנסי_ים|בוקסר)\b/i.test(metaText);
+  const isCapriOr78 = /\b(capri|cropped|culotte|culottes|3\/4|7\/8|seven_eighths|קפרי|שבע שמיניות|שלושת רבעי|שבע_שמיניות|ankle\s*pant)\b/i.test(metaText);
+
+  let lengthType = 'full';
+  if (isMiniShorts) {
+    lengthType = 'mini_shorts';
+  } else if (isBermudaOrKnee) {
+    lengthType = 'bermuda';
+  } else if (isShortsText) {
+    // If aspect is tall (< 0.75), might be longer bermuda, otherwise standard shorts
+    lengthType = aspect < 0.88 ? 'bermuda' : 'shorts';
+  } else if (isCapriOr78) {
+    lengthType = 'capri';
+  } else {
+    // Physical cutout aspect ratio fallback:
+    // Full trousers: aspect ~ 0.35..0.58
+    // Capri / 7/8: aspect ~ 0.58..0.72
+    // Bermuda / Knee-length: aspect ~ 0.72..0.90
+    // Shorts: aspect >= 0.90
+    if (aspect >= 1.05) {
+      lengthType = 'shorts';
+    } else if (aspect >= 0.72) {
+      lengthType = 'bermuda';
+    } else if (aspect >= 0.58) {
+      lengthType = 'capri';
+    } else {
+      lengthType = 'full';
+    }
+  }
+
+  const yBottomMap = {
+    mini_shorts: isMale ? 0.72 : 0.68,
+    shorts: isMale ? 0.60 : 0.56,
+    bermuda: isMale ? 0.48 : 0.44, // Right at / just around knee (e.g. cargo shorts)
+    capri: isMale ? 0.32 : 0.28,   // 7/8 length / mid calf
+    full: isMale ? 0.11 : 0.10,    // Ankle length
+  };
+
+  return { lengthType, yBottom: yBottomMap[lengthType] };
+}
+
+/**
  * Catalog photos show sleeves in all sorts of poses (arms raised, stretched out).
  * The avatar's arms hang down, so each sleeve is swung about the shoulder joint until
  * its cuff points along the avatar's arm. Torso vertices never move.
@@ -204,8 +270,13 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
     const thetaPhoto = Math.atan2(ys[best] - pivotY, xs[best] * side - pivotX);
     const phi = thetaTarget - thetaPhoto;
     if (Math.abs(phi) < 0.05 || Math.abs(phi) > 1.95) return;
-    const cos = Math.cos(phi);
-    const sin = Math.sin(phi);
+
+    // For short sleeves (T-shirts with bestR < 0.24m):
+    // Soften rotation angle so short sleeves drape naturally rather than shearing aggressively into sharp robotic angles
+    const sleeveLengthFactor = clamp((bestR - 0.10) / 0.18, 0.35, 1.0);
+    const effectivePhi = phi * sleeveLengthFactor;
+    const cos = Math.cos(effectivePhi);
+    const sin = Math.sin(effectivePhi);
     const yWrist = isMale ? 0.93 : 0.89;
 
     for (let idx = 0; idx < vw * vh; idx++) {
@@ -226,7 +297,7 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
       xs[idx] = side * (x + (nx2 - x) * w);
       ys[idx] = y + (ny2 - y) * w;
     }
-    applied.push({ side, phiDeg: (phi * 180) / Math.PI });
+    applied.push({ side, phiDeg: (effectivePhi * 180) / Math.PI });
   });
   return applied;
 }
@@ -350,7 +421,7 @@ export function buildSilhouetteShell({
   let crotchRow = -1;
   if (isBottom) {
     const scanStart = Math.min(ny - 4, jFabricTop + Math.max(2, Math.floor(0.14 * fabricHeight)));
-    const scanEnd = Math.min(ny - 4, jFabricTop + Math.floor(0.48 * fabricHeight));
+    const scanEnd = Math.min(ny - 4, jFabricTop + Math.floor(0.55 * fabricHeight));
     for (let j = scanStart; j <= scanEnd; j++) {
       let stable = true;
       for (let k = 0; k < 4; k++) {
@@ -364,11 +435,12 @@ export function buildSilhouetteShell({
         break;
       }
     }
-    // Clamp crotchRow to realistic anatomical trouser rise (18%..38% of garment height)
-    const minCrotchRow = jFabricTop + Math.max(2, Math.round(0.18 * fabricHeight));
-    const maxCrotchRow = jFabricTop + Math.max(4, Math.round(0.38 * fabricHeight));
+    // Realistic anatomical trouser rise based on effectiveYTop and yCrotchBody:
+    const anatomicalRiseFrac = clamp((effectiveYTop - yCrotchBody) / Math.max(0.12, hWorld), 0.16, 0.58);
+    const minCrotchRow = jFabricTop + Math.max(2, Math.round(0.16 * fabricHeight));
+    const maxCrotchRow = jFabricTop + Math.max(4, Math.round(0.55 * fabricHeight));
     if (crotchRow < 0) {
-      crotchRow = jFabricTop + Math.round(0.28 * fabricHeight);
+      crotchRow = jFabricTop + Math.round(anatomicalRiseFrac * fabricHeight);
     } else {
       crotchRow = clamp(crotchRow, minCrotchRow, maxCrotchRow);
     }
@@ -652,8 +724,7 @@ export function buildSilhouetteShell({
       const idx = j * vw + i;
       const run = resolveVertexRun(i, j);
       const col = run ? clamp(i, run[0], run[1]) : i;
-      const inset = run ? Math.min(0.35, (run[1] - run[0]) * 0.15) : 0;
-      uCols[idx] = run ? clamp(col, run[0] + inset, run[1] - inset) : i;
+      uCols[idx] = col;
 
       let x = (col - colMid) * dx;
       if (isSkirt && !isStandalone) {
@@ -685,6 +756,9 @@ export function buildSilhouetteShell({
         const fitScale = targetRowHalf / Math.max(1e-3, currentHalf);
         x = (col - rMid) * dx * fitScale;
       } else if (isBottom && !isStandalone && belowCrotch) {
+        const legSpread = clamp((j - crotchRow) / 3, 0, 1);
+        const activeLegCx = leg.cx * (0.85 + 0.15 * legSpread);
+
         if (legRuns) {
           const c0 = (legRuns[0][0] + legRuns[0][1]) / 2;
           const c1 = (legRuns[1][0] + legRuns[1][1]) / 2;
@@ -695,33 +769,41 @@ export function buildSilhouetteShell({
           const side = k === 0 ? -1 : 1;
 
           // Keep the garment's photographed leg cut (slim vs wide) while guaranteeing
-          // full avatar limb clearance and centering each leg tube directly over side * leg.cx!
+          // full avatar limb clearance and centering each leg tube directly over side * activeLegCx!
           const minLegRadius = (leg.r + layerOffset) * 1.06;
           const photoLegRadius = halfCols * dx;
           const outerRadius = clamp(photoLegRadius, minLegRadius, minLegRadius * 1.38);
           // Inner thigh seam stays cleanly in the inter-thigh cleft (|x| >= 0.012m) and never crosses x = 0
-          const maxInnerRadius = Math.max(0.035, leg.cx - 0.012);
+          const maxInnerRadius = Math.max(0.035, activeLegCx - 0.012);
           const innerRadius = Math.min(outerRadius, maxInnerRadius);
 
           const isInnerSide = side * uLeg < 0;
           const rActive = isInnerSide ? innerRadius : outerRadius;
-          x = side * leg.cx + uLeg * rActive;
+          x = side * activeLegCx + uLeg * rActive;
         } else {
-          // Single-run row at or just below crotchRow
-          const crotchSlice = getTorsoSlice(yCrotchBody, isMale);
-          const minPelvisHalf = (crotchSlice.rx + layerOffset) * 1.06;
-          let rMinA = Infinity, rMaxB = -Infinity;
-          if (runs && runs.length) {
-            runs.forEach(([a, b]) => {
-              if (a < rMinA) rMinA = a;
-              if (b > rMaxB) rMaxB = b;
-            });
+          // Single-run row at or below crotchRow (e.g. cargo pockets or touching hems/fabric in shorts)
+          // Split the single run into left and right leg segments relative to colMid
+          // so leg vertices never snap to center x = 0 (which created horizontal sliced bands/shelves!)
+          const side = col < colMid ? -1 : 1;
+          let legMin = run ? run[0] : 0;
+          let legMax = run ? run[1] : nx;
+          if (legMin < colMid && legMax > colMid) {
+            if (side === -1) legMax = Math.floor(colMid);
+            else legMin = Math.ceil(colMid);
           }
-          const rMid = Number.isFinite(rMinA) ? (rMinA + rMaxB) / 2 : colMid;
-          const rHalf = Number.isFinite(rMinA) ? Math.max(1, (rMaxB - rMinA) / 2) : 1;
-          const currentHalf = rHalf * dx;
-          const targetHalf = clamp(currentHalf, minPelvisHalf, minPelvisHalf * 1.16);
-          x = (col - rMid) * dx * (targetHalf / Math.max(1e-3, currentHalf));
+          const ck = (legMin + legMax) / 2;
+          const halfCols = Math.max(1, (legMax - legMin) / 2);
+          const uLeg = clamp((col - ck) / halfCols, -1, 1);
+
+          const minLegRadius = (leg.r + layerOffset) * 1.06;
+          const photoLegRadius = halfCols * dx;
+          const outerRadius = clamp(photoLegRadius, minLegRadius, minLegRadius * 1.38);
+          const maxInnerRadius = Math.max(0.035, activeLegCx - 0.012);
+          const innerRadius = Math.min(outerRadius, maxInnerRadius);
+
+          const isInnerSide = side * uLeg < 0;
+          const rActive = isInnerSide ? innerRadius : outerRadius;
+          x = side * activeLegCx + uLeg * rActive;
         }
       }
       xs[idx] = x;
@@ -789,13 +871,13 @@ export function buildSilhouetteShell({
       for (let i = iStart; i <= iEnd; i++) {
         const u = clamp((i - mid) / effectiveHalf, -1, 1);
         const s = Math.max(0, 1 - u * u);
-        const taperWidth = isBottom ? 0.05 : 0.08;
+        const taperWidth = isBottom ? 0.08 : 0.12;
         const edgeTaper = isShoulderZone
-          ? smoothstep01((1 - Math.abs(u)) / 0.04)
+          ? smoothstep01((1 - Math.abs(u)) / 0.05)
           : smoothstep01((1 - Math.abs(u)) / taperWidth);
-        const hhFront = (isBottom ? Math.pow(s, 0.18) : (isBodySpan ? Math.pow(s, 0.28) : Math.sqrt(s))) * edgeTaper;
-        // Natural anatomical back curvature (0.24 power instead of flat 0.08 box) eliminates barrel torso
-        const hhBack = (isBottom ? Math.pow(s, 0.18) : (isBodySpan ? Math.pow(s, 0.24) : Math.pow(s, 0.28))) * edgeTaper;
+        const hhFront = (isBottom ? Math.pow(s, 0.38) : (isBodySpan ? Math.pow(s, 0.44) : Math.sqrt(s))) * edgeTaper;
+        // Natural anatomical back curvature (0.42 power instead of flat box) eliminates robot torso
+        const hhBack = (isBottom ? Math.pow(s, 0.36) : (isBodySpan ? Math.pow(s, 0.42) : Math.pow(s, 0.44))) * edgeTaper;
         offF[j * vw + i] = ampFront * hhFront;
         offB[j * vw + i] = ampBack * hhBack;
       }
@@ -838,11 +920,16 @@ export function buildSilhouetteShell({
       if (jFirst < 0 || jFirst > jFabricTop + Math.round(0.25 * fabricHeight)) continue;
       const xCol = xs[jFirst * vw + i];
       const absX = Math.abs(xCol);
-      if (absX < minNeckX || absX > maxShoulderX) continue;
+
+      // Smooth blend near neck line and outer deltoid/acromion
+      const neckBlend = smoothstep01((absX - (minNeckX - 0.025)) / 0.035);
+      const shoulderBlend = 1 - smoothstep01((absX - (maxShoulderX - 0.030)) / 0.045);
+      const shoulderWeight = neckBlend * shoulderBlend;
+      if (shoulderWeight <= 1e-3) continue;
 
       const yTarget = getAvatarShoulderRidgeY(absX, isMale);
       const yActual = ys[jFirst * vw + i];
-      const dy = clamp(yTarget - yActual, -0.12, 0.12);
+      const dy = clamp(yTarget - yActual, -0.12, 0.12) * shoulderWeight;
       if (Math.abs(dy) < 1e-4) continue;
 
       // Apply anchor shift to cap rows above jFirst and decay smoothly down to chest/armpit
@@ -960,10 +1047,39 @@ export function buildSilhouetteShell({
     return geo;
   };
 
+  const front = makeGeo(frontPos, uvFront, frontIdx);
+  const back = makeGeo(backPos, uvBack, backIdx);
+
+  // Smooth boundary vertex normals between front and back sheets:
+  // At edge vertices where depth offset is small (offF <= 0.006 and offB <= 0.006),
+  // average the normals (setting normal Z to 0 so light wraps continuously around the flank).
+  const fNorm = front.attributes.normal.array;
+  const bNorm = back.attributes.normal.array;
+  for (let idx = 0; idx < vw * vh; idx++) {
+    if (offF[idx] <= 0.006 && offB[idx] <= 0.006) {
+      const p = idx * 3;
+      const nxAvg = (fNorm[p] + bNorm[p]) * 0.5;
+      const nyAvg = (fNorm[p + 1] + bNorm[p + 1]) * 0.5;
+      const len = Math.hypot(nxAvg, nyAvg);
+      if (len > 1e-4) {
+        const nxN = nxAvg / len;
+        const nyN = nyAvg / len;
+        fNorm[p] = nxN;
+        fNorm[p + 1] = nyN;
+        fNorm[p + 2] = 0;
+        bNorm[p] = nxN;
+        bNorm[p + 1] = nyN;
+        bNorm[p + 2] = 0;
+      }
+    }
+  }
+  front.attributes.normal.needsUpdate = true;
+  back.attributes.normal.needsUpdate = true;
+
   return {
     ok: true,
-    front: makeGeo(frontPos, uvFront, frontIdx),
-    back: makeGeo(backPos, uvBack, backIdx),
+    front,
+    back,
     info: { nx, ny, crotchRow, sCorr, sleevePose, runsPerRow: runsByRow.map((r) => r.length) },
   };
 }
