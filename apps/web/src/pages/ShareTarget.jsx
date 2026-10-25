@@ -25,6 +25,8 @@ import {
   Percent,
 } from 'lucide-react';
 
+import { getSharedMediaFromStorage } from '@/lib/shareTargetStorage';
+
 export default function ShareTarget() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -35,6 +37,7 @@ export default function ShareTarget() {
   const sharedUrl = searchParams.get('url') || '';
   const sharedText = searchParams.get('text') || '';
   const sharedTitle = searchParams.get('title') || '';
+  const hasSharedMedia = searchParams.get('shared_media');
 
   const [inputUrl, setInputUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,14 +84,63 @@ export default function ShareTarget() {
     }
   }, [t, user]);
 
-  // Auto-trigger when landing with shared URL/text from native OS Share sheet
+  // Manual screenshot or direct image share analysis
+  const processScreenshotFile = useCallback(async (file) => {
+    if (!file) return;
+
+    setManualUploading(true);
+    setError(null);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const b64Data = reader.result.split(',')[1];
+        try {
+          const chartData = await api.misc.analyzeChart({
+            chart_screenshot_b64: b64Data,
+            garment_type: result?.product?.garment_type || undefined,
+            store: result?.product?.brand || undefined,
+            user_preferred_units: user?.profile?.preferred_units || 'cm',
+          });
+          setResult((prev) => ({
+            product: prev?.product || {
+              url: inputUrl,
+              title: t('shareTarget.customChartTitle', { defaultValue: 'Shared Size Chart' }),
+              brand: prev?.product?.brand || 'Store',
+              store: prev?.product?.brand || 'Store',
+            },
+            recommendation: chartData,
+          }));
+          toast.success(t('shareTarget.chartAnalyzed', { defaultValue: 'Size chart analyzed successfully!' }));
+        } catch (chartErr) {
+          console.error('[ShareTarget] Chart analysis failed:', chartErr);
+          toast.error(t('shareTarget.chartError', { defaultValue: 'Could not parse size chart from image. Please try a clearer screenshot.' }));
+        } finally {
+          setManualUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setManualUploading(false);
+    }
+  }, [inputUrl, result?.product?.brand, result?.product?.garment_type, t, user?.profile?.preferred_units]);
+
+  // Auto-trigger when landing with shared URL/text or shared screenshot from native OS Share sheet
   useEffect(() => {
+    if (hasSharedMedia) {
+      getSharedMediaFromStorage().then((file) => {
+        if (file) {
+          processScreenshotFile(file);
+        }
+      });
+      return;
+    }
+
     const clean = extractUrl(sharedUrl, sharedText);
     if (clean) {
       setInputUrl(clean);
       runAnalysis(clean, sharedTitle);
     }
-  }, [sharedUrl, sharedText, sharedTitle, extractUrl, runAnalysis]);
+  }, [hasSharedMedia, sharedUrl, sharedText, sharedTitle, extractUrl, runAnalysis, processScreenshotFile]);
 
   const handleSubmit = (e) => {
     e?.preventDefault();
@@ -158,43 +210,11 @@ export default function ShareTarget() {
     }
   };
 
-  // Manual screenshot upload fallback (when store bot protection blocks scraping)
+  // Triggered when user selects a file from the mobile photo picker / gallery
   const handleScreenshotUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    setManualUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const b64Data = reader.result.split(',')[1];
-        try {
-          const chartData = await api.misc.analyzeChart({
-            chart_screenshot_b64: b64Data,
-            garment_type: result?.product?.garment_type || undefined,
-            store: result?.product?.brand || undefined,
-            user_preferred_units: user?.profile?.preferred_units || 'cm',
-          });
-          setResult((prev) => ({
-            product: prev?.product || {
-              url: inputUrl,
-              title: 'Custom Size Chart',
-              brand: prev?.product?.brand || 'Store',
-              store: prev?.product?.brand || 'Store',
-            },
-            recommendation: chartData,
-          }));
-          toast.success(t('shareTarget.chartAnalyzed', { defaultValue: 'Size chart analyzed successfully!' }));
-        } catch (chartErr) {
-          console.error('[ShareTarget] Chart analysis failed:', chartErr);
-          toast.error(t('shareTarget.chartError', { defaultValue: 'Could not parse size chart from image. Please try a clearer screenshot.' }));
-        } finally {
-          setManualUploading(false);
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      setManualUploading(false);
+    if (file) {
+      await processScreenshotFile(file);
     }
   };
 
@@ -320,7 +340,7 @@ export default function ShareTarget() {
           </div>
 
           {/* Loading Animation */}
-          {loading && (
+          {(loading || manualUploading) && (
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-3" data-testid="share-target-loading">
               <div className="relative">
                 <div className="w-16 h-16 rounded-full border-4 border-primary-brand/20 border-t-primary-brand animate-spin" />
@@ -328,7 +348,9 @@ export default function ShareTarget() {
               </div>
               <div className="space-y-1">
                 <p className="font-bold text-sm text-dark-brand">
-                  {t('shareTarget.readingSizeChart', { defaultValue: 'Connecting to store & scanning size chart…' })}
+                  {manualUploading
+                    ? t('shareTarget.analyzingScreenshot', { defaultValue: 'Scanning size chart screenshot with Gemini AI…' })
+                    : t('shareTarget.readingSizeChart', { defaultValue: 'Connecting to store & scanning size chart…' })}
                 </p>
                 <p className="text-xs text-text-brand">
                   {t('shareTarget.matchingMeasurements', { defaultValue: 'AI is cross-referencing your body measurements' })}
@@ -338,7 +360,7 @@ export default function ShareTarget() {
           )}
 
           {/* Error Message */}
-          {error && !loading && (
+          {error && !loading && !manualUploading && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3" data-testid="share-target-error">
               <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
               <div className="space-y-1">
@@ -351,7 +373,7 @@ export default function ShareTarget() {
           )}
 
           {/* Result View */}
-          {result && !loading && (
+          {result && !loading && !manualUploading && (
             <div className="space-y-5 animate-in fade-in duration-300" data-testid="share-target-result">
               {/* Product Header Card */}
               <div className="flex gap-4 p-3.5 rounded-[12px] bg-sand/30 border border-border">

@@ -1,4 +1,78 @@
-/* DressApp Service Worker for Web Push notifications (Phase Scheduler) */
+/* DressApp Service Worker for Web Push notifications (Phase Scheduler) and Web Share Target */
+
+/* Store shared image in IndexedDB for client retrieval */
+function storeSharedMedia(file) {
+  return new Promise(function(resolve, reject) {
+    if (!self.indexedDB) {
+      resolve(false);
+      return;
+    }
+    var req = self.indexedDB.open('dressapp_share_store', 1);
+    req.onupgradeneeded = function() {
+      if (!req.result.objectStoreNames.contains('shares')) {
+        req.result.createObjectStore('shares');
+      }
+    };
+    req.onsuccess = function() {
+      var db = req.result;
+      var tx = db.transaction('shares', 'readwrite');
+      tx.objectStore('shares').put(file, 'latest_shared_image');
+      tx.oncomplete = function() {
+        db.close();
+        resolve(true);
+      };
+      tx.onerror = function() {
+        db.close();
+        reject(tx.error);
+      };
+    };
+    req.onerror = function() {
+      reject(req.error);
+    };
+  });
+}
+
+/* Intercept POST /share-target from Web Share Target API */
+self.addEventListener('fetch', function(event) {
+  var reqUrl;
+  try {
+    reqUrl = new URL(event.request.url);
+  } catch (e) {
+    return;
+  }
+
+  if (reqUrl.pathname === '/share-target' && event.request.method === 'POST') {
+    event.respondWith(
+      (async function() {
+        try {
+          var formData = await event.request.formData();
+          var mediaFiles = formData.getAll('media');
+          if (!mediaFiles || mediaFiles.length === 0) {
+            mediaFiles = formData.getAll('files');
+          }
+          var file = mediaFiles && mediaFiles.length > 0 ? mediaFiles[0] : null;
+          var sharedUrl = formData.get('url') || '';
+          var sharedText = formData.get('text') || '';
+          var sharedTitle = formData.get('title') || '';
+
+          if (file && file.size > 0) {
+            await storeSharedMedia(file);
+            return Response.redirect('/share-target?shared_media=1', 303);
+          }
+
+          var target = new URL('/share-target', self.location.origin);
+          if (sharedUrl) target.searchParams.set('url', sharedUrl);
+          if (sharedText) target.searchParams.set('text', sharedText);
+          if (sharedTitle) target.searchParams.set('title', sharedTitle);
+          return Response.redirect(target.href, 303);
+        } catch (err) {
+          console.error('[sw] Failed to process share target POST:', err);
+          return Response.redirect('/share-target', 303);
+        }
+      })()
+    );
+  }
+});
 
 self.addEventListener('install', function(event) {
   self.skipWaiting();
