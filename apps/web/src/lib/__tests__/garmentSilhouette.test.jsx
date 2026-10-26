@@ -307,6 +307,23 @@ describe('garment slot inference from the item name', () => {
     });
     expect(hebrewBermuda.lengthType).toBe('bermuda');
     expect(hebrewBermuda.yBottom).toBe(0.48);
+
+    // 5. Full pants explicit keywords preserve full ankle length even if aspect is wide/cropped
+    const khakiPantsWideAspect = resolveBottomLength({
+      garmentText: 'formal khaki pants summer attire',
+      aspect: 0.76, // Wide/spread flat-lay photo
+      isMale: true,
+    });
+    expect(khakiPantsWideAspect.lengthType).toBe('full');
+    expect(khakiPantsWideAspect.yBottom).toBeCloseTo(0.11, 2);
+
+    const hebrewChinos = resolveBottomLength({
+      garmentText: 'מכנסי צ׳ינו אלגנט לגבר',
+      aspect: 0.82,
+      isMale: true,
+    });
+    expect(hebrewChinos.lengthType).toBe('full');
+    expect(hebrewChinos.yBottom).toBeCloseTo(0.11, 2);
   });
 
   test('silhouette shell generates smooth organic humanoid chest and seamless flank normals', () => {

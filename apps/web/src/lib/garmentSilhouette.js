@@ -196,10 +196,13 @@ export function resolveBottomLength({
 
   // Bottoms (pants, shorts, culottes, etc.)
   // 1. Explicit keywords in metadata or title
-  const isMiniShorts = /\b(hot\s*pants|micro\s*short|mini\s*short|קצרצר|ביקיני|תחתונים|brief|thong|bikini)\b/i.test(metaText);
-  const isBermudaOrKnee = /\b(bermuda|knee|knee-high|knee_length|knee-length|ברמודה|עד הברך|ברך)\b/i.test(metaText);
-  const isShortsText = /\b(short|shorts|trunk|trunks|boxer|boxers|swim_short|שורט|שורטס|קצרים|מכנסי ים|מכנסי_ים|בוקסר)\b/i.test(metaText);
-  const isCapriOr78 = /\b(capri|cropped|culotte|culottes|3\/4|7\/8|seven_eighths|קפרי|שבע שמיניות|שלושת רבעי|שבע_שמיניות|ankle\s*pant)\b/i.test(metaText);
+  // Note: Hebrew characters are non-ASCII (\w is ASCII-only in standard JS regex), so use unicode boundaries
+  const isMiniShorts = /(?:^|[^\p{L}\p{N}])(hot\s*pants|micro\s*short|mini\s*short|קצרצר|ביקיני|תחתונים|brief|thong|bikini)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isBermudaOrKnee = /(?:^|[^\p{L}\p{N}])(bermuda|knee|knee-high|knee_length|knee-length|ברמודה|עד הברך|ברך)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isShortsText = /(?:^|[^\p{L}\p{N}])(short|shorts|trunk|trunks|boxer|boxers|swim_short|שורט|שורטס|קצרים|קצר|מכנסי ים|מכנסי_ים|בוקסר)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isCapriOr78 = /(?:^|[^\p{L}\p{N}])(capri|cropped|culotte|culottes|3\/4|7\/8|seven_eighths|קפרי|שבע שמיניות|שלושת רבעי|שבע_שמיניות|ankle\s*pant)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  // Full-length pants keywords: e.g. "pants", "trousers", "chinos", "jeans", "slacks", "sweatpants", "מכנסיים", "מכנס", "דגמ\"ח"
+  const isFullPantsExplicit = /(?:^|[^\p{L}\p{N}])(pants|pant|trousers|trouser|chinos?|jeans?|slacks|sweatpants|joggers?|pantalon|pantaloni|calça|calca|hose|מכנס(?:יים|י)?|דגמ['״"]?ח)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
 
   let lengthType = 'full';
   if (isMiniShorts) {
@@ -211,8 +214,11 @@ export function resolveBottomLength({
     lengthType = aspect < 0.88 ? 'bermuda' : 'shorts';
   } else if (isCapriOr78) {
     lengthType = 'capri';
+  } else if (isFullPantsExplicit) {
+    // Explicit pants/trousers/chinos must stay full-length even if the cutout photo has spread legs or wide framing!
+    lengthType = 'full';
   } else {
-    // Physical cutout aspect ratio fallback:
+    // Physical cutout aspect ratio fallback (only when no explicit pants/shorts keywords exist):
     // Full trousers: aspect ~ 0.35..0.58
     // Capri / 7/8: aspect ~ 0.58..0.72
     // Bermuda / Knee-length: aspect ~ 0.72..0.90
@@ -824,9 +830,12 @@ export function buildSilhouetteShell({
           const minLegRadius = (leg.r + layerOffset) * 1.06;
           const photoLegRadius = halfCols * dx;
           const outerRadius = clamp(photoLegRadius, minLegRadius, minLegRadius * 1.38);
-          // Inner thigh seam stays cleanly in the inter-thigh cleft (|x| >= 0.012m) and never crosses x = 0
-          const maxInnerRadius = Math.max(0.035, activeLegCx - 0.012);
-          const innerRadius = Math.min(outerRadius, maxInnerRadius);
+          // Inner thigh contour: near the crotch (top of thighs), inner edge must reach center seam (x -> 0)
+          // without gap so the avatar's crotch skin never shows through! As we progress down towards knees/ankles,
+          // allow standard anatomical leg separation.
+          const crotchProximity = clamp((y - (yCrotchBody - 0.12)) / 0.12, 0, 1);
+          const maxInnerRadius = activeLegCx * (1.0 - 0.12 * (1 - crotchProximity));
+          const innerRadius = Math.min(outerRadius, Math.max(0.045, maxInnerRadius));
 
           const isInnerSide = side * uLeg < 0;
           const rActive = isInnerSide ? innerRadius : outerRadius;
@@ -860,8 +869,15 @@ export function buildSilhouetteShell({
         const torsoB = (torso.rzBack || torso.rz) + layerOffset;
         const legF = (leg.rzFront || leg.r) + layerOffset;
         const legB = (leg.rzBack || leg.r) + layerOffset;
-        const minF = legRuns ? legF : (torsoF * (1 - crotchBlend) + legF * crotchBlend);
-        const minB = legRuns ? legB : (torsoB * (1 - crotchBlend) + legB * crotchBlend);
+        // In the pelvis and crotch junction zone (y >= yCrotchBody - 0.05), enforce full anterior/posterior
+        // clearance against torso and pubic/gluteal contours so avatar crotch skin is never exposed.
+        const crotchProximity = clamp((y - (yCrotchBody - 0.06)) / 0.08, 0, 1);
+        const minF = legRuns
+          ? Math.max(legF, torsoF * 0.95 * crotchProximity)
+          : (torsoF * (1 - crotchBlend) + legF * crotchBlend);
+        const minB = legRuns
+          ? Math.max(legB, torsoB * 0.95 * crotchProximity)
+          : (torsoB * (1 - crotchBlend) + legB * crotchBlend);
         bodyRzFront = Math.max(minF, minF * sideMod);
         bodyRzBack = Math.max(minB, minB * sideMod);
       } else if (isSkirt) {
@@ -1080,14 +1096,24 @@ export function buildSilhouetteShell({
     const lo = i;
     const hi = i + 1;
 
-    // For pants/bottoms: do not bridge across the crotch void when BOTH adjacent rows have separated legs
+    // For pants/bottoms: do not bridge across the crotch void when BOTH adjacent rows have separated legs.
+    // However, right at the crotch apex (crotchRow and crotchRow + 1), allow the gusset/saddle cells to bridge
+    // across the center cleft (|i - nx/2| <= 2) so there is never an open hole exposing avatar skin!
     if (isBottom) {
       const currRuns = runsByRow[j];
       const nextRuns = runsByRow[j + 1];
       if (currRuns && currRuns.length >= 2 && nextRuns && nextRuns.length >= 2) {
         const gapStart = Math.min(currRuns[0][1], nextRuns[0][1]);
         const gapEnd = Math.max(currRuns[1][0], nextRuns[1][0]);
-        if (lo >= gapStart && hi <= gapEnd) return false;
+        if (lo >= gapStart && hi <= gapEnd) {
+          // Keep a solid crotch saddle across the central 1-2 columns right at crotchRow to crotchRow + 1
+          const isCrotchSaddleRow = j >= crotchRow - 1 && j <= crotchRow + 1;
+          const isCenterCleft = Math.abs((lo + hi) * 0.5 - colMid) <= Math.max(1.5, 0.04 * nx);
+          if (isCrotchSaddleRow && isCenterCleft) {
+            return true;
+          }
+          return false;
+        }
       }
     }
 
