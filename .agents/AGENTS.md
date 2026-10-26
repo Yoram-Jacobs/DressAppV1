@@ -56,6 +56,7 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 
 | Command | Skill | Description |
 |---------|-------|-------------|
+| `/3d-dressing-room-creator` | [3d-dressing-room-creator](skills/3d-dressing-room-creator/SKILL.md) | 3D virtual try-on dressing room, avatar fitting, and dynamic 3D garment reconstruction from 2D photos |
 | `/translate` | [translator](skills/translator/SKILL.md) | Translate markdown, JSON locales, and user manuals into all 13 languages with RTL protection and post-scan quality assurance |
 | `/prune` | [codebase-pruning](skills/codebase-pruning/SKILL.md) | Deep codebase pruning and dead-code elimination |
 | `/strategy` | [strategy-consultant](skills/strategy-consultant/SKILL.md) | Strategic analysis and decision-making framework |
