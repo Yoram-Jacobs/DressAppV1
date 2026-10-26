@@ -261,7 +261,7 @@ export default function OutfitPiecePreview({
               shapeParams={effectiveShapeParams}
               showGuideLines={false}
               interactive={false}
-              className="h-full w-auto aspect-[200/450] max-h-full max-w-full mx-auto"
+              className="w-full h-full"
             />
           </div>
         )}

@@ -1447,7 +1447,7 @@ export default function AvatarViewer2D({
             shapeParams={params}
             showGuideLines={false}
             interactive={interactive}
-            className="h-full w-auto aspect-[200/450] max-h-full max-w-full mx-auto"
+            className="w-full h-full"
           >
             {/* ─── Layered Clothes & Accessories (Segmented transparent PNG overlays) ─── */}
             {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[3.5%] left-1/2 w-[34%] aspect-square z-[50]', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}

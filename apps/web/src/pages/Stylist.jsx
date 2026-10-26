@@ -2911,7 +2911,7 @@ export default function Stylist() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-1">
             {/* Large Avatar Viewer */}
-            <div className="relative w-full h-full bg-[#ddd] rounded-[12px] overflow-hidden border border-border aspect-[4/5]">
+            <div className="relative w-full h-full bg-gradient-to-b from-stone-50/70 via-stone-100/60 to-stone-200/50 dark:from-slate-900/80 dark:via-slate-900/60 dark:to-slate-800/80 rounded-[12px] overflow-hidden border border-border aspect-[4/5]">
               <AvatarViewer
                 shapeParams={user?.avatar_shape_params || {}}
                 measurements={user?.body_measurements || user?.measurements}

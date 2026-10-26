@@ -7,6 +7,9 @@ import { RotateCcw } from 'lucide-react';
 const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair5_smooth';
 const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair5_smooth';
 
+export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png';
+export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png';
+
 // Cache rendered 3D WebGL snapshots (`data:image/png;base64,...`) keyed by avatar signature
 // so grids with 40+ Saved Outfit cards can render the 3D avatar instantaneously without
 // exceeding the browser's 8-16 active WebGL context limit.
@@ -16,11 +19,11 @@ const slotReleaseSubscribers = new Set();
 let activeWebGLCanvasCount = 0;
 const MAX_CONCURRENT_WEBGL_CANVASES = 2;
 
-export function getCachedSnapshot(sig) {
-  if (rendered3DAvatarSnapshotCache.has(sig)) {
+export function getCachedSnapshot(sig, isMale = false) {
+  if (sig && rendered3DAvatarSnapshotCache.has(sig)) {
     return rendered3DAvatarSnapshotCache.get(sig);
   }
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && sig) {
     try {
       const stored = sessionStorage.getItem('avatar_snap_' + sig);
       if (stored && stored.length > 5000) {
@@ -29,7 +32,8 @@ export function getCachedSnapshot(sig) {
       }
     } catch {}
   }
-  return null;
+  // Immediate fallback to canonical 3D GLB model snapshot
+  return isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL;
 }
 
 function notifySnapshotSubscribers(sig, dataUrl) {
@@ -957,7 +961,7 @@ export default function DynamicAvatar({
   }, [isMale, activeSkinColor, hairProps.color, hairProps.roughness, height, morphInfluences]);
 
   const [snapshotUrl, setSnapshotUrl] = useState(
-    () => getCachedSnapshot(avatarSignature)
+    () => getCachedSnapshot(avatarSignature, isMale)
   );
   const [canMountWebGL, setCanMountWebGL] = useState(false);
   const acquiredSlotRef = useRef(false);
@@ -1001,6 +1005,16 @@ export default function DynamicAvatar({
   const handleResetRotation = useCallback((e) => {
     e?.stopPropagation?.();
     setAvatarRotationY(0);
+  }, []);
+
+  const handleContextLost = useCallback((e) => {
+    e?.preventDefault?.();
+    setCanMountWebGL(false);
+    if (acquiredSlotRef.current) {
+      acquiredSlotRef.current = false;
+      activeWebGLCanvasCount = Math.max(0, activeWebGLCanvasCount - 1);
+      notifySlotReleased();
+    }
   }, []);
 
   const acquireSlot = useCallback(() => {
@@ -1053,27 +1067,14 @@ export default function DynamicAvatar({
 
   // Snapshot updates & subscription
   useEffect(() => {
-    const cached = getCachedSnapshot(avatarSignature);
+    const cached = getCachedSnapshot(avatarSignature, isMale);
     if (cached) {
       setSnapshotUrl(cached);
       if (!interactive) {
         releaseSlot();
-        return;
       }
-    } else if (!interactive) {
-      // Not cached and not interactive: acquire slot to render snapshot
-      const got = acquireSlot();
-      if (!got) {
-        const retrySlot = () => {
-          if (!rendered3DAvatarSnapshotCache.has(avatarSignature)) {
-            acquireSlot();
-          }
-        };
-        slotReleaseSubscribers.add(retrySlot);
-        return () => {
-          slotReleaseSubscribers.delete(retrySlot);
-        };
-      }
+    } else {
+      setSnapshotUrl(isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL);
     }
 
     const handleSnapshot = (sig, dataUrl) => {
@@ -1089,11 +1090,11 @@ export default function DynamicAvatar({
     return () => {
       snapshotSubscribers.delete(handleSnapshot);
     };
-  }, [avatarSignature, interactive, acquireSlot, releaseSlot]);
+  }, [avatarSignature, isMale, interactive, releaseSlot]);
 
   return (
     <div
-      className={`relative h-full w-auto aspect-[200/450] max-h-full max-w-full flex items-center justify-center mx-auto select-none ${className}`}
+      className={`relative flex items-center justify-center mx-auto select-none ${className || 'h-full w-auto aspect-[200/450] max-h-full max-w-full'}`}
       data-testid="dynamic-3d-avatar"
       data-gender={isMale ? 'male' : 'female'}
       data-skin-color={activeSkinColor}
@@ -1135,6 +1136,7 @@ export default function DynamicAvatar({
               zoom: 1,
             }}
             gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
+            onContextLost={handleContextLost}
           >
             <ResponsiveOrthoCamera />
             <ambientLight intensity={1.15} />
