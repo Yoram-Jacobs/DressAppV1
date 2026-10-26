@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /**
- * Avatar Morph Field
+ * Avatar Morph Field & Point-Cloud Non-Penetration Alignment
  *
  * Garment shells are authored against the avatar's *base* (un-morphed) body
  * coordinates. The avatar itself is reshaped at runtime by morph targets
@@ -9,11 +9,13 @@ import * as THREE from 'three';
  * line by 20 cm or more in local space. Without compensation, garments stay
  * at base coordinates and appear to sag down the body.
  *
- * This module extracts the base vertex positions and the per-vertex morph
- * displacement vectors from the avatar GLB, then transfers the same
- * displacement onto every garment vertex via k-nearest-neighbour inverse
- * distance weighting. The garment therefore follows the exact same body
- * deformation as the avatar mesh.
+ * This module:
+ *   1. Extracts the base vertex positions and per-vertex morph displacement
+ *      vectors from the avatar GLB.
+ *   2. Transfers the exact same body deformation onto every garment vertex via
+ *      k-nearest-neighbour inverse distance weighting.
+ *   3. Enforces a strict point-cloud surface envelope clearance so the avatar's
+ *      skin never shows or pokes through any garment sheet.
  */
 
 const CELL = 0.05; // spatial hash cell size (metres)
@@ -26,7 +28,7 @@ function cellKey(ix, iy, iz) {
 
 /**
  * Builds (and caches per GLTF scene) a morph field: base positions, body
- * morph displacement arrays, and a spatial hash for nearest-neighbour lookup.
+ * morph displacement arrays, and spatial hashes for nearest-neighbour lookup.
  * Hair targets are ignored so hair styling never drags garments around.
  */
 export function buildAvatarMorphField(scene) {
@@ -96,20 +98,30 @@ function buildField(scene) {
   });
 
   const grid = new Map();
+  const fullGrid = new Map();
   for (let i = 0; i < count; i++) {
     const bx = basePositions[i * 3];
     const by = basePositions[i * 3 + 1];
     const bz = basePositions[i * 3 + 2];
-    // Exclude hanging forearms, wrists, hands, and fingers (|x| > 0.188m at y in 0.70..1.28m)
-    // so waist, pelvis, hip, and thigh garment vertices never inherit stationary hand morph weights.
-    if (Math.abs(bx) > 0.188 && by >= 0.70 && by <= 1.28) {
-      continue;
-    }
     const key = cellKey(
       Math.floor(bx / CELL),
       Math.floor(by / CELL),
       Math.floor(bz / CELL)
     );
+
+    let fullBucket = fullGrid.get(key);
+    if (!fullBucket) {
+      fullBucket = [];
+      fullGrid.set(key, fullBucket);
+    }
+    fullBucket.push(i);
+
+    // Exclude hanging forearms, wrists, hands, and fingers (|x| > 0.188m at y in 0.70..1.28m)
+    // from the primary torso/hip grid so waist, pelvis, hip, and thigh garment vertices
+    // never inherit stationary hand morph weights.
+    if (Math.abs(bx) > 0.188 && by >= 0.70 && by <= 1.28) {
+      continue;
+    }
     let bucket = grid.get(key);
     if (!bucket) {
       bucket = [];
@@ -118,13 +130,14 @@ function buildField(scene) {
     bucket.push(i);
   }
 
-  const field = { basePositions, targets: targetArrays, grid, count };
+  const field = { basePositions, targets: targetArrays, grid, fullGrid, count };
   fieldCache.set(scene, field);
   return field;
 }
 
-function findNearest(field, x, y, z) {
-  const { basePositions, grid } = field;
+function findNearest(field, x, y, z, includeArms = false) {
+  const { basePositions } = field;
+  const activeGrid = includeArms && field.fullGrid ? field.fullGrid : field.grid;
   const cx = Math.floor(x / CELL);
   const cy = Math.floor(y / CELL);
   const cz = Math.floor(z / CELL);
@@ -136,7 +149,7 @@ function findNearest(field, x, y, z) {
         for (let iz = cz - r; iz <= cz + r; iz++) {
           // Only visit the outer shell of the cube at radius r
           if (r > 0 && Math.abs(ix - cx) !== r && Math.abs(iy - cy) !== r && Math.abs(iz - cz) !== r) continue;
-          const bucket = grid.get(cellKey(ix, iy, iz));
+          const bucket = activeGrid.get(cellKey(ix, iy, iz));
           if (!bucket) continue;
           for (let b = 0; b < bucket.length; b++) {
             const i = bucket[b];
@@ -161,26 +174,42 @@ function findNearest(field, x, y, z) {
 
 /**
  * Returns a new geometry whose vertices carry the same morph displacement the
- * avatar body receives at the matching surface location.
+ * avatar body receives at the matching surface location, plus point-cloud
+ * non-penetration safety clearance so avatar skin never pokes through.
  */
-export function applyAvatarMorphsToGeometry(geometry, field, influences) {
-  if (!geometry || !field || !influences) return geometry;
-  const active = Object.entries(influences).filter(
+export function applyAvatarMorphsToGeometry(geometry, field, influences, options = {}) {
+  if (!geometry || !field) return geometry;
+  const infObj = influences || {};
+  const active = Object.entries(infObj).filter(
     ([name, w]) => field.targets[name] && Math.abs(Number(w) || 0) > 1e-4
   );
-  if (active.length === 0) return geometry;
+
+  const includeArms = Boolean(options?.includeArms);
+  const sheetSide = options?.sheetSide || null; // 'front' | 'back' | null
+  const minClearance = Number.isFinite(options?.minClearance) ? options.minClearance : 0.012;
+
+  if (active.length === 0 && !sheetSide) return geometry;
 
   const out = geometry.clone();
   const pos = out.attributes.position;
+  const heavyInf = Math.max(0, Number(infObj.heavy) || 0);
+  const waistInf = Math.max(0, Number(infObj.waist_thick) || 0);
+  const hipsInf = Math.max(0, Number(infObj.hips_wide) || 0);
+  const bustInf = Math.max(0, Number(infObj.busty) || 0);
+
   for (let vi = 0; vi < pos.count; vi++) {
     const x = pos.getX(vi);
     const y = pos.getY(vi);
     const z = pos.getZ(vi);
-    const nn = findNearest(field, x, y, z);
+    const isOuterArmVertex = includeArms || (Math.abs(x) > 0.212 && y >= 0.80 && y <= 1.42);
+    const nn = findNearest(field, x, y, z, isOuterArmVertex);
     if (nn.length === 0) continue;
 
     let wSum = 0;
     let ox = 0, oy = 0, oz = 0;
+    let maxFrontSkinZ = -Infinity;
+    let minBackSkinZ = Infinity;
+
     for (let n = 0; n < nn.length; n++) {
       const { i, d2 } = nn[n];
       const w = 1 / (d2 + 1e-6);
@@ -196,27 +225,47 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences) {
       oy += w * dy;
       oz += w * dz;
       wSum += w;
+
+      // Track the morphed skin surface Z of nearby point-cloud vertices within the same (x, y) column
+      const sx = field.basePositions[i * 3] + dx;
+      const sy = field.basePositions[i * 3 + 1] + dy;
+      const sz = field.basePositions[i * 3 + 2] + dz;
+      if (Math.abs(sx - (x + dx)) < 0.032 && Math.abs(sy - (y + dy)) < 0.032) {
+        if (sz > maxFrontSkinZ) maxFrontSkinZ = sz;
+        if (sz < minBackSkinZ) minBackSkinZ = sz;
+      }
     }
-    let dxFinal = ox / wSum;
-    let dyFinal = oy / wSum;
-    let dzFinal = oz / wSum;
+
+    let dxFinal = wSum > 0 ? ox / wSum : 0;
+    let dyFinal = wSum > 0 ? oy / wSum : 0;
+    let dzFinal = wSum > 0 ? oz / wSum : 0;
 
     // Guarantee full envelope clearance when body-mass expansion morphs are active
-    // so peak quadriceps/pelvis/belly expansions never poke through off-center garment vertices.
-    const heavyInf = Math.max(0, Number(influences.heavy) || 0);
-    const waistInf = Math.max(0, Number(influences.waist_thick) || 0);
-    const hipsInf = Math.max(0, Number(influences.hips_wide) || 0);
-    if ((heavyInf > 0 || waistInf > 0 || hipsInf > 0) && y >= 0.48 && y <= 1.42) {
-      if (z > 0.025) {
-        const minFrontPush = heavyInf * 0.028 + waistInf * 0.010 + hipsInf * 0.008;
+    // so peak quadriceps/pelvis/belly/bust expansions never poke through off-center garment vertices.
+    if ((heavyInf > 0 || waistInf > 0 || hipsInf > 0 || bustInf > 0) && y >= 0.45 && y <= 1.45) {
+      if (z > 0.020) {
+        const minFrontPush = heavyInf * 0.028 + waistInf * 0.012 + hipsInf * 0.010 + (y >= 1.12 && y <= 1.35 ? bustInf * 0.018 : 0);
         if (dzFinal < minFrontPush) dzFinal = minFrontPush;
-      } else if (z < -0.025) {
-        const minBackPush = -(heavyInf * 0.022 + waistInf * 0.008 + hipsInf * 0.010);
+      } else if (z < -0.020) {
+        const minBackPush = -(heavyInf * 0.024 + waistInf * 0.010 + hipsInf * 0.012);
         if (dzFinal > minBackPush) dzFinal = minBackPush;
       }
     }
 
-    pos.setXYZ(vi, x + dxFinal, y + dyFinal, z + dzFinal);
+    let finalZ = z + dzFinal;
+
+    // Point-cloud non-penetration guard for interior front/back sheet vertices
+    if (sheetSide === 'front' && z > 0.028 && Number.isFinite(maxFrontSkinZ)) {
+      if (finalZ < maxFrontSkinZ + minClearance) {
+        finalZ = maxFrontSkinZ + minClearance;
+      }
+    } else if (sheetSide === 'back' && z < -0.028 && Number.isFinite(minBackSkinZ)) {
+      if (finalZ > minBackSkinZ - minClearance) {
+        finalZ = minBackSkinZ - minClearance;
+      }
+    }
+
+    pos.setXYZ(vi, x + dxFinal, y + dyFinal, finalZ);
   }
   pos.needsUpdate = true;
   out.computeVertexNormals();

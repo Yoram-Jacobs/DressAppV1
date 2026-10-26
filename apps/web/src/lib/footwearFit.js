@@ -3,9 +3,11 @@ import * as THREE from 'three';
 /**
  * Footwear Fit
  *
- * Fits 3D footwear around the avatar's actual feet and, for heeled shoes,
- * re-poses the avatar: the heel is raised, the foot pivots about the ball of
- * the foot, toes stay flat on the floor and the whole body is lifted.
+ * Fits detailed 3D footwear around the avatar's actual feet (completely enclosing
+ * the sole and covering the feet with zero skin show-through) and, for platform
+ * and high-heeled shoes, elevates and re-poses the avatar: the heel is raised,
+ * the foot pivots about the ball of the foot, toes stay flat on the platform/sole,
+ * and the whole body is elevated above the floor plane.
  *
  * All profiles are measured from avatar_female_1.glb / avatar_male_1.glb
  * (base, un-morphed coordinates, metres, avatar facing +Z). Profiles describe
@@ -50,16 +52,16 @@ export const FOOT_PROFILE_MALE = [
 
 // Lower-leg cross sections used for boot shafts (+X leg)
 const SHAFT_PROFILE_FEMALE = [
-  { y: 0.10, cx: 0.166, rx: 0.028, cz: 0.035, rz: 0.045 },
-  { y: 0.20, cx: 0.165, rx: 0.030, cz: 0.028, rz: 0.040 },
-  { y: 0.35, cx: 0.151, rx: 0.048, cz: 0.020, rz: 0.052 },
-  { y: 0.50, cx: 0.128, rx: 0.052, cz: 0.038, rz: 0.055 },
+  { y: 0.10, cx: 0.166, rx: 0.032, cz: 0.035, rz: 0.048 },
+  { y: 0.20, cx: 0.165, rx: 0.035, cz: 0.028, rz: 0.044 },
+  { y: 0.35, cx: 0.151, rx: 0.052, cz: 0.020, rz: 0.056 },
+  { y: 0.50, cx: 0.128, rx: 0.056, cz: 0.038, rz: 0.058 },
 ];
 const SHAFT_PROFILE_MALE = [
-  { y: 0.10, cx: 0.142, rx: 0.033, cz: -0.002, rz: 0.048 },
-  { y: 0.20, cx: 0.148, rx: 0.036, cz: 0.005, rz: 0.044 },
-  { y: 0.35, cx: 0.142, rx: 0.052, cz: 0.012, rz: 0.056 },
-  { y: 0.50, cx: 0.130, rx: 0.056, cz: 0.022, rz: 0.058 },
+  { y: 0.10, cx: 0.142, rx: 0.038, cz: -0.002, rz: 0.052 },
+  { y: 0.20, cx: 0.148, rx: 0.040, cz: 0.005, rz: 0.048 },
+  { y: 0.35, cx: 0.142, rx: 0.056, cz: 0.012, rz: 0.060 },
+  { y: 0.50, cx: 0.130, rx: 0.060, cz: 0.022, rz: 0.062 },
 ];
 
 export function getFootAnatomy(isMale) {
@@ -73,6 +75,7 @@ export function getFootAnatomy(isMale) {
       heelContactZ: -0.048,
       ankleY: 0.085,
       ankleZ: -0.005,
+      soleBottomY: -0.0061,
     };
   }
   return {
@@ -84,6 +87,7 @@ export function getFootAnatomy(isMale) {
     heelContactZ: 0.008,
     ankleY: 0.085,
     ankleZ: 0.035,
+    soleBottomY: -0.0061,
   };
 }
 
@@ -116,20 +120,28 @@ function sampleProfile(profile, key, value) {
 }
 
 /**
- * Classifies a footwear item and returns its fit parameters.
- * heelHeight is the rise of the heel above the toes (metres).
+ * Classifies a footwear item from its metadata (name, subcategory, item_type, caption, description)
+ * and returns its fit, elevation, and detail parameters.
+ * heelHeight is the rise of the heel above the fore-foot platform (metres).
+ * soleThickness is the platform/outsole thickness under the fore-foot (metres).
  */
 export function resolveFootwearSpec(garment) {
   const text = [
     garment?.name,
     garment?.title,
     garment?.sub_category,
+    garment?.subcategory,
     garment?.item_type,
     garment?.category,
+    garment?.caption,
+    garment?.description,
     garment?.rawItem?.name,
+    garment?.rawItem?.title,
     garment?.rawItem?.sub_category,
+    garment?.rawItem?.subcategory,
     garment?.rawItem?.item_type,
     garment?.rawItem?.heel_type,
+    garment?.rawItem?.caption,
     garment?.rawItem?.description,
   ]
     .filter(Boolean)
@@ -138,43 +150,91 @@ export function resolveFootwearSpec(garment) {
 
   const has = (re) => re.test(text);
   const explicitHeel = Number(garment?.rawItem?.heel_height_cm || garment?.heel_height_cm);
+  const explicitPlatform = Number(garment?.rawItem?.platform_height_cm || garment?.platform_height_cm);
 
-  const isAnkleBoot = has(/ankle\s*boot|bootie|chelsea|מגפונ|bottines?|stiefelette|botin|ботильон|短靴|ショートブーツ/);
+  const isAnkleBoot = has(/ankle\s*boot|bootie|chelsea|combat\s*boot|מגפונ|bottines?|stiefelette|botin|ботильон|短靴|ショートブーツ/);
   const isBoot = !isAnkleBoot && has(/boots?\b|מגפ|bottes|stiefel|botas|stivali|сапог|靴子|ブーツ|جزمة/);
-  const isSneaker = has(/sneaker|trainer|running|סניקרס|נעלי ספורט|basket|zapatilla|кроссовк|运动鞋|スニーカー/);
-  const isSandal = has(/sandal|flip.?flop|slide|סנדל|כפכפ|sandale|sandalia|сандал|凉鞋|サンダル|صندل/);
+  const isSneaker = has(/sneaker|trainer|running|tennis\s*shoe|athletic|סניקרס|נעלי ספורט|basket|zapatilla|кроссовк|运动鞋|スニーカー/);
+  const isSandal = has(/sandal|flip.?flop|slide|mule|סנדל|כפכפ|sandale|sandalia|сандал|凉鞋|サンダル|صندل/);
+  const isLoaferOrOxford = has(/loafer|oxford|derby|brogue|moccasin|dress\s*shoe|מוקסין|אוקספורד|נעלי אלגנט/);
+  const isPlatform = has(/platform|flatform|creeper|chunky|lug\s*sole|פלטפורמ|סוליה עבה|厚底|プラットフォーム/);
 
   let heelHeight = 0;
   if (has(/stiletto|סטילטו/)) heelHeight = 0.10;
   else if (has(/kitten/)) heelHeight = 0.045;
-  else if (has(/wedge|platform|פלטפורמ|טריז/)) heelHeight = 0.07;
-  else if (has(/block\s*heel|עקב רחב/)) heelHeight = 0.06;
-  else if (has(/heels?\b|high.?heel|pumps?\b|עקב|עקבים|talon|tacón|tacco|absatz|каблук|高跟|ヒール|كعب/)) heelHeight = 0.08;
-  if (Number.isFinite(explicitHeel) && explicitHeel > 0) heelHeight = Math.min(0.13, explicitHeel / 100);
-  // Boots usually carry a modest heel unless explicitly heeled
-  if ((isBoot || isAnkleBoot) && heelHeight === 0) heelHeight = 0.025;
+  else if (has(/wedge|טריז/)) heelHeight = 0.075;
+  else if (has(/block\s*heel|עקב רחב|chunky\s*heel/)) heelHeight = 0.065;
+  else if (has(/heels?\b|high.?heel|pumps?\b|עקב|עקבים|talon|tacón|tacco|absatz|каблук|高跟|ヒール|كعب/)) heelHeight = 0.085;
+  else if (isPlatform && !isSneaker) heelHeight = 0.045;
+
+  if (Number.isFinite(explicitHeel) && explicitHeel > 0) {
+    heelHeight = Math.min(0.14, explicitHeel / 100);
+  }
+  // Boots and dress oxfords carry a modest heel unless explicitly higher
+  if ((isBoot || isAnkleBoot) && heelHeight === 0) heelHeight = 0.028;
+  else if (isLoaferOrOxford && heelHeight === 0) heelHeight = 0.018;
 
   const heelStyle = has(/stiletto|סטילטו|kitten/) ? 'stiletto'
     : has(/wedge|טריז/) ? 'wedge'
-      : has(/platform|פלטפורמ/) ? 'platform'
+      : isPlatform ? 'platform'
         : 'block';
 
   let kind = 'flat';
-  let collar = 0.055;
-  let soleThickness = 0.012;
-  if (isBoot) { kind = 'boot'; collar = 0.40; soleThickness = 0.016; }
-  else if (isAnkleBoot) { kind = 'ankle_boot'; collar = 0.17; soleThickness = 0.016; }
-  else if (isSneaker) { kind = 'sneaker'; collar = 0.075; soleThickness = 0.022; }
-  else if (isSandal) { kind = 'sandal'; collar = 0.035; soleThickness = 0.012; }
-  if (heelHeight >= 0.04 && kind === 'flat') { kind = 'heel'; collar = 0.045; soleThickness = 0.008; }
+  let collar = 0.095;
+  let soleThickness = 0.016;
+  if (isBoot) {
+    kind = 'boot';
+    collar = 0.40;
+    soleThickness = isPlatform ? 0.038 : 0.020;
+  } else if (isAnkleBoot) {
+    kind = 'ankle_boot';
+    collar = 0.18;
+    soleThickness = isPlatform ? 0.038 : 0.020;
+  } else if (isSneaker) {
+    kind = 'sneaker';
+    collar = 0.105;
+    soleThickness = isPlatform ? 0.038 : 0.024;
+  } else if (isSandal) {
+    kind = 'sandal';
+    collar = 0.065;
+    soleThickness = isPlatform ? 0.038 : 0.016;
+  } else if (isLoaferOrOxford) {
+    kind = 'loafer';
+    collar = 0.092;
+    soleThickness = isPlatform ? 0.034 : 0.018;
+  }
 
-  return { kind, heelHeight, heelStyle, collar, soleThickness };
+  if (heelHeight >= 0.04 && (kind === 'flat' || kind === 'loafer')) {
+    kind = 'heel';
+    collar = 0.082;
+    soleThickness = isPlatform ? 0.034 : 0.012;
+  } else if (isPlatform && soleThickness < 0.034) {
+    soleThickness = 0.038;
+  }
+
+  if (Number.isFinite(explicitPlatform) && explicitPlatform > 0) {
+    soleThickness = Math.min(0.08, Math.max(0.012, explicitPlatform / 100));
+  }
+
+  const hasTongue = kind === 'sneaker' || kind === 'loafer' || kind === 'ankle_boot' || kind === 'boot';
+  const hasWelt = true;
+
+  return {
+    kind,
+    heelHeight,
+    heelStyle,
+    collar,
+    soleThickness,
+    isPlatform,
+    hasTongue,
+    hasWelt,
+  };
 }
 
 /**
- * Computes the rigid foot pose for a given heel height. The foot pivots about
- * the ball of the foot so the heel rises by heelHeight; the body is lifted by
- * the resulting ankle rise plus the sole thickness.
+ * Computes the rigid foot pose for a given heel height and platform/sole thickness.
+ * The foot pivots about the ball of the foot so the heel rises by heelHeight;
+ * the whole avatar and outfit are elevated above the floor plane by groupLift = lift + soleThickness.
  */
 export function computeFootPose(isMale, heelHeight = 0, soleThickness = 0) {
   const a = getFootAnatomy(isMale);
@@ -186,18 +246,20 @@ export function computeFootPose(isMale, heelHeight = 0, soleThickness = 0) {
   const dy0 = a.ankleY;
   const ankleY2 = dy0 * c - dz0 * s;
   const ankleZ2 = a.ballZ + dz0 * c + dy0 * s;
-  const lift = ankleY2 - a.ankleY;
+  const lift = Math.max(0, ankleY2 - a.ankleY);
   const shiftZ = ankleZ2 - a.ankleZ;
+  const effectiveSole = Math.max(0, Number(soleThickness) || 0);
   return {
     active: theta > 1e-4,
+    elevated: (lift + effectiveSole) > 1e-4,
     theta,
     cos: c,
     sin: s,
     lift,
     shiftZ,
-    soleThickness,
+    soleThickness: effectiveSole,
     heelHeight,
-    groupLift: lift + soleThickness,
+    groupLift: lift + effectiveSole,
     anatomy: a,
   };
 }
@@ -337,20 +399,25 @@ function shoeUV(side, x, y, z, frame, layout) {
 }
 
 /**
- * Builds a closed shoe shell (upper + outsole) wrapped around both feet in
+ * Builds a high-detail, watertight closed shoe shell (contoured upper, tongue,
+ * collar cushion, welt lip, and sculpted outsole) wrapped around both feet in
  * base foot coordinates, plus an optional boot shaft.
+ * Guarantees 100% enclosure of the sole and full coverage of the foot so avatar
+ * skin never pokes through.
  */
 export function createFittedFootwearGeometry({ isMale = false, spec, layout } = {}) {
   const a = getFootAnatomy(isMale);
   const s = spec || resolveFootwearSpec(null);
-  const off = 0.007; // upper clearance over the skin
-  const sole = s.soleThickness;
-  const z0 = a.heelZ - 0.012;
-  const z1 = a.toeZ + 0.014;
-  const nz = 30;
-  const nArch = 20;
-  const nSole = 6;
-  const ring = nArch + nSole; // closed loop: arch (inner->top->outer) + sole (outer->inner)
+  const off = 0.011; // generous anatomical clearance over skin so toes/instep never poke through
+  const sole = Math.max(0.012, s.soleThickness || 0.016);
+  const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002); // below foot sole bottom
+  const yOutsoleBottom = yWelt - sole;
+  const z0 = a.heelZ - 0.016;
+  const z1 = a.toeZ + 0.018;
+  const nz = 36;
+  const nArch = 24;
+  const nSole = 10;
+  const ring = nArch + nSole; // closed loop: upper arch + welt/outsole perimeter + sole bottom
 
   const verts = [];
   const uvs = [];
@@ -358,7 +425,6 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
 
   [-1, 1].forEach((side) => {
     const startIdx = verts.length / 3;
-    // Texture frame spans the actual foot width
     const minX = Math.min(...a.profile.map((q) => q.x0)) - off;
     const maxX = Math.max(...a.profile.map((q) => q.x1)) + off;
     const frame = {
@@ -366,40 +432,77 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
       x1: side > 0 ? maxX : -minX,
       z0,
       z1,
-      yTop: Math.min(s.collar, 0.14),
+      yTop: Math.max(s.collar, 0.135),
     };
 
     for (let i = 0; i <= nz; i++) {
       const t = i / nz;
       const z = lerp(z0, z1, t);
       const p = sampleProfile(a.profile, 'z', z);
-      // Rounded heel counter and toe box in plan view
-      const tc = (t - 0.5) * 2;
-      const round = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(tc), 4)), 0.25);
+
+      // Keep full anatomical width across [heelZ, toeZ], rounding only in the extended bumper caps
+      let endTaper = 1.0;
+      if (z < a.heelZ) {
+        const uHeel = Math.max(0, (z - z0) / Math.max(1e-4, a.heelZ - z0));
+        endTaper = 0.35 + 0.65 * Math.pow(uHeel, 0.45);
+      } else if (z > a.toeZ) {
+        const uToe = Math.max(0, (z1 - z) / Math.max(1e-4, z1 - a.toeZ));
+        endTaper = 0.30 + 0.70 * Math.pow(uToe, 0.42);
+      }
+
       const cxR = (p.x0 + p.x1) / 2;
-      const hw = ((p.x1 - p.x0) / 2 + off) * Math.max(0.05, round);
+      const baseHalfW = (p.x1 - p.x0) / 2 + off;
+      const hw = baseHalfW * endTaper;
       const cx = side * cxR;
+
+      // Full foot coverage: upper roof ALWAYS clears p.top + off across the entire foot!
+      // Plus sculpted toe box puff at the front and tongue / collar contour at the ankle.
       const footTop = p.top + off;
-      const capTop = Math.min(footTop, s.collar);
-      const archTop = Math.max(0.012, capTop * Math.max(0.35, round));
+      const toeBoxPuff = smoothstep(a.ballZ, a.toeZ, z) * 0.012 * endTaper;
+      const tongueZone = smoothstep(a.ankleZ, a.ankleZ + 0.04, z) * (1 - smoothstep(a.ballZ - 0.04, a.ballZ + 0.01, z));
+      const tongueBoost = s.hasTongue ? tongueZone * 0.014 : 0;
+      const collarBoost = z <= a.ankleZ + 0.05 ? Math.max(0, s.collar - footTop) * 0.35 : 0;
+      const archTop = Math.max(0.022, (footTop + toeBoxPuff + tongueBoost + collarBoost) * endTaper);
+
+      // Subtle tread ripples along outsole bottom for realism
+      const treadRipple = Math.sin(t * Math.PI * 14) * 0.0012;
+      const weltFlare = 0.0045 * endTaper;
 
       for (let j = 0; j < ring; j++) {
         let x;
         let y;
         if (j < nArch) {
-          // Arch from inner sole edge, over the top, to outer sole edge
+          // Upper arch from inner welt edge (phi=0), over dorsal crest (phi=PI/2), to outer welt edge (phi=PI)
           const phi = Math.PI * (j / (nArch - 1));
           const cphi = Math.cos(phi);
           const sphi = Math.sin(phi);
-          const ex = Math.sign(cphi) * Math.pow(Math.abs(cphi), 0.7);
-          const ey = Math.pow(sphi, 0.8);
+          // Boxier, fuller shoe last cross-section (power 0.62) so lateral toes & ankle malleoli are 100% enclosed
+          const ex = Math.sign(cphi) * Math.pow(Math.abs(cphi), 0.62);
+          const ey = Math.pow(sphi, 0.68);
+          // Tongue crest ridge along center dorsal line (sphi near 1)
+          const centerCrest = s.hasTongue ? Math.pow(sphi, 4) * tongueBoost * 0.6 : 0;
           x = cx + side * hw * ex;
-          y = archTop * ey;
+          y = yWelt + (archTop - yWelt) * ey + centerCrest;
         } else {
-          // Outsole underside from outer edge back to inner edge
-          const k = (j - nArch) / (nSole - 1);
-          x = cx + side * hw * lerp(-1, 1, k);
-          y = -sole;
+          // Sculpted Welt + Outsole underside (outer welt -> outer sole bottom -> inner sole bottom -> inner welt)
+          const k = (j - nArch) / (nSole - 1); // 0 .. 1
+          const hwSole = hw + weltFlare;
+          if (k <= 0.15) {
+            // Outer welt lip descending to sole bottom
+            const uSide = k / 0.15;
+            x = cx - side * hwSole;
+            y = lerp(yWelt, yOutsoleBottom + treadRipple, uSide);
+          } else if (k >= 0.85) {
+            // Inner sole bottom ascending to inner welt lip
+            const uSide = (k - 0.85) / 0.15;
+            x = cx + side * hwSole;
+            y = lerp(yOutsoleBottom + treadRipple, yWelt, uSide);
+          } else {
+            // Flat contoured outsole bottom face
+            const uBottom = (k - 0.15) / 0.70;
+            x = cx + side * hwSole * lerp(-1, 1, uBottom);
+            y = yOutsoleBottom + treadRipple;
+          }
         }
         verts.push(x, y, z);
         uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
@@ -417,20 +520,53 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
       }
     }
 
-    // Boot shaft: tube following the lower leg up to the collar height
+    // Watertight Heel Cap (i = 0) and Toe Box Cap (i = nz)
+    [
+      { sliceIdx: 0, zCap: z0 - 0.002, flip: false },
+      { sliceIdx: nz, zCap: z1 + 0.002, flip: true },
+    ].forEach(({ sliceIdx, zCap, flip }) => {
+      const ringOffset = startIdx + sliceIdx * ring;
+      let sumX = 0;
+      let sumY = 0;
+      for (let j = 0; j < ring; j++) {
+        sumX += verts[(ringOffset + j) * 3];
+        sumY += verts[(ringOffset + j) * 3 + 1];
+      }
+      const centerIdx = verts.length / 3;
+      const cxCap = sumX / ring;
+      const cyCap = sumY / ring;
+      verts.push(cxCap, cyCap, zCap);
+      uvs.push(...shoeUV(side, cxCap, Math.max(0, cyCap), zCap, frame, layout));
+
+      for (let j = 0; j < ring; j++) {
+        const jn = (j + 1) % ring;
+        const v0 = ringOffset + j;
+        const v1 = ringOffset + jn;
+        if (flip) {
+          indices.push(centerIdx, v0, v1);
+        } else {
+          indices.push(centerIdx, v1, v0);
+        }
+      }
+    });
+
+    // Boot / Ankle-Boot / High-Top Shaft: tube following the lower leg up to the collar height
     if (s.kind === 'boot' || s.kind === 'ankle_boot') {
       const shaftStart = verts.length / 3;
-      const ny = 12;
-      const nTheta = 20;
-      const yStart = 0.06;
+      const ny = 14;
+      const nTheta = 22;
+      const yStart = 0.055;
       const yEnd = s.collar;
       for (let i = 0; i <= ny; i++) {
-        const y = lerp(yStart, yEnd, i / ny);
+        const vShaft = i / ny;
+        const y = lerp(yStart, yEnd, vShaft);
         const sp = sampleProfile(a.shaft, 'y', y);
+        // Padded top collar lip on the final 2 rings
+        const collarLip = vShaft > 0.85 ? 0.004 * ((vShaft - 0.85) / 0.15) : 0;
         for (let j = 0; j <= nTheta; j++) {
           const th = -Math.PI + (j / nTheta) * Math.PI * 2;
-          const x = side * sp.cx + (sp.rx + off) * Math.sin(th);
-          const z = sp.cz + (sp.rz + off) * Math.cos(th);
+          const x = side * sp.cx + (sp.rx + off + collarLip) * Math.sin(th);
+          const z = sp.cz + (sp.rz + off + collarLip) * Math.cos(th);
           verts.push(x, y, z);
           if (layout?.mode === 'side') {
             uvs.push(0.5 + Math.sin(th) * 0.2, Math.min(0.98, 0.3 + (y / yEnd) * 0.66));
@@ -460,8 +596,8 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
 }
 
 /**
- * Builds the heel posts (or wedge blocks) for heeled footwear in the posed,
- * lifted local frame. Returns null for flat footwear.
+ * Builds the heel posts (or wedge / platform blocks) for heeled footwear in the posed,
+ * lifted local frame. Returns null for flat footwear without heel elevation.
  */
 export function createHeelGeometry({ isMale = false, spec, pose } = {}) {
   if (!pose?.active || !spec || spec.heelHeight < 0.02) return null;
@@ -482,12 +618,12 @@ export function createHeelGeometry({ isMale = false, spec, pose } = {}) {
 
     const isStiletto = spec.heelStyle === 'stiletto';
     const isWedge = spec.heelStyle === 'wedge' || spec.heelStyle === 'platform';
-    const topHalfW = isWedge ? 0.030 : isStiletto ? 0.016 : 0.022;
-    const topHalfD = isWedge ? 0.030 : isStiletto ? 0.016 : 0.022;
-    const botHalfW = isWedge ? 0.028 : isStiletto ? 0.005 : 0.017;
-    const botHalfD = isWedge ? 0.034 : isStiletto ? 0.005 : 0.017;
+    const topHalfW = isWedge ? 0.032 : isStiletto ? 0.018 : 0.024;
+    const topHalfD = isWedge ? 0.032 : isStiletto ? 0.018 : 0.024;
+    const botHalfW = isWedge ? 0.030 : isStiletto ? 0.006 : 0.019;
+    const botHalfD = isWedge ? 0.036 : isStiletto ? 0.006 : 0.019;
     // Wedges extend forward toward the arch
-    const fwd = isWedge ? 0.05 : 0;
+    const fwd = isWedge ? 0.055 : 0;
     const base = verts.length / 3;
     const box = [
       [cx - topHalfW, topY, topZ - topHalfD], [cx + topHalfW, topY, topZ - topHalfD],

@@ -27,7 +27,11 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import AvatarMesh3D, { getAvatarMetricTransform } from './AvatarMesh3D';
-import GarmentMesh3D, { normalizeGarmentRole } from './GarmentMesh3D';
+import GarmentMesh3D, {
+  normalizeGarmentRole,
+  resolveGarmentRenderOrder,
+  resolveGarmentMetadataText,
+} from './GarmentMesh3D';
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
@@ -91,6 +95,12 @@ export const GARMENT_CAMERA_TARGETS = {
   top: { target: [0, 1.16, 0], pos: [0, 1.20, 1.65] },
   outerwear: { target: [0, 1.00, 0], pos: [0, 1.05, 2.05] },
   dress: { target: [0, 0.98, 0], pos: [0, 1.02, 2.10] },
+  necktie: { target: [0, 1.25, 0], pos: [0, 1.28, 1.15] },
+  belt: { target: [0, 1.05, 0], pos: [0, 1.08, 1.15] },
+  watch: { target: [0.24, 0.90, 0.05], pos: [0.35, 0.96, 0.85] },
+  headwear: { target: [0, 1.66, 0], pos: [0, 1.70, 0.95] },
+  glasses: { target: [0, 1.58, 0], pos: [0, 1.60, 0.85] },
+  bag: { target: [-0.24, 0.82, 0.04], pos: [-0.30, 0.88, 1.20] },
   accessory: { target: [0, 1.15, 0], pos: [0, 1.20, 1.25] },
   full: { target: [0, 0.95, 0], pos: [0, 1.05, 2.5] },
 };
@@ -321,8 +331,32 @@ export default function DressingRoom3D({
   // (and suspended Canvas mounts are not restarted) by unrelated re-renders.
   const itemsSignature = Object.entries(activeItems || {})
     .map(([k, v]) => (v && typeof v === 'object'
-      ? [k, v.id, v.group_id, v.url, v.image_url, v.clean_image_url, v.category, v.sub_category, v.title, v.name, v.pattern,
-        (v.view_urls || []).join(','), (v.group_members || []).map((m) => m?.id).join(',')].join('~')
+      ? [
+          k,
+          v.id,
+          v.group_id,
+          v.url,
+          v.image_url,
+          v.clean_image_url,
+          v.category,
+          v.sub_category,
+          v.subcategory,
+          v.item_type,
+          v.title,
+          v.name,
+          v.caption,
+          v.description,
+          v.material,
+          v.fabric,
+          v.fit,
+          v.cut,
+          v.length,
+          v.pattern,
+          v.heel_height,
+          v.sole_type,
+          (v.view_urls || []).join(','),
+          (v.group_members || []).map((m) => m?.id).join(','),
+        ].join('~')
       : `${k}~${v}`))
     .join('|');
   const activeItemsRef = useRef(activeItems);
@@ -338,10 +372,11 @@ export default function DressingRoom3D({
       if (!item) return;
       const g = typeof item === 'object' ? item : { id: item, slot: slotKey };
       if (!g.url && !g.image_url && !g.clean_image_url) return;
+      const metaText = resolveGarmentMetadataText(g);
       const normSlot = normalizeGarmentRole(
         slotKey,
         g.category,
-        g.name || g.title || g.sub_category || g.item_type
+        metaText || g.name || g.title || g.sub_category || g.subcategory || g.item_type
       );
       const frontUrl = resolveEffectiveGarmentUrl(g) || g.url || g.image_url;
 
@@ -362,9 +397,13 @@ export default function DressingRoom3D({
       (Array.isArray(g.additional_images) ? g.additional_images : []).forEach(pushView);
       (Array.isArray(g.images) ? g.images : []).forEach(pushView);
       (Array.isArray(g.views) ? g.views : []).forEach(pushView);
+      (Array.isArray(g.pov_images) ? g.pov_images : []).forEach(pushView);
+      (Array.isArray(g.angles) ? g.angles : []).forEach(pushView);
       if (g.back_image_url) pushView(g.back_image_url);
+      if (g.back_view_url) pushView(g.back_view_url);
       if (g.rear_image_url) pushView(g.rear_image_url);
       if (g.side_image_url) pushView(g.side_image_url);
+      if (g.side_view_url) pushView(g.side_view_url);
       if (g.profile_image_url) pushView(g.profile_image_url);
       (Array.isArray(g.group_members) ? g.group_members : []).forEach((m) => {
         if (!m || m.id === g.id) return;
@@ -380,6 +419,12 @@ export default function DressingRoom3D({
       const closetMatch = itemId
         ? allClosetItems.find((it) => (it.id || it._id) === itemId)
         : null;
+      if (closetMatch) {
+        (Array.isArray(closetMatch.view_urls) ? closetMatch.view_urls : []).forEach(pushView);
+        (Array.isArray(closetMatch.additional_images) ? closetMatch.additional_images : []).forEach(pushView);
+        if (closetMatch.back_image_url) pushView(closetMatch.back_image_url);
+        if (closetMatch.side_image_url) pushView(closetMatch.side_image_url);
+      }
       const effectiveGroupId = g.group_id || closetMatch?.group_id;
       if (effectiveGroupId && allClosetItems.length > 0) {
         allClosetItems.forEach((sibling) => {
@@ -389,7 +434,7 @@ export default function DressingRoom3D({
           const sibSlot = normalizeGarmentRole(
             sibling.category || slotKey,
             sibling.category,
-            sibling.name || sibling.title || sibling.sub_category || sibling.item_type
+            resolveGarmentMetadataText(sibling) || sibling.name || sibling.title || sibling.sub_category || sibling.item_type
           );
           if (sibSlot === normSlot) {
             pushView(sibling);
@@ -400,17 +445,30 @@ export default function DressingRoom3D({
       list.push({
         slot: normSlot,
         id: g.id || slotKey,
-        name: g.name || g.title || slotKey,
+        name: g.name || g.title || g.caption || slotKey,
         url: frontUrl,
         category: g.category || slotKey,
-        sub_category: g.sub_category || '',
+        sub_category: g.sub_category || g.subcategory || '',
+        subcategory: g.subcategory || g.sub_category || '',
         item_type: g.item_type || '',
+        caption: g.caption || g.description || '',
+        description: g.description || g.caption || '',
+        material: g.material || g.fabric || '',
+        fabric: g.fabric || g.material || '',
+        fit: g.fit || g.cut || '',
+        cut: g.cut || g.fit || '',
+        length: g.length || '',
         pattern: g.pattern || '',
+        heel_height: g.heel_height,
+        sole_type: g.sole_type,
         extraViews,
         rawItem: g,
       });
     });
 
+    // Sort active garments in physical real-world overlay order:
+    // bottom (6) -> top (8) -> dress (9) -> belt (10) -> necktie (11) -> outerwear (12) -> shoes (14) -> watch/accessory (15)
+    list.sort((a, b) => resolveGarmentRenderOrder(a.slot) - resolveGarmentRenderOrder(b.slot));
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemsSignature]);
@@ -425,6 +483,22 @@ export default function DressingRoom3D({
 
   const hasOuterwear = useMemo(() => {
     return activeGarments.some((g) => g.slot === 'outerwear' && (layerVisibility[g.slot] ?? true));
+  }, [activeGarments, layerVisibility]);
+
+  // Compute covered body zones from visible garments so AvatarMesh3D retracts covered skin
+  const coveredZones = useMemo(() => {
+    const visibleSlots = new Set(
+      activeGarments
+        .filter((g) => layerVisibility[g.slot] ?? true)
+        .map((g) => g.slot)
+    );
+    return {
+      hasTop: visibleSlots.has('top'),
+      hasOuterwear: visibleSlots.has('outerwear'),
+      hasDress: visibleSlots.has('dress'),
+      hasBottom: visibleSlots.has('bottom'),
+      hasShoes: visibleSlots.has('shoes'),
+    };
   }, [activeGarments, layerVisibility]);
 
   const hairProps = useMemo(() => {
@@ -658,6 +732,7 @@ export default function DressingRoom3D({
                     hairProps={hairProps}
                     morphInfluences={morphInfluences}
                     footPose={footPose}
+                    coveredZones={coveredZones}
                     height={activeMeasurements?.height || (isMale ? 178 : 168)}
                     meterScale={false}
                     castShadow={true}

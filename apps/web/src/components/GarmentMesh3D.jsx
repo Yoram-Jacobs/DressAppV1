@@ -111,8 +111,11 @@ export function getLegSlice(y, isMale) {
 export function inferRoleFromName(title) {
   const text = String(title || '').toLowerCase();
   if (!text) return null;
+  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|שעון יד|שעון|צמיד)/i.test(text)) return 'watch';
+  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת)/i.test(text)) return 'necktie';
+  if (/(?:\b(?:belt)\b|חגורה|חגורת)/i.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) return 'belt';
   if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|מעיל|ז['’]קט|ג['’]קט|בלייזר|קרדיגן)/i.test(text)) return 'outerwear';
-  if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|שמלה|שמלת|אוברול|סרבל)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks)\b/i.test(text)) return 'dress';
+  if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|שמלה|שמלת|אוברול|סרבל)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks|watch)\b/i.test(text)) return 'dress';
   if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|leggings|joggers|slacks|sweatpants)\b|מכנס|ג['’]ינס|חצאית|שורטס|טייץ)/i.test(text)) return 'bottom';
   if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey)\b|חולצ|סוודר|גופי)/i.test(text)) return 'top';
   return null;
@@ -126,7 +129,7 @@ export function inferRoleFromName(title) {
 export function normalizeGarmentRole(role, category, title) {
   const declared = normalizeDeclaredGarmentRole(role, category, title);
   const inferred = inferRoleFromName(title);
-  const CORE = ['top', 'bottom', 'outerwear', 'dress'];
+  const CORE = ['top', 'bottom', 'outerwear', 'dress', 'necktie', 'watch', 'belt'];
   if (inferred && inferred !== declared && CORE.includes(declared) && CORE.includes(inferred)) {
     return inferred;
   }
@@ -144,10 +147,23 @@ function normalizeDeclaredGarmentRole(role, category, title) {
   if (r === 'bottom' || r === 'pants' || r === 'skirt' || r === 'shorts') return 'bottom';
   if (r === 'top' || r === 'shirt') return 'top';
   if (r === 'shoes' || r === 'footwear') return 'shoes';
+  if (r === 'watch' || r === 'wristwatch') return 'watch';
+  if (r === 'necktie' || r === 'tie' || r === 'necklace' || r === 'scarf') return 'necktie';
   if (r === 'headwear' || r === 'hat') return 'headwear';
   if (r === 'glasses') return 'glasses';
   if (r === 'belt') return 'belt';
   if (r === 'bag') return 'bag';
+
+  // 1b. Specific Accessories (Wristwatch, Necktie, Belt) checked before general tops/outerwear
+  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|שעון יד|שעון|צמיד|ساعة|montre|uhr|reloj|orologio|часы|手表|腕表|腕時計)/i.test(text)) {
+    return 'watch';
+  }
+  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker|neck\s*scarf)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת|ربطة عنق|قلادة|cravate|collier|krawatte|halskette|corbata|collar|cravatta|collana|галстук|ожерелье|领带|项链|ネクタイ|ネックレス)/i.test(text)) {
+    return 'necktie';
+  }
+  if (/(?:\bbelt\b|חגורה|חגורות|חגור|حزام|cinturón|cinturon|ceinture|gürtel|guertel|cintura|cinto|пояс|ремень|腰带|皮带|ベルト|riem|बेल्ट)/i.test(text) && !/\b(?:trench|coat|jacket|dress|pants|trousers|bag)\b/i.test(text)) {
+    return 'belt';
+  }
 
   // 2. Multi-lingual Outerwear (checked BEFORE general tops/bottoms)
   if (/(?:outerwear|jacket|coat|blazer|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|מעיל|ז['’]קט|ג['’]קט|בלייזר|עליונית|קרדיגן|וסט|ملابس خارجية|معطف|سترة|جاكيت|بليزر|كارديجان|ropa de abrigo|cazadora|chaleco|vêtements d['’]extérieur|vêtement d['’]extérieur|veste|manteau|gilet|outdoor-bekleidung|oberbekleidung|jacke|mantel|weste|capispalla|giacca|cappotto|casacos e jaquetas|agasalho|jaqueta|casaco|cardigã|верхняя одежда|куртка|пальто|пиджак|блейзер|кардиган|外套|大衣|夹克|西装|开衫|アウター|コート|ブレザー|カーディガン|buitenmode|आउटरवियर|जैकेट|कोट|ब्लेज़र)/i.test(text)) {
@@ -1791,52 +1807,79 @@ export function createAnatomicalBottomGeometry({
   }
 
   // B. PANTS / JEANS / TROUSERS / SHORTS MODE
-  // Continuous anatomical leg bifurcation from waistband down to hem.
-  // Eliminates disjoint pelvis shelf, overhangs, and box-like hip artifacts.
+  // Strict Waist & Crotch Anchor:
+  // 1) Unified 360° pelvis shell from waistband (yWaist) down to crotch line (yCrotch).
+  //    Pants can NEVER bifurcate or split higher than the crotch line.
+  // 2) Bifurcated left/right leg cylinders exclusively from yCrotch down to yAnkle.
   const yWaist = yTop;
   const yCrotch = isMale ? 0.86 : 0.82;
-  const yAnkle = isShorts ? (isMale ? 0.58 : 0.54) : yHem;
+  const yAnkle = isShorts ? (isMale ? 0.58 : 0.54) : Math.min(yHem, yCrotch - 0.06);
 
-  const nyLeg = 18;
+  // 1) Upper Pelvis & Waistband Shell (yWaist -> yCrotch)
+  const nyPelvis = 8;
+  const nxPelvis = 28;
+  const pelvisStartIdx = verts.length / 3;
+  const pelvisTexSpan = Math.min(0.42, Math.max(0.22, (yWaist - yCrotch) / Math.max(0.18, yWaist - yAnkle)));
+
+  for (let i = 0; i <= nyPelvis; i++) {
+    const tPelvis = i / nyPelvis; // 0 at waist, 1 at crotch
+    const y = yWaist - tPelvis * (yWaist - yCrotch);
+    const sliceTorso = getTorsoSlice(y, isMale);
+    const rx = sliceTorso.rx + layerOffset;
+    const rzFront = (sliceTorso.rzFront || sliceTorso.rz) + layerOffset;
+    const rzBack = (sliceTorso.rzBack || sliceTorso.rz) + layerOffset + 0.008;
+    const cz = sliceTorso.cz;
+    const vTex = 0.98 - tPelvis * pelvisTexSpan * 0.94;
+
+    for (let j = 0; j <= nxPelvis; j++) {
+      const uFrac = j / nxPelvis;
+      const theta = -Math.PI + uFrac * 2 * Math.PI;
+      const isFront = Math.cos(theta) >= 0;
+      const x = rx * Math.sin(theta);
+      // Subtle crotch saddle indentation exclusively at the bottom crotch boundary (tPelvis -> 1)
+      const centerT = Math.max(0, 1 - Math.abs(Math.sin(theta)) / 0.28);
+      const saddlePinch = Math.pow(tPelvis, 2.2) * centerT * 0.018;
+      const z = isFront
+        ? cz + Math.max(0.02, rzFront - saddlePinch) * Math.cos(theta)
+        : cz - Math.max(0.02, rzBack - saddlePinch) * Math.abs(Math.cos(theta));
+      verts.push(x, y, z);
+
+      const uTex = 0.5 + 0.46 * Math.sin(theta);
+      uvs.push(
+        Math.max(0.02, Math.min(0.98, uTex)),
+        Math.max(0.02, Math.min(0.98, vTex))
+      );
+    }
+  }
+
+  for (let i = 0; i < nyPelvis; i++) {
+    for (let j = 0; j < nxPelvis; j++) {
+      const a = pelvisStartIdx + i * (nxPelvis + 1) + j;
+      const b = a + 1;
+      const c = a + (nxPelvis + 1);
+      const d = c + 1;
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+
+  // 2) Lower Leg Tubes (yCrotch -> yAnkle, strictly <= yCrotch)
+  const nyLeg = 14;
   const nxLeg = 18;
-  const legSides = [-1, 1]; // Left (-X), Right (+X)
+  const legSides = [-1, 1]; // Right (-X), Left (+X)
 
   legSides.forEach((side) => {
     const startIdx = verts.length / 3;
 
     for (let i = 0; i <= nyLeg; i++) {
-      const vNorm = i / nyLeg;
-      const y = yWaist - vNorm * (yWaist - yAnkle);
-      const isAboveCrotch = y >= yCrotch;
+      const vLeg = i / nyLeg;
+      const y = yCrotch - vLeg * (yCrotch - yAnkle);
+      const slice = getLegSlice(y, isMale);
+      const cx = side * slice.cx;
+      const cz = slice.cz;
+      const rx = slice.r + layerOffset;
+      const rz = rx;
 
-      let cx, cz, rx, rz;
-      if (isAboveCrotch) {
-        // Upper Pelvis & Waistband: smoothly contours along the hip silhouette
-        const tPelvis = (y - yCrotch) / Math.max(0.01, yWaist - yCrotch); // 0 at crotch, 1 at waist
-        const sliceTorso = getTorsoSlice(y, isMale);
-        const sliceLegCrotch = getLegSlice(yCrotch, isMale);
-
-        const hipRx = sliceTorso.rx + layerOffset;
-        const hipRz = sliceTorso.rz + layerOffset;
-        const crotchR = sliceLegCrotch.r + layerOffset;
-
-        const centerCrotch = side * sliceLegCrotch.cx;
-        const centerWaist = side * (hipRx * 0.48);
-        cx = centerCrotch * (1 - tPelvis) + centerWaist * tPelvis;
-        rx = Math.abs(side * hipRx - cx);
-        rz = crotchR * (1 - tPelvis) + hipRz * tPelvis;
-        cz = sliceLegCrotch.cz * (1 - tPelvis) + sliceTorso.cz * tPelvis;
-      } else {
-        // Below Crotch: natural anatomical leg profile down to hem
-        const slice = getLegSlice(y, isMale);
-        cx = side * slice.cx;
-        cz = slice.cz;
-        rx = slice.r + layerOffset;
-        rz = rx;
-      }
-
-      // vTex runs from 0.98 (waistband) down to 0.02 (hem)
-      const vTex = 0.98 - vNorm * 0.94;
+      const vTex = (0.98 - pelvisTexSpan * 0.94) - vLeg * (1 - pelvisTexSpan) * 0.94;
 
       for (let j = 0; j <= nxLeg; j++) {
         const uFrac = j / nxLeg;
@@ -1883,8 +1926,8 @@ export function createAnatomicalBottomGeometry({
 export function createAnatomicalFootwearGeometry({
   isMale = false,
   yTop = 0.095,
-  ySole = -0.006,
-  layerOffset = 0.010,
+  ySole = -0.008,
+  layerOffset = 0.012,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
@@ -1943,7 +1986,20 @@ export function createAnatomicalFootwearGeometry({
   return geo;
 }
 
-export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {}) {
+/**
+ * Creates 3D accessory geometry mapped directly to its anatomical anchor on the avatar:
+ *  - 'watch': Wristwatch / bracelet wrapped around the avatar's LEFT wrist (+X side)
+ *             with a raised watch dial/bezel on the dorsal wrist surface.
+ *  - 'necktie': Contoured collar band + knot + tapered front blade hanging from the
+ *               neckline (y = 1.50 M / 1.44 F) down to the beltline (y = 1.06 M / 1.04 F),
+ *               layered cleanly outside the shirt (`layerOffset = 0.029`) and inside jackets.
+ *  - 'belt': 360° contoured elliptical strap + raised front buckle around the waistline
+ *            (y = 1.08 M / 1.05 F), overlaying tops and bottoms (`layerOffset = 0.026`).
+ *  - 'headwear': Contoured crown dome + visor/brim on the head.
+ *  - 'glasses': Contoured front frame + nose bridge + side temples resting on the face.
+ *  - 'bag': Structured handbag/shoulder bag positioned on the right hip/hand side.
+ */
+export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerOffset = 0.026 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
   const uvs = [];
@@ -1951,9 +2007,151 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
 
   const baseHeadY = isMale ? 1.70 : 1.62;
 
-  if (type === 'headwear') {
+  if (type === 'watch') {
+    // Avatar's anatomical LEFT wrist is on the +X side:
+    // Female wrist at y = 0.900m: cx = +0.228m, cz = +0.044m, rx = 0.031m, rz = 0.031m
+    // Male wrist at y = 0.915m:   cx = +0.256m, cz = +0.068m, rx = 0.036m, rz = 0.042m
+    const cx = isMale ? 0.256 : 0.228;
+    const cy = isMale ? 0.915 : 0.900;
+    const cz = isMale ? 0.068 : 0.044;
+    const bandHalfH = 0.015;
+    const rx = isMale ? 0.042 : 0.036;
+    const rz = isMale ? 0.047 : 0.036;
+    const ny = 6;
+    const nx = 24;
+
+    // 1. 360° Wrist Strap Band
+    for (let i = 0; i <= ny; i++) {
+      const v = i / ny;
+      const y = cy + bandHalfH - v * (bandHalfH * 2);
+      for (let j = 0; j <= nx; j++) {
+        const u = j / nx;
+        const theta = -Math.PI + u * 2 * Math.PI;
+        const x = cx + rx * Math.sin(theta);
+        const z = cz + rz * Math.cos(theta);
+        verts.push(x, y, z);
+        uvs.push(u, 1 - v);
+      }
+    }
+    for (let i = 0; i < ny; i++) {
+      for (let j = 0; j < nx; j++) {
+        const a = i * (nx + 1) + j;
+        const b = a + 1;
+        const c = a + (nx + 1);
+        const d = c + 1;
+        indices.push(a, c, b, b, c, d);
+      }
+    }
+
+    // 2. Raised Watch Case / Bezel on outer/front-lateral wrist surface (theta around +pi/4)
+    const caseStartIdx = verts.length / 3;
+    const caseAngle = Math.PI * 0.25; // front-outer aspect of left wrist
+    const nCaseR = 16;
+    const caseRadius = 0.022;
+    const caseDepth = 0.008;
+    const nxDir = Math.sin(caseAngle);
+    const nzDir = Math.cos(caseAngle);
+    const txDir = Math.cos(caseAngle);
+    const tzDir = -Math.sin(caseAngle);
+    const dialCenterX = cx + (rx + caseDepth) * nxDir;
+    const dialCenterY = cy;
+    const dialCenterZ = cz + (rz + caseDepth) * nzDir;
+
+    // Center vertex of watch face
+    verts.push(dialCenterX, dialCenterY, dialCenterZ);
+    uvs.push(0.5, 0.5);
+    for (let j = 0; j <= nCaseR; j++) {
+      const phi = (j / nCaseR) * 2 * Math.PI;
+      const localU = Math.cos(phi) * caseRadius;
+      const localV = Math.sin(phi) * caseRadius;
+      const RimX = dialCenterX + localU * txDir;
+      const RimY = dialCenterY + localV;
+      const RimZ = dialCenterZ + localU * tzDir;
+      verts.push(RimX, RimY, RimZ);
+      uvs.push(0.5 + 0.35 * Math.cos(phi), 0.5 + 0.35 * Math.sin(phi));
+    }
+    for (let j = 1; j <= nCaseR; j++) {
+      indices.push(caseStartIdx, caseStartIdx + j, caseStartIdx + j + 1);
+    }
+  } else if (type === 'necktie') {
+    // Contoured 3D Necktie anchored from the neckline down over the sternum to the beltline.
+    // Overlays shirt (0.022m) and sits cleanly beneath outerwear (0.038m).
+    const tieOffset = Math.max(0.029, layerOffset);
+    const yTop = isMale ? 1.50 : 1.44;
+    const yKnotBottom = isMale ? 1.44 : 1.385;
+    const yTip = isMale ? 1.06 : 1.04;
+
+    // 1. Collar Loop around the neck (yTop -> yKnotBottom)
+    const nyCollar = 3;
+    const nxCollar = 20;
+    const collarStartIdx = verts.length / 3;
+    for (let i = 0; i <= nyCollar; i++) {
+      const v = i / nyCollar;
+      const y = yTop - v * (yTop - yKnotBottom);
+      const slice = getTorsoSlice(y, isMale);
+      const rx = Math.min(slice.rx, isMale ? 0.082 : 0.068) + tieOffset * 0.7;
+      const rz = Math.min(slice.rz, isMale ? 0.078 : 0.066) + tieOffset * 0.7;
+      for (let j = 0; j <= nxCollar; j++) {
+        const u = j / nxCollar;
+        const theta = -Math.PI + u * 2 * Math.PI;
+        verts.push(rx * Math.sin(theta), y, slice.cz + rz * Math.cos(theta));
+        uvs.push(0.35 + u * 0.30, 0.96 - v * 0.08);
+      }
+    }
+    for (let i = 0; i < nyCollar; i++) {
+      for (let j = 0; j < nxCollar; j++) {
+        const a = collarStartIdx + i * (nxCollar + 1) + j;
+        indices.push(a, a + nxCollar + 1, a + 1, a + 1, a + nxCollar + 1, a + nxCollar + 2);
+      }
+    }
+
+    // 2. Front Tie Knot & Tapered Blade with Pointed Diamond Tip (yTop -> yTip)
+    const nyBlade = 18;
+    const nxBlade = 6;
+    const bladeStartIdx = verts.length / 3;
+    for (let i = 0; i <= nyBlade; i++) {
+      const v = i / nyBlade; // 0 at top knot, 1 at bottom tip
+      const y = yTop - v * (yTop - yTip);
+      const slice = getTorsoSlice(y, isMale);
+
+      // Width profile: knot at top (v < 0.14), narrow neck (v = 0.16), widening blade (v = 0.85), pointed tip (v = 1.0)
+      let halfWidth;
+      let knotBumpZ = 0;
+      if (v < 0.14) {
+        const kt = v / 0.14;
+        halfWidth = 0.028 - kt * 0.011; // 2.8cm down to 1.7cm at knot base
+        knotBumpZ = Math.sin(kt * Math.PI) * 0.009;
+      } else if (v < 0.86) {
+        const bt = (v - 0.14) / (0.86 - 0.14);
+        halfWidth = 0.017 + bt * 0.027; // tapers out to 4.4cm wide blade
+      } else {
+        const tt = (v - 0.86) / 0.14;
+        halfWidth = Math.max(0.002, 0.044 * (1 - tt)); // crisp V-point tip
+      }
+
+      const rzFront = (slice.rzFront || slice.rz) + tieOffset + knotBumpZ;
+      for (let j = 0; j <= nxBlade; j++) {
+        const u = j / nxBlade; // 0..1 across tie width
+        const x = (u - 0.5) * 2 * halfWidth;
+        // Slight convex bevel across the blade so it has 3D thickness
+        const bevelZ = Math.sin(u * Math.PI) * 0.004;
+        const z = slice.cz + rzFront + bevelZ;
+        verts.push(x, y, z);
+        uvs.push(0.32 + u * 0.36, 0.98 - v * 0.94);
+      }
+    }
+    for (let i = 0; i < nyBlade; i++) {
+      for (let j = 0; j < nxBlade; j++) {
+        const a = bladeStartIdx + i * (nxBlade + 1) + j;
+        const b = a + 1;
+        const c = a + (nxBlade + 1);
+        const d = c + 1;
+        indices.push(a, c, b, b, c, d);
+      }
+    }
+  } else if (type === 'headwear') {
     const ny = 8;
-    const nx = 18;
+    const nx = 20;
     const rHead = 0.125;
     for (let i = 0; i <= ny; i++) {
       const v = i / ny;
@@ -1976,15 +2174,90 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
     }
   } else if (type === 'glasses') {
     const yEye = isMale ? 1.62 : 1.56;
-    verts.push(-0.075, yEye - 0.025, 0.138, 0.075, yEye - 0.025, 0.138, 0.075, yEye + 0.025, 0.138, -0.075, yEye + 0.025, 0.138);
-    uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
-    indices.push(0, 1, 2, 0, 2, 3);
+    const nxG = 12;
+    const nyG = 2;
+    for (let i = 0; i <= nyG; i++) {
+      const v = i / nyG;
+      const y = yEye + 0.024 - v * 0.048;
+      for (let j = 0; j <= nxG; j++) {
+        const u = j / nxG;
+        const x = (u - 0.5) * 0.15;
+        const curveZ = 0.138 - Math.pow(Math.abs(u - 0.5) * 2, 1.8) * 0.022;
+        verts.push(x, y, curveZ);
+        uvs.push(u, 1 - v);
+      }
+    }
+    for (let i = 0; i < nyG; i++) {
+      for (let j = 0; j < nxG; j++) {
+        const a = i * (nxG + 1) + j;
+        indices.push(a, a + nxG + 1, a + 1, a + 1, a + nxG + 1, a + nxG + 2);
+      }
+    }
+  } else if (type === 'bag') {
+    // Structured 3D bag carried near right hip/hand (-X side)
+    const cx = isMale ? -0.27 : -0.24;
+    const cy = isMale ? 0.84 : 0.80;
+    const cz = 0.04;
+    const hw = 0.055;
+    const hh = 0.11;
+    const hd = 0.095;
+    const nyB = 8;
+    const nxB = 20;
+    for (let i = 0; i <= nyB; i++) {
+      const v = i / nyB;
+      const y = cy + hh - v * (hh * 2);
+      for (let j = 0; j <= nxB; j++) {
+        const u = j / nxB;
+        const theta = -Math.PI + u * 2 * Math.PI;
+        verts.push(cx + hw * Math.sin(theta), y, cz + hd * Math.cos(theta));
+        uvs.push(u, 1 - v);
+      }
+    }
+    for (let i = 0; i < nyB; i++) {
+      for (let j = 0; j < nxB; j++) {
+        const a = i * (nxB + 1) + j;
+        indices.push(a, a + nxB + 1, a + 1, a + 1, a + nxB + 1, a + nxB + 2);
+      }
+    }
   } else {
-    // Belt / general torso accessory
+    // Belt / Waistline accessory: 360° contoured elliptical strap + front buckle on the waistline
     const yBelt = isMale ? 1.08 : 1.05;
-    verts.push(-0.19, yBelt - 0.03, 0.145, 0.19, yBelt - 0.03, 0.145, 0.19, yBelt + 0.03, 0.145, -0.19, yBelt + 0.03, 0.145);
-    uvs.push(0, 0, 1, 0, 1, 1, 0, 1);
-    indices.push(0, 1, 2, 0, 2, 3);
+    const beltHalfH = 0.022;
+    const slice = getTorsoSlice(yBelt, isMale);
+    const beltOffset = Math.max(0.026, layerOffset);
+    const rx = slice.rx + beltOffset;
+    const rzFront = (slice.rzFront || slice.rz) + beltOffset;
+    const rzBack = (slice.rzBack || slice.rz) + beltOffset + 0.006;
+    const nyB = 4;
+    const nxB = 28;
+
+    for (let i = 0; i <= nyB; i++) {
+      const v = i / nyB;
+      const y = yBelt + beltHalfH - v * (beltHalfH * 2);
+      for (let j = 0; j <= nxB; j++) {
+        const u = j / nxB;
+        const theta = -Math.PI + u * 2 * Math.PI;
+        const isFront = Math.cos(theta) >= 0;
+        const x = rx * Math.sin(theta);
+        // Subtle front buckle relief at center-front (|sin(theta)| < 0.18)
+        const isBuckle = isFront && Math.abs(Math.sin(theta)) < 0.18;
+        const buckleBoost = isBuckle ? 0.005 : 0;
+        const z = isFront
+          ? slice.cz + (rzFront + buckleBoost) * Math.cos(theta)
+          : slice.cz - rzBack * Math.abs(Math.cos(theta));
+        verts.push(x, y, z);
+        uvs.push(u, 1 - v);
+      }
+    }
+    for (let i = 0; i < nyB; i++) {
+      for (let j = 0; j < nxB; j++) {
+        const a = i * (nxB + 1) + j;
+        const b = a + 1;
+        const c = a + (nxB + 1);
+        const d = c + 1;
+        indices.push(a, c, b, b, c, d);
+      }
+    }
   }
 
   geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
@@ -1995,8 +2268,115 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false } = {})
 }
 
 /**
+ * Extracts comprehensive metadata text from a garment and its rawItem so cut,
+ * silhouette, length, sleeves, and material properties are always considered.
+ */
+export function resolveGarmentMetadataText(garment) {
+  if (!garment) return '';
+  const raw = garment.rawItem || {};
+  return [
+    garment.sub_category,
+    garment.subcategory,
+    garment.item_type,
+    garment.name,
+    garment.title,
+    garment.category,
+    garment.caption,
+    garment.description,
+    garment.material,
+    garment.fabric,
+    garment.fit,
+    garment.cut,
+    garment.length,
+    garment.sleeve_length,
+    garment.neckline,
+    raw.sub_category,
+    raw.subcategory,
+    raw.item_type,
+    raw.name,
+    raw.title,
+    raw.category,
+    raw.caption,
+    raw.description,
+    raw.material,
+    raw.fabric,
+    raw.fit,
+    raw.cut,
+    raw.length,
+    raw.sleeve_length,
+    raw.neckline,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+/**
+ * Resolves consistent PBR material surface attributes (roughness, metalness, envMapIntensity)
+ * from the garment metadata so fabric sheen and texture match across all 3D views.
+ */
+export function resolveMaterialPBRProps(garmentText = '', rawSlot = 'top') {
+  const has = (...words) => words.some((w) => garmentText.includes(w));
+  if (rawSlot === 'watch' || has('gold', 'silver', 'metallic', 'metal', 'stainless', 'זהב', 'כסף', 'מתכת')) {
+    return { roughness: 0.25, metalness: 0.72, envMapIntensity: 1.35 };
+  }
+  if (has('patent', 'latex', 'vinyl', 'לקה', 'ויניל')) {
+    return { roughness: 0.18, metalness: 0.15, envMapIntensity: 1.3 };
+  }
+  if (has('leather', 'faux leather', 'suede', 'עור', 'זמש')) {
+    return { roughness: 0.42, metalness: 0.08, envMapIntensity: 1.05 };
+  }
+  if (has('silk', 'satin', 'velvet', 'chiffon', 'organza', 'משי', 'סאטן', 'קטיפה', 'שיפון') || rawSlot === 'necktie') {
+    return { roughness: 0.38, metalness: 0.06, envMapIntensity: 1.0 };
+  }
+  if (has('denim', 'jeans', 'canvas', 'corduroy', 'ג׳ינס', "ג'ינס", 'דנים', 'קורדורוי')) {
+    return { roughness: 0.86, metalness: 0.01, envMapIntensity: 0.55 };
+  }
+  if (has('wool', 'knit', 'cashmere', 'fleece', 'sweater', 'צמר', 'סריג', 'קשמיר', 'פליז')) {
+    return { roughness: 0.88, metalness: 0.01, envMapIntensity: 0.50 };
+  }
+  if (rawSlot === 'shoes' || rawSlot === 'belt' || rawSlot === 'bag') {
+    return { roughness: 0.38, metalness: 0.10, envMapIntensity: 1.15 };
+  }
+  return { roughness: 0.76, metalness: 0.02, envMapIntensity: 0.72 };
+}
+
+/**
+ * Returns the physical layering renderOrder for each garment slot:
+ * bottom (6) < top (8) < dress (9) < belt (10) < necktie (11) < outerwear (12) < shoes (14) < watch/accessory (15)
+ */
+export function resolveGarmentRenderOrder(rawSlot) {
+  switch (rawSlot) {
+    case 'bottom':
+      return 6;
+    case 'top':
+      return 8;
+    case 'dress':
+      return 9;
+    case 'belt':
+      return 10;
+    case 'necktie':
+      return 11;
+    case 'outerwear':
+      return 12;
+    case 'shoes':
+      return 14;
+    case 'watch':
+    case 'glasses':
+    case 'headwear':
+    case 'bag':
+    case 'accessory':
+      return 15;
+    default:
+      return 10;
+  }
+}
+
+/**
  * Vertical placement + clearance of a garment shell for each clothing slot,
  * expressed in the avatar's base (un-morphed) metric space.
+ * Enforces strict physical layering offsets:
+ *   bottom (0.016m) < top (0.022m) < dress (0.023m) < belt (0.026m) < necktie (0.029m) < outerwear (0.038m M / 0.035m F)
  */
 export function resolveShellFit({
   rawSlot,
@@ -2006,7 +2386,8 @@ export function resolveShellFit({
   garment = null,
   aspect = 0.55,
 } = {}) {
-  const has = (...words) => words.some((w) => garmentText.includes(w));
+  const fullText = `${garmentText} ${resolveGarmentMetadataText(garment)}`.toLowerCase();
+  const has = (...words) => words.some((w) => fullText.includes(w));
   const isStrapless = has('strapless', 'tube', 'bandeau', 'סטרפלס', 'בנדו', 'sans bretelles', 'trägerlos', 'palabra de honor');
   if (rawSlot === 'top') {
     const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
@@ -2015,7 +2396,8 @@ export function resolveShellFit({
     if (isCrop) yBottom = isMale ? 1.18 : 1.12;
     if (isLongline) yBottom = isMale ? 0.75 : 0.70;
     const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
-    return { yTop, yBottom, layerOffset: hasOuterwear ? 0.016 : 0.022, isSkirt: false, isStrapless };
+    // Shirt/top always clears bottom (0.016m) and sits cleanly under necktie (0.029m) & outerwear (0.035m+)
+    return { yTop, yBottom, layerOffset: 0.022, isSkirt: false, isStrapless };
   }
   if (rawSlot === 'outerwear') {
     const isLong = has('overcoat', 'trench', 'duster', 'מעיל ארוך', 'cardigan', 'קרדיגן', 'coat', 'parka', 'robe');
@@ -2023,7 +2405,7 @@ export function resolveShellFit({
     let yBottom = isMale ? 0.88 : 0.84;
     if (isLong) yBottom = isMale ? 0.52 : 0.48;
     if (isCrop) yBottom = isMale ? 1.15 : 1.10;
-    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.036 : 0.032, isSkirt: false, isStrapless: false };
+    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.038 : 0.035, isSkirt: false, isStrapless: false };
   }
   if (rawSlot === 'dress') {
     const isMini = has('mini', 'קצרה');
@@ -2032,13 +2414,13 @@ export function resolveShellFit({
     if (isMini) yBottom = isMale ? 0.78 : 0.74;
     if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
     const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
-    return { yTop, yBottom, layerOffset: 0.022, isSkirt: false, isStrapless };
+    return { yTop, yBottom, layerOffset: 0.023, isSkirt: false, isStrapless };
   }
   if (rawSlot === 'bottom') {
     const isSkirt = has('skirt', 'חצאית');
     const { lengthType, yBottom } = resolveBottomLength({
       garment,
-      garmentText,
+      garmentText: fullText,
       aspect,
       isMale,
       isSkirt,
@@ -2046,7 +2428,7 @@ export function resolveShellFit({
     return {
       yTop: isMale ? 1.08 : 1.05,
       yBottom,
-      layerOffset: 0.018,
+      layerOffset: 0.016,
       isSkirt,
       isStrapless: false,
       lengthType,
@@ -2093,12 +2475,14 @@ export default function GarmentMesh3D({
     ready: textureReady = false,
   } = useGarmentTexture(garment?.url, garment?.extraViews, isPatterned);
 
+  const metadataText = useMemo(() => resolveGarmentMetadataText(garment), [garment]);
   const rawSlot = normalizeGarmentRole(
     slot || garment?.slot,
-    garment?.category,
-    garment?.name || garment?.title || garment?.sub_category || garment?.item_type
+    garment?.category || garment?.rawItem?.category,
+    metadataText || garment?.name || garment?.title || garment?.sub_category || garment?.item_type
   );
-  const garmentText = `${garment?.sub_category || ''} ${garment?.item_type || ''} ${garment?.name || ''} ${garment?.category || ''}`.toLowerCase();
+  const garmentText = metadataText;
+  const pbrProps = useMemo(() => resolveMaterialPBRProps(garmentText, rawSlot), [garmentText, rawSlot]);
   const footwearSpec = useMemo(
     () => (rawSlot === 'shoes' ? resolveFootwearSpec(garment) : null),
     [rawSlot, garment]
@@ -2130,7 +2514,7 @@ export default function GarmentMesh3D({
       if (isCrop) yBottom = (isMale ? 1.18 : 1.12) + yShift;
       if (isLongline) yBottom = (isMale ? 0.75 : 0.70) + yShift;
 
-      const layerOffset = (hasOuterwear ? 0.016 : 0.022) + rxShift;
+      const layerOffset = 0.022 + rxShift;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -2157,8 +2541,8 @@ export default function GarmentMesh3D({
       if (isLongCoat) yBottom = (isMale ? 0.52 : 0.48) + yShift;
       if (isCropJacket) yBottom = (isMale ? 1.15 : 1.10) + yShift;
 
-      // Layered cleanly outside tops with generous clearance
-      const layerOffset = (isMale ? 0.038 : 0.034) + rxShift;
+      // Layered cleanly outside tops and neckties with generous clearance
+      const layerOffset = (isMale ? 0.038 : 0.035) + rxShift;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -2192,7 +2576,7 @@ export default function GarmentMesh3D({
         sleeveFactor: sleeveStyle.factor,
         yTop,
         yBottom,
-        layerOffset: 0.022 + rxShift,
+        layerOffset: 0.023 + rxShift,
         uSwatch: solidU,
         vSwatch: solidV,
       });
@@ -2216,7 +2600,7 @@ export default function GarmentMesh3D({
         isShorts,
         yTop: (isMale ? 1.08 : 1.05) + yShift,
         yHem,
-        layerOffset: 0.018 + rxShift,
+        layerOffset: 0.016 + rxShift,
         uSwatch: solidU,
         vSwatch: solidV,
       });
@@ -2231,14 +2615,17 @@ export default function GarmentMesh3D({
       });
     }
 
-    // 6. ACCESSORIES
-    return createAnatomicalAccessoryGeometry(rawSlot, { isMale });
-  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, solidU, solidV, footwearSpec, shoeLayout]);
+    // 6. ACCESSORIES (watch, necktie, belt, headwear, glasses, bag)
+    const accessoryLayerOffset = rawSlot === 'necktie' ? 0.029 : rawSlot === 'belt' ? 0.026 : 0.042;
+    return createAnatomicalAccessoryGeometry(rawSlot, { isMale, layerOffset: accessoryLayerOffset });
+  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, aspect, solidU, solidV, footwearSpec, shoeLayout, isStandalone]);
 
   const geometry = useMemo(() => {
     const morphed = isStandalone
       ? baseGeometry
-      : applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences);
+      : applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences, {
+          includeArms: rawSlot === 'watch',
+        });
     // Footwear follows the heeled foot pose applied to the avatar
     return rawSlot === 'shoes' ? poseGeometry(morphed, footPose) : morphed;
   }, [baseGeometry, morphField, morphInfluences, rawSlot, footPose, isStandalone]);
@@ -2281,11 +2668,18 @@ export default function GarmentMesh3D({
     if (isStandalone) {
       return { front: shell.front, back: shell.back };
     }
+    const minClearance = Math.max(0.012, (shellFit?.layerOffset || 0.018) * 0.75);
     return {
-      front: applyAvatarMorphsToGeometry(shell.front, morphField, morphInfluences),
-      back: applyAvatarMorphsToGeometry(shell.back, morphField, morphInfluences),
+      front: applyAvatarMorphsToGeometry(shell.front, morphField, morphInfluences, {
+        sheetSide: 'front',
+        minClearance,
+      }),
+      back: applyAvatarMorphsToGeometry(shell.back, morphField, morphInfluences, {
+        sheetSide: 'back',
+        minClearance,
+      }),
     };
-  }, [shell, morphField, morphInfluences, isStandalone]);
+  }, [shell, shellFit, morphField, morphInfluences, isStandalone]);
 
   const heelGeometry = useMemo(
     () => (rawSlot === 'shoes' && visible ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose }) : null),
@@ -2298,7 +2692,7 @@ export default function GarmentMesh3D({
   // Never flash an untextured (white) body-shaped placeholder while the photo loads
   if (isCoreClothing && !textureReady) return null;
 
-  const renderOrder = rawSlot === 'outerwear' ? 12 : rawSlot === 'dress' ? 11 : rawSlot === 'top' ? 10 : 8;
+  const renderOrder = resolveGarmentRenderOrder(rawSlot);
 
   if (shellGeos && texture) {
     const shellMaterialProps = {
@@ -2307,10 +2701,13 @@ export default function GarmentMesh3D({
       transparent: false,
       depthWrite: true,
       side: THREE.DoubleSide,
-      roughness: 0.78,
-      metalness: 0.02,
-      envMapIntensity: 0.7,
+      roughness: pbrProps.roughness,
+      metalness: pbrProps.metalness,
+      envMapIntensity: pbrProps.envMapIntensity,
       alphaToCoverage: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     };
     return (
       <>
@@ -2325,6 +2722,8 @@ export default function GarmentMesh3D({
   }
 
   if (!geometry) return null;
+
+  const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
 
   return (
     <>
@@ -2346,19 +2745,19 @@ export default function GarmentMesh3D({
       <meshStandardMaterial
         map={(rawSlot === 'shoes'
           ? (opaqueTexture || texture)
-          : ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot)
-            ? (filledTexture || texture)
+          : ['top', 'outerwear', 'dress', 'bottom', 'belt', 'necktie', 'watch'].includes(rawSlot)
+            ? (filledTexture || opaqueTexture || texture)
             : texture) || null}
         color={rawSlot === 'shoes'
           ? (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B')
           : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
-        transparent={!['top', 'outerwear', 'dress', 'bottom', 'shoes'].includes(rawSlot)}
-        alphaTest={['top', 'outerwear', 'dress', 'bottom', 'shoes'].includes(rawSlot) ? 0 : 0.02}
+        transparent={!isOpaqueSlot}
+        alphaTest={isOpaqueSlot ? 0 : 0.02}
         depthWrite={true}
         side={THREE.DoubleSide}
-        roughness={rawSlot === 'shoes' ? 0.38 : 0.65}
-        metalness={rawSlot === 'shoes' ? 0.10 : 0.04}
-        envMapIntensity={rawSlot === 'shoes' ? 1.2 : 0.8}
+        roughness={pbrProps.roughness}
+        metalness={pbrProps.metalness}
+        envMapIntensity={pbrProps.envMapIntensity}
         polygonOffset={true}
         polygonOffsetFactor={-1}
         polygonOffsetUnits={-1}

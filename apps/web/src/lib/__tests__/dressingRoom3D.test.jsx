@@ -514,4 +514,120 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(screen.getByText('360° Avatar Studio')).toBeInTheDocument();
     expect(screen.getByText('Garment Only')).toBeInTheDocument();
   });
+
+  test('Footwear encloses the sole and foot completely and elevates the avatar for platforms and high heels', () => {
+    const {
+      resolveFootwearSpec,
+      computeFootPose,
+      createFittedFootwearGeometry,
+      FOOT_PROFILE_FEMALE,
+    } = require('@/lib/footwearFit');
+
+    // 1. Platform shoes elevate the avatar even with a flat heel drop
+    const platformSpec = resolveFootwearSpec({
+      name: 'Chunky Platform Creeper Sneakers',
+      sub_category: 'platform sneakers',
+      caption: 'Thick platform sole',
+    });
+    expect(platformSpec.isPlatform).toBe(true);
+    expect(platformSpec.soleThickness).toBeGreaterThanOrEqual(0.035);
+    const platformPose = computeFootPose(false, platformSpec.heelHeight, platformSpec.soleThickness);
+    expect(platformPose.elevated).toBe(true);
+    expect(platformPose.groupLift).toBeGreaterThanOrEqual(0.035);
+
+    // 2. High-heeled shoes elevate and pitch the avatar foot
+    const stilettoSpec = resolveFootwearSpec({
+      name: 'Patent Stiletto Pumps',
+      sub_category: 'stiletto heels',
+    });
+    expect(stilettoSpec.heelHeight).toBeGreaterThanOrEqual(0.08);
+    const stilettoPose = computeFootPose(false, stilettoSpec.heelHeight, stilettoSpec.soleThickness);
+    expect(stilettoPose.active).toBe(true);
+    expect(stilettoPose.elevated).toBe(true);
+    expect(stilettoPose.groupLift).toBeGreaterThan(0.07);
+
+    // 3. Shoe geometry encloses the avatar sole (yMin <= -0.008m < avatar sole -0.0061m)
+    //    and covers the entire dorsal instep (top y > p.top at every station)
+    const shoeGeo = createFittedFootwearGeometry({ isMale: false, spec: platformSpec });
+    shoeGeo.computeBoundingBox();
+    expect(shoeGeo.boundingBox.min.y).toBeLessThanOrEqual(-0.0075);
+    expect(shoeGeo.boundingBox.max.y).toBeGreaterThan(FOOT_PROFILE_FEMALE[0].top);
+  });
+
+  test('Accessories map to exact anatomical anchors: watch on left hand (+X), necktie from neckline down, belt on waistline', () => {
+    const {
+      normalizeGarmentRole,
+      createAnatomicalAccessoryGeometry,
+      resolveGarmentRenderOrder,
+      resolveShellFit,
+    } = require('@/components/GarmentMesh3D');
+
+    // 1. Role classification from metadata/caption
+    expect(normalizeGarmentRole('accessory', 'Accessories', 'Leather Strap Chronograph Wristwatch')).toBe('watch');
+    expect(normalizeGarmentRole('accessory', 'Accessories', 'Silk Repp Striped Necktie')).toBe('necktie');
+    expect(normalizeGarmentRole('accessory', 'Accessories', 'Italian Leather Waist Belt')).toBe('belt');
+
+    // 2. Watch geometry is anchored on the avatar's LEFT wrist (+X side: x in [0.18, 0.30], y around 0.90m)
+    const watchGeo = createAnatomicalAccessoryGeometry('watch', { isMale: false });
+    watchGeo.computeBoundingBox();
+    expect(watchGeo.boundingBox.min.x).toBeGreaterThan(0.18);
+    expect(watchGeo.boundingBox.max.x).toBeLessThan(0.31);
+    expect(watchGeo.boundingBox.min.y).toBeGreaterThan(0.86);
+    expect(watchGeo.boundingBox.max.y).toBeLessThan(0.95);
+
+    // 3. Necktie geometry hangs from the neckline (yTop ~ 1.44..1.50) down to the waistline (yTip ~ 1.04..1.06)
+    const tieGeo = createAnatomicalAccessoryGeometry('necktie', { isMale: true, layerOffset: 0.029 });
+    tieGeo.computeBoundingBox();
+    expect(tieGeo.boundingBox.max.y).toBeCloseTo(1.50, 2);
+    expect(tieGeo.boundingBox.min.y).toBeCloseTo(1.06, 2);
+
+    // 4. Belt geometry wraps 360° around the waistline (y ~ 1.05..1.08)
+    const beltGeo = createAnatomicalAccessoryGeometry('belt', { isMale: false, layerOffset: 0.026 });
+    beltGeo.computeBoundingBox();
+    expect((beltGeo.boundingBox.min.y + beltGeo.boundingBox.max.y) / 2).toBeCloseTo(1.05, 2);
+    expect(beltGeo.boundingBox.max.z - beltGeo.boundingBox.min.z).toBeGreaterThan(0.20);
+
+    // 5. Physical overlay order: jacket (outerwear) > necktie > belt > shirt (top) > pants (bottom)
+    const bottomFit = resolveShellFit({ rawSlot: 'bottom', garmentText: 'dress pants', isMale: true });
+    const shirtFit = resolveShellFit({ rawSlot: 'top', garmentText: 'button-up shirt', isMale: true, hasOuterwear: true });
+    const jacketFit = resolveShellFit({ rawSlot: 'outerwear', garmentText: 'suit blazer jacket', isMale: true });
+
+    expect(bottomFit.layerOffset).toBeLessThan(shirtFit.layerOffset);
+    expect(shirtFit.layerOffset).toBeLessThan(0.029); // necktie layerOffset
+    expect(0.029).toBeLessThan(jacketFit.layerOffset);
+
+    expect(resolveGarmentRenderOrder('bottom')).toBeLessThan(resolveGarmentRenderOrder('top'));
+    expect(resolveGarmentRenderOrder('top')).toBeLessThan(resolveGarmentRenderOrder('belt'));
+    expect(resolveGarmentRenderOrder('belt')).toBeLessThan(resolveGarmentRenderOrder('necktie'));
+    expect(resolveGarmentRenderOrder('necktie')).toBeLessThan(resolveGarmentRenderOrder('outerwear'));
+  });
+
+  test('retractCoveredAvatarSkin retracts covered torso, pelvis, and foot skin vertices so skin never shows through garments', () => {
+    const THREE = require('three');
+    const { retractCoveredAvatarSkin } = require('@/components/AvatarMesh3D');
+
+    const geo = new THREE.BufferGeometry();
+    // Three test vertices: (1) chest skin at y=1.20, (2) hip skin at y=0.90, (3) foot skin at y=0.04
+    const verts = new Float32Array([
+      0.12, 1.20, 0.14,
+      0.15, 0.90, 0.13,
+      0.17, 0.04, 0.18,
+    ]);
+    geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+
+    retractCoveredAvatarSkin(
+      geo,
+      { hasTop: true, hasBottom: true, hasShoes: true },
+      false
+    );
+
+    const pos = geo.getAttribute('position');
+    // Chest and hip X/Z radii are retracted inward toward the bone axis
+    expect(pos.getX(0)).toBeLessThan(0.12);
+    expect(pos.getZ(0)).toBeLessThan(0.14);
+    expect(pos.getX(1)).toBeLessThan(0.15);
+    expect(pos.getZ(1)).toBeLessThan(0.13);
+    // Foot Z is retracted toward foot center (0.095)
+    expect(pos.getZ(2)).toBeLessThan(0.18);
+  });
 });

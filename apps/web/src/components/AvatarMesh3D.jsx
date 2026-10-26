@@ -44,6 +44,62 @@ export function getAvatarMetricTransform({ isMale = false, height = 170, morphIn
 
 
 /**
+ * Gently retracts interior avatar skin vertices toward the anatomical bone axis
+ * inside regions covered by active garments (torso under tops/outerwear/dresses,
+ * pelvis/hips under bottoms/dresses, feet inside shoes) so avatar skin can never
+ * poke or bleed through garments at any camera angle or morph setting.
+ */
+export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale = false) {
+  if (!geometry || !coveredZones) return geometry;
+  const { hasTop, hasOuterwear, hasDress, hasBottom, hasShoes } = coveredZones;
+  if (!hasTop && !hasOuterwear && !hasDress && !hasBottom && !hasShoes) return geometry;
+
+  const pos = geometry.attributes?.position;
+  if (!pos) return geometry;
+  const arr = pos.array;
+  const n = pos.count;
+  const footCx = isMale ? 0.148 : 0.170;
+  const footCz = isMale ? 0.055 : 0.095;
+
+  for (let i = 0; i < n; i++) {
+    const idx = i * 3;
+    const x = arr[idx];
+    const y = arr[idx + 1];
+    const z = arr[idx + 2];
+    const absX = Math.abs(x);
+
+    // 1. Foot enclosure under shoes: retract foot & sole surface inward toward foot core
+    if (hasShoes && y < 0.088) {
+      const sign = x < 0 ? -1 : 1;
+      const cx = sign * footCx;
+      arr[idx] = cx + (x - cx) * 0.82;
+      arr[idx + 1] = Math.max(-0.002, y * 0.94);
+      arr[idx + 2] = footCz + (z - footCz) * 0.84;
+      continue;
+    }
+
+    // 2. Upper torso under top / outerwear / dress (exclude neck/head y > 1.38 and arms |x| > 0.175)
+    if ((hasTop || hasOuterwear || hasDress) && y >= 0.90 && y <= 1.38 && absX <= 0.175) {
+      const cz = 0.015;
+      arr[idx] = x * 0.88;
+      arr[idx + 2] = cz + (z - cz) * 0.85;
+      continue;
+    }
+
+    // 3. Pelvis / hip / crotch under bottom / dress (y in [0.76, 1.04], |x| <= 0.185)
+    if ((hasBottom || hasDress) && y >= 0.76 && y <= 1.04 && absX <= 0.185) {
+      const cz = 0.010;
+      arr[idx] = x * 0.88;
+      arr[idx + 2] = cz + (z - cz) * 0.85;
+    }
+  }
+
+  pos.needsUpdate = true;
+  geometry.computeVertexNormals?.();
+  return geometry;
+}
+
+/**
  * AvatarMesh3D
  * 
  * High-fidelity 3D human avatar mesh rendered in real-world metric coordinates (meters).
@@ -63,6 +119,7 @@ export default function AvatarMesh3D({
   receiveShadow = true,
   groupRef: externalGroupRef,
   footPose = null,
+  coveredZones = null,
 }) {
   const modelUrl = isMale ? MALE_GLB_URL : FEMALE_GLB_URL;
   const { scene } = useGLTF(modelUrl);
@@ -104,10 +161,15 @@ export default function AvatarMesh3D({
     return clone;
   }, [scene, skinColor, hairProps, isMale, morphInfluences, castShadow, receiveShadow]);
 
-  // Heeled footwear: re-pose the feet (heel raised, pivot about the ball of the foot).
+  // Heeled footwear & covered-skin retraction: re-pose the feet (heel raised, pivot about
+  // the ball of the foot) and retract covered skin zones so skin never bleeds through garments.
   // Works on per-instance geometry copies so the shared GLTF stays untouched.
   useEffect(() => {
     if (!clonedScene) return;
+    const hasCoverage = Boolean(
+      coveredZones &&
+      (coveredZones.hasTop || coveredZones.hasOuterwear || coveredZones.hasDress || coveredZones.hasBottom || coveredZones.hasShoes)
+    );
     clonedScene.traverse((node) => {
       const original = node.userData?.originalGeometry;
       if (!node.isMesh || !original) return;
@@ -115,12 +177,20 @@ export default function AvatarMesh3D({
         node.geometry.dispose?.();
         node.geometry = original;
       }
-      if (!footPose?.active) return;
+      if (!footPose?.active && !hasCoverage) return;
       if (!original.boundingBox) original.computeBoundingBox?.();
-      if (original.boundingBox && original.boundingBox.min.y > 0.2) return;
-      node.geometry = poseAvatarGeometry(original.clone(), footPose);
+      // Skip hair/head-only meshes located high above the shoulders
+      if (original.boundingBox && original.boundingBox.min.y > 1.42) return;
+      let nextGeo = original.clone();
+      if (hasCoverage) {
+        nextGeo = retractCoveredAvatarSkin(nextGeo, coveredZones, isMale);
+      }
+      if (footPose?.active && (!original.boundingBox || original.boundingBox.min.y <= 0.2)) {
+        nextGeo = poseAvatarGeometry(nextGeo, footPose);
+      }
+      node.geometry = nextGeo;
     });
-  }, [clonedScene, footPose]);
+  }, [clonedScene, footPose, coveredZones, isMale]);
 
   // Metric scaling and floor positioning
   const transform = useMemo(() => {
