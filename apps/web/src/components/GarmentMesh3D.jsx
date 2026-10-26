@@ -225,7 +225,26 @@ export function extractImageAlphaBounds(img) {
 
 // ─── High-Fidelity Garment Texture Loader with In-Memory Alpha Tight-Cropping ───
 
+// Bounded LRU cache (capped at 16 textures) with automatic VRAM disposal
+const MAX_TEXTURE_CACHE_ENTRIES = 16;
 const textureCache = new Map();
+
+function setTextureCache(key, entry) {
+  if (textureCache.has(key)) {
+    textureCache.delete(key);
+  } else if (textureCache.size >= MAX_TEXTURE_CACHE_ENTRIES) {
+    const oldestKey = textureCache.keys().next().value;
+    const oldEntry = textureCache.get(oldestKey);
+    if (oldEntry) {
+      oldEntry.texture?.dispose?.();
+      oldEntry.opaqueTexture?.dispose?.();
+      oldEntry.filledTexture?.dispose?.();
+      oldEntry.backTexture?.dispose?.();
+    }
+    textureCache.delete(oldestKey);
+  }
+  textureCache.set(key, entry);
+}
 
 /** Mean colour, silhouette area and texture busyness of a cut-out canvas. */
 function computeCanvasStats(canvas) {
@@ -487,14 +506,11 @@ export function buildBackTexture({ frontCanvas, backCanvas }) {
   ctx.drawImage(cleanBackCanvas, 0, 0);
 
   if (backCanvas) {
-    // A back photo is seen from behind: mirror it and align its horizontal opaque spans
-    // row-by-row onto the front silhouette so back seams/pockets/yoke match the 3D shell 1:1.
+    // When a verified back photograph is available from the item group, project it onto
+    // the back silhouette in original orientation so authentic asymmetric detailing,
+    // rear pockets, embroidery, or text remain un-inverted.
     ctx.globalCompositeOperation = 'source-atop';
-    ctx.save();
-    ctx.translate(W, 0);
-    ctx.scale(-1, 1);
     ctx.drawImage(backCanvas, 0, 0, W, H);
-    ctx.restore();
     ctx.globalCompositeOperation = 'source-over';
   }
   const tex = new THREE.CanvasTexture(out);
@@ -544,8 +560,8 @@ async function fetchAndCropTexture(url) {
     if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke);
     return null;
   }
-  // Cap the working resolution: keeps flood-fill / mask analysis fast and GPU memory small
-  const MAX_SIDE = 1100;
+  // Cap the working resolution: keeps flood-fill / mask analysis fast, reduces main-thread blocking, and keeps GPU memory small
+  const MAX_SIDE = 768;
   const downScale = Math.min(1, MAX_SIDE / Math.max(srcW, srcH));
   const w = Math.max(1, Math.round(srcW * downScale));
   const h = Math.max(1, Math.round(srcH * downScale));
@@ -1178,7 +1194,7 @@ async function fetchAndCropTexture(url) {
     },
   };
 
-  textureCache.set(url, res);
+  setTextureCache(url, res);
   return res;
 }
 
@@ -2685,6 +2701,23 @@ export default function GarmentMesh3D({
     () => (rawSlot === 'shoes' && visible ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose }) : null),
     [rawSlot, visible, isMale, footwearSpec, footPose]
   );
+
+  // VRAM cleanup: dispose transient morphed and generated geometries on unmount / recompute
+  useEffect(() => {
+    return () => {
+      if (baseGeometry) baseGeometry.dispose?.();
+      if (geometry && geometry !== baseGeometry) geometry.dispose?.();
+      if (shell) {
+        shell.front?.dispose?.();
+        shell.back?.dispose?.();
+      }
+      if (shellGeos) {
+        if (shellGeos.front && shellGeos.front !== shell?.front) shellGeos.front.dispose?.();
+        if (shellGeos.back && shellGeos.back !== shell?.back) shellGeos.back.dispose?.();
+      }
+      if (heelGeometry) heelGeometry.dispose?.();
+    };
+  }, [baseGeometry, geometry, shell, shellGeos, heelGeometry]);
 
   if (!visible || !garment) return null;
 

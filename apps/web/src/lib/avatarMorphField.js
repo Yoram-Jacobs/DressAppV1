@@ -22,8 +22,10 @@ const CELL = 0.05; // spatial hash cell size (metres)
 const K = 6; // neighbours per garment vertex
 const fieldCache = new WeakMap();
 
+// Packed 32-bit integer key for spatial hashing (avoids string allocation in hot loops)
+// Range: ix, iy, iz in [-512, 511]
 function cellKey(ix, iy, iz) {
-  return `${ix},${iy},${iz}`;
+  return ((ix + 512) & 0x3FF) | (((iy + 512) & 0x3FF) << 10) | (((iz + 512) & 0x3FF) << 20);
 }
 
 /**
@@ -141,7 +143,35 @@ function findNearest(field, x, y, z, includeArms = false) {
   const cx = Math.floor(x / CELL);
   const cy = Math.floor(y / CELL);
   const cz = Math.floor(z / CELL);
-  const best = []; // [{ i, d2 }] sorted ascending, length <= K
+
+  // Maintain top-K nearest neighbors in fixed inline arrays to eliminate GC garbage
+  const bestIdx = new Int32Array(K);
+  const bestD2 = new Float32Array(K);
+  let bestCount = 0;
+
+  function insertNeighbor(idx, d2) {
+    if (bestCount < K) {
+      // Find insertion position to keep sorted ascending
+      let pos = bestCount;
+      while (pos > 0 && bestD2[pos - 1] > d2) {
+        bestIdx[pos] = bestIdx[pos - 1];
+        bestD2[pos] = bestD2[pos - 1];
+        pos--;
+      }
+      bestIdx[pos] = idx;
+      bestD2[pos] = d2;
+      bestCount++;
+    } else if (d2 < bestD2[K - 1]) {
+      let pos = K - 1;
+      while (pos > 0 && bestD2[pos - 1] > d2) {
+        bestIdx[pos] = bestIdx[pos - 1];
+        bestD2[pos] = bestD2[pos - 1];
+        pos--;
+      }
+      bestIdx[pos] = idx;
+      bestD2[pos] = d2;
+    }
+  }
 
   for (let r = 0; r <= 4; r++) {
     for (let ix = cx - r; ix <= cx + r; ix++) {
@@ -149,7 +179,8 @@ function findNearest(field, x, y, z, includeArms = false) {
         for (let iz = cz - r; iz <= cz + r; iz++) {
           // Only visit the outer shell of the cube at radius r
           if (r > 0 && Math.abs(ix - cx) !== r && Math.abs(iy - cy) !== r && Math.abs(iz - cz) !== r) continue;
-          const bucket = activeGrid.get(cellKey(ix, iy, iz));
+          const key = ((ix + 512) & 0x3FF) | (((iy + 512) & 0x3FF) << 10) | (((iz + 512) & 0x3FF) << 20);
+          const bucket = activeGrid.get(key);
           if (!bucket) continue;
           for (let b = 0; b < bucket.length; b++) {
             const i = bucket[b];
@@ -157,19 +188,22 @@ function findNearest(field, x, y, z, includeArms = false) {
             const dy = basePositions[i * 3 + 1] - y;
             const dz = basePositions[i * 3 + 2] - z;
             const d2 = dx * dx + dy * dy + dz * dz;
-            if (best.length < K || d2 < best[best.length - 1].d2) {
-              best.push({ i, d2 });
-              best.sort((a, c) => a.d2 - c.d2);
-              if (best.length > K) best.pop();
+            if (bestCount < K || d2 < bestD2[K - 1]) {
+              insertNeighbor(i, d2);
             }
           }
         }
       }
     }
     // Any point outside the searched cube is at least r*CELL away
-    if (best.length >= K && best[best.length - 1].d2 <= (r * CELL) * (r * CELL)) break;
+    if (bestCount >= K && bestD2[K - 1] <= (r * CELL) * (r * CELL)) break;
   }
-  return best;
+
+  const result = [];
+  for (let k = 0; k < bestCount; k++) {
+    result.push({ i: bestIdx[k], d2: bestD2[k] });
+  }
+  return result;
 }
 
 /**

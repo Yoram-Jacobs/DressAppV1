@@ -190,7 +190,41 @@ export default function AvatarMesh3D({
       }
       node.geometry = nextGeo;
     });
+
+    return () => {
+      // Clean up cloned geometries when unmounting or dependencies change
+      if (!clonedScene) return;
+      clonedScene.traverse((node) => {
+        const original = node.userData?.originalGeometry;
+        if (node.isMesh && node.geometry && node.geometry !== original) {
+          node.geometry.dispose?.();
+          node.geometry = original;
+        }
+      });
+    };
   }, [clonedScene, footPose, coveredZones, isMale]);
+
+  // Clean up cloned materials and textures upon unmount
+  useEffect(() => {
+    return () => {
+      if (!clonedScene) return;
+      clonedScene.traverse((node) => {
+        if (node.isMesh) {
+          const original = node.userData?.originalGeometry;
+          if (node.geometry && node.geometry !== original) {
+            node.geometry.dispose?.();
+          }
+          if (node.material) {
+            if (Array.isArray(node.material)) {
+              node.material.forEach((m) => m?.dispose?.());
+            } else {
+              node.material?.dispose?.();
+            }
+          }
+        }
+      });
+    };
+  }, [clonedScene]);
 
   // Metric scaling and floor positioning
   const transform = useMemo(() => {

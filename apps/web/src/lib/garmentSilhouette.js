@@ -1112,8 +1112,8 @@ export function buildSilhouetteShell({
     const hi = i + 1;
 
     // For pants/bottoms: do not bridge across the crotch void when BOTH adjacent rows have separated legs.
-    // However, right at the crotch apex (crotchRow and crotchRow + 1), allow the gusset/saddle cells to bridge
-    // across the center cleft (|i - nx/2| <= 2) so there is never an open hole exposing avatar skin!
+    // However, right at the crotch apex (crotchRow), allow a single apex saddle cell
+    // (|i - colMid| <= 1) so the pelvis connects smoothly to the legs without webbing between thighs!
     if (isBottom) {
       const currRuns = runsByRow[j];
       const nextRuns = runsByRow[j + 1];
@@ -1121,10 +1121,10 @@ export function buildSilhouetteShell({
         const gapStart = Math.min(currRuns[0][1], nextRuns[0][1]);
         const gapEnd = Math.max(currRuns[1][0], nextRuns[1][0]);
         if (lo >= gapStart && hi <= gapEnd) {
-          // Keep a solid crotch saddle across the central 1-2 columns right at crotchRow to crotchRow + 1
-          const isCrotchSaddleRow = j >= crotchRow - 1 && j <= crotchRow + 1;
-          const isCenterCleft = Math.abs((lo + hi) * 0.5 - colMid) <= Math.max(1.5, 0.04 * nx);
-          if (isCrotchSaddleRow && isCenterCleft) {
+          // Strictly only bridge at the exact crotch apex row (j === crotchRow) across 1 cell
+          const isCrotchApexRow = j === crotchRow;
+          const isCenterApexCell = Math.abs((lo + hi) * 0.5 - colMid) <= 1.0;
+          if (isCrotchApexRow && isCenterApexCell) {
             return true;
           }
           return false;

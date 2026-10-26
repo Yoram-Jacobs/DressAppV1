@@ -573,6 +573,35 @@ export default function DressingRoom3D({
 
   const outfitName = outfit?.name || t('dressing_room_3d.default_outfit', { defaultValue: 'Current Outfit' });
 
+  const primarySlot = useMemo(() => {
+    return (focusedSlot && GARMENT_CAMERA_TARGETS[focusedSlot])
+      ? focusedSlot
+      : (activeGarments[0]?.slot || 'top');
+  }, [focusedSlot, activeGarments]);
+
+  const initialCamConfig = useMemo(() => {
+    return (!showAvatar && GARMENT_CAMERA_TARGETS[primarySlot])
+      ? GARMENT_CAMERA_TARGETS[primarySlot]
+      : GARMENT_CAMERA_TARGETS.full;
+  }, [showAvatar, primarySlot]);
+
+  const cameraProps = useMemo(() => ({
+    position: initialCamConfig.pos,
+    fov: 42,
+    near: 0.1,
+    far: 20,
+  }), [initialCamConfig]);
+
+  const glProps = useMemo(() => ({
+    antialias: true,
+    alpha: true,
+    powerPreference: 'high-performance',
+  }), []);
+
+  const handlePointerDown = useCallback(() => {
+    setCameraPreset(null);
+  }, []);
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -634,14 +663,6 @@ export default function DressingRoom3D({
 
         {/* ─── Main 3D Viewport & Overlay Controls ─── */}
         <div className="relative flex-1 w-full h-full overflow-hidden select-none bg-[#FAF7F2]">
-          {(() => {
-            const primarySlot = (focusedSlot && GARMENT_CAMERA_TARGETS[focusedSlot])
-              ? focusedSlot
-              : (activeGarments[0]?.slot || 'top');
-            const initialCamConfig = (!showAvatar && GARMENT_CAMERA_TARGETS[primarySlot])
-              ? GARMENT_CAMERA_TARGETS[primarySlot]
-              : GARMENT_CAMERA_TARGETS.full;
-            return (
           <Suspense
             fallback={(
               <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-[#6B7280]" data-testid="dressing-room-3d-loading">
@@ -651,19 +672,10 @@ export default function DressingRoom3D({
           >
           <Canvas
             shadows
-            camera={{
-              position: initialCamConfig.pos,
-              fov: 42,
-              near: 0.1,
-              far: 20,
-            }}
-            gl={{
-              antialias: true,
-              alpha: true,
-              powerPreference: 'high-performance',
-            }}
+            camera={cameraProps}
+            gl={glProps}
             className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
-            onPointerDown={() => setCameraPreset(null)}
+            onPointerDown={handlePointerDown}
           >
             {/* Creamy boutique background */}
             <color attach="background" args={['#FAF7F2']} />
@@ -763,8 +775,6 @@ export default function DressingRoom3D({
             </Suspense>
           </Canvas>
           </Suspense>
-            );
-          })()}
 
           {/* ─── Floating Interaction & Drag Hint ─── */}
           <div className="absolute top-4 start-4 z-10 pointer-events-none">
