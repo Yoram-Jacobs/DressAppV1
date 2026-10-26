@@ -5692,7 +5692,8 @@
       "m_tshirt_white_crew": "圆领T恤",
       "m_tshirt_black_crew": "圆领T恤"
     },
-    "firstOutfitTitle": "我的第一套 AI 穿搭"
+    "firstOutfitTitle": "我的第一套 AI 穿搭",
+    "firstOutfitDesc": "在您的风格与版型校准期间搭配完成。"
   },
   "closetTour": {
     "skipTour": "跳过导览",
@@ -5805,7 +5806,15 @@
     "show_item": "显示单品",
     "fullscreen": "全屏",
     "exit_fullscreen": "退出全屏",
-    "view_item_details": "查看单品详情"
+    "view_item_details": "查看单品详情",
+    "view_garment_only": "仅查看服装（无虚拟模特）",
+    "garment_only": "仅服装",
+    "show_avatar": "显示虚拟模特",
+    "garment_view_badge": "服装工作室 • 360°",
+    "avatar_studio_badge": "虚拟模特工作室 • 3D",
+    "loading": "正在加载3D试衣间...",
+    "side_view": "侧视图",
+    "back_view": "后视图"
   },
   "dressingRoom": {
     "title": "3D试衣间",

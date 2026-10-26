@@ -5710,7 +5710,8 @@
       "m_tshirt_white_crew": "Футболка с круглым вырезом",
       "m_tshirt_black_crew": "Футболка с круглым вырезом"
     },
-    "firstOutfitTitle": "Мой первый образ от ИИ"
+    "firstOutfitTitle": "Мой первый образ от ИИ",
+    "firstOutfitDesc": "Подобрано во время калибровки вашего стиля и посадки."
   },
   "closetTour": {
     "skipTour": "Пропустить тур",

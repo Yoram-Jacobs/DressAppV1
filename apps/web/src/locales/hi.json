@@ -5709,7 +5709,8 @@
       "m_tshirt_white_crew": "क्रू-नेक टी-शर्ट",
       "m_tshirt_black_crew": "क्रू-नेक टी-शर्ट"
     },
-    "firstOutfitTitle": "मेरा पहला एआई लुक"
+    "firstOutfitTitle": "मेरा पहला एआई लुक",
+    "firstOutfitDesc": "आपकी स्टाइल और फिट कैलिब्रेशन के दौरान तैयार किया गया।"
   },
   "closetTour": {
     "skipTour": "टूर छोड़ें",

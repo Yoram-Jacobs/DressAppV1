@@ -5708,7 +5708,8 @@
       "m_tshirt_white_crew": "T-Shirt Girocollo",
       "m_tshirt_black_crew": "T-Shirt Girocollo"
     },
-    "firstOutfitTitle": "Il mio primo look IA"
+    "firstOutfitTitle": "Il mio primo look IA",
+    "firstOutfitDesc": "Creato durante la calibrazione di stile e vestibilità."
   },
   "closetTour": {
     "skipTour": "Salta tour",

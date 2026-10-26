@@ -5696,7 +5696,8 @@
       "m_tshirt_white_crew": "T-Shirt met Ronde Hals",
       "m_tshirt_black_crew": "T-Shirt met Ronde Hals"
     },
-    "firstOutfitTitle": "Mijn eerste AI-look"
+    "firstOutfitTitle": "Mijn eerste AI-look",
+    "firstOutfitDesc": "Samengesteld tijdens uw stijl- en pasvormkalibratie."
   },
   "closetTour": {
     "skipTour": "Rondleiding overslaan",
@@ -5809,7 +5810,15 @@
     "show_item": "Item tonen",
     "fullscreen": "Volledig scherm",
     "exit_fullscreen": "Volledig scherm verlaten",
-    "view_item_details": "Bekijk itemdetails"
+    "view_item_details": "Bekijk itemdetails",
+    "view_garment_only": "Alleen kledingstuk bekijken (zonder avatar)",
+    "garment_only": "Alleen kledingstuk",
+    "show_avatar": "Avatar tonen",
+    "garment_view_badge": "Kledingstudio • 360°",
+    "avatar_studio_badge": "Avatarstudio • 3D",
+    "loading": "3D paskamer laden...",
+    "side_view": "Zijaanzicht",
+    "back_view": "Achteraanzicht"
   },
   "dressingRoom": {
     "title": "3D-paskamer",

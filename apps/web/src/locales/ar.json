@@ -5741,7 +5741,8 @@
       "m_tshirt_white_crew": "قميص قطني بياقة دائرية",
       "m_tshirt_black_crew": "قميص قطني بياقة دائرية"
     },
-    "firstOutfitTitle": "إطلالتي الذكية الأولى"
+    "firstOutfitTitle": "إطلالتي الذكية الأولى",
+    "firstOutfitDesc": "تم تجميعه أثناء معايرة أسلوبك ومقاسك."
   },
   "closetTour": {
     "skipTour": "تخطي الجولة",

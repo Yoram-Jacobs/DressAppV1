@@ -5709,7 +5709,8 @@
       "m_tshirt_white_crew": "クルーネックTシャツ",
       "m_tshirt_black_crew": "クルーネックTシャツ"
     },
-    "firstOutfitTitle": "はじめてのAIコーディネート"
+    "firstOutfitTitle": "はじめてのAIコーディネート",
+    "firstOutfitDesc": "スタイルとフィット感の測定中に作成されました。"
   },
   "closetTour": {
     "skipTour": "ツアーをスキップ",

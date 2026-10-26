@@ -5708,7 +5708,8 @@
       "m_tshirt_white_crew": "Camiseta Gola Careca",
       "m_tshirt_black_crew": "Camiseta Gola Careca"
     },
-    "firstOutfitTitle": "O meu primeiro look IA"
+    "firstOutfitTitle": "O meu primeiro look IA",
+    "firstOutfitDesc": "Montado durante a calibração do seu estilo e caimento."
   },
   "closetTour": {
     "skipTour": "Pular tour",

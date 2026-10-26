@@ -5708,7 +5708,8 @@
       "m_tshirt_white_crew": "圆领T恤",
       "m_tshirt_black_crew": "圆领T恤"
     },
-    "firstOutfitTitle": "我的第一套 AI 穿搭"
+    "firstOutfitTitle": "我的第一套 AI 穿搭",
+    "firstOutfitDesc": "在您的风格与版型校准期间搭配完成。"
   },
   "closetTour": {
     "skipTour": "跳过导览",

@@ -5701,7 +5701,8 @@
       "m_tshirt_white_crew": "Rundhals-T-Shirt",
       "m_tshirt_black_crew": "Rundhals-T-Shirt"
     },
-    "firstOutfitTitle": "Mein erster KI-Look"
+    "firstOutfitTitle": "Mein erster KI-Look",
+    "firstOutfitDesc": "Zusammengestellt während Ihrer Stil- und Passformkalibrierung."
   },
   "closetTour": {
     "skipTour": "Tour überspringen",

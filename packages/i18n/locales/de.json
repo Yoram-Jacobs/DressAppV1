@@ -5685,7 +5685,8 @@
       "m_tshirt_white_crew": "Rundhals-T-Shirt",
       "m_tshirt_black_crew": "Rundhals-T-Shirt"
     },
-    "firstOutfitTitle": "Mein erster KI-Look"
+    "firstOutfitTitle": "Mein erster KI-Look",
+    "firstOutfitDesc": "Zusammengestellt während Ihrer Stil- und Passformkalibrierung."
   },
   "closetTour": {
     "skipTour": "Tour überspringen",
@@ -5798,7 +5799,15 @@
     "show_item": "Artikel anzeigen",
     "fullscreen": "Vollbild",
     "exit_fullscreen": "Vollbild beenden",
-    "view_item_details": "Artikeldetails anzeigen"
+    "view_item_details": "Artikeldetails anzeigen",
+    "view_garment_only": "Nur Kleidungsstück anzeigen (ohne Avatar)",
+    "garment_only": "Nur Kleidungsstück",
+    "show_avatar": "Avatar anzeigen",
+    "garment_view_badge": "Kleidungsstudio • 360°",
+    "avatar_studio_badge": "Avatar-Studio • 3D",
+    "loading": "3D-Umkleidekabine wird geladen...",
+    "side_view": "Seitenansicht",
+    "back_view": "Rückansicht"
   },
   "dressingRoom": {
     "title": "3D-Umkleidekabine",

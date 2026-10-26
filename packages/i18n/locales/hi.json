@@ -5693,7 +5693,8 @@
       "m_tshirt_white_crew": "क्रू-नेक टी-शर्ट",
       "m_tshirt_black_crew": "क्रू-नेक टी-शर्ट"
     },
-    "firstOutfitTitle": "मेरा पहला एआई लुक"
+    "firstOutfitTitle": "मेरा पहला एआई लुक",
+    "firstOutfitDesc": "आपकी स्टाइल और फिट कैलिब्रेशन के दौरान तैयार किया गया।"
   },
   "closetTour": {
     "skipTour": "टूर छोड़ें",
@@ -5806,7 +5807,15 @@
     "show_item": "आइटम दिखाएँ",
     "fullscreen": "पूर्ण स्क्रीन",
     "exit_fullscreen": "पूर्ण स्क्रीन से बाहर निकलें",
-    "view_item_details": "आइटम विवरण देखें"
+    "view_item_details": "आइटम विवरण देखें",
+    "view_garment_only": "केवल परिधान देखें (अवतार के बिना)",
+    "garment_only": "केवल परिधान",
+    "show_avatar": "अवतार दिखाएं",
+    "garment_view_badge": "परिधान स्टूडियो • 360°",
+    "avatar_studio_badge": "अवतार स्टूडियो • 3D",
+    "loading": "3D ड्रेसिंग रूम लोड हो रहा है...",
+    "side_view": "साइड व्यू",
+    "back_view": "बैक व्यू"
   },
   "dressingRoom": {
     "title": "3D ड्रेसिंग रूम",

@@ -5685,7 +5685,8 @@
       "m_tshirt_white_crew": "T-Shirt à Col Rond",
       "m_tshirt_black_crew": "T-Shirt à Col Rond"
     },
-    "firstOutfitTitle": "Mon premier look IA"
+    "firstOutfitTitle": "Mon premier look IA",
+    "firstOutfitDesc": "Composé pendant la calibration de votre style et de votre coupe."
   },
   "closetTour": {
     "skipTour": "Passer la visite",
@@ -5798,7 +5799,15 @@
     "show_item": "Afficher l'article",
     "fullscreen": "Plein écran",
     "exit_fullscreen": "Quitter le plein écran",
-    "view_item_details": "Voir les détails de l'article"
+    "view_item_details": "Voir les détails de l'article",
+    "view_garment_only": "Voir le vêtement seul (sans avatar)",
+    "garment_only": "Vêtement seul",
+    "show_avatar": "Afficher l'avatar",
+    "garment_view_badge": "Studio vêtement • 360°",
+    "avatar_studio_badge": "Studio avatar • 3D",
+    "loading": "Chargement de la cabine 3D...",
+    "side_view": "Vue latérale",
+    "back_view": "Vue arrière"
   },
   "dressingRoom": {
     "title": "Cabine d'essayage 3D",

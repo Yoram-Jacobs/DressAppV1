@@ -5725,7 +5725,8 @@
       "m_tshirt_white_crew": "قميص قطني بياقة دائرية",
       "m_tshirt_black_crew": "قميص قطني بياقة دائرية"
     },
-    "firstOutfitTitle": "إطلالتي الذكية الأولى"
+    "firstOutfitTitle": "إطلالتي الذكية الأولى",
+    "firstOutfitDesc": "تم تجميعه أثناء معايرة أسلوبك ومقاسك."
   },
   "closetTour": {
     "skipTour": "تخطي الجولة",
@@ -5838,7 +5839,15 @@
     "show_item": "إظهار القطعة",
     "fullscreen": "ملء الشاشة",
     "exit_fullscreen": "الخروج من ملء الشاشة",
-    "view_item_details": "عرض تفاصيل القطعة"
+    "view_item_details": "عرض تفاصيل القطعة",
+    "view_garment_only": "عرض القطعة فقط (بدون الأفاتار)",
+    "garment_only": "القطعة فقط",
+    "show_avatar": "عرض الأفاتار",
+    "garment_view_badge": "استوديو القطعة • 360°",
+    "avatar_studio_badge": "استوديو الأفاتار • ثلاثي الأبعاد",
+    "loading": "جارٍ تحميل غرفة القياس ثلاثية الأبعاد...",
+    "side_view": "منظر جانبي",
+    "back_view": "منظر خلفي"
   },
   "dressingRoom": {
     "title": "غرفة قياس ثلاثية الأبعاد",

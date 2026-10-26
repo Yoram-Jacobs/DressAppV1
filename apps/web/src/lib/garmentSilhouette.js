@@ -160,17 +160,29 @@ function smoothstep01(t) {
 /**
  * Exact anatomical shoulder ridge height Y(x) measured from the male and female
  * 3D avatar meshes across the trapezius/clavicle/acromion span.
+ * Follows natural human shoulder slope without robotic step-ledges or flat shelves.
  */
 export function getAvatarShoulderRidgeY(absX, isMale = false) {
   const ax = Math.max(0, Number(absX) || 0);
   if (isMale) {
     if (ax <= 0.068) return 1.535;
-    if (ax >= 0.220) return 1.470;
-    return 1.535 - 0.428 * (ax - 0.068);
+    if (ax >= 0.220) {
+      // Natural deltoid downward curvature beyond acromion tip
+      const t = Math.min(1.0, (ax - 0.220) / 0.05);
+      return 1.470 - 0.065 * t * t;
+    }
+    // Smooth anatomical slope across trapezius & clavicle (concave-to-convex S-curve)
+    const t = (ax - 0.068) / (0.220 - 0.068);
+    return 1.535 - 0.065 * (t * 0.90 + 0.10 * smoothstep01(t));
   }
   if (ax <= 0.058) return 1.435;
-  if (ax >= 0.198) return 1.375;
-  return 1.435 - 0.430 * (ax - 0.058);
+  if (ax >= 0.198) {
+    // Natural deltoid downward curvature beyond acromion tip
+    const t = Math.min(1.0, (ax - 0.198) / 0.05);
+    return 1.375 - 0.060 * t * t;
+  }
+  const t = (ax - 0.058) / (0.198 - 0.058);
+  return 1.435 - 0.060 * (t * 0.90 + 0.10 * smoothstep01(t));
 }
 
 /**
@@ -507,6 +519,45 @@ export function buildSilhouetteShell({
         if (rMax > rMin) {
           runsByRow[j] = [[rMin, rMax]];
         }
+      }
+    }
+  }
+
+  // ── Tops & Dresses: Continuous Torso & Waist Envelope Unification ──
+  // For dresses and skirts, below the bust line (or below armpits), the garment is a single
+  // continuous sheath / skirt envelope. Any interior transparency gap or excised arm remnant
+  // must never tear the torso/waist into multiple detached tubes or jagged sawteeth.
+  if (isTopOrBody) {
+    const isDress = slot === 'dress';
+    const torsoStartRow = jFabricTop + Math.max(2, Math.floor((isDress ? 0.22 : 0.30) * fabricHeight));
+    for (let j = torsoStartRow; j <= jFabricBottom; j++) {
+      const r = runsByRow[j];
+      if (!r || r.length <= 1) continue;
+      if (isDress) {
+        // A dress below bust is strictly a single continuous body envelope
+        let rMin = Infinity;
+        let rMax = -Infinity;
+        for (let k = 0; k < r.length; k++) {
+          if (r[k][0] < rMin) rMin = r[k][0];
+          if (r[k][1] > rMax) rMax = r[k][1];
+        }
+        if (rMax > rMin) runsByRow[j] = [[rMin, rMax]];
+      } else {
+        // For general tops: bridge small/medium cutout gaps between adjacent runs within the torso
+        const merged = [];
+        let cur = [r[0][0], r[0][1]];
+        for (let k = 1; k < r.length; k++) {
+          const gap = r[k][0] - cur[1];
+          // If gap is small (cutout tear or arm seam slit <= 10% of width), bridge it into single run
+          if (gap <= Math.max(3, 0.10 * nx)) {
+            cur[1] = Math.max(cur[1], r[k][1]);
+          } else {
+            merged.push(cur);
+            cur = [r[k][0], r[k][1]];
+          }
+        }
+        merged.push(cur);
+        runsByRow[j] = merged;
       }
     }
   }
@@ -988,12 +1039,16 @@ export function buildSilhouetteShell({
 
   // ── Strict Column-Wise Shoulder Line Anchor for Tops, Outerwear & Full-Body Garments ──
   // Anchors the top shoulder edge of every column across the left and right shoulders
-  // directly to the avatar's anatomical shoulder contour (cannot go lower or higher).
+  // smoothly along the avatar's anatomical shoulder contour without sharp shelves or inverted folds.
   if (isTopOrBody && !isStrapless) {
     const minNeckX = isMale ? 0.064 : 0.054;
     const maxShoulderX = isMale ? 0.222 : 0.198;
     const decayRows = Math.max(6, Math.round(0.28 * fabricHeight));
     const minStartRow = hasHoodOrHanger ? Math.max(0, detectedShoulder - 2) : 0;
+
+    const jFirsts = new Int32Array(vw).fill(-1);
+    const dys = new Float32Array(vw);
+    const weights = new Float32Array(vw);
 
     for (let i = 0; i < vw; i++) {
       let jFirst = -1;
@@ -1004,30 +1059,55 @@ export function buildSilhouetteShell({
         }
       }
       if (jFirst < 0 || jFirst > jFabricTop + Math.round(0.25 * fabricHeight)) continue;
+      jFirsts[i] = jFirst;
       const xCol = xs[jFirst * vw + i];
       const absX = Math.abs(xCol);
 
       // Smooth blend near neck line and outer deltoid/acromion
       const neckBlend = smoothstep01((absX - (minNeckX - 0.025)) / 0.035);
-      const shoulderBlend = 1 - smoothstep01((absX - (maxShoulderX - 0.030)) / 0.045);
+      const shoulderBlend = 1 - smoothstep01((absX - (maxShoulderX - 0.015)) / 0.055);
       const shoulderWeight = neckBlend * shoulderBlend;
+      weights[i] = shoulderWeight;
+
+      if (shoulderWeight > 1e-3) {
+        const yTarget = getAvatarShoulderRidgeY(absX, isMale);
+        const yActual = ys[jFirst * vw + i];
+        dys[i] = (yTarget - yActual) * shoulderWeight;
+      }
+    }
+
+    // 1D Gaussian-like smoothing across columns to prevent stepped ledges between adjacent columns
+    const smoothedDy = new Float32Array(dys);
+    for (let i = 1; i < vw - 1; i++) {
+      if (weights[i] > 1e-3 || weights[i - 1] > 1e-3 || weights[i + 1] > 1e-3) {
+        smoothedDy[i] = 0.25 * dys[i - 1] + 0.50 * dys[i] + 0.25 * dys[i + 1];
+      }
+    }
+
+    for (let i = 0; i < vw; i++) {
+      const jFirst = jFirsts[i];
+      if (jFirst < 0) continue;
+      const shoulderWeight = weights[i];
       if (shoulderWeight <= 1e-3) continue;
 
+      const xCol = xs[jFirst * vw + i];
+      const absX = Math.abs(xCol);
+      const dy = smoothedDy[i];
       const yTarget = getAvatarShoulderRidgeY(absX, isMale);
-      const yActual = ys[jFirst * vw + i];
-      const dy = (yTarget - yActual) * shoulderWeight;
-
-      // Guarantee full anterior/posterior deltoid & trapezius depth on the top shoulder rows
-      // (jFirst .. jFirst + 4) so sloped shoulder seams never pinch to z=0 inside the deltoid!
       const shSlice = getTorsoSlice(yTarget, isMale);
-      const radialShelf = clamp(1 - Math.pow(absX / (maxShoulderX + 0.045), 2), 0.55, 1.0);
-      const minShFront = (shSlice.rzFront + layerOffset) * radialShelf * shoulderWeight;
-      const minShBack = (shSlice.rzBack + layerOffset) * radialShelf * shoulderWeight;
+
+      // Anatomically contoured deltoid & trapezius depth that rolls smoothly over the shoulder cap
+      // without creating flat box shelves
+      const lateralRolloff = Math.cos(clamp(absX / (maxShoulderX + 0.035), 0, 1) * (Math.PI * 0.45));
+      const minShFront = (shSlice.rzFront + layerOffset) * Math.max(0.60, lateralRolloff) * shoulderWeight;
+      const minShBack = (shSlice.rzBack + layerOffset) * Math.max(0.60, lateralRolloff) * shoulderWeight;
+
       for (let dj = 0; dj <= 4 && jFirst + dj < vh; dj++) {
         const sIdx = (jFirst + dj) * vw + i;
         if (!inside[sIdx]) continue;
-        offF[sIdx] = Math.max(offF[sIdx], minShFront);
-        offB[sIdx] = Math.max(offB[sIdx], minShBack);
+        const depthGrad = 0.85 + 0.15 * Math.sin((dj / 4) * (Math.PI * 0.5));
+        offF[sIdx] = Math.max(offF[sIdx], minShFront * depthGrad);
+        offB[sIdx] = Math.max(offB[sIdx], minShBack * depthGrad);
       }
 
       if (Math.abs(dy) >= 1e-4) {
@@ -1043,9 +1123,20 @@ export function buildSilhouetteShell({
         ys[(jFirst - 1) * vw + i] = Math.max(ys[(jFirst - 1) * vw + i], ys[jFirst * vw + i] + 0.014 * shoulderWeight);
       }
 
-      // Hard shoulder-line lock across the core shoulder span: cannot ride higher or lower than yTarget
+      // Smooth anchor lock on core shoulder line without creating hard step ledges
       if (!isStandalone && shoulderWeight >= 0.95) {
         ys[jFirst * vw + i] = yTarget;
+      }
+    }
+
+    // Enforce strict vertical monotonicity down every column so triangles never fold backwards or invert normals
+    for (let i = 0; i < vw; i++) {
+      for (let j = 1; j < vh; j++) {
+        const prevIdx = (j - 1) * vw + i;
+        const curIdx = j * vw + i;
+        if (ys[curIdx] >= ys[prevIdx] - 1e-4) {
+          ys[curIdx] = ys[prevIdx] - 0.001;
+        }
       }
     }
   }
@@ -1140,6 +1231,22 @@ export function buildSilhouetteShell({
     }
     return false;
   };
+  const addTri = (idxArr, posArr, p0, p1, p2) => {
+    const ax = posArr[p1 * 3] - posArr[p0 * 3];
+    const ay = posArr[p1 * 3 + 1] - posArr[p0 * 3 + 1];
+    const az = posArr[p1 * 3 + 2] - posArr[p0 * 3 + 2];
+    const bx = posArr[p2 * 3] - posArr[p0 * 3];
+    const by = posArr[p2 * 3 + 1] - posArr[p0 * 3 + 1];
+    const bz = posArr[p2 * 3 + 2] - posArr[p0 * 3 + 2];
+    const cx = ay * bz - az * by;
+    const cy = az * bx - ax * bz;
+    const cz = ax * by - ay * bx;
+    const areaSq = cx * cx + cy * cy + cz * cz;
+    if (areaSq > 1e-10) {
+      idxArr.push(p0, p1, p2);
+    }
+  };
+
   const frontIdx = [];
   const backIdx = [];
   for (let j = 0; j < ny; j++) {
@@ -1149,8 +1256,10 @@ export function buildSilhouetteShell({
       const b = a + 1;
       const c = a + vw;
       const d = c + 1;
-      frontIdx.push(a, c, b, b, c, d);
-      backIdx.push(a, b, c, b, d, c);
+      addTri(frontIdx, frontPos, a, c, b);
+      addTri(frontIdx, frontPos, b, c, d);
+      addTri(backIdx, backPos, a, b, c);
+      addTri(backIdx, backPos, b, d, c);
     }
   }
 

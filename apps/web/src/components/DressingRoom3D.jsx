@@ -786,7 +786,7 @@ export default function DressingRoom3D({
 
           {/* ─── Bottom Floating Camera Toolbar (Creamy Design) ─── */}
           <div className="absolute bottom-5 inset-x-0 z-10 flex justify-center pointer-events-none px-4">
-            <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 bg-white/92 backdrop-blur-md rounded-2xl border border-[#E5DFD5] shadow-xl">
+            <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 bg-white/92 backdrop-blur-md rounded-2xl border border-[#E5DFD5] shadow-xl max-w-[calc(100vw-2rem)] overflow-x-auto scrollbar-none">
               <Button
                 variant={cameraPreset === 'full' ? 'default' : 'ghost'}
                 size="sm"
@@ -794,14 +794,14 @@ export default function DressingRoom3D({
                   setAutoRotate(false);
                   setCameraPreset('full');
                 }}
-                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   cameraPreset === 'full'
                     ? 'bg-primary-brand text-white shadow-md'
                     : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
                 }`}
                 title={t('dressing_room_3d.full_body', { defaultValue: 'Full Body' })}
               >
-                <User className="w-3.5 h-3.5" />
+                <User className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.full_body', { defaultValue: 'Full Body' })}</span>
               </Button>
 
@@ -812,14 +812,14 @@ export default function DressingRoom3D({
                   setAutoRotate(false);
                   setCameraPreset('upper');
                 }}
-                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   cameraPreset === 'upper'
                     ? 'bg-primary-brand text-white shadow-md'
                     : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
                 }`}
                 title={t('dressing_room_3d.upper_body', { defaultValue: 'Upper Body' })}
               >
-                <Shirt className="w-3.5 h-3.5" />
+                <Shirt className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.upper_body', { defaultValue: 'Upper Body' })}</span>
               </Button>
 
@@ -830,14 +830,14 @@ export default function DressingRoom3D({
                   setAutoRotate(false);
                   setCameraPreset('lower');
                 }}
-                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   cameraPreset === 'lower'
                     ? 'bg-primary-brand text-white shadow-md'
                     : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
                 }`}
                 title={t('dressing_room_3d.lower_body', { defaultValue: 'Lower Body' })}
               >
-                <Footprints className="w-3.5 h-3.5" />
+                <Footprints className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.lower_body', { defaultValue: 'Lower Body' })}</span>
               </Button>
 
@@ -848,7 +848,7 @@ export default function DressingRoom3D({
                   setAutoRotate(false);
                   setCameraPreset('side');
                 }}
-                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   cameraPreset === 'side'
                     ? 'bg-primary-brand text-white shadow-md'
                     : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
@@ -856,7 +856,7 @@ export default function DressingRoom3D({
                 title={t('dressing_room_3d.side_view', { defaultValue: 'Side view' })}
                 data-testid="camera-side-btn"
               >
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.side_view', { defaultValue: 'Side view' })}</span>
               </Button>
 
@@ -867,7 +867,7 @@ export default function DressingRoom3D({
                   setAutoRotate(false);
                   setCameraPreset('back');
                 }}
-                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   cameraPreset === 'back'
                     ? 'bg-primary-brand text-white shadow-md'
                     : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
@@ -875,11 +875,11 @@ export default function DressingRoom3D({
                 title={t('dressing_room_3d.back_view', { defaultValue: 'Back view' })}
                 data-testid="camera-back-btn"
               >
-                <RotateCw className="w-3.5 h-3.5" />
+                <RotateCw className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.back_view', { defaultValue: 'Back view' })}</span>
               </Button>
 
-              <div className="h-4 w-px bg-[#E5DFD5] mx-1" />
+              <div className="h-4 w-px bg-[#E5DFD5] mx-1 shrink-0" />
 
               {/* Toggle Avatar / Garment-Only view (Zara 3D style) */}
               <Button
@@ -887,7 +887,7 @@ export default function DressingRoom3D({
                 variant={!showAvatar ? 'default' : 'ghost'}
                 size="sm"
                 onClick={handleToggleAvatar}
-                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   !showAvatar
                     ? 'bg-primary-brand text-white shadow-md'
                     : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
@@ -896,7 +896,7 @@ export default function DressingRoom3D({
                 title={showAvatar ? t('dressing_room_3d.view_garment_only', { defaultValue: 'View Garment Only (Without Avatar)' }) : t('dressing_room_3d.show_avatar', { defaultValue: 'Show Avatar' })}
                 aria-label={showAvatar ? t('dressing_room_3d.view_garment_only', { defaultValue: 'View Garment Only (Without Avatar)' }) : t('dressing_room_3d.show_avatar', { defaultValue: 'Show Avatar' })}
               >
-                <User className={`w-3.5 h-3.5 ${!showAvatar ? 'opacity-80' : 'text-primary-brand'}`} />
+                <User className={`w-3.5 h-3.5 shrink-0 ${!showAvatar ? 'opacity-80' : 'text-primary-brand'}`} />
                 <span className="hidden sm:inline">
                   {showAvatar
                     ? t('dressing_room_3d.garment_only', { defaultValue: 'Garment Only' })
@@ -904,20 +904,20 @@ export default function DressingRoom3D({
                 </span>
               </Button>
 
-              <div className="h-4 w-px bg-[#E5DFD5] mx-1" />
+              <div className="h-4 w-px bg-[#E5DFD5] mx-1 shrink-0" />
 
               <Button
                 variant={autoRotate ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setAutoRotate((prev) => !prev)}
-                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 transition-all ${
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   autoRotate
                     ? 'bg-primary-brand text-white shadow-md'
                     : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
                 }`}
                 title={t('dressing_room_3d.auto_rotate', { defaultValue: '360° Rotate' })}
               >
-                <RotateCw className={`w-3.5 h-3.5 ${autoRotate ? 'animate-spin' : ''}`} />
+                <RotateCw className={`w-3.5 h-3.5 shrink-0 ${autoRotate ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">{t('dressing_room_3d.auto_rotate', { defaultValue: '360° Rotate' })}</span>
               </Button>
 
@@ -925,10 +925,10 @@ export default function DressingRoom3D({
                 variant="ghost"
                 size="sm"
                 onClick={handleResetCamera}
-                className="text-xs font-semibold text-[#4B5563] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 py-1.5 h-8 flex items-center gap-1"
+                className="text-xs font-semibold text-[#4B5563] hover:text-[#111827] hover:bg-[#F5F2EB] rounded-xl px-2.5 py-1.5 h-8 flex items-center gap-1 shrink-0 whitespace-nowrap"
                 title={t('dressing_room_3d.reset_view', { defaultValue: 'Reset View' })}
               >
-                <RefreshCw className="w-3.5 h-3.5 text-[#6B7280]" />
+                <RefreshCw className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.reset_view', { defaultValue: 'Reset' })}</span>
               </Button>
             </div>

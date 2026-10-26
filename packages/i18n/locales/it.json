@@ -5692,7 +5692,8 @@
       "m_tshirt_white_crew": "T-Shirt Girocollo",
       "m_tshirt_black_crew": "T-Shirt Girocollo"
     },
-    "firstOutfitTitle": "Il mio primo look IA"
+    "firstOutfitTitle": "Il mio primo look IA",
+    "firstOutfitDesc": "Creato durante la calibrazione di stile e vestibilità."
   },
   "closetTour": {
     "skipTour": "Salta tour",
@@ -5805,7 +5806,15 @@
     "show_item": "Mostra articolo",
     "fullscreen": "Schermo intero",
     "exit_fullscreen": "Esci da schermo intero",
-    "view_item_details": "Visualizza dettagli articolo"
+    "view_item_details": "Visualizza dettagli articolo",
+    "view_garment_only": "Visualizza solo il capo (senza avatar)",
+    "garment_only": "Solo capo",
+    "show_avatar": "Mostra avatar",
+    "garment_view_badge": "Studio capo • 360°",
+    "avatar_studio_badge": "Studio avatar • 3D",
+    "loading": "Caricamento camerino 3D...",
+    "side_view": "Vista laterale",
+    "back_view": "Vista posteriore"
   },
   "dressingRoom": {
     "title": "Camerino 3D",

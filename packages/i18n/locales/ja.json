@@ -5693,7 +5693,8 @@
       "m_tshirt_white_crew": "クルーネックTシャツ",
       "m_tshirt_black_crew": "クルーネックTシャツ"
     },
-    "firstOutfitTitle": "はじめてのAIコーディネート"
+    "firstOutfitTitle": "はじめてのAIコーディネート",
+    "firstOutfitDesc": "スタイルとフィット感の測定中に作成されました。"
   },
   "closetTour": {
     "skipTour": "ツアーをスキップ",
@@ -5806,7 +5807,15 @@
     "show_item": "アイテムを表示",
     "fullscreen": "全画面表示",
     "exit_fullscreen": "全画面表示を終了",
-    "view_item_details": "アイテムの詳細を表示"
+    "view_item_details": "アイテムの詳細を表示",
+    "view_garment_only": "衣服のみを表示 (アバターなし)",
+    "garment_only": "衣服のみ",
+    "show_avatar": "アバターを表示",
+    "garment_view_badge": "衣服スタジオ • 360°",
+    "avatar_studio_badge": "アバタースタジオ • 3D",
+    "loading": "3D試着室を読み込み中...",
+    "side_view": "サイドビュー",
+    "back_view": "バックビュー"
   },
   "dressingRoom": {
     "title": "3D試着室",

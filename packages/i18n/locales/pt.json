@@ -5692,7 +5692,8 @@
       "m_tshirt_white_crew": "Camiseta Gola Careca",
       "m_tshirt_black_crew": "Camiseta Gola Careca"
     },
-    "firstOutfitTitle": "O meu primeiro look IA"
+    "firstOutfitTitle": "O meu primeiro look IA",
+    "firstOutfitDesc": "Montado durante a calibração do seu estilo e caimento."
   },
   "closetTour": {
     "skipTour": "Pular tour",
@@ -5805,7 +5806,15 @@
     "show_item": "Mostrar peça",
     "fullscreen": "Tela cheia",
     "exit_fullscreen": "Sair da tela cheia",
-    "view_item_details": "Ver detalhes da peça"
+    "view_item_details": "Ver detalhes da peça",
+    "view_garment_only": "Ver apenas a peça (sem avatar)",
+    "garment_only": "Apenas peça",
+    "show_avatar": "Mostrar avatar",
+    "garment_view_badge": "Estúdio da peça • 360°",
+    "avatar_studio_badge": "Estúdio avatar • 3D",
+    "loading": "Carregando provador 3D...",
+    "side_view": "Vista lateral",
+    "back_view": "Vista traseira"
   },
   "dressingRoom": {
     "title": "Provador 3D",

@@ -5701,7 +5701,8 @@
       "m_tshirt_white_crew": "T-Shirt à Col Rond",
       "m_tshirt_black_crew": "T-Shirt à Col Rond"
     },
-    "firstOutfitTitle": "Mon premier look IA"
+    "firstOutfitTitle": "Mon premier look IA",
+    "firstOutfitDesc": "Composé pendant la calibration de votre style et de votre coupe."
   },
   "closetTour": {
     "skipTour": "Passer la visite",

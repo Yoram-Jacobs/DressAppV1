@@ -5694,7 +5694,8 @@
       "m_tshirt_white_crew": "Футболка с круглым вырезом",
       "m_tshirt_black_crew": "Футболка с круглым вырезом"
     },
-    "firstOutfitTitle": "Мой первый образ от ИИ"
+    "firstOutfitTitle": "Мой первый образ от ИИ",
+    "firstOutfitDesc": "Подобрано во время калибровки вашего стиля и посадки."
   },
   "closetTour": {
     "skipTour": "Пропустить тур",
@@ -5807,7 +5808,15 @@
     "show_item": "Показать вещь",
     "fullscreen": "Во весь экран",
     "exit_fullscreen": "Выйти из полноэкранного режима",
-    "view_item_details": "Просмотреть сведения о вещи"
+    "view_item_details": "Просмотреть сведения о вещи",
+    "view_garment_only": "Только одежда (без аватара)",
+    "garment_only": "Только одежда",
+    "show_avatar": "Показать аватар",
+    "garment_view_badge": "Студия одежды • 360°",
+    "avatar_studio_badge": "Студия аватара • 3D",
+    "loading": "Загрузка 3D-примерочной...",
+    "side_view": "Вид сбоку",
+    "back_view": "Вид сзади"
   },
   "dressingRoom": {
     "title": "3D-примерочная",

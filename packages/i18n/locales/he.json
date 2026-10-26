@@ -5787,7 +5787,8 @@
       "m_tshirt_white_crew": "חולצת טריקו בצווארון עגול",
       "m_tshirt_black_crew": "חולצת טריקו בצווארון עגול"
     },
-    "firstOutfitTitle": "הלוק החכם הראשון שלי"
+    "firstOutfitTitle": "הלוק החכם הראשון שלי",
+    "firstOutfitDesc": "הורכב במהלך כיול הסגנון והמידות שלך."
   },
   "closetTour": {
     "skipTour": "דילוג על הסיור",
@@ -5900,7 +5901,15 @@
     "show_item": "הצג פריט",
     "fullscreen": "מסך מלא",
     "exit_fullscreen": "יציאה ממסך מלא",
-    "view_item_details": "צפייה בפרטי הפריט"
+    "view_item_details": "צפייה בפרטי הפריט",
+    "view_garment_only": "הצג בגד בלבד (ללא אווטאר)",
+    "garment_only": "בגד בלבד",
+    "show_avatar": "הצג אווטאר",
+    "garment_view_badge": "סטודיו פריט • 360°",
+    "avatar_studio_badge": "סטודיו אווטאר • תלת-ממד",
+    "loading": "טוען חדר הלבשה תלת-ממדי...",
+    "side_view": "מבט צד",
+    "back_view": "מבט מאחור"
   },
   "dressingRoom": {
     "title": "חדר מדידה בתלת-ממד",

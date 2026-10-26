@@ -5712,7 +5712,8 @@
       "m_tshirt_white_crew": "T-Shirt met Ronde Hals",
       "m_tshirt_black_crew": "T-Shirt met Ronde Hals"
     },
-    "firstOutfitTitle": "Mijn eerste AI-look"
+    "firstOutfitTitle": "Mijn eerste AI-look",
+    "firstOutfitDesc": "Samengesteld tijdens uw stijl- en pasvormkalibratie."
   },
   "closetTour": {
     "skipTour": "Rondleiding overslaan",

@@ -5705,7 +5705,8 @@
       "m_tshirt_white_crew": "Camiseta de Cuello Redondo",
       "m_tshirt_black_crew": "Camiseta de Cuello Redondo"
     },
-    "firstOutfitTitle": "Mi primer look con IA"
+    "firstOutfitTitle": "Mi primer look con IA",
+    "firstOutfitDesc": "Diseñado durante tu calibración de estilo y ajuste."
   },
   "closetTour": {
     "skipTour": "Omitir tour",

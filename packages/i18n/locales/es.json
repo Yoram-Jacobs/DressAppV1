@@ -5689,7 +5689,8 @@
       "m_tshirt_white_crew": "Camiseta de Cuello Redondo",
       "m_tshirt_black_crew": "Camiseta de Cuello Redondo"
     },
-    "firstOutfitTitle": "Mi primer look con IA"
+    "firstOutfitTitle": "Mi primer look con IA",
+    "firstOutfitDesc": "Diseñado durante tu calibración de estilo y ajuste."
   },
   "closetTour": {
     "skipTour": "Omitir tour",
@@ -5802,7 +5803,15 @@
     "show_item": "Mostrar prenda",
     "fullscreen": "Pantalla completa",
     "exit_fullscreen": "Salir de pantalla completa",
-    "view_item_details": "Ver detalles de la prenda"
+    "view_item_details": "Ver detalles de la prenda",
+    "view_garment_only": "Ver solo la prenda (sin avatar)",
+    "garment_only": "Solo prenda",
+    "show_avatar": "Mostrar avatar",
+    "garment_view_badge": "Estudio de prenda • 360°",
+    "avatar_studio_badge": "Estudio avatar • 3D",
+    "loading": "Cargando probador 3D...",
+    "side_view": "Vista lateral",
+    "back_view": "Vista trasera"
   },
   "dressingRoom": {
     "title": "Probador 3D",

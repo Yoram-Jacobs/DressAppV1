@@ -5714,7 +5714,8 @@
       "m_tshirt_white_crew": "Crew-Neck T-Shirt",
       "m_tshirt_black_crew": "Crew-Neck T-Shirt"
     },
-    "firstOutfitTitle": "My First AI Look"
+    "firstOutfitTitle": "My First AI Look",
+    "firstOutfitDesc": "Assembled during your style & fit calibration."
   },
   "closetTour": {
     "skipTour": "Skip tour",
@@ -5827,7 +5828,15 @@
     "show_item": "Show item",
     "fullscreen": "Full screen",
     "exit_fullscreen": "Exit full screen",
-    "view_item_details": "View item details"
+    "view_item_details": "View item details",
+    "view_garment_only": "View Garment Only (Without Avatar)",
+    "garment_only": "Garment Only",
+    "show_avatar": "Show Avatar",
+    "garment_view_badge": "Garment Studio • 360°",
+    "avatar_studio_badge": "Avatar Studio • 3D",
+    "loading": "Loading 3D dressing room...",
+    "side_view": "Side view",
+    "back_view": "Back view"
   },
   "dressingRoom": {
     "title": "3D Dressing Room",
