@@ -386,16 +386,23 @@ function shoeUV(side, x, y, z, frame, layout) {
     return [bx.u0 + u * (bx.u1 - bx.u0), bx.v0 + h * (bx.v1 - bx.v0)];
   }
 
-  // Top view: toes point down in the photo, heel opening up
+  // Top view: in catalog photos, toes point UP toward the top of the photo (v1),
+  // and the heel opening points DOWN (v0).
   let bx = layout?.box || full;
   if (mode === 'pair' && layout?.boxes?.length === 2) {
-    // Avatar faces the camera: its -X foot appears on the image's left
+    // Avatar faces +Z (toward viewer when camera looks at front).
+    // The avatar's right foot is -X in 3D space, which appears on the left in the viewer / photo.
+    // The avatar's left foot is +X in 3D space, which appears on the right in the viewer / photo.
     bx = side < 0 ? layout.boxes[0] : layout.boxes[1];
   } else if (mode === 'pair') {
-    bx = side < 0 ? { u0: 0, u1: 0.5, v0: 0, v1: 1 } : { u0: 0.5, u1: 1, v0: 0, v1: 1 };
+    bx = side < 0 ? { u0: 0, u1: 0.5, v0: 0, v1: 1, toeUp: true } : { u0: 0.5, u1: 1, v0: 0, v1: 1, toeUp: true };
   }
   bx = inset(bx);
-  return [bx.u0 + across * (bx.u1 - bx.u0), bx.v0 + (1 - along) * (bx.v1 - bx.v0)];
+  // along = 0 at heel -> along = 1 at toe.
+  // With toeUp (standard for shoe photos), toe is at v1 (top) and heel is at v0 (bottom).
+  const toeUp = bx.toeUp !== false;
+  const v = toeUp ? bx.v0 + along * (bx.v1 - bx.v0) : bx.v0 + (1 - along) * (bx.v1 - bx.v0);
+  return [bx.u0 + across * (bx.u1 - bx.u0), v];
 }
 
 /**
@@ -408,12 +415,15 @@ function shoeUV(side, x, y, z, frame, layout) {
 export function createFittedFootwearGeometry({ isMale = false, spec, layout } = {}) {
   const a = getFootAnatomy(isMale);
   const s = spec || resolveFootwearSpec(null);
-  const off = 0.011; // generous anatomical clearance over skin so toes/instep never poke through
+  const isSneaker = s.kind === 'sneaker';
+  // Precise anatomical clearance: sleek athletic profile for sneakers (0.0055m = 5.5mm),
+  // snugger than heavy boots so sneakers don't look bloated or rectangular.
+  const off = isSneaker ? 0.0055 : (s.kind === 'boot' || s.kind === 'ankle_boot' ? 0.010 : 0.0065);
   const sole = Math.max(0.012, s.soleThickness || 0.016);
   const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002); // below foot sole bottom
   const yOutsoleBottom = yWelt - sole;
-  const z0 = a.heelZ - 0.016;
-  const z1 = a.toeZ + 0.018;
+  const z0 = a.heelZ - (isSneaker ? 0.010 : 0.014);
+  const z1 = a.toeZ + (isSneaker ? 0.012 : 0.016);
   const nz = 36;
   const nArch = 24;
   const nSole = 10;
@@ -458,15 +468,20 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
       // Full foot coverage: upper roof ALWAYS clears p.top + off across the entire foot!
       // Plus sculpted toe box puff at the front and tongue / collar contour at the ankle.
       const footTop = p.top + off;
-      const toeBoxPuff = smoothstep(a.ballZ, a.toeZ, z) * 0.012 * endTaper;
+      const toeBoxPuff = smoothstep(a.ballZ, a.toeZ, z) * (isSneaker ? 0.007 : 0.012) * endTaper;
       const tongueZone = smoothstep(a.ankleZ, a.ankleZ + 0.04, z) * (1 - smoothstep(a.ballZ - 0.04, a.ballZ + 0.01, z));
-      const tongueBoost = s.hasTongue ? tongueZone * 0.014 : 0;
-      const collarBoost = z <= a.ankleZ + 0.05 ? Math.max(0, s.collar - footTop) * 0.35 : 0;
+      const tongueBoost = s.hasTongue ? tongueZone * (isSneaker ? 0.010 : 0.014) : 0;
+      const collarBoost = z <= a.ankleZ + 0.05 ? Math.max(0, s.collar - footTop) * (isSneaker ? 0.22 : 0.35) : 0;
       const archTop = Math.max(0.022, (footTop + toeBoxPuff + tongueBoost + collarBoost) * endTaper);
 
       // Subtle tread ripples along outsole bottom for realism
       const treadRipple = Math.sin(t * Math.PI * 14) * 0.0012;
-      const weltFlare = 0.0045 * endTaper;
+      const weltFlare = (isSneaker ? 0.003 : 0.0045) * endTaper;
+
+      // Natural sneaker cross-section powers: smooth athletic contour (0.92 / 0.88)
+      // vs boxy work boot / cast (0.62 / 0.68)
+      const pX = isSneaker ? 0.92 : 0.68;
+      const pY = isSneaker ? 0.88 : 0.72;
 
       for (let j = 0; j < ring; j++) {
         let x;
@@ -476,9 +491,9 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
           const phi = Math.PI * (j / (nArch - 1));
           const cphi = Math.cos(phi);
           const sphi = Math.sin(phi);
-          // Boxier, fuller shoe last cross-section (power 0.62) so lateral toes & ankle malleoli are 100% enclosed
-          const ex = Math.sign(cphi) * Math.pow(Math.abs(cphi), 0.62);
-          const ey = Math.pow(sphi, 0.68);
+          // Smooth curved shoe last cross-section so sneakers look athletic and sleek
+          const ex = Math.sign(cphi) * Math.pow(Math.abs(cphi), pX);
+          const ey = Math.pow(sphi, pY);
           // Tongue crest ridge along center dorsal line (sphi near 1)
           const centerCrest = s.hasTongue ? Math.pow(sphi, 4) * tongueBoost * 0.6 : 0;
           x = cx + side * hw * ex;

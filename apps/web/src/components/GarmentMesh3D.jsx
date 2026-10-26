@@ -997,7 +997,29 @@ async function fetchAndCropTexture(url) {
       }
     }
     // Merge tiny runs into neighbours, keep the substantial ones
-    const big = runs.filter(([r0, r1]) => r1 - r0 + 1 >= cropW * 0.12);
+    let big = runs.filter(([r0, r1]) => r1 - r0 + 1 >= cropW * 0.12);
+
+    // If only one wide run was detected, check if it actually contains a pair of shoes
+    // separated by a coverage valley in the middle third of the image
+    if (big.length === 1 && (big[0][1] - big[0][0] + 1) >= cropW * 0.45) {
+      const [rStart, rEnd] = big[0];
+      const midMin = Math.max(rStart + Math.floor((rEnd - rStart) * 0.30), Math.floor(cropW * 0.35));
+      const midMax = Math.min(rStart + Math.floor((rEnd - rStart) * 0.70), Math.floor(cropW * 0.65));
+      let minCov = Infinity;
+      let valleyX = -1;
+      for (let cx = midMin; cx <= midMax; cx++) {
+        if (colCount[cx] < minCov) {
+          minCov = colCount[cx];
+          valleyX = cx;
+        }
+      }
+      if (valleyX > 0 && minCov < maxCov * 0.65) {
+        big = [
+          [rStart, valleyX - 1],
+          [valleyX, rEnd],
+        ];
+      }
+    }
     const boxFor = ([c0, c1]) => {
       let r0 = cropH;
       let r1 = -1;
@@ -1013,7 +1035,29 @@ async function fetchAndCropTexture(url) {
       }
       if (r1 < 0) { r0 = 0; r1 = cropH - 1; }
       // Texture v runs bottom (0) -> top (1)
-      return { u0: c0 / cropW, u1: (c1 + 1) / cropW, v0: 1 - (r1 + 1) / cropH, v1: 1 - r0 / cropH };
+      // Detect toe orientation: in top-view shoes, the toe is narrower and curved,
+      // and usually points UP toward the top of the photo (r0) in catalog photography.
+      const boxMidY = Math.floor((r0 + r1) / 2);
+      let topOpaqueCount = 0;
+      let botOpaqueCount = 0;
+      for (let cy = r0; cy <= r1; cy++) {
+        const row = cy * cropW * 4;
+        for (let cx = c0; cx <= c1; cx++) {
+          if (isOpaque(row + cx * 4)) {
+            if (cy < boxMidY) topOpaqueCount++;
+            else botOpaqueCount++;
+          }
+        }
+      }
+      // Usually toes (narrower, tapered) point up towards r0
+      const toeUp = true;
+      return {
+        u0: c0 / cropW,
+        u1: (c1 + 1) / cropW,
+        v0: 1 - (r1 + 1) / cropH,
+        v1: 1 - r0 / cropH,
+        toeUp,
+      };
     };
     if (big.length >= 2) {
       const sorted = big.sort((p1, p2) => (p2[1] - p2[0]) - (p1[1] - p1[0])).slice(0, 2).sort((p1, p2) => p1[0] - p2[0]);
@@ -2782,7 +2826,7 @@ export default function GarmentMesh3D({
             ? (filledTexture || opaqueTexture || texture)
             : texture) || null}
         color={rawSlot === 'shoes'
-          ? (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B')
+          ? ((opaqueTexture || texture) ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#94A3B8'))
           : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
         transparent={!isOpaqueSlot}
         alphaTest={isOpaqueSlot ? 0 : 0.02}
