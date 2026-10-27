@@ -672,6 +672,7 @@ export default function DressingRoom3D({
           >
           <Canvas
             shadows
+            dpr={[1, typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1]}
             camera={cameraProps}
             gl={glProps}
             className="w-full h-full cursor-grab active:cursor-grabbing touch-none"

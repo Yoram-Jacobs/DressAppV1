@@ -1166,6 +1166,7 @@ export default function DynamicAvatar({
         >
           <Canvas
             orthographic
+            dpr={[1, typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1]}
             camera={{
               manual: true,
               left: -100,
