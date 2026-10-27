@@ -19,14 +19,54 @@ const slotReleaseSubscribers = new Set();
 let activeWebGLCanvasCount = 0;
 const MAX_CONCURRENT_WEBGL_CANVASES = 2;
 
+/**
+ * Checks if the WebGL canvas has drawn non-transparent pixels at the center of the frame.
+ * Prevents blank transparent frames from being captured as snapshots.
+ */
+function isCanvasFrameRendered(gl) {
+  try {
+    const glCtx = gl?.getContext ? gl.getContext() : gl;
+    if (!glCtx || typeof glCtx.readPixels !== 'function') return false;
+    const w = glCtx.drawingBufferWidth || gl?.drawingBufferWidth || 200;
+    const h = glCtx.drawingBufferHeight || gl?.drawingBufferHeight || 450;
+    const pixel = new Uint8Array(4);
+    glCtx.readPixels(Math.floor(w / 2), Math.floor(h / 2), 1, 1, glCtx.RGBA, glCtx.UNSIGNED_BYTE, pixel);
+    return pixel[3] > 30;
+  } catch {
+    return false;
+  }
+}
+
+class Avatar3DErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    console.warn('[Avatar3D] WebGL render fallback to canonical snapshot:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
 export function getCachedSnapshot(sig, isMale = false) {
   if (sig && rendered3DAvatarSnapshotCache.has(sig)) {
-    return rendered3DAvatarSnapshotCache.get(sig);
+    const cached = rendered3DAvatarSnapshotCache.get(sig);
+    if (cached && (cached.startsWith('/models/') || cached.length > 8000)) {
+      return cached;
+    }
   }
   if (typeof window !== 'undefined' && sig) {
     try {
       const stored = sessionStorage.getItem('avatar_snap_' + sig);
-      if (stored && stored.length > 5000) {
+      if (stored && stored.length > 8000) {
         rendered3DAvatarSnapshotCache.set(sig, stored);
         return stored;
       }
@@ -831,16 +871,16 @@ function Realistic3DAvatarMesh({
           }
           const prevRot = groupRef.current ? groupRef.current.rotation.y : 0;
           if (groupRef.current) groupRef.current.rotation.y = 0;
-          gl.setSize(400, 900, false);
-          gl.setClearColor(0x000000, 0);
-          gl.clear();
           gl.render(threeScene, camera);
-          const dataUrl = gl.domElement?.toDataURL?.('image/png');
-          if (groupRef.current) groupRef.current.rotation.y = prevRot;
-          if (dataUrl && dataUrl.length > 8000) {
-            notifySnapshotSubscribers(signature, dataUrl);
-            return;
+          if (isCanvasFrameRendered(gl)) {
+            const dataUrl = gl.domElement?.toDataURL?.('image/png');
+            if (groupRef.current) groupRef.current.rotation.y = prevRot;
+            if (dataUrl && dataUrl.length > 8000) {
+              notifySnapshotSubscribers(signature, dataUrl);
+              return;
+            }
           }
+          if (groupRef.current) groupRef.current.rotation.y = prevRot;
         } catch {
           /* ignore snapshot error in restricted contexts */
         }
@@ -867,11 +907,13 @@ function Realistic3DAvatarMesh({
   useFrame(() => {
     if (!signature || rendered3DAvatarSnapshotCache.has(signature)) return;
     frameCountRef.current += 1;
-    if (frameCountRef.current >= 3 && frameCountRef.current <= 30) {
+    if (frameCountRef.current >= 6 && frameCountRef.current <= 40) {
       try {
-        const dataUrl = gl.domElement?.toDataURL?.('image/png');
-        if (dataUrl && dataUrl.length > 8000) {
-          notifySnapshotSubscribers(signature, dataUrl);
+        if (isCanvasFrameRendered(gl)) {
+          const dataUrl = gl.domElement?.toDataURL?.('image/png');
+          if (dataUrl && dataUrl.length > 8000) {
+            notifySnapshotSubscribers(signature, dataUrl);
+          }
         }
       } catch {}
     }
@@ -1094,7 +1136,7 @@ export default function DynamicAvatar({
 
   return (
     <div
-      className={`relative flex items-center justify-center mx-auto select-none ${className || 'h-full w-auto aspect-[200/450] max-h-full max-w-full'}`}
+      className={`relative flex items-center justify-center mx-auto select-none overflow-hidden ${className ? `${className} aspect-[200/450]` : 'h-full w-auto aspect-[200/450] max-h-full max-w-full'}`}
       data-testid="dynamic-3d-avatar"
       data-gender={isMale ? 'male' : 'female'}
       data-skin-color={activeSkinColor}
@@ -1144,18 +1186,20 @@ export default function DynamicAvatar({
             <directionalLight position={[120, 180, 260]} intensity={1.35} />
             <directionalLight position={[-120, 80, 180]} intensity={0.55} />
             <directionalLight position={[0, 140, -200]} intensity={0.35} />
-            <Suspense fallback={null}>
-              <Realistic3DAvatarMesh
-                isMale={isMale}
-                skinColor={activeSkinColor}
-                hairProps={hairProps}
-                morphInfluences={morphInfluences}
-                height={height}
-                signature={avatarSignature}
-                interactive={interactive}
-                rotationY={avatarRotationY}
-              />
-            </Suspense>
+            <Avatar3DErrorBoundary>
+              <Suspense fallback={null}>
+                <Realistic3DAvatarMesh
+                  isMale={isMale}
+                  skinColor={activeSkinColor}
+                  hairProps={hairProps}
+                  morphInfluences={morphInfluences}
+                  height={height}
+                  signature={avatarSignature}
+                  interactive={interactive}
+                  rotationY={avatarRotationY}
+                />
+              </Suspense>
+            </Avatar3DErrorBoundary>
           </Canvas>
         </div>
       )}
@@ -1174,15 +1218,32 @@ export default function DynamicAvatar({
         </button>
       )}
 
-      {/* Cached 3D Avatar Snapshot (double-buffered image fallback when Canvas is not active or initial frame is loading) */}
-      {snapshotUrl && (
-        <img
-          src={snapshotUrl}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
-        />
-      )}
+      {/* 1. Guaranteed Canonical 3D Avatar Base (always present as solid underlying foundation) */}
+      <img
+        src={isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL}
+        alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
+      />
+
+      {/* 2. Custom Proportions Snapshot (rendered over canonical base when ready) */}
+      {snapshotUrl &&
+        snapshotUrl !== CANONICAL_MALE_SNAPSHOT_URL &&
+        snapshotUrl !== CANONICAL_FEMALE_SNAPSHOT_URL && (
+          <img
+            src={snapshotUrl}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
+            onError={() => {
+              try {
+                sessionStorage.removeItem('avatar_snap_' + avatarSignature);
+              } catch {}
+              rendered3DAvatarSnapshotCache.delete(avatarSignature);
+              setSnapshotUrl(isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL);
+            }}
+          />
+        )}
 
       {/* 200x450 Coordinate Frame */}
       <svg

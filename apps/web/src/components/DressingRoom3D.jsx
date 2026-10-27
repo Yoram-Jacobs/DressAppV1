@@ -299,7 +299,7 @@ export default function DressingRoom3D({
   const [autoRotate, setAutoRotate] = useState(false);
   const [cameraPreset, setCameraPreset] = useState(null);
   const [layerVisibility, setLayerVisibility] = useState({});
-  const [showRack, setShowRack] = useState(true);
+  const [showRack, setShowRack] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? false : true));
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [internalShowAvatar, setInternalShowAvatar] = useState(
@@ -606,7 +606,7 @@ export default function DressingRoom3D({
     <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
       <DialogContent
         ref={containerRef}
-        className="!max-w-6xl w-[96vw] h-[92vh] max-h-[92vh] p-0 overflow-hidden bg-[#FAF7F2] border border-[#E5DFD5] shadow-2xl rounded-2xl flex flex-col text-[#1C2024]"
+        className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !w-full !h-full !max-w-none !max-h-none !rounded-none sm:!inset-auto sm:!left-[50%] sm:!top-[50%] sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:!w-[96vw] sm:!h-[92vh] sm:!max-h-[92vh] sm:!max-w-6xl sm:!rounded-2xl p-0 overflow-hidden bg-[#FAF7F2] border border-[#E5DFD5] shadow-2xl flex flex-col text-[#1C2024]"
         data-testid="dressing-room-3d-dialog"
       >
         <DialogTitle className="sr-only">
@@ -785,8 +785,8 @@ export default function DressingRoom3D({
           </div>
 
           {/* ─── Bottom Floating Camera Toolbar (Creamy Design) ─── */}
-          <div className="absolute bottom-5 inset-x-0 z-10 flex justify-center pointer-events-none px-4">
-            <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 bg-white/92 backdrop-blur-md rounded-2xl border border-[#E5DFD5] shadow-xl max-w-[calc(100vw-2rem)] overflow-x-auto scrollbar-none">
+          <div className="absolute bottom-3 sm:bottom-5 inset-x-0 z-10 flex justify-center pointer-events-none px-2 sm:px-4">
+            <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 bg-white/92 backdrop-blur-md rounded-2xl border border-[#E5DFD5] shadow-xl max-w-[calc(100vw-1rem)] sm:max-w-none overflow-x-auto scrollbar-none">
               <Button
                 variant={cameraPreset === 'full' ? 'default' : 'ghost'}
                 size="sm"

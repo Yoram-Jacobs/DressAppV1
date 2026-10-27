@@ -51,6 +51,26 @@ export default function StylistGuidedTour() {
 
     const vw = window.innerWidth || 1024;
     const vh = window.innerHeight || 768;
+    const isMobile = vw < 640;
+
+    // Mobile view: dock balloon as a clean, responsive bottom or top card
+    // guaranteeing zero overlay on the target element and zero horizontal overflow.
+    if (isMobile) {
+      const cardWidth = Math.max(280, vw - 24);
+      const targetMidY = spotlightRect.top + spotlightRect.height / 2;
+      const isTargetInTopHalf = targetMidY <= vh * 0.52;
+
+      return {
+        left: '12px',
+        right: '12px',
+        width: `${cardWidth}px`,
+        maxWidth: `${cardWidth}px`,
+        top: isTargetInTopHalf ? 'auto' : '16px',
+        bottom: isTargetInTopHalf ? '16px' : 'auto',
+        transform: 'none',
+      };
+    }
+
     const cardWidth = Math.min(450, vw - 24);
     const cardH = measuredCardHeight || 260;
     const GAP = 16;
