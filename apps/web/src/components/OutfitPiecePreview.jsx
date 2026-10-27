@@ -284,7 +284,7 @@ export default function OutfitPiecePreview({
               loading="lazy"
               className={cn(
                 'w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200',
-                bottomTopo.align || 'object-bottom',
+                bottomTopo.align || 'object-top',
                 'object-contain'
               )}
             />
@@ -294,7 +294,7 @@ export default function OutfitPiecePreview({
         {/* Footwear / Shoes -> zIndex 15 */}
         {slots.shoes && (
           <div
-            className="absolute bottom-[0.5%] left-1/2 -translate-x-1/2 w-[76%] h-[16%] pointer-events-none flex items-center justify-center"
+            className="absolute bottom-[2.5%] left-1/2 -translate-x-1/2 w-[60%] h-[13%] pointer-events-none flex items-center justify-center"
             style={{ zIndex: 15 }}
             title={slots.shoes.title || slots.shoes.name}
           >
@@ -356,7 +356,7 @@ export default function OutfitPiecePreview({
         {/* Belt -> zIndex 25 */}
         {slots.belt && (
           <div
-            className="absolute top-[41%] left-1/2 -translate-x-1/2 w-[62%] h-[5%] pointer-events-none flex items-center justify-center"
+            className="absolute top-[40.2%] left-1/2 -translate-x-1/2 w-[58%] h-[4.5%] pointer-events-none flex items-center justify-center"
             style={{ zIndex: 25 }}
             title={slots.belt.title || slots.belt.name}
           >
