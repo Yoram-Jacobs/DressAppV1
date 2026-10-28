@@ -1432,8 +1432,9 @@ class GarmentVisionService:
                     len(result),
                 )
                 try:
-                    from app.services.background_matting import drop_disconnected_islands
-                    result = drop_disconnected_islands(result, min_area_ratio=0.01)
+                    from app.services.background_matting import drop_disconnected_islands, strip_hanger_hook
+                    result = drop_disconnected_islands(result, min_area_ratio=0.05)
+                    result = strip_hanger_hook(result)
                 except Exception as exc:
                     logger.debug("_whole_image_matte island filter failed: %s", exc)
 

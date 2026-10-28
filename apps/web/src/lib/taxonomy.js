@@ -461,7 +461,8 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('包')
   ) return 'bags';
   if (normalized.includes('small_good') || normalized.includes('ארנקים') || normalized.includes('бумажник') || normalized.includes('кошелек')) return 'small_goods';
-  if (normalized.includes('headwear') || normalized.includes('hat') || normalized.includes('cap') || normalized.includes('beanie') || normalized.includes('כובע') || normalized.includes('כובעים') || normalized.includes('головн_убор') || normalized.includes('шапк') || normalized.includes('шляп') || normalized.includes('قبعة') || normalized.includes('hut') || normalized.includes('mütze') || normalized.includes('sombrero') || normalized.includes('gorra') || normalized.includes('chapeau') || normalized.includes('cappello') || normalized.includes('chapéu') || normalized.includes('टोपी') || normalized.includes('帽子')) return 'headwear';
+  if (normalized.includes('cape') || normalized.includes('poncho') || normalized.includes('שכמי') || normalized.includes('פונצו') || normalized.includes('пончо')) return 'capes_and_ponchos';
+  if (normalized.includes('headwear') || normalized.includes('hat') || (normalized.includes('cap') && !normalized.includes('cape')) || normalized.includes('beanie') || normalized.includes('כובע') || normalized.includes('כובעים') || normalized.includes('головн_убор') || normalized.includes('шапк') || normalized.includes('шляп') || normalized.includes('قبعة') || normalized.includes('hut') || normalized.includes('mütze') || normalized.includes('sombrero') || normalized.includes('gorra') || normalized.includes('chapeau') || normalized.includes('cappello') || normalized.includes('chapéu') || normalized.includes('टोपी') || normalized.includes('帽子')) return 'headwear';
   if (normalized.includes('belt') || normalized.includes('חגורה') || normalized.includes('חגורות') || normalized.includes('ремень') || normalized.includes('ремни') || normalized.includes('пояс') || normalized.includes('حزام') || normalized.includes('gürtel') || normalized.includes('cintur') || normalized.includes('ceinture') || normalized.includes('cinto') || normalized.includes('बेल्ट') || normalized.includes('ベルト') || normalized.includes('腰带')) return 'belts';
   if (normalized.includes('glove') || normalized.includes('כפפה') || normalized.includes('כפפות') || normalized.includes('перчат') || normalized.includes('варежк') || normalized.includes('قفاز') || normalized.includes('handschuh') || normalized.includes('guante') || normalized.includes('gant') || normalized.includes('guanti') || normalized.includes('luva') || normalized.includes('दस्ताने') || normalized.includes('手袋') || normalized.includes('手套')) return 'gloves';
   if (normalized.includes('scarf') || normalized.includes('wrap') || normalized.includes('צעיף') || normalized.includes('צעיפים') || normalized.includes('шарф') || normalized.includes('платок') || normalized.includes('وشاح') || normalized.includes('schal') || normalized.includes('bufanda') || normalized.includes('écharpe') || normalized.includes('echarpe') || normalized.includes('sciarpa') || normalized.includes('cachecol') || normalized.includes('स्कार्फ') || normalized.includes('スカーフ') || normalized.includes('围巾')) return 'scarves_and_wraps';
@@ -679,6 +680,25 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized === 'totes' || normalized === 'tote' || normalized === 'tote_bags' || normalized === 'tote_bag' || normalized === 'tote bag') return 'basket_bag';
 
   return normalized;
+};
+
+export const canonicalCategoryForSubCategory = (raw) => {
+  const canonical = canonicalSubCategoryKey(raw);
+  if (!canonical) return null;
+  const topKeys = new Set(['t_shirts', 'tailored_shirts', 'polo_shirt', 'sweatshirts', 'knitwear', 'blouses', 'tank_tops', 'tunics']);
+  const bottomKeys = new Set(['jeans', 'trousers', 'cargo_pants', 'shorts', 'sweatpants', 'leggings', 'skirts', 'pleated_skirt', 'a_line_skirt', 'pencil_skirt', 'mini_skirt', 'midi_skirt', 'maxi_skirt']);
+  const outerwearKeys = new Set(['coats', 'jackets', 'blazers', 'vests', 'capes_and_ponchos', 'shrugs', 'performance_gear']);
+  const fullBodyKeys = new Set(['dress', 'dresses', 'midi_dresses', 'mini_dresses', 'maxi_dresses', 'evening_dresses', 'sundresses', 'wrap_dresses', 'suit', 'jumpsuits_and_rompers', 'overalls', 'cultural_traditional']);
+  const footwearKeys = new Set(['shoes', 'sneakers', 'boots', 'sandals', 'heels', 'flats', 'slippers', 'loafers', 'oxfords', 'oxford_shoes']);
+  const accessoryKeys = new Set(['bags', 'belts', 'headwear', 'scarves_and_wraps', 'gloves', 'jewelry', 'sunglasses', 'wallets', 'ties', 'socks', 'handbag', 'clutch', 'basket_bag']);
+
+  if (topKeys.has(canonical)) return 'Top';
+  if (bottomKeys.has(canonical)) return 'Bottom';
+  if (outerwearKeys.has(canonical)) return 'Outerwear';
+  if (fullBodyKeys.has(canonical)) return 'Full Body';
+  if (footwearKeys.has(canonical)) return 'Footwear';
+  if (accessoryKeys.has(canonical)) return 'Accessories';
+  return null;
 };
 
 export const labelForSubCategory = (raw, t) => {

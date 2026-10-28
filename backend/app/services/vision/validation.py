@@ -499,6 +499,27 @@ def _canonical_tag_key(tag: Any) -> str:
     return synonyms.get(s, s)
 
 
+_HE_COLOR_DICT: dict[str, str] = {
+    "white": "לבן", "black": "שחור", "grey": "אפור", "gray": "אפור", "light_grey": "אפור בהיר", "light_gray": "אפור בהיר",
+    "dark_grey": "אפור כהה", "dark_gray": "אפור כהה", "charcoal": "פחם", "anthracite": "אנתרציט",
+    "burgundy": "בורדו", "bordeaux": "בורדו", "maroon": "בורדו", "wine": "בורדו", "brown": "חום",
+    "chocolate": "חום שוקולד", "cognac": "קוניאק", "camel": "קאמל", "tan": "חום בהיר", "wheat": "חיטה",
+    "sand": "חול", "blue": "כחול", "light_blue": "תכלת", "sky_blue": "תכלת", "baby_blue": "תכלת",
+    "powder_blue": "תכלת בהיר", "dark_blue": "כחול כהה", "navy": "כחול נייבי", "navy_blue": "כחול נייבי",
+    "midnight_blue": "כחול לילה", "royal_blue": "כחול רויאל", "cobalt": "כחול קובלט", "indigo": "אינדיגו",
+    "denim": "דנים", "green": "ירוק", "olive": "זית", "olive_green": "ירוק זית", "dark_green": "ירוק כהה",
+    "forest_green": "ירוק יער", "khaki": "חאקי", "emerald": "ברקת", "sage": "מרווה", "mint": "מנטה",
+    "lime": "ליים", "seafoam": "קצף ים", "red": "אדום", "crimson": "שני", "scarlet": "שני", "ruby": "רובין",
+    "pink": "ורוד", "light_pink": "ורוד בהיר", "dusty_pink": "ורוד עתיק", "fuchsia": "פוקסיה",
+    "magenta": "מג'נטה", "coral": "קורל", "salmon": "סלמון", "rose": "ורד", "blush": "בלאש",
+    "yellow": "צהוב", "mustard": "חרדל", "gold": "זהב", "orange": "כתום", "rust": "חלודה",
+    "copper": "נחושת", "terracotta": "טרקוטה", "peach": "אפרסק", "purple": "סגול", "violet": "סגול כהה",
+    "lavender": "לבנדר", "lilac": "לילך", "plum": "שזיף", "mauve": "מוב", "beige": "בז'", "cream": "שמנת",
+    "ivory": "שנהב", "off_white": "אוף-ווייט", "ecru": "שמנת", "taupe": "טופ", "silver": "כסף",
+    "multicolor": "צבעוני", "multicolored": "צבעוני",
+}
+he_color_dict = _HE_COLOR_DICT
+
 _CANONICAL_MATERIAL_MAP: dict[str, str] = {
     "革": "Leather", "皮革": "Leather", "皮": "Leather",
     "עור": "Leather", "جلد": "Leather", "cuir": "Leather", "leder": "Leather",
@@ -1103,6 +1124,81 @@ def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | 
 
     is_he = lang_code == "he"
     top_cuts = _TOP_CUTS_BY_LANG.get(lang_code, _TOP_CUTS_BY_LANG["en"])
+
+    # 0a. HANGER-INDUCED POLO MISCLASSIFICATION CORRECTION:
+    # A triangular wooden/plastic hanger in an open neckline/cape/poncho/knit drape frequently
+    # tricks vision models into predicting "Polo" / "חולצת פולו" when the item actually has fringe,
+    # cape/poncho drape, or sleeveless knit construction with no real polo collar or button placket.
+    all_garment_txt = f"{name_str} {cap_str} {itype_str} {sub_l} {' '.join(res.get('tags') or [])}".lower()
+    is_polo = any(w in all_garment_txt for w in ("polo", "פולו"))
+    has_fringe_or_poncho = any(w in all_garment_txt for w in ("fringe", "fringes", "פרנז", "גדיל", "poncho", "פונצ", "cape", "שכמי", "shawl", "של ", "שכמיה"))
+    if is_polo and has_fringe_or_poncho:
+        res["category"] = "Outerwear"
+        res["sub_category"] = "שכמיות ופונצ'ו" if is_he else "Capes & Ponchos"
+        res["item_type"] = "פונצ'ו סרוג עם פרנזים" if is_he else "Knit Fringe Poncho"
+        col_str = ""
+        if res.get("colors") and isinstance(res["colors"], list):
+            c0 = str(res["colors"][0].get("name", "")).strip()
+            if c0.lower() not in ("unknown", "other"):
+                col_str = c0
+        if is_he:
+            col_he = _HE_COLOR_DICT.get(col_str.lower(), col_str) if col_str else "שמנת"
+            if col_he.lower() in ("קרם", "cream", "white", "לבן", "שמנת"):
+                col_he = "שמנת"
+            new_title = f"פונצ'ו סרוג {col_he}".strip()
+            res["name"] = new_title
+            res["title"] = new_title
+            res["caption"] = f"{new_title} עם פרנזים מעוצב ונוח לעונות מעבר ולחורף."
+        else:
+            c_en = col_str or "Cream"
+            new_title = f"{c_en} Knit Fringe Poncho".strip()
+            res["name"] = new_title
+            res["title"] = new_title
+            res["caption"] = f"{c_en} knit fringe poncho with draped silhouette and textured weave."
+        res["_category_overridden_by"] = "hanger-polo-to-poncho"
+        logger.warning(
+            "garment_vision: auto-corrected hanger-induced polo to %s (category=%s)",
+            res["name"], res["category"],
+        )
+        cat_l = str(res.get("category") or "").strip().lower()
+        sub_l = str(res.get("sub_category") or "").strip().lower()
+        name_str = str(res.get("name") or res.get("title") or "").strip()
+        name_l = name_str.lower()
+        cap_str = str(res.get("caption") or "").strip()
+        cap_l = cap_str.lower()
+        itype_str = str(res.get("item_type") or "").strip()
+        itype_l = itype_str.lower()
+
+    # 0b. CATEGORY INTEGRITY GUARD:
+    # Apparel items (polo shirts, tees, tops, knitwear, sweaters, outerwear, ponchos, pants, skirts, dresses)
+    # must NEVER be assigned category='Accessories'!
+    if cat_l in ("accessories", "accessory"):
+        comb_check = f"{sub_l} {itype_l} {name_l} {cap_l}".lower()
+        if any(w in comb_check for w in (
+            "polo", "פולו", "shirt", "חולצ", "tee", "t-shirt", "sweater", "סוודר", "סריג", "cardigan",
+            "hoodie", "קפוצ", "jacket", "ז'קט", "מעיל", "coat", "poncho", "פונצ'ו", "cape", "שכמייה",
+            "blazer", "blouse", "בלוז", "pants", "מכנסי", "trousers", "jeans", "ג'ינס", "skirt", "חצאית", "dress", "שמלה"
+        )):
+            if any(w in comb_check for w in ("coat", "jacket", "מעיל", "ז'קט", "poncho", "פונצ'ו", "cape", "שכמייה", "blazer")):
+                res["category"] = "Outerwear"
+            elif any(w in comb_check for w in ("pants", "מכנסי", "trousers", "jeans", "ג'ינס", "skirt", "חצאית", "shorts", "שורט")):
+                res["category"] = "Bottom"
+            elif any(w in comb_check for w in ("dress", "שמלה", "abaya", "עבאיה", "jumpsuit")):
+                res["category"] = "Full Body"
+            else:
+                res["category"] = "Top"
+            logger.warning(
+                "garment_vision: Corrected apparel misclassified as Accessories -> category=%s (item=%s)",
+                res["category"], res.get("name") or res.get("sub_category"),
+            )
+            cat_l = str(res.get("category") or "").strip().lower()
+            sub_l = str(res.get("sub_category") or "").strip().lower()
+            name_str = str(res.get("name") or res.get("title") or "").strip()
+            name_l = name_str.lower()
+            cap_str = str(res.get("caption") or "").strip()
+            cap_l = cap_str.lower()
+            itype_str = str(res.get("item_type") or "").strip()
+            itype_l = itype_str.lower()
 
     # 1. Top / Outerwear cleanup
     is_top_cat = (
@@ -2213,6 +2309,13 @@ def _coerce_single_garment(
                 "v-neck t-shirt": "חולצת וי",
                 "polo shirt": "חולצת פולו",
                 "polo": "חולצת פולו",
+                "capes & ponchos": "שכמיות ופונצ'ו",
+                "cape": "שכמייה",
+                "poncho": "פונצ'ו",
+                "knit poncho": "פונצ'ו סרוג",
+                "fringe poncho": "פונצ'ו עם פרנזים",
+                "knit fringe poncho": "פונצ'ו סרוג עם פרנזים",
+                "shawl": "של",
                 "tank top": "גופייה",
                 "blouse": "בלוזה",
                 "shirt": "חולצה",
@@ -4291,13 +4394,14 @@ def _enforce_segformer_category(
             analysis["sub_category"] = "Headwear"
         return analysis
 
-    # If the LLM has identified the crop as Top or Outerwear (blazer, jacket, suit, coat, shirt, sweater, hoodie),
+    # If the LLM has identified the crop as Top or Outerwear (blazer, jacket, suit, coat, shirt, polo, sweater, poncho, hoodie),
     # never override it with SegFormer's headwear or accessory kind!
     is_llm_upper = (
         current.lower() in ("top", "outerwear", "suit", "full body")
         or any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in (
             "blazer", "jacket", "suit", "coat", "shirt", "sweater", "hoodie", "cardigan", "blouse", "top", "vest",
-            "ז'קט", "חליפה", "מעיל", "חולצה", "סוודר", "סריג", "קפוצ'ון"
+            "polo", "poncho", "cape", "shawl", "t-shirt", "tee",
+            "ז'קט", "חליפה", "מעיל", "חולצה", "חולצת", "פולו", "סוודר", "סריג", "קפוצ'ון", "פונצ'ו", "שכמייה", "של"
         ))
     )
     if is_llm_upper and kind in ("headwear", "accessory") and "bag" not in lbl_low:
@@ -4305,6 +4409,7 @@ def _enforce_segformer_category(
             "garment_vision: preserving LLM upper garment (%s / %s) over SegFormer %r kind",
             current, analysis.get("sub_category"), kind,
         )
+        _sanitize_cross_category_contamination(analysis, language=language)
         return analysis
 
     if current.lower() in allowed:

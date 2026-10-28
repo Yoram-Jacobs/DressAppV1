@@ -2388,7 +2388,7 @@ def apply_alpha_intersection(
         norm_cat in {"accessory", "headwear", "bag", "belt", "jewelry"}
         or any(w in norm_lbl for w in ("hat", "cap", "beanie", "bag", "belt", "necklace", "watch", "bracelet"))
     )
-    if is_acc and not is_eyewear:
+    if is_acc and not is_eyewear and norm_lbl not in ("scarf", "shawl", "poncho", "cape"):
         return matted_png_bytes
 
     # 1. Smooth, anti-aliased human mask subtraction (face, hair, skin, arms, legs)
@@ -2477,24 +2477,28 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 2b. Upper garment neck/head trimming:
-    # A human head, neck, chin, or throat must NEVER float above collars or lapels of tops/outerwear/suits!
-    if norm_cat in {"top", "outerwear", "suit", "dress", "fullbody"} and not is_single_item and mask_resized is not None:
+    # 2b. Upper garment neck/head trimming & hanger hook/triangle excision:
+    # A human head, neck, chin, throat, or hanger hook/triangle must NEVER float above collars or in neck openings!
+    is_upper_wear = (
+        norm_cat in {"top", "outerwear", "suit", "dress", "fullbody"}
+        or norm_lbl in ("scarf", "shawl", "poncho", "cape")
+    )
+    if is_upper_wear and mask_resized is not None:
         try:
             garment_pts = np.where(mask_resized > 40)
             if len(garment_pts[0]) > 0:
                 ys, xs = garment_pts
                 apex_y = int(ys.min())
-                # Anything above the garment apex is strictly head / neck / background
+                # Anything above the garment apex is strictly head / neck / background / hanger hook
                 if apex_y > 2:
                     new_alpha[:max(0, apex_y - 2), :] = 0
 
                 # Column-wise contour trimming along the central neckline/collar notch
                 col_min_y = np.full(Wc, Hc, dtype=int)
                 np.minimum.at(col_min_y, xs, ys)
-                # Bounding: a neckline curve never dips deeper than 18% of crop height from apex.
+                # Bounding: a neckline curve never dips deeper than 22% of crop height from apex.
                 # Deeper dips are occlusions (hair, jewelry, scarves, hands) and must NOT slice the garment!
-                max_neck_dip = min(Hc - 1, apex_y + max(12, int(0.18 * Hc)))
+                max_neck_dip = min(Hc - 1, apex_y + max(12, int(0.22 * Hc)))
                 col_min_y = np.minimum(col_min_y, max_neck_dip)
 
                 # Restrict column trimming to the central neck/throat corridor (20% to 80% of width)
@@ -2504,9 +2508,21 @@ def apply_alpha_intersection(
                 valid_cols = (col_min_y < Hc) & neck_cols
                 if valid_cols.any():
                     y_indices = np.arange(Hc)[:, None]
-                    # Pixels above the collar in the central neck zone are neck/face/background
+                    # Pixels above the collar in the central neck zone are neck/face/background/hanger hook
                     above_collar = (y_indices < (col_min_y[None, :] - 3)) & valid_cols[None, :]
                     new_alpha = np.where(above_collar, np.uint8(0), new_alpha)
+
+                    # Wooden/plastic hanger triangle excision inside the collar notch:
+                    # Inside the collar opening between shoulders, where SegFormer has no fabric (mask_resized <= 30),
+                    # zero out alpha so triangular hanger struts are never left in the collar opening!
+                    collar_opening = (
+                        (y_indices >= (col_min_y[None, :] - 2))
+                        & (y_indices <= max_neck_dip)
+                        & valid_cols[None, :]
+                        & (mask_resized <= 30)
+                    )
+                    if collar_opening.any():
+                        new_alpha = np.where(collar_opening, np.uint8(0), new_alpha)
         except Exception as _neck_exc:
             logger.debug("apply_alpha_intersection collar neck trim: %s", _neck_exc)
 
@@ -2548,17 +2564,23 @@ def apply_alpha_intersection(
             )
 
     # 4. Intersect with the smooth, dilated soft envelope of the target garment.
-    # On single items, envelope truncation is skipped so rembg's outer garment contours
-    # (collars, cuffs, hoods) are never truncated if SegFormer is slightly undersized.
-    if mask_resized is not None and not is_single_item:
+    # Excludes far-away background debris, detached plants, and hooks outside the garment envelope.
+    if mask_resized is not None:
         try:
             from scipy import ndimage
             mask_bin = mask_resized > 50
-            closed = ndimage.binary_closing(mask_bin, structure=np.ones((3 if (is_eyewear or is_footwear or is_acc) else 5, 3 if (is_eyewear or is_footwear or is_acc) else 5), dtype=bool), iterations=1)
+            closed = ndimage.binary_closing(
+                mask_bin,
+                structure=np.ones((3 if (is_eyewear or is_footwear or is_acc) else 5, 3 if (is_eyewear or is_footwear or is_acc) else 5), dtype=bool),
+                iterations=1
+            )
             filled = closed if is_multi_segment else ndimage.binary_fill_holes(closed)
             
             filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
-            env_dilate = 2 if (is_eyewear or is_footwear or is_acc) else dilate_px
+            if is_single_item:
+                env_dilate = max(14, int(0.06 * min(Hc, Wc)))
+            else:
+                env_dilate = 2 if (is_eyewear or is_footwear or is_acc) else dilate_px
             if env_dilate > 0:
                 filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * env_dilate + 1))
             blur_r = 1.5 if (is_eyewear or is_footwear or is_acc) else 3.0
@@ -2661,6 +2683,12 @@ def apply_alpha_intersection(
 
     arr[:, :, 3] = new_alpha
     out = Image.fromarray(arr, mode="RGBA")
+    try:
+        from app.services.background_matting import drop_disconnected_islands, strip_hanger_hook
+        out = drop_disconnected_islands(out, min_area_ratio=0.05)
+        out = strip_hanger_hook(out)
+    except Exception as _filter_exc:
+        logger.debug("apply_alpha_intersection post-cleanup filter error: %s", _filter_exc)
     buf = io.BytesIO()
     out.save(buf, format="PNG", optimize=True)
     return buf.getvalue()

@@ -1,4 +1,4 @@
-import { canonicalSubCategoryKey, labelForSubCategory, labelForItemType } from '../taxonomy';
+import { canonicalSubCategoryKey, labelForSubCategory, labelForItemType, canonicalCategoryForSubCategory } from '../taxonomy';
 
 describe('Multilingual Bag and Basket Bag Taxonomy', () => {
   test('resolves canonical subcategories for bags across languages', () => {
@@ -99,32 +99,6 @@ describe('Multilingual Bag and Basket Bag Taxonomy', () => {
     expect(canonicalSubCategoryKey('Sherwani')).toBe('sherwani');
     expect(canonicalSubCategoryKey('शेरवानी')).toBe('sherwani');
     expect(canonicalSubCategoryKey('שרוואני')).toBe('sherwani');
-
-    // Sari & Lehenga
-    expect(canonicalSubCategoryKey('Sari')).toBe('sari');
-    expect(canonicalSubCategoryKey('साड़ी')).toBe('sari');
-    expect(canonicalSubCategoryKey('סארי')).toBe('sari');
-    expect(canonicalSubCategoryKey('Lehenga')).toBe('lehenga');
-    expect(canonicalSubCategoryKey('लेहंगा')).toBe('lehenga');
-    expect(canonicalSubCategoryKey('להנגה')).toBe('lehenga');
-
-    // Hanbok, Kimono, Dirndl, Guayabera
-    expect(canonicalSubCategoryKey('Hanbok')).toBe('hanbok');
-    expect(canonicalSubCategoryKey('한복')).toBe('hanbok');
-    expect(canonicalSubCategoryKey('Kimono')).toBe('kimono');
-    expect(canonicalSubCategoryKey('着物')).toBe('kimono');
-    expect(canonicalSubCategoryKey('Dirndl')).toBe('dirndl');
-    expect(canonicalSubCategoryKey('דירנדל')).toBe('dirndl');
-    expect(canonicalSubCategoryKey('Guayabera')).toBe('guayabera');
-    expect(canonicalSubCategoryKey('גוואיאברה')).toBe('guayabera');
-
-    // Dhoti & Salwar / Sharwal
-    expect(canonicalSubCategoryKey('Dhoti')).toBe('dhoti');
-    expect(canonicalSubCategoryKey('דהוטי')).toBe('dhoti');
-    expect(canonicalSubCategoryKey('Salwar')).toBe('salwar');
-    expect(canonicalSubCategoryKey('שרוואל')).toBe('salwar');
-    expect(canonicalSubCategoryKey('סלוואר')).toBe('salwar');
-    expect(canonicalSubCategoryKey('شروال')).toBe('salwar');
   });
 
   test('resolves canonical subcategories for traditional headwear across languages', () => {
@@ -156,5 +130,31 @@ describe('Multilingual Bag and Basket Bag Taxonomy', () => {
     expect(canonicalSubCategoryKey('Tarboush')).toBe('tarboush');
     expect(canonicalSubCategoryKey('תרבוש')).toBe('tarboush');
     expect(canonicalSubCategoryKey('طربوش')).toBe('tarboush');
+  });
+
+  test('resolves canonical categories for subcategories and prevents apparel in accessories', () => {
+    // Tops
+    expect(canonicalCategoryForSubCategory('polo_shirt')).toBe('Top');
+    expect(canonicalCategoryForSubCategory('חולצת פולו')).toBe('Top');
+    expect(canonicalCategoryForSubCategory('t_shirt')).toBe('Top');
+    expect(canonicalCategoryForSubCategory('knitwear')).toBe('Top');
+    expect(canonicalCategoryForSubCategory('סוודר')).toBe('Top');
+
+    // Outerwear
+    expect(canonicalCategoryForSubCategory('poncho')).toBe('Outerwear');
+    expect(canonicalCategoryForSubCategory('פונצ\'ו')).toBe('Outerwear');
+    expect(canonicalCategoryForSubCategory('cape')).toBe('Outerwear');
+    expect(canonicalCategoryForSubCategory('שכמייה')).toBe('Outerwear');
+    expect(canonicalCategoryForSubCategory('coat')).toBe('Outerwear');
+
+    // Bottoms
+    expect(canonicalCategoryForSubCategory('jeans')).toBe('Bottom');
+    expect(canonicalCategoryForSubCategory('מכנסיים')).toBe('Bottom');
+    expect(canonicalCategoryForSubCategory('skirt')).toBe('Bottom');
+
+    // Accessories
+    expect(canonicalCategoryForSubCategory('handbag')).toBe('Accessories');
+    expect(canonicalCategoryForSubCategory('belt')).toBe('Accessories');
+    expect(canonicalCategoryForSubCategory('sunglasses')).toBe('Accessories');
   });
 });

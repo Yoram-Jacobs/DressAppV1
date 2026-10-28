@@ -133,7 +133,8 @@ def drop_disconnected_islands(
         # may have gaps up to 25px or 3% of the image dimension.
         prox_threshold = max(25.0, float(min(arr.shape[:2])) * 0.03)
         if min_dist <= prox_threshold:
-            if s < max_size * min_area_ratio:
+            cutoff = max_size * max(min_area_ratio, 0.05)
+            if s < cutoff:
                 drop_indices.append(idx)
         else:
             if s < max_size * 0.25:
@@ -156,6 +157,67 @@ def drop_disconnected_islands(
         cleaned.save(buf, format="PNG", optimize=True)
         return buf.getvalue()
     return cleaned
+
+
+def strip_hanger_hook(image_rgba: Image.Image | bytes) -> Image.Image | bytes:
+    """Detect and zero-out thin hanger hooks and wire stalks above garment shoulders.
+
+    Hanger hooks are typically vertical or arched metallic/plastic stalks located
+    at the top of the crop (top 40% of height), centered horizontally (x between 15%
+    and 85% of width), and narrow (< 45px or < 12% of crop width).
+    Once the garment shoulders / collar curve begins, row width expands dramatically
+    (> 2.5x the hook width, or > 20% of image width).
+    This function zeroes out any narrow hook stalk directly above the shoulder apex.
+    """
+    is_bytes = isinstance(image_rgba, (bytes, bytearray))
+    if is_bytes:
+        im = Image.open(io.BytesIO(image_rgba)).convert("RGBA")
+    else:
+        im = image_rgba.convert("RGBA")
+
+    arr = np.array(im)
+    alpha = arr[:, :, 3]
+    solid = alpha >= 32
+    if not solid.any():
+        return image_rgba
+
+    Hc, Wc = alpha.shape
+    y_indices, x_indices = np.where(solid)
+    y_min = int(y_indices.min())
+
+    max_scan_y = min(Hc, y_min + int(Hc * 0.40))
+    narrow_threshold = max(45, int(Wc * 0.12))
+    shoulder_y = None
+
+    for y in range(y_min, max_scan_y):
+        xs = np.where(solid[y, :])[0]
+        if len(xs) == 0:
+            continue
+        w = int(xs[-1] - xs[0] + 1)
+        x_center = float(xs[-1] + xs[0]) / 2.0
+        if w >= max(80, int(Wc * 0.20)) and (0.15 * Wc <= x_center <= 0.85 * Wc):
+            shoulder_y = y
+            break
+        if w > narrow_threshold:
+            shoulder_y = y
+            break
+
+    if shoulder_y is not None and shoulder_y > y_min + 8:
+        hook_mask = np.zeros_like(solid, dtype=bool)
+        hook_mask[max(0, y_min - 2):max(0, shoulder_y - 2), int(0.15 * Wc):int(0.85 * Wc)] = True
+        arr[:, :, 3] = np.where(hook_mask, 0, arr[:, :, 3])
+        cleaned = Image.fromarray(arr, "RGBA")
+        logger.info(
+            "strip_hanger_hook: stripped hanger hook above shoulder y=%d (y_min=%d)",
+            shoulder_y, y_min,
+        )
+        if is_bytes:
+            buf = io.BytesIO()
+            cleaned.save(buf, format="PNG", optimize=True)
+            return buf.getvalue()
+        return cleaned
+
+    return image_rgba
 
 
 def _rembg_remove(image_bytes: bytes) -> bytes | None:
@@ -246,7 +308,8 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
                 alpha_full = alpha_small
             full_rgba = original.convert("RGBA")
             full_rgba.putalpha(alpha_full)
-            full_rgba = drop_disconnected_islands(full_rgba, min_area_ratio=0.01)
+            full_rgba = drop_disconnected_islands(full_rgba, min_area_ratio=0.05)
+            full_rgba = strip_hanger_hook(full_rgba)
             buf = io.BytesIO()
             full_rgba.save(buf, format="PNG", optimize=True)
             out = buf.getvalue()

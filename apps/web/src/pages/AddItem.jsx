@@ -97,6 +97,7 @@ import {
   labelForColor,
   labelForSubCategory,
   canonicalSubCategoryKey,
+  canonicalCategoryForSubCategory,
   labelForTag,
   labelForMaterial,
 } from "@/lib/taxonomy";
@@ -452,6 +453,35 @@ const hydrate = (a, user, t, i18n) => {
     }
   }
 
+  // Category Integrity Guard: Apparel (Polo, Shirt, Knitwear, Sweater, Coat, Jacket, Poncho, Cape, Pants, Skirt, Dress) must NEVER be Accessories!
+  const isApparelInAccessories = (catLower === 'accessories' || catLower === 'accessory' || catLower === 'אקססוריז') &&
+    (/polo|פולו|shirt|חולצ|tee|t-shirt|sweater|סוודר|סריג|cardigan|hoodie|קפוצ|jacket|זקט|מעיל|coat|poncho|פונצ|cape|שכמי|pant|מכנס|skirt|חצאית|dress|שמל/i.test(`${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''}`));
+  if (isApparelInAccessories) {
+    if (/coat|jacket|מעיל|זקט|poncho|פונצ|cape|שכמי/i.test(`${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''}`)) {
+      out.category = 'Outerwear';
+    } else if (/pant|trousers|מכנס|jean|ג׳ינס|גינס|skirt|חצאית/i.test(`${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''}`)) {
+      out.category = 'Bottom';
+    } else if (/dress|שמל|abaya|עבאיה|jumpsuit/i.test(`${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''}`)) {
+      out.category = 'Full Body';
+    } else {
+      out.category = 'Top';
+    }
+  }
+
+  if (/polo|פולו/i.test(`${subRaw} ${itemRaw}`)) {
+    subRaw = 'polo_shirts';
+    if (!out.category || out.category.toLowerCase() === 'accessories') {
+      out.category = 'Top';
+    }
+  }
+
+  if (/poncho|cape|פונצ|שכמי/i.test(`${subRaw} ${itemRaw}`)) {
+    subRaw = 'capes_and_ponchos';
+    if (!out.category || out.category.toLowerCase() === 'accessories') {
+      out.category = 'Outerwear';
+    }
+  }
+
   // Cross-consistency: If itemRaw/title is a hoodie/sweatshirt, t-shirt, boots, or bag, align subRaw
   const fullHoodieBlob = `${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''} ${out.caption || ''}`.toLowerCase();
   if (/hoodie|hooded|sweatshirt|קפוצ|סווטשירט|толстовк|худи/i.test(fullHoodieBlob) && !/bottom|pant|skirt|shoe|footwear/i.test(String(out.category || ''))) {
@@ -647,6 +677,17 @@ const hydrate = (a, user, t, i18n) => {
       } else {
         // Localize sub_category and item_type into Hebrew / active language
         const subKey = canonicalSubCategoryKey(subRaw);
+        const catCanonical = canonicalCategoryForSubCategory(subRaw);
+        if (catCanonical) {
+          const currentCatSlug = slug(out.category);
+          if (catCanonical === 'Top' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {
+            out.category = (lang === 'he' || lang === 'iw') ? 'חלק עליון' : 'Top';
+          } else if (catCanonical === 'Outerwear' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {
+            out.category = (lang === 'he' || lang === 'iw') ? 'עליוניות' : 'Outerwear';
+          } else if (catCanonical === 'Bottom' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {
+            out.category = (lang === 'he' || lang === 'iw') ? 'חלק תחתון' : 'Bottom';
+          }
+        }
         if (subKey && subKey !== 'other') {
           const localizedSub = labelForSubCategory(subKey, t);
           if (localizedSub && localizedSub !== subKey) out.sub_category = localizedSub;
