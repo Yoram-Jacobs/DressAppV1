@@ -235,7 +235,7 @@ System liveness validation, financial bookkeeping, and user account management.
 ## 5. Troubleshooting
 
 ### HTTP 402 Payment Required
-- **Problem**: Ingestion blocked. You have reached the baseline limit of 50 closet items (or up to 150 items with referral bonuses).
+- **Problem**: Ingestion blocked. You have reached the baseline limit of 100 closet items (or up to 150 items with referral bonuses).
 - **Solution**: Go to the **Pricing page** (`/pricing`) and subscribe to the Manager or Professional plan, or share your invite link to get +10 slots per registration (up to 150 items max).
 
 ### SSRF Blocked / DNS Error on DPP

@@ -17,7 +17,7 @@ DressApp propose un forfait Gratuit généreux ainsi que des abonnements mensuel
    - Inclut tous les avantages du forfait Manager, plus une fiche vérifiée dans **l'Annuaire des Stylistes**, la création de campagnes promotionnelles, un support prioritaire et **100 crédits mensuels de stylisme et de reconstruction**.
 
 ## Rétrogradation au forfait Gratuit et conservation des 50 derniers articles
-- **Les utilisateurs Manager et Professionnel qui passent au forfait Gratuit perdent leurs emplacements supplémentaires, ne laissant que les 50 derniers articles ajoutés dans leur garde-robe.**
+- **Les utilisateurs Manager et Professionnel qui passent au forfait Gratuit perdent leurs emplacements supplémentaires, ne laissant que les 100 derniers articles ajoutés dans leur garde-robe.**
 - Les articles plus anciens au-delà des **50 articles ajoutés le plus récemment** sont définitivement supprimés lors du passage au forfait Gratuit.
 - Avant d'accepter une rétrogradation ou une annulation, DressApp affiche un avertissement clair sur la perte des anciens articles et demande votre confirmation explicite.
 

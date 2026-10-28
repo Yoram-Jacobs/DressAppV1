@@ -5,7 +5,7 @@ DressApp offers a generous Free plan alongside flexible monthly and annual subsc
 ## Plan Overview
 
 1. **Free Plan**:
-   - Store up to **50 closet items** for free—and expand your closet up to **150 items** by sharing your referral link with friends (**+10 free slots** for every friend who signs up).
+   - Store up to **100 closet items** for free—and expand your closet up to **150 items** by sharing your referral link with friends (**+10 free slots** for every friend who signs up).
    - Powered right out of the box by **DressApp's on-premises AI model** (**10 daily credits**, accumulating up to **300 credits over 30 days**).
    - Includes **5 one-time AI reconstruction onboarding bonus credits** upon signup to try out studio repairs and the AddItem re-analyzer.
    - Additional AI reconstruction credits can be purchased at any time via non-expiring credit packs (10, 50, or 100 credits) on the Pricing page. Free users with any reconstruction credit balance (> 0) can use the AddItem re-analyzer.
@@ -19,7 +19,7 @@ DressApp offers a generous Free plan alongside flexible monthly and annual subsc
    - Includes everything in the Manager plan, plus a verified listing in the **Stylist Directory**, the ability to launch promotional campaigns, priority support, and **100 monthly styling and reconstruction credits**.
 
 ## Plan Demotion & Closet Retention Warning
-- **Manager and Professional users who demote to the Free plan will lose their extra closet slots, leaving only the last 50 added items in their closet.**
+- **Manager and Professional users who demote to the Free plan will lose their extra closet slots, leaving only the last 100 added items in their closet.**
 - Any older closet assets beyond your **50 most recently added items** will be permanently deleted when your plan switches to Free.
 - Before accepting a planned demotion or subscription cancellation, DressApp displays a clear warning showing how many items will be affected and asks for your explicit confirmation.
 

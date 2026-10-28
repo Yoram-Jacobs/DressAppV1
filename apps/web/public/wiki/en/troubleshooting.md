@@ -23,7 +23,7 @@ Here are simple solutions to the most common questions when using DressApp:
 - **Easy fix**: For garments with intricate prints, delicate details, or specific wear conditions, upload a clear single-item photo instead.
 
 ## 4. What happens to my clothes if I demote from Manager or Professional to the Free plan?
-- **Why it happens**: The Free plan has a baseline limit of 50 closet slots. When Manager or Professional users demote to the Free plan, they lose their extra closet slots, **leaving only the last 50 added items in their closet**.
+- **Why it happens**: The Free plan has a baseline limit of 100 closet slots. When Manager or Professional users demote to the Free plan, they lose their extra closet slots, **leaving only the last 100 added items in their closet**.
 - **What to expect**: DressApp always warns you before demoting and asks for your confirmation, because older closet assets beyond your 50 most recently added items are permanently removed upon demotion.
 
 ## 5. My camera or microphone isn't working!

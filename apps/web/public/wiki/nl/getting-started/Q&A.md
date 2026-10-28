@@ -19,7 +19,7 @@ DressApp neemt handmatig invoerwerk en keuzestress in de ochtend weg met slimme 
 
 | Functie | Gratis Plan ($0) | Garderobebeheerder ($10/mnd of $100/jr) | Pro-Stylist ($15/mnd of $150/jr) |
 | :--- | :--- | :--- | :--- |
-| **Kastcapaciteit** | **50 items** (tot **150** via vrienden uitnodigen) | **Onbeperkt** | **Onbeperkt** |
+| **Kastcapaciteit** | **100 items** (tot **150** via vrienden uitnodigen) | **Onbeperkt** | **Onbeperkt** |
 | **AI-model** | **Het eigen AI-model van DressApp** | **Geavanceerd AI-model** + automatische interne terugvaloptie | **Geavanceerd AI-model** + automatische interne terugvaloptie |
 | **Dagelijkse Credits** | **10/dag** (spaart op tot **300 / 30 dagen**) | **Onbeperkt** dagelijks stylen & kleding scannen | **Onbeperkt** dagelijks stylen & kleding scannen |
 | **Studio-reconstructie** | **5 gratis** startcredits | **100 maandelijkse** Studio-reconstructiecredits | **100 maandelijkse** Studio-reconstructiecredits |

@@ -20,7 +20,7 @@ Hier finden Sie einfache Lösungen für die häufigsten Fragen rund um DressApp:
 - **Lösung**: Laden Sie für Teile mit feinen Prints oder wichtigen Zustandsdetails ein einzelnes Foto hoch.
 
 ## 4. Was passiert mit meiner Kleidung, wenn ich vom Manager- oder Professional-Tarif in den Free-Tarif wechsle?
-- **Ursache**: Der Free-Tarif umfasst 50 Schrankplätze. Beim Wechsel in den Free-Tarif gehen zusätzliche Plätze verloren, sodass **nur die letzten 50 hinzugefügten Artikel im Kleiderschrank verbleiben**.
+- **Ursache**: Der Free-Tarif umfasst 50 Schrankplätze. Beim Wechsel in den Free-Tarif gehen zusätzliche Plätze verloren, sodass **nur die letzten 100 hinzugefügten Artikel im Kleiderschrank verbleiben**.
 - **Wichtiger Hinweis**: DressApp warnt Sie vor dem Wechsel und bittet um Ihre Bestätigung, da ältere Kleidungsstücke dauerhaft entfernt werden.
 
 ## 5. Meine Kamera oder mein Mikrofon funktioniert nicht!

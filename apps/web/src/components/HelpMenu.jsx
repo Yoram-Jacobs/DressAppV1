@@ -1711,7 +1711,7 @@ export default function HelpMenu({ initialTab, onClose }) {
                           {renderFormattedText(
                             t("help.tiers_free_desc", {
                               defaultValue:
-                                "Baseline limit of 50 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 one-time AI reconstruction onboarding bonus credits. Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
+                                "Baseline limit of 100 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 one-time AI reconstruction onboarding bonus credits. Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
                             }),
                           )}
                         </p>
@@ -1756,7 +1756,7 @@ export default function HelpMenu({ initialTab, onClose }) {
                           {renderFormattedText(
                             t("help.tiers_demotion_desc", {
                               defaultValue:
-                                "Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 50 added items in their closet. Older closet assets beyond the 50 most recently added items are permanently removed after you confirm the demotion warning.",
+                                "Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 100 added items in their closet. Older closet assets beyond the 100 most recently added items are permanently removed after you confirm the demotion warning.",
                             }),
                           )}
                         </p>

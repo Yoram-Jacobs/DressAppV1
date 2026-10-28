@@ -150,7 +150,7 @@ export default function Pricing() {
         t('pricing.demoteSuccessToast', {
           removed: res?.removed_closet_items_count ?? 0,
           defaultValue:
-            'Your plan has been switched to Free. Your last 50 added closet items were retained.',
+            'Your plan has been switched to Free. Your last 100 added closet items were retained.',
         })
       );
       try {
@@ -344,7 +344,7 @@ export default function Pricing() {
             <DialogDescription className="text-sm text-text-brand pt-2 leading-relaxed">
               {t('pricing.demoteConfirmBody', {
                 defaultValue:
-                  'Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 50 added items in their closet. Older closet assets beyond the newest 50 items will be permanently removed.',
+                  'Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 100 added items in their closet. Older closet assets beyond the newest 100 items will be permanently removed.',
               })}
             </DialogDescription>
           </DialogHeader>
@@ -352,15 +352,15 @@ export default function Pricing() {
             <div className="font-bold">
               {t('pricing.demoteClosetSummary', {
                 count: closetCount || 0,
-                limit: 50,
-                defaultValue: `Current closet items: ${closetCount || 0} (Free plan limit: 50 items)`,
+                limit: 100,
+                defaultValue: `Current closet items: ${closetCount || 0} (Free plan limit: 100 items)`,
               })}
             </div>
-            {(closetCount || 0) > 50 ? (
+            {(closetCount || 0) > 100 ? (
               <p className="font-semibold text-rose-800">
                 {t('pricing.demoteItemsWillBeLost', {
-                  lostCount: Math.max(0, (closetCount || 0) - 50),
-                  defaultValue: `Warning: Your ${Math.max(0, (closetCount || 0) - 50)} oldest closet items will be permanently deleted, leaving only the last 50 added items.`,
+                  lostCount: Math.max(0, (closetCount || 0) - 100),
+                  defaultValue: `Warning: Your ${Math.max(0, (closetCount || 0) - 100)} oldest closet items will be permanently deleted, leaving only the last 100 added items.`,
                 })}
               </p>
             ) : (

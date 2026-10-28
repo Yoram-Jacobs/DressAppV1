@@ -75,7 +75,7 @@ Nach 5 Tagen haben Sie **50 Grundteile** digitalisiert – die Basis für tausen
 - **Upgrade auf Garderoben-Manager ($10/Monat oder $100/Jahr)**: Schaltet **unbegrenzten Platz im Kleiderschrank**, **unbegrenztes tägliches Styling und Scannen** mit unserem **hochmodernen KI-Modell**, **100 monatliche Studio-Rekonstruktions-Credits**, morgendliche Outfit-Benachrichtigungen, **Trend-Entdecker** und den **Marktplatz** frei.
 
 ### F: Was passiert, wenn ich von Manager oder Professional zurück in den Free-Tarif wechsle?
-**A:** Manager- und Professional-Nutzer, die in den Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass **nur die letzten 50 hinzugefügten Artikel im Kleiderschrank verbleiben**. Ältere Kleidungsstücke werden dauerhaft entfernt. Vor der Durchführung zeigt DressApp eine Warnmeldung an und bittet um Ihre Bestätigung.
+**A:** Manager- und Professional-Nutzer, die in den Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass **nur die letzten 100 hinzugefügten Artikel im Kleiderschrank verbleiben**. Ältere Kleidungsstücke werden dauerhaft entfernt. Vor der Durchführung zeigt DressApp eine Warnmeldung an und bittet um Ihre Bestätigung.
 
 ---
 

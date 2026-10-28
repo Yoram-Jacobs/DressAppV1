@@ -194,7 +194,7 @@ const SECTIONS: HelpSection[] = [
     fallbackTitle: 'Tiers & Credits',
     icon: Lucide.Wallet,
     p1Key: 'help.tiers_p1',
-    fallbackP1: 'Free plan with 150 items baseline, referral bonuses, and Pro plans for unlimited closets.',
+    fallbackP1: 'Free plan with 100 items baseline (up to 150 with invites), and Manager/Pro plans for unlimited closets.',
   },
   {
     id: 'troubleshooting',

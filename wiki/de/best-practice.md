@@ -38,7 +38,7 @@ Das Hochladen von Kleider-Clustern (Mass-Pipeline) ist eine revolutionäre Funkt
 4. **Halluzinierte Muster und Farben**: Die KI kann bei verdeckten Bereichen gelegentlich Muster oder Farben hinzuerfinden — prüfen Sie die Artikelkarte vor dem Speichern.
 5. **Verbraucht Rekonstruktions-Credits**: Jedes rekonstruierte Teil verbraucht Rekonstruktions-Credits.
 
-> **Hinweis zur Tarif-Herabstufung (Downgrade):** Wenn Manager- oder Professional-Nutzer in den Free-Tarif wechseln, verlieren sie ihre zusätzlichen Schrankplätze, sodass **nur die letzten 50 hinzugefügten Artikel im Kleiderschrank verbleiben**. DressApp warnt Sie vor dem Verlust älterer Kleidungsstücke und bittet vorab um Ihre Bestätigung.
+> **Hinweis zur Tarif-Herabstufung (Downgrade):** Wenn Manager- oder Professional-Nutzer in den Free-Tarif wechseln, verlieren sie ihre zusätzlichen Schrankplätze, sodass **nur die letzten 100 hinzugefügten Artikel im Kleiderschrank verbleiben**. DressApp warnt Sie vor dem Verlust älterer Kleidungsstücke und bittet vorab um Ihre Bestätigung.
 
 ### Die 4 goldenen Regeln für flach ausgelegte Fotos
 

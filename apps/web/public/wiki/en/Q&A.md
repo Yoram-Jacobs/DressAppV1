@@ -19,7 +19,7 @@ DressApp removes manual work and morning decision fatigue with smart visual reco
 
 | Feature | Free Plan ($0) | Wardrobe Manager ($10/mo or $100/yr) | Pro Stylist ($15/mo or $150/yr) |
 | :--- | :--- | :--- | :--- |
-| **Closet Capacity** | **50 items** (up to **150** via friend invites) | **Unlimited** | **Unlimited** |
+| **Closet Capacity** | **100 items** (up to **150** via friend invites) | **Unlimited** | **Unlimited** |
 | **AI Model** | **DressApp's On-Premises AI Model** | **Cutting-Edge AI Model** + Automatic On-Premises Fallback | **Cutting-Edge AI Model** + Automatic On-Premises Fallback |
 | **Daily AI Credits** | **10/day** (accumulates up to **300 / 30 days**) | **Unlimited** daily styling & garment scans | **Unlimited** daily styling & garment scans |
 | **Studio Reconstruction** | **5 one-time onboarding bonus credits** | **100 monthly** Studio Reconstruction credits | **100 monthly** Studio Reconstruction credits |
@@ -75,7 +75,7 @@ By Day 5, you will have **50 core items** in your digital closet — unlocking t
 - **Upgrade to Wardrobe Manager ($10/mo or $100/yr)**: Unlocks **unlimited closet space**, **unlimited daily styling and scans** powered by our **cutting-edge AI model**, **100 monthly Studio Reconstruction credits**, **Cluster Garment Uploading** (closets, hangers, shoe racks, and shirt piles), the **Wardrobe Migration Agent**, morning outfit notifications, **Trend Scout**, and the **Marketplace**.
 
 ### Q: What happens if I demote from Manager or Professional back to the Free plan?
-**A:** Manager and Professional users who demote to the Free plan lose their extra closet slots, **leaving only the last 50 added items in their closet**. Older closet assets beyond the 50 most recently added items are permanently removed. Before accepting a planned demotion, DressApp displays a clear warning about losing older closet assets and asks for your confirmation.
+**A:** Manager and Professional users who demote to the Free plan lose their extra closet slots, **leaving only the last 100 added items in their closet**. Older closet assets beyond the 100 most recently added items are permanently removed. Before accepting a planned demotion, DressApp displays a clear warning about losing older closet assets and asks for your confirmation.
 
 ---
 

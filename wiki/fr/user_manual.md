@@ -235,7 +235,7 @@ Validation de la disponibilité du système, comptabilité financière et gestio
 ## 5. Dépannage
 
 ### Erreur HTTP 402 Payment Required
-- **Problème** : Intégration bloquée. Vous avez atteint la limite de base de 50 articles du dressing (ou jusqu'à 150 articles avec les bonus de parrainage).
+- **Problème** : Intégration bloquée. Vous avez atteint la limite de base de 100 articles du dressing (ou jusqu'à 150 articles avec les bonus de parrainage).
 - **Solution** : Rendez-vous sur la **page Tarifs** (`/pricing`) et souscrivez au forfait Manager ou Professional, ou partagez votre lien d'invitation pour obtenir +10 emplacements par inscription (jusqu'à 150 articles maximum).
 
 ### Blocage SSRF / Erreur DNS sur le DPP

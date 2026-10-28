@@ -67,7 +67,7 @@ No 5º dia, você terá **50 peças essenciais** digitalizadas — liberando mil
 - **Navegar pelo armário, filtrar, editar etiquetas manualmente e montar looks no Planejador**: **0 créditos (Sempre grátis!)**
 
 ### P: Como posso ganhar mais espaço no armário e créditos extras gratuitamente?
-**R:** Compartilhe seu link pessoal em **Perfil → Convidar Amigos**! Cada amigo que se cadastrar pelo seu link garante **+10 espaços permanentes grátis no seu armário** (expandindo seu plano Gratuito de 50 para até **150 peças**) mais créditos de bônus.
+**R:** Compartilhe seu link pessoal em **Perfil → Convidar Amigos**! Cada amigo que se cadastrar pelo seu link garante **+10 espaços permanentes grátis no seu armário** (expandindo seu plano Gratuito de 100 para até **150 peças**) mais créditos de bônus.
 
 ### P: O que acontece se meus créditos de Reconstrução acabarem ou se eu quiser uso diário ilimitado?
 **R:** Você tem duas opções flexíveis na página de **Planos**:

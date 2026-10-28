@@ -13,7 +13,7 @@ Als gebruiker van het Gratis-abonnement geeft DressApp u twee aparte credittegoe
 | **Interne AI-credits** *(Het eigen AI-model van DressApp)* | **10 gratis credits / dag**, cumulatief tot **30 dagen (maximaal 300 credits)**, daarna reset | Kledingscannen, meerdere kledingstukken herkennen, AI-stylistchat en Koffer-assistent | • **Scan van 1 kledingstuk**: 1 credit — • **Foto met meerdere items (bijv. 5 stuks)**: 5 credits (1 per stuk) — • **Vraag aan AI-stylist**: 1 credit — • **Koffer inpakken**: 1 credit per geselecteerd item |
 | **Studio-reconstructiecredits** *(Geavanceerd AI-model)* | **5 gratis startcredits** (altijd aan te vullen via de Prijzenpagina) | Fotoreconstructie in studiokwaliteit, reparatie van afgesneden randen en fotoverbetering | • **1 Reconstructiecredit** per studio-fotoverbetering |
 
-> **Tip:** **Waarom cumulatieve credits handig zijn bij het starten:** Omdat uw **10 dagelijkse interne AI-credits** tot **300 credits over 30 dagen** worden opgespaard, verliest u nooit een dag als u uw kleding liever in het weekend in één keer fotografeert. Na slechts **5 dagen** heeft u **50 credits** — precies genoeg om een complete gratis kledingkast van 50 items te digitaliseren!
+> **Tip:** **Waarom cumulatieve credits handig zijn bij het starten:** Omdat uw **10 dagelijkse interne AI-credits** tot **300 credits over 30 dagen** worden opgespaard, verliest u nooit een dag als u uw kleding liever in het weekend in één keer fotografeert. Na slechts **5 dagen** heeft u **50 credits** — precies genoeg om een complete gratis kledingkast van 100 items te digitaliseren!
 
 ---
 

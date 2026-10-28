@@ -19,7 +19,7 @@ DressApp neemt handmatig invoerwerk en keuzestress in de ochtend weg met slimme 
 
 | Functie | Gratis Plan ($0) | Garderobebeheerder ($10/mnd of $100/jr) | Pro-Stylist ($15/mnd of $150/jr) |
 | :--- | :--- | :--- | :--- |
-| **Kastcapaciteit** | **50 items** (tot **150** via vrienden uitnodigen) | **Onbeperkt** | **Onbeperkt** |
+| **Kastcapaciteit** | **100 items** (tot **150** via vrienden uitnodigen) | **Onbeperkt** | **Onbeperkt** |
 | **AI-model** | **Het eigen AI-model van DressApp** | **Geavanceerd AI-model** + automatische interne terugvaloptie | **Geavanceerd AI-model** + automatische interne terugvaloptie |
 | **Dagelijkse Credits** | **10/dag** (spaart op tot **300 / 30 dagen**) | **Onbeperkt** dagelijks stylen & kleding scannen | **Onbeperkt** dagelijks stylen & kleding scannen |
 | **Studio-reconstructie** | **5 eenmalige onboarding-bonuscredits** | **100 maandelijkse** Studio-reconstructiecredits | **100 maandelijkse** Studio-reconstructiecredits |
@@ -47,7 +47,7 @@ DressApp neemt handmatig invoerwerk en keuzestress in de ochtend weg met slimme 
 Op dag 5 heeft u **50 basisitems** gedigitaliseerd — goed voor duizenden outfitcombinaties!
 
 ### V: Kan ik mijn kleding importeren vanuit een andere kledingkast-app?
-**A:** Ja! **Manager- en Professional-abonnees** kunnen de **Garderobe Migratie-agent** gebruiken via **Profiel → Garderobe Importeren** (of **Item toevoegen**) om 50+ items uit andere apps automatisch te importeren. Free-gebruikers (beperkt tot 50 items op het lokale model) kunnen de Migratie-agent niet gebruiken, maar kunnen wel losse winkellinks importeren of **Cluster Kleding Uploaden** ontgrendelen met **15 of meer AI-reconstructiecredits**.
+**A:** Ja! **Manager- en Professional-abonnees** kunnen de **Garderobe Migratie-agent** gebruiken via **Profiel → Garderobe Importeren** (of **Item toevoegen**) om 50+ items uit andere apps automatisch te importeren. Free-gebruikers (beperkt tot 100 items op het lokale model) kunnen de Migratie-agent niet gebruiken, maar kunnen wel losse winkellinks importeren of **Cluster Kleding Uploaden** ontgrendelen met **15 of meer AI-reconstructiecredits**.
 
 ---
 
@@ -75,7 +75,7 @@ Op dag 5 heeft u **50 basisitems** gedigitaliseerd — goed voor duizenden outfi
 - **Upgraden naar Garderobebeheerder ($10/mnd of $100/jr)**: Ontgrendelt **onbeperkte kastruimte**, **onbeperkt dagelijks stylen en scannen** met ons **geavanceerde AI-model**, **100 maandelijkse Studio-reconstructiecredits**, dagelijkse outfitmeldingen in de ochtend, **Trendverkenner** en de **Marktplaats**.
 
 ### V: Wat gebeurt er als ik van Manager of Professional terugga naar het Free-abonnement?
-**A:** Manager- en Professional-gebruikers die degraderen naar het Free-abonnement verliezen hun extra kastplekken, waardoor **alleen de laatste 50 toegevoegde items in hun kast behouden blijven**. Oudere items worden definitief verwijderd. Voordat de degradatie wordt uitgevoerd, toont DressApp een waarschuwing en vraagt om uw bevestiging.
+**A:** Manager- en Professional-gebruikers die degraderen naar het Free-abonnement verliezen hun extra kastplekken, waardoor **alleen de laatste 100 toegevoegde items in hun kast behouden blijven**. Oudere items worden definitief verwijderd. Voordat de degradatie wordt uitgevoerd, toont DressApp een waarschuwing en vraagt om uw bevestiging.
 
 ---
 

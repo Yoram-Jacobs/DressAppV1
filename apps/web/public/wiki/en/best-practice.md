@@ -38,7 +38,7 @@ Cluster garment uploading (mass pipeline) is a revolutionary feature that lets y
 4. **Watch for Hallucinated Patterns or Colors**: It can occasionally hallucinate patterns and colors on partially hidden pieces—always review the item card before saving.
 5. **Mind Your Reconstruction Credits**: Every reconstructed piece consumes reconstruction credits.
 
-> **Plan Demotion Note:** If a Manager or Professional user later demotes to the Free plan, they lose their extra closet slots, **leaving only the last 50 added items in their closet**. DressApp warns you about losing older closet assets and asks for confirmation before completing any planned demotion.
+> **Plan Demotion Note:** If a Manager or Professional user later demotes to the Free plan, they lose their extra closet slots, **leaving only the last 100 added items in their closet**. DressApp warns you about losing older closet assets and asks for confirmation before completing any planned demotion.
 
 ### The 4 Golden Rules of Flat-Lay Photography
 

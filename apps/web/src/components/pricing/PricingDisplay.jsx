@@ -8,8 +8,11 @@ import {
   Loader2,
   Sliders,
   Sparkles,
-  Coins
+  Coins,
+  Info,
+  Zap
 } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,6 +21,7 @@ const featureKeys = {
   "5 onboarding credits": "pricing.freeCreditsOnboarding",
   "100 AI credits / month (not cumulative)": "pricing.monthlyCreditsDesc",
   "Up to 50 closet items": "pricing.features.closetLimitFree",
+  "Up to 100 closet items": "pricing.features.closetLimitFree",
   "Up to 10 requests per day": "pricing.features.dailyLimitFree",
   "Community support": "pricing.features.communitySupport",
   "Unlimited closet items": "pricing.features.unlimitedCloset",
@@ -130,7 +134,7 @@ export function PricingDisplay({
     },
     {
       label: t('pricing.features.closetLimit', { defaultValue: 'Closet Items Capacity' }),
-      free: '50',
+      free: t('pricing.closetFreeCapacityDesc', { defaultValue: '100 (up to 150 with invites)' }),
       manager: t('pricing.unlimited', { defaultValue: 'Unlimited' }),
       professional: t('pricing.unlimited', { defaultValue: 'Unlimited' }),
       type: 'text',
@@ -311,7 +315,48 @@ export function PricingDisplay({
               {t('pricing.creditPacksSubtitle', { defaultValue: 'Purchase credit packs for on-demand AI reconstructions and unlock Cluster Upload. Paid credits never expire.' })}
             </p>
           </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-shadow/30 border border-primary-brand/30 text-primary-brand text-xs font-semibold cursor-pointer hover:bg-primary-shadow/50 transition-colors">
+                  <Info className="h-3.5 w-3.5" />
+                  <span>{t('pricing.whatCreditBuysShort', { defaultValue: 'What 1 Credit Buys' })}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[280px] p-3 text-xs leading-relaxed space-y-1.5 bg-dark-brand text-white border-none shadow-lg">
+                <p className="font-bold text-primary-shadow">
+                  {t('pricing.whatCreditBuysTitle', { defaultValue: 'Exact Operation Costs:' })}
+                </p>
+                <p>• <strong>1 Credit</strong> = 1 Instant 2s Cloud Gemini Analysis</p>
+                <p>• <strong>1 Credit</strong> = 1 AI Photo Reshoot & Inpainting</p>
+                <p>• <strong>15+ Credits</strong> = Unlocks full-closet / rack cluster scan</p>
+                <p className="text-[10px] text-emerald-300 font-semibold pt-1 border-t border-white/10">
+                  ✓ Core daily styling & closet access are free forever.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
+
+        {/* Value Breakdown Banner */}
+        <div className="mb-4 p-3.5 rounded-[12px] bg-secondary/50 border border-border/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-text-brand">
+            <span className="font-bold text-dark-brand flex items-center gap-1">
+              <Zap className="h-3.5 w-3.5 text-primary-brand" />
+              {t('pricing.fairValueTitle', { defaultValue: 'Transparent AI Economics:' })}
+            </span>
+            <span>{t('pricing.fairValueSubtitle', { defaultValue: 'No surprise bills, no recurring micro-fees. Top up only when you need power workflows.' })}</span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+              ✓ {t('pricing.neverExpires', { defaultValue: 'Never Expires' })}
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-900 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">
+              ✓ {t('pricing.noSubscriptionNeeded', { defaultValue: 'No Subscription Needed' })}
+            </span>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
           {(pricingData?.credit_packs || [
             { pack: '10', credits: 10, price_usd: 3.0 },
@@ -319,6 +364,31 @@ export function PricingDisplay({
             { pack: '100', credits: 100, price_usd: 20.0 }
           ]).map((cp) => {
             const isBestValue = cp.pack === '100';
+            const price = cp.price_usd || (cp.price_cents ? cp.price_cents / 100 : 0);
+            const unitPrice = (price / cp.credits).toFixed(2);
+
+            // Detailed breakdowns per pack
+            const packDetails = {
+              '10': [
+                t('pricing.pack10Item1', { defaultValue: '10 Instant Cloud Gemini analyses' }),
+                t('pricing.pack10Item2', { defaultValue: '10 AI photo reshoots & inpainting' }),
+                t('pricing.packPerCreditCost', { cost: unitPrice, defaultValue: `$${unitPrice} per credit` })
+              ],
+              '50': [
+                t('pricing.pack50Item1', { defaultValue: '50 Instant Cloud Gemini analyses' }),
+                t('pricing.pack50Item2', { defaultValue: 'Unlocks Cluster Garment Upload (15+ cr)' }),
+                t('pricing.pack50Item3', { defaultValue: '~3 full closet/rack cluster scans' }),
+                t('pricing.packPerCreditCostSave', { cost: unitPrice, save: '20%', defaultValue: `$${unitPrice} per credit (save 20%)` })
+              ],
+              '100': [
+                t('pricing.pack100Item1', { defaultValue: '100 Instant Cloud Gemini analyses' }),
+                t('pricing.pack100Item2', { defaultValue: 'Unlocks Cluster Garment Upload' }),
+                t('pricing.pack100Item3', { defaultValue: '~6+ full closet/rack cluster scans' }),
+                t('pricing.pack100Item4', { defaultValue: 'Priority queue & high-res 3D try-on' }),
+                t('pricing.packPerCreditCostSave', { cost: unitPrice, save: '33%', defaultValue: `$${unitPrice} per credit (save 33%)` })
+              ]
+            }[cp.pack] || [];
+
             return (
               <div
                 key={cp.pack}
@@ -341,24 +411,34 @@ export function PricingDisplay({
                     <span className="text-[22px] font-bold text-dark-brand">{cp.credits}</span>
                     <span className="text-[12px] font-semibold text-text-brand">{t('pricing.creditsLabel', { defaultValue: 'Credits' })}</span>
                   </div>
-                  <div className="text-[18px] font-bold text-primary-brand mt-1">
-                    ${cp.price_usd || (cp.price_cents ? cp.price_cents / 100 : 0)}
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-[20px] font-bold text-primary-brand">${price}</span>
+                    <span className="text-[11px] font-semibold text-text-brand/80">(${unitPrice}/cr)</span>
                   </div>
                   {cp.credits >= 15 && (
-                    <div className="mt-1.5">
+                    <div className="mt-2">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900">
                         <Sparkles className="h-2.5 w-2.5 text-amber-600" />
                         {t('pricing.unlocksCluster', { defaultValue: 'Unlocks Cluster Upload' })}
                       </span>
                     </div>
                   )}
-                  <p className="text-[11px] text-text-brand font-semibold mt-2">
-                    {cp.credits >= 15
-                      ? t('pricing.packIncludesCluster', { defaultValue: 'Paid pack — unlocks Cluster Upload (15+ credits)' })
-                      : t('pricing.noExpiration', { defaultValue: 'Paid pack - never expires' })}
-                  </p>
+
+                  {/* What this pack buys list */}
+                  <div className="mt-3 pt-3 border-t border-border/70 space-y-1.5">
+                    <p className="text-[11px] font-bold text-dark-brand mb-1">
+                      {t('pricing.whatYouGet', { defaultValue: 'What this pack buys:' })}
+                    </p>
+                    {packDetails.map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5 text-[11px] text-text-brand font-medium">
+                        <Check className="h-3 w-3 text-primary-brand shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="mt-4">
+
+                <div className="mt-4 pt-2">
                   <Button
                     onClick={() => handleBuyCreditPack && handleBuyCreditPack(cp.pack)}
                     disabled={subBusy}

@@ -45,7 +45,7 @@ async def refund_user_credits(
 ) -> bool:
     return await _refund(db_connection, user_id, amount, credit_type)
 
-FREE_CLOSET_LIMIT = 50
+FREE_CLOSET_LIMIT = 100
 
 
 async def demote_user_to_free_plan(
@@ -53,12 +53,14 @@ async def demote_user_to_free_plan(
     user: dict,
 ) -> Dict[str, Any]:
     """Demote a Manager/Professional user to the Free plan and prune their closet
-    to the last 50 added items (ordered by created_at descending).
+    to the last 100 added items (up to 150 with referral bonus) (ordered by created_at descending).
     """
     from datetime import datetime, timezone
 
     user_id = user["id"]
     now_iso = datetime.now(timezone.utc).isoformat()
+    bonus = user.get("closet_capacity_bonus", 0)
+    effective_limit = min(150, FREE_CLOSET_LIMIT + bonus)
 
     # Fetch all closet items ordered by created_at DESC (newest first)
     cursor = db_connection.closet_items.find(
@@ -68,9 +70,9 @@ async def demote_user_to_free_plan(
     all_items = await cursor.to_list(length=10000)
 
     removed_count = 0
-    if len(all_items) > FREE_CLOSET_LIMIT:
+    if len(all_items) > effective_limit:
         older_ids = [
-            it["id"] for it in all_items[FREE_CLOSET_LIMIT:] if it.get("id")
+            it["id"] for it in all_items[effective_limit:] if it.get("id")
         ]
         if older_ids:
             del_res = await db_connection.closet_items.delete_many(
@@ -78,7 +80,7 @@ async def demote_user_to_free_plan(
             )
             removed_count = int(getattr(del_res, "deleted_count", len(older_ids)))
 
-    remaining_count = min(len(all_items), FREE_CLOSET_LIMIT)
+    remaining_count = min(len(all_items), effective_limit)
 
     await db_connection.users.update_one(
         {"id": user_id},

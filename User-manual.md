@@ -179,7 +179,7 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 11. **Invite Friends (Share payload API)**
     - **Why does it matter?**: It provides a viral loop for free closet expansion.
-    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`. Free tier capacity is capped at 50 items baseline, but can expand up to a maximum limit of 150 items through referral credits (+10 slots per referral).
+    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`. Free tier capacity is capped at 100 items baseline, but can expand up to a maximum limit of 150 items through referral credits (+10 slots per referral).
 
 12. **Developer & Administrator Access (Google OAuth)**
     - **Why does it matter?**: Ensures privileged platform governance and diagnostic tools are restricted to verified accounts.
@@ -764,7 +764,7 @@ System liveness validation, financial bookkeeping, and user account management.
 Integration with PayPal Subscriptions and Atzmai APIs for subscription management, credit purchases, and automated bookkeeping.
 
 1. **Manager ($10/mo) & Professional ($15/mo) Subscriptions**:
-   - Upgrades Free Tier accounts (50–150 item ceiling, on-premises `Qwen 2.5 VL 3B` Eyes engine) to unlimited closet storage and fast Cloud AI routing (`Google Gemini 3.5 Flash`) via the PayPal Subscriptions REST API.
+   - Upgrades Free Tier accounts (100–150 item ceiling, on-premises `Qwen 2.5 VL 3B` Eyes engine) to unlimited closet storage and fast Cloud AI routing (`Google Gemini 3.5 Flash`) via the PayPal Subscriptions REST API.
    - Monthly and annual tiers with automatic recurring billing and instant webhooks updating user roles.
 2. **Pre-Paid AI Credit Bucket Management**:
    - **Daily Free Credits**: 10 free credits granted every 24 hours with a strict 30-day expiration window.
@@ -795,7 +795,7 @@ Integration with PayPal Subscriptions and Atzmai APIs for subscription managemen
 ## 5. Troubleshooting
 
 ### HTTP 402 Payment Required
-- **Problem**: Ingestion blocked. You have reached the capacity limit (50 items baseline, up to 150 with referral slots).
+- **Problem**: Ingestion blocked. You have reached the capacity limit (100 items baseline, up to 150 with referral slots).
 - **Solution**: Go to the Pricing page (`/pricing`) and subscribe to the Manager ($10/mo) or Professional ($15/mo) plan, or share your invite link to get +10 slots per registration.
 
 ### SSRF Blocked / DNS Error on DPP

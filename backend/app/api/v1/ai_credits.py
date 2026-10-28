@@ -144,7 +144,7 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
                     "price": 0,
                     "features": [
                         "5 onboarding credits",
-                        "Up to 50 closet items",
+                        "Up to 100 closet items",
                         "Up to 10 requests per day",
                         "Cluster upload (with 15+ credits)",
                         "Community support"

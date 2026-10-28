@@ -230,7 +230,7 @@ Never buy the wrong size online again!
 Understand your plan and manage your AI styling credits:
 
 1. **Monetization Tiers**:
-   - **Free Tier ($0/month)**: Stores up to **50 closet garments** baseline (expandable up to 150 via referral bonuses), powered by DressApp's built-in **Eyes** AI (`Qwen 2.5 VL 3B`) with full access to styling and marketplace features. Includes **10 free daily AI credits** (which refresh every 24 hours and have a 30-day lifespan).
+   - **Free Tier ($0/month)**: Stores up to **100 closet garments** baseline (expandable up to 150 via referral bonuses), powered by DressApp's built-in **Eyes** AI (`Qwen 2.5 VL 3B`) with full access to styling and marketplace features. Includes **10 free daily AI credits** (which refresh every 24 hours and have a 30-day lifespan).
    - **Manager Plan ($10/month)**: Upgrades you to **unlimited closet storage**, priority cloud AI processing (**Google Gemini 3.5 Flash**), and monthly bonus credits.
    - **Professional / Expert Plan ($15/month)**: Designed for power users, professional stylists, and local tailors—including unlimited closet storage, priority cloud AI (**Google Gemini 3.5 Flash**), directory listings, and promotional campaign tools.
 2. **Viral Referral Bonus**:
@@ -238,10 +238,9 @@ Understand your plan and manage your AI styling credits:
    - Every friend who signs up gives you **+10 bonus closet slots** for free (up to 150 items max)!
 3. **Prepaid Credit Packs (Paid Credits Never Expire)**:
    - Need extra AI credits for heavy styling or photo inpainting? Purchase packs anytime:
-     - **10 credits**: $1.99 (or 10.00 ILS)
-     - **25 credits**: $3.99 (or 25.00 ILS)
-     - **50 credits**: $7.99 (or 50.00 ILS)
-     - **100 credits**: $15.99 (or 55.00 ILS)
+     - **10 credits**: $3.00 (or 10.00 ILS) — $0.30/cr, 10 instant Cloud Gemini scans or photo reshoots
+     - **50 credits**: $12.00 (or 45.00 ILS) — $0.24/cr (save 20%), unlocks Cluster Upload, ~3 full closet scans
+     - **100 credits**: $20.00 (or 75.00 ILS) — $0.20/cr (save 33%, Best Value), 100 cloud operations & 3D try-on
    - **Smart Credit Spending**: The system always spends your oldest soonest-expiring free daily credits first, protecting your permanent paid credits!
 4. **Localized Israeli Payments (Atzmai Gateway)**:
    - For users in Israel, pay conveniently in ILS using **Bit** or Israeli credit cards with automated tax invoice delivery to your email.
@@ -268,7 +267,7 @@ If your account has administrative permissions:
 ## 4. Quick Troubleshooting & Tips
 
 - **"Using Platform Stylist (Quota Fallback)" Notice**: If the cloud AI hits a temporary rate limit, DressApp automatically answers using our built-in on-premises **Eyes** engine so your chat never crashes!
-- **"Closet Limit Reached"**: Free accounts hold 50 items baseline (up to 150 with referrals). You can invite friends to gain +10 free slots per signup, or upgrade to the **Manager** ($10/mo) or **Professional** ($15/mo) plan for unlimited storage.
+- **"Closet Limit Reached"**: Free accounts hold 100 items baseline (up to 150 with referrals). You can invite friends to gain +10 free slots per signup, or upgrade to the **Manager** ($10/mo) or **Professional** ($15/mo) plan for unlimited storage.
 - **Microphone or Voice Typing Not Responding**: Ensure microphone permissions are enabled in your browser or device settings. In Chrome, click the lock icon in the address bar to check permissions.
 - **Background Removal Quality**: For the crispest cutout, photograph clothes against a contrasting surface (like a plain bedsheet, wood floor, or light wall) with good lighting.
 - **Wardrobe Import Stalling?** Competitor wardrobe import works best on desktop computers in Google Chrome. Ensure the competitor closet page is scrolled so items are visible.
@@ -278,7 +277,7 @@ If your account has administrative permissions:
 
 ## 5. Helpful Limitations to Keep in Mind
 
-- **Free Tier Capacity**: Baseline storage is 50 garments (up to 150 items with referrals). To store more, invite friends or activate a Manager or Professional subscription.
+- **Free Tier Capacity**: Baseline storage is 100 garments (up to 150 items with referrals). To store more, invite friends or activate a Manager or Professional subscription.
 - **Daily Free Credits**: The 10 daily free AI credits expire after 30 days if unused. Purchased credit packs never expire.
 - **Desktop Requirement for Bookmarklet**: The competitor wardrobe migration bookmarklet requires desktop browser bookmark capabilities and cannot run inside mobile phone browsers.
 - **Receipt OCR Quality**: When taking photos of physical paper receipts, ensure the text is well-lit, flat, and legible for optimal brand and price extraction.

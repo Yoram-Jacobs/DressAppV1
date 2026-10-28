@@ -70,7 +70,7 @@ export function useTierLimits() {
   const canAccessReanalyzer = !isFree || aiReconstructionCredits > 0;
 
   const closetCapacityBonus = user?.closet_capacity_bonus || 0;
-  const maxClosetSlots = isFree ? Math.min(150, 50 + closetCapacityBonus) : Infinity;
+  const maxClosetSlots = isFree ? Math.min(150, 100 + closetCapacityBonus) : Infinity;
   const maxAiActionsPerDay = isFree ? 10 : Infinity;
 
   const onpremCreditsBalance = (() => {

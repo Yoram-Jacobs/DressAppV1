@@ -67,7 +67,7 @@ Dès le 5e jour, vous aurez **50 pièces clés** numérisées — ouvrant la por
 - **Consultation du dressing, filtrage, modification manuelle des fiches et création de tenues dans le Planificateur** : **0 crédit (Toujours gratuit !)**
 
 ### Q : Comment obtenir gratuitement plus de place dans mon dressing et des crédits supplémentaires ?
-**R :** Partagez votre lien d'invitation personnel dans **Profil → Inviter des amis** ! Chaque ami qui s'inscrit via votre lien vous offre **+10 emplacements gratuits permanents** (portant votre dressing gratuit de 50 à **150 articles**) ainsi que des crédits bonus.
+**R :** Partagez votre lien d'invitation personnel dans **Profil → Inviter des amis** ! Chaque ami qui s'inscrit via votre lien vous offre **+10 emplacements gratuits permanents** (portant votre dressing gratuit de 100 à **150 articles**) ainsi que des crédits bonus.
 
 ### Q : Que faire si je n'ai plus de crédits de Reconstruction ou si je souhaite un usage quotidien illimité ?
 **R :** Deux solutions flexibles s'offrent à vous sur la page **Tarifs** :

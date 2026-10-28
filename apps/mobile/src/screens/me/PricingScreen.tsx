@@ -189,12 +189,12 @@ export function PricingScreen() {
           </Text>
           <Text style={[styles.planPrice, { color: colors.foreground }]}>$0</Text>
           <Text style={[styles.planDesc, { color: colors.mutedFg }]}>
-            {t('pricing.freeDesc', { defaultValue: 'Up to 50 garments, basic AI styling & closet management.' })}
+            {t('pricing.freeDesc', { defaultValue: 'Up to 100 garments, basic AI styling & closet management.' })}
           </Text>
           <View style={styles.featureList}>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>⏱️ 40–60s / photo (Standard AI)</Text>
             <Text style={[styles.featureItem, { color: colors.mutedFg }]}>✕ No AI Photo Reshoots & Inpainting</Text>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 50 Closet items (expandable to 150 with invites)</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 100 Closet items (expandable to 150 with invites)</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 10 free daily AI styling operations</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Standard background cutout & tagger</Text>
           </View>
@@ -414,7 +414,7 @@ export function PricingScreen() {
             <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
               {t('pricing.features.closetLimit', { defaultValue: 'Closet Items' })}
             </Text>
-            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.mutedFg }]}>50-150</Text>
+            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.mutedFg }]}>100-150</Text>
             <Text style={[styles.compareValText, { flex: 1.2, textAlign: 'center', color: colors.foreground }]}>∞</Text>
             <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.foreground }]}>∞</Text>
           </View>

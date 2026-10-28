@@ -67,7 +67,7 @@ Al quinto día tendrás **50 prendas esenciales** digitalizadas, ¡desbloqueando
 - **Explorar tu armario, filtrar, editar etiquetas manualmente y armar conjuntos en el Planificador**: **0 créditos (¡Siempre gratis!)**
 
 ### P: ¿Cómo puedo conseguir más espacio en el armario y créditos extra gratis?
-**R:** ¡Comparte tu enlace personal de invitación desde **Perfil → Invitar Amigos**! Cada amigo que se registre con tu enlace te otorga **+10 espacios permanentes gratis en tu armario** (ampliando tu armario gratuito de 50 a **150 prendas**) además de créditos adicionales.
+**R:** ¡Comparte tu enlace personal de invitación desde **Perfil → Invitar Amigos**! Cada amigo que se registre con tu enlace te otorga **+10 espacios permanentes gratis en tu armario** (ampliando tu armario gratuito de 100 a **150 prendas**) además de créditos adicionales.
 
 ### P: ¿Qué ocurre si agoto mis créditos de Reconstrucción o quiero uso diario ilimitado?
 **R:** Tienes dos opciones flexibles en la página de **Planes**:

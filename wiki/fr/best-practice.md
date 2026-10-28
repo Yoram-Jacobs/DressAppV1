@@ -38,7 +38,7 @@ L'import de lots de vêtements (pipeline de masse) est une fonctionnalité révo
 4. **Peut halluciner des motifs et des couleurs** : L'IA peut parfois inventer des motifs ou des teintes sur les parties cachées — vérifiez toujours la fiche avant d'enregistrer.
 5. **Consomme des crédits de reconstruction** : Chaque pièce reconstruite consomme des crédits de reconstruction.
 
-> **Note sur la rétrogradation de forfait :** Les utilisateurs Manager ou Professional qui repassent au forfait Gratuit perdent leurs emplacements supplémentaires, **ne conservant que les 50 derniers articles ajoutés dans leur garde-robe**. DressApp vous avertit de la suppression des articles plus anciens et demande confirmation avant d'appliquer la rétrogradation.
+> **Note sur la rétrogradation de forfait :** Les utilisateurs Manager ou Professional qui repassent au forfait Gratuit perdent leurs emplacements supplémentaires, **ne conservant que les 100 derniers articles ajoutés dans leur garde-robe**. DressApp vous avertit de la suppression des articles plus anciens et demande confirmation avant d'appliquer la rétrogradation.
 
 ### Les 4 Règles d'Or de la Photo à Plat
 

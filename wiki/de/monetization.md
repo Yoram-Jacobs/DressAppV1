@@ -17,7 +17,7 @@ DressApp bietet einen großzügigen Free-Tarif sowie flexible Monats- und Jahres
    - Enthält alle Funktionen des Manager-Tarifs sowie einen verifizierten Eintrag im **Stylisten-Verzeichnis**, Werbekampagnen, Priority-Support und **100 monatliche Styling- und Rekonstruktions-Credits**.
 
 ## Tarif-Herabstufung & Aufbewahrung der letzten 50 Artikel
-- **Manager- und Professional-Nutzer, die auf den Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass nur die letzten 50 hinzugefügten Artikel in ihrem Kleiderschrank verbleiben.**
+- **Manager- und Professional-Nutzer, die auf den Free-Tarif wechseln, verlieren ihre zusätzlichen Schrankplätze, sodass nur die letzten 100 hinzugefügten Artikel in ihrem Kleiderschrank verbleiben.**
 - Ältere Kleidungsstücke über die **50 zuletzt hinzugefügten Artikel** hinaus werden beim Wechsel auf den Free-Tarif dauerhaft gelöscht.
 - Vor einer geplanten Herabstufung oder Kündigung zeigt DressApp eine deutliche Warnmeldung an und bittet um Ihre ausdrückliche Bestätigung.
 

@@ -239,7 +239,7 @@ export default function WardrobeStats() {
   }, [items]);
 
   const closetBonus = user?.closet_capacity_bonus || 0;
-  const freeCapacity = Math.min(150, 50 + closetBonus);
+  const freeCapacity = Math.min(150, 100 + closetBonus);
 
   const accountAgeDays = useMemo(() => {
     if (!user?.created_at) return 1;
