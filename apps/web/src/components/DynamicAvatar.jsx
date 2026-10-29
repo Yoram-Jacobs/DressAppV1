@@ -1283,7 +1283,7 @@ export default function DynamicAvatar({
         <button
           type="button"
           onClick={handleResetRotation}
-          className="absolute bottom-2 end-2 z-10 p-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 shadow border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-all cursor-pointer"
+          className="absolute bottom-2.5 start-2.5 z-30 p-1.5 rounded-full bg-white/90 dark:bg-slate-800/90 shadow border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-all cursor-pointer"
           title="Reset rotation"
           aria-label="Reset avatar rotation"
           data-testid="reset-avatar-rotation-btn"

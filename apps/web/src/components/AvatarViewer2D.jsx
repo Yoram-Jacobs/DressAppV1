@@ -1188,12 +1188,15 @@ export default function AvatarViewer2D({
   showPointCloudMesh = false,
   interactive = false,
   enable3DTryOn = true,
+  useBodyPhoto = false,
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [isDressingRoomOpen, setIsDressingRoomOpen] = useState(false);
 
-  const activeBodyPhotoUrl = resolveMediaUrl(bodyPhotoUrl !== undefined ? (bodyPhotoUrl || null) : (user?.body_photo_url || null));
+  const activeBodyPhotoUrl = useBodyPhoto && (bodyPhotoUrl || user?.body_photo_url)
+    ? resolveMediaUrl(bodyPhotoUrl || user?.body_photo_url)
+    : null;
   const rawSkinColor = (skinColor && skinColor.toLowerCase() !== '#9ca3af') ? skinColor : (user?.skin_tone || '#E0AC69');
   const activeSkinColor = rawSkinColor.toLowerCase() === '#9ca3af' ? '#E0AC69' : rawSkinColor;
   const activeHair = hair !== undefined ? hair : (user?.hair || {});

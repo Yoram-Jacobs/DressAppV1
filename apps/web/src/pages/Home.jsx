@@ -2231,7 +2231,6 @@ export default function Home() {
                         shapeParams={user?.avatar_shape_params || {}}
                         sex={user?.sex || "female"}
                         skinColor={user?.skin_tone}
-                        bodyPhotoUrl={user?.body_photo_url}
                         outfitItems={stylistPreviewOutfitItems}
                         interactive={true}
                       />

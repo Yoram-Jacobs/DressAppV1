@@ -156,6 +156,30 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
     expect(avatarRoot).toHaveAttribute('data-gender', 'male');
   });
 
+  test('AvatarViewer always renders DynamicAvatar unless useBodyPhoto=true is explicitly set', () => {
+    const { rerender } = render(
+      <AvatarViewer
+        measurements={{ height: 170, waist: 72, chest: 90, shoulders: 40 }}
+        sex="male"
+        bodyPhotoUrl="https://example.com/my-body-photo.jpg"
+      />
+    );
+
+    expect(screen.getByTestId('dynamic-3d-avatar')).toBeInTheDocument();
+    expect(screen.queryByAltText('Full-body photo')).toBeNull();
+
+    rerender(
+      <AvatarViewer
+        measurements={{ height: 170, waist: 72, chest: 90, shoulders: 40 }}
+        sex="male"
+        bodyPhotoUrl="https://example.com/my-body-photo.jpg"
+        useBodyPhoto={true}
+      />
+    );
+
+    expect(screen.getByAltText('Full-body photo')).toBeInTheDocument();
+  });
+
   test('DynamicAvatar interactive mode enables touch-zone pointer events for 360 drag and rotate', () => {
     window.WebGLRenderingContext = function () {};
     window.PointerEvent = window.MouseEvent;

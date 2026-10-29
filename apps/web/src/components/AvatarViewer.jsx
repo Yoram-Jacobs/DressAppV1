@@ -13,6 +13,7 @@ export default function AvatarViewer({
   showPointCloudMesh = false,
   interactive = false,
   enable3DTryOn = true,
+  useBodyPhoto = false,
 }) {
   const effectiveSex = isMaleGender(sex) ? 'male' : 'female';
   return (
@@ -28,6 +29,7 @@ export default function AvatarViewer({
       showPointCloudMesh={showPointCloudMesh}
       interactive={interactive}
       enable3DTryOn={enable3DTryOn}
+      useBodyPhoto={useBodyPhoto}
     />
   );
 }

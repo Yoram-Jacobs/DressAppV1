@@ -56,12 +56,11 @@ export function PhotosSection({ form, setField, t, user }) {
 
             <div className="flex-1 w-full rounded-[12px] overflow-hidden bg-accent-beige border border-border h-[300px] relative">
               <AvatarViewer
-                shapeParams={user?.avatar_shape_params || {}}
-                measurements={form.body_measurements}
-                sex={form.sex || 'female'}
-                bodyPhotoUrl={form.body_photo_url}
-                skinColor={normalizeSkinTone(form.skin_tone)}
-                hair={form.hair}
+                shapeParams={form.avatar_shape_params || user?.avatar_shape_params || {}}
+                measurements={form.body_measurements || user?.body_measurements || user?.measurements}
+                sex={form.sex || user?.sex || user?.gender || 'female'}
+                skinColor={normalizeSkinTone(form.skin_tone || user?.skin_tone)}
+                hair={form.hair || user?.hair}
                 interactive={true}
               />
             </div>
