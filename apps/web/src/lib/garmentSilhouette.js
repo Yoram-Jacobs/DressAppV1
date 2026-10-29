@@ -524,11 +524,12 @@ export function buildSilhouetteShell({
   }
 
   // ── Tops & Dresses: Continuous Torso & Waist Envelope Unification ──
-  // For dresses and skirts, below the bust line (or below armpits), the garment is a single
-  // continuous sheath / skirt envelope. Any interior transparency gap or excised arm remnant
-  // must never tear the torso/waist into multiple detached tubes or jagged sawteeth.
+  // For dresses, skirts, and tops below the bust line / armpits, the garment forms a single
+  // continuous body sheath. Any interior transparency gap, wrinkle tear, or cutout artifact
+  // must never slice holes or detach the torso into disconnected tubes.
   if (isTopOrBody) {
     const isDress = slot === 'dress';
+    const isTop = slot === 'top';
     const torsoStartRow = jFabricTop + Math.max(2, Math.floor((isDress ? 0.22 : 0.30) * fabricHeight));
     for (let j = torsoStartRow; j <= jFabricBottom; j++) {
       const r = runsByRow[j];
@@ -544,12 +545,12 @@ export function buildSilhouetteShell({
         if (rMax > rMin) runsByRow[j] = [[rMin, rMax]];
       } else {
         // For general tops: bridge small/medium cutout gaps between adjacent runs within the torso
+        // (tears, wrinkle artifacts, or arm-torso boundary seams up to 14% of width)
         const merged = [];
         let cur = [r[0][0], r[0][1]];
         for (let k = 1; k < r.length; k++) {
           const gap = r[k][0] - cur[1];
-          // If gap is small (cutout tear or arm seam slit <= 10% of width), bridge it into single run
-          if (gap <= Math.max(3, 0.10 * nx)) {
+          if (gap <= Math.max(3, 0.14 * nx)) {
             cur[1] = Math.max(cur[1], r[k][1]);
           } else {
             merged.push(cur);
@@ -1229,12 +1230,13 @@ export function buildSilhouetteShell({
     }
   }
 
-  // Helper: check if a row's runs contain fabric near [lo, hi]
-  const hasFabricNear = (runs, lo, hi, maxDist = 1.5) => {
+  // Helper: check if a row's runs contain fabric on the specified leg side
+  const hasLegOnSide = (runs, side) => {
     if (!runs || !runs.length) return false;
     for (let k = 0; k < runs.length; k++) {
-      if (runs[k][0] <= hi && runs[k][1] >= lo) return true;
-      if (runs[k][0] - hi <= maxDist && lo - runs[k][1] <= maxDist) return true;
+      const c = (runs[k][0] + runs[k][1]) * 0.5;
+      if (side < 0 && c <= colMid) return true;
+      if (side > 0 && c >= colMid) return true;
     }
     return false;
   };
@@ -1247,14 +1249,14 @@ export function buildSilhouetteShell({
     const nextRuns = runsByRow[j + 1];
 
     // For pants/bottoms below crotch:
-    // 1. Do not bridge across the crotch void when adjacent rows have separated legs.
-    // 2. Do not bridge under a terminated pant leg hem when adjacent row has no fabric for that leg
+    // 1. Do not bridge across the crotch void where separated legs have empty space between them.
+    // 2. Do not bridge under a terminated pant leg hem when the adjacent row has no fabric on that side
     //    (strictly prevents horizontal polygon shelves spanning from a shorter cuff across to the other leg).
     if (isBottom) {
       if (currRuns && currRuns.length >= 2 && nextRuns && nextRuns.length >= 2) {
-        const gapStart = Math.min(currRuns[0][1], nextRuns[0][1]);
-        const gapEnd = Math.max(currRuns[1][0], nextRuns[1][0]);
-        if (lo >= gapStart && hi <= gapEnd) {
+        const gapStart = Math.max(currRuns[0][1], nextRuns[0][1]);
+        const gapEnd = Math.min(currRuns[1][0], nextRuns[1][0]);
+        if (gapEnd > gapStart && lo >= gapStart && hi <= gapEnd) {
           // Strictly only bridge at the exact crotch apex row (j === crotchRow) across 1 cell
           const isCrotchApexRow = j === crotchRow;
           const isCenterApexCell = Math.abs((lo + hi) * 0.5 - colMid) <= 1.0;
@@ -1266,10 +1268,12 @@ export function buildSilhouetteShell({
       }
 
       if (j >= crotchRow) {
-        const hasCurr = hasFabricNear(currRuns, lo, hi, 1.5);
-        const hasNext = hasFabricNear(nextRuns, lo, hi, 1.5);
-        if (hasCurr && !hasNext) return false;
-        if (!hasCurr && hasNext) return false;
+        const cCell = (lo + hi) * 0.5;
+        const side = cCell < colMid ? -1 : 1;
+        const hasCurrOnSide = hasLegOnSide(currRuns, side);
+        const hasNextOnSide = hasLegOnSide(nextRuns, side);
+        if (hasCurrOnSide && !hasNextOnSide) return false;
+        if (!hasCurrOnSide && hasNextOnSide) return false;
       }
     }
 

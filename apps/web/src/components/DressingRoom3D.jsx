@@ -299,6 +299,7 @@ export default function DressingRoom3D({
 
   const [autoRotate, setAutoRotate] = useState(false);
   const [cameraPreset, setCameraPreset] = useState(null);
+  const [meshMode, setMeshMode] = useState('photo'); // 'photo' (cutout shell) | 'tailored' (bypass cutout defects)
   const [layerVisibility, setLayerVisibility] = useState({});
   const [showRack, setShowRack] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? false : true));
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -769,6 +770,7 @@ export default function DressingRoom3D({
                       footPose={footPose}
                       showAvatar={showAvatar}
                       standaloneMode={!showAvatar}
+                      bypassSilhouette={meshMode === 'tailored'}
                     />
                   );
                 })}
@@ -879,6 +881,35 @@ export default function DressingRoom3D({
               >
                 <RotateCw className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden sm:inline">{t('dressing_room_3d.back_view', { defaultValue: 'Back view' })}</span>
+              </Button>
+
+              <div className="h-4 w-px bg-[#E5DFD5] mx-1 shrink-0" />
+
+              {/* Toggle Photo Cutout vs 3D Tailored Mesh (Bypass photo cutout slicing/defects) */}
+              <Button
+                type="button"
+                variant={meshMode === 'tailored' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setMeshMode((prev) => (prev === 'photo' ? 'tailored' : 'photo'))}
+                className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
+                  meshMode === 'tailored'
+                    ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'
+                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                }`}
+                data-testid="toggle-mesh-mode-btn"
+                title={
+                  meshMode === 'tailored'
+                    ? t('dressing_room_3d.mesh_mode_tailored_active', { defaultValue: '3D Tailored Active (Bypassing photo cutout). Click for Photo Cutout.' })
+                    : t('dressing_room_3d.mesh_mode_photo_active', { defaultValue: 'Photo Cutout Active. Click to switch to 3D Tailored Fit (Bypass cutout slicing).' })
+                }
+                aria-label={meshMode === 'tailored' ? '3D Tailored Fit Active' : 'Switch to 3D Tailored Fit'}
+              >
+                <Sparkles className={`w-3.5 h-3.5 shrink-0 ${meshMode === 'tailored' ? 'text-amber-200' : 'text-amber-600'}`} />
+                <span className="hidden sm:inline">
+                  {meshMode === 'tailored'
+                    ? t('dressing_room_3d.mesh_tailored', { defaultValue: '3D Tailored' })
+                    : t('dressing_room_3d.mesh_photo', { defaultValue: 'Photo Fit' })}
+                </span>
               </Button>
 
               <div className="h-4 w-px bg-[#E5DFD5] mx-1 shrink-0" />

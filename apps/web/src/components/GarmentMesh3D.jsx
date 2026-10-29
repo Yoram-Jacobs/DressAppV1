@@ -2515,6 +2515,7 @@ export default function GarmentMesh3D({
   footPose = null,
   showAvatar = true,
   standaloneMode = false,
+  bypassSilhouette = false,
 }) {
   const isStandalone = Boolean(!showAvatar);
   const patternLabel = String(garment?.pattern || garment?.rawItem?.pattern || '').toLowerCase().trim();
@@ -2696,7 +2697,7 @@ export default function GarmentMesh3D({
     [rawSlot, garmentText, isMale, hasOuterwear, garment, aspect]
   );
   const shell = useMemo(() => {
-    if (!visible || !shellFit || !shellMask) return null;
+    if (!visible || !shellFit || !shellMask || bypassSilhouette) return null;
     try {
       const built = buildSilhouetteShell({
         runsByRow: shellMask.runsByRow,
@@ -2774,7 +2775,7 @@ export default function GarmentMesh3D({
   if (shellGeos && texture) {
     const shellMaterialProps = {
       color: '#FFFFFF',
-      alphaTest: 0.15,
+      alphaTest: 0.02,
       transparent: false,
       depthWrite: true,
       side: THREE.DoubleSide,

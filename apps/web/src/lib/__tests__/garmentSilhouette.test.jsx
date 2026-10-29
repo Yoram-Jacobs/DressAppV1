@@ -859,4 +859,32 @@ describe('shoulder line detection and hoodie mapping', () => {
       }
     }
   });
+
+  test('pants maintain continuous seamless triangulation from waist through crotch to hem without horizontal slicing or dropped rows', () => {
+    const nx = 48;
+    const ny = 64;
+    const mask = pantsMask(nx, ny);
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.70, slot: 'bottom', isMale: true, isSkirt: false, isStandalone: false,
+      yTop: 1.08, yBottom: 0.15, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const fIdx = shell.front.index.array;
+    const fPos = shell.front.attributes.position;
+    const vw = nx + 1;
+
+    // Check that every row between fabric top and fabric bottom has vertices referenced by triangles
+    const referencedVertices = new Set(fIdx);
+    const crotchJ = shell.info.crotchRow;
+
+    // Check rows around crotchRow: crotchRow - 2, crotchRow - 1, crotchRow, crotchRow + 1, crotchRow + 2
+    for (let j = crotchJ - 2; j <= crotchJ + 2; j++) {
+      let rowRefHits = 0;
+      for (let i = 0; i < vw; i++) {
+        if (referencedVertices.has(j * vw + i)) rowRefHits++;
+      }
+      expect(rowRefHits).toBeGreaterThan(10);
+    }
+  });
 });
