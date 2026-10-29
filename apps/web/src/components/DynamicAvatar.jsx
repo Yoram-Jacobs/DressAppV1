@@ -66,7 +66,7 @@ export function getCachedSnapshot(sig, isMale = false) {
   }
   if (typeof window !== 'undefined' && sig) {
     try {
-      const stored = sessionStorage.getItem('avatar_snap_v2_' + sig);
+      const stored = sessionStorage.getItem('avatar_snap_v3_' + sig);
       if (stored && stored.length > 8000) {
         rendered3DAvatarSnapshotCache.set(sig, stored);
         return stored;
@@ -81,7 +81,7 @@ function notifySnapshotSubscribers(sig, dataUrl) {
   rendered3DAvatarSnapshotCache.set(sig, dataUrl);
   if (typeof window !== 'undefined') {
     try {
-      sessionStorage.setItem('avatar_snap_v2_' + sig, dataUrl);
+      sessionStorage.setItem('avatar_snap_v3_' + sig, dataUrl);
     } catch {}
   }
   snapshotSubscribers.forEach((cb) => {
@@ -773,11 +773,13 @@ function Realistic3DAvatarMesh({
   signature,
   interactive = false,
   rotationY = 0,
+  onFrameReady,
 }) {
   const modelUrl = isMale ? MALE_GLB_URL : FEMALE_GLB_URL;
   const { scene } = useGLTF(modelUrl);
   const { gl, scene: threeScene, camera } = useThree();
   const groupRef = useRef(null);
+  const frameReadyNotifiedRef = useRef(false);
 
   const clonedScene = useMemo(() => {
     if (!scene) return null;
@@ -847,6 +849,11 @@ function Realistic3DAvatarMesh({
       morphInfluences,
     });
 
+    if (gl && threeScene && camera && !frameReadyNotifiedRef.current) {
+      frameReadyNotifiedRef.current = true;
+      onFrameReady?.();
+    }
+
     if (signature && !rendered3DAvatarSnapshotCache.has(signature) && gl && threeScene && camera) {
       let cancelled = false;
       let attempts = 0;
@@ -874,14 +881,20 @@ function Realistic3DAvatarMesh({
           if (groupRef.current) groupRef.current.rotation.y = 0;
           gl.render(threeScene, camera);
           if (isCanvasFrameRendered(gl)) {
+            if (!frameReadyNotifiedRef.current) {
+              frameReadyNotifiedRef.current = true;
+              onFrameReady?.();
+            }
             const dataUrl = gl.domElement?.toDataURL?.('image/png');
             if (groupRef.current) groupRef.current.rotation.y = prevRot;
+            if (prevRot !== 0) gl.render(threeScene, camera);
             if (dataUrl && dataUrl.length > 8000) {
               notifySnapshotSubscribers(signature, dataUrl);
               return;
             }
           }
           if (groupRef.current) groupRef.current.rotation.y = prevRot;
+          if (prevRot !== 0) gl.render(threeScene, camera);
         } catch {
           /* ignore snapshot error in restricted contexts */
         }
@@ -902,19 +915,39 @@ function Realistic3DAvatarMesh({
         if (rafId) cancelAnimationFrame(rafId);
       };
     }
-  }, [clonedScene, skinColor, hairProps, isMale, morphInfluences, signature, gl, threeScene, camera, transform, interactive]);
+  }, [clonedScene, skinColor, hairProps, isMale, morphInfluences, signature, gl, threeScene, camera, transform, interactive, onFrameReady]);
 
   const frameCountRef = useRef(0);
+  useEffect(() => {
+    frameCountRef.current = 0;
+  }, [signature]);
+
   useFrame(() => {
+    if (!frameReadyNotifiedRef.current && isCanvasFrameRendered(gl)) {
+      frameReadyNotifiedRef.current = true;
+      onFrameReady?.();
+    }
     if (!signature || rendered3DAvatarSnapshotCache.has(signature)) return;
     frameCountRef.current += 1;
     if (frameCountRef.current >= 6 && frameCountRef.current <= 40) {
       try {
+        const prevRot = groupRef.current ? groupRef.current.rotation.y : 0;
+        if (groupRef.current && prevRot !== 0) {
+          groupRef.current.rotation.y = 0;
+          gl.render(threeScene, camera);
+        }
         if (isCanvasFrameRendered(gl)) {
           const dataUrl = gl.domElement?.toDataURL?.('image/png');
+          if (groupRef.current && prevRot !== 0) {
+            groupRef.current.rotation.y = prevRot;
+            gl.render(threeScene, camera);
+          }
           if (dataUrl && dataUrl.length > 8000) {
             notifySnapshotSubscribers(signature, dataUrl);
           }
+        } else if (groupRef.current && prevRot !== 0) {
+          groupRef.current.rotation.y = prevRot;
+          gl.render(threeScene, camera);
         }
       } catch {}
     }
@@ -1000,13 +1033,14 @@ export default function DynamicAvatar({
     const morphKey = Object.entries(morphInfluences)
       .map(([k, v]) => `${k}:${Number(v || 0).toFixed(2)}`)
       .join('|');
-    return `v8_prop_${isMale ? 'M' : 'F'}_${activeSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(height) || 170}_${morphKey}`;
+    return `v9_prop_${isMale ? 'M' : 'F'}_${activeSkinColor}_${hairProps.color}_${hairProps.roughness}_${Number(height) || 170}_${morphKey}`;
   }, [isMale, activeSkinColor, hairProps.color, hairProps.roughness, height, morphInfluences]);
 
   const [snapshotUrl, setSnapshotUrl] = useState(
     () => getCachedSnapshot(avatarSignature, isMale)
   );
   const [canMountWebGL, setCanMountWebGL] = useState(false);
+  const [isWebGLFrameReady, setIsWebGLFrameReady] = useState(false);
   const acquiredSlotRef = useRef(false);
 
   const [avatarRotationY, setAvatarRotationY] = useState(0);
@@ -1053,6 +1087,7 @@ export default function DynamicAvatar({
   const handleContextLost = useCallback((e) => {
     e?.preventDefault?.();
     setCanMountWebGL(false);
+    setIsWebGLFrameReady(false);
     if (acquiredSlotRef.current) {
       acquiredSlotRef.current = false;
       activeWebGLCanvasCount = Math.max(0, activeWebGLCanvasCount - 1);
@@ -1079,8 +1114,13 @@ export default function DynamicAvatar({
       acquiredSlotRef.current = false;
       activeWebGLCanvasCount = Math.max(0, activeWebGLCanvasCount - 1);
       setCanMountWebGL(false);
+      setIsWebGLFrameReady(false);
       notifySlotReleased();
     }
+  }, []);
+
+  const handleFrameReady = useCallback(() => {
+    setIsWebGLFrameReady(true);
   }, []);
 
   // Slot Management Lifecycle
@@ -1141,6 +1181,10 @@ export default function DynamicAvatar({
       snapshotSubscribers.delete(handleSnapshot);
     };
   }, [avatarSignature, isMale, interactive, canUseWebGL, acquireSlot, releaseSlot]);
+
+  const canonicalFallbackUrl = isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL;
+  const activeSnapshotSrc = snapshotUrl || canonicalFallbackUrl;
+  const hideStaticImgBecauseWebGLReady = canUseWebGL && canMountWebGL && isWebGLFrameReady;
 
   return (
     <div
@@ -1206,6 +1250,7 @@ export default function DynamicAvatar({
                   signature={avatarSignature}
                   interactive={interactive}
                   rotationY={avatarRotationY}
+                  onFrameReady={handleFrameReady}
                 />
               </Suspense>
             </Avatar3DErrorBoundary>
@@ -1227,32 +1272,26 @@ export default function DynamicAvatar({
         </button>
       )}
 
-      {/* 1. Guaranteed Canonical 3D Avatar Base (always present as solid underlying foundation) */}
+      {/* Single Static 3D Avatar Snapshot (hidden once live WebGL canvas is active, never stacked with canonical base) */}
       <img
-        src={isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL}
+        src={activeSnapshotSrc}
         alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
+        className={
+          hideStaticImgBecauseWebGLReady
+            ? 'sr-only opacity-0 pointer-events-none'
+            : 'absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]'
+        }
+        onError={() => {
+          if (activeSnapshotSrc !== canonicalFallbackUrl) {
+            try {
+              sessionStorage.removeItem('avatar_snap_v3_' + avatarSignature);
+            } catch {}
+            rendered3DAvatarSnapshotCache.delete(avatarSignature);
+            setSnapshotUrl(canonicalFallbackUrl);
+          }
+        }}
       />
-
-      {/* 2. Custom Proportions Snapshot (rendered over canonical base when ready) */}
-      {snapshotUrl &&
-        snapshotUrl !== CANONICAL_MALE_SNAPSHOT_URL &&
-        snapshotUrl !== CANONICAL_FEMALE_SNAPSHOT_URL && (
-          <img
-            src={snapshotUrl}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
-            onError={() => {
-              try {
-                sessionStorage.removeItem('avatar_snap_v2_' + avatarSignature);
-              } catch {}
-              rendered3DAvatarSnapshotCache.delete(avatarSignature);
-              setSnapshotUrl(isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL);
-            }}
-          />
-        )}
 
       {/* 200x450 Coordinate Frame */}
       <svg

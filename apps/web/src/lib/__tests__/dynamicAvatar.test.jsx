@@ -271,6 +271,10 @@ describe('DynamicAvatar & AvatarViewer old avatar removal', () => {
 
     const mannequinGroups = container.querySelectorAll('g[fill]');
     expect(mannequinGroups.length).toBe(0);
+
+    // Verify only a single avatar <img> element is rendered (never stacking default + custom avatar)
+    const avatarImgs = container.querySelectorAll('img');
+    expect(avatarImgs.length).toBe(1);
   });
 
   test('OutfitPiecePreview renders canonical DynamicAvatar and layered pieces with zero legacy 2D SVG mannequin paths', () => {
