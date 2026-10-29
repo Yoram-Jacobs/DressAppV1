@@ -646,24 +646,35 @@ function ResponsiveOrthoCamera() {
       bottom = -halfHeight;
     }
 
-    if (
+    const isMatrixInvalid =
+      !camera?.projectionMatrix?.elements ||
+      !Number.isFinite(camera.projectionMatrix.elements[0]) ||
+      !Number.isFinite(camera.projectionMatrix.elements[5]);
+
+    const isBoundsChanged =
       Math.abs((camera.left || 0) - left) > 0.001 ||
       Math.abs((camera.right || 0) - right) > 0.001 ||
       Math.abs((camera.top || 0) - top) > 0.001 ||
-      Math.abs((camera.bottom || 0) - bottom) > 0.001
-    ) {
+      Math.abs((camera.bottom || 0) - bottom) > 0.001;
+
+    if (isMatrixInvalid || isBoundsChanged) {
       camera.manual = true;
       camera.left = left;
       camera.right = right;
       camera.top = top;
       camera.bottom = bottom;
-      camera.updateProjectionMatrix();
+      if (typeof camera.updateProjectionMatrix === 'function') {
+        camera.updateProjectionMatrix();
+      }
     }
   }, [camera, size?.width, size?.height]);
 
   useEffect(() => {
+    if (camera?.isOrthographicCamera && typeof camera.updateProjectionMatrix === 'function') {
+      camera.updateProjectionMatrix();
+    }
     syncCamera();
-  }, [syncCamera]);
+  }, [camera, syncCamera]);
 
   useFrame(() => {
     syncCamera();
@@ -861,7 +872,18 @@ function Realistic3DAvatarMesh({
       morphInfluences,
     });
 
-    if (gl && threeScene && camera && !frameReadyNotifiedRef.current) {
+    if (
+      camera?.isOrthographicCamera &&
+      (!camera?.projectionMatrix?.elements ||
+        !Number.isFinite(camera.projectionMatrix.elements[0]) ||
+        !Number.isFinite(camera.projectionMatrix.elements[5]))
+    ) {
+      if (typeof camera.updateProjectionMatrix === 'function') {
+        camera.updateProjectionMatrix();
+      }
+    }
+
+    if (gl && threeScene && camera && isCanvasFrameRendered(gl) && !frameReadyNotifiedRef.current) {
       frameReadyNotifiedRef.current = true;
       onFrameReady?.();
     }
@@ -930,7 +952,17 @@ function Realistic3DAvatarMesh({
   }, [signature]);
 
   useFrame(() => {
-    if (!frameReadyNotifiedRef.current) {
+    if (
+      camera?.isOrthographicCamera &&
+      (!camera?.projectionMatrix?.elements ||
+        !Number.isFinite(camera.projectionMatrix.elements[0]) ||
+        !Number.isFinite(camera.projectionMatrix.elements[5]))
+    ) {
+      if (typeof camera.updateProjectionMatrix === 'function') {
+        camera.updateProjectionMatrix();
+      }
+    }
+    if (!frameReadyNotifiedRef.current && isCanvasFrameRendered(gl)) {
       frameReadyNotifiedRef.current = true;
       onFrameReady?.();
     }
@@ -1251,6 +1283,17 @@ export default function DynamicAvatar({
               zoom: 1,
             }}
             gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
+            onCreated={({ camera: createdCam }) => {
+              if (createdCam?.isOrthographicCamera) {
+                createdCam.left = -100;
+                createdCam.right = 100;
+                createdCam.top = 225;
+                createdCam.bottom = -225;
+                if (typeof createdCam.updateProjectionMatrix === 'function') {
+                  createdCam.updateProjectionMatrix();
+                }
+              }
+            }}
             onContextLost={handleContextLost}
           >
             <ResponsiveOrthoCamera />
