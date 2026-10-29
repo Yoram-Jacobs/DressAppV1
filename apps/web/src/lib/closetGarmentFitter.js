@@ -1127,8 +1127,23 @@ function warpRealGarmentPhotoToDefaultCanvas(
       }
     }
     if (minX !== -1 && maxX > minX + 2) {
-      rawU0[s] = minX / Math.max(1, cropW - 1);
-      rawU1[s] = maxX / Math.max(1, cropW - 1);
+      let curU0 = minX / Math.max(1, cropW - 1);
+      let curU1 = maxX / Math.max(1, cropW - 1);
+      // For pants/shorts: below crotch, detect when one leg ends before the other (uneven hems or cuffs)
+      // to prevent bounding box collapse, coordinate shifts, and diagonal smeared stretching!
+      if (isPantsOrShorts && s > 0 && s >= Math.floor(SLICES * 0.35)) {
+        const prevSpan = rawU1[s - 1] - rawU0[s - 1];
+        const curSpan = curU1 - curU0;
+        if (prevSpan > 0.28 && curSpan < 0.60 * prevSpan) {
+          if (curU1 < 0.50) {
+            curU1 = rawU1[s - 1];
+          } else if (curU0 > 0.50) {
+            curU0 = rawU0[s - 1];
+          }
+        }
+      }
+      rawU0[s] = curU0;
+      rawU1[s] = curU1;
     } else {
       rawU0[s] = s > 0 ? rawU0[s - 1] : 0.15;
       rawU1[s] = s > 0 ? rawU1[s - 1] : 0.85;
@@ -1377,7 +1392,10 @@ function warpRealGarmentPhotoToDefaultCanvas(
       fullSliceSvgWidth = pelvisFullSvgWidth * (1 - blend) + envelopeFullSvgWidth * blend;
     }
 
-    const svgLeftX = g.x0 - sliceCenterU * fullSliceSvgWidth;
+    const effectiveCenterU = isPantsOrShorts
+      ? Math.max(0.44, Math.min(0.56, sliceCenterU))
+      : sliceCenterU;
+    const svgLeftX = g.x0 - effectiveCenterU * fullSliceSvgWidth;
     const dx = svgLeftX * SCALE;
     const dw = fullSliceSvgWidth * SCALE;
 

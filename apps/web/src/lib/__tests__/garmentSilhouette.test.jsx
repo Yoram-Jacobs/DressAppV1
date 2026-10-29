@@ -816,4 +816,47 @@ describe('shoulder line detection and hoodie mapping', () => {
       expect(Math.abs(pf.getX(vIdx))).toBeLessThan(0.38);
     }
   });
+
+  test('pants with asymmetric leg lengths stop shorter leg cleanly at its hem without rogue bridging or horizontal shelves', () => {
+    const nx = 48;
+    const ny = 64;
+    // Pants mask where left leg extends to row 60, but right leg ends at row 48:
+    const mask = paintMask(nx, ny, (u, v) => {
+      if (v < 0.10) return false;
+      // Pelvis: rows 0.10 to 0.40
+      if (v <= 0.40) return u >= 0.20 && u <= 0.80;
+      // Below crotch:
+      // Left leg: u in [0.20, 0.42], extends down to v = 0.94
+      if (u >= 0.20 && u <= 0.42 && v <= 0.94) return true;
+      // Right leg: u in [0.58, 0.80], ends prematurely at v = 0.75
+      if (u >= 0.58 && u <= 0.80 && v <= 0.75) return true;
+      return false;
+    });
+
+    const shell = buildSilhouetteShell({
+      mask, nx, ny, aspect: 0.60, slot: 'bottom', isMale: true, isSkirt: false, isStandalone: false,
+      yTop: 1.08, yBottom: 0.15, layerOffset: 0.018, getTorsoSlice, getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const fIdx = shell.front.index.array;
+    const fPos = shell.front.attributes.position;
+
+    // Check that no triangle connects the left leg (x < -0.04) and right leg (x > 0.04) below the crotch
+    const crotchJ = shell.info.crotchRow;
+    const yCrotch = fPos.getY(crotchJ * (nx + 1) + Math.floor(nx / 2));
+
+    for (let t = 0; t < fIdx.length; t += 3) {
+      const p0 = fIdx[t];
+      const p1 = fIdx[t + 1];
+      const p2 = fIdx[t + 2];
+      const y0 = fPos.getY(p0), y1 = fPos.getY(p1), y2 = fPos.getY(p2);
+      if (Math.min(y0, y1, y2) < yCrotch - 0.05) {
+        const x0 = fPos.getX(p0), x1 = fPos.getX(p1), x2 = fPos.getX(p2);
+        const hasLeft = x0 < -0.04 || x1 < -0.04 || x2 < -0.04;
+        const hasRight = x0 > 0.04 || x1 > 0.04 || x2 > 0.04;
+        expect(hasLeft && hasRight).toBe(false);
+      }
+    }
+  });
 });

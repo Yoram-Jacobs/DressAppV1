@@ -818,6 +818,18 @@ export function buildSilhouetteShell({
     const crotchBlend = isBottom ? smoothstep01((yCrotchBody + 0.03 - y) / 0.06) : 0;
 
     const legRuns = isBottom && j >= crotchRow ? getValidLegPair(effectiveRuns) : null;
+    let singleLegRun = null;
+    let singleLegSide = 0;
+    if (isBottom && j >= crotchRow && !legRuns && effectiveRuns && effectiveRuns.length >= 1) {
+      const sortedLegs = [...effectiveRuns].sort((p, q) => (q[1] - q[0]) - (p[1] - p[0]));
+      const candidate = sortedLegs[0];
+      const wCandidate = candidate[1] - candidate[0];
+      const cCandidate = (candidate[0] + candidate[1]) * 0.5;
+      if (wCandidate >= Math.max(2, 0.08 * nx)) {
+        singleLegRun = candidate;
+        singleLegSide = cCandidate < colMid ? -1 : 1;
+      }
+    }
 
     let rMinA = Infinity, rMaxB = -Infinity;
     if (effectiveRuns && effectiveRuns.length) {
@@ -894,6 +906,26 @@ export function buildSilhouetteShell({
           // Inner thigh contour: near the crotch (top of thighs), inner edge must reach center seam (x -> 0)
           // without gap so the avatar's crotch skin never shows through! As we progress down towards knees/ankles,
           // allow standard anatomical leg separation.
+          const crotchProximity = clamp((y - (yCrotchBody - 0.12)) / 0.12, 0, 1);
+          const maxInnerRadius = activeLegCx * (1.0 - 0.12 * (1 - crotchProximity));
+          const innerRadius = Math.min(outerRadius, Math.max(0.045, maxInnerRadius));
+
+          const isInnerSide = side * uLeg < 0;
+          const rActive = isInnerSide ? innerRadius : outerRadius;
+          const xLeg = side * activeLegCx + uLeg * rActive;
+          const legBlend = smoothstep01((j - crotchRow + 1) / (isShortBottom ? 4 : 2.5));
+          x = xCont * (1 - legBlend) + xLeg * legBlend;
+        } else if (singleLegRun && y <= yCrotchBody + 1e-4) {
+          const legSpread = clamp((j - crotchRow) / 3, 0, 1);
+          const activeLegCx = leg.cx * (0.85 + 0.15 * legSpread);
+          const c0 = (singleLegRun[0] + singleLegRun[1]) / 2;
+          const halfCols = Math.max(1, (singleLegRun[1] - singleLegRun[0]) / 2);
+          const uLeg = clamp((col - c0) / halfCols, -1, 1);
+          const side = singleLegSide;
+
+          const minLegRadius = (leg.r + layerOffset) * 1.06;
+          const photoLegRadius = halfCols * dx;
+          const outerRadius = clamp(photoLegRadius, minLegRadius, minLegRadius * 1.60);
           const crotchProximity = clamp((y - (yCrotchBody - 0.12)) / 0.12, 0, 1);
           const maxInnerRadius = activeLegCx * (1.0 - 0.12 * (1 - crotchProximity));
           const innerRadius = Math.min(outerRadius, Math.max(0.045, maxInnerRadius));
@@ -1197,17 +1229,28 @@ export function buildSilhouetteShell({
     }
   }
 
+  // Helper: check if a row's runs contain fabric near [lo, hi]
+  const hasFabricNear = (runs, lo, hi, maxDist = 1.5) => {
+    if (!runs || !runs.length) return false;
+    for (let k = 0; k < runs.length; k++) {
+      if (runs[k][0] <= hi && runs[k][1] >= lo) return true;
+      if (runs[k][0] - hi <= maxDist && lo - runs[k][1] <= maxDist) return true;
+    }
+    return false;
+  };
+
   // Index: keep every cell the fabric overlaps (in this row band or the next)
   const cellHasFabric = (i, j) => {
     const lo = i;
     const hi = i + 1;
+    const currRuns = runsByRow[j];
+    const nextRuns = runsByRow[j + 1];
 
-    // For pants/bottoms: do not bridge across the crotch void when BOTH adjacent rows have separated legs.
-    // However, right at the crotch apex (crotchRow), allow a single apex saddle cell
-    // (|i - colMid| <= 1) so the pelvis connects smoothly to the legs without webbing between thighs!
+    // For pants/bottoms below crotch:
+    // 1. Do not bridge across the crotch void when adjacent rows have separated legs.
+    // 2. Do not bridge under a terminated pant leg hem when adjacent row has no fabric for that leg
+    //    (strictly prevents horizontal polygon shelves spanning from a shorter cuff across to the other leg).
     if (isBottom) {
-      const currRuns = runsByRow[j];
-      const nextRuns = runsByRow[j + 1];
       if (currRuns && currRuns.length >= 2 && nextRuns && nextRuns.length >= 2) {
         const gapStart = Math.min(currRuns[0][1], nextRuns[0][1]);
         const gapEnd = Math.max(currRuns[1][0], nextRuns[1][0]);
@@ -1220,6 +1263,13 @@ export function buildSilhouetteShell({
           }
           return false;
         }
+      }
+
+      if (j >= crotchRow) {
+        const hasCurr = hasFabricNear(currRuns, lo, hi, 1.5);
+        const hasNext = hasFabricNear(nextRuns, lo, hi, 1.5);
+        if (hasCurr && !hasNext) return false;
+        if (!hasCurr && hasNext) return false;
       }
     }
 
