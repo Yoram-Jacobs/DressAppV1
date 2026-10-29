@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, lazy, Suspense } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { isMaleGender } from '@/lib/gender';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 import DynamicAvatar, {
+  getAvatarGeometry,
   getFullAvatarAnatomy,
   getDefaultAvatarAnatomy,
   warpDefaultAvatarPoint,
@@ -22,6 +23,8 @@ import {
   fitClosetGarmentToDefaultAvatar,
   extractBodyPhotoAnatomy,
 } from '@/lib/closetGarmentFitter';
+
+export const FITTED_AVATAR_SLOTS = new Set(['dress', 'top', 'bottom', 'outerwear', 'shoes']);
 
 // ─── Dynamic Anatomical Topography Helpers ───
 export function getBottomTopography(garment) {
@@ -695,6 +698,235 @@ function resolveEffectiveGarmentUrl(garment) {
 }
 
 /**
+ * Dynamically warps a pre-fitted onboarding garment OR any closet garment (fitted
+ * via the Hybrid Real-Photo Alpha-Contour + Cubic-Bezier Reconstruction engine)
+ * across 56 horizontal anatomical slices in `DynamicAvatar`'s `0 0 200 450` SVG
+ * space so collar, shoulders, chest, waist, hips, knees, ankles, and feet resize
+ * independently to hug the live avatar.
+ */
+export function FittedGarmentLayer({
+  garment,
+  avatarFit,
+  liveAnatomy,
+  roleKey,
+  clickable = false,
+  onClick,
+  zIndexClass = 'z-[20]',
+  altText = 'Garment',
+}) {
+  const canvasRef = useRef(null);
+  const effectiveUrl = useMemo(() => resolveEffectiveGarmentUrl(garment), [garment]);
+  const [loadedImg, setLoadedImg] = useState(
+    () => (effectiveUrl && loadedOnboardingImageCache.get(effectiveUrl)) || null
+  );
+  const [imgDone, setImgDone] = useState(
+    () => Boolean(effectiveUrl && loadedOnboardingImageCache.has(effectiveUrl))
+  );
+
+  const defaultSex = useMemo(
+    () => avatarFit?.default_sex || (liveAnatomy?.isMale ? 'male' : 'female'),
+    [avatarFit?.default_sex, liveAnatomy?.isMale]
+  );
+
+  const defaultAnatomy = useMemo(
+    () => getDefaultAvatarAnatomy(defaultSex),
+    [defaultSex]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    const src = effectiveUrl;
+    if (!src) {
+      setImgDone(true);
+      return;
+    }
+    if (loadedOnboardingImageCache.has(src)) {
+      setLoadedImg(loadedOnboardingImageCache.get(src));
+      setImgDone(true);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      loadedOnboardingImageCache.set(src, img);
+      if (mounted) {
+        setLoadedImg(img);
+        setImgDone(true);
+      }
+    };
+    img.onerror = () => {
+      if (mounted) {
+        setLoadedImg(null);
+        setImgDone(true);
+      }
+    };
+    img.src = src;
+    return () => {
+      mounted = false;
+    };
+  }, [effectiveUrl]);
+
+  const dynamicClosetFit = useMemo(() => {
+    if (avatarFit?.default_viewbox) return null;
+    if (!loadedImg && !imgDone) return null;
+    return fitClosetGarmentToDefaultAvatar(garment, loadedImg, roleKey, defaultSex);
+  }, [avatarFit, garment, loadedImg, imgDone, roleKey, defaultSex]);
+
+  const activeAvatarFit = avatarFit?.default_viewbox
+    ? avatarFit
+    : dynamicClosetFit?.avatarFit || null;
+
+  const activeImageSource = avatarFit?.default_viewbox
+    ? loadedImg
+    : dynamicClosetFit?.imageSource || loadedImg;
+
+  const layerEaseMultiplier = useMemo(() => {
+    if (roleKey === 'outerwear') return 1.02;
+    return 1.0;
+  }, [roleKey]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !activeImageSource || !activeAvatarFit?.default_viewbox) return;
+    let ctx = null;
+    try {
+      ctx = canvas.getContext('2d');
+    } catch {
+      ctx = null;
+    }
+    if (!ctx) return;
+
+    const SCALE = 3; // 600 x 1350 supersampled canvas for 200 x 450 SVG viewBox
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const vb = activeAvatarFit.default_viewbox;
+    const natW = activeImageSource.naturalWidth || activeImageSource.width || 1;
+    const natH = activeImageSource.naturalHeight || activeImageSource.height || 1;
+    const SLICES = 56;
+
+    for (let i = 0; i < SLICES; i++) {
+      const t0 = i / SLICES;
+      const t1 = (i + 1) / SLICES;
+
+      const sy = t0 * natH;
+      const sh = Math.max(1, (t1 - t0) * natH);
+
+      const y0Top = vb.y + t0 * vb.height;
+      const y0Bot = vb.y + t1 * vb.height;
+      const y0Mid = 0.5 * (y0Top + y0Bot);
+
+      const pTop = warpDefaultAvatarPoint(100, y0Top, defaultAnatomy, liveAnatomy);
+      const pBot = warpDefaultAvatarPoint(100, y0Bot, defaultAnatomy, liveAnatomy);
+
+      let yWidthAnchor = y0Mid;
+      if (activeAvatarFit.fit_mode === 'photo_contour') {
+        if (
+          roleKey === 'top' ||
+          roleKey === 'outerwear' ||
+          roleKey === 'dress' ||
+          roleKey === 'full_body'
+        ) {
+          yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yShoulders);
+        } else if (roleKey === 'bottom') {
+          yWidthAnchor = Math.min(y0Mid, defaultAnatomy.yHip);
+        }
+      }
+
+      const pLeft = warpDefaultAvatarPoint(vb.x, yWidthAnchor, defaultAnatomy, liveAnatomy);
+      const pRight = warpDefaultAvatarPoint(
+        vb.x + vb.width,
+        yWidthAnchor,
+        defaultAnatomy,
+        liveAnatomy
+      );
+
+      const anchorCenter = pLeft.centerX ?? 100;
+      const sliceCenter = pTop.centerX ?? anchorCenter;
+      const halfSpanL = (anchorCenter - pLeft.x) * layerEaseMultiplier;
+      const halfSpanR = (pRight.x - anchorCenter) * layerEaseMultiplier;
+
+      const xLeftLive = sliceCenter - halfSpanL;
+      const widthLive = halfSpanL + halfSpanR;
+      const yTopLive = pTop.y;
+      const heightLive = Math.max(0.4, pBot.y - pTop.y);
+
+      const dx = xLeftLive * SCALE;
+      const dy = yTopLive * SCALE;
+      const dw = widthLive * SCALE;
+      const dh = heightLive * SCALE + 0.85; // sub-pixel overlap prevents slice seams
+
+      ctx.drawImage(activeImageSource, 0, sy, natW, sh, dx, dy, dw, dh);
+    }
+  }, [activeImageSource, activeAvatarFit, defaultAnatomy, liveAnatomy, layerEaseMultiplier, roleKey]);
+
+  const fallbackBox = useMemo(() => {
+    const vb = activeAvatarFit?.default_viewbox || { x: 55, y: 75, width: 90, height: 150 };
+    const tl = warpDefaultAvatarPoint(vb.x, vb.y, defaultAnatomy, liveAnatomy);
+    const br = warpDefaultAvatarPoint(
+      vb.x + vb.width,
+      vb.y + vb.height,
+      defaultAnatomy,
+      liveAnatomy
+    );
+    return {
+      x: tl.x,
+      y: tl.y,
+      width: Math.max(10, br.x - tl.x),
+      height: Math.max(10, br.y - tl.y),
+    };
+  }, [activeAvatarFit, defaultAnatomy, liveAnatomy]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.22 }}
+      className={`absolute inset-0 w-full h-full drop-shadow-md ${zIndexClass} ${
+        clickable ? 'cursor-pointer pointer-events-auto' : 'pointer-events-none'
+      }`}
+      onClick={clickable ? onClick : undefined}
+      title={garment?.name || garment?.title || altText}
+      data-testid={`fitted-garment-layer-${roleKey}`}
+      data-fit-mode={activeAvatarFit?.fit_mode || 'onboarding_prefitted'}
+    >
+      {effectiveUrl && (
+        <img
+          src={effectiveUrl}
+          alt={altText || ''}
+          loading="lazy"
+          className="sr-only pointer-events-none"
+        />
+      )}
+      <svg
+        viewBox="0 0 200 450"
+        className="w-full h-full overflow-visible"
+        style={{ maxHeight: '100%' }}
+      >
+        {!activeImageSource && effectiveUrl && (
+          <image
+            href={effectiveUrl}
+            x={fallbackBox.x}
+            y={fallbackBox.y}
+            width={fallbackBox.width}
+            height={fallbackBox.height}
+            preserveAspectRatio="none"
+          />
+        )}
+        <foreignObject x="0" y="0" width="200" height="450">
+          <canvas
+            ref={canvasRef}
+            width={600}
+            height={1350}
+            aria-label={altText}
+            style={{ width: '200px', height: '450px', display: 'block' }}
+          />
+        </foreignObject>
+      </svg>
+    </motion.div>
+  );
+}
+
+/**
  * Interactive 2D Point-Cloud Fit Mesh overlay that visualizes the anatomical
  * vertices, triangulated mesh edges, and proportion scaling rings over the
  * avatar and fitted garments in real time.
@@ -1354,24 +1586,224 @@ export default function AvatarViewer2D({
     );
   }, [activeBodyPhotoUrl, loadedBodyPhotoImg, baseLiveAnatomy, computedMeasurements.gender, sex]);
 
-  const renderGarment = (roleKey, altText, extraClasses = '', _initial = {}, _animate = {}, imgAlignClass = 'object-top', objectFitMode = 'contain') => {
+  const avatarGeometry = useMemo(() => {
+    if (activeBodyPhotoUrl && liveAnatomy?.isPhotoExtracted) {
+      return {
+        yShoulders: liveAnatomy.yShoulders,
+        wShoulders: liveAnatomy.wShoulders,
+        shoulderYPercent: liveAnatomy.shoulderYPercent,
+        shoulderWidthPercent: liveAnatomy.shoulderWidthPercent,
+        isMale: liveAnatomy.isMale,
+      };
+    }
+    return getAvatarGeometry({
+      height: computedMeasurements.height,
+      shoulders: computedMeasurements.shoulders,
+      gender: computedMeasurements.gender || sex
+    });
+  }, [activeBodyPhotoUrl, liveAnatomy, computedMeasurements.height, computedMeasurements.shoulders, computedMeasurements.gender, sex]);
+
+  const [garmentMetrics, setGarmentMetrics] = useState({});
+
+  const handleMetricsReady = useCallback((slot, m) => {
+    setGarmentMetrics(prev => {
+      if (prev[slot] && prev[slot].shoulderYRatio === m.shoulderYRatio && prev[slot].aspectRatio === m.aspectRatio) {
+        return prev;
+      }
+      return { ...prev, [slot]: m };
+    });
+  }, []);
+
+  const renderGarment = (roleKey, altText, extraClasses = '', initial = {}, animate = {}, imgAlignClass = 'object-top', objectFitMode = 'contain') => {
     const garment = garments[roleKey];
-    if (!garment || !garment.url) return null;
+    if (!garment || (!garment.url && !FITTED_AVATAR_SLOTS.has(roleKey))) return null;
     const clickable = onItemClick && garment.id;
 
+    // 1. All Clothing & Footwear Slots on 2D Avatar AND Real Full-Body Photo Avatar:
+    //    Uses pre-fitted onboarding `avatar_fit` when present, or dynamically fits
+    //    any user closet item via `fitClosetGarmentToDefaultAvatar` (Hybrid Real-Photo
+    //    Alpha-Contour Warping + Cubic-Bezier Silhouette & Fabric Texture Reconstruction)
+    //    followed by 56-slice anatomical warping to `liveAnatomy` (either parametric
+    //    measurements or full-body photo extracted anatomy).
+    const onboardingFit = resolveOnboardingAvatarFit(garment);
+    if ((onboardingFit && onboardingFit.default_viewbox) || FITTED_AVATAR_SLOTS.has(roleKey)) {
+      const zMatch = extraClasses.match(/\bz-\[\d+\]/);
+      const zIndexClass = zMatch ? zMatch[0] : (roleKey === 'outerwear' ? 'z-[30]' : roleKey === 'bottom' ? 'z-[10]' : roleKey === 'shoes' ? 'z-[15]' : 'z-[20]');
+      return (
+        <FittedGarmentLayer
+          key={`fitted-${roleKey}-${garment.id || garment.url || garment.name}`}
+          garment={garment}
+          avatarFit={onboardingFit}
+          liveAnatomy={liveAnatomy}
+          roleKey={roleKey}
+          clickable={Boolean(clickable)}
+          onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
+          zIndexClass={zIndexClass}
+          altText={altText}
+        />
+      );
+    }
+
+    // 2. Accessories Overlay (headwear, glasses, earrings, scarf, belt, watch, gloves, etc.)
+    const garmentText = `${garment.name || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`;
+    const isStrapless = /\b(strapless|tube\s*top|bandeau|off[\s-_]*shoulder)\b/i.test(garmentText);
+    const isShoulderAnchored = (roleKey === 'top' || roleKey === 'outerwear' || roleKey === 'dress') && !isStrapless;
+
+    let dynamicStyle = undefined;
+    let effectiveInitial = initial;
+    let effectiveAnimate = animate;
+    let effectiveClasses = extraClasses;
+
+    if (isShoulderAnchored) {
+      const defaultMetrics = {
+        top: { shoulderYRatio: 0.13, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.60, aspectRatio: 1.25 },
+        outerwear: { shoulderYRatio: 0.136, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.51, aspectRatio: 1.45 },
+        dress: { shoulderYRatio: 0.12, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.58, aspectRatio: 0.85 }
+      };
+
+      const m = garmentMetrics[roleKey] || trimmedImageMetricsCache.get(garment.url) || defaultMetrics[roleKey] || defaultMetrics.top;
+
+      // Outerwear drapes slightly wider (1.09x) over underlayers (1.03x)
+      const spanMultiplier = roleKey === 'outerwear' ? 1.09 : 1.03;
+      const targetSpan = avatarGeometry.shoulderWidthPercent * spanMultiplier;
+
+      // Rendered width based on shoulder span (clamped between 52% and 96%)
+      const renderedWidth = Math.max(52, Math.min(96, targetSpan / Math.max(0.3, m.shoulderWidthRatio)));
+
+      // In aspect-[1/2] container, H_rendered = W_rendered / aspectRatio * 0.5
+      const renderedHeight = (renderedWidth / Math.max(0.35, m.aspectRatio)) * 0.5;
+
+      // Shoulder offset in % of container height
+      const shoulderOffsetY = m.shoulderYRatio * renderedHeight;
+
+      // Align garment shoulder line with avatar shoulder line:
+      const dynamicTop = avatarGeometry.shoulderYPercent - shoulderOffsetY;
+
+      // Shoulder horizontal center offset:
+      const translateX = -m.shoulderCenterXRatio * 100;
+
+      dynamicStyle = {
+        top: `${dynamicTop.toFixed(2)}%`,
+        left: '50%',
+        width: `${renderedWidth.toFixed(2)}%`,
+        height: `${renderedHeight.toFixed(2)}%`
+      };
+
+      // Strip hard-coded top-*, left-*, w-*, h-* classes, keep z-index and shadows
+      effectiveClasses = extraClasses
+        .replace(/\btop-\[[^\]]+\]/g, '')
+        .replace(/\bleft-\S+/g, '')
+        .replace(/\bw-\[[^\]]+\]/g, '')
+        .replace(/\bh-\[[^\]]+\]/g, '')
+        .trim();
+
+      effectiveInitial = {
+        ...initial,
+        x: `${translateX.toFixed(2)}%`
+      };
+      effectiveAnimate = {
+        ...animate,
+        x: `${translateX.toFixed(2)}%`
+      };
+    } else if (liveAnatomy) {
+      const H = liveAnatomy.viewBoxHeight || 450;
+      const W = 200;
+      const headH = Math.max(24, (liveAnatomy.yChin || 100) - (liveAnatomy.yHeadTop || 52));
+      const cx = typeof liveAnatomy.centerXAtY === 'function' ? liveAnatomy.centerXAtY(liveAnatomy.yWaist) : (liveAnatomy.X0 || 100);
+      const leftPct = `${((cx / W) * 100).toFixed(2)}%`;
+
+      if (roleKey === 'headwear') {
+        const crownBottomY = (liveAnatomy.yHeadTop || 52) + headH * 0.42;
+        const boxH = 18;
+        dynamicStyle = {
+          top: `${(((crownBottomY / H) * 100) - boxH).toFixed(2)}%`,
+          left: leftPct,
+          width: '32%',
+          height: `${boxH}%`,
+        };
+      } else if (roleKey === 'glasses') {
+        const yEyes = (liveAnatomy.yHeadTop || 52) + headH * 0.48;
+        const boxH = 4.6;
+        dynamicStyle = {
+          top: `${(((yEyes / H) * 100) - boxH * 0.5).toFixed(2)}%`,
+          left: leftPct,
+          width: '19%',
+          height: `${boxH}%`,
+        };
+      } else if (roleKey === 'earrings') {
+        const yEars = (liveAnatomy.yHeadTop || 52) + headH * 0.58;
+        const boxH = 6.5;
+        dynamicStyle = {
+          top: `${(((yEars / H) * 100) - boxH * 0.35).toFixed(2)}%`,
+          left: leftPct,
+          width: '24%',
+          height: `${boxH}%`,
+        };
+      } else if (roleKey === 'scarf' || roleKey === 'accessory') {
+        const yNeckTop = (liveAnatomy.yChin || 100) - 2.0;
+        dynamicStyle = {
+          top: `${((yNeckTop / H) * 100).toFixed(2)}%`,
+          left: leftPct,
+          width: roleKey === 'scarf' ? '32%' : '28%',
+          height: roleKey === 'scarf' ? '19%' : '15%',
+        };
+      } else if (roleKey === 'belt') {
+        const yBelt = (liveAnatomy.yWaist || 182) + ((liveAnatomy.yHip || 226) - (liveAnatomy.yWaist || 182)) * 0.18;
+        const wBeltPct = Math.max(30, Math.min(56, (((liveAnatomy.wWaist || 28) * 2 + 7) / W) * 100));
+        dynamicStyle = {
+          top: `${(((yBelt / H) * 100) - 2.2).toFixed(2)}%`,
+          left: leftPct,
+          width: `${wBeltPct.toFixed(2)}%`,
+          height: '4.6%',
+        };
+      } else if (roleKey === 'watch') {
+        const yWr = liveAnatomy.yWrist || 231;
+        const xWr = cx + 0.5 * ((liveAnatomy.wWristIn || 48) + (liveAnatomy.wWristOut || 58));
+        dynamicStyle = {
+          top: `${((yWr / H) * 100).toFixed(2)}%`,
+          left: `${((xWr / W) * 100).toFixed(2)}%`,
+          width: '11.5%',
+        };
+      } else if (roleKey === 'gloves') {
+        const yWr = (liveAnatomy.yWrist || 231) - 2.0;
+        const yHand = (liveAnatomy.yHandTip || 258) + 4.0;
+        const wGlovesPct = Math.max(54, Math.min(76, (((liveAnatomy.wWristOut || 58) * 2 + 10) / W) * 100));
+        dynamicStyle = {
+          top: `${((yWr / H) * 100).toFixed(2)}%`,
+          left: leftPct,
+          width: `${wGlovesPct.toFixed(2)}%`,
+          height: `${Math.max(6.5, ((yHand - yWr) / H) * 100).toFixed(2)}%`,
+        };
+      }
+
+      if (dynamicStyle) {
+        effectiveClasses = extraClasses
+          .replace(/\btop-\[[^\]]+\]/g, '')
+          .replace(/\bleft-\S+/g, '')
+          .replace(/\bw-\[[^\]]+\]/g, '')
+          .replace(/\bh-\[[^\]]+\]/g, '')
+          .trim();
+      }
+    }
+
     return (
-      <div
-        className={`absolute -translate-x-1/2 flex items-center justify-center ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform pointer-events-auto' : 'pointer-events-none'}`}
+      <motion.div
+        initial={effectiveInitial}
+        animate={effectiveAnimate}
+        style={dynamicStyle}
+        className={`absolute drop-shadow-md ${effectiveClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform pointer-events-auto' : 'pointer-events-none'}`}
         onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
         title={garment.name || altText}
       >
-        <img
+        <AutoTrimmedGarmentImage
           src={garment.url}
-          alt={altText || ''}
-          loading="lazy"
-          className={`w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200 ${imgAlignClass || 'object-top'} ${objectFitMode === 'cover' ? 'object-cover' : 'object-contain'}`}
+          placeholder={garment.placeholder}
+          alt={altText}
+          objectFitMode={objectFitMode}
+          imgAlignClass={imgAlignClass}
+          onMetricsReady={(metrics) => handleMetricsReady(roleKey, metrics)}
         />
-      </div>
+      </motion.div>
     );
   };
 

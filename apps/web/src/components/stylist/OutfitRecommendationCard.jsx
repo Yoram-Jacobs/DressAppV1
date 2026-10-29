@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth';
 import OutfitAvatarViewer from '@/components/OutfitAvatarViewer';
 import { HarmonyBadge } from '@/components/stylist/HarmonyBadge';
 import { closetStore } from '@/lib/closetStore';
-import { bestImageUrl } from '@/lib/itemImage';
+import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 /**
  * Renders a single outfit recommendation. When recommendation items include
  * `closet_item_id`, we fetch and embed the item's image so the user sees
@@ -151,6 +151,9 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
       <div className="relative">
         <OutfitAvatarViewer
           shapeParams={user?.avatar_shape_params || {}}
+          measurements={user?.body_measurements || user?.measurements}
+          skinColor={user?.skin_tone}
+          hair={user?.hair}
           sex={user?.gender || user?.sex || 'female'}
           outfitItemsMap={outfitItemsMap}
           onItemClick={onItemClick}
@@ -173,40 +176,62 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
         {/* Pieces in this Outfit — Thumbnails & Quick View */}
         {items.length > 0 && (
           <div className="mt-3">
-            <div className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
-              <span>{t('stylist.outfitPieces', { defaultValue: 'Outfit Pieces' })}</span>
+            <div className="text-[12px] font-semibold text-muted-foreground mb-2 flex items-center justify-between">
+              <span>{t('stylist.outfitPieces', { defaultValue: 'Outfit Pieces' })} ({items.length})</span>
               <span className="text-[10px] text-muted-foreground font-normal">{t('stylist.tapToInspect', { defaultValue: 'Tap to inspect' })}</span>
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {items.map((it, idx) => {
                 const itId = it.closet_item_id || it.id;
                 const itObj = itemData[itId];
-                const itImg = images[itId] || (itObj ? bestImageUrl(itObj) : null);
+                const itImg =
+                  images[itId] ||
+                  (itObj ? bestImageUrl(itObj) : null) ||
+                  resolveMediaUrl(
+                    it.clean_image_url ||
+                      it.reconstructed_image_url ||
+                      it.image_url ||
+                      it.url ||
+                      null
+                  );
                 const roleLabel = labelForRole(it.role, t);
-                const itTitle = itObj?.title || itObj?.name || it.description || roleLabel;
+                const itTitle =
+                  itObj?.title ||
+                  itObj?.name ||
+                  it.name ||
+                  it.title ||
+                  it.description ||
+                  roleLabel;
+                const itSubtitle =
+                  it.description && it.description !== itTitle ? it.description : null;
                 return (
                   <button
-                    key={itId || `piece-${idx}`}
+                    key={`${it.role || 'piece'}-${itId || idx}-${idx}`}
                     type="button"
                     onClick={() => itId && onItemClick?.(itId)}
                     disabled={!itId}
-                    className="flex items-center gap-2 p-1.5 pe-2.5 rounded-lg border border-border bg-card hover:bg-accent/10 hover:border-primary-brand/40 transition-all text-start shrink-0 group focus:outline-none focus:ring-1 focus:ring-primary-brand"
+                    className="w-full flex items-center gap-2.5 p-2 rounded-lg border border-border bg-card hover:bg-accent/10 hover:border-primary-brand/40 transition-all text-start group focus:outline-none focus:ring-1 focus:ring-primary-brand"
                     title={itTitle}
                   >
-                    <div className="w-10 h-10 rounded-md overflow-hidden bg-secondary/20 shrink-0 border border-border/50 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-md overflow-hidden bg-secondary/20 shrink-0 border border-border/50 flex items-center justify-center">
                       {itImg ? (
                         <img src={itImg} alt={itTitle} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
                       ) : (
                         <span className="text-[10px] text-muted-foreground font-semibold">{it.role?.[0]?.toUpperCase()}</span>
                       )}
                     </div>
-                    <div className="min-w-0 max-w-[110px]">
-                      <span className="block text-[10px] font-semibold text-primary-brand leading-tight uppercase truncate">
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-[10px] font-semibold text-primary-brand leading-tight uppercase">
                         {roleLabel}
                       </span>
-                      <span className="block text-xs font-medium text-foreground leading-tight truncate">
+                      <span className="block text-xs font-medium text-foreground leading-snug line-clamp-2">
                         {itTitle}
                       </span>
+                      {itSubtitle && (
+                        <span className="block text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
+                          {itSubtitle}
+                        </span>
+                      )}
                     </div>
                   </button>
                 );

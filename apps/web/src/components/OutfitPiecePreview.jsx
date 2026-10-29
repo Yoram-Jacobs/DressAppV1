@@ -4,12 +4,10 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { userStore } from '@/lib/api';
 import { isMaleGender } from '@/lib/gender';
-import DynamicAvatar from './DynamicAvatar';
+import DynamicAvatar, { getFullAvatarAnatomy } from './DynamicAvatar';
 import {
-  getTopTopography,
-  getBottomTopography,
-  getOuterwearTopography,
-  getDressTopography,
+  FittedGarmentLayer,
+  resolveOnboardingAvatarFit,
 } from './AvatarViewer2D';
 
 /**
@@ -178,6 +176,7 @@ export default function OutfitPiecePreview({
 
       const itemData = {
         ...piece,
+        url: url,
         imageUrl: url,
       };
 
@@ -205,11 +204,20 @@ export default function OutfitPiecePreview({
     return categorized;
   }, [outfit, outfitItems]);
 
-  const hasOuterwear = Boolean(slots.outerwear && slots.outerwear.imageUrl);
-  const bottomTopo = useMemo(() => getBottomTopography(slots.bottom), [slots.bottom]);
-  const dressTopo = useMemo(() => getDressTopography(slots.dress), [slots.dress]);
-  const topTopo = useMemo(() => getTopTopography(slots.top, hasOuterwear), [slots.top, hasOuterwear]);
-  const outerwearTopo = useMemo(() => getOuterwearTopography(slots.outerwear), [slots.outerwear]);
+  const liveAnatomy = useMemo(() => {
+    const isMale = effectiveSex === 'male';
+    return getFullAvatarAnatomy({
+      height: Number(rawMeasurements?.height || rawMeasurements?.height_cm) || (isMale ? 178 : 168),
+      shoulders: Number(rawMeasurements?.shoulders || rawMeasurements?.shoulders_cm) || (isMale ? 44 : 38),
+      chest: Number(rawMeasurements?.chest || rawMeasurements?.chest_cm) || (isMale ? 98 : 88),
+      waist: Number(rawMeasurements?.waist || rawMeasurements?.waist_cm) || (isMale ? 82 : 68),
+      hip: Number(rawMeasurements?.hip || rawMeasurements?.hips || rawMeasurements?.hips_cm) || (isMale ? 96 : 94),
+      armLength: Number(rawMeasurements?.armLength || rawMeasurements?.arm_length) || (isMale ? 64 : 58),
+      inseam: Number(rawMeasurements?.inseam || rawMeasurements?.inseam_cm) || (isMale ? 82 : 76),
+      footLength: Number(rawMeasurements?.footLength || rawMeasurements?.foot_length) || (isMale ? 27.0 : 24.5),
+      gender: effectiveSex,
+    });
+  }, [rawMeasurements, effectiveSex]);
 
   const hasDress = Boolean(slots.dress);
   const totalPlaced =
@@ -275,87 +283,90 @@ export default function OutfitPiecePreview({
 
         {/* Bottom (Pants, Skirts, Shorts) -> zIndex 10 */}
         {slots.bottom && !hasDress && (
-          <div
-            className={cn(
-              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
-              bottomTopo.classes
-            )}
-            style={{ zIndex: 10 }}
-            title={slots.bottom.title || slots.bottom.name}
-          >
-            <img
-              src={slots.bottom.imageUrl}
-              alt=""
-              loading="lazy"
-              className={cn(
-                'w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200',
-                bottomTopo.align || 'object-top',
-                'object-contain'
-              )}
-            />
-          </div>
+          <FittedGarmentLayer
+            key={`preview-bottom-${slots.bottom.id || slots.bottom.imageUrl}`}
+            garment={slots.bottom}
+            avatarFit={resolveOnboardingAvatarFit(slots.bottom)}
+            liveAnatomy={liveAnatomy}
+            roleKey="bottom"
+            clickable={Boolean(onItemClick && (slots.bottom.id || slots.bottom.closet_item_id))}
+            onClick={
+              onItemClick && (slots.bottom.id || slots.bottom.closet_item_id)
+                ? (e) => {
+                    e.stopPropagation();
+                    onItemClick(slots.bottom.id || slots.bottom.closet_item_id);
+                  }
+                : undefined
+            }
+            zIndexClass="z-[10]"
+            altText={slots.bottom.title || slots.bottom.name || 'Bottom'}
+          />
         )}
 
         {/* Footwear / Shoes -> zIndex 15 */}
         {slots.shoes && (
-          <div
-            className="absolute bottom-[2.5%] left-1/2 -translate-x-1/2 w-[60%] h-[13%] pointer-events-none flex items-center justify-center"
-            style={{ zIndex: 15 }}
-            title={slots.shoes.title || slots.shoes.name}
-          >
-            <img
-              src={slots.shoes.imageUrl}
-              alt=""
-              loading="lazy"
-              className="w-full h-full object-contain object-bottom filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)] transition-transform duration-200"
-            />
-          </div>
+          <FittedGarmentLayer
+            key={`preview-shoes-${slots.shoes.id || slots.shoes.imageUrl}`}
+            garment={slots.shoes}
+            avatarFit={resolveOnboardingAvatarFit(slots.shoes)}
+            liveAnatomy={liveAnatomy}
+            roleKey="shoes"
+            clickable={Boolean(onItemClick && (slots.shoes.id || slots.shoes.closet_item_id))}
+            onClick={
+              onItemClick && (slots.shoes.id || slots.shoes.closet_item_id)
+                ? (e) => {
+                    e.stopPropagation();
+                    onItemClick(slots.shoes.id || slots.shoes.closet_item_id);
+                  }
+                : undefined
+            }
+            zIndexClass="z-[15]"
+            altText={slots.shoes.title || slots.shoes.name || 'Shoes'}
+          />
         )}
 
         {/* Dress Mode -> zIndex 20 */}
         {hasDress && (
-          <div
-            className={cn(
-              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
-              dressTopo.classes
-            )}
-            style={{ zIndex: 20 }}
-            title={slots.dress.title || slots.dress.name}
-          >
-            <img
-              src={slots.dress.imageUrl}
-              alt=""
-              loading="lazy"
-              className={cn(
-                'w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.14)] transition-transform duration-200',
-                dressTopo.align || 'object-top',
-                'object-contain'
-              )}
-            />
-          </div>
+          <FittedGarmentLayer
+            key={`preview-dress-${slots.dress.id || slots.dress.imageUrl}`}
+            garment={slots.dress}
+            avatarFit={resolveOnboardingAvatarFit(slots.dress)}
+            liveAnatomy={liveAnatomy}
+            roleKey="dress"
+            clickable={Boolean(onItemClick && (slots.dress.id || slots.dress.closet_item_id))}
+            onClick={
+              onItemClick && (slots.dress.id || slots.dress.closet_item_id)
+                ? (e) => {
+                    e.stopPropagation();
+                    onItemClick(slots.dress.id || slots.dress.closet_item_id);
+                  }
+                : undefined
+            }
+            zIndexClass="z-[20]"
+            altText={slots.dress.title || slots.dress.name || 'Dress'}
+          />
         )}
 
         {/* Top (Shirts, Tees, Blouses, Sweaters) -> zIndex 20 */}
         {slots.top && !hasDress && (
-          <div
-            className={cn(
-              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
-              topTopo.classes
-            )}
-            style={{ zIndex: 20 }}
-            title={slots.top.title || slots.top.name}
-          >
-            <img
-              src={slots.top.imageUrl}
-              alt=""
-              loading="lazy"
-              className={cn(
-                'w-full h-full filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.12)] transition-transform duration-200',
-                topTopo.align || 'object-top',
-                'object-contain'
-              )}
-            />
-          </div>
+          <FittedGarmentLayer
+            key={`preview-top-${slots.top.id || slots.top.imageUrl}`}
+            garment={slots.top}
+            avatarFit={resolveOnboardingAvatarFit(slots.top)}
+            liveAnatomy={liveAnatomy}
+            roleKey="top"
+            clickable={Boolean(onItemClick && (slots.top.id || slots.top.closet_item_id))}
+            onClick={
+              onItemClick && (slots.top.id || slots.top.closet_item_id)
+                ? (e) => {
+                    e.stopPropagation();
+                    onItemClick(slots.top.id || slots.top.closet_item_id);
+                  }
+                : undefined
+            }
+            zIndexClass="z-[20]"
+            altText={slots.top.title || slots.top.name || 'Top'}
+          />
         )}
 
         {/* Belt -> zIndex 25 */}
@@ -376,25 +387,24 @@ export default function OutfitPiecePreview({
 
         {/* Outerwear (Jackets, Blazers, Coats, Cardigans) -> zIndex 30 */}
         {slots.outerwear && (
-          <div
-            className={cn(
-              'absolute -translate-x-1/2 pointer-events-none flex items-center justify-center',
-              outerwearTopo.classes
-            )}
-            style={{ zIndex: 30 }}
-            title={slots.outerwear.title || slots.outerwear.name}
-          >
-            <img
-              src={slots.outerwear.imageUrl}
-              alt=""
-              loading="lazy"
-              className={cn(
-                'w-full h-full filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.16)] transition-transform duration-200',
-                outerwearTopo.align || 'object-top',
-                'object-contain'
-              )}
-            />
-          </div>
+          <FittedGarmentLayer
+            key={`preview-outerwear-${slots.outerwear.id || slots.outerwear.imageUrl}`}
+            garment={slots.outerwear}
+            avatarFit={resolveOnboardingAvatarFit(slots.outerwear)}
+            liveAnatomy={liveAnatomy}
+            roleKey="outerwear"
+            clickable={Boolean(onItemClick && (slots.outerwear.id || slots.outerwear.closet_item_id))}
+            onClick={
+              onItemClick && (slots.outerwear.id || slots.outerwear.closet_item_id)
+                ? (e) => {
+                    e.stopPropagation();
+                    onItemClick(slots.outerwear.id || slots.outerwear.closet_item_id);
+                  }
+                : undefined
+            }
+            zIndexClass="z-[30]"
+            altText={slots.outerwear.title || slots.outerwear.name || 'Outerwear'}
+          />
         )}
 
         {/* Bag -> zIndex 35 */}

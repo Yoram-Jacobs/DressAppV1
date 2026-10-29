@@ -8,7 +8,7 @@ import { isMaleGender } from '@/lib/gender';
 const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair5_smooth';
 const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair5_smooth';
 
-export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png';
+export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png?v=male2';
 export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png';
 
 // Cache rendered 3D WebGL snapshots (`data:image/png;base64,...`) keyed by avatar signature
@@ -66,7 +66,7 @@ export function getCachedSnapshot(sig, isMale = false) {
   }
   if (typeof window !== 'undefined' && sig) {
     try {
-      const stored = sessionStorage.getItem('avatar_snap_' + sig);
+      const stored = sessionStorage.getItem('avatar_snap_v2_' + sig);
       if (stored && stored.length > 8000) {
         rendered3DAvatarSnapshotCache.set(sig, stored);
         return stored;
@@ -81,7 +81,7 @@ function notifySnapshotSubscribers(sig, dataUrl) {
   rendered3DAvatarSnapshotCache.set(sig, dataUrl);
   if (typeof window !== 'undefined') {
     try {
-      sessionStorage.setItem('avatar_snap_' + sig, dataUrl);
+      sessionStorage.setItem('avatar_snap_v2_' + sig, dataUrl);
     } catch {}
   }
   snapshotSubscribers.forEach((cb) => {
@@ -1111,13 +1111,20 @@ export default function DynamicAvatar({
   // Snapshot updates & subscription
   useEffect(() => {
     const cached = getCachedSnapshot(avatarSignature, isMale);
-    if (cached) {
+    const isRealCustomSnapshot =
+      cached &&
+      cached !== CANONICAL_MALE_SNAPSHOT_URL &&
+      cached !== CANONICAL_FEMALE_SNAPSHOT_URL;
+    if (isRealCustomSnapshot) {
       setSnapshotUrl(cached);
       if (!interactive) {
         releaseSlot();
       }
     } else {
       setSnapshotUrl(isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL);
+      if (canUseWebGL && !interactive) {
+        acquireSlot();
+      }
     }
 
     const handleSnapshot = (sig, dataUrl) => {
@@ -1133,7 +1140,7 @@ export default function DynamicAvatar({
     return () => {
       snapshotSubscribers.delete(handleSnapshot);
     };
-  }, [avatarSignature, isMale, interactive, releaseSlot]);
+  }, [avatarSignature, isMale, interactive, canUseWebGL, acquireSlot, releaseSlot]);
 
   return (
     <div
@@ -1239,7 +1246,7 @@ export default function DynamicAvatar({
             className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
             onError={() => {
               try {
-                sessionStorage.removeItem('avatar_snap_' + avatarSignature);
+                sessionStorage.removeItem('avatar_snap_v2_' + avatarSignature);
               } catch {}
               rendered3DAvatarSnapshotCache.delete(avatarSignature);
               setSnapshotUrl(isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL);
