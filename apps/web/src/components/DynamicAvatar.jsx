@@ -31,8 +31,19 @@ function isCanvasFrameRendered(gl) {
     const w = glCtx.drawingBufferWidth || gl?.drawingBufferWidth || 200;
     const h = glCtx.drawingBufferHeight || gl?.drawingBufferHeight || 450;
     const pixel = new Uint8Array(4);
-    glCtx.readPixels(Math.floor(w / 2), Math.floor(h / 2), 1, 1, glCtx.RGBA, glCtx.UNSIGNED_BYTE, pixel);
-    return pixel[3] > 30;
+    // Sample multiple anatomical points across head, chest, torso, and legs
+    const samplePoints = [
+      [Math.floor(w * 0.5), Math.floor(h * 0.35)], // chest
+      [Math.floor(w * 0.5), Math.floor(h * 0.45)], // torso / waist
+      [Math.floor(w * 0.5), Math.floor(h * 0.20)], // head
+      [Math.floor(w * 0.42), Math.floor(h * 0.60)], // left thigh
+      [Math.floor(w * 0.58), Math.floor(h * 0.60)], // right thigh
+    ];
+    for (const [px, py] of samplePoints) {
+      glCtx.readPixels(px, py, 1, 1, glCtx.RGBA, glCtx.UNSIGNED_BYTE, pixel);
+      if (pixel[3] > 30) return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -854,7 +865,7 @@ function Realistic3DAvatarMesh({
       onFrameReady?.();
     }
 
-    if (signature && !rendered3DAvatarSnapshotCache.has(signature) && gl && threeScene && camera) {
+    if (signature && !interactive && !rendered3DAvatarSnapshotCache.has(signature) && gl && threeScene && camera) {
       let cancelled = false;
       let attempts = 0;
       let rafId = null;
@@ -877,7 +888,6 @@ function Realistic3DAvatarMesh({
             camera.lookAt(0, 0, 0);
             camera.updateProjectionMatrix();
           }
-          const prevRot = groupRef.current ? groupRef.current.rotation.y : 0;
           if (groupRef.current) groupRef.current.rotation.y = 0;
           gl.render(threeScene, camera);
           if (isCanvasFrameRendered(gl)) {
@@ -886,15 +896,11 @@ function Realistic3DAvatarMesh({
               onFrameReady?.();
             }
             const dataUrl = gl.domElement?.toDataURL?.('image/png');
-            if (groupRef.current) groupRef.current.rotation.y = prevRot;
-            if (prevRot !== 0) gl.render(threeScene, camera);
             if (dataUrl && dataUrl.length > 8000) {
               notifySnapshotSubscribers(signature, dataUrl);
               return;
             }
           }
-          if (groupRef.current) groupRef.current.rotation.y = prevRot;
-          if (prevRot !== 0) gl.render(threeScene, camera);
         } catch {
           /* ignore snapshot error in restricted contexts */
         }
@@ -927,27 +933,16 @@ function Realistic3DAvatarMesh({
       frameReadyNotifiedRef.current = true;
       onFrameReady?.();
     }
-    if (!signature || rendered3DAvatarSnapshotCache.has(signature)) return;
+    // Snapshots are NEVER captured while interactive (user is actively interacting with the live 3D avatar)
+    if (interactive || !signature || rendered3DAvatarSnapshotCache.has(signature)) return;
     frameCountRef.current += 1;
     if (frameCountRef.current >= 6 && frameCountRef.current <= 40) {
       try {
-        const prevRot = groupRef.current ? groupRef.current.rotation.y : 0;
-        if (groupRef.current && prevRot !== 0) {
-          groupRef.current.rotation.y = 0;
-          gl.render(threeScene, camera);
-        }
         if (isCanvasFrameRendered(gl)) {
           const dataUrl = gl.domElement?.toDataURL?.('image/png');
-          if (groupRef.current && prevRot !== 0) {
-            groupRef.current.rotation.y = prevRot;
-            gl.render(threeScene, camera);
-          }
           if (dataUrl && dataUrl.length > 8000) {
             notifySnapshotSubscribers(signature, dataUrl);
           }
-        } else if (groupRef.current && prevRot !== 0) {
-          groupRef.current.rotation.y = prevRot;
-          gl.render(threeScene, camera);
         }
       } catch {}
     }
@@ -1051,7 +1046,7 @@ export default function DynamicAvatar({
   const handleAvatarPointerDown = useCallback((e) => {
     if (!interactive) return;
     isDraggingRef.current = true;
-    startXRef.current = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+    startXRef.current = e.clientX ?? 0;
     startRotRef.current = avatarRotationY;
     if (e.currentTarget?.setPointerCapture && e.pointerId !== undefined) {
       try {
@@ -1062,10 +1057,10 @@ export default function DynamicAvatar({
 
   const handleAvatarPointerMove = useCallback((e) => {
     if (!interactive || !isDraggingRef.current) return;
-    const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+    const clientX = e.clientX ?? 0;
     const deltaX = clientX - startXRef.current;
-    // Map ~260px horizontal drag across avatar card to 360° (2*PI) rotation
-    const newRot = startRotRef.current + (deltaX / 260) * Math.PI * 2;
+    // Map ~220px horizontal drag across avatar card to 360° (2*PI) rotation
+    const newRot = startRotRef.current + (deltaX / 220) * Math.PI * 2;
     setAvatarRotationY(newRot);
   }, [interactive]);
 
@@ -1077,6 +1072,26 @@ export default function DynamicAvatar({
         e.currentTarget.releasePointerCapture(e.pointerId);
       } catch {}
     }
+  }, [interactive]);
+
+  const handleTouchStart = useCallback((e) => {
+    if (!interactive || !e.touches || !e.touches[0]) return;
+    isDraggingRef.current = true;
+    startXRef.current = e.touches[0].clientX;
+    startRotRef.current = avatarRotationY;
+  }, [interactive, avatarRotationY]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!interactive || !isDraggingRef.current || !e.touches || !e.touches[0]) return;
+    const clientX = e.touches[0].clientX;
+    const deltaX = clientX - startXRef.current;
+    const newRot = startRotRef.current + (deltaX / 220) * Math.PI * 2;
+    setAvatarRotationY(newRot);
+  }, [interactive]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!interactive) return;
+    isDraggingRef.current = false;
   }, [interactive]);
 
   const handleResetRotation = useCallback((e) => {
@@ -1184,7 +1199,6 @@ export default function DynamicAvatar({
 
   const canonicalFallbackUrl = isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL;
   const activeSnapshotSrc = snapshotUrl || canonicalFallbackUrl;
-  const hideStaticImgBecauseWebGLReady = canUseWebGL && canMountWebGL && isWebGLFrameReady;
 
   return (
     <div
@@ -1214,6 +1228,10 @@ export default function DynamicAvatar({
           onPointerMove={handleAvatarPointerMove}
           onPointerUp={handleAvatarPointerUp}
           onPointerCancel={handleAvatarPointerUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
           data-testid="interactive-avatar-touch-zone"
         >
           <Canvas
@@ -1272,26 +1290,36 @@ export default function DynamicAvatar({
         </button>
       )}
 
-      {/* Single Static 3D Avatar Snapshot (hidden once live WebGL canvas is active, never stacked with canonical base) */}
-      <img
-        src={activeSnapshotSrc}
-        alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
-        aria-hidden="true"
-        className={
-          hideStaticImgBecauseWebGLReady
-            ? 'sr-only opacity-0 pointer-events-none'
-            : 'absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]'
-        }
-        onError={() => {
-          if (activeSnapshotSrc !== canonicalFallbackUrl) {
-            try {
-              sessionStorage.removeItem('avatar_snap_v3_' + avatarSignature);
-            } catch {}
-            rendered3DAvatarSnapshotCache.delete(avatarSignature);
-            setSnapshotUrl(canonicalFallbackUrl);
-          }
-        }}
-      />
+      {/* 
+        Single Static 3D Avatar Snapshot:
+        - When WebGL is active (interactive 3D view or snapshot generation), the live 3D Canvas IS the visual avatar.
+          We NEVER show a static <img> behind the transparent WebGL canvas.
+        - When WebGL is NOT active, we show the single static snapshot image.
+      */}
+      {!canMountWebGL ? (
+        <img
+          src={activeSnapshotSrc}
+          alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
+          onError={() => {
+            if (activeSnapshotSrc !== canonicalFallbackUrl) {
+              try {
+                sessionStorage.removeItem('avatar_snap_v3_' + avatarSignature);
+              } catch {}
+              rendered3DAvatarSnapshotCache.delete(avatarSignature);
+              setSnapshotUrl(canonicalFallbackUrl);
+            }
+          }}
+        />
+      ) : (
+        <img
+          src={activeSnapshotSrc}
+          alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
+          aria-hidden="true"
+          className="sr-only opacity-0 pointer-events-none"
+        />
+      )}
 
       {/* 200x450 Coordinate Frame */}
       <svg
