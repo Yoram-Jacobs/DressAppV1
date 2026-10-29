@@ -260,11 +260,11 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
       oz += w * dz;
       wSum += w;
 
-      // Track the morphed skin surface Z of nearby point-cloud vertices within the same (x, y) column
+      // Track the morphed skin surface Z of nearby point-cloud vertices within the same tight (x, y) column
       const sx = field.basePositions[i * 3] + dx;
       const sy = field.basePositions[i * 3 + 1] + dy;
       const sz = field.basePositions[i * 3 + 2] + dz;
-      if (Math.abs(sx - (x + dx)) < 0.032 && Math.abs(sy - (y + dy)) < 0.032) {
+      if (Math.abs(sx - (x + dx)) < 0.012 && Math.abs(sy - (y + dy)) < 0.015) {
         if (sz > maxFrontSkinZ) maxFrontSkinZ = sz;
         if (sz < minBackSkinZ) minBackSkinZ = sz;
       }
@@ -274,28 +274,36 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
     let dyFinal = wSum > 0 ? oy / wSum : 0;
     let dzFinal = wSum > 0 ? oz / wSum : 0;
 
+    // Smooth interior weight: strictly 0 near the side seam (z in [-0.035, +0.065]) so front and back
+    // sheets never detach at the hip/thigh seam and side-flank vertices never step discontinuously.
+    const frontRamp = z > 0.065 ? Math.min(1, (z - 0.065) / 0.040) : 0;
+    const backRamp = z < -0.035 ? Math.min(1, (-0.035 - z) / 0.040) : 0;
+    const frontWeight = frontRamp * frontRamp * (3 - 2 * frontRamp);
+    const backWeight = backRamp * backRamp * (3 - 2 * backRamp);
+
     // Guarantee full envelope clearance when body-mass expansion morphs are active
-    // so peak quadriceps/pelvis/belly/bust expansions never poke through off-center garment vertices.
     if ((heavyInf > 0 || waistInf > 0 || hipsInf > 0 || bustInf > 0) && y >= 0.45 && y <= 1.45) {
-      if (z > 0.020) {
-        const minFrontPush = heavyInf * 0.028 + waistInf * 0.012 + hipsInf * 0.010 + (y >= 1.12 && y <= 1.35 ? bustInf * 0.018 : 0);
+      if (frontWeight > 0) {
+        const minFrontPush = (heavyInf * 0.028 + waistInf * 0.012 + hipsInf * 0.010 + (y >= 1.12 && y <= 1.35 ? bustInf * 0.018 : 0)) * frontWeight;
         if (dzFinal < minFrontPush) dzFinal = minFrontPush;
-      } else if (z < -0.020) {
-        const minBackPush = -(heavyInf * 0.024 + waistInf * 0.010 + hipsInf * 0.012);
+      } else if (backWeight > 0) {
+        const minBackPush = -(heavyInf * 0.024 + waistInf * 0.010 + hipsInf * 0.012) * backWeight;
         if (dzFinal > minBackPush) dzFinal = minBackPush;
       }
     }
 
     let finalZ = z + dzFinal;
 
-    // Point-cloud non-penetration guard for interior front/back sheet vertices
-    if (sheetSide === 'front' && z > 0.028 && Number.isFinite(maxFrontSkinZ)) {
-      if (finalZ < maxFrontSkinZ + minClearance) {
-        finalZ = maxFrontSkinZ + minClearance;
+    // Smooth non-penetration guard strictly for central front/back sheet vertices (never at side seams)
+    if (sheetSide === 'front' && frontWeight > 0 && Number.isFinite(maxFrontSkinZ)) {
+      const reqZ = maxFrontSkinZ + minClearance;
+      if (finalZ < reqZ) {
+        finalZ = finalZ + (reqZ - finalZ) * frontWeight;
       }
-    } else if (sheetSide === 'back' && z < -0.028 && Number.isFinite(minBackSkinZ)) {
-      if (finalZ > minBackSkinZ - minClearance) {
-        finalZ = minBackSkinZ - minClearance;
+    } else if (sheetSide === 'back' && backWeight > 0 && Number.isFinite(minBackSkinZ)) {
+      const reqZ = minBackSkinZ - minClearance;
+      if (finalZ > reqZ) {
+        finalZ = finalZ + (reqZ - finalZ) * backWeight;
       }
     }
 

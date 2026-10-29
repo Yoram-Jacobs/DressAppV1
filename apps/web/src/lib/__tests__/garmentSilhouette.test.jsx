@@ -887,4 +887,65 @@ describe('shoulder line detection and hoodie mapping', () => {
       expect(rowRefHits).toBeGreaterThan(10);
     }
   });
+
+  test('pants fit tightly with 2.5mm (0.0025m) thickness, level arched/button-tab waistbands without horns, and eliminate hip saddle signs', () => {
+    const fit = resolveShellFit({ rawSlot: 'bottom', garmentText: 'slim blue jeans', isMale: true });
+    expect(fit.layerOffset).toBeCloseTo(0.0025, 5);
+
+    const nx = 48;
+    const ny = 64;
+    // Jeans mask with a narrow raised button tab on the top 2 rows (v in 0.04..0.07, u in 0.44..0.56)
+    // followed by full waistband/pelvis (v in 0.07..0.38, u in 0.16..0.84) and wide legs below v = 0.38
+    const mask = paintMask(nx, ny, (u, v) => {
+      if (v < 0.04 || v > 0.94) return false;
+      if (v < 0.07) return u >= 0.44 && u <= 0.56;
+      if (v < 0.38) return u >= 0.16 && u <= 0.84;
+      return (u >= 0.14 && u <= 0.46) || (u >= 0.54 && u <= 0.86);
+    });
+
+    const shell = buildSilhouetteShell({
+      mask,
+      nx,
+      ny,
+      aspect: 0.65,
+      slot: 'bottom',
+      isMale: true,
+      isSkirt: false,
+      isStandalone: false,
+      yTop: fit.yTop,
+      yBottom: fit.yBottom,
+      layerOffset: fit.layerOffset,
+      getTorsoSlice,
+      getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+
+    const vw = nx + 1;
+    const pf = shell.front.attributes.position;
+    const pb = shell.back.attributes.position;
+
+    // 1. Top waistband row (j = 3) must not flare out into horizontal horns and must match waist rx + 2.5mm
+    const jTop = 3;
+    const waistSlice = getTorsoSlice(fit.yTop, true);
+    let maxWaistAbsX = 0;
+    for (let i = 0; i < vw; i++) {
+      maxWaistAbsX = Math.max(maxWaistAbsX, Math.abs(pf.getX(jTop * vw + i)));
+    }
+    expect(maxWaistAbsX).toBeCloseTo(waistSlice.rx + 0.0025, 3);
+
+    // 2. Center of top waistband row must maintain full anterior/posterior waist depth (never pinch to baseZ)
+    const midCol = Math.floor(nx / 2);
+    const topCenterGap = pf.getZ(jTop * vw + midCol) - pb.getZ(jTop * vw + midCol);
+    expect(topCenterGap).toBeGreaterThan(0.18);
+
+    // 3. Hip-to-thigh outer width transitions smoothly with zero saddle bulge (< 0.190m half-width)
+    const crotchJ = shell.info.crotchRow;
+    for (let j = jTop; j <= crotchJ + 6; j++) {
+      let rowMaxX = 0;
+      for (let i = 0; i < vw; i++) {
+        rowMaxX = Math.max(rowMaxX, Math.abs(pf.getX(j * vw + i)));
+      }
+      expect(rowMaxX).toBeLessThanOrEqual(0.191);
+    }
+  });
 });

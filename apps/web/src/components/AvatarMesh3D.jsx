@@ -78,19 +78,46 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       continue;
     }
 
-    // 2. Upper torso under top / outerwear / dress (exclude neck/head y > 1.38 and arms |x| > 0.175)
-    if ((hasTop || hasOuterwear || hasDress) && y >= 0.90 && y <= 1.38 && absX <= 0.175) {
-      const cz = 0.015;
+    // 2. Upper torso under top / outerwear / dress (exclude neck/head y > 1.38 and arms)
+    const armCutUpper = 0.165 + Math.max(0, Math.min(1, (1.12 - y) / 0.40)) * 0.033;
+    if ((hasTop || hasOuterwear || hasDress) && y >= 0.90 && y <= 1.38 && absX <= armCutUpper) {
+      const cz = 0.020;
       arr[idx] = x * 0.88;
       arr[idx + 2] = cz + (z - cz) * 0.85;
       continue;
     }
 
-    // 3. Pelvis / hip / crotch under bottom / dress (y in [0.76, 1.04], |x| <= 0.185)
-    if ((hasBottom || hasDress) && y >= 0.76 && y <= 1.04 && absX <= 0.185) {
-      const cz = 0.010;
-      arr[idx] = x * 0.88;
-      arr[idx + 2] = cz + (z - cz) * 0.85;
+    // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress:
+    // Use exact anatomical arm-exclusion boundary (0.165 at waist -> 0.198 at hip -> 0.30 below hands)
+    // so the outer hip skin is retracted as a single whole unit and never tears into a floating strip.
+    const armCutLower = y >= 0.71
+      ? 0.165 + Math.max(0, Math.min(1, (1.10 - y) / 0.38)) * 0.033
+      : 0.30;
+    const minBottomY = hasBottom ? 0.12 : 0.74;
+    if ((hasBottom || hasDress) && y >= minBottomY && y <= 1.07 && absX <= armCutLower) {
+      const sign = x < 0 ? -1 : 1;
+      // Smooth blend at top waist (if no top is worn) and at bottom ankle
+      const wTop = (hasTop || hasOuterwear || hasDress)
+        ? 1.0
+        : Math.max(0, Math.min(1, (1.07 - y) / 0.04));
+      const wBot = Math.max(0, Math.min(1, (y - minBottomY) / 0.05));
+      const w = wTop * wBot;
+
+      // Above crotch (y >= 0.82), retract toward pelvis center (0, 0.020).
+      // Below crotch (y < 0.82), retract each leg toward its own bone axis (sign * legCx, legCz).
+      const legBlend = Math.max(0, Math.min(1, (0.82 - y) / 0.08));
+      const tLeg = Math.max(0, Math.min(1, (0.80 - y) / 0.66));
+      const legCx = isMale
+        ? 0.095 + tLeg * (0.145 - 0.095)
+        : 0.095 + tLeg * (0.166 - 0.095);
+      const legCz = isMale
+        ? (y >= 0.52 ? 0.035 : -0.020)
+        : (y >= 0.50 ? 0.035 : 0.010);
+      const cx = sign * legCx * legBlend;
+      const cz = 0.020 * (1 - legBlend) + legCz * legBlend;
+      const scale = 1 - 0.22 * w;
+      arr[idx] = cx + (x - cx) * scale;
+      arr[idx + 2] = cz + (z - cz) * scale;
     }
   }
 

@@ -29,10 +29,10 @@ export const TORSO_PROFILE_FEMALE = [
   { y: 1.36, rx: 0.215, cz: 0.020, rz: 0.098, rzFront: 0.098, rzBack: 0.090 }, // Upper chest / scapulae top (zMin=-0.063, zMax=+0.100)
   { y: 1.25, rx: 0.210, cz: 0.052, rz: 0.124, rzFront: 0.126, rzBack: 0.114 }, // Bust peak & scapulae (zMin=-0.057, zMax=+0.170)
   { y: 1.15, rx: 0.174, cz: 0.054, rz: 0.106, rzFront: 0.110, rzBack: 0.094 }, // Under-bust (zMin=-0.028, zMax=+0.155)
-  { y: 1.05, rx: 0.142, cz: 0.048, rz: 0.104, rzFront: 0.108, rzBack: 0.096 }, // Natural waist (rx=0.142, zMin=-0.042, zMax=+0.147)
-  { y: 0.95, rx: 0.176, cz: 0.024, rz: 0.126, rzFront: 0.126, rzBack: 0.128 }, // Upper hips / glutes (zMin=-0.101, zMax=+0.141)
-  { y: 0.82, rx: 0.174, cz: 0.018, rz: 0.120, rzFront: 0.118, rzBack: 0.120 }, // Pelvis / crotch (zMin=-0.100, zMax=+0.121)
-  { y: 0.65, rx: 0.205, cz: 0.032, rz: 0.112, rzFront: 0.110, rzBack: 0.105 }, // Upper thigh flare (skirts/dresses)
+  { y: 1.05, rx: 0.142, cz: 0.052, rz: 0.095, rzFront: 0.095, rzBack: 0.095 }, // Natural waist (rx=0.142, zMin=-0.042, zMax=+0.147)
+  { y: 0.95, rx: 0.168, cz: 0.019, rz: 0.120, rzFront: 0.120, rzBack: 0.120 }, // Upper hips / glutes (zMin=-0.101, zMax=+0.139)
+  { y: 0.82, rx: 0.186, cz: 0.014, rz: 0.114, rzFront: 0.114, rzBack: 0.114 }, // Pelvis / crotch (zMin=-0.100, zMax=+0.118)
+  { y: 0.65, rx: 0.183, cz: 0.032, rz: 0.105, rzFront: 0.105, rzBack: 0.100 }, // Upper thigh flare (skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
@@ -41,33 +41,33 @@ export const TORSO_PROFILE_MALE = [
   { y: 1.42, rx: 0.235, cz: 0.013, rz: 0.122, rzFront: 0.124, rzBack: 0.122 }, // Shoulders / upper chest (zMin=-0.110, zMax=+0.135)
   { y: 1.30, rx: 0.215, cz: 0.027, rz: 0.140, rzFront: 0.142, rzBack: 0.138 }, // Chest / pecs peak & scapulae (zMin=-0.113, zMax=+0.168)
   { y: 1.18, rx: 0.178, cz: 0.036, rz: 0.116, rzFront: 0.118, rzBack: 0.112 }, // Rib cage / lumbar taper (zMin=-0.066, zMax=+0.148)
-  { y: 1.08, rx: 0.150, cz: 0.038, rz: 0.114, rzFront: 0.118, rzBack: 0.108 }, // Waist (rx=0.150, zMin=-0.062, zMax=+0.149)
-  { y: 0.96, rx: 0.180, cz: 0.025, rz: 0.134, rzFront: 0.138, rzBack: 0.132 }, // Upper hips / glutes (zMin=-0.103, zMax=+0.153)
-  { y: 0.86, rx: 0.182, cz: 0.020, rz: 0.130, rzFront: 0.132, rzBack: 0.124 }, // Pelvis / crotch (zMin=-0.096, zMax=+0.128)
-  { y: 0.70, rx: 0.205, cz: 0.028, rz: 0.120, rzFront: 0.120, rzBack: 0.112 }, // Thigh flare
+  { y: 1.08, rx: 0.148, cz: 0.044, rz: 0.106, rzFront: 0.106, rzBack: 0.106 }, // Waist (rx=0.148, zMin=-0.062, zMax=+0.149)
+  { y: 0.96, rx: 0.172, cz: 0.025, rz: 0.128, rzFront: 0.128, rzBack: 0.128 }, // Upper hips / glutes (zMin=-0.103, zMax=+0.153)
+  { y: 0.86, rx: 0.184, cz: 0.018, rz: 0.116, rzFront: 0.116, rzBack: 0.116 }, // Pelvis / crotch (zMin=-0.088, zMax=+0.123)
+  { y: 0.70, rx: 0.188, cz: 0.028, rz: 0.110, rzFront: 0.110, rzBack: 0.106 }, // Thigh flare
 ];
 
 export const LEG_PROFILE_FEMALE = [
-  { y: 0.82, cx: 0.100, r: 0.094, cz: 0.024, rzFront: 0.115, rzBack: 0.115 }, // Crotch / upper thigh (zMin=-0.080, zMax=+0.121)
-  { y: 0.75, cx: 0.104, r: 0.090, cz: 0.034, rzFront: 0.105, rzBack: 0.098 }, // Upper-mid thigh (zMin=-0.057, zMax=+0.118)
-  { y: 0.65, cx: 0.112, r: 0.082, cz: 0.040, rzFront: 0.092, rzBack: 0.088 }, // Mid thigh (zMin=-0.032, zMax=+0.115)
-  { y: 0.50, cx: 0.128, r: 0.072, cz: 0.036, rzFront: 0.078, rzBack: 0.076 }, // Knee (zMin=-0.022, zMax=+0.100)
-  { y: 0.40, cx: 0.138, r: 0.068, cz: 0.003, rzFront: 0.072, rzBack: 0.076 }, // Back of knee / upper calf (z reaches -0.055)
-  { y: 0.30, cx: 0.145, r: 0.064, cz: 0.010, rzFront: 0.066, rzBack: 0.070 }, // Calf (z reaches -0.044)
-  { y: 0.20, cx: 0.160, r: 0.052, cz: 0.020, rzFront: 0.052, rzBack: 0.054 }, // Lower calf
-  { y: 0.10, cx: 0.165, r: 0.048, cz: 0.035, rzFront: 0.065, rzBack: 0.055 }, // Ankle
+  { y: 0.82, cx: 0.094, r: 0.092, cz: 0.016, rzFront: 0.102, rzBack: 0.100 }, // Crotch / upper thigh (xmin=0.002, xmax=0.186)
+  { y: 0.75, cx: 0.101, r: 0.087, cz: 0.032, rzFront: 0.086, rzBack: 0.086 }, // Upper-mid thigh (xmin=0.014, xmax=0.188)
+  { y: 0.65, cx: 0.115, r: 0.068, cz: 0.040, rzFront: 0.074, rzBack: 0.074 }, // Mid thigh (xmin=0.047, xmax=0.183)
+  { y: 0.50, cx: 0.129, r: 0.058, cz: 0.036, rzFront: 0.062, rzBack: 0.062 }, // Knee (xmin=0.071, xmax=0.187)
+  { y: 0.40, cx: 0.148, r: 0.060, cz: 0.003, rzFront: 0.059, rzBack: 0.059 }, // Back of knee / upper calf (xmin=0.088, xmax=0.208)
+  { y: 0.30, cx: 0.155, r: 0.053, cz: 0.010, rzFront: 0.054, rzBack: 0.054 }, // Calf (xmin=0.102, xmax=0.208)
+  { y: 0.20, cx: 0.166, r: 0.033, cz: 0.021, rzFront: 0.038, rzBack: 0.038 }, // Lower calf (xmin=0.133, xmax=0.199)
+  { y: 0.10, cx: 0.167, r: 0.028, cz: 0.035, rzFront: 0.042, rzBack: 0.042 }, // Ankle (xmin=0.139, xmax=0.195)
 ];
 
 export const LEG_PROFILE_MALE = [
-  { y: 0.86, cx: 0.102, r: 0.096, cz: 0.022, rzFront: 0.125, rzBack: 0.125 }, // Crotch (zMin=-0.096, zMax=+0.128)
-  { y: 0.78, cx: 0.105, r: 0.094, cz: 0.032, rzFront: 0.116, rzBack: 0.105 }, // Upper thigh (zMin=-0.053, zMax=+0.128)
-  { y: 0.70, cx: 0.108, r: 0.088, cz: 0.036, rzFront: 0.108, rzBack: 0.096 }, // Mid thigh (zMin=-0.046, zMax=+0.124)
-  { y: 0.58, cx: 0.118, r: 0.080, cz: 0.022, rzFront: 0.095, rzBack: 0.090 }, // Lower thigh
-  { y: 0.50, cx: 0.130, r: 0.076, cz: -0.003, rzFront: 0.085, rzBack: 0.095 }, // Knee (zMin=-0.074, zMax=+0.068)
-  { y: 0.40, cx: 0.134, r: 0.072, cz: -0.020, rzFront: 0.075, rzBack: 0.088 }, // Back of knee / upper calf (zMin=-0.083)
-  { y: 0.30, cx: 0.138, r: 0.068, cz: -0.024, rzFront: 0.068, rzBack: 0.076 }, // Calf (zMin=-0.074)
-  { y: 0.20, cx: 0.146, r: 0.058, cz: -0.022, rzFront: 0.056, rzBack: 0.064 }, // Lower calf (zMin=-0.061)
-  { y: 0.10, cx: 0.148, r: 0.054, cz: 0.002, rzFront: 0.068, rzBack: 0.068 }, // Ankle
+  { y: 0.86, cx: 0.094, r: 0.090, cz: 0.018, rzFront: 0.114, rzBack: 0.112 }, // Crotch (xmin=0.004, xmax=0.184)
+  { y: 0.78, cx: 0.098, r: 0.090, cz: 0.036, rzFront: 0.092, rzBack: 0.092 }, // Upper thigh (xmin=0.008, xmax=0.188)
+  { y: 0.70, cx: 0.105, r: 0.082, cz: 0.040, rzFront: 0.086, rzBack: 0.086 }, // Mid thigh (xmin=0.023, xmax=0.187)
+  { y: 0.58, cx: 0.115, r: 0.061, cz: 0.029, rzFront: 0.073, rzBack: 0.073 }, // Lower thigh (xmin=0.054, xmax=0.176)
+  { y: 0.50, cx: 0.133, r: 0.058, cz: 0.000, rzFront: 0.072, rzBack: 0.072 }, // Knee (xmin=0.075, xmax=0.191)
+  { y: 0.40, cx: 0.142, r: 0.066, cz: -0.022, rzFront: 0.062, rzBack: 0.062 }, // Back of knee / upper calf (xmin=0.076, xmax=0.208)
+  { y: 0.30, cx: 0.144, r: 0.059, cz: -0.025, rzFront: 0.052, rzBack: 0.052 }, // Calf (xmin=0.085, xmax=0.203)
+  { y: 0.20, cx: 0.149, r: 0.036, cz: -0.023, rzFront: 0.039, rzBack: 0.039 }, // Lower calf (xmin=0.113, xmax=0.185)
+  { y: 0.10, cx: 0.144, r: 0.034, cz: -0.004, rzFront: 0.050, rzBack: 0.050 }, // Ankle (xmin=0.110, xmax=0.178)
 ];
 
 /**
@@ -1885,9 +1885,10 @@ export function createAnatomicalBottomGeometry({
     const tPelvis = i / nyPelvis; // 0 at waist, 1 at crotch
     const y = yWaist - tPelvis * (yWaist - yCrotch);
     const sliceTorso = getTorsoSlice(y, isMale);
-    const rx = sliceTorso.rx + layerOffset;
-    const rzFront = (sliceTorso.rzFront || sliceTorso.rz) + layerOffset;
-    const rzBack = (sliceTorso.rzBack || sliceTorso.rz) + layerOffset + 0.008;
+    const fitOff = Math.min(layerOffset, 0.0025);
+    const rx = sliceTorso.rx + fitOff;
+    const rzFront = (sliceTorso.rzFront || sliceTorso.rz) + fitOff;
+    const rzBack = (sliceTorso.rzBack || sliceTorso.rz) + fitOff;
     const cz = sliceTorso.cz;
     const vTex = 0.98 - tPelvis * pelvisTexSpan * 0.94;
 
@@ -1936,8 +1937,10 @@ export function createAnatomicalBottomGeometry({
       const slice = getLegSlice(y, isMale);
       const cx = side * slice.cx;
       const cz = slice.cz;
-      const rx = slice.r + layerOffset;
-      const rz = rx;
+      const fitOff = Math.min(layerOffset, 0.0025);
+      const rx = slice.r + fitOff;
+      const rzFront = (slice.rzFront || slice.r) + fitOff;
+      const rzBack = (slice.rzBack || slice.r) + fitOff;
 
       const vTex = (0.98 - pelvisTexSpan * 0.94) - vLeg * (1 - pelvisTexSpan) * 0.94;
 
@@ -1948,8 +1951,8 @@ export function createAnatomicalBottomGeometry({
         const isFront = Math.cos(theta) >= 0;
         const x = cx + rx * Math.sin(theta);
         const z = isFront
-          ? cz + rz * Math.cos(theta)
-          : cz - (rz + 0.008) * Math.abs(Math.cos(theta));
+          ? cz + rzFront * Math.cos(theta)
+          : cz - rzBack * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
         const legCenter = side === -1 ? 0.30 : 0.70;
@@ -2488,7 +2491,7 @@ export function resolveShellFit({
     return {
       yTop: isMale ? 1.08 : 1.05,
       yBottom,
-      layerOffset: 0.016,
+      layerOffset: isSkirt ? 0.014 : 0.0025,
       isSkirt,
       isStrapless: false,
       lengthType,
@@ -2729,7 +2732,9 @@ export default function GarmentMesh3D({
     if (isStandalone) {
       return { front: shell.front, back: shell.back };
     }
-    const minClearance = Math.max(0.012, (shellFit?.layerOffset || 0.018) * 0.75);
+    const minClearance = (rawSlot === 'bottom' && !shellFit?.isSkirt)
+      ? 0.0025
+      : Math.max(0.008, (shellFit?.layerOffset || 0.018) * 0.75);
     return {
       front: applyAvatarMorphsToGeometry(shell.front, morphField, morphInfluences, {
         sheetSide: 'front',
