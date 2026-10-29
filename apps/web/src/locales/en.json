@@ -362,7 +362,10 @@
       "cta": "Ask the stylist",
       "conciergeTitle": "Your Daily Wardrobe Concierge",
       "conciergeDescription": "Get personalized outfit recommendations delivered straight to your lock screen. Factored by local forecasts, your calendar events, and smart closet rotation to keep your style fresh and underused items in rotation. Tap the alert to preview the look on your avatar and plan your week effortlessly.",
-      "scheduledOutfitsCta": "Scheduled Outfits"
+      "scheduledOutfitsCta": "Scheduled Outfits",
+      "speedHighlightTitle": "Real-Time AI Generation (<2s)",
+      "speedHighlightBadge": "Instant Look",
+      "speedHighlightDesc": "Unlike apps with multi-minute cloud queues, DressApp's edge-optimized engine generates complete, styled looks in real time — under 2 seconds."
     },
     "marketplace": {
       "tag": "Zero Waste Initiative",
@@ -5414,7 +5417,7 @@
       "title": "Seed Your Starter Closet with 4+ Everyday Staples",
       "subtitle": "Pick from our pre-cataloged studio dataset—each staple includes full fabric, color, and seasonal DNA.",
       "autoSelectBtn": "Auto-Select 4 Staples for My Style",
-      "readyMessage": "Complete head-to-toe outfit unlocked ({{count}} staples selected)!",
+      "readyMessage": "Complete head-to-toe outfit unlocked ({{count}} staples selected)! Ready to generate your look in <2s.",
       "incompleteMessage": "{{count}}/4 selected — Pick at least 4 staples including (Full-Body + Footwear) OR (Top + Trousers/Skirt + Footwear).",
       "pillFullBody": "Full-Body ({{count}})",
       "pillTopBottom": "Top ({{top}}) + Bottom ({{bottom}})",
@@ -5460,12 +5463,14 @@
       "openStylistBtn": "Save & Open My AI Stylist",
       "saveWithGoogle": "Save My Style DNA & Open AI Stylist",
       "savedSuccess": "Your Style DNA, AI Size Passport, and Starter Capsule are ready!",
-      "saveError": "Could not save your onboarding profile. Please try again."
+      "saveError": "Could not save your onboarding profile. Please try again.",
+      "instantBadge": "Generated in <2s · Real-Time AI",
+      "speedNote": "Generated in real-time in under 2 seconds — no multi-minute queue waits, zero cloud lag."
     },
     "nav": {
       "back": "Back",
       "continue": "Continue",
-      "revealOutfit": "Reveal My First AI Outfit"
+      "revealOutfit": "Reveal My First AI Outfit (<2s)"
     },
     "items": {
       "w_abaya_black": "Black Embroidered Modest Abaya",

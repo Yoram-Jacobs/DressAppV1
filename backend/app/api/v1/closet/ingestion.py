@@ -1994,22 +1994,14 @@ async def reanalyze_item(
     # For Free users and default platform mode, explicitly wire to on-prem Eyes (Qwen2.5-VL-3B-Instruct)
     # with transparent Gemini quota fallback inside GarmentVisionService.analyze.
     # Paid or BYOK users with custom keys can use their custom Gemini key.
-    if user_tier == "free" and not custom_gemini_key:
+    vision_service = get_garment_vision_service(user=user)
+    if vision_service is None:
         from app.services.vision import GarmentVisionService, resolve_garment_gender
         vision_service = GarmentVisionService(
             provider="gemma",
             model="garment_vision",
             user_gender=resolve_garment_gender(user),
         )
-    else:
-        vision_service = get_garment_vision_service(user=user)
-        if vision_service is None:
-            from app.services.vision import GarmentVisionService, resolve_garment_gender
-            vision_service = GarmentVisionService(
-                provider="gemma",
-                model="garment_vision",
-                user_gender=resolve_garment_gender(user),
-            )
 
     from app.services.billing_service import deduct_user_credits
     if not await deduct_user_credits(db, user, cost=1, operation="reanalyze_item"):

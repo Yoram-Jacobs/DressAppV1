@@ -657,6 +657,8 @@ class GarmentVisionService:
         model: str | None = None,
         provider: str | None = None,
         user_gender: str | None = None,
+        crop_model: str | None = None,
+        detect_model: str | None = None,
     ) -> None:
         self.user_gender = resolve_garment_gender(user_gender)
         # We tolerate a missing EMERGENT_LLM_KEY if HF is configured for
@@ -666,21 +668,22 @@ class GarmentVisionService:
         # DB-backed runtime resolution via eyes_override.get_active_provider().
         self.provider = provider
         if self.provider == "gemini":
-            self.model = model if (model and model.lower().startswith("gemini")) else "gemini-3.5-flash-lite"
+            self.model = model if (model and model.lower().startswith("gemini")) else (settings.GARMENT_VISION_MODEL or "gemini-2.5-flash")
         elif self.provider:
             self.model = model or settings.GARMENT_VISION_MODEL or "Eyes v1"
         else:
-            self.model = model or "gemini-3.5-flash-lite"
+            self.model = model or settings.GARMENT_VISION_MODEL or "gemini-2.5-flash"
         # Detection stays on Gemini Flash until we upgrade to a fine-tuned vision model.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
         self.detect_model = (
-            model if (model and model.lower().startswith("gemini"))
-            else (settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash-lite")
+            detect_model
+            or (settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash-lite")
         )
         # Per-crop analyser (multi-item pipeline).
         self.crop_model = (
-            model if (model and model.lower().startswith("gemini"))
-            else (settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash-lite")
+            crop_model
+            or (model if (model and model.lower().startswith("gemini")) else None)
+            or (settings.GARMENT_VISION_CROP_MODEL or "gemini-2.5-flash")
         )
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
         # Gemini chat key — explicit parameter, else direct GEMINI_API_KEY from .env.
@@ -4932,6 +4935,7 @@ def get_garment_vision_service(
     """Return a GarmentVisionService instance scoped to the user's provider / API key if available,
     falling back to the server-configured Eyes provider (respecting DB runtime override)."""
     from app.services.auth import (
+        is_paid_tier_user,
         is_tester_user,
         resolve_effective_provider,
         resolve_user_custom_gemini_api_key,
@@ -4955,11 +4959,11 @@ def get_garment_vision_service(
                 gemini_model = resolve_user_gemini_model(user)
                 if user_gemini_key:
                     try:
-                        return GarmentVisionService(api_key=user_gemini_key, model=gemini_model, provider="gemini", user_gender=user_gender)
+                        return GarmentVisionService(api_key=user_gemini_key, model=gemini_model, crop_model=gemini_model, detect_model=gemini_model, provider="gemini", user_gender=user_gender)
                     except Exception as exc:
                         logger.warning("Failed to build tester custom-key Gemini GarmentVisionService: %s", exc)
                 try:
-                    return GarmentVisionService(model=gemini_model or "gemini-3.5-flash-lite", provider="gemini", user_gender=user_gender)
+                    return GarmentVisionService(model=gemini_model or "gemini-3.5-flash-lite", crop_model=gemini_model or "gemini-2.5-flash", detect_model=gemini_model or "gemini-3.5-flash-lite", provider="gemini", user_gender=user_gender)
                 except Exception as exc:
                     logger.warning("Failed to build tester Gemini GarmentVisionService: %s", exc)
 
@@ -4981,8 +4985,8 @@ def get_garment_vision_service(
 
         # 4) Effective provider resolution:
         # - Tester with DressApp Eyes -> "gemma"
-        # - Free user -> "gemma" (on-premises Eyes)
-        # - Manager / Professional user -> "gemini" (cloud Eyes)
+        # - Free user -> "gemini" with gemini-2.5-flash-lite (and on-premises Eyes as emergency quota fallback)
+        # - Manager / Professional user -> "gemini" with Hybrid Setup (gemini-2.5-flash crop/single + gemini-3.5-flash-lite detect)
         eff_provider = resolve_effective_provider(user)
         if eff_provider == "gemma":
             try:
@@ -4990,10 +4994,33 @@ def get_garment_vision_service(
             except Exception as exc:
                 logger.warning("Failed to build DressApp Eyes Gemma GarmentVisionService: %s", exc)
         elif eff_provider == "gemini":
-            try:
-                return GarmentVisionService(provider="gemini", model="gemini-3.5-flash-lite", user_gender=user_gender)
-            except Exception as exc:
-                logger.warning("Failed to build Gemini GarmentVisionService: %s", exc)
+            if is_paid_tier_user(user):
+                try:
+                    return GarmentVisionService(
+                        provider="gemini",
+                        model=settings.GARMENT_VISION_MODEL or "gemini-2.5-flash",
+                        crop_model=settings.GARMENT_VISION_CROP_MODEL or "gemini-2.5-flash",
+                        detect_model=settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash-lite",
+                        user_gender=user_gender,
+                    )
+                except Exception as exc:
+                    logger.warning("Failed to build Paid Hybrid Gemini GarmentVisionService: %s", exc)
+            else:
+                free_vision_model = getattr(settings, "FREE_VISION_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
+                try:
+                    return GarmentVisionService(
+                        provider="gemini",
+                        model=free_vision_model,
+                        crop_model=free_vision_model,
+                        detect_model=free_vision_model,
+                        user_gender=user_gender,
+                    )
+                except Exception as exc:
+                    logger.warning("Failed to build Free Gemini GarmentVisionService; falling back to on-prem Eyes: %s", exc)
+                    try:
+                        return GarmentVisionService(provider="gemma", model="Eyes v1", user_gender=user_gender)
+                    except Exception:
+                        pass
 
         # 5) Platform default fallback (e.g., tester user with no explicit ai_configuration):
         active_server_provider = eyes_override.get_cached_active_provider()

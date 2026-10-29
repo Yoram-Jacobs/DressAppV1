@@ -114,8 +114,8 @@ def test_resolve_effective_provider_tester_and_tiers(
     # 2. Tester switches to Google Gemini -> routes to gemini
     assert resolve_effective_provider(tester_user_gemini) == "gemini"
 
-    # 3. Free non-tester user defaults to on-premises DressApp Eyes (gemma)
-    assert resolve_effective_provider(regular_user) == "gemma"
+    # 3. Free non-tester user defaults to cloud Gemini (gemini-2.5-flash-lite primary + on-prem Eyes fallback)
+    assert resolve_effective_provider(regular_user) == "gemini"
 
     # 4. Manager / Professional non-tester user defaults to cloud Eyes (gemini)
     assert resolve_effective_provider(manager_user) == "gemini"
@@ -148,16 +148,19 @@ async def test_llm_gateway_routes_tester_gemini_switch(tester_user_gemini):
 
 
 @pytest.mark.anyio
-async def test_llm_gateway_free_user_defaults_to_on_prem_eyes(regular_user):
-    with patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma, \
-         patch("app.config.settings.EYES_GEMMA_SPACE_URL", "http://eyes:7860"):
-        mock_gemma.return_value = '{"result": "gemma free user output"}'
+async def test_llm_gateway_free_user_defaults_to_gemini_25_flash_lite(regular_user):
+    with patch("app.services.gemini_client.GeminiClient.text", new_callable=AsyncMock) as mock_gemini, \
+         patch("app.config.settings.GEMINI_API_KEY", "test_key"), \
+         patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma:
+        mock_gemini.return_value = '{"result": "gemini 2.5 flash lite output"}'
         res = await call_main_llm(
             user_text="Suggest outfit",
             user=regular_user,
         )
-        assert res == '{"result": "gemma free user output"}'
-        mock_gemma.assert_awaited_once()
+        assert res == '{"result": "gemini 2.5 flash lite output"}'
+        mock_gemini.assert_awaited_once()
+        assert mock_gemini.await_args.kwargs["model"] == "gemini-2.5-flash-lite"
+        mock_gemma.assert_not_awaited()
 
 
 @pytest.mark.anyio
@@ -172,6 +175,7 @@ async def test_llm_gateway_manager_user_defaults_to_cloud_gemini(manager_user):
         )
         assert res == '{"result": "gemini manager output"}'
         mock_gemini.assert_awaited_once()
+        assert mock_gemini.await_args.kwargs["model"] == "gemini-3.5-flash-lite"
         mock_gemma.assert_not_awaited()
 
 
@@ -186,15 +190,21 @@ def test_vision_service_tester_and_tiers(tester_user_dressapp, tester_user_gemin
         v_tester_gem = get_garment_vision_service(user=tester_user_gemini)
         assert v_tester_gem.provider == "gemini"
 
-    # 3. Free non-tester user gets on-premises DressApp Eyes (gemma)
-    v_reg = get_garment_vision_service(user=regular_user)
-    assert v_reg.provider == "gemma"
-    assert v_reg.model == "Eyes v1"
+    # 3. Free non-tester user gets Gemini 2.5 Flash-Lite (with fallback to on-prem Eyes if GEMINI_API_KEY unset)
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
+        v_reg = get_garment_vision_service(user=regular_user)
+        assert v_reg.provider == "gemini"
+        assert v_reg.model == "gemini-2.5-flash-lite"
+        assert v_reg.crop_model == "gemini-2.5-flash-lite"
+        assert v_reg.detect_model == "gemini-2.5-flash-lite"
 
-    # 4. Manager / Professional non-tester user gets cloud Eyes (gemini)
+    # 4. Manager / Professional non-tester user gets Hybrid Setup (gemini-2.5-flash crop/single + gemini-3.5-flash-lite detect)
     with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
         v_mgr = get_garment_vision_service(user=manager_user)
         assert v_mgr.provider == "gemini"
+        assert v_mgr.model == "gemini-2.5-flash"
+        assert v_mgr.crop_model == "gemini-2.5-flash"
+        assert v_mgr.detect_model == "gemini-3.5-flash-lite"
 
     # 5. Developer / tester user without explicit Gemma selection respects active platform provider (Gemini)
     with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"), \
@@ -222,18 +232,19 @@ def test_stylist_brain_tester_and_tiers(tester_user_dressapp, tester_user_gemini
         else:
             assert brain_tester_gem.provider_name == "gemini"
 
-    # 3. Free user gets primary GemmaStylistBrain
-    brain_free = stylist_brain_service(user=regular_user)
-    if isinstance(brain_free, FallbackBrain):
-        assert brain_free.primary.provider_name == "gemma"
-    else:
-        assert brain_free.provider_name == "gemma"
+    # 3. Free user gets primary GeminiStylistBrain (gemini-2.5-flash-lite) with GemmaStylistBrain fallback
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
+        brain_free = stylist_brain_service(user=regular_user)
+        assert isinstance(brain_free, FallbackBrain)
+        assert brain_free.primary.provider_name == "gemini"
+        assert brain_free.primary._svc.model == "gemini-2.5-flash-lite"
+        assert brain_free.fallback.provider_name == "gemma"
 
-    # 4. Manager user gets primary GeminiStylistBrain
+    # 4. Manager user gets primary GeminiStylistBrain (gemini-3.5-flash-lite) with GemmaStylistBrain fallback
     with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
         brain_mgr = stylist_brain_service(user=manager_user)
-        if isinstance(brain_mgr, FallbackBrain):
-            assert brain_mgr.primary.provider_name == "gemini"
-        else:
-            assert brain_mgr.provider_name == "gemini"
+        assert isinstance(brain_mgr, FallbackBrain)
+        assert brain_mgr.primary.provider_name == "gemini"
+        assert brain_mgr.primary._svc.model == "gemini-3.5-flash-lite"
+        assert brain_mgr.fallback.provider_name == "gemma"
 

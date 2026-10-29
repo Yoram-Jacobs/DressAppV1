@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import { userStore } from '@/lib/api';
+import { isMaleGender } from '@/lib/gender';
 import {
   X,
   RotateCw,
@@ -294,7 +295,7 @@ export default function DressingRoom3D({
   const activeHair = propHair || effectiveProfile?.hair || storedUser?.hair || EMPTY_OBJ;
   const activeShapeParams = propShapeParams || effectiveProfile?.shape_params || effectiveProfile?.shapeParams || storedUser?.avatar_shape_params || EMPTY_OBJ;
 
-  const isMale = String(activeSex || activeMeasurements?.gender || '').toLowerCase() === 'male';
+  const isMale = isMaleGender(activeSex || activeMeasurements?.gender);
 
   const [autoRotate, setAutoRotate] = useState(false);
   const [cameraPreset, setCameraPreset] = useState(null);

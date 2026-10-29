@@ -3,6 +3,7 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { RotateCcw } from 'lucide-react';
+import { isMaleGender } from '@/lib/gender';
 
 const MALE_GLB_URL = '/models/avatar_male_1.glb?v=hair5_smooth';
 const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=hair5_smooth';
@@ -130,7 +131,7 @@ export function getFullAvatarAnatomy({
   const numHip = Math.max(68, Math.min(148, Number(hip) || 96));
   const numArm = Math.max(42, Math.min(85, Number(armLength) || 60));
   const numIns = Math.max(52, Math.min(100, Number(inseam) || 78));
-  const isMale = String(gender).toLowerCase() === 'male';
+  const isMale = isMaleGender(gender);
   const _numFoot = Math.max(19, Math.min(33, Number(footLength) || (isMale ? 27.0 : 24.5)));
   void _numFoot;
 
@@ -245,7 +246,7 @@ export function getFullAvatarAnatomy({
 }
 
 export function getDefaultAvatarAnatomy(sex = 'female') {
-  const isMale = String(sex).toLowerCase() === 'male';
+  const isMale = isMaleGender(sex);
   if (isMale) {
     return getFullAvatarAnatomy({
       height: 178,
@@ -384,7 +385,7 @@ export function getAvatarGeometry({
 }
 
 export function getDefaultAvatarHair(sex = 'female') {
-  const isMale = String(sex || '').toLowerCase() === 'male';
+  const isMale = isMaleGender(sex);
   if (isMale) {
     return {
       length: 'short',
@@ -951,7 +952,7 @@ export default function DynamicAvatar({
   interactive = false,
   children
 }) {
-  const isMale = String(gender).toLowerCase() === 'male';
+  const isMale = isMaleGender(gender);
 
   const anatomy = useMemo(
     () =>

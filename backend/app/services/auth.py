@@ -287,17 +287,28 @@ def resolve_user_gemini_api_key(user: dict[str, Any] | None = None) -> str | Non
 
 
 def resolve_user_gemini_model(user: dict[str, Any] | None = None) -> str:
-    """Resolve the active Gemini multimodal model for a user, defaulting to gemini-3.5-flash-lite."""
+    """Resolve the active Gemini multimodal model for a user based on subscription tier.
+    - Tester group: respects user.ai_configuration.selected_model (normalizing deprecated 3.5-flash/pro).
+    - Manager / Professional: defaults to settings.DEFAULT_STYLIST_MODEL ('gemini-3.5-flash-lite').
+    - Free tier: defaults to settings.FREE_STYLIST_MODEL ('gemini-2.5-flash-lite').
+    """
     default_model = getattr(settings, "DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
+    free_model = getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
     if user and isinstance(user, dict):
-        ai_config = user.get("ai_configuration") or {}
-        selected = ai_config.get("selected_model")
-        if selected and isinstance(selected, str) and selected.strip():
-            selected = selected.strip()
-            # Normalize legacy/invalid model strings to cost-effective production gemini-3.5-flash-lite
-            if selected in ("gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro"):
-                return "gemini-3.5-flash-lite"
-            return selected
+        if is_tester_user(user):
+            ai_config = user.get("ai_configuration") or {}
+            selected = ai_config.get("selected_model")
+            if selected and isinstance(selected, str) and selected.strip():
+                selected = selected.strip()
+                if selected in ("gemini-3.5-flash", "gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro"):
+                    return "gemini-3.5-flash-lite"
+                if selected in ("Eyes v1", "gemma", "dressapp", "gemma-4-E4B-it-Q3_K_M.gguf"):
+                    return default_model
+                return selected
+            return default_model
+        if is_paid_tier_user(user):
+            return default_model
+        return free_model
     return default_model
 
 
@@ -358,8 +369,8 @@ def resolve_user_custom_key(user: dict[str, Any] | None, provider: str) -> str |
 def resolve_user_ai_provider(user: dict[str, Any] | None) -> str:
     """Resolve the AI provider for a user.
     - Tester group: respects user.ai_configuration.selected_provider (defaults to 'dressapp').
-    - Manager / Professional: defaults to 'gemini' (DressApp cloud Eyes).
-    - Free: defaults to 'dressapp' (DressApp on-premises Eyes).
+    - Manager / Professional: defaults to 'gemini' (Hybrid Gemini 3.5 Flash-Lite + 2.5 Flash).
+    - Free: defaults to 'gemini' (Gemini 2.5 Flash-Lite primary with on-premises Eyes quota fallback).
     """
     if user and isinstance(user, dict):
         if is_tester_user(user):
@@ -368,16 +379,15 @@ def resolve_user_ai_provider(user: dict[str, Any] | None) -> str:
             if provider and isinstance(provider, str) and provider.strip():
                 return provider.strip().lower()
             return "dressapp"
-        if is_paid_tier_user(user):
-            return "gemini"
-    return "dressapp"
+        return "gemini"
+    return "gemini"
 
 
 def resolve_user_ai_model(user: dict[str, Any] | None) -> str:
     """Resolve the active AI model for a user.
     - Tester group: respects user.ai_configuration.selected_model (defaults to 'Eyes v1').
-    - Manager / Professional: defaults to 'gemini-3.5-flash-lite' (cloud Eyes).
-    - Free: defaults to 'Eyes v1' (on-premises Eyes).
+    - Manager / Professional: defaults to 'gemini-3.5-flash-lite'.
+    - Free: defaults to 'gemini-2.5-flash-lite'.
     """
     if user and isinstance(user, dict):
         if is_tester_user(user):
@@ -387,8 +397,9 @@ def resolve_user_ai_model(user: dict[str, Any] | None) -> str:
                 return selected.strip()
             return "Eyes v1"
         if is_paid_tier_user(user):
-            return "gemini-3.5-flash-lite"
-    return "Eyes v1"
+            return getattr(settings, "DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
+        return getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
+    return getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
 
 
 def resolve_user_custom_gemini_api_key(user: dict[str, Any] | None = None) -> str | None:
@@ -470,7 +481,7 @@ def resolve_effective_provider(
         if is_paid_tier_user(user):
             return "gemini"
 
-        return "gemma"
+        return "gemini"
 
     return ""
 

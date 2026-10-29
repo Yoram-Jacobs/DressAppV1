@@ -147,7 +147,7 @@ class GemmaStylistBrain:
                 system_prompt=sys_msg,
                 user_text=prompt_text,
                 image_b64_jpeg=image_base64,
-                max_tokens=650,
+                max_tokens=2048,
                 temperature=0.2,
                 timeout=60.0,
             )
@@ -349,7 +349,7 @@ def stylist_brain_service(
             return FallbackBrain(primary=primary, fallback=fallback) if fallback else primary
         elif eff_provider == "gemini":
             custom_key = api_key or (resolve_user_custom_gemini_api_key(user) if is_tester_user(user) else None)
-            gemini_model = model or (resolve_user_gemini_model(user) if is_tester_user(user) else "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
+            gemini_model = model or resolve_user_gemini_model(user)
             primary = GeminiStylistBrain(api_key=custom_key, model=gemini_model)
             return FallbackBrain(primary=primary, fallback=GemmaStylistBrain())
 

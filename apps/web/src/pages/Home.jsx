@@ -2363,6 +2363,40 @@ export default function Home() {
                       "Never step out under-dressed for high stakes business sessions or unprepared for sudden rainfall. It feels like having a world-class sartorial advisor living in your phone, with complete access to what you own.",
                   })}
                 </motion.p>
+
+                {/* Real-Time Speed Highlight Callout */}
+                <motion.div
+                  initial={{ opacity: 0, x: 40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.65, delay: 0.45, ease: "easeOut" }}
+                  className="mb-6 flex items-start gap-3 rounded-[16px] border border-emerald-200/90 bg-emerald-50/80 p-3.5"
+                  data-testid="home-stylist-speed-callout"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm">
+                    <Zap className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <div className="text-[13px] font-bold text-emerald-950 flex items-center gap-1.5 flex-wrap">
+                      <span>
+                        {t("home.stylist.speedHighlightTitle", {
+                          defaultValue: "Real-Time AI Generation (<2s)",
+                        })}
+                      </span>
+                      <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-emerald-900">
+                        {t("home.stylist.speedHighlightBadge", {
+                          defaultValue: "Instant Look",
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-[12px] leading-[18px] text-emerald-800 font-medium">
+                      {t("home.stylist.speedHighlightDesc", {
+                        defaultValue:
+                          "Unlike apps with multi-minute cloud queues, DressApp's edge-optimized engine generates complete, styled looks in real time — under 2 seconds.",
+                      })}
+                    </p>
+                  </div>
+                </motion.div>
                 {/* CTAs */}
                 <motion.div
                   initial={{ opacity: 0, x: 40 }}

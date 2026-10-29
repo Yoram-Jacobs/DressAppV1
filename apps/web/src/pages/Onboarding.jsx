@@ -16,6 +16,7 @@ import {
   Crown,
   ShieldCheck,
   Loader2,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1209,7 +1210,7 @@ export default function Onboarding() {
                     {selectionValidation.isComplete
                       ? t('onboarding.step3.readyMessage', {
                           count: selectionValidation.totalSelected,
-                          defaultValue: `Complete head-to-toe outfit unlocked (${selectionValidation.totalSelected} staples selected)!`,
+                          defaultValue: `Complete head-to-toe outfit unlocked (${selectionValidation.totalSelected} staples selected)! Ready to generate your look in <2s.`,
                         })
                       : t('onboarding.step3.incompleteMessage', {
                           count: selectionValidation.totalSelected,
@@ -1360,12 +1361,20 @@ export default function Onboarding() {
           {step === 4 && (
             <div className="space-y-6" data-testid="onboarding-step-4">
               <div className="space-y-1">
-                <Badge className="bg-emerald-100 text-emerald-900 border-none px-3 py-1 text-xs font-bold">
-                  <Sparkles className="w-3.5 h-3.5 me-1.5 inline" />
-                  {t('onboarding.step4.badge', {
-                    defaultValue: 'Your First AI Outfit & Calibrated Avatar Are Ready!',
-                  })}
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="bg-emerald-100 text-emerald-900 border-none px-3 py-1 text-xs font-bold">
+                    <Sparkles className="w-3.5 h-3.5 me-1.5 inline" />
+                    {t('onboarding.step4.badge', {
+                      defaultValue: 'Your First AI Outfit & Calibrated Avatar Are Ready!',
+                    })}
+                  </Badge>
+                  <Badge className="bg-amber-100 text-amber-900 border-none px-3 py-1 text-xs font-bold">
+                    <Zap className="w-3.5 h-3.5 me-1.5 inline text-amber-700" />
+                    {t('onboarding.step4.instantBadge', {
+                      defaultValue: 'Generated in <2s · Real-Time AI',
+                    })}
+                  </Badge>
+                </div>
                 <h1 className="text-2xl md:text-3xl font-bold text-dark-brand">
                   {t('onboarding.step4.title', {
                     defaultValue: 'Meet Your Personal AI Stylist Look',
@@ -1376,6 +1385,15 @@ export default function Onboarding() {
                     defaultValue:
                       'We dressed your calibrated avatar in a complete head-to-toe outfit from your Starter Capsule, matched to today’s weather.',
                   })}
+                </p>
+                <p className="text-xs font-medium text-emerald-700 flex items-center gap-1.5 pt-0.5">
+                  <Zap className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                  <span>
+                    {t('onboarding.step4.speedNote', {
+                      defaultValue:
+                        'Generated in real-time in under 2 seconds — no multi-minute queue waits, zero cloud lag.',
+                    })}
+                  </span>
                 </p>
               </div>
 
@@ -1648,7 +1666,7 @@ export default function Onboarding() {
               >
                 {step === 3
                   ? t('onboarding.nav.revealOutfit', {
-                      defaultValue: 'Reveal My First AI Outfit',
+                      defaultValue: 'Reveal My First AI Outfit (<2s)',
                     })
                   : t('onboarding.nav.continue', { defaultValue: 'Continue' })}
                 <ChevronRight className="w-4 h-4 ms-1 rtl:rotate-180" />

@@ -318,7 +318,10 @@
       "cta": "Pergunte ao estilista",
       "conciergeTitle": "Seu concierge diário do guarda-roupa",
       "conciergeDescription": "Receba recomendações de looks personalizadas direto na tela de bloqueio. Com base na previsão local, nos eventos da agenda e na rotação inteligente do guarda-roupa para manter o estilo fresco e as peças pouco usadas em circulação. Toque no alerta para pré-visualizar o look no avatar e planejar a semana sem esforço.",
-      "scheduledOutfitsCta": "Looks agendados"
+      "scheduledOutfitsCta": "Looks agendados",
+      "speedHighlightTitle": "Geração de IA em tempo real (<2s)",
+      "speedHighlightBadge": "Look instantâneo",
+      "speedHighlightDesc": "Ao contrário de aplicativos com filas de espera de vários minutos na nuvem, o motor otimizado da DressApp gera looks completos e elegantes em tempo real — em menos de 2 segundos."
     },
     "marketplace": {
       "tag": "Iniciativa Desperdício Zero",
@@ -5373,7 +5376,7 @@
       "title": "Monte seu guarda-roupa inicial com 4+ peças essenciais",
       "subtitle": "Escolha em nosso acervo catalogado — cada peça inclui tecido, cor e perfil sazonal completos.",
       "autoSelectBtn": "Selecionar automaticamente 4 peças para o meu estilo",
-      "readyMessage": "Look completo dos pés à cabeça desbloqueado ({{count}} peças selecionadas)!",
+      "readyMessage": "Look completo da cabeça aos pés liberado ({{count}} peças básicas selecionadas)! Pronto para gerar seu visual em menos de 2s.",
       "incompleteMessage": "{{count}}/4 selecionadas — Escolha pelo menos 4 peças incluindo (Peça única + Calçado) OU (Parte de cima + Calça/Saia + Calçado).",
       "pillFullBody": "Peça única ({{count}})",
       "pillTopBottom": "Cima ({{top}}) + Baixo ({{bottom}})",
@@ -5419,12 +5422,14 @@
       "openStylistBtn": "Salvar e abrir meu Stylist IA",
       "saveWithGoogle": "Salvar meu DNA de estilo e abrir Stylist IA",
       "savedSuccess": "Seu DNA de estilo, passaporte de medidas IA e cápsula inicial estão prontos!",
-      "saveError": "Não foi possível salvar seu perfil inicial. Tente novamente."
+      "saveError": "Não foi possível salvar seu perfil inicial. Tente novamente.",
+      "instantBadge": "Gerado em <2s · IA em tempo real",
+      "speedNote": "Gerado em tempo real em menos de 2 segundos — sem minutos de fila na nuvem, sem lentidão de servidor."
     },
     "nav": {
       "back": "Voltar",
       "continue": "Continuar",
-      "revealOutfit": "Revelar meu primeiro look IA"
+      "revealOutfit": "Revelar meu primeiro look de IA (<2s)"
     },
     "items": {
       "w_abaya_black": "Abaya preta modesta bordada",

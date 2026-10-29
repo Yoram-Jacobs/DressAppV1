@@ -255,7 +255,8 @@ async def closet_summary_for(user_id: str, limit: int = 40) -> list[dict[str, An
 
         item_dict = {
             "id": r["id"],
-            "title": r.get("title"),
+            "title": r.get("title") or r.get("name"),
+            "name": r.get("name") or r.get("title"),
             "brand": r.get("brand"),
             "category": r.get("category"),
             "sub_category": r.get("sub_category"),
@@ -266,6 +267,12 @@ async def closet_summary_for(user_id: str, limit: int = 40) -> list[dict[str, An
             "season": r.get("season") or [],
             "tags": r.get("tags") or [],
             "cultural_tags": r.get("cultural_tags") or [],
+            "gender": r.get("gender"),
+            "image_url": r.get("clean_image_url") or r.get("reconstructed_image_url") or r.get("thumbnail_data_url") or r.get("photo_url") or r.get("image_url"),
+            "clean_image_url": r.get("clean_image_url"),
+            "reconstructed_image_url": r.get("reconstructed_image_url"),
+            "thumbnail_data_url": r.get("thumbnail_data_url"),
+            "photo_url": r.get("photo_url"),
             "source": r.get("source"),
         }
         if is_part_of_set:

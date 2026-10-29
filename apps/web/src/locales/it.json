@@ -318,7 +318,10 @@
       "cta": "Chiedi allo stilista",
       "conciergeTitle": "Il tuo concierge quotidiano del guardaroba",
       "conciergeDescription": "Ricevi consigli di outfit personalizzati direttamente sulla schermata di blocco. Basati sulle previsioni locali, sugli eventi del calendario e su una rotazione intelligente del guardaroba per mantenere lo stile fresco e rimettere in uso i pezzi poco indossati. Tocca l'avviso per vedere il look sull'avatar e pianificare la settimana senza sforzo.",
-      "scheduledOutfitsCta": "Outfit programmati"
+      "scheduledOutfitsCta": "Outfit programmati",
+      "speedHighlightTitle": "Generazione AI in tempo reale (<2 s)",
+      "speedHighlightBadge": "Look istantaneo",
+      "speedHighlightDesc": "A differenza delle app con lunghe code sul cloud, il motore ottimizzato di DressApp compone outfit completi e curati in tempo reale — in meno di 2 secondi."
     },
     "marketplace": {
       "tag": "Iniziativa Rifiuti Zero",
@@ -5389,7 +5392,7 @@
       "title": "Inizia il tuo guardaroba con 4+ capi essenziali",
       "subtitle": "Scegli dal nostro catalogo studio pre-indicizzato — ogni capo include tessuto, colore e stagionalità completi.",
       "autoSelectBtn": "Seleziona automaticamente 4 capi per il mio stile",
-      "readyMessage": "Outfit completo da capo a piedi sbloccato ({{count}} capi selezionati)!",
+      "readyMessage": "Outfit completo da capo a piedi sbloccato ({{count}} capi essenziali selezionati)! Pronto a creare il tuo look in meno di 2 s.",
       "incompleteMessage": "{{count}}/4 selezionati — Scegli almeno 4 capi includendo (Capo intero + Calzature) OPPURE (Top + Pantaloni/Gonna + Calzature).",
       "pillFullBody": "Capo intero ({{count}})",
       "pillTopBottom": "Top ({{top}}) + Fondo ({{bottom}})",
@@ -5435,12 +5438,14 @@
       "openStylistBtn": "Salva e apri il mio Stylist IA",
       "saveWithGoogle": "Salva il mio DNA di stile e apri lo Stylist IA",
       "savedSuccess": "Il tuo DNA di stile, il passaporto taglie IA e la capsula iniziale sono pronti!",
-      "saveError": "Impossibile salvare il profilo iniziale. Riprova."
+      "saveError": "Impossibile salvare il profilo iniziale. Riprova.",
+      "instantBadge": "Generato in <2 s · AI in tempo reale",
+      "speedNote": "Generato in tempo reale in meno di 2 secondi — nessuna attesa di diversi minuti in coda, zero latenza cloud."
     },
     "nav": {
       "back": "Indietro",
       "continue": "Continua",
-      "revealOutfit": "Rivela il mio primo outfit IA"
+      "revealOutfit": "Rivela il mio primo outfit AI (<2 s)"
     },
     "items": {
       "w_abaya_black": "Abaya nera sobria ricamata",

@@ -1,4 +1,5 @@
 import AvatarViewer2D from './AvatarViewer2D';
+import { isMaleGender } from '@/lib/gender';
 
 export default function AvatarViewer({
   shapeParams,
@@ -13,11 +14,12 @@ export default function AvatarViewer({
   interactive = false,
   enable3DTryOn = true,
 }) {
+  const effectiveSex = isMaleGender(sex) ? 'male' : 'female';
   return (
     <AvatarViewer2D
       shapeParams={shapeParams}
       measurements={measurements}
-      sex={sex}
+      sex={effectiveSex}
       outfitItems={outfitItems}
       onItemClick={onItemClick}
       bodyPhotoUrl={bodyPhotoUrl}

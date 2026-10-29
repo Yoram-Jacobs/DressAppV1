@@ -3841,6 +3841,10 @@ export default function Stylist() {
                                           <OutfitPiecePreview
                                             outfit={dayOutfit}
                                             outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
+                                            sex={user?.gender || user?.sex || 'female'}
+                                            skinColor={user?.skin_tone}
+                                            measurements={user?.body_measurements || user?.measurements}
+                                            hair={user?.hair}
                                           />
                                         </div>
                                       ) : (
@@ -4019,6 +4023,10 @@ export default function Stylist() {
                               <OutfitPiecePreview
                                 outfit={dayOutfit}
                                 outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
+                                sex={user?.gender || user?.sex || 'female'}
+                                skinColor={user?.skin_tone}
+                                measurements={user?.body_measurements || user?.measurements}
+                                hair={user?.hair}
                               />
                             </div>
                             <div className="absolute inset-0 bg-background/90 opacity-0 hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center">
@@ -4065,6 +4073,10 @@ export default function Stylist() {
                           <OutfitPiecePreview
                             outfit={dayOutfit}
                             outfitItems={getOutfitPiecesMap(dayOutfit, closetItems)}
+                            sex={user?.gender || user?.sex || 'female'}
+                            skinColor={user?.skin_tone}
+                            measurements={user?.body_measurements || user?.measurements}
+                            hair={user?.hair}
                           />
                         </div>
                         <div className="min-w-0 text-start">
@@ -4110,6 +4122,10 @@ export default function Stylist() {
                         <div className="w-full aspect-[4/5] bg-accent-beige overflow-hidden relative shrink-0">
                           <OutfitPiecePreview
                             outfitItems={getRecommendationPiecesMap(rec, closetItems)}
+                            sex={user?.gender || user?.sex || 'female'}
+                            skinColor={user?.skin_tone}
+                            measurements={user?.body_measurements || user?.measurements}
+                            hair={user?.hair}
                           />
                         </div>
                         <div className="p-2 text-[12px] font-semibold truncate text-text-brand w-full">
@@ -4157,6 +4173,10 @@ export default function Stylist() {
                               <OutfitPiecePreview
                                 outfit={o}
                                 outfitItems={getOutfitPiecesMap(o, closetItems)}
+                                sex={user?.gender || user?.sex || 'female'}
+                                skinColor={user?.skin_tone}
+                                measurements={user?.body_measurements || user?.measurements}
+                                hair={user?.hair}
                               />
                               {isAlreadyScheduled && (
                                 <div className="absolute inset-0 bg-background/60 flex items-center justify-center">

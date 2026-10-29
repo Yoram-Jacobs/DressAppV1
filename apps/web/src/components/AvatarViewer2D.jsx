@@ -5,6 +5,7 @@ import { Sparkles } from 'lucide-react';
 import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { useAuth } from '@/lib/auth';
+import { isMaleGender } from '@/lib/gender';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 import DynamicAvatar, {
   getFullAvatarAnatomy,
@@ -977,7 +978,7 @@ export default function AvatarViewer2D({
 
   // Derive cm measurements for DynamicAvatar
   const computedMeasurements = useMemo(() => {
-    const isMale = String(sex).toLowerCase() === 'male';
+    const isMale = isMaleGender(sex);
     const baseH = isMale ? 178 : 168;
     const baseSh = isMale ? 44 : 38;
     const baseCh = isMale ? 98 : 88;

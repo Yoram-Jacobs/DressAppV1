@@ -113,6 +113,8 @@ class Settings:
     )
     GOOGLE_TRANSLATE_API_KEY: str | None = os.environ.get("GOOGLE_TRANSLATE_API_KEY") or None
     DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite")
+    FREE_STYLIST_MODEL: str = os.environ.get("FREE_STYLIST_MODEL", "gemini-2.5-flash-lite")
+    FREE_VISION_MODEL: str = os.environ.get("FREE_VISION_MODEL", "gemini-2.5-flash-lite")
     DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemini")
 
     # --- Phase O: Stylist brain provider ---
@@ -196,7 +198,7 @@ class Settings:
         "GARMENT_VISION_PROVIDER", os.environ.get("EYES_PROVIDER", "gemini")
     )
     GARMENT_VISION_MODEL: str = os.environ.get(
-        "GARMENT_VISION_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_MODEL", "gemini-2.5-flash"
     )
     # When set, the HF path hits this OpenAI-compatible endpoint URL
     # instead of going through HF Inference Providers routing. Use this
@@ -270,7 +272,7 @@ class Settings:
     # file has no effect.
     # Per-crop analyzer used inside the multi-item outfit pipeline.
     GARMENT_VISION_CROP_MODEL: str = os.environ.get(
-        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash-lite"
+        "GARMENT_VISION_CROP_MODEL", "gemini-2.5-flash"
     )
     # Detection stays on Gemini Flash until we upgrade to a fine-tuned
     # vision model that does boxes well.

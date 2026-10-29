@@ -3,6 +3,7 @@ import { resolveMediaUrl } from '@/lib/itemImage';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { userStore } from '@/lib/api';
+import { isMaleGender } from '@/lib/gender';
 import DynamicAvatar from './DynamicAvatar';
 import {
   getTopTopography,
@@ -17,6 +18,9 @@ import {
 function getPieceImageUrl(piece) {
   if (!piece) return null;
   const raw =
+    piece.imageUrl ||
+    piece.url ||
+    piece.image ||
     piece.cutout_url ||
     piece.reconstruct_image_url ||
     piece.reconstructed_image_url ||
@@ -101,13 +105,14 @@ export default function OutfitPiecePreview({
   const storedUser = user || userStore?.get?.() || {};
   const effectiveProfile = storedUser?.profile || storedUser || {};
 
-  const effectiveSex =
+  const rawSex =
     sex ||
     effectiveProfile?.sex ||
     effectiveProfile?.gender ||
     storedUser?.sex ||
     storedUser?.gender ||
     'female';
+  const effectiveSex = isMaleGender(rawSex) ? 'male' : 'female';
 
   const rawSkin =
     skinColor ||

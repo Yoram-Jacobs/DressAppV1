@@ -318,7 +318,10 @@
       "cta": "Fragen Sie den Stylisten",
       "conciergeTitle": "Ihr täglicher Garderoben-Concierge",
       "conciergeDescription": "Erhalten Sie personalisierte Outfit-Empfehlungen direkt auf dem Sperrbildschirm. Basierend auf lokaler Wettervorhersage, Ihren Kalenderterminen und einer intelligenten Garderoben-Rotation, damit Ihr Stil frisch bleibt und wenig genutzte Teile wieder zum Einsatz kommen. Tippen Sie auf die Benachrichtigung, um den Look auf Ihrem Avatar zu sehen und die Woche mühelos zu planen.",
-      "scheduledOutfitsCta": "Geplante Outfits"
+      "scheduledOutfitsCta": "Geplante Outfits",
+      "speedHighlightTitle": "Echtzeit-KI-Generierung (< 2 Sek.)",
+      "speedHighlightBadge": "Sofort-Look",
+      "speedHighlightDesc": "Im Gegensatz zu Apps mit minutenlangen Cloud-Warteschlangen generiert die optimierte Engine von DressApp vollständige, gestylte Outfits in Echtzeit — in unter 2 Sekunden."
     },
     "marketplace": {
       "tag": "Zero-Waste-Initiative",
@@ -5382,7 +5385,7 @@
       "title": "Starten Sie Ihren Kleiderschrank mit 4+ Basics",
       "subtitle": "Wählen Sie aus unserem katalogisierten Studio-Sortiment — jedes Teil enthält vollständige Stoff-, Farb- und Saisondaten.",
       "autoSelectBtn": "4 passende Basics automatisch für meinen Stil wählen",
-      "readyMessage": "Komplettes Outfit von Kopf bis Fuß freigeschaltet ({{count}} Basics ausgewählt)!",
+      "readyMessage": "Vollständiges Outfit von Kopf bis Fuß freigeschaltet ({{count}} Basics gewählt)! Bereit für Ihren Look in unter 2 Sekunden.",
       "incompleteMessage": "{{count}}/4 ausgewählt — Wählen Sie mindestens 4 Basics inklusive (Einteiler + Schuhe) ODER (Oberteil + Hose/Rock + Schuhe).",
       "pillFullBody": "Einteiler ({{count}})",
       "pillTopBottom": "Oberteil ({{top}}) + Unterteil ({{bottom}})",
@@ -5428,12 +5431,14 @@
       "openStylistBtn": "Speichern & meinen KI-Stylisten öffnen",
       "saveWithGoogle": "Stil-DNA speichern & KI-Stylist öffnen",
       "savedSuccess": "Ihre Stil-DNA, Ihr KI-Größenpass und Ihre Start-Kapsel sind bereit!",
-      "saveError": "Ihr Profil konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+      "saveError": "Ihr Profil konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+      "instantBadge": "In < 2 Sek. generiert · Echtzeit-KI",
+      "speedNote": "In Echtzeit unter 2 Sekunden generiert — keine minutenlangen Warteschlangen, null Cloud-Verzögerung."
     },
     "nav": {
       "back": "Zurück",
       "continue": "Weiter",
-      "revealOutfit": "Mein erstes KI-Outfit anzeigen"
+      "revealOutfit": "Mein erstes KI-Outfit anzeigen (< 2 Sek.)"
     },
     "items": {
       "w_abaya_black": "Schwarze bestickte Abaya",

@@ -318,7 +318,10 @@
       "cta": "Demandez au styliste",
       "conciergeTitle": "Votre concierge quotidien de garde-robe",
       "conciergeDescription": "Recevez des recommandations de tenues personnalisées directement sur votre écran de verrouillage. Elles tiennent compte des prévisions locales, de votre agenda et d'une rotation intelligente de la garde-robe pour garder votre style frais et remettre en circulation les pièces peu portées. Touchez l'alerte pour prévisualiser le look sur votre avatar et planifier votre semaine sans effort.",
-      "scheduledOutfitsCta": "Tenues planifiées"
+      "scheduledOutfitsCta": "Tenues planifiées",
+      "speedHighlightTitle": "Génération IA en temps réel (< 2 s)",
+      "speedHighlightBadge": "Look instantané",
+      "speedHighlightDesc": "Contrairement aux applications avec de longues files d'attente sur le cloud, le moteur optimisé de DressApp compose des tenues complètes et stylisées en temps réel — en moins de 2 secondes."
     },
     "marketplace": {
       "tag": "Initiative Zéro Déchet",
@@ -5366,7 +5369,7 @@
       "title": "Composez votre garde-robe initiale avec 4+ essentiels",
       "subtitle": "Choisissez parmi notre catalogue studio pré-indexé — chaque pièce inclut la matière, la couleur et la saisonnalité complètes.",
       "autoSelectBtn": "Sélectionner automatiquement 4 essentiels pour mon style",
-      "readyMessage": "Tenue complète de la tête aux pieds débloquée ({{count}} essentiels sélectionnés) !",
+      "readyMessage": "Tenue complète de la tête aux pieds débloquée ({{count}} essentiels sélectionnés) ! Prêt à générer votre look en moins de 2 s.",
       "incompleteMessage": "{{count}}/4 sélectionnés — Choisissez au moins 4 essentiels incluant (Pièce complète + Chaussures) OU (Haut + Pantalon/Jupe + Chaussures).",
       "pillFullBody": "Pièce complète ({{count}})",
       "pillTopBottom": "Haut ({{top}}) + Bas ({{bottom}})",
@@ -5412,12 +5415,14 @@
       "openStylistBtn": "Enregistrer et ouvrir mon Styliste IA",
       "saveWithGoogle": "Enregistrer mon ADN de style et ouvrir le Styliste IA",
       "savedSuccess": "Votre ADN de style, votre passeport tailles IA et votre capsule initiale sont prêts !",
-      "saveError": "Impossible d’enregistrer votre profil d’intégration. Veuillez réessayer."
+      "saveError": "Impossible d’enregistrer votre profil d’intégration. Veuillez réessayer.",
+      "instantBadge": "Généré en < 2 s · IA en temps réel",
+      "speedNote": "Généré en temps réel en moins de 2 secondes — sans attente de plusieurs minutes, zéro latence cloud."
     },
     "nav": {
       "back": "Retour",
       "continue": "Continuer",
-      "revealOutfit": "Révéler ma première tenue IA"
+      "revealOutfit": "Révéler ma première tenue IA (< 2 s)"
     },
     "items": {
       "w_abaya_black": "Abaya noire modeste brodée",

@@ -46,6 +46,10 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
           id: itId,
           closet_item_id: itId,
           url: resolvedUrl,
+          imageUrl: resolvedUrl,
+          image_url: resolvedUrl,
+          clean_image_url: resolvedUrl,
+          role: it.role,
           placeholder: itemObj?.placeholder_data_url || it.placeholder_data_url || null,
           category: itemObj?.category || it.category || '',
           sub_category: itemObj?.sub_category || it.sub_category || '',
@@ -147,7 +151,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
       <div className="relative">
         <OutfitAvatarViewer
           shapeParams={user?.avatar_shape_params || {}}
-          sex={user?.sex || 'female'}
+          sex={user?.gender || user?.sex || 'female'}
           outfitItemsMap={outfitItemsMap}
           onItemClick={onItemClick}
         />

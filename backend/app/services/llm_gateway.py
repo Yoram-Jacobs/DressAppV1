@@ -26,6 +26,8 @@ from app.services.eyes_override import get_active_provider
 from app.services.vision.llm import _call_gemma_space
 from app.services.gemini_client import GeminiClient
 from app.services.auth import (
+    is_paid_tier_user,
+    is_tester_user,
     resolve_effective_provider,
     resolve_user_custom_gemini_api_key,
     resolve_user_gemini_model,
@@ -93,14 +95,18 @@ async def call_main_llm(
     provider = (effective or await get_active_provider()).lower().strip()
     target_model = model or fallback_model or DEFAULT_MAIN_MODEL
 
-    # If caller didn't explicitly specify a model, check if user has a custom Gemini model preference
-    if not model and not fallback_model and user and provider == "gemini":
-        custom_gemini_model = resolve_user_gemini_model(user)
-        if custom_gemini_model:
-            target_model = custom_gemini_model
+    # If caller didn't explicitly specify a model, check if user has a custom/tier Gemini model preference
+    if user and provider == "gemini":
+        if not is_tester_user(user) and not is_paid_tier_user(user):
+            # Free-tier users route to Gemini 2.5 Flash-Lite
+            target_model = getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
+        elif not model and not fallback_model:
+            custom_gemini_model = resolve_user_gemini_model(user)
+            if custom_gemini_model:
+                target_model = custom_gemini_model
 
-    # Normalization: ensure cost-effective Gemini 3.5 Flash-Lite is preferred unless explicitly specified
-    if target_model in ("gemini-3.5-flash", "gemini-2.5-flash"):
+    # Normalization: replace deprecated 3.5-flash/pro strings with 3.5-flash-lite (preserve 2.5-flash / 2.5-flash-lite)
+    if target_model in ("gemini-3.5-flash", "gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro"):
         target_model = DEFAULT_MAIN_MODEL
 
     is_json_mode = bool(json_schema or (response_mime_type and "json" in response_mime_type.lower()))

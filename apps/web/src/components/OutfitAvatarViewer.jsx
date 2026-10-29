@@ -4,6 +4,8 @@ import AvatarViewer from './AvatarViewer';
 import OutfitPiecePreview from './OutfitPiecePreview';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
+import { isMaleGender } from '@/lib/gender';
 
 export default function OutfitAvatarViewer({
   shapeParams,
@@ -19,6 +21,8 @@ export default function OutfitAvatarViewer({
   children,
 }) {
   const { t } = useTranslation();
+  const { user } = useAuth?.() || {};
+  const effectiveSex = isMaleGender(sex || user?.gender || user?.sex) ? 'male' : 'female';
 
   return (
     <div className={cn("relative w-full aspect-[4/5] bg-secondary/10 shrink-0 overflow-hidden", className)}>
@@ -28,7 +32,7 @@ export default function OutfitAvatarViewer({
           measurements={measurements}
           skinColor={skinColor}
           hair={hair}
-          sex={sex}
+          sex={effectiveSex}
           outfitItems={outfitItemsMap}
           onItemClick={onItemClick}
           interactive={true}
@@ -41,7 +45,7 @@ export default function OutfitAvatarViewer({
           measurements={measurements}
           skinColor={skinColor}
           hair={hair}
-          sex={sex}
+          sex={effectiveSex}
         />
       )}
       {badgeContent && (

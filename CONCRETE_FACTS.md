@@ -85,7 +85,12 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
 | --- | --- | --- |
 | `EYES_GEMMA_SPACE_URL` | `http://eyes:7860` | Internal docker DNS target for [`backend/app/services/vision/service.py`](backend/app/services/vision/service.py) calls |
 | `EYES_PROVIDER` | `gemini` \| `gemma` | Env-default provider (defaults to `gemini` with `gemma` as fallback). **Use the runtime override below to switch in production** — do not edit this on the fly. |
-| `DEFAULT_STYLIST_MODEL` | `gemini-3.5-flash-lite` | Default primary LLM model across all 6 core backend pipelines for paid tiers |
+| `DEFAULT_STYLIST_MODEL` | `gemini-3.5-flash-lite` | Default primary LLM model for Manager & Professional tiers |
+| `FREE_STYLIST_MODEL` | `gemini-2.5-flash-lite` | Primary LLM model for Free tier users |
+| `FREE_VISION_MODEL` | `gemini-2.5-flash-lite` | Primary vision model for Free tier users |
+| `GARMENT_VISION_MODEL` | `gemini-2.5-flash` | Single-item vision model for Manager & Professional tiers |
+| `GARMENT_VISION_CROP_MODEL` | `gemini-2.5-flash` | Per-crop vision model for Manager & Professional tiers |
+| `GARMENT_VISION_DETECT_MODEL` | `gemini-3.5-flash-lite` | Multi-item bounding-box fallback detector for Manager & Professional tiers |
 | `EYES_API_TOKEN` | (secret) | Bearer token required by `dressapp-eyes` `/predict` and `/transcribe` |
 | `GEMINI_API_KEY` | (secret) | Google AI Studio key for the native `google-genai` SDK. Drives **every** Gemini call (primary stylist brain, wardrobe migration, suitcase, session titles, trend scout, vision verifier). Required whenever the production provider is `gemini`. |
 | `GOOGLE_API_KEY` | (secret, optional) | Canonical Google SDK name. `config.py` aliases it into `GEMINI_API_KEY` when the latter is unset, so only one of the two needs to be defined. |
@@ -101,14 +106,14 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
 
 ### Multi-Tier AI Routing & Quota Fallback (Locked Production Rules)
 
-1. **Manager & Professional Plans — Fast Cloud Model (Google Gemini 3.5 Flash)**:
-   - Paid subscribers on the **Manager** and **Professional** plans enjoy priority routing across all interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, Closet Ingestion) to **Google Gemini 3.5 Flash** (`gemini-3.5-flash-lite`) via [`backend/app/services/llm_gateway.py`](backend/app/services/llm_gateway.py).
-   - Driven by native `google-genai` SDK with strict JSON schema enforcement (`response_schema`), sub-350ms TTFT, and ultra-cost-effective rates ($0.30/1M input, $2.50/1M output).
-2. **Free Tier — On-Premises VPS Eyes (Fine-Tuned `Qwen2.5-VL-3B-Instruct`)**:
-   - **BYOK is retired.** Free-tier users never supply personal API keys; instead, they use the DressApp on-premises **Eyes** engine (`dressapp-eyes` container running fine-tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` with `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` on port 7860 of the Hetzner CPX32 VPS).
-   - Preserves native non-square aspect ratios via NaViT, extracts text from clothing tags, and provides clean structured JSON responses at zero variable cloud cost.
-3. **Transparent Quota Safety Net**:
-   - If Google Gemini external calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm` and `FallbackBrain` (`backend/app/services/stylist_brain.py`) catch the exception and immediately route the query to on-prem Eyes.
+1. **Manager & Professional Plans — Hybrid Cloud Setup (`gemini-3.5-flash-lite` + `gemini-2.5-flash`)**:
+   - Paid subscribers on the **Manager** and **Professional** plans route interactive reasoning, AI Stylist, Size Chart OCR, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and fallback bounding-box detection (`GARMENT_VISION_DETECT_MODEL`) to **Google Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`).
+   - High-volume single-item and per-crop garment tagging (`GARMENT_VISION_MODEL` / `GARMENT_VISION_CROP_MODEL`) routes to **Google Gemini 2.5 Flash** (`gemini-2.5-flash`) since SegFormer already isolates and crops each garment.
+2. **Free Tier — Fast Cloud Entry (`gemini-2.5-flash-lite`, 100-item cap)**:
+   - **BYOK is retired.** Free-tier users (capped at **100 wardrobe items**, expandable to 150 with referrals, plus 10 daily requests) route to **Google Gemini 2.5 Flash-Lite** (`gemini-2.5-flash-lite`) for both AI Stylist and garment vision, providing sub-second latency while keeping variable token costs negligible (~$0.01–$0.02/active user/month).
+3. **Transparent Quota Safety Net (On-Premises VPS Eyes `Qwen2.5-VL-3B-Instruct`)**:
+   - The self-hosted `dressapp-eyes` container (`Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` on port 7860 of the Hetzner CPX32 VPS) stays idle as the automatic emergency **Quota Safety Net** (and remains selectable by Tester group users).
+   - If Google Gemini external calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm`, `FallbackBrain` (`backend/app/services/stylist_brain.py`), and `GarmentVisionService.analyze` catch the exception and immediately route the query to on-prem Eyes.
    - The response includes `provider_fallback: "gemma"` and `fallback_from_quota: True`, displaying an informational banner in the UI (`stylist.fallbackQuotaBanner`) without interrupting the user or failing with a 500 error.
 4. **Zero-BYOK Platform Architecture**:
    - User-supplied third-party API keys (BYOK) are retired across the platform. Model selection and compute quotas are governed strictly by the user's subscription tier (**Free** vs. **Manager** / **Professional**) and platform credit ledger.

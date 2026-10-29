@@ -318,7 +318,10 @@
       "cta": "Vraag het aan de stylist",
       "conciergeTitle": "Je dagelijkse garderobe-concierge",
       "conciergeDescription": "Ontvang gepersonaliseerde outfitadviezen direct op je vergrendelscherm. Gebaseerd op lokale weersvoorspellingen, je agenda-afspraken en slimme garderobevariaties zodat je stijl fris blijft en weinig gedragen items weer meedraaien. Tik op de melding om de look op je avatar te bekijken en je week moeiteloos te plannen.",
-      "scheduledOutfitsCta": "Geplande outfits"
+      "scheduledOutfitsCta": "Geplande outfits",
+      "speedHighlightTitle": "Realtime AI-outfits (< 2 sec)",
+      "speedHighlightBadge": "Directe look",
+      "speedHighlightDesc": "In tegenstelling tot apps met minutenlange cloudwachtrijen, stelt de geoptimaliseerde engine van DressApp complete outfits samen in realtime — binnen 2 seconden."
     },
     "marketplace": {
       "tag": "Zero Waste-initiatief",
@@ -5377,7 +5380,7 @@
       "title": "Vul je startkast met 4+ dagelijkse basics",
       "subtitle": "Kies uit onze gecatalogiseerde studiodataset — elk basisstuk bevat volledige stof-, kleur- en seizoensgegevens.",
       "autoSelectBtn": "Selecteer automatisch 4 basics voor mijn stijl",
-      "readyMessage": "Complete outfit van top tot teen ontgrendeld ({{count}} basics geselecteerd)!",
+      "readyMessage": "Complete outfit van top tot teen ontgrendeld ({{count}} basisitems geselecteerd)! Klaar om uw look binnen 2 sec te genereren.",
       "incompleteMessage": "{{count}}/4 geselecteerd — Kies minimaal 4 basics inclusief (Volledig kledingstuk + Schoenen) OF (Top + Broek/Rok + Schoenen).",
       "pillFullBody": "Volledig stuk ({{count}})",
       "pillTopBottom": "Top ({{top}}) + Onderstuk ({{bottom}})",
@@ -5423,12 +5426,14 @@
       "openStylistBtn": "Opslaan & mijn AI-stylist openen",
       "saveWithGoogle": "Stijl-DNA opslaan & AI-stylist openen",
       "savedSuccess": "Je stijl-DNA, AI-maatpaspoort en startcapsule zijn klaar!",
-      "saveError": "Kon je profiel niet opslaan. Probeer het opnieuw."
+      "saveError": "Kon je profiel niet opslaan. Probeer het opnieuw.",
+      "instantBadge": "Gegenereerd in < 2 sec · Realtime AI",
+      "speedNote": "Realtime gegenereerd in minder dan 2 seconden — geen minuten wachten in een wachtrij, nul cloudvertraging."
     },
     "nav": {
       "back": "Terug",
       "continue": "Doorgaan",
-      "revealOutfit": "Onthul mijn eerste AI-outfit"
+      "revealOutfit": "Mijn eerste AI-outfit onthullen (< 2 sec)"
     },
     "items": {
       "w_abaya_black": "Zwarte geborduurde bedekte abaya",

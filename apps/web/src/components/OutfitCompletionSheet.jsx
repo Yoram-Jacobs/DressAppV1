@@ -908,7 +908,7 @@ export function OutfitCompletionSheet({
           <div className="relative w-full aspect-[4/5] bg-[#eae6df] rounded-2xl overflow-hidden shadow-inner my-2 flex items-center justify-center">
             <AvatarViewer
               shapeParams={user?.avatar_shape_params || {}}
-              sex={user?.sex || "female"}
+              sex={user?.gender || user?.sex || "female"}
               outfitItems={avatarTryOnOutfit?.piecesMap || {}}
             />
           </div>

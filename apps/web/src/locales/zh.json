@@ -318,7 +318,10 @@
       "cta": "询问造型师",
       "conciergeTitle": "你的每日衣橱管家",
       "conciergeDescription": "把个性化穿搭推荐直接送到锁屏。结合本地天气预报、日历日程和智能衣橱轮换，让风格保持新鲜，也让闲置单品重新上场。点开提醒即可在虚拟形象上预览造型，轻松规划一周。",
-      "scheduledOutfitsCta": "已排程穿搭"
+      "scheduledOutfitsCta": "已排程穿搭",
+      "speedHighlightTitle": "实时 AI 穿搭生成（<2秒）",
+      "speedHighlightBadge": "即时穿搭",
+      "speedHighlightDesc": "不同于需要数分钟云端排队等待的应用，DressApp 的端侧优化引擎能在2秒内实时生成完整的时尚搭配。"
     },
     "marketplace": {
       "tag": "零浪费时尚倡议",
@@ -5389,7 +5392,7 @@
       "title": "挑选 4 件以上日常基础款开启初始衣橱",
       "subtitle": "从我们预先归档的工作室单品库中挑选——每件单品均包含完整的面料、色彩与季节属性。",
       "autoSelectBtn": "按我的风格自动挑选 4 件基础款",
-      "readyMessage": "全身完整穿搭已解锁（已选 {{count}} 件基础款）！",
+      "readyMessage": "全身穿搭已解锁（已选 {{count}} 件基础单品）！可在2秒内立即生成专属穿搭。",
       "incompleteMessage": "已选 {{count}}/4 件 — 请至少选择 4 件基础款，包含（连体/全身款 + 鞋履）或（上装 + 裤装/半裙 + 鞋履）。",
       "pillFullBody": "全身款 ({{count}})",
       "pillTopBottom": "上装 ({{top}}) + 下装 ({{bottom}})",
@@ -5435,12 +5438,14 @@
       "openStylistBtn": "保存并打开我的 AI 造型师",
       "saveWithGoogle": "保存我的风格 DNA 并打开 AI 造型师",
       "savedSuccess": "您的风格 DNA、AI 尺码护照与初始胶囊衣橱已准备就绪！",
-      "saveError": "无法保存您的初始配置，请重试。"
+      "saveError": "无法保存您的初始配置，请重试。",
+      "instantBadge": "2秒内极速生成 · 实时 AI",
+      "speedNote": "2秒内实时生成 — 无需数分钟排队等待，零云端延迟。"
     },
     "nav": {
       "back": "返回",
       "continue": "继续",
-      "revealOutfit": "揭晓我的首套 AI 穿搭"
+      "revealOutfit": "查看我的首套 AI 穿搭（<2秒）"
     },
     "items": {
       "w_abaya_black": "黑色刺绣端庄阿巴雅长袍",
