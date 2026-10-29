@@ -59,6 +59,7 @@ class Avatar3DErrorBoundary extends React.Component {
   }
   componentDidCatch(error) {
     console.warn('[Avatar3D] WebGL render fallback to canonical snapshot:', error);
+    this.props.onError?.();
   }
   render() {
     if (this.state.hasError) {
@@ -929,7 +930,7 @@ function Realistic3DAvatarMesh({
   }, [signature]);
 
   useFrame(() => {
-    if (!frameReadyNotifiedRef.current && isCanvasFrameRendered(gl)) {
+    if (!frameReadyNotifiedRef.current) {
       frameReadyNotifiedRef.current = true;
       onFrameReady?.();
     }
@@ -1199,6 +1200,7 @@ export default function DynamicAvatar({
 
   const canonicalFallbackUrl = isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL;
   const activeSnapshotSrc = snapshotUrl || canonicalFallbackUrl;
+  const hideStaticImgBecauseWebGLReady = canUseWebGL && canMountWebGL && isWebGLFrameReady;
 
   return (
     <div
@@ -1257,7 +1259,7 @@ export default function DynamicAvatar({
             <directionalLight position={[120, 180, 260]} intensity={1.35} />
             <directionalLight position={[-120, 80, 180]} intensity={0.55} />
             <directionalLight position={[0, 140, -200]} intensity={0.35} />
-            <Avatar3DErrorBoundary>
+            <Avatar3DErrorBoundary onError={handleContextLost}>
               <Suspense fallback={null}>
                 <Realistic3DAvatarMesh
                   isMale={isMale}
@@ -1292,33 +1294,35 @@ export default function DynamicAvatar({
 
       {/* 
         Single Static 3D Avatar Snapshot:
-        - When WebGL is active (interactive 3D view or snapshot generation), the live 3D Canvas IS the visual avatar.
-          We NEVER show a static <img> behind the transparent WebGL canvas.
-        - When WebGL is NOT active, we show the single static snapshot image.
+        - Visible initially and while 3D WebGL is loading (or if WebGL is unavailable), ensuring the avatar container is NEVER blank.
+        - Once live 3D WebGL has rendered its first frame (isWebGLFrameReady), this static image is cleanly hidden (sr-only opacity-0)
+          so there is never a ghost or duplicate avatar behind the live 3D model.
       */}
-      {!canMountWebGL ? (
-        <img
-          src={activeSnapshotSrc}
-          alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]"
-          onError={() => {
-            if (activeSnapshotSrc !== canonicalFallbackUrl) {
-              try {
-                sessionStorage.removeItem('avatar_snap_v3_' + avatarSignature);
-              } catch {}
-              rendered3DAvatarSnapshotCache.delete(avatarSignature);
-              setSnapshotUrl(canonicalFallbackUrl);
-            }
-          }}
-        />
-      ) : (
-        <img
-          src={activeSnapshotSrc}
-          alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
-          aria-hidden="true"
-          className="sr-only opacity-0 pointer-events-none"
-        />
+      <img
+        src={activeSnapshotSrc}
+        alt={isMale ? '3D Male Avatar' : '3D Female Avatar'}
+        aria-hidden="true"
+        className={
+          hideStaticImgBecauseWebGLReady
+            ? 'sr-only opacity-0 pointer-events-none'
+            : 'absolute inset-0 w-full h-full object-contain pointer-events-none z-[1]'
+        }
+        onError={() => {
+          if (activeSnapshotSrc !== canonicalFallbackUrl) {
+            try {
+              sessionStorage.removeItem('avatar_snap_v3_' + avatarSignature);
+            } catch {}
+            rendered3DAvatarSnapshotCache.delete(avatarSignature);
+            setSnapshotUrl(canonicalFallbackUrl);
+          }
+        }}
+      />
+
+      {/* Loading spinner while 3D mesh is preparing in interactive mode */}
+      {interactive && canUseWebGL && canMountWebGL && !isWebGLFrameReady && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-[3] gap-2 bg-black/5 dark:bg-white/5 backdrop-blur-[1px]">
+          <div className="w-8 h-8 rounded-full border-2 border-primary-brand/30 border-t-primary-brand animate-spin" />
+        </div>
       )}
 
       {/* 200x450 Coordinate Frame */}
