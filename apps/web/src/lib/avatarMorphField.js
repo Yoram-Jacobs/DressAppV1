@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 
 /**
  * Avatar Morph Field & Point-Cloud Non-Penetration Alignment
@@ -219,10 +219,8 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
   );
 
   const includeArms = Boolean(options?.includeArms);
-  const sheetSide = options?.sheetSide || null; // 'front' | 'back' | null
-  const minClearance = Number.isFinite(options?.minClearance) ? options.minClearance : 0.012;
 
-  if (active.length === 0 && !sheetSide) return geometry;
+  if (active.length === 0) return geometry;
 
   const out = geometry.clone();
   const pos = out.attributes.position;
@@ -241,8 +239,6 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
 
     let wSum = 0;
     let ox = 0, oy = 0, oz = 0;
-    let maxFrontSkinZ = -Infinity;
-    let minBackSkinZ = Infinity;
 
     for (let n = 0; n < nn.length; n++) {
       const { i, d2 } = nn[n];
@@ -259,15 +255,6 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
       oy += w * dy;
       oz += w * dz;
       wSum += w;
-
-      // Track the morphed skin surface Z of nearby point-cloud vertices within the same tight (x, y) column
-      const sx = field.basePositions[i * 3] + dx;
-      const sy = field.basePositions[i * 3 + 1] + dy;
-      const sz = field.basePositions[i * 3 + 2] + dz;
-      if (Math.abs(sx - (x + dx)) < 0.012 && Math.abs(sy - (y + dy)) < 0.015) {
-        if (sz > maxFrontSkinZ) maxFrontSkinZ = sz;
-        if (sz < minBackSkinZ) minBackSkinZ = sz;
-      }
     }
 
     let dxFinal = wSum > 0 ? ox / wSum : 0;
@@ -292,20 +279,7 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
       }
     }
 
-    let finalZ = z + dzFinal;
-
-    // Smooth non-penetration guard strictly for central front/back sheet vertices (never at side seams)
-    if (sheetSide === 'front' && frontWeight > 0 && Number.isFinite(maxFrontSkinZ)) {
-      const reqZ = maxFrontSkinZ + minClearance;
-      if (finalZ < reqZ) {
-        finalZ = finalZ + (reqZ - finalZ) * frontWeight;
-      }
-    } else if (sheetSide === 'back' && backWeight > 0 && Number.isFinite(minBackSkinZ)) {
-      const reqZ = minBackSkinZ - minClearance;
-      if (finalZ > reqZ) {
-        finalZ = finalZ + (reqZ - finalZ) * backWeight;
-      }
-    }
+    const finalZ = z + dzFinal;
 
     pos.setXYZ(vi, x + dxFinal, y + dyFinal, finalZ);
   }

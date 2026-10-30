@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Hybrid Closet-to-Avatar Garment Fitting Engine (`closetGarmentFitter.js`)
  *
  * Ports and unifies the anatomical fitting techniques from
@@ -203,23 +203,23 @@ export function getDefaultAvatarFitterGeometry(sex = 'female', customAnatomy = n
 export function getBottomRiseAndCrotchMetrics(garment = {}, g) {
   const text = `${garment.name || ''} ${garment.title || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`.toLowerCase();
 
-  const isSkirt = /\b(skirt|חצאית|تنورة|falda|jupe)\b/i.test(text);
-  const isBriefOrBikini = /\b(bikini|brief|thong|swim_brief|תחתונים|ביקיני)\b/i.test(text);
-  const isShort = /\b(short|trunk|boxer|bermuda|שורט|קצרים|ברמודה)\b/i.test(text);
-  const isLoose = /\b(wide|loose|palazzo|relaxed|baggy|jogger|sweatpant|cargo|רחבים|טרנינג|דגמ)\b/i.test(text);
+  const isSkirt = /\b(skirt|?????|?????|falda|jupe)\b/i.test(text);
+  const isBriefOrBikini = /\b(bikini|brief|thong|swim_brief|???????|??????)\b/i.test(text);
+  const isShort = /\b(short|trunk|boxer|bermuda|????|?????|??????)\b/i.test(text);
+  const isLoose = /\b(wide|loose|palazzo|relaxed|baggy|jogger|sweatpant|cargo|?????|??????|???)\b/i.test(text);
 
   // Determine style riseRatio in [0.0 (waist upper limit) .. 1.0 (hip lower limit)]
   let riseStyle = 'mid_rise';
   let riseRatio = 0.35;
 
   if (
-    /\b(low[-_\s]*rise|hipster|hip[-_\s]*hugger|גזרה נמוכה)\b/i.test(text) ||
+    /\b(low[-_\s]*rise|hipster|hip[-_\s]*hugger|???? ?????)\b/i.test(text) ||
     isBriefOrBikini
   ) {
     riseStyle = 'low_rise';
     riseRatio = isBriefOrBikini ? 0.92 : 0.85;
   } else if (
-    /\b(high[-_\s]*rise|high[-_\s]*waist|tailored|pleat|dress\s*pants|dress\s*trousers|formal|palazzo|wide[-_\s]*leg|culotte|גזרה גבוהה|מחוייט|פליסה)\b/i.test(
+    /\b(high[-_\s]*rise|high[-_\s]*waist|tailored|pleat|dress\s*pants|dress\s*trousers|formal|palazzo|wide[-_\s]*leg|culotte|???? ?????|??????|?????)\b/i.test(
       text
     ) ||
     isSkirt
@@ -227,7 +227,7 @@ export function getBottomRiseAndCrotchMetrics(garment = {}, g) {
     riseStyle = 'high_rise';
     riseRatio = 0.0;
   } else if (
-    /\b(jogger|sweatpant|track|cargo|relaxed|baggy|trunk|boxer|טרנינג|שורט|מכנסי ים)\b/i.test(
+    /\b(jogger|sweatpant|track|cargo|relaxed|baggy|trunk|boxer|??????|????|????? ??)\b/i.test(
       text
     )
   ) {
@@ -281,7 +281,7 @@ export function getGarmentAnatomicalEnvelope(
 ) {
   const g = getDefaultAvatarFitterGeometry(sex, customAnatomy);
   const text = `${garment.name || ''} ${garment.title || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`.toLowerCase();
-  const isStrapless = /\b(strapless|tube\s*top|tube\s*dress|bandeau|off[\s-_]*shoulder|סטרפלס|בנדו)\b/i.test(text);
+  const isStrapless = /\b(strapless|tube\s*top|tube\s*dress|bandeau|off[\s-_]*shoulder|??????|????)\b/i.test(text);
 
   let yTop0 = g.yChin - 0.6;
   let yBot0 = g.yHip + 3.0;
@@ -291,13 +291,13 @@ export function getGarmentAnatomicalEnvelope(
 
   if (roleKey === 'dress' || roleKey === 'full_body') {
     yTop0 = isStrapless ? g.yChest - 7.5 : g.yChin - 0.6;
-    if (/\b(one_piece|swimsuit|monokini|bodysuit|בגד ים שלם)\b/i.test(text)) {
+    if (/\b(one_piece|swimsuit|monokini|bodysuit|??? ?? ???)\b/i.test(text)) {
       yBot0 = g.yCrotch + 3.0;
       easeMult = 1.01;
-    } else if (/\b(mini|short\s+dress|שמלת מיני|שמלה קצרה)\b/i.test(text)) {
+    } else if (/\b(mini|short\s+dress|???? ????|???? ????)\b/i.test(text)) {
       yBot0 = g.yCrotch + (g.yKnees - g.yCrotch) * 0.55;
       flareExtra = 4.0;
-    } else if (/\b(maxi|gown|abaya|kaftan|caftan|jalabiya|galabiya|thobe|kandura|saree|sari|jumpsuit|suit|מקסי|עבאיה|כפתן|גלבייה|אוברול)\b/i.test(text)) {
+    } else if (/\b(maxi|gown|abaya|kaftan|caftan|jalabiya|galabiya|thobe|kandura|saree|sari|jumpsuit|suit|????|?????|????|??????|??????)\b/i.test(text)) {
       yBot0 = g.yAnkles + 3.0;
       flareExtra = /\b(abaya|kaftan|caftan|jalabiya|galabiya|gown|saree)\b/i.test(text) ? 14.5 : 5.0;
     } else {
@@ -307,9 +307,9 @@ export function getGarmentAnatomicalEnvelope(
   } else if (roleKey === 'outerwear') {
     yTop0 = g.yChin - 0.6;
     easeMult = 1.09;
-    if (/\b(crop|bolero|shrug|קרופ|עליונית קצרה)\b/i.test(text)) {
+    if (/\b(crop|bolero|shrug|????|??????? ????)\b/i.test(text)) {
       yBot0 = g.yWaist + 4.0;
-    } else if (/\b(trench|overcoat|duster|cardigan|achkan|sherwani|long\s+coat|maxi\s+coat|מעיל ארוך|טרנץ)\b/i.test(text)) {
+    } else if (/\b(trench|overcoat|duster|cardigan|achkan|sherwani|long\s+coat|maxi\s+coat|???? ????|????)\b/i.test(text)) {
       yBot0 = g.yKnees + 14.0;
       flareExtra = 6.5;
     } else {
@@ -323,19 +323,19 @@ export function getGarmentAnatomicalEnvelope(
 
     if (bottomMetrics.isBriefOrBikini) {
       yBot0 = bottomMetrics.yCrotchTarget + 1.5;
-    } else if (/\b(mini_skirt|mini\s+skirt|חצאית מיני)\b/i.test(text)) {
+    } else if (/\b(mini_skirt|mini\s+skirt|????? ????)\b/i.test(text)) {
       yBot0 = g.yCrotch + (g.yKnees - g.yCrotch) * 0.45;
       flareExtra = 6.0;
     } else if (bottomMetrics.isShort) {
-      yBot0 = /\b(bermuda|ברמודה|knee)\b/i.test(text)
+      yBot0 = /\b(bermuda|??????|knee)\b/i.test(text)
         ? g.yKnees - 2.0
         : bottomMetrics.yCrotchTarget + (g.yKnees - bottomMetrics.yCrotchTarget) * 0.48;
       flareExtra = 2.0;
     } else if (bottomMetrics.isSkirt) {
-      const isMaxi = /\b(maxi|long|מקסי|ארוכה)\b/i.test(text);
+      const isMaxi = /\b(maxi|long|????|?????)\b/i.test(text);
       yBot0 = isMaxi ? g.yAnkles + 1.0 : g.yKnees + 22.0;
-      flareExtra = /\b(pleat|a-line|a_line|flared|פליסה)\b/i.test(text) ? 13.0 : 8.0;
-    } else if (/\b(capri|cropped|culotte|3\/4|קפרי)\b/i.test(text)) {
+      flareExtra = /\b(pleat|a-line|a_line|flared|?????)\b/i.test(text) ? 13.0 : 8.0;
+    } else if (/\b(capri|cropped|culotte|3\/4|????)\b/i.test(text)) {
       yBot0 = g.yKnees + 18.0;
       flareExtra = 2.5;
     } else {
@@ -343,15 +343,15 @@ export function getGarmentAnatomicalEnvelope(
       flareExtra = bottomMetrics.isLoose ? 5.5 : 1.5;
     }
   } else if (roleKey === 'shoes') {
-    const isBoot = /\b(boot|chelsea|ankle\s*boot|מגפיים|מגפי|מגפונים|بوت)\b/i.test(text);
+    const isBoot = /\b(boot|chelsea|ankle\s*boot|??????|????|???????|???)\b/i.test(text);
     yTop0 = g.yAnkles - (isBoot ? 6.5 : 2.5);
     yBot0 = g.yFeet + 2.8;
   } else {
     // 'top'
     yTop0 = isStrapless ? g.yChest - 7.5 : g.yChin - 0.6;
-    if (/\b(crop|bralette|sports_bra|bikini_top|קרופ|חולצת בטן|חזיית)\b/i.test(text)) {
+    if (/\b(crop|bralette|sports_bra|bikini_top|????|????? ???|?????)\b/i.test(text)) {
       yBot0 = g.yWaist - 2.0;
-    } else if (/\b(tunic|kurta|longline|kaftan|galabiya|טוניקה|קורטה)\b/i.test(text)) {
+    } else if (/\b(tunic|kurta|longline|kaftan|galabiya|??????|?????)\b/i.test(text)) {
       yBot0 = g.yCrotch + 26.0;
       flareExtra = 4.5;
     } else {
@@ -1007,7 +1007,7 @@ function warpRealGarmentPhotoToDefaultCanvas(
   const outCanvas = document.createElement('canvas');
   outCanvas.width = CANVAS_W;
   outCanvas.height = CANVAS_H;
-  const ctx = outCanvas.getContext('2d');
+  const ctx = outCanvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return null;
 
   // Special handling for Footwear: map exactly ONE shoe per foot
@@ -1414,7 +1414,7 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
   const outCanvas = document.createElement('canvas');
   outCanvas.width = CANVAS_W;
   outCanvas.height = CANVAS_H;
-  const ctx = outCanvas.getContext('2d');
+  const ctx = outCanvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return null;
 
   const text = `${garment.name || ''} ${garment.title || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''} ${garment.pattern || ''}`.toLowerCase();
@@ -1778,7 +1778,7 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
     });
     fillPolygonList(polys, baseRgb, seamRgb, 2);
   } else if (roleKey === 'bottom') {
-    const isSkirt = /\b(skirt|חצאית|تنورة|falda|jupe)\b/i.test(text);
+    const isSkirt = /\b(skirt|?????|?????|falda|jupe)\b/i.test(text);
     if (isSkirt) {
       const hemY = g.yKnees + 22.0;
       const poly = buildSkirtPoly(hemY, 12.0);
@@ -1815,7 +1815,7 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
     );
     strokeLine([[g.x0, g.yShoulders + 13.5], [g.x0, hemY]], seamRgb, 2);
   } else if (roleKey === 'shoes') {
-    const isBoot = /\b(boot|chelsea|מגפיים|מגפי)\b/i.test(text);
+    const isBoot = /\b(boot|chelsea|??????|????)\b/i.test(text);
     const topShoeY = g.yAnkles - (isBoot ? 4.0 : 0.0);
     const yFt = g.yFeet;
     for (const sign of [-1, 1]) {
@@ -1885,7 +1885,7 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
         const pCanvas = document.createElement('canvas');
         pCanvas.width = CANVAS_W;
         pCanvas.height = CANVAS_H;
-        const pCtx = pCanvas.getContext('2d');
+        const pCtx = pCanvas.getContext('2d', { willReadFrequently: true });
         pCtx.drawImage(
           sourceImg,
           Math.floor(sw * 0.28),
@@ -1945,7 +1945,7 @@ export function renderProceduralBezierFittedGarment(garment, roleKey, sex = 'fem
  */
 function finalizeDefaultCanvasFit(fullCanvas400x900, sex = 'female', roleKey = 'top') {
   if (!fullCanvas400x900) return null;
-  const ctx = fullCanvas400x900.getContext('2d');
+  const ctx = fullCanvas400x900.getContext('2d', { willReadFrequently: true });
   if (!ctx) return null;
 
   let imgData;
@@ -1988,7 +1988,7 @@ function finalizeDefaultCanvasFit(fullCanvas400x900, sex = 'female', roleKey = '
   const croppedCanvas = document.createElement('canvas');
   croppedCanvas.width = cw;
   croppedCanvas.height = ch;
-  const cropCtx = croppedCanvas.getContext('2d');
+  const cropCtx = croppedCanvas.getContext('2d', { willReadFrequently: true });
   cropCtx.drawImage(fullCanvas400x900, minX, minY, cw, ch, 0, 0, cw, ch);
 
   const croppedData = cropCtx.getImageData(0, 0, cw, ch).data;
@@ -2045,7 +2045,7 @@ export function fitClosetGarmentToDefaultAvatar(garment, loadedImg, roleKey = 't
       const srcCanvas = document.createElement('canvas');
       srcCanvas.width = w;
       srcCanvas.height = h;
-      const srcCtx = srcCanvas.getContext('2d');
+      const srcCtx = srcCanvas.getContext('2d', { willReadFrequently: true });
       if (srcCtx) {
         srcCtx.drawImage(loadedImg, 0, 0);
         const srcData = srcCtx.getImageData(0, 0, w, h).data;
@@ -2076,7 +2076,7 @@ export function fitClosetGarmentToDefaultAvatar(garment, loadedImg, roleKey = 't
           const cropCanvas = document.createElement('canvas');
           cropCanvas.width = cropW;
           cropCanvas.height = cropH;
-          const cropCtx = cropCanvas.getContext('2d');
+          const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
           cropCtx.drawImage(srcCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
 
           const cropImageData = cropCtx.getImageData(0, 0, cropW, cropH);
@@ -2245,7 +2245,7 @@ export function extractBodyPhotoAnatomy(
       const canvas = document.createElement('canvas');
       canvas.width = W;
       canvas.height = H;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (!ctx) return fallback;
       ctx.clearRect(0, 0, W, H);
       ctx.drawImage(imgOrImageData, drawX0, drawY0, drawW, drawH);

@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 
 /**
  * Silhouette-driven garment shells
@@ -7,19 +7,19 @@ import * as THREE from 'three';
  * pant legs and every other part of the real silhouette) the garment is rebuilt
  * from its own cut-out:
  *
- *   • The alpha channel of the (background-removed) photo is scanned row by row.
- *   • Every grid row is split into horizontal runs (torso, each sleeve, each leg)
+ *   ? The alpha channel of the (background-removed) photo is scanned row by row.
+ *   ? Every grid row is split into horizontal runs (torso, each sleeve, each leg)
  *     with sub-cell accurate left/right ends, so the shell meets the photographed
  *     outline exactly (no staircase edges).
- *   • Each run is inflated into an elliptical cross-section whose depth follows the
+ *   ? Each run is inflated into an elliptical cross-section whose depth follows the
  *     avatar's body profile (torso slice / leg slice), so the garment keeps the
  *     photographed silhouette AND hugs the avatar's point cloud.
- *   • Strict Anatomical Anchors:
+ *   ? Strict Anatomical Anchors:
  *       - Tops, outerwear, and full-body dresses (except strapless) are strictly
  *         anchored to the avatar's shoulder contour (cannot go lower or higher).
  *       - Bottoms are anchored to the waist and to the crotch (pants leg split
  *         can never go higher than the crotch line).
- *   • A front sheet carries the front photo; a back sheet carries the back photo of
+ *   ? A front sheet carries the front photo; a back sheet carries the back photo of
  *     the item group when available (otherwise a clean detail-damped back synthesis).
  *
  * The functions here are pure (no DOM / canvas) so they can be unit-tested.
@@ -199,8 +199,8 @@ export function resolveBottomLength({
   const metaText = `${g.length || ''} ${g.bottom_length || ''} ${g.item_length || ''} ${g.metadata?.length || ''} ${garmentText}`.toLowerCase();
 
   if (isSkirt) {
-    const isMini = /\b(mini|micro|קצרה|מיני)\b/i.test(metaText);
-    const isMaxi = /\b(maxi|gown|long|ארוכה|מקסי)\b/i.test(metaText);
+    const isMini = /\b(mini|micro|????|????)\b/i.test(metaText);
+    const isMaxi = /\b(maxi|gown|long|?????|????)\b/i.test(metaText);
     if (isMini) return { lengthType: 'mini_skirt', yBottom: isMale ? 0.76 : 0.72 };
     if (isMaxi) return { lengthType: 'maxi_skirt', yBottom: isMale ? 0.16 : 0.12 };
     return { lengthType: 'midi_skirt', yBottom: isMale ? 0.48 : 0.44 };
@@ -209,12 +209,12 @@ export function resolveBottomLength({
   // Bottoms (pants, shorts, culottes, etc.)
   // 1. Explicit keywords in metadata or title
   // Note: Hebrew characters are non-ASCII (\w is ASCII-only in standard JS regex), so use unicode boundaries
-  const isMiniShorts = /(?:^|[^\p{L}\p{N}])(hot\s*pants|micro\s*short|mini\s*short|קצרצר|ביקיני|תחתונים|brief|thong|bikini)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  const isBermudaOrKnee = /(?:^|[^\p{L}\p{N}])(bermuda|knee|knee-high|knee_length|knee-length|ברמודה|עד הברך|ברך)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  const isShortsText = /(?:^|[^\p{L}\p{N}])(short|shorts|trunk|trunks|boxer|boxers|swim_short|שורט|שורטס|קצרים|קצר|מכנסי ים|מכנסי_ים|בוקסר)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  const isCapriOr78 = /(?:^|[^\p{L}\p{N}])(capri|cropped|culotte|culottes|3\/4|7\/8|seven_eighths|קפרי|שבע שמיניות|שלושת רבעי|שבע_שמיניות|ankle\s*pant)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  // Full-length pants keywords: e.g. "pants", "trousers", "chinos", "jeans", "slacks", "sweatpants", "מכנסיים", "מכנס", "דגמ\"ח"
-  const isFullPantsExplicit = /(?:^|[^\p{L}\p{N}])(pants|pant|trousers|trouser|chinos?|jeans?|slacks|sweatpants|joggers?|pantalon|pantaloni|calça|calca|hose|מכנס(?:יים|י)?|דגמ['״"]?ח)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isMiniShorts = /(?:^|[^\p{L}\p{N}])(hot\s*pants|micro\s*short|mini\s*short|?????|??????|???????|brief|thong|bikini)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isBermudaOrKnee = /(?:^|[^\p{L}\p{N}])(bermuda|knee|knee-high|knee_length|knee-length|??????|?? ????|???)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isShortsText = /(?:^|[^\p{L}\p{N}])(short|shorts|trunk|trunks|boxer|boxers|swim_short|????|?????|?????|???|????? ??|?????_??|?????)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isCapriOr78 = /(?:^|[^\p{L}\p{N}])(capri|cropped|culotte|culottes|3\/4|7\/8|seven_eighths|????|??? ???????|????? ????|???_???????|ankle\s*pant)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  // Full-length pants keywords: e.g. "pants", "trousers", "chinos", "jeans", "slacks", "sweatpants", "???????", "????", "???\"?"
+  const isFullPantsExplicit = /(?:^|[^\p{L}\p{N}])(pants|pant|trousers|trouser|chinos?|jeans?|slacks|sweatpants|joggers?|pantalon|pantaloni|cal?a|calca|hose|????(?:???|?)?|???['?"]??)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
 
   let lengthType = 'full';
   if (isMiniShorts) {
@@ -388,10 +388,12 @@ export function buildSilhouetteShell({
   isMale = false,
   isSkirt = false,
   isStrapless = false,
+  isWideOrLoose = false,
   isStandalone = false,
   yTop,
   yBottom,
   layerOffset = 0.02,
+  fabricThickness = null,
   poseSleeves = true,
   sideProfile = null,
   getTorsoSlice,
@@ -405,6 +407,15 @@ export function buildSilhouetteShell({
   const yShoulderAvatar = isMale ? 1.48 : 1.42;
   const yHeadTop = isMale ? 1.74 : 1.70;
 
+  // Realistic physical fabric thickness in meters (0.2 mm to 3.0 mm = 0.0002m to 0.0030m).
+  // Waistlines on skirts and bottoms are strictly <= 1.8 mm (0.0018m) thick.
+  const effOffset = isStandalone
+    ? layerOffset
+    : Number.isFinite(fabricThickness)
+      ? clamp(fabricThickness, 0.0002, 0.0035)
+      : (isBottom || isSkirt ? Math.min(layerOffset, 0.0018) : Math.min(layerOffset, 0.0020));
+  const waistOffset = isStandalone ? layerOffset : Math.min(effOffset, 0.0018);
+
   // Enforce strict top anchor bounds:
   // - Bottoms / skirts are anchored to the avatar waist (isMale ? 1.08 : 1.05).
   // - Strapless tops/dresses sit at the bust/chest line (isMale ? 1.34 : 1.30).
@@ -413,7 +424,7 @@ export function buildSilhouetteShell({
     : (isTopOrBody && isStrapless ? Math.min(yTop, isMale ? 1.34 : 1.30) : yTop);
   const hWorld = Math.max(0.10, effectiveYTop - yBottom);
 
-  // ── Row analysis & Detached Shard Pruning ──
+  // ?? Row analysis & Detached Shard Pruning ??
   const runsByRow = [];
   let total = 0;
   let minCol = Infinity;
@@ -471,7 +482,7 @@ export function buildSilhouetteShell({
     return sorted;
   };
 
-  // ── Bottoms: Strict Waist & Crotch Anchor Detection ──
+  // ?? Bottoms: Strict Waist & Crotch Anchor Detection ??
   // Pants are anchored at the waist (jFabricTop -> effectiveYTop) and at the crotch (crotchRow -> yCrotchBody).
   // In no case can pants split into legs higher than the crotch line (yCrotchBody)!
   const isShortBottom = isBottom && hWorld <= 0.66;
@@ -521,12 +532,32 @@ export function buildSilhouetteShell({
         }
       }
     }
+  } else if (isSkirt) {
+    // A skirt is a single continuous envelope from waist to hem
+    for (let j = jFabricTop; j <= jFabricBottom; j++) {
+      const r = runsByRow[j];
+      if (r && r.length > 1) {
+        let rMin = Infinity;
+        let rMax = -Infinity;
+        for (let k = 0; k < r.length; k++) {
+          if (r[k][0] < rMin) rMin = r[k][0];
+          if (r[k][1] > rMax) rMax = r[k][1];
+        }
+        if (rMax > rMin) {
+          runsByRow[j] = [[rMin, rMax]];
+        }
+      }
+    }
   }
 
   // Track first opaque row per column for waistband UV leveling and level arched/tabbed top waistband rows
+  // Applies to BOTH pants/shorts (isBottom) and skirts (isSkirt) so cutout waistbands never create sawtooth teeth!
+  const waistLevelLimitRow = isBottom
+    ? crotchRow
+    : (isSkirt ? Math.min(jFabricBottom, jFabricTop + Math.max(4, Math.floor(0.28 * fabricHeight))) : -1);
   let jFirstWaistCol = null;
-  if (isBottom && !isStandalone && crotchRow > jFabricTop) {
-    const jWaistScanEnd = Math.min(crotchRow - 1, jFabricTop + Math.max(2, Math.floor(0.14 * fabricHeight)));
+  if ((isBottom || isSkirt) && !isStandalone && waistLevelLimitRow > jFabricTop) {
+    const jWaistScanEnd = Math.min(waistLevelLimitRow - 1, jFabricTop + Math.max(2, Math.floor(0.14 * fabricHeight)));
     const waistWidths = [];
     for (let j = jFabricTop; j <= jWaistScanEnd; j++) {
       const r = runsByRow[j];
@@ -536,7 +567,7 @@ export function buildSilhouetteShell({
     let jWaistFull = jFabricTop;
     for (let j = jFabricTop; j <= jWaistScanEnd; j++) {
       const r = runsByRow[j];
-      if (r && r.length && (r[0][1] - r[0][0]) >= 0.84 * maxWaistW) {
+      if (r && r.length && (r[0][1] - r[0][0]) >= 0.88 * maxWaistW) {
         jWaistFull = j;
         break;
       }
@@ -566,7 +597,7 @@ export function buildSilhouetteShell({
     }
   }
 
-  // ── Tops & Dresses: Continuous Torso & Waist Envelope Unification ──
+  // ?? Tops & Dresses: Continuous Torso & Waist Envelope Unification ??
   // For dresses, skirts, and tops below the bust line / armpits, the garment forms a single
   // continuous body sheath. Any interior transparency gap, wrinkle tear, or cutout artifact
   // must never slice holes or detach the torso into disconnected tubes.
@@ -614,7 +645,7 @@ export function buildSilhouetteShell({
     });
   });
 
-  // ── Horizontal scale & Shoulder line detection ──
+  // ?? Horizontal scale & Shoulder line detection ??
   const dxUniform = (aspect * hWorld) / nx;
 
   const detectedShoulder = isTopOrBody && !isStrapless
@@ -679,21 +710,24 @@ export function buildSilhouetteShell({
     runs.forEach(([a, b]) => { wCols += b - a; });
     const wWorld = wCols * dxUniform;
     const y = rowY(j);
-    const target = 2 * (bodyHalfAt(y) + layerOffset) * (isBottom ? 0.98 : 1.04);
+    const target = 2 * (bodyHalfAt(y) + effOffset);
     if (wWorld > 1e-3) ratios.push(target / wWorld);
   }
 
   let waistCenterCol = colMid;
+  let collarCenterCol = colMid;
+  let spineCenterCol = colMid;
   let sWaistSkirt = 1.0;
   let sCorr;
   if (isStandalone) {
     sCorr = 1.0;
   } else if (isSkirt) {
+    // ?? Skirt Slicing: Align & scale top-hem slice with avatar's waist slice circumference (<= 2mm thick) ??
     const yWaist = effectiveYTop;
     const waistTorso = getTorsoSlice(yWaist, isMale);
-    const reqWaistHalf = (waistTorso.rx + layerOffset) * 1.02;
+    const reqWaistHalf = waistTorso.rx + waistOffset;
 
-    const waistScanStart = Math.min(vh - 1, jFabricTop + Math.max(1, Math.floor(0.02 * fabricHeight)));
+    const waistScanStart = jFabricTop;
     const waistScanEnd = Math.min(vh - 1, jFabricTop + Math.max(3, Math.floor(0.10 * fabricHeight)));
     const topWidths = [];
     const topCenters = [];
@@ -710,51 +744,19 @@ export function buildSilhouetteShell({
         topCenters.push((minA + maxB) / 2);
       }
     }
-    if (!topWidths.length) {
-      for (let j = jFabricTop; j <= waistScanEnd; j++) {
-        const runs = runsByRow[j];
-        if (!runs || !runs.length) continue;
-        let minA = Infinity, maxB = -Infinity;
-        runs.forEach(([a, b]) => {
-          if (a < minA) minA = a;
-          if (b > maxB) maxB = b;
-        });
-        if (maxB > minA) {
-          topWidths.push(maxB - minA);
-          topCenters.push((minA + maxB) / 2);
-        }
-      }
-    }
-    const waistCols = topWidths.length ? percentile(topWidths, 0.50) : nx * 0.4;
+    const waistCols = topWidths.length ? percentile(topWidths, 0.55) : nx * 0.4;
     waistCenterCol = topCenters.length ? percentile(topCenters, 0.50) : colMid;
     const waistHalfWorld = Math.max(1e-3, 0.5 * waistCols * dxUniform);
     const sWaist = reqWaistHalf / waistHalfWorld;
     sWaistSkirt = sWaist;
-
-    const hipClearance = [];
-    const hipScanStart = Math.min(vh - 1, jFabricTop + Math.max(3, Math.floor(0.20 * fabricHeight)));
-    const hipScanEnd = Math.min(vh - 1, jFabricTop + Math.floor(0.50 * fabricHeight));
-    for (let j = hipScanStart; j <= hipScanEnd; j++) {
-      const runs = runsByRow[j];
-      if (!runs || !runs.length) continue;
-      const y = rowY(j);
-      let minA = Infinity, maxB = -Infinity;
-      runs.forEach(([a, b]) => {
-        if (a < minA) minA = a;
-        if (b > maxB) maxB = b;
-      });
-      const halfCols = Math.max(1, (maxB - minA) * 0.5);
-      const reqHalf = bodyHalfAt(y) + layerOffset;
-      hipClearance.push(reqHalf / Math.max(1e-3, halfCols * dxUniform));
-    }
-    const maxHipClear = hipClearance.length ? Math.max(...hipClearance) : sWaist;
-    const sHipBounded = Math.min(sWaist * 1.05, maxHipClear);
-    sCorr = clamp(Math.max(sWaist, sHipBounded), 0.45, 2.20);
+    sCorr = clamp(sWaist, 0.45, 2.20);
   } else if (isBottom) {
+    // ?? Bottom Slicing: Align & scale top-hem slice with avatar's waist slice circumference (<= 2mm thick) ??
     const waistTorso = getTorsoSlice(effectiveYTop, isMale);
-    const reqWaistHalf = (waistTorso.rx + layerOffset) * 1.02;
+    const reqWaistHalf = waistTorso.rx + waistOffset;
     const waistScanEnd = Math.min(vh - 1, jFabricTop + Math.max(2, Math.floor(0.12 * fabricHeight)));
     const topWidths = [];
+    const topCenters = [];
     for (let j = jFabricTop; j <= waistScanEnd; j++) {
       const runs = runsByRow[j];
       if (!runs || !runs.length) continue;
@@ -763,16 +765,41 @@ export function buildSilhouetteShell({
         if (a < minA) minA = a;
         if (b > maxB) maxB = b;
       });
-      if (maxB > minA) topWidths.push(maxB - minA);
+      if (maxB > minA) {
+        topWidths.push(maxB - minA);
+        topCenters.push((minA + maxB) / 2);
+      }
     }
     const waistCols = topWidths.length ? percentile(topWidths, 0.60) : nx * 0.4;
+    waistCenterCol = topCenters.length ? percentile(topCenters, 0.50) : colMid;
     const waistHalfWorld = Math.max(1e-3, 0.5 * waistCols * dxUniform);
     const sWaist = reqWaistHalf / waistHalfWorld;
-    sCorr = clamp(sWaist, 0.72, 1.35);
+    sCorr = clamp(sWaist, 0.55, 1.65);
   } else if (isTopOrBody) {
+    // ?? Top / Dress / Outerwear Slicing:
+    // 1. Align the top's collar center with the avatar's neck center (x = 0).
+    // 2. Align & scale the top's shoulder slices with the avatar's shoulder slice circumference.
+    // 3. Keep the original silhouette and cut below the shoulders.
+    const jTopAnchor = hasHoodOrHanger ? detectedShoulder : jFabricTop;
+    const collarScanEnd = Math.min(vh - 1, jTopAnchor + Math.max(2, Math.floor(0.08 * fabricHeight)));
+    const collarCenters = [];
+    for (let j = jTopAnchor; j <= collarScanEnd; j++) {
+      const runs = runsByRow[j];
+      if (!runs || !runs.length) continue;
+      let minA = Infinity, maxB = -Infinity;
+      runs.forEach(([a, b]) => {
+        if (a < minA) minA = a;
+        if (b > maxB) maxB = b;
+      });
+      if (maxB > minA) collarCenters.push((minA + maxB) * 0.5);
+    }
+    collarCenterCol = collarCenters.length ? percentile(collarCenters, 0.50) : colMid;
+
+    // Measure torso trunk width & center
     const trunkWidths = [];
-    const tStart = Math.min(vh - 1, jFabricTop + Math.floor(0.35 * fabricHeight));
-    const tEnd = Math.min(vh - 1, jFabricTop + Math.floor(0.80 * fabricHeight));
+    const trunkCenters = [];
+    const tStart = Math.min(vh - 1, jTopAnchor + Math.floor(0.35 * fabricHeight));
+    const tEnd = Math.min(vh - 1, jTopAnchor + Math.floor(0.75 * fabricHeight));
     for (let j = tStart; j <= tEnd; j++) {
       const runs = runsByRow[j];
       if (!runs || !runs.length) continue;
@@ -786,12 +813,40 @@ export function buildSilhouetteShell({
         }
       }
       trunkWidths.push(bestRun[1] - bestRun[0]);
+      trunkCenters.push((bestRun[0] + bestRun[1]) * 0.5);
     }
     const trunkCols = trunkWidths.length ? percentile(trunkWidths, 0.50) : nx * 0.45;
+    spineCenterCol = trunkCenters.length ? percentile(trunkCenters, 0.50) : colMid;
+
+    // Measure shoulder slice width at the shoulder line (excluding outstretched sleeves)
+    const shScanStart = Math.min(vh - 1, jTopAnchor + Math.max(1, Math.floor(0.06 * fabricHeight)));
+    const shScanEnd = Math.min(vh - 1, jTopAnchor + Math.max(3, Math.floor(0.18 * fabricHeight)));
+    const shWidths = [];
+    for (let j = shScanStart; j <= shScanEnd; j++) {
+      const runs = runsByRow[j];
+      if (!runs || !runs.length) continue;
+      let minA = Infinity, maxB = -Infinity;
+      runs.forEach(([a, b]) => {
+        if (a < minA) minA = a;
+        if (b > maxB) maxB = b;
+      });
+      if (maxB > minA) shWidths.push(maxB - minA);
+    }
+    const rawShoulderCols = shWidths.length ? percentile(shWidths, 0.60) : trunkCols * 1.12;
+    const shoulderCols = rawShoulderCols > trunkCols * 1.20
+      ? clamp(rawShoulderCols * 0.78, trunkCols * 1.06, trunkCols * 1.18)
+      : Math.max(rawShoulderCols, trunkCols * 1.04);
+
+    const shTorso = getTorsoSlice(yShoulderAvatar, isMale);
+    const reqShoulderHalf = shTorso.rx + effOffset;
+    const shoulderHalfWorld = Math.max(1e-3, 0.5 * shoulderCols * dxUniform);
+    const sShoulder = reqShoulderHalf / shoulderHalfWorld;
+
     const trunkHalfWorld = Math.max(1e-3, 0.5 * trunkCols * dxUniform);
-    const targetTrunkHalf = (getTorsoSlice(1.15, isMale).rx + layerOffset) * 1.02;
+    const targetTrunkHalf = getTorsoSlice(isMale ? 1.24 : 1.18, isMale).rx + effOffset;
     const sTrunk = targetTrunkHalf / trunkHalfWorld;
-    sCorr = clamp(sTrunk, 0.68, 1.35);
+
+    sCorr = clamp(isWideOrLoose ? sShoulder : Math.max(sShoulder, sTrunk * 0.96), 0.55, 1.65);
   } else {
     sCorr = clamp(percentile(ratios, 0.85), 0.72, 1.4);
   }
@@ -843,7 +898,7 @@ export function buildSilhouetteShell({
     return clamp(sideProfile.ratios[idx] || 1.0, 0.85, 1.30);
   };
 
-  // ── Per-row geometry ──
+  // ?? Per-row geometry ??
   const offF = new Float32Array(vw * vh);
   const offB = new Float32Array(vw * vh);
   const baseZ = new Float32Array(vw * vh);
@@ -900,12 +955,15 @@ export function buildSilhouetteShell({
       }
 
       let x = (col - colMid) * dx;
-      if (isTopOrBody && !isStandalone && y >= 0.80 && y <= yShoulderAvatar - 0.04) {
-        // Keep the garment's authentic photographed cut (oversized, tailored, flared, sleeves),
-        // while guaranteeing the central trunk span always clears the avatar's torso width (zero lateral skin poke-through).
-        if (run && run[0] <= colMid && run[1] >= colMid) {
+      if (isTopOrBody && !isStandalone) {
+        // Align collar center with avatar neck (x = 0) and transition smoothly down the spine,
+        // keeping the garment's original photographed silhouette & cut while ensuring torso clearance.
+        const tCollar = clamp((j - jFabricTop) / Math.max(1, 0.20 * fabricHeight), 0, 1);
+        const rowCenter = collarCenterCol * (1 - tCollar) + spineCenterCol * tCollar;
+        x = (col - rowCenter) * dx;
+        if (y >= 0.80 && y <= yShoulderAvatar - 0.04 && run && run[0] <= rowCenter && run[1] >= rowCenter) {
           const trunkHalfWorld = Math.max(1e-3, ((run[1] - run[0]) * 0.5) * dx);
-          const minTrunkHalf = (torso.rx + layerOffset) * 1.02;
+          const minTrunkHalf = torso.rx + effOffset;
           if (trunkHalfWorld < minTrunkHalf) {
             const trunkMid = (run[0] + run[1]) * 0.5;
             const scaleBoost = minTrunkHalf / trunkHalfWorld;
@@ -913,20 +971,32 @@ export function buildSilhouetteShell({
           }
         }
       } else if (isSkirt && !isStandalone) {
+        // Align top-hem slice center to waist (x = 0) and scale top-hem slice to avatar waist circumference,
+        // while keeping the skirt's original photographed silhouette and cut below the waist.
         const tSkirt = clamp((effectiveYTop - y) / Math.max(0.01, hWorld), 0, 1);
-        const rowMid = waistCenterCol * (1 - tSkirt) + colMid * tSkirt;
-        const waistFitFactor = tSkirt < 0.15 ? (sWaistSkirt / sCorr) + (1 - sWaistSkirt / sCorr) * (tSkirt / 0.15) : 1.0;
-        x = (col - rowMid) * dx * waistFitFactor;
+        const rowMid = waistCenterCol * (1 - tSkirt) + rMid * tSkirt;
+        const naturalHalf = rHalf * dx;
+        const waistTorso = getTorsoSlice(effectiveYTop, isMale);
+        const reqWaistHalf = waistTorso.rx + waistOffset;
+        const minBodyHalf = (y >= yCrotchBody ? torso.rx : getTorsoSlice(Math.max(0.68, y), isMale).rx * 0.96) + effOffset;
+        const waistLock = smoothstep01(tSkirt / 0.14);
+        const targetRowHalf = reqWaistHalf * (1 - waistLock) + Math.max(minBodyHalf, naturalHalf) * waistLock;
+        const uSkirt = clamp((col - rowMid) / Math.max(1, rHalf), -1, 1);
+        x = uSkirt * targetRowHalf;
       } else if (isBottom && !isStandalone) {
-        // Tightly fit waist, pelvis, and legs to the avatar's exact body contour with <= 2.5mm (0.0025m)
-        // clearance and zero hip/thigh saddle signs or flared waistband horns.
-        const fitOffset = Math.min(layerOffset, 0.0025);
-        const bodyOuterHalf = (torso.rx * (1 - crotchBlend) + (leg.cx + leg.r) * crotchBlend) + fitOffset;
+        // Anchor top-hem slice to avatar's waist slice circumference with <= 1.8mm thickness,
+        // and keep original silhouette for wide/loose/hip-hop/cargo pants below the waist.
+        const waistTorso = getTorsoSlice(effectiveYTop, isMale);
+        const reqWaistHalf = waistTorso.rx + waistOffset;
+        const bodyOuterHalf = (torso.rx * (1 - crotchBlend) + (leg.cx + leg.r) * crotchBlend) + effOffset;
         const currentHalf = rHalf * dx;
-        const targetRowHalf = isShortBottom
-          ? clamp(currentHalf, bodyOuterHalf, bodyOuterHalf * 1.05)
+        const tBelowWaist = smoothstep01((effectiveYTop - y) / 0.08);
+        const naturalPelvisHalf = (isShortBottom || isWideOrLoose || currentHalf > bodyOuterHalf * 1.08)
+          ? clamp(currentHalf, bodyOuterHalf, bodyOuterHalf * 1.38)
           : bodyOuterHalf;
-        const uPelvis = clamp((col - rMid) / Math.max(1, rHalf), -1, 1);
+        const targetRowHalf = reqWaistHalf * (1 - tBelowWaist) + naturalPelvisHalf * tBelowWaist;
+        const rowCenter = waistCenterCol * (1 - tBelowWaist) + rMid * tBelowWaist;
+        const uPelvis = clamp((col - rowCenter) / Math.max(1, rHalf), -1, 1);
         const xCont = uPelvis * targetRowHalf;
 
         if (legRuns && y <= yCrotchBody + 1e-4) {
@@ -938,12 +1008,13 @@ export function buildSilhouetteShell({
           const uLeg = clamp((col - ck) / halfCols, -1, 1);
           const side = k === 0 ? -1 : 1;
 
-          // Center each leg directly over side * leg.cx with outerRadius = leg.r + fitOffset
-          // so the outer thigh matches bodyOuterHalf at yCrotchBody with 0.0mm step (zero saddle sign),
-          // and innerRadius covers the inner thigh (xmin = leg.cx - leg.r) all the way from crotch to ankle.
-          const outerRadius = leg.r + fitOffset;
+          const minLegRadius = leg.r + effOffset;
+          const photoLegRadius = halfCols * dx;
+          const outerRadius = (isWideOrLoose || photoLegRadius > minLegRadius * 1.12)
+            ? clamp(photoLegRadius, minLegRadius, minLegRadius * 1.38)
+            : minLegRadius;
           const crotchClose = clamp((y - (yCrotchBody - 0.06)) / 0.06, 0, 1);
-          const baseInnerRadius = leg.r + fitOffset;
+          const baseInnerRadius = minLegRadius;
           const innerRadius = Math.min(
             leg.cx - 0.001 * (1 - crotchClose),
             baseInnerRadius + crotchClose * Math.max(0, leg.cx - baseInnerRadius)
@@ -960,9 +1031,13 @@ export function buildSilhouetteShell({
           const uLeg = clamp((col - c0) / halfCols, -1, 1);
           const side = singleLegSide;
 
-          const outerRadius = leg.r + fitOffset;
+          const minLegRadius = leg.r + effOffset;
+          const photoLegRadius = halfCols * dx;
+          const outerRadius = (isWideOrLoose || photoLegRadius > minLegRadius * 1.12)
+            ? clamp(photoLegRadius, minLegRadius, minLegRadius * 1.38)
+            : minLegRadius;
           const crotchClose = clamp((y - (yCrotchBody - 0.06)) / 0.06, 0, 1);
-          const baseInnerRadius = leg.r + fitOffset;
+          const baseInnerRadius = minLegRadius;
           const innerRadius = Math.min(
             leg.cx - 0.001 * (1 - crotchClose),
             baseInnerRadius + crotchClose * Math.max(0, leg.cx - baseInnerRadius)
@@ -994,13 +1069,12 @@ export function buildSilhouetteShell({
 
       let bodyRzFront, bodyRzBack;
       if (isBottom) {
-        const fitOffset = isStandalone ? layerOffset : Math.min(layerOffset, 0.0025);
+        const tWaist = smoothstep01((effectiveYTop - y) / 0.06);
+        const fitOffset = isStandalone ? layerOffset : (waistOffset * (1 - tWaist) + effOffset * tWaist);
         const torsoF = (torso.rzFront || torso.rz) + fitOffset;
         const torsoB = (torso.rzBack || torso.rz) + fitOffset;
         const legF = (leg.rzFront || leg.r) + fitOffset;
         const legB = (leg.rzBack || leg.r) + fitOffset;
-        // In the pelvis and crotch junction zone (y >= yCrotchBody - 0.05), enforce full anterior/posterior
-        // clearance against torso and pubic/gluteal contours so avatar crotch skin is never exposed.
         const crotchProximity = clamp((y - (yCrotchBody - 0.06)) / 0.08, 0, 1);
         const minF = legRuns
           ? Math.max(legF, torsoF * 0.95 * crotchProximity)
@@ -1011,17 +1085,22 @@ export function buildSilhouetteShell({
         bodyRzFront = Math.max(minF, minF * sideMod);
         bodyRzBack = Math.max(minB, minB * sideMod);
       } else if (isSkirt) {
-        const frontClearance = (y <= 1.05 && y >= 0.75) ? 0.132 : 0.108;
-        const baseRzFront = Math.max(((torso ? torso.rzFront : null) || 0.108), frontClearance) + layerOffset;
-        const buttockClearance = (y <= 1.05 && y >= 0.75) ? 0.134 : 0.108;
-        const baseRzBack = Math.max(((torso ? torso.rzBack : null) || 0.108), buttockClearance) + layerOffset;
+        // Skirt waistline thickness is strictly <= 1.8 mm (waistOffset) on the waist!
+        // Below the waist, follow the avatar's exact hip/buttock contour and drape smoothly downward.
+        const tWaist = smoothstep01((effectiveYTop - y) / 0.08);
+        const fitOff = isStandalone ? layerOffset : (waistOffset * (1 - tWaist) + effOffset * tWaist);
+        const hipPeakSlice = getTorsoSlice(isMale ? 0.92 : 0.90, isMale);
+        // Below the hip peak (y < 0.90), a skirt hangs straight or flares outward rather than pinching between the legs
+        const belowHipT = smoothstep01(((isMale ? 0.92 : 0.90) - y) / 0.14);
+        const baseRzFront = ((torso.rzFront || torso.rz) * (1 - belowHipT) + (hipPeakSlice.rzFront || hipPeakSlice.rz) * belowHipT) + fitOff;
+        const baseRzBack = ((torso.rzBack || torso.rz) * (1 - belowHipT) + (hipPeakSlice.rzBack || hipPeakSlice.rz) * belowHipT) + fitOff;
 
-        const flareProgress = clamp((0.84 - y) / Math.max(0.01, 0.84 - yBottom), 0, 1);
-        bodyRzFront = (baseRzFront + flareProgress * Math.max(0, 0.32 * halfWorld - baseRzFront)) * sideMod;
-        bodyRzBack = (baseRzBack + flareProgress * Math.max(0, 0.32 * halfWorld - baseRzBack)) * sideMod;
+        const lateralFlare = Math.max(0, halfWorld - (torso.rx + fitOff)) * 0.42 * tWaist;
+        bodyRzFront = (baseRzFront + lateralFlare) * sideMod;
+        bodyRzBack = (baseRzBack + lateralFlare) * sideMod;
       } else {
-        const minF = (torso.rzFront || torso.rz) + layerOffset;
-        const minB = (torso.rzBack || torso.rz) + layerOffset;
+        const minF = (torso.rzFront || torso.rz) + effOffset;
+        const minB = (torso.rzBack || torso.rz) + effOffset;
         bodyRzFront = Math.max(minF, minF * sideMod);
         bodyRzBack = Math.max(minB, minB * sideMod);
       }
@@ -1033,21 +1112,23 @@ export function buildSilhouetteShell({
         bodyRzBack *= 0.82;
       }
 
-      // Dresses / long coats flare below the hips
+      // Dresses / ball gowns / long coats flare below the hips proportional to their silhouette width
       if (!isBottom && !isSkirt && !isStandalone && y < 0.84) {
-        bodyRzFront = Math.max(bodyRzFront, 0.42 * halfWorld);
-        bodyRzBack = Math.max(bodyRzBack, 0.42 * halfWorld);
+        const hipRx = getTorsoSlice(0.88, isMale).rx + effOffset;
+        const dressFlare = Math.max(0, halfWorld - hipRx) * 0.48;
+        bodyRzFront = Math.max(bodyRzFront, bodyRzFront + dressFlare);
+        bodyRzBack = Math.max(bodyRzBack, bodyRzBack + dressFlare);
       }
 
       const isShoulderZone = !isBottom && !isSkirt && y >= (isMale ? 1.35 : 1.29);
       const isBodySpan = isBottom || isSkirt || halfWorld >= torso.rx * 0.72 || isShoulderZone;
-      const ampFront = isBottom ? bodyRzFront : (isBodySpan ? bodyRzFront * 1.05 : Math.min(bodyRzFront, halfWorld * 1.05 + 0.012));
-      const ampBack = isBottom ? bodyRzBack : (isBodySpan ? bodyRzBack * 1.05 : Math.min(bodyRzBack, halfWorld * 1.05 + 0.012));
+      const ampFront = (isBottom || isSkirt) ? bodyRzFront : (isBodySpan ? bodyRzFront : Math.min(bodyRzFront, halfWorld + 0.010));
+      const ampBack = (isBottom || isSkirt) ? bodyRzBack : (isBodySpan ? bodyRzBack : Math.min(bodyRzBack, halfWorld + 0.010));
 
       // For sloped shoulder rows near the top of shirts/jackets, normalize u against the full shoulder span
       // so diagonal shoulder edges retain full anterior/posterior clavicle & scapula depth.
       const effectiveHalf = isShoulderZone
-        ? Math.max(half, ((torso.rx + layerOffset) * 0.96) / Math.max(1e-4, dx))
+        ? Math.max(half, ((torso.rx + effOffset) * 1.04) / Math.max(1e-4, dx))
         : half;
 
       const iStart = Math.max(0, Math.ceil(a + 0.02));
@@ -1056,14 +1137,14 @@ export function buildSilhouetteShell({
       for (let i = iStart; i <= iEnd; i++) {
         const u = clamp((i - mid) / effectiveHalf, -1, 1);
         const s = Math.max(0, 1 - u * u);
-        // Tight 0.06 flank taper and fuller s^0.36 super-ellipse for bottoms so pant legs wrap
-        // cleanly around the outer thigh and knee before closing at the side seam.
-        const taperWidth = isBottom ? 0.06 : 0.20;
+        // Tight 0.06 flank taper and fuller s^0.36 super-ellipse for bottoms & skirts so waistbands and pant legs
+        // wrap cleanly around the waist, hip, and thigh before closing at the side seam.
+        const taperWidth = (isBottom || isSkirt) ? 0.06 : 0.16;
         const edgeTaper = isShoulderZone
-          ? smoothstep01((1 - Math.abs(u)) / 0.06)
+          ? smoothstep01((1 - Math.abs(u)) / 0.05)
           : smoothstep01((1 - Math.abs(u)) / taperWidth);
-        const hhFront = (isBottom ? Math.pow(s, 0.36) : (isBodySpan ? Math.pow(s, 0.46) : Math.sqrt(s))) * edgeTaper;
-        const hhBack = (isBottom ? Math.pow(s, 0.36) : (isBodySpan ? Math.pow(s, 0.44) : Math.pow(s, 0.46))) * edgeTaper;
+        const hhFront = ((isBottom || isSkirt) ? Math.pow(s, 0.36) : (isBodySpan ? Math.pow(s, 0.42) : Math.sqrt(s))) * edgeTaper;
+        const hhBack = ((isBottom || isSkirt) ? Math.pow(s, 0.36) : (isBodySpan ? Math.pow(s, 0.40) : Math.pow(s, 0.46))) * edgeTaper;
         offF[j * vw + i] = ampFront * hhFront;
         offB[j * vw + i] = ampBack * hhBack;
       }
@@ -1086,9 +1167,9 @@ export function buildSilhouetteShell({
     }
   }
 
-  // Vertical X-smoothing for bottoms across consecutive rows with matching topology
+  // Vertical X-smoothing for bottoms and skirts across consecutive rows with matching topology
   // so pocket flaps or cutout noise never create horizontal step shelves.
-  if (isBottom) {
+  if (isBottom || isSkirt) {
     for (let pass = 0; pass < 2; pass++) {
       const tmpX = new Float32Array(xs);
       for (let j = Math.max(1, jFabricTop + 1); j < Math.min(vh - 1, jFabricBottom); j++) {
@@ -1106,9 +1187,9 @@ export function buildSilhouetteShell({
     }
   }
 
-  // ── Strict Column-Wise Shoulder Line Anchor for Tops, Outerwear & Full-Body Garments ──
+  // ?? Strict Column-Wise Shoulder Line Anchor for Tops, Outerwear & Full-Body Garments ??
   // Anchors the top shoulder edge of every column across the left and right shoulders
-  // smoothly along the avatar's anatomical shoulder contour without sharp shelves or inverted folds.
+  // smoothly along the avatar's anatomical shoulder contour without sharp shelves or skin holes.
   if (isTopOrBody && !isStrapless) {
     const minNeckX = isMale ? 0.064 : 0.054;
     const maxShoulderX = isMale ? 0.222 : 0.198;
@@ -1127,19 +1208,19 @@ export function buildSilhouetteShell({
           break;
         }
       }
-      if (jFirst < 0 || jFirst > jFabricTop + Math.round(0.25 * fabricHeight)) continue;
+      if (jFirst < 0 || jFirst > jFabricTop + Math.round(0.28 * fabricHeight)) continue;
       jFirsts[i] = jFirst;
       const xCol = xs[jFirst * vw + i];
       const absX = Math.abs(xCol);
 
       // Smooth blend near neck line and outer deltoid/acromion
       const neckBlend = smoothstep01((absX - (minNeckX - 0.025)) / 0.035);
-      const shoulderBlend = 1 - smoothstep01((absX - (maxShoulderX - 0.015)) / 0.055);
+      const shoulderBlend = 1 - smoothstep01((absX - (maxShoulderX - 0.010)) / 0.055);
       const shoulderWeight = neckBlend * shoulderBlend;
       weights[i] = shoulderWeight;
 
       if (shoulderWeight > 1e-3) {
-        const yTarget = getAvatarShoulderRidgeY(absX, isMale);
+        const yTarget = getAvatarShoulderRidgeY(absX, isMale) + effOffset;
         const yActual = ys[jFirst * vw + i];
         dys[i] = (yTarget - yActual) * shoulderWeight;
       }
@@ -1162,38 +1243,34 @@ export function buildSilhouetteShell({
       const xCol = xs[jFirst * vw + i];
       const absX = Math.abs(xCol);
       const dy = smoothedDy[i];
-      const yTarget = getAvatarShoulderRidgeY(absX, isMale);
+      const yTarget = getAvatarShoulderRidgeY(absX, isMale) + effOffset;
       const shSlice = getTorsoSlice(yTarget, isMale);
 
       // Anatomically contoured deltoid & trapezius depth that rolls smoothly over the shoulder cap
-      // without creating flat box shelves
-      const lateralRolloff = Math.cos(clamp(absX / (maxShoulderX + 0.035), 0, 1) * (Math.PI * 0.45));
-      const minShFront = (shSlice.rzFront + layerOffset) * Math.max(0.60, lateralRolloff) * shoulderWeight;
-      const minShBack = (shSlice.rzBack + layerOffset) * Math.max(0.60, lateralRolloff) * shoulderWeight;
+      // and guarantees full anterior clavicle & posterior trapezius clearance (zero shoulder skin holes!)
+      const lateralRolloff = Math.cos(clamp(absX / (maxShoulderX + 0.045), 0, 1) * (Math.PI * 0.42));
+      const minShFront = (shSlice.rzFront + effOffset + 0.004) * Math.max(0.72, lateralRolloff) * shoulderWeight;
+      const minShBack = (shSlice.rzBack + effOffset + 0.004) * Math.max(0.72, lateralRolloff) * shoulderWeight;
 
-      for (let dj = 0; dj <= 4 && jFirst + dj < vh; dj++) {
+      for (let dj = 0; dj <= 6 && jFirst + dj < vh; dj++) {
         const sIdx = (jFirst + dj) * vw + i;
         if (!inside[sIdx]) continue;
-        const depthGrad = 0.85 + 0.15 * Math.sin((dj / 4) * (Math.PI * 0.5));
+        const depthGrad = 0.92 + 0.08 * Math.sin((dj / 6) * (Math.PI * 0.5));
         offF[sIdx] = Math.max(offF[sIdx], minShFront * depthGrad);
         offB[sIdx] = Math.max(offB[sIdx], minShBack * depthGrad);
       }
 
       if (Math.abs(dy) >= 1e-4) {
-        // Apply anchor shift to cap rows above jFirst and decay smoothly down to chest/armpit
         for (let j = 0; j < jFirst; j++) {
-          ys[j * vw + i] += dy + 0.014 * shoulderWeight;
+          ys[j * vw + i] += dy;
         }
         for (let dj = 0; dj <= decayRows && jFirst + dj < vh; dj++) {
           const w = 1 - smoothstep01(dj / decayRows);
           ys[(jFirst + dj) * vw + i] += dy * w;
         }
-      } else if (jFirst > 0) {
-        ys[(jFirst - 1) * vw + i] = Math.max(ys[(jFirst - 1) * vw + i], ys[jFirst * vw + i] + 0.014 * shoulderWeight);
       }
 
-      // Smooth anchor lock on core shoulder line without creating hard step ledges
-      if (!isStandalone && shoulderWeight >= 0.95) {
+      if (!isStandalone && shoulderWeight >= 0.85) {
         ys[jFirst * vw + i] = yTarget;
       }
     }
@@ -1210,7 +1287,8 @@ export function buildSilhouetteShell({
     }
   }
 
-  // 4-pass Laplacian smoothing of the depth offsets (interior vertices only; boundary stays pinned to 0)
+  // 4-pass Laplacian smoothing of the depth offsets (strictly positive interior neighbors only
+  // so boundary/cap-row offF=0 vertices never pull waistbands, shoulders, or outer thighs inward)
   for (let pass = 0; pass < 4; pass++) {
     const tmpF = new Float32Array(offF);
     const tmpB = new Float32Array(offB);
@@ -1223,9 +1301,7 @@ export function buildSilhouetteShell({
         const lf = idx - 1;
         const rt = idx + 1;
         if (!inside[up] || !inside[dn] || !inside[lf] || !inside[rt]) continue;
-        // For bottoms, only smooth across strictly positive interior depth neighbors so side-seam (offF=0)
-        // and cap-row (offF=0) vertices never pull the outer thigh/knee or top waistband inward.
-        if (isBottom && (offF[up] <= 1e-5 || offF[dn] <= 1e-5 || offF[lf] <= 1e-5 || offF[rt] <= 1e-5)) continue;
+        if (offF[up] <= 1e-5 || offF[dn] <= 1e-5 || offF[lf] <= 1e-5 || offF[rt] <= 1e-5) continue;
         const smF = 0.125 * (offF[up] + offF[dn] + offF[lf] + offF[rt]) + 0.5 * offF[idx];
         const smB = 0.125 * (offB[up] + offB[dn] + offB[lf] + offB[rt]) + 0.5 * offB[idx];
         tmpF[idx] = smF;
@@ -1236,10 +1312,50 @@ export function buildSilhouetteShell({
     offB.set(tmpB);
   }
 
+  // ?? Column-Wise Top & Bottom Boundary Vertex Snap ??
+  // For any column i, vertices strictly above jFirstCol[i] (or below jLastCol[i]) are outside the
+  // garment's vertical span in that column. Snapping them onto (i, jFirstCol[i]) / (i, jLastCol[i])
+  // collapses any stepped quad along a sloped shoulder, collar, waistband, or hem into a smooth
+  // diagonal triangle with full surface depth (never diving to z = baseZ or creating sawtooth teeth!).
+  for (let i = 0; i < vw; i++) {
+    let jFirst = -1;
+    let jLast = -1;
+    for (let j = jFabricTop; j <= jFabricBottom; j++) {
+      if (inside[j * vw + i]) {
+        if (jFirst < 0) jFirst = j;
+        jLast = j;
+      }
+    }
+    if (jFirst > 0) {
+      const src = jFirst * vw + i;
+      for (let j = 0; j < jFirst; j++) {
+        const dst = j * vw + i;
+        xs[dst] = xs[src];
+        ys[dst] = ys[src];
+        offF[dst] = offF[src];
+        offB[dst] = offB[src];
+        baseZ[dst] = baseZ[src];
+        uCols[dst] = uCols[src];
+      }
+    }
+    if (jLast >= 0 && jLast < vh - 1) {
+      const src = jLast * vw + i;
+      for (let j = jLast + 1; j < vh; j++) {
+        const dst = j * vw + i;
+        xs[dst] = xs[src];
+        ys[dst] = ys[src];
+        offF[dst] = offF[src];
+        offB[dst] = offB[src];
+        baseZ[dst] = baseZ[src];
+        uCols[dst] = uCols[src];
+      }
+    }
+  }
+
   // Swing photographed sleeves down along the avatar's arms
   let sleevePose = null;
   if (poseSleeves && isTopOrBody) {
-    sleevePose = retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, getTorsoSlice });
+    sleevePose = retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset: effOffset, getTorsoSlice });
   }
 
   const frontPos = new Float32Array(vw * vh * 3);
@@ -1262,11 +1378,11 @@ export function buildSilhouetteShell({
       const idx = j * vw + i;
       const u = clamp(uCols[idx] / nx, 0, 1);
       let jSample = j;
-      if (jFirstWaistCol && j >= jFabricTop && j <= crotchRow) {
+      if (jFirstWaistCol && j >= jFabricTop && j <= waistLevelLimitRow) {
         const colIdx = Math.round(clamp(uCols[idx], 0, nx));
-        const jTopCol = Math.min(crotchRow - 1, jFirstWaistCol[colIdx] + 0.5);
-        const tRow = (j - jFabricTop) / Math.max(1, crotchRow - jFabricTop);
-        jSample = jTopCol + tRow * (crotchRow - jTopCol);
+        const jTopCol = Math.min(waistLevelLimitRow - 1, jFirstWaistCol[colIdx] + 0.5);
+        const tRow = (j - jFabricTop) / Math.max(1, waistLevelLimitRow - jFabricTop);
+        jSample = jTopCol + tRow * (waistLevelLimitRow - jTopCol);
       }
       const v = 1 - clamp(jSample / ny, 0, 1);
       uvFront[idx * 2] = u;
@@ -1289,6 +1405,7 @@ export function buildSilhouetteShell({
 
   // Index: keep every cell the fabric overlaps (in this row band or the next)
   const cellHasFabric = (i, j) => {
+    if (j < jFabricTop || j >= jFabricBottom) return false;
     const lo = i;
     const hi = i + 1;
     const currRuns = runsByRow[j];
@@ -1299,7 +1416,6 @@ export function buildSilhouetteShell({
     // 2. Do not bridge under a terminated pant leg hem when the adjacent row has no fabric on that side
     //    (strictly prevents horizontal polygon shelves spanning from a shorter cuff across to the other leg).
     if (isBottom) {
-      if (j < jFabricTop || j >= jFabricBottom) return false;
       if (currRuns && currRuns.length >= 2 && nextRuns && nextRuns.length >= 2) {
         const gapStart = Math.max(currRuns[0][1], nextRuns[0][1]);
         const gapEnd = Math.min(currRuns[1][0], nextRuns[1][0]);
@@ -1439,8 +1555,8 @@ export function classifyGroupView(frontStats, otherStats, hintText = '') {
   const colorDist = Math.sqrt(dr * dr + dg * dg + db * db);
   if (colorDist >= 85) return null;
 
-  if (/(?:\b(?:side|profile)\b|צד|פרופיל)/i.test(hint)) return 'side';
-  if (/(?:\b(?:back|rear|behind)\b|גב|אחור)/i.test(hint)) return 'back';
+  if (/(?:\b(?:side|profile)\b|??|??????)/i.test(hint)) return 'side';
+  if (/(?:\b(?:back|rear|behind)\b|??|????)/i.test(hint)) return 'back';
 
   const aspectRatio = otherStats.aspect / Math.max(1e-3, frontStats.aspect);
   const areaRatio = otherStats.area / Math.max(1e-3, frontStats.area);

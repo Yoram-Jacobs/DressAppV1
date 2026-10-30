@@ -78,11 +78,24 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       continue;
     }
 
-    // 2. Upper torso under top / outerwear / dress (exclude neck/head y > 1.38 and arms)
-    const armCutUpper = 0.165 + Math.max(0, Math.min(1, (1.12 - y) / 0.40)) * 0.033;
-    if ((hasTop || hasOuterwear || hasDress) && y >= 0.90 && y <= 1.38 && absX <= armCutUpper) {
+    // 2. Upper torso & shoulder ridge under top / outerwear / dress (exclude neck column and head)
+    const armCutUpper = y >= 1.30
+      ? (isMale ? 0.220 : 0.196)
+      : 0.165 + Math.max(0, Math.min(1, (1.12 - y) / 0.40)) * 0.033;
+    const maxShoulderY = isMale ? 1.52 : 1.435;
+    const minNeckAbsX = isMale ? 0.064 : 0.055;
+    if (
+      (hasTop || hasOuterwear || hasDress) &&
+      y >= 0.90 &&
+      y <= maxShoulderY &&
+      absX <= armCutUpper &&
+      (y <= 1.38 || absX >= minNeckAbsX)
+    ) {
       const cz = 0.020;
       arr[idx] = x * 0.88;
+      if (y > 1.34 && absX >= minNeckAbsX) {
+        arr[idx + 1] = y - 0.012;
+      }
       arr[idx + 2] = cz + (z - cz) * 0.85;
       continue;
     }

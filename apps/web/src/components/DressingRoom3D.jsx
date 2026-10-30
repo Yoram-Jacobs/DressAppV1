@@ -673,7 +673,7 @@ export default function DressingRoom3D({
             )}
           >
           <Canvas
-            shadows
+            shadows={{ type: THREE.PCFShadowMap }}
             dpr={[1, typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1]}
             camera={cameraProps}
             gl={glProps}

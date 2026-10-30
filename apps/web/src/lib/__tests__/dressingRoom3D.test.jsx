@@ -630,4 +630,94 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     // Foot Z is retracted toward foot center (0.095)
     expect(pos.getZ(2)).toBeLessThan(0.18);
   });
+
+  test('Garment slicing aligns bottom top-hem with waist circumference (<= 2mm thick) and top collar/shoulders with neck/shoulder circumference', () => {
+    const {
+      resolveShellFit,
+      resolveFabricThickness,
+      getTorsoSlice,
+      getLegSlice,
+    } = require('@/components/GarmentMesh3D');
+    const { buildSilhouetteShell } = require('@/lib/garmentSilhouette');
+
+    // 1. Fabric thickness ranges from 0.2 mm to 3.0 mm (0.0002m to 0.0030m),
+    //    and overlaid tops (sweaters, sweatshirts, jackets, coats) are thicker than thin shirts/skirts
+    const silkBlouseThickness = resolveFabricThickness('silk chiffon blouse', 'top', false);
+    const tshirtThickness = resolveFabricThickness('cotton fitted t-shirt', 'top', false);
+    const skirtThickness = resolveFabricThickness('grey a-line skirt', 'bottom', true);
+    const sweaterThickness = resolveFabricThickness('heavy knit wool sweater sweatshirt', 'top', false);
+    const coatThickness = resolveFabricThickness('heavy winter wool overcoat jacket', 'outerwear', false);
+
+    expect(silkBlouseThickness).toBeGreaterThanOrEqual(0.0002);
+    expect(silkBlouseThickness).toBeLessThan(tshirtThickness);
+    expect(skirtThickness).toBeLessThanOrEqual(0.0020); // <= 2 mm thick on waistline
+    expect(sweaterThickness).toBeGreaterThan(tshirtThickness);
+    expect(coatThickness).toBeGreaterThan(sweaterThickness);
+    expect(coatThickness).toBeLessThanOrEqual(0.0030);
+
+    // 2. Skirt slicing: top-hem slice aligns & scales with avatar waist circumference with <= 2mm thickness
+    const nx = 40;
+    const ny = 60;
+    const skirtRuns = [];
+    for (let j = 0; j <= ny; j++) {
+      // A-line skirt cutout widening from waist (cols 12..28) to hem (cols 6..34)
+      const t = j / ny;
+      const halfCols = 8 + t * 6;
+      skirtRuns.push([[20 - halfCols, 20 + halfCols]]);
+    }
+    const skirtFit = resolveShellFit({ rawSlot: 'bottom', garmentText: 'grey a-line midi skirt', isMale: false });
+    const skirtShell = buildSilhouetteShell({
+      runsByRow: skirtRuns,
+      nx,
+      ny,
+      aspect: 0.65,
+      slot: 'bottom',
+      isMale: false,
+      isSkirt: true,
+      yTop: skirtFit.yTop,
+      yBottom: skirtFit.yBottom,
+      layerOffset: skirtFit.layerOffset,
+      fabricThickness: skirtFit.fabricThickness,
+      getTorsoSlice,
+      getLegSlice,
+    });
+    expect(skirtShell.ok).toBe(true);
+    const waistSlice = getTorsoSlice(1.05, false);
+    const frontPos = skirtShell.front.getAttribute('position');
+    const vw = nx + 1;
+    // Center of top-hem waist row (j=0, i=20) has front Z within 2mm of avatar waist front Z (cz + rzFront)
+    const centerWaistZ = frontPos.getZ(20);
+    const avatarWaistFrontZ = waistSlice.cz + waistSlice.rzFront;
+    expect(centerWaistZ - avatarWaistFrontZ).toBeGreaterThanOrEqual(0.0002);
+    expect(centerWaistZ - avatarWaistFrontZ).toBeLessThanOrEqual(0.0025);
+
+    // 3. Top slicing: collar aligns to neck center (x = 0) and shoulder slice scales to avatar shoulder circumference
+    const topRuns = [];
+    for (let j = 0; j <= ny; j++) {
+      const t = j / ny;
+      // Sloped shoulders from collar (t=0, cols 14..26) to acromion (t=0.14, cols 8..32) and fitted torso (cols 10..30)
+      const halfCols = t < 0.14 ? 6 + (t / 0.14) * 6 : 10;
+      topRuns.push([[20 - halfCols, 20 + halfCols]]);
+    }
+    const topFit = resolveShellFit({ rawSlot: 'top', garmentText: 'black fitted t-shirt', isMale: false });
+    const topShell = buildSilhouetteShell({
+      runsByRow: topRuns,
+      nx,
+      ny,
+      aspect: 0.75,
+      slot: 'top',
+      isMale: false,
+      isSkirt: false,
+      yTop: topFit.yTop,
+      yBottom: topFit.yBottom,
+      layerOffset: topFit.layerOffset,
+      fabricThickness: topFit.fabricThickness,
+      getTorsoSlice,
+      getLegSlice,
+    });
+    expect(topShell.ok).toBe(true);
+    const topFrontPos = topShell.front.getAttribute('position');
+    // Collar center (j=0, i=20) is aligned with avatar neck center (x = 0)
+    expect(Math.abs(topFrontPos.getX(20))).toBeLessThan(0.005);
+  });
 });

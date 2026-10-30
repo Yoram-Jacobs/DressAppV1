@@ -547,7 +547,7 @@ function AutoTrimmedGarmentImage({
         const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(img, 0, 0);
 
         const imgData = ctx.getImageData(0, 0, w, h);
@@ -581,7 +581,7 @@ function AutoTrimmedGarmentImage({
         const cropCanvas = document.createElement('canvas');
         cropCanvas.width = cropW;
         cropCanvas.height = cropH;
-        const cropCtx = cropCanvas.getContext('2d');
+        const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
         cropCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
 
         // Analyze alpha channel on cropped garment to calculate shoulder line

@@ -561,7 +561,7 @@ async function fetchAndCropTexture(url) {
     return null;
   }
   // Cap the working resolution: keeps flood-fill / mask analysis fast, reduces main-thread blocking, and keeps GPU memory small
-  const MAX_SIDE = 768;
+  const MAX_SIDE = 384;
   const downScale = Math.min(1, MAX_SIDE / Math.max(srcW, srcH));
   const w = Math.max(1, Math.round(srcW * downScale));
   const h = Math.max(1, Math.round(srcH * downScale));
@@ -819,30 +819,28 @@ async function fetchAndCropTexture(url) {
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = cropW;
   cropCanvas.height = cropH;
-  const cropCtx = cropCanvas.getContext('2d');
+  const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
   cropCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
 
-  // Remove background, detached cutout shards, and studio fringes from the crop (keeps interior whites intact)
-  if (imgData && bgMask) {
-    try {
-      const cImgData = cropCtx.getImageData(0, 0, cropW, cropH);
-      const cPx = cImgData.data;
+  // Read crop pixels ONCE into memory, run background removal, halo trim, and edge despill
+  // in a single pass, and write back once (eliminating repeated GPU<->CPU getImageData stalls).
+  let cleanCropImgData = null;
+  try {
+    cleanCropImgData = cropCtx.getImageData(0, 0, cropW, cropH);
+    const eData = cleanCropImgData.data;
+
+    // 1. Remove background, detached cutout shards, and studio fringes from the crop (keeps interior whites intact)
+    if (imgData && bgMask) {
       for (let cy = 0; cy < cropH; cy++) {
         for (let cx = 0; cx < cropW; cx++) {
           if (bgMask[(minY + cy) * w + (minX + cx)]) {
-            cPx[(cy * cropW + cx) * 4 + 3] = 0; // Transparent
+            eData[(cy * cropW + cx) * 4 + 3] = 0;
           }
         }
       }
-      cropCtx.putImageData(cImgData, 0, 0);
-    } catch {}
-  }
+    }
 
-  // Trim the 1-2px semi-transparent halo that cut-outs carry (white catalog fringe)
-  // AND despill / strip any residual light-gray background rim along each row's left/right fabric edges.
-  try {
-    const eImg = cropCtx.getImageData(0, 0, cropW, cropH);
-    const eData = eImg.data;
+    // 2. Trim the 1-2px semi-transparent halo that cut-outs carry (white catalog fringe)
     for (let pass = 0; pass < 2; pass++) {
       const kill = [];
       for (let y = 0; y < cropH; y++) {
@@ -856,10 +854,12 @@ async function fetchAndCropTexture(url) {
           if (Math.min(left, right, up, down) < 96) kill.push(p);
         }
       }
-      kill.forEach((p) => { eData[p * 4 + 3] = 0; });
+      for (let k = 0; k < kill.length; k++) {
+        eData[kill[k] * 4 + 3] = 0;
+      }
     }
 
-    // Per-row edge despill & light-fringe trim: compares outer 15% of each span against
+    // 3. Per-row edge despill & light-fringe trim: compares outer 15% of each span against
     // adjacent interior fabric (15%..28% inward) to strip remaining gray/white cutout rims
     // and replace the outermost 4 edge pixels' RGB with clean local fabric color.
     for (let y = 0; y < cropH; y++) {
@@ -952,7 +952,7 @@ async function fetchAndCropTexture(url) {
       }
     }
 
-    cropCtx.putImageData(eImg, 0, 0);
+    cropCtx.putImageData(cleanCropImgData, 0, 0);
   } catch {}
 
   const texture = new THREE.CanvasTexture(cropCanvas);
@@ -973,7 +973,7 @@ async function fetchAndCropTexture(url) {
   // so every foot samples only inside its own shoe in the photo.
   const shoeLayout = { mode: aspect > 1.25 ? 'side' : 'top', toeLeft: true, boxes: null, box: null };
   try {
-    const layoutData = cropCtx.getImageData(0, 0, cropW, cropH).data;
+    const layoutData = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, cropW, cropH).data;
     const isOpaque = (o) => {
       const nearWhite = layoutData[o] > 238 && layoutData[o + 1] > 238 && layoutData[o + 2] > 238;
       return layoutData[o + 3] > 40 && !nearWhite;
@@ -1034,22 +1034,6 @@ async function fetchAndCropTexture(url) {
         }
       }
       if (r1 < 0) { r0 = 0; r1 = cropH - 1; }
-      // Texture v runs bottom (0) -> top (1)
-      // Detect toe orientation: in top-view shoes, the toe is narrower and curved,
-      // and usually points UP toward the top of the photo (r0) in catalog photography.
-      const boxMidY = Math.floor((r0 + r1) / 2);
-      let topOpaqueCount = 0;
-      let botOpaqueCount = 0;
-      for (let cy = r0; cy <= r1; cy++) {
-        const row = cy * cropW * 4;
-        for (let cx = c0; cx <= c1; cx++) {
-          if (isOpaque(row + cx * 4)) {
-            if (cy < boxMidY) topOpaqueCount++;
-            else botOpaqueCount++;
-          }
-        }
-      }
-      // Usually toes (narrower, tapered) point up towards r0
       const toeUp = true;
       return {
         u0: c0 / cropW,
@@ -1087,24 +1071,24 @@ async function fetchAndCropTexture(url) {
   }
 
   try {
-    const cropImgData = cropCtx.getImageData(0, 0, cropW, cropH);
-    const cData = cropImgData.data;
-    const opaqueXs = [];
-    const opaqueYs = [];
-    for (let cy = 0; cy < cropH; cy++) {
+    const cData = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, cropW, cropH).data;
+    let sumOx = 0;
+    let sumOy = 0;
+    let countO = 0;
+    const stride = Math.max(1, Math.floor(Math.min(cropW, cropH) / 64));
+    for (let cy = 0; cy < cropH; cy += stride) {
       const row = cy * cropW * 4;
-      for (let cx = 0; cx < cropW; cx++) {
+      for (let cx = 0; cx < cropW; cx += stride) {
         if (cData[row + cx * 4 + 3] > 240) {
-          opaqueXs.push(cx);
-          opaqueYs.push(cy);
+          sumOx += cx;
+          sumOy += cy;
+          countO++;
         }
       }
     }
-    if (opaqueXs.length > 0) {
-      opaqueXs.sort((a, b) => a - b);
-      opaqueYs.sort((a, b) => a - b);
-      const medX = opaqueXs[Math.floor(opaqueXs.length / 2)];
-      const medY = opaqueYs[Math.floor(opaqueYs.length / 2)];
+    if (countO > 0) {
+      const medX = sumOx / countO;
+      const medY = sumOy / countO;
       solidU = Math.max(0.02, Math.min(0.98, medX / cropW));
       solidV = Math.max(0.02, Math.min(0.98, 1.0 - (medY / cropH)));
     }
@@ -1118,7 +1102,8 @@ async function fetchAndCropTexture(url) {
   // NO horizontal row-smear to eliminate barcode / zebra stripe distortion!
   let filledTexture = null;
   try {
-    const fillData = cropCtx.getImageData(0, 0, cropW, cropH);
+    const srcPixels = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, cropW, cropH).data;
+    const fillData = new ImageData(new Uint8ClampedArray(srcPixels), cropW, cropH);
     const px = fillData.data;
     const hexColor = dominantColor.replace('#', '');
     const domR = parseInt(hexColor.substring(0, 2), 16) || 35;
@@ -1152,7 +1137,7 @@ async function fetchAndCropTexture(url) {
     const fillCanvas = document.createElement('canvas');
     fillCanvas.width = cropW;
     fillCanvas.height = cropH;
-    fillCanvas.getContext('2d').putImageData(fillData, 0, 0);
+    fillCanvas.getContext('2d', { willReadFrequently: true }).putImageData(fillData, 0, 0);
     filledTexture = new THREE.CanvasTexture(fillCanvas);
     filledTexture.colorSpace = THREE.SRGBColorSpace;
     filledTexture.wrapS = THREE.ClampToEdgeWrapping;
@@ -1169,7 +1154,7 @@ async function fetchAndCropTexture(url) {
   const opaqueCanvas = document.createElement('canvas');
   opaqueCanvas.width = cropW;
   opaqueCanvas.height = cropH;
-  const opaqueCtx = opaqueCanvas.getContext('2d');
+  const opaqueCtx = opaqueCanvas.getContext('2d', { willReadFrequently: true });
   opaqueCtx.fillStyle = dominantColor;
   opaqueCtx.fillRect(0, 0, cropW, cropH);
   opaqueCtx.drawImage(cropCanvas, 0, 0);
@@ -1185,7 +1170,7 @@ async function fetchAndCropTexture(url) {
   let shellMask = null;
   let canvasStats = null;
   try {
-    const sData = cropCtx.getImageData(0, 0, cropW, cropH).data;
+    const sData = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, cropW, cropH).data;
     const alpha = new Uint8Array(cropW * cropH);
     for (let p = 0; p < alpha.length; p++) alpha[p] = sData[p * 4 + 3];
     const { nx, ny } = chooseGridResolution(aspect);
@@ -1818,18 +1803,22 @@ export function createAnatomicalBottomGeometry({
     const ny = 18;
     const nx = 28;
     const waistSlice = getTorsoSlice(yTop, isMale);
-    const rxWaist = (waistSlice ? waistSlice.rx : 0.212) + layerOffset;
-    const rzWaist = (waistSlice ? ((waistSlice.rzFront || 0.118) + (waistSlice.rzBack || 0.065)) * 0.5 : 0.0915) + layerOffset;
-    const cz = waistSlice ? waistSlice.cz : 0.046;
+    const waistOff = Math.min(layerOffset, 0.0018); // <= 2mm physical fabric thickness at waistline
+    const rxWaist = (waistSlice ? waistSlice.rx : 0.145) + waistOff;
+    const rzFrontWaist = (waistSlice ? (waistSlice.rzFront || waistSlice.rz) : 0.095) + waistOff;
+    const rzBackWaist = (waistSlice ? (waistSlice.rzBack || waistSlice.rz) : 0.095) + waistOff;
+    const cz = waistSlice ? waistSlice.cz : 0.020;
 
     for (let i = 0; i <= ny; i++) {
       const vNorm = i / ny;
       const y = yTop - vNorm * (yTop - yHem);
+      const bodySlice = getTorsoSlice(Math.max(0.50, y), isMale);
 
-      // Smooth monotonic drape from waistband to hem (avoids hourglass waist indentation)
+      // Smooth A-line contour anchored to exact waist circumference (<= 2mm thick at waist)
       const flareRatio = Math.pow(vNorm, 1.15);
-      const rx = rxWaist + flareRatio * 0.18;
-      const rz = rzWaist + flareRatio * 0.14;
+      const rx = Math.max((bodySlice ? bodySlice.rx : rxWaist) + waistOff, rxWaist + flareRatio * 0.08);
+      const rzFront = Math.max((bodySlice ? (bodySlice.rzFront || bodySlice.rz) : rzFrontWaist) + waistOff, rzFrontWaist + flareRatio * 0.05);
+      const rzBack = Math.max((bodySlice ? (bodySlice.rzBack || bodySlice.rz) : rzBackWaist) + waistOff, rzBackWaist + flareRatio * 0.05);
 
       const vTex = 1.0 - vNorm;
 
@@ -1839,8 +1828,8 @@ export function createAnatomicalBottomGeometry({
         const x = rx * Math.sin(theta);
         const isFront = Math.cos(theta) >= 0;
         const z = isFront
-          ? cz + rz * Math.cos(theta)
-          : cz - (rz + 0.010) * Math.abs(Math.cos(theta));
+          ? cz + rzFront * Math.cos(theta)
+          : cz - rzBack * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
         // Continuous 360° UV mapping so front and back views share the skirt texture & pattern
@@ -2436,10 +2425,45 @@ export function resolveGarmentRenderOrder(rawSlot) {
 }
 
 /**
+ * Resolves realistic physical fabric thickness in meters (0.2 mm to 3.0 mm = 0.0002m to 0.0030m).
+ * Overlaid tops (sweaters, sweatshirts, hoodies, cardigans) and outerwear (jackets, coats, blazers)
+ * are thicker (2.2 mm - 3.0 mm), while skirts, trousers, shirts, and silk blouses are 0.4 mm - 1.8 mm.
+ */
+export function resolveFabricThickness(fullText = '', rawSlot = 'top', isSkirt = false) {
+  const has = (...words) => words.some((w) => fullText.includes(w));
+  if (rawSlot === 'outerwear' || has('coat', 'overcoat', 'trench', 'parka', 'puffer', 'blazer', 'jacket', 'מעיל', "ז'קט", 'בלייזר')) {
+    return has('heavy', 'puffer', 'winter', 'wool', 'fur', 'פוך', 'צמר') ? 0.0030 : 0.0027;
+  }
+  if (has('sweater', 'sweatshirt', 'hoodie', 'cardigan', 'fleece', 'knit', 'jumper', 'pullover', 'סוודר', 'סווטשירט', "קפוצ'ון", 'קרדיגן', 'סריג', 'פליז')) {
+    return 0.0024;
+  }
+  if (rawSlot === 'bottom') {
+    if (isSkirt) {
+      if (has('silk', 'satin', 'chiffon', 'שיפון', 'משי', 'סאטן')) return 0.0008;
+      return 0.0016; // <= 2.0 mm on the waistline
+    }
+    if (has('denim', 'jeans', 'cargo', 'corduroy', "ג'ינס", 'דגמ"ח')) return 0.0018;
+    if (has('linen', 'silk', 'פשתן', 'משי')) return 0.0010;
+    return 0.0015;
+  }
+  if (has('silk', 'chiffon', 'satin', 'lace', 'mesh', 'sheer', 'organza', 'משי', 'שיפון', 'סאטן', 'תחרה')) {
+    return 0.0005;
+  }
+  if (has('linen', 'viscose', 'rayon', 'camisole', 'tank', 'גופיה', 'פשתן')) {
+    return 0.0008;
+  }
+  if (rawSlot === 'dress') {
+    if (has('velvet', 'knit', 'wool', 'קטיפה', 'סריג')) return 0.0020;
+    return 0.0014;
+  }
+  // Standard T-shirt, polo, button-up shirt, blouse: ~1.2 mm
+  return 0.0012;
+}
+
+/**
  * Vertical placement + clearance of a garment shell for each clothing slot,
  * expressed in the avatar's base (un-morphed) metric space.
- * Enforces strict physical layering offsets:
- *   bottom (0.016m) < top (0.022m) < dress (0.023m) < belt (0.026m) < necktie (0.029m) < outerwear (0.038m M / 0.035m F)
+ * Enforces strict physical layering offsets and realistic fabric thickness (0.2 mm to 3.0 mm).
  */
 export function resolveShellFit({
   rawSlot,
@@ -2452,6 +2476,7 @@ export function resolveShellFit({
   const fullText = `${garmentText} ${resolveGarmentMetadataText(garment)}`.toLowerCase();
   const has = (...words) => words.some((w) => fullText.includes(w));
   const isStrapless = has('strapless', 'tube', 'bandeau', 'סטרפלס', 'בנדו', 'sans bretelles', 'trägerlos', 'palabra de honor');
+  const isWideOrLoose = has('wide', 'loose', 'baggy', 'oversized', 'hip-hop', 'hip hop', 'cargo', 'relaxed', 'boyfriend', 'flair', 'flare', 'palazzo', 'ball gown', 'רחב', 'רפוי', 'אוברסייז');
   if (rawSlot === 'top') {
     const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
     const isLongline = has('kurta', 'tunic', 'longline', 'thobe', 'טוניקה');
@@ -2459,8 +2484,9 @@ export function resolveShellFit({
     if (isCrop) yBottom = isMale ? 1.18 : 1.12;
     if (isLongline) yBottom = isMale ? 0.75 : 0.70;
     const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
+    const fabricThickness = resolveFabricThickness(fullText, 'top', false);
     // Shirt/top always clears bottom (0.016m) and sits cleanly under necktie (0.029m) & outerwear (0.035m+)
-    return { yTop, yBottom, layerOffset: 0.022, isSkirt: false, isStrapless };
+    return { yTop, yBottom, layerOffset: 0.022, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
   }
   if (rawSlot === 'outerwear') {
     const isLong = has('overcoat', 'trench', 'duster', 'מעיל ארוך', 'cardigan', 'קרדיגן', 'coat', 'parka', 'robe');
@@ -2468,7 +2494,8 @@ export function resolveShellFit({
     let yBottom = isMale ? 0.88 : 0.84;
     if (isLong) yBottom = isMale ? 0.52 : 0.48;
     if (isCrop) yBottom = isMale ? 1.15 : 1.10;
-    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.038 : 0.035, isSkirt: false, isStrapless: false };
+    const fabricThickness = resolveFabricThickness(fullText, 'outerwear', false);
+    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.038 : 0.035, fabricThickness, isSkirt: false, isStrapless: false, isWideOrLoose };
   }
   if (rawSlot === 'dress') {
     const isMini = has('mini', 'קצרה');
@@ -2477,7 +2504,8 @@ export function resolveShellFit({
     if (isMini) yBottom = isMale ? 0.78 : 0.74;
     if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
     const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
-    return { yTop, yBottom, layerOffset: 0.023, isSkirt: false, isStrapless };
+    const fabricThickness = resolveFabricThickness(fullText, 'dress', false);
+    return { yTop, yBottom, layerOffset: 0.023, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
   }
   if (rawSlot === 'bottom') {
     const isSkirt = has('skirt', 'חצאית');
@@ -2488,12 +2516,15 @@ export function resolveShellFit({
       isMale,
       isSkirt,
     });
+    const fabricThickness = resolveFabricThickness(fullText, 'bottom', isSkirt);
     return {
       yTop: isMale ? 1.08 : 1.05,
       yBottom,
       layerOffset: isSkirt ? 0.014 : 0.0025,
+      fabricThickness,
       isSkirt,
       isStrapless: false,
+      isWideOrLoose,
       lengthType,
     };
   }
@@ -2712,10 +2743,12 @@ export default function GarmentMesh3D({
         isMale,
         isSkirt: shellFit.isSkirt,
         isStrapless: Boolean(shellFit.isStrapless),
+        isWideOrLoose: Boolean(shellFit.isWideOrLoose),
         isStandalone,
         yTop: shellFit.yTop,
         yBottom: shellFit.yBottom,
         layerOffset: shellFit.layerOffset,
+        fabricThickness: shellFit.fabricThickness,
         poseSleeves: !isStandalone,
         sideProfile,
         getTorsoSlice,
@@ -2732,9 +2765,9 @@ export default function GarmentMesh3D({
     if (isStandalone) {
       return { front: shell.front, back: shell.back };
     }
-    const minClearance = (rawSlot === 'bottom' && !shellFit?.isSkirt)
-      ? 0.0025
-      : Math.max(0.008, (shellFit?.layerOffset || 0.018) * 0.75);
+    const minClearance = Number.isFinite(shellFit?.fabricThickness)
+      ? shellFit.fabricThickness
+      : (rawSlot === 'bottom' ? 0.0018 : 0.0020);
     return {
       front: applyAvatarMorphsToGeometry(shell.front, morphField, morphInfluences, {
         sheetSide: 'front',
