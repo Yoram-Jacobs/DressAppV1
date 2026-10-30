@@ -100,6 +100,7 @@ import {
   canonicalCategoryForSubCategory,
   labelForTag,
   labelForMaterial,
+  slug,
 } from "@/lib/taxonomy";
 import { toast } from "sonner";
 import { useRememberedDirectory } from "@/hooks/useRememberedDirectory";
@@ -679,7 +680,9 @@ const hydrate = (a, user, t, i18n) => {
         const subKey = canonicalSubCategoryKey(subRaw);
         const catCanonical = canonicalCategoryForSubCategory(subRaw);
         if (catCanonical) {
-          const currentCatSlug = slug(out.category);
+          const currentCatSlug = typeof slug === 'function'
+            ? slug(out.category)
+            : String(out.category || '').trim().toLowerCase().replace(/\s+/g, '_');
           if (catCanonical === 'Top' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {
             out.category = (lang === 'he' || lang === 'iw') ? 'חלק עליון' : 'Top';
           } else if (catCanonical === 'Outerwear' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {

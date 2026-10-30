@@ -1,4 +1,4 @@
-import { canonicalSubCategoryKey, labelForSubCategory, labelForItemType, canonicalCategoryForSubCategory } from '../taxonomy';
+import { canonicalSubCategoryKey, labelForSubCategory, labelForItemType, canonicalCategoryForSubCategory, slug } from '../taxonomy';
 
 describe('Multilingual Bag and Basket Bag Taxonomy', () => {
   test('resolves canonical subcategories for bags across languages', () => {
@@ -156,5 +156,14 @@ describe('Multilingual Bag and Basket Bag Taxonomy', () => {
     expect(canonicalCategoryForSubCategory('handbag')).toBe('Accessories');
     expect(canonicalCategoryForSubCategory('belt')).toBe('Accessories');
     expect(canonicalCategoryForSubCategory('sunglasses')).toBe('Accessories');
+  });
+
+  test('slug helper normalizes category and taxonomy keys safely', () => {
+    expect(slug('Top')).toBe('top');
+    expect(slug('Full Body')).toBe('full_body');
+    expect(slug('  Accessories  ')).toBe('accessories');
+    expect(slug(null)).toBe('');
+    expect(slug(undefined)).toBe('');
+    expect(slug('אקססוריז')).toBe('אקססוריז');
   });
 });

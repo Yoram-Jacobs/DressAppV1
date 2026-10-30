@@ -19,7 +19,7 @@
  * "Full Body", "Accessories"). We map them to lowercase with underscore
  * separators so JSON keys stay predictable.
  */
-const slug = (value) =>
+export const slug = (value) =>
   String(value || '')
     .trim()
     .toLowerCase()
