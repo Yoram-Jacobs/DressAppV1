@@ -145,74 +145,20 @@ async def _call_gemma_space(
 
 
 
-# Canonical Gemini Vision prompt (comprehensive 17-field merchandisable detail)
+# Canonical Gemini Vision prompt (compact, SegFormer-anchored 17-field specification)
 GEMINI_VISION_SYSTEM_PROMPT = (
-    "You are The Eyes — DressApp's visual garment analyst. You look at "
-    "a photograph. If there are garments present in the photograph, analyse the photogaph (which may contain one or more garments) and "
-    "describe each item in exhaustive, merchandisable detail. Your output "
-    "is used to auto-fill an Add-Item form that a user will review, so be "
-    "confident but never invent sensitive claims (e.g. do not guess a "
-    "specific brand unless clearly visible; leave brand blank otherwise).\n\n"
-    "Return ONLY a JSON value with one of two shapes:\n"
-    "  • a single JSON object when one garment is visible, or\n"
-    "  • a JSON array of such objects when multiple garments are visible, or\n"
-    "  • a 'No Garments detected' message\n"
-    " Never wrap the result in extra commentary or markdown.\n"
-    "Each garment object has the following shape (all keys optional except "
-    "`title`):\n"
-    "{\n"
-    '  "name": string,                     // 2–5 words. Must be UNIQUE & distinguishing — weave in a defining detail (material, fit, vibe, pattern, era, hardware, neckline, wash) so the user never ends up with 12 generic "Black T-shirt" rows. The pattern is "<distinguishing detail> + <core garment>" — e.g. heavyweight boxy + tee, ribbed slim + crewneck, vintage pocket + tee. Render that pattern in the OUTPUT LANGUAGE specified by the user message; do NOT echo English examples verbatim.\n'
-    '  "title": string,                    // fallback short title (required). Same uniqueness rules as `name`. Same output language as `name`.\n'
-    '  "caption": string,                  // ONE confident, vivid sentence in the OUTPUT LANGUAGE describing what makes this piece tick — silhouette, surface detail, what it pairs with. Max 240 chars. NEVER hedge: forbid "seems", "appears", "probably", "looks like", "might be". State observations directly. If `state` is "used" and `condition` is "bad", end with one short repair/enhancement tip.\n'
-    '  "category": string,                 // top bucket: "Top", "Bottom", "Outerwear", "Full Body", "Footwear", "Accessories", "Underwear"\n'
-    '  "sub_category": string,             // e.g. "Shirt", "Pants", "Dress", "Coat", "Sneakers"\n'
-    '  "item_type": string,                // specific type: "Oxford shirt", "Mini-dress", "Crew-neck sweater"\n'
-    '  "brand": string|null,               // only if legibly visible\n'
-    '  "gender": "men"|"women"|"unisex"|"kids",\n'
-    '  "dress_code": "casual"|"smart-casual"|"business"|"formal"|"athletic"|"loungewear",\n'
-    '  "season": string[],                 // any of: "spring","summer","fall","winter","all"\n'
-    '  "tradition": string|null,           // cultural/religious pattern if clearly present (e.g. "arabic","jewish","indian"), else null\n'
-    '  "colors":           [{"name": string, "pct": integer 0..100}, ...],  // sum ≈ 100\n'
-    '  "fabric_materials": [{"name": string, "pct": integer 0..100}, ...],  // sum ≈ 100; infer likely composition\n'
-    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka_dot","paisley","geometric","animal_print","graphic","tie_dye","abstract","embroidered","camouflage"\n'
-    '  "state": "new"|"used",\n'
-    '  "condition": "bad"|"fair"|"good"|"excellent",\n'
-    '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
-    '  "size": string|null,                // only if a label/tag is readable, else null\n'
-    '  "price_cents": integer|null,        // estimated resale value in USD cents, only if confident; else null\n'
-    '  "repair_advice": string|null,       // a short, warm, actionable tip if condition=="bad" (e.g. "Minor pilling on the sleeves — a fabric shaver will restore the surface."); null otherwise\n'
-    '  "tags": string[],                   // 3–8 searchable keywords\n'
-    '  "image_quality_status": "complete"|"needs_completion"|"needs_reconstruction", // Quality Checker assessment of the cropped image:\n'
-    '                                                                              // • "complete": ONLY if 100% of the entire garment is pristine, standalone, fully unoccluded, with all outer edges, side contours, waistband/collar, and bottom hems clearly intact (e.g. clean studio flat lay or ghost mannequin). NEVER use "complete" for crops from worn outfits where any edge, side, or hem is truncated or occluded.\n'
-    '                                                                              // • "needs_completion": Visible garment is mostly present, but has ANY missing side panels/contours, occlusions from hands, arms, bags, hair, or overlapping garments, clipped hems/waistbands, or uneven amputated borders. Needs image completion to outpaint/inpaint missing sections while preserving visible fabric and shape.\n'
-    '                                                                              // • "needs_reconstruction": Severely truncated, severed (e.g. only shoe tips visible, tiny sliver, amputated torso), or heavily degraded so that inpainting is insufficient and a full new photorealistic generation from scratch is required.\n'
-    '  "image_quality_reason": string|null, // Diagnostic note in English describing what is missing/occluded (e.g. "Right side contour cut by bag occlusion; hem clipped at bottom" or "Only toe caps visible, heels and openings missing"). Null if "complete".\n'
-    '  "reconstruction_prompt": string|null // Nano Banana prompt. If "needs_completion": clear instruction to outpaint and complete missing borders/hems/sleeves/sides into a symmetrical, whole garment on a neutral DressApp card background (#F5F2EB) while preserving existing fabric and texture. If "needs_reconstruction": complete editorial product photograph prompt for the entire item on a neutral DressApp card background (#F5F2EB). Null if "complete".\n'
-    "}\n\n"
-    "Style rules for the free-text fields (`name`, `title`, `caption`, "
-    "`tags`, `repair_advice`):\n"
-    "  1. LANGUAGE — honour the OUTPUT LANGUAGE specified at the "
-    "top of the user message. It applies equally to short label-like "
-    "fields (`name`, `title`) and long descriptive ones (`caption`). "
-    "JSON keys and the listed enum tokens always stay in English.\n"
-    "  2. CONFIDENCE — state observations directly. Never hedge "
-    "with \"seems\", \"appears\", \"probably\", \"looks like\", "
-    "\"might be\", \"possibly\", \"kind of\". You are the expert; "
-    "commit to the call. \"There's a cute cat print.\" not \"There "
-    "seems to be an animal print, probably a cat.\"\n"
-    "  3. UNIQUENESS — `name` and `title` must be distinguishing. "
-    "Imagine the user already owns ten black tees; pick a detail no "
-    "other shirt in a closet would share (texture, weight, neckline, "
-    "wash, hardware, vibe, era).\n"
-    "  4. VOICE — thoughtful editor, never salesy, never robotic. "
-    "No emojis, no markdown, no hashtags, no #tags inside text "
-    "fields.\n"
-    "  5. FIELD RULES:\n"
-    "     • pattern: If the garment has embroidered text/lettering, stitching, raised threads, or embroidery artwork/patches (e.g. embroidered baseball caps with words/teams like 'BRASIL', polo shirts with embroidered crests, stitched patches), set pattern=\"embroidered\". If the garment has printed text, slogans, graphics, artwork, or flat prints, set pattern=\"printed\". NEVER choose \"solid\" if the garment has visible words, text, letters, slogans, graphics, or embroidery! Only use \"solid\" if 100% plain with no text or artwork.\n"
-    "     • season: If the piece is versatile and wearable year-round (e.g. standard t-shirt, jeans, hoodie, sneakers), return [\"all\"]. Only restrict to specific seasons if clearly weather-bound (e.g. heavy winter down parka, summer swimwear).\n"
-    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women. Never default to 'men'.\n"
-    "     • HANGER REJECTION & COLLAR INTEGRITY: Clothes hangers (metal hooks, wooden or plastic angled bars) are strictly props, NOT part of the garment! NEVER mistake a triangular wooden/plastic hanger visible in the neckline or collar opening for a collar, lapel, or polo shirt! A draped, sleeveless knit garment with fringe or open sides is a 'Poncho' or 'Cape' (category: 'Outerwear' or 'Top', sub_category: 'Capes & Ponchos' or 'Poncho'), NEVER a 'Polo'.\n"
-    "     • CATEGORY INTEGRITY: Apparel items (polo shirts, shirts, t-shirts, knitwear, sweaters, outerwear, ponchos, pants, skirts, dresses) must NEVER have category='Accessories'! Category must strictly be 'Top', 'Outerwear', 'Bottom', or 'Full Body'."
+    "You are The Eyes — DressApp's visual garment analyst. Input is a SegFormer-isolated garment crop (or single-garment photo). Output ONLY raw JSON (single object or array). No markdown.\n"
+    "• CROP GROUNDING & HANGER/BACKGROUND REJECTION: Describe ONLY the target garment's fabric pixels. Ignore hangers (metal hooks, wooden/plastic neckline bars), mannequin parts, adjacent crop-border bleed, and background surfaces (sheets, carpets, floors, tables). NEVER mistake a hanger in a V-neck opening for a collar or Polo. Draped/sleeveless open-knit or fringed V-neck layer is 'Poncho'|'Cape' (sub_category:'Capes & Ponchos'|'Poncho'), NEVER 'Polo'.\n"
+    "• NON-CLOTHING: Non-wearable objects (bottles, cups, phones, furniture, racks) -> is_clothing:false, sub_category:'non-clothing', item_type:'non-clothing', title:'Unidentifiable'.\n"
+    "• LANGUAGE & VOICE: Write free-text fields (`name`, `title`, `caption`, `tags`, `repair_advice`, `sub_category`, `item_type`, `colors[*].name`, `fabric_materials[*].name`) in the requested OUTPUT LANGUAGE; keep JSON keys/enums in English. Direct editorial voice — never hedge ('seems', 'appears', 'probably', 'looks like'), no emojis/hashtags.\n"
+    "• name & title: 2-5 unique words: [Color] [Material/Cut] [Core Garment]. Never generic ('Black T-Shirt', 'Garment'). caption: 1 sentence (<=15 words) stating silhouette, surface detail, and styling.\n"
+    "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'|'Underwear'. Apparel is NEVER 'Accessories'. Sweaters/cardigans/shirts/tees='Top'; coats/jackets/blazers/ponchos/capes='Outerwear'; dresses/jumpsuits/skirt-suits='Full Body'.\n"
+    "• sub_category & item_type: Specific cut ('T-Shirt','Shirt','Polo','Sweater','Cardigan','Poncho','Blouse','Kurta','Jeans','Pants','Chinos','Cargo Pants','Sweatpants','Shorts','Skirt','Dresses','Jumpsuits','Coat','Jacket','Blazer','Sherwani','Sneakers','Boots','Heels','Pumps','Loafers','Oxfords','Sandals','Handbag','Sunglasses','Belts','Headwear').\n"
+    "• Cultural: Kurta/Tunic/Kurti/Guayabera -> 'Top'. Sherwani/Achkan/Bandhgala/Nehru Jacket -> 'Outerwear'|'Top' (Mandarin collar, button placket; NEVER Blazer/Suit). Kaftan/Thobe/Galabiya/Abaya/Saree/Lehenga/Qipao/Hanbok/Kimono/Agbada -> 'Full Body' (open Abaya/Kaftan/Bisht -> 'Outerwear').\n"
+    "• colors & fabric_materials: [{\"name\":str,\"pct\":int}] summing to 100 (garment fabric ONLY). Materials: Coats=Wool/Cashmere or Leather/Suede; Non-athletic Footwear=Leather/Suede+Rubber (NEVER Cotton); Knitwear/Ponchos=Cotton/Wool/Acrylic/Cashmere; Jeans=Denim.\n"
+    "• pattern: 'solid'|'printed'|'embroidered'|'striped'|'plaid'|'floral'|'geometric'|'polka_dot'|'paisley'|'herringbone'|'animal_print'|'graphic'|'tie_dye'|'abstract'|'camouflage' (stitched text/crests='embroidered'; flat graphics/text='printed'; 'solid' ONLY if 100% plain).\n"
+    "• Enums: gender ('men'|'women'|'unisex'|'kids'; default casual basics to 'unisex', never default to 'men'), dress_code ('casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'|'traditional'), season (['spring'|'summer'|'fall'|'winter'|'all']), state ('new'|'used'), condition ('bad'|'fair'|'good'|'excellent'), quality ('budget'|'mid'|'premium'|'luxury'), brand/size/tradition/price_cents/repair_advice (null unless visible), tags (3-6 keywords).\n"
+    "• Quality: image_quality_status='complete' (100% standalone/unoccluded) | 'needs_completion' (clipped/occluded) | 'needs_reconstruction' (severed). Set image_quality_reason (English) and reconstruction_prompt (product shot on #F5F2EB) when not 'complete', else null."
 )
 
 # Canonical keyed prompt for garment vision workflow on on-prem Eyes / Qwen
@@ -233,7 +179,7 @@ def _build_system_prompt(*, provider: str = "gemini", one_pass: bool = False, us
     """Return the system prompt for vision analysis.
 
     provider in ('gemma', 'eyes', 'dressapp') returns the on-prem model prompt.
-    provider == 'gemini' returns the rich Gemini garment analyst prompt.
+    provider == 'gemini' returns the compact SegFormer-anchored Gemini garment analyst prompt.
     """
     if provider in ("gemma", "eyes", "dressapp"):
         prompt = PROMPT_GARMENT_VISION
@@ -241,10 +187,11 @@ def _build_system_prompt(*, provider: str = "gemini", one_pass: bool = False, us
             from .validation import resolve_garment_gender
             norm_gender = resolve_garment_gender(user_gender) or "unisex"
             prompt = prompt.replace("{DEFAULT_GENDER_HINT}", f"'{norm_gender}'")
-        from app.services.fashion_rules_rag import retrieve_garment_vision_axioms
-        rag_axioms = retrieve_garment_vision_axioms()
-        if rag_axioms:
-            prompt = f"{prompt}\n\n{rag_axioms}"
+        if "Sherwani" not in prompt:
+            from app.services.fashion_rules_rag import retrieve_garment_vision_axioms
+            rag_axioms = retrieve_garment_vision_axioms()
+            if rag_axioms:
+                prompt = f"{prompt}\n\n{rag_axioms}"
         if one_pass:
             return prompt + SYSTEM_PROMPT_ONE_PASS_SUFFIX
         return prompt
@@ -662,45 +609,51 @@ def _language_directive(code: str | None) -> str:
     return ""
 
 
-def _gemini_user_prompt(code: str | None = None, user_gender: str | None = None) -> str:
-    """Build the user-message prompt for Gemini analyze()."""
-    base = (
-        "Analyse this photograph. If one garment is visible return a single "
-        "JSON object; if multiple garments are visible return a JSON array "
-        "of such objects. No commentary."
-    )
+def _gemini_user_prompt(
+    code: str | None = None,
+    user_gender: str | None = None,
+    *,
+    segformer_hint: str | None = None,
+    color_hint: str | None = None,
+) -> str:
+    """Build the compact SegFormer-grounded user-message prompt for Gemini analyze()."""
+    parts: list[str] = []
+    code_norm = (code or "en").lower()
+    if code_norm != "en":
+        lang_name = _LANG_NAMES.get(code_norm, code_norm)
+        parts.append(
+            f"**OUTPUT LANGUAGE = {lang_name} ({code_norm}).** Write free-text fields (`name`, `title`, `caption`, `tags`, `repair_advice`, `sub_category`, `item_type`, `colors[*].name`, `fabric_materials[*].name`) in fluent {lang_name}; keep JSON keys and enum tokens in English."
+        )
+    parts.append("Analyze this SegFormer-isolated garment crop and return raw JSON only.")
+    if segformer_hint:
+        human = _SEGFORMER_KIND_HUMAN_LABEL.get(segformer_hint.strip().lower(), segformer_hint)
+        parts.append(f"• SegFormer crop hint: {human}.")
+    if color_hint:
+        parts.append(f"• {color_hint}")
     if user_gender in ("men", "women"):
-        base += f"\nNote: User wardrobe category preference is '{user_gender}'."
-    code = (code or "en").lower()
-    if code == "en":
-        return base
-    lang_name = _LANG_NAMES.get(code, code)
-    return (
-        f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
-        f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
-        f"`sub_category`, `item_type`, `colors[*].name`, "
-        f"`fabric_materials[*].name`) MUST be written in fluent, "
-        f"idiomatic {lang_name}. JSON keys and enum tokens "
-        f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
-        f"`state`, `condition`, `quality`) stay in English.\n\n"
-        + base
-    )
+        parts.append(f"• Wardrobe gender preference: '{user_gender}'.")
+    return "\n".join(parts)
 
 
-def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str:
-    """Build the user-message prompt for ``analyze()``.
-    
-    Enforces canonical English tokens across all fields and schema keys to minimize
-    prompt ingestion latency, eliminate low-resource language hallucinations (like
-    Hebrew false friends or Chinese character leaks), and provide stable ground-truth
-    attributes that the frontend/backend localization engine renders into the user's
-    selected language.
+def _user_prompt(
+    code: str | None = None,
+    user_gender: str | None = None,
+    *,
+    segformer_hint: str | None = None,
+    color_hint: str | None = None,
+) -> str:
+    """Build the compact SegFormer-grounded user-message prompt for ``analyze()`` (on-prem Eyes).
+
+    All static taxonomy and schema rules reside in ``PROMPT_GARMENT_VISION`` (the KV-cached
+    system prompt) so ``llama-server`` does not re-evaluate redundant user tokens per crop.
     """
     from .validation import resolve_garment_gender
     norm_gender = resolve_garment_gender(user_gender) or "unisex"
-    fallback_gender_hint = f"if uncertain/neutral basics, apply '{norm_gender}'" if norm_gender != "unisex" else "if uncertain, apply 'unisex'"
+    fallback_gender_hint = f"'{norm_gender}'" if norm_gender != "unisex" else "'unisex'"
 
-    lang_hint = ""
+    parts = [
+        "Analyze the isolated garment in this SegFormer crop. Return raw JSON only.",
+    ]
     if code:
         _lang_names = {
             "he": "Hebrew (עברית)",
@@ -716,28 +669,18 @@ def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str
             "nl": "Dutch (Nederlands)",
             "en": "English",
         }
-        name_l = _lang_names.get(code, code)
-        lang_hint = f"• User interface language: {name_l}.\n"
-
-    return (
-        "Analyze the garment in this image. Return raw JSON (1 object or array). No markdown/intro.\n"
-        f"{lang_hint}"
-        "• Language: All fields, values, attributes, and captions MUST be in canonical English.\n"
-        "• name & title: 2-4 canonical English words [Color] [Material/Cut] [Type] strictly reflecting visible pixels of the garment only (never background surface). Never generic ('Garment','Clothing').\n"
-        "• caption: <=12 words concise English sentence describing this specific item: [Color] [Material] [Type] with [details]. End with period.\n"
-        "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'. NOTE: Sweaters/cardigans/shirts/tees are 'Top'. 'Outerwear' is strictly coats/jackets/blazers. Dresses/skirt-suits/jumpsuits are 'Full Body' (NEVER 'Outerwear').\n"
-        "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Dresses','Suits','Jumpsuits','Oxfords','Loafers','Boots','Sandals','Sneakers','Heels','Pumps','Flats','Handbag','Crossbody Bag','Sunglasses','Belts','Headwear'). Never 'Top'/'Bottom'/'Footwear'.\n"
-        "• Footwear: Boots='Boots' (item_type='Ankle Boots'|'Heeled Boots'|'Combat Boots'). Heels/pumps='Heels'|'Pumps'. Dress shoes='Oxfords'|'Loafers'|'Shoes'. Non-athletic footwear uppers are Leather/Suede (heeled boots/dress shoes are Leather 70% + Rubber 30%), NEVER Cotton or generic Synthetic unless athletic sneakers.\n"
-        "• Bottoms: 'Cargo Pants','Chinos','Jeans','Sweatpants','Pants','Shorts','Skirt'.\n"
-        "• item_type: Detailed silhouette/cut ('Cargo Pants','Chinos','Straight Jeans','Pleated Skirt','Oxford Shoes','High Heel Pumps','Hooded Jacket','Knit Sweater'). Differ from sub_category.\n"
-        "• BACKGROUND REJECTION: Flat-lay & hanger shots rest on surfaces (bedsheets, blankets, carpets, floors, tables). STRICTLY IGNORE all background surface colors! The garment's 'colors', 'name', 'title', and 'caption' must describe EXCLUSIVELY the garment's own fabric (e.g. a white t-shirt lying on a blue blanket is 'White', NEVER 'Blue').\n"
-        '• colors: [{"name": str, "pct": int}] summing to 100. Garment fabric colors ONLY; 100% exclude background surfaces.\n'
-        '• fabric_materials: [{"name": str, "pct": int}] summing strictly to 100 by visual texture & category: Coats/Outerwear/Blazers=Wool/Cashmere (woven/felted cloth) vs Leather/Faux Leather/Suede (grain, sheen, panel seams, or suede nap; tailored coats and fur-trimmed coats can legitimately be either); Footwear=Leather/Suede/Synthetic/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon (never generic Polyester); Knitwear/Sweaters=Wool/Cashmere/Acrylic/Cotton knit; Jeans=Denim. Never use Chinese or non-English characters.\n'
-        "• season: Array of applicable seasons ['spring'|'summer'|'fall'|'winter'] strictly based on visual fabric weight and cut. Never blindly select all four.\n"
-        "• pattern: 'solid'|'printed'|'embroidered'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'. CRITICAL: If the garment has embroidered text/lettering, stitching, raised threads, logos, or patches (e.g. baseball caps with words/teams like 'BRASIL', stitched crests/patches), set pattern='embroidered'. If it has printed graphics, text, or artwork, set pattern='printed'. NEVER choose 'solid' if there is visible text, words, lettering, slogans, or graphics!\n"
-        f"• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'; "
-        f"gender: criteria ('women' for floral/feminine/blouses/heels/skirts, 'men' for masculine cuts, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men')."
-    )
+        name_l = _lang_names.get(code.lower(), code)
+        parts.append(f"• UI locale: {name_l}. Emit all JSON keys/values in canonical English.")
+    else:
+        parts.append("• Language: Canonical English for all keys, values, titles, colors, and captions.")
+    parts.append("• Focus strictly on garment fabric pixels; ignore hangers, mannequin parts, crop-edge bleed, and background surfaces.")
+    parts.append(f"• Gender fallback for neutral basics: {fallback_gender_hint} (never default to 'men').")
+    if segformer_hint:
+        human = _SEGFORMER_KIND_HUMAN_LABEL.get(segformer_hint.strip().lower(), segformer_hint)
+        parts.append(f"• SegFormer class hint: {human}.")
+    if color_hint:
+        parts.append(f"• {color_hint}")
+    return "\n".join(parts)
 
 
 def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
@@ -892,12 +835,32 @@ def _scan_complete_json_objects(
 
 
 _SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
+    "outerwear": "Outerwear (coat / jacket / blazer / poncho / cape)",
     "top": "Top or Outerwear (upper-body garment)",
-    "bottom": "Bottom (pants / skirt / shorts)",
-    "dress": "Full Body (dress / jumpsuit)",
-    "footwear": "Footwear (shoes / boots / sneakers)",
+    "bottom": "Bottom (pants / jeans / skirt / shorts)",
+    "dress": "Full Body (dress / jumpsuit) or Long Outerwear (coat / abaya)",
+    "footwear": "Footwear (shoes / boots / sneakers / sandals / heels)",
     "accessory": "Accessories (belt / scarf / sunglasses / bag)",
-    "headwear": "Accessories (hat / cap / beanie)",
+    "headwear": "Accessories / Headwear (hat / cap / beanie / hijab / turban)",
+    "bag": "Accessories / Bag (handbag / tote / backpack / purse)",
+    "cape": "Outerwear / Capes & Ponchos (poncho / cape / shawl — NEVER Polo)",
+    "poncho": "Outerwear / Capes & Ponchos (poncho / cape — NEVER Polo)",
+    "cardigan": "Top / Knitwear (cardigan / open-front knit)",
+    "sweater": "Top / Knitwear (sweater / pullover / knit)",
+    "jacket": "Outerwear (jacket / blazer)",
+    "coat": "Outerwear (coat / trench / overcoat)",
+    "shirt": "Top (shirt / blouse / polo / t-shirt)",
+    "t-shirt": "Top (t-shirt / tee / polo)",
+    "vest": "Top or Outerwear (vest / waistcoat / gilet)",
+    "pants": "Bottom (pants / trousers / jeans / chinos)",
+    "shorts": "Bottom (shorts)",
+    "skirt": "Bottom (skirt — continuous hem, no leg division)",
+    "jumpsuit": "Full Body (jumpsuit / romper)",
+    "shoes": "Footwear (shoes / sneakers / boots / loafers / heels)",
+    "belt": "Accessories (belt)",
+    "scarf": "Accessories (scarf / wrap / shawl)",
+    "hat": "Accessories / Headwear (hat / cap / beanie)",
+    "sunglasses": "Accessories / Eyewear (sunglasses / glasses)",
 }
 
 
@@ -906,6 +869,7 @@ def _build_batch_prompts(
     n: int,
     language: str | None,
     kind_hints: list[str | None] | None = None,
+    color_hints: list[str | None] | None = None,
     user_gender: str | None = None,
     model_gender: str | None = None,
 ) -> tuple[str, str]:
@@ -929,15 +893,24 @@ def _build_batch_prompts(
         )
 
     hint_block = ""
-    if n > 1 and kind_hints and len(kind_hints) == n:
-        bullets = [
-            f"  - Image {i}: {human}"
-            for i, k in enumerate(kind_hints, 1)
-            if k and (human := _SEGFORMER_KIND_HUMAN_LABEL.get(k.strip().lower()))
-        ]
+    if kind_hints and len(kind_hints) == n:
+        bullets = []
+        for i, k in enumerate(kind_hints, 1):
+            c_hint = (
+                color_hints[i - 1]
+                if (color_hints and i - 1 < len(color_hints) and color_hints[i - 1])
+                else None
+            )
+            human = _SEGFORMER_KIND_HUMAN_LABEL.get(k.strip().lower(), k) if k else None
+            if human and c_hint:
+                bullets.append(f"  - Image {i}: {human} | {c_hint}")
+            elif human:
+                bullets.append(f"  - Image {i}: {human}")
+            elif c_hint:
+                bullets.append(f"  - Image {i}: {c_hint}")
         if bullets:
             hint_block = (
-                "\nCROP HINTS:\n"
+                "\nSEGFORMER CROP HINTS:\n"
                 + "\n".join(bullets)
                 + "\nDiscard non-clothing objects (bottles/cups/phones) with is_clothing: false."
             )
@@ -954,9 +927,7 @@ def _build_batch_prompts(
             user_parts.append(f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.")
 
     user_parts.append(f"BATCH: Analyze {n} crop(s) (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.")
-    user_parts.append("• name & title: 2-5 words, unique, descriptive cut + key attributes [Color] [Material/Cut] [Type]. Strictly reflect pixels of the garment only (never background surface); NEVER hallucinate or copy items from other crops.")
-    user_parts.append("• caption: short fluent sentence in the requested language (<=12 words). Zero English leaks in non-English modes.")
-    user_parts.append("• BACKGROUND REJECTION: Flat-lay & hanger photos rest on background surfaces (bedsheets, blankets, carpets, floors, tables). STRICTLY IGNORE all background surface colors! The garment's 'colors', 'name', 'title', and 'caption' must describe EXCLUSIVELY the garment's own fabric (e.g. a white t-shirt lying on a blue blanket is 'White', NEVER 'Blue').")
+    user_parts.append("• Analyze each SegFormer crop independently (garment fabric pixels ONLY; ignore hangers, background surfaces, and adjacent crop bleed). Zero English leaks in non-English modes.")
     if hint_block:
         user_parts.append(hint_block)
 
@@ -1211,27 +1182,29 @@ async def call_gemma_space_stream_attributes(
                 user_hints.append(f"Crop: '{mapped_cat}'. Describe this item only.")
 
         if is_traditional_top:
-            user_hints.append("RULE: Traditional Top / Kurta. This crop is an ethnic/traditional top or tunic (category='Top', sub_category='Kurta' or 'Tunic', item_type='Kurta' or 'Tunic'). NEVER classify as Coat, Jacket, Outerwear, or Suit.")
+            user_hints.append("RULE: Traditional Top/Kurta -> category='Top', sub_category='Kurta'|'Tunic' (NEVER Coat/Jacket/Suit).")
         elif is_traditional_coat:
-            user_hints.append("RULE: Traditional Coat / Sherwani / Achkan. This crop is a traditional South Asian structured coat featuring a standing Mandarin/Nehru collar and front button placket (category='Outerwear' or 'Top', sub_category='Sherwani' or 'Achkan', item_type='Sherwani'|'Achkan'|'Bandhgala'). NEVER classify as Blazer, Suit, or Casual Jacket.")
+            user_hints.append("RULE: Traditional Coat -> category='Outerwear'|'Top', sub_category='Sherwani'|'Achkan' (NEVER Blazer/Suit).")
+        elif "cape" in lbl_low or "poncho" in lbl_low:
+            user_hints.append("RULE: Cape/Poncho -> category='Outerwear'|'Top', sub_category='Capes & Ponchos'|'Poncho' (NEVER Polo).")
         elif "skirt" in lbl_low:
-            user_hints.append("RULE: Skirt. Lower garment with continuous flare/hem and no leg division is sub_category='Skirt', item_type='Pleated Skirt'|'Midi Skirt'|'A-Line Skirt'|'Mini Skirt'|'Maxi Skirt'. NEVER classify as Pants or Trousers. Accurately report the true interior fabric color (white/ivory/cream/beige/grey/olive/charcoal) covering >80% of the skirt body; NEVER let a thin top-edge hem from an upper garment override the skirt's true color.")
+            user_hints.append("RULE: Skirt (continuous hem, no leg division) -> sub_category='Skirt' (NEVER Pants). Report main body color (>80% area), ignore top-edge bleed.")
         elif "bag" in lbl_low or segformer_category == "bag":
-            user_hints.append("RULE: Genuine bags/purses only. Handheld water bottles/cups/phones/objects: set is_clothing: false, sub_category='non-clothing', item_type='non-clothing'.")
+            user_hints.append("RULE: Bags/purses only; non-wearable handheld objects -> is_clothing:false, sub_category='non-clothing'.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
-            user_hints.append("RULE: Footwear. Low-cut/athletic: sub_category='Sneakers'|'Shoes'.")
+            user_hints.append("RULE: Low-cut footwear -> sub_category='Sneakers'|'Shoes'|'Loafers'|'Oxfords'|'Heels'|'Sandals'.")
         elif "pants" in lbl_low or (segformer_category == "bottom" and "skirt" not in lbl_low):
-            user_hints.append("RULE: Lower Body Garment / Pants vs Jeans. This crop is strictly a lower body garment (category='Bottom'). Set sub_category='Pants'|'Jeans'|'Shorts'|'Sweatpants', item_type='Pants'|'Trousers'|'Casual Pants'|'Chinos'|'Salwar Pants'. NEVER classify as Shirt, Button-Up Shirt, Blouse, T-Shirt, Jacket, or Coat.")
+            user_hints.append("RULE: Lower body garment -> category='Bottom', sub_category='Pants'|'Jeans'|'Shorts'|'Sweatpants' (NEVER Shirt/Jacket/Coat).")
 
         if dominant_color_hint:
             user_hints.append(dominant_color_hint)
 
         if model_gender in ("women", "men"):
-            user_hints.append(f"HUMAN MODEL GENDER: Item is worn by an identifiable {model_gender} model. Set gender='{model_gender}' and model_gender='{model_gender}'.")
+            user_hints.append(f"MODEL GENDER: Worn by {model_gender} model -> set gender='{model_gender}', model_gender='{model_gender}'.")
 
         user_text = _user_prompt(language, user_gender=user_gender)
         if user_hints:
-            user_text = "\n".join(user_hints) + "\n\n" + user_text
+            user_text = "\n".join(user_hints) + "\n" + user_text
 
         import copy
         properties = {}
