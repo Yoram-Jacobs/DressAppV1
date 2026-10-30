@@ -147,18 +147,18 @@ async def _call_gemma_space(
 
 # Canonical Gemini Vision prompt (compact, SegFormer-anchored 17-field specification)
 GEMINI_VISION_SYSTEM_PROMPT = (
-    "You are The Eyes — DressApp's visual garment analyst. Input is a SegFormer-isolated garment crop (or single-garment photo). Output ONLY raw JSON (single object or array). No markdown.\n"
-    "• CROP GROUNDING & HANGER/BACKGROUND REJECTION: Describe ONLY the target garment's fabric pixels. Ignore hangers (metal hooks, wooden/plastic neckline bars), mannequin parts, adjacent crop-border bleed, and background surfaces (sheets, carpets, floors, tables). NEVER mistake a hanger in a V-neck opening for a collar or Polo. Draped/sleeveless open-knit or fringed V-neck layer is 'Poncho'|'Cape' (sub_category:'Capes & Ponchos'|'Poncho'), NEVER 'Polo'.\n"
-    "• NON-CLOTHING: Non-wearable objects (bottles, cups, phones, furniture, racks) -> is_clothing:false, sub_category:'non-clothing', item_type:'non-clothing', title:'Unidentifiable'.\n"
-    "• LANGUAGE & VOICE: Write free-text fields (`name`, `title`, `caption`, `tags`, `repair_advice`, `sub_category`, `item_type`, `colors[*].name`, `fabric_materials[*].name`) in the requested OUTPUT LANGUAGE; keep JSON keys/enums in English. Direct editorial voice — never hedge ('seems', 'appears', 'probably', 'looks like'), no emojis/hashtags.\n"
-    "• name & title: 2-5 unique words: [Color] [Material/Cut] [Core Garment]. Never generic ('Black T-Shirt', 'Garment'). caption: 1 sentence (<=15 words) stating silhouette, surface detail, and styling.\n"
-    "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'|'Underwear'. Apparel is NEVER 'Accessories'. Sweaters/cardigans/shirts/tees='Top'; coats/jackets/blazers/ponchos/capes='Outerwear'; dresses/jumpsuits/skirt-suits='Full Body'.\n"
-    "• sub_category & item_type: Specific cut ('T-Shirt','Shirt','Polo','Sweater','Cardigan','Poncho','Blouse','Kurta','Jeans','Pants','Chinos','Cargo Pants','Sweatpants','Shorts','Skirt','Dresses','Jumpsuits','Coat','Jacket','Blazer','Sherwani','Sneakers','Boots','Heels','Pumps','Loafers','Oxfords','Sandals','Handbag','Sunglasses','Belts','Headwear').\n"
-    "• Cultural: Kurta/Tunic/Kurti/Guayabera -> 'Top'. Sherwani/Achkan/Bandhgala/Nehru Jacket -> 'Outerwear'|'Top' (Mandarin collar, button placket; NEVER Blazer/Suit). Kaftan/Thobe/Galabiya/Abaya/Saree/Lehenga/Qipao/Hanbok/Kimono/Agbada -> 'Full Body' (open Abaya/Kaftan/Bisht -> 'Outerwear').\n"
-    "• colors & fabric_materials: [{\"name\":str,\"pct\":int}] summing to 100 (garment fabric ONLY). Materials: Coats=Wool/Cashmere or Leather/Suede; Non-athletic Footwear=Leather/Suede+Rubber (NEVER Cotton); Knitwear/Ponchos=Cotton/Wool/Acrylic/Cashmere; Jeans=Denim.\n"
-    "• pattern: 'solid'|'printed'|'embroidered'|'striped'|'plaid'|'floral'|'geometric'|'polka_dot'|'paisley'|'herringbone'|'animal_print'|'graphic'|'tie_dye'|'abstract'|'camouflage' (stitched text/crests='embroidered'; flat graphics/text='printed'; 'solid' ONLY if 100% plain).\n"
-    "• Enums: gender ('men'|'women'|'unisex'|'kids'; default casual basics to 'unisex', never default to 'men'), dress_code ('casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'|'traditional'), season (['spring'|'summer'|'fall'|'winter'|'all']), state ('new'|'used'), condition ('bad'|'fair'|'good'|'excellent'), quality ('budget'|'mid'|'premium'|'luxury'), brand/size/tradition/price_cents/repair_advice (null unless visible), tags (3-6 keywords).\n"
-    "• Quality: image_quality_status='complete' (100% standalone/unoccluded) | 'needs_completion' (clipped/occluded) | 'needs_reconstruction' (severed). Set image_quality_reason (English) and reconstruction_prompt (product shot on #F5F2EB) when not 'complete', else null."
+    "You are The Eyes — DressApp's visual garment analyst. Input is a SegFormer garment crop (or single-garment photo). Output ONLY raw JSON (object or array).\n"
+    "• CROP & HANGER/BACKGROUND REJECTION: Describe ONLY target garment fabric pixels. Ignore hangers (hooks, wooden/plastic bars), mannequin parts, border bleed, and background surfaces (sheets, carpets, floors, tables). NEVER mistake a V-neck hanger for a collar/Polo. Draped sleeveless open-knit/fringed V-neck is 'Poncho'|'Cape' (`sub_category:'Capes & Ponchos'|'Poncho'`), NEVER 'Polo'.\n"
+    "• NON-CLOTHING: Non-wearable objects -> `is_clothing:false, sub_category:'non-clothing', item_type:'non-clothing', title:'Unidentifiable'`.\n"
+    "• LANGUAGE & VOICE: Localize `name, title, caption, tags, repair_advice, sub_category, item_type, colors[*].name, fabric_materials[*].name` to OUTPUT LANGUAGE; keep JSON keys/enums in English. Direct editorial voice (no hedging/emojis/hashtags).\n"
+    "• name & title: 2-5 unique words: `[Color] [Material/Cut] [Core Garment]`. Never generic. caption: 1 sentence (<=15 words).\n"
+    "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'|'Underwear' (apparel is NEVER 'Accessories'; sweaters/cardigans/shirts/tees='Top'; coats/jackets/blazers/ponchos/capes='Outerwear'; dresses/jumpsuits='Full Body').\n"
+    "• sub_category & item_type: ('T-Shirt','Shirt','Polo','Sweater','Cardigan','Poncho','Blouse','Kurta','Jeans','Pants','Chinos','Cargo Pants','Sweatpants','Shorts','Skirt','Dresses','Jumpsuits','Coat','Jacket','Blazer','Sherwani','Sneakers','Boots','Heels','Pumps','Loafers','Oxfords','Sandals','Handbag','Sunglasses','Belts','Headwear').\n"
+    "• Cultural: Kurta/Tunic/Kurti/Guayabera->'Top'; Sherwani/Achkan/Bandhgala/Nehru Jacket->'Outerwear'|'Top' (Mandarin collar; NEVER Blazer); Kaftan/Thobe/Galabiya/Abaya/Saree/Lehenga/Qipao/Hanbok/Kimono/Agbada->'Full Body' (open Abaya/Kaftan/Bisht->'Outerwear').\n"
+    "• colors & fabric_materials: `[{\"name\":str,\"pct\":int}]` summing to 100 (garment fabric ONLY; Coats=Wool/Cashmere/Leather; Non-athletic Footwear=Leather/Suede+Rubber, NEVER Cotton; Knitwear/Ponchos=Cotton/Wool/Acrylic; Jeans=Denim).\n"
+    "• pattern: 'solid'|'printed'|'embroidered'|'striped'|'plaid'|'floral'|'geometric'|'polka_dot'|'paisley'|'herringbone'|'animal_print'|'graphic'|'tie_dye'|'abstract'|'camouflage'.\n"
+    "• Enums: gender ('men'|'women'|'unisex'|'kids'; casual basics='unisex', never default to 'men'), dress_code ('casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'|'traditional'), season (['spring'|'summer'|'fall'|'winter'|'all']), state ('new'|'used'), condition ('bad'|'fair'|'good'|'excellent'), quality ('budget'|'mid'|'premium'|'luxury'), brand/size/tradition/price_cents/repair_advice (null unless visible), tags (3-6).\n"
+    "• Quality: `image_quality_status`='complete'|'needs_completion'|'needs_reconstruction'; set `image_quality_reason` (English) and `reconstruction_prompt` (#F5F2EB product shot) when not 'complete', else null."
 )
 
 # Canonical keyed prompt for garment vision workflow on on-prem Eyes / Qwen
@@ -953,55 +953,24 @@ def _build_mass_catalog_prompts(
 
     mass_sys = (
         f"{base_sys}\n\n"
-        "MASS CLOSET & PILE CATALOGING RULES (CRITICAL):\n"
-        "1. You are inspecting a cluster wardrobe photograph showing garments hanging side-by-side "
-        "in a closet or on hangers/hooks, a rack/shelf of shoes, a pile/stack of shirts or clothes, "
-        "or multiple unworn garments arranged on a surface.\n"
-        "2. Scan systematically (left-to-right for hanging rods and shoe racks; top-to-bottom/front-to-back for piles) "
-        f"and catalog every distinct, identifiable garment or pair of shoes (up to {max_items} items). "
-        "For shoe racks, treat each matching pair of shoes as a single Footwear entry.\n"
-        "3. GROUND-TRUTH CONDITION & QUALITY: Evaluate `state` ('new'|'used'), `condition` "
-        "('bad'|'fair'|'good'|'excellent'), `quality` ('budget'|'mid'|'premium'|'luxury'), and "
-        "`repair_advice` STRICTLY from the real fabric texture, wrinkles, pilling, stains, and drape "
-        "visible in THIS uploaded photograph. These ground-truth physical assessments are permanently "
-        "locked and will NEVER be re-evaluated on reconstructed studio images.\n"
-        "4. BOUNDING BOX (`bbox`): Provide `[ymin, xmin, ymax, xmax]` (0..1000 scale) tightly enclosing "
-        "the visible portion of each garment or shoe pair in the uploaded photo.\n"
-        "5. RECONSTRUCTION PROMPT (`reconstruction_prompt`): Write a rich, specific visual blueprint "
-        "(25-45 words) of the complete unfolded garment or shoe pair (exact color shades, fabric weave/knit, pattern "
-        "scale, collar/neckline, sleeve length, buttons/zippers, pockets, hem cut) so Nano Banana can "
-        "reconstruct a studio-quality, unfolded, centered, vertical front-facing flat-lay product shot.\n"
-        f"6. GENDER DEFAULT RULE: Default `gender` to the user's wardrobe gender ('{norm_gender or 'unisex'}') "
-        "for all wardrobe basics, hoodies, t-shirts, sweatshirts, pants, jeans, sneakers, and casual wear unless the garment "
-        "is clearly designed exclusively for the opposite sex (e.g. women's dresses, skirts, bras, high heels).\n"
-        "7. HOODIES & SWEATSHIRTS: If a garment has a hood, drawstrings, or is a hoodie/sweatshirt (קפוצ'ון / סווטשירט), "
-        "always set `category`: 'Top', `sub_category`: 'Hoodie', and `item_type`: 'Zip Hoodie' (if front zipper) or 'Hoodie'. "
-        "Never classify hoodies as T-Shirts, short-sleeve shirts, or knitwear sweaters."
+        "MASS CLOSET & PILE RULES:\n"
+        f"1. Scan systematically (left-to-right on rods/racks; top-to-bottom on piles) and catalog up to {max_items} distinct garments or shoe pairs (treat a matching pair of shoes as 1 Footwear entry).\n"
+        "2. Ground-Truth Condition: Score `state`, `condition`, `quality`, and `repair_advice` strictly from visible fabric texture, wrinkles, pilling, and stains in THIS photo.\n"
+        "3. `bbox`: `[ymin, xmin, ymax, xmax]` (0..1000) tightly enclosing each item.\n"
+        "4. `reconstruction_prompt`: 20-35 word visual blueprint (exact color shade, weave/knit, pattern, collar, sleeves, closures, hem) for a vertical unfolded flat-lay product shot.\n"
+        f"5. Gender & Hoodies: Default `gender` to '{norm_gender or 'unisex'}' unless exclusively opposite-sex. Hooded garments -> `category:'Top', sub_category:'Hoodie', item_type:'Zip Hoodie'|'Hoodie'` (never T-Shirt/Sweater)."
     )
 
     user_parts: list[str] = []
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
-        if code in ("he", "iw"):
-            user_parts.append(
-                "**OUTPUT LANGUAGE: Hebrew (עברית).** Write `name`, `title`, `caption`, `tags`, and `repair_advice` "
-                "in fluent Hebrew. Keep `reconstruction_prompt` and all JSON keys/enums in English."
-            )
-        elif code == "ar":
-            user_parts.append(
-                "**OUTPUT LANGUAGE: Arabic (العربية).** Write `name`, `title`, `caption`, `tags`, and `repair_advice` "
-                "in fluent Arabic. Keep `reconstruction_prompt` and all JSON keys/enums in English."
-            )
-        else:
-            user_parts.append(
-                f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Write `name`, `title`, `caption`, `tags`, and `repair_advice` "
-                f"in fluent {lang_name}. Keep `reconstruction_prompt` and all JSON keys/enums in English."
-            )
+        user_parts.append(
+            f"OUTPUT LANGUAGE: {lang_name} ({code}). Localize `name, title, caption, tags, repair_advice`; keep `reconstruction_prompt` and JSON keys/enums in English."
+        )
 
     user_parts.append(
-        f"Catalog the garments in the image (up to {max_items} distinct garments). "
-        "Return a JSON object matching MASS_CATALOG_JSON_SCHEMA with `scene_type` and `items`."
+        f"Catalog up to {max_items} distinct garments. Return JSON with `scene_type` and `items`."
     )
     return mass_sys, "\n".join(user_parts)
 

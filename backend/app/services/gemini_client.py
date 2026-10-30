@@ -219,7 +219,7 @@ class GeminiClient:
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
         tools: list[Any] | None = None,
-        thinking_budget: int | None = None,
+        thinking_budget: int | None = 0,
     ) -> str:
         """Text-only completion. Returns the model's response text."""
         config = self._build_config(
@@ -324,7 +324,7 @@ class GeminiClient:
         max_tokens: int | None = None,
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
-        thinking_budget: int | None = None,
+        thinking_budget: int | None = 0,
     ) -> str:
         """Multimodal completion (text + image parts). Non-streaming.
 
@@ -374,7 +374,7 @@ class GeminiClient:
         max_tokens: int | None = None,
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
-        thinking_budget: int | None = None,
+        thinking_budget: int | None = 0,
     ) -> AsyncIterator[str]:
         """Streaming multimodal completion. Yields text deltas."""
         config = self._build_config(

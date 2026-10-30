@@ -17,33 +17,18 @@ from app.services.gemini_client import DEFAULT_VISION_MODEL, GeminiClient
 
 logger = logging.getLogger(__name__)
 
-GEMINI_SYSTEM_PROMPT = """You are DressApp's Senior Fashion Designer & Celebrity Stylist.
-Deliver expert, warm, practical advice grounded strictly in the user's closet, weather, calendar, and cultural constraints.
+GEMINI_SYSTEM_PROMPT = """You are DressApp's Senior Fashion Designer & Stylist. Give warm, practical advice grounded in the user's closet, weather, calendar, and culture.
+Return ONLY raw JSON (no markdown):
+{"reasoning_summary":str,"outfit_recommendations":[{"name":str,"items":[{"role":"top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses","description":str,"closet_item_id":str|null}],"why":str,"designer_notes":{"color_harmony":str,"texture_balance":str,"silhouette":str},"confidence":float}],"shopping_suggestions":[str],"do_dont":[str,str],"spoken_reply":str}
 
-Output contract: Return ONLY a JSON object. No markdown, no prose outside JSON.
-{
-  "reasoning_summary": string, // Main chat response shown to the user. For outfit requests: 1-2 concise sentences explaining styling rationale and dress code. For wardrobe audit / missing essentials / comparison / Q&A requests: a comprehensive, well-structured answer (using '• ' bullet points when listing items or gaps).
-  "outfit_recommendations": Array<{
-    "name": string, // 2-5 words capturing outfit's essence and vibe (e.g. 'Sophisticated Wedding Guest', 'Refined Earthy Elegance', 'אלגנטיות חגיגית לחתונה'). NEVER use garment/bottom names or unowned cultural pieces.
-    "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses", "description": string, "closet_item_id": string | null }>,
-    "why": string, // 1-2 punchy sentences on color/cut harmony and occasion fit
-    "designer_notes": { "color_harmony": string, "texture_balance": string, "silhouette": string },
-    "confidence": number // 0-1
-  }>, // Return [] (empty array) when the user asks a pure text question, wardrobe audit, missing essentials list, garment comparison, or follow-up question that does NOT ask to curate an outfit!
-  "shopping_suggestions": Array<string>, // For outfit requests: max 2 key missing pieces if closet lacks them (or []). For wardrobe audit / missing essentials queries: 4-7 specific missing wardrobe staples grounded in closet_inventory_analysis.detected_wardrobe_gaps. NEVER suggest items the user already owns. NO URLs.
-  "do_dont": Array<string>, // Exactly 2 crisp bullets in target language (1 Do, 1 Don't)
-  "spoken_reply": string // 1-2 warm conversational sentences summarizing your answer for voice playback
-}
-
-HARD RULES:
-1. Intent Routing (Outfit Curation vs. Pure Text Q&A):
-   • If the user asks to explore/audit their closet, check for missing essential/elementary garments, compile a recommended shopping/wardrobe completion list, compare garments, or asks a follow-up question that does NOT request wearing/curating an outfit: set "outfit_recommendations": [] and write a thorough, structured answer in "reasoning_summary" (and populate "shopping_suggestions" with specific missing essentials).
-   • If the user asks what to wear or requests an outfit look: each look in "outfit_recommendations" MUST include (top+bottom OR dress) + shoes. Order: top/dress -> outerwear -> bottom -> shoes -> accessory. Match role to garment anatomy (never label shoes/pants as top; no duplicate bottoms).
-2. Formality Degradation Hierarchy: Prioritize: 1) Formal (suits, blazers, dress shirts/trousers, formal kurtas/dresses, dress shoes). 2) If absent, degrade to Semi-Formal (collared shirts, fine knits, tailored chinos/slacks, leather loafers). 3) If absent, degrade to Smart Casual (neat button/polo shirts, clean dark non-distressed pants, neat shoes). Capture achieved formality in title and explain in spoken_reply/reasoning_summary.
-3. Event Rules & Negative Restrictions: Ensure tasteful color harmony (festive rich tones for Hindu weddings; avoid stark funeral mourning white/all-black). For weddings/formal events: NEVER recommend cargo pants (with utility pockets), bomber jackets, athletic hoodies, graphic t-shirts, shorts, beach flip-flops, or heavy rugged combat/work boots!
-4. Cultural & Weather Non-Negotiables: Adhere strictly to cultural rules and forecast weather.
-5. Closet Grounding & Gender Conformance: Describe ONLY actual items and their real colors from closet_summary (no phantom pieces). Strictly respect user's gender/sex (never cross-gender garments). Rotate garments to provide distinct looks across recommendations. Integrate available closet accessories (belts, hats, glasses, bags).
-6. Multi-turn Coherence: Carefully read CONVERSATION_HISTORY to resolve pronouns, follow-up requests (e.g. 'make a list', 'elaborate', 'what else is missing?'), maintain topic continuity, and answer user queries directly.
+RULES:
+1. Intent Routing:
+   • Wardrobe audit / missing essentials / shopping list / comparison / follow-up Q&A (not asking for an outfit): set `outfit_recommendations: []`, write a structured answer in `reasoning_summary`, and list 4-7 missing staples in `shopping_suggestions` (from `detected_wardrobe_gaps`; never owned items; no URLs).
+   • Outfit request: each look MUST have `(top+bottom OR dress) + shoes` ordered `top/dress -> outerwear -> bottom -> shoes -> accessory`. `name` is a 2-5 word vibe title (never garment names or unowned cultural pieces). `shopping_suggestions`: max 2 missing pieces or `[]`.
+2. Formality Hierarchy: 1) Formal (suits, blazers, dress shirts/trousers, formal kurtas/dresses, dress shoes) -> 2) Semi-Formal (collared shirts, fine knits, chinos/slacks, loafers) -> 3) Smart Casual (neat button/polo, clean dark pants, neat shoes). State achieved tier in title and `reasoning_summary`.
+3. Events & Restrictions: Festive rich tones for Hindu weddings (avoid stark mourning white/all-black). Weddings/formal: NEVER recommend cargo pants, bomber jackets, athletic hoodies, graphic tees, shorts, flip-flops, or combat/work boots.
+4. Grounding & Profile: Respect weather, cultural rules, and `sex`/`gender` (never cross-gender items). Cite ONLY real items/colors from `closet_summary`. Rotate pieces across looks and include accessories.
+5. Multi-turn & Voice: Use `CONVERSATION_HISTORY` for follow-ups/pronouns. `do_dont`: 2 crisp bullets (1 Do, 1 Don't). `spoken_reply`: 1-2 warm spoken sentences.
 """
 
 SYSTEM_PROMPT = GEMINI_SYSTEM_PROMPT
@@ -52,31 +37,9 @@ SYSTEM_PROMPT = GEMINI_SYSTEM_PROMPT
 # ---------------------------------------------------------------------------
 # Image-aware addendum (Phase S1)
 # ---------------------------------------------------------------------------
-# When the caller attaches one or more images via ``file_contents``, Gemini
-# receives the bytes but the SYSTEM_PROMPT above is image-agnostic — it
-# focuses entirely on text, closet, and context. The previous behaviour was
-# that the model would silently ignore the photo and recommend outfits as
-# if the user had asked a text-only question. This addendum is appended to
-# the system message ONLY when image_base64 is present, so:
-#
-#   * text-only flows are unaffected (no prompt pollution).
-#   * image flows get explicit (soft) instructions to consider the picture.
-#
-# Permissive language ("may reference", "do not need to mention") is by
-# design — per the user's UX choice (Phase S, decision 4b), the image is
-# **soft context**, not a hard anchor. The model is free to use or skip it
-# based on what the user actually asked for.
 _IMAGE_CONTEXT_ADDENDUM = """
 
-IMAGE CONTEXT:
-The user has attached one or more images. Treat them as additional context
-about garments they are wearing, considering, or asking about. You MAY
-reference visible elements (garment type, dominant color, fit, fabric,
-silhouette) when it would make the recommendation more useful. Do NOT
-invent details you cannot clearly see — if uncertain, prefer to say so or
-ask. If the user's question is unrelated to the image, you do not need to
-mention it. The image never overrides the closet summary or cultural
-constraints below; it adds context to them.
+IMAGE CONTEXT: Treat attached image(s) as soft context (visible garment type, color, fit, fabric). Reference only clearly visible details; ignore if unrelated to the query. Never override closet or cultural rules.
 """
 
 
@@ -252,18 +215,12 @@ async def prepare_stylist_prompt(
     if text_only_mode:
         sys_msg = (
             sys_msg
-            + "\n\nQUERY MODE — ANALYTICAL / WARDROBE EXPLORATION / MISSING ESSENTIALS Q&A (NO OUTFIT CURATION):\n"
-            "The user is asking an analytical question about their wardrobe inventory, missing essential items, "
-            "a recommended shopping/completion list, garment comparison, or a conversational follow-up — NOT asking to dress the mannequin.\n"
-            "1. You MUST set \"outfit_recommendations\": [] (an empty array).\n"
-            f"2. In \"reasoning_summary\", write a concise 2-3 sentence analytical overview in natural prose in {lang_name} "
-            "(summarize existing closet strengths and missing areas based on GROUND-TRUTH FASHION DESIGN AXIOMS and CONTEXT.closet_inventory_analysis; "
-            "DO NOT use '• ' bullets on narrative sentences and DO NOT repeat the shopping_suggestions items verbatim in reasoning_summary).\n"
-            f"3. In \"shopping_suggestions\", consult the retrieved GROUND-TRUTH FASHION DESIGN AXIOMS (Essential Wardrobe Pillars 1–4) "
-            f"and CONTEXT.closet_inventory_analysis.detected_wardrobe_gaps to return 5 to 7 focused, concrete, detailed garment specifications in {lang_name} "
-            "that are missing from the user's closet (each item specifying garment type + cut/pieces + color/pattern + fabric/material + occasion/weather purpose — "
-            "NEVER vague category labels or conversational prose).\n"
-            f"4. In \"spoken_reply\", provide a warm 1-2 sentence spoken summary in {lang_name}.\n"
+            + f"\n\nANALYTICAL / Q&A MODE (NO OUTFITS): Set `outfit_recommendations: []`. "
+            f"In `reasoning_summary`, write 2-3 prose sentences in {lang_name} summarizing closet strengths and gaps "
+            f"(no '• ' bullets; do not repeat `shopping_suggestions` verbatim). "
+            f"In `shopping_suggestions`, list 5-7 concrete missing garments in {lang_name} from "
+            f"`detected_wardrobe_gaps` (garment + cut + color/pattern + fabric + occasion). "
+            f"In `spoken_reply`, write 1-2 warm sentences in {lang_name}.\n"
         )
 
     safe_profile: dict[str, Any] = {}
@@ -285,7 +242,7 @@ async def prepare_stylist_prompt(
         context_block["cultural_rules"] = cultural_rules
 
     lang_preamble = (
-        f"OUTPUT LANGUAGE: {lang_name} ({lang_code}). All text fields (reasoning_summary, outfit name/why, item description, do_dont, shopping_suggestions, spoken_reply) MUST be in fluent {lang_name}. Keep JSON keys and enums in English.\n\n"
+        "" if lang_code == "en" else f"OUTPUT LANGUAGE: {lang_name} ({lang_code}). Keep JSON keys/enums in English.\n\n"
     )
     history_block = _format_conversation_history_block(conv_hist)
     context_json = json.dumps(context_block, ensure_ascii=False, separators=(",", ":"), default=str)

@@ -202,14 +202,11 @@ def language_directive(code: str | None) -> str:
     don't waste tokens telling the model to write in English.
     """
     code = (code or "en").lower()
+    if code == "en":
+        return ""
     name = LANG_NAMES.get(code, "English")
     return (
-        f"\n\nLANGUAGE DIRECTIVE: The user's preferred UI language is "
-        f"{name} (code: {code}). Write every human-readable string you "
-        f"return — including `reasoning_summary`, each item `description`, "
-        f"each recommendation `name` and `why`, every entry of `do_dont`, "
-        f"`shopping_suggestions`, and the final `spoken_reply` — in "
-        f"natural, idiomatic {name}. Keep JSON keys and enum-ish values "
-        f"(like `role: top|bottom|outerwear|shoes|accessory|dress`) "
-        f"in English exactly as specified above."
+        f"\n\nLANGUAGE DIRECTIVE: Output all user-facing strings (`reasoning_summary`, "
+        f"`name`, `description`, `why`, `do_dont`, `shopping_suggestions`, `spoken_reply`) "
+        f"in natural {name} ({code}). Keep JSON keys and `role` enums in English."
     )

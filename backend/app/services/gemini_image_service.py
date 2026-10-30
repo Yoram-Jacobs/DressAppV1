@@ -280,10 +280,9 @@ class GeminiImageService:
         descriptor = ", ".join(descriptor_bits) if descriptor_bits else "garment"
         composed = (
             f"Commercial catalog product photograph of a complete isolated {descriptor}. {user_prompt}. "
-            "Strictly vertical portrait orientation, completely unfolded, centered flat-lay filling frame, "
-            "pure uniform studio background for clean alpha cutout, "
-            "even diffused studio softbox lighting, sharp fabric weave and edge detail, true color fidelity. "
-            "Negative: person, model, mannequin, hanger, closet rod, shadow, text, watermark."
+            "Vertical portrait flat-lay, completely unfolded, centered on pure uniform studio background (#F5F2EB) "
+            "for clean alpha cutout, diffused softbox lighting, sharp fabric weave and true color fidelity. "
+            "Negative: person, mannequin, hanger, rod, shadow, text, watermark."
         )
         return composed[:1000]
 
@@ -302,17 +301,15 @@ def build_mass_reconstruction_prompt(item_analysis: dict[str, Any]) -> str:
 
     spec_parts = [p for p in (color_str, mat_str, pattern, sub_cat) if p and p.lower() != "unknown"]
     spec_desc = " ".join(spec_parts) if spec_parts else title
-    detail_clause = f" Visual details: {custom_prompt or caption}." if (custom_prompt or caption) else ""
+    detail_clause = f" Details: {custom_prompt or caption}." if (custom_prompt or caption) else ""
 
     prompt = (
-        f"Studio e-commerce flat-lay product photograph of a single isolated garment: {title} ({spec_desc})."
+        f"Studio e-commerce flat-lay product photograph of an isolated {title} ({spec_desc})."
         f"{detail_clause} "
-        "The garment must be completely unfolded, neatly laid out flat, strictly vertical upright portrait orientation "
-        "(collar/waistband at top, hem/cuffs at bottom), front-facing, symmetrical, and centered with balanced margins "
-        "to fit a 3:4 vertical closet card. Pure uniform solid white background (#FFFFFF) with zero cast shadows so "
-        "background alpha removal is 100% clean. Soft, even studio lighting preserving exact fabric weave, stitching, "
-        "buttons, and color shades. Do NOT include any hanger, closet rod, shelf, mannequin, human body parts, "
-        "adjacent clothes, price tags, or shadows."
+        "Completely unfolded, vertical upright portrait (collar/waist at top, hem at bottom), "
+        "front-facing, symmetrical, centered on pure solid white (#FFFFFF) with zero shadows. "
+        "Even studio lighting preserving exact weave, stitching, and color. "
+        "Negative: hanger, rod, shelf, mannequin, body, adjacent clothes, tags, shadows."
     )
     return prompt[:1000]
 
