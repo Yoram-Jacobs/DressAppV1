@@ -1736,8 +1736,14 @@ async def parse_garments(
     # 2a-3b) Detect and synthesize Hat ONLY on standalone headwear close-ups when SegFormer (Fashion 47-class)
     # fragments a baseball cap into crown (vest/top/hood) and brim/visor (shorts/skirt).
     # NEVER run on full outfits, when Shoes or Belt are present, or when >= 3 distinct garment labels exist.
+    def _is_headwear_label_key(k: str) -> bool:
+        kl = (k or "").strip().lower()
+        if kl in ("cape", "capes", "capri", "capris") or kl.startswith("cape"):
+            return False
+        return kl in ("hat", "headwear", "cap", "caps", "beanie") or kl.startswith(("hat", "headwear", "beanie"))
+
     if (
-        not any(k.lower().startswith(("hat", "headwear", "cap", "beanie")) or (v and v.get("category") == "headwear") for k, v in by_label.items())
+        not any(_is_headwear_label_key(k) or (v and v.get("category") == "headwear") for k, v in by_label.items())
         and not has_human
         and not has_anatomical_outfit_stack
         and not is_side_by_side_unworn_cluster
@@ -1818,7 +1824,7 @@ async def parse_garments(
     # 2a-4) Collapse all Hat/Headwear pieces into a single "Hat" item
     hat_keys = [
         k for k, v in list(by_label.items())
-        if k.lower().startswith(("hat", "headwear", "cap", "beanie"))
+        if _is_headwear_label_key(k)
         or (v and v.get("category") == "headwear")
         or "head covering" in k.lower()
     ]
@@ -2386,9 +2392,14 @@ def apply_alpha_intersection(
     has_human = human_mask is not None and bool(human_mask.any())
     is_acc = (
         norm_cat in {"accessory", "headwear", "bag", "belt", "jewelry"}
-        or any(w in norm_lbl for w in ("hat", "cap", "beanie", "bag", "belt", "necklace", "watch", "bracelet"))
+        or norm_lbl in {"hat", "cap", "caps", "beanie", "bag", "belt", "necklace", "watch", "bracelet"}
+        or (
+            norm_lbl not in ("scarf", "shawl", "poncho", "cape")
+            and not norm_lbl.startswith("cape")
+            and any(w in norm_lbl for w in ("hat", "beanie", "bag", "belt", "necklace", "watch", "bracelet"))
+        )
     )
-    if is_acc and not is_eyewear and norm_lbl not in ("scarf", "shawl", "poncho", "cape"):
+    if is_acc and not is_eyewear and norm_lbl not in ("scarf", "shawl", "poncho", "cape") and not norm_lbl.startswith("cape"):
         return matted_png_bytes
 
     # 1. Smooth, anti-aliased human mask subtraction (face, hair, skin, arms, legs)
@@ -2496,15 +2507,15 @@ def apply_alpha_intersection(
                 # Column-wise contour trimming along the central neckline/collar notch
                 col_min_y = np.full(Wc, Hc, dtype=int)
                 np.minimum.at(col_min_y, xs, ys)
-                # Bounding: a neckline curve never dips deeper than 22% of crop height from apex.
+                # Bounding: a neckline / V-neck curve never dips deeper than 28% of crop height from apex.
                 # Deeper dips are occlusions (hair, jewelry, scarves, hands) and must NOT slice the garment!
-                max_neck_dip = min(Hc - 1, apex_y + max(12, int(0.22 * Hc)))
+                max_neck_dip = min(Hc - 1, apex_y + max(16, int(0.28 * Hc)))
                 col_min_y = np.minimum(col_min_y, max_neck_dip)
 
-                # Restrict column trimming to the central neck/throat corridor (20% to 80% of width)
+                # Restrict column trimming to the central neck/throat corridor (18% to 82% of width)
                 # so shoulders, lapels, and fur collars on either side are never truncated.
                 neck_cols = np.zeros(Wc, dtype=bool)
-                neck_cols[int(0.20 * Wc):int(0.80 * Wc)] = True
+                neck_cols[int(0.18 * Wc):int(0.82 * Wc)] = True
                 valid_cols = (col_min_y < Hc) & neck_cols
                 if valid_cols.any():
                     y_indices = np.arange(Hc)[:, None]
@@ -2513,16 +2524,16 @@ def apply_alpha_intersection(
                     new_alpha = np.where(above_collar, np.uint8(0), new_alpha)
 
                     # Wooden/plastic hanger triangle excision inside the collar notch:
-                    # Inside the collar opening between shoulders, where SegFormer has no fabric (mask_resized <= 30),
-                    # zero out alpha so triangular hanger struts are never left in the collar opening!
-                    collar_opening = (
-                        (y_indices >= (col_min_y[None, :] - 2))
-                        & (y_indices <= max_neck_dip)
-                        & valid_cols[None, :]
-                        & (mask_resized <= 30)
+                    # Inside the collar opening between shoulders, where SegFormer has no fabric,
+                    # smoothly attenuate alpha so triangular hanger struts and crossbars are cleanly excised
+                    # without leaving a 2-3px dark wood fringe along the V-neck edge.
+                    in_neck_box = (y_indices <= max_neck_dip) & valid_cols[None, :]
+                    neck_weight = np.clip((mask_resized.astype(float) - 45.0) / 45.0, 0.0, 1.0)
+                    new_alpha = np.where(
+                        in_neck_box & (mask_resized < 90),
+                        (new_alpha.astype(float) * neck_weight).round().astype(np.uint8),
+                        new_alpha,
                     )
-                    if collar_opening.any():
-                        new_alpha = np.where(collar_opening, np.uint8(0), new_alpha)
         except Exception as _neck_exc:
             logger.debug("apply_alpha_intersection collar neck trim: %s", _neck_exc)
 

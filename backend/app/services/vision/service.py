@@ -436,10 +436,13 @@ def _align_analyses_to_crops(
         )
     
     def _is_headwear(cat: str, lbl: str, all_text: str) -> bool:
+        import re as _re
         return (
             cat in ("headwear", "hat", "כובעים", "כובע") or
-            "hat" in lbl or "cap" in lbl or "כובע" in lbl or
-            any(w in all_text for w in ("hat", "cap", "beanie", "beret", "fedora", "כובע", "ברט", "קסקט"))
+            lbl in ("hat", "cap", "caps", "beanie", "headwear") or
+            "hat" in lbl or "כובע" in lbl or
+            bool(_re.search(r"\b(hats?|caps?|beanies?|berets?|fedora)\b", f"{lbl} {all_text}")) or
+            any(w in all_text for w in ("כובע", "ברט", "קסקט"))
         )
 
     for i, c in enumerate(crop_data):

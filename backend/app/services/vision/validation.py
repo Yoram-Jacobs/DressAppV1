@@ -1758,7 +1758,11 @@ def _coerce_single_garment(
     is_he = ((language or "").lower() in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_text)
 
     # Ensure headwear and accessories are properly rooted in Accessories
-    is_headwear_item = any(w in full_text or w in sub_lower for w in ("hat", "cap", "beanie", "visor", "headwear", "beret", "fedora", "כובע", "chullo"))
+    is_headwear_item = (
+        bool(re.search(r"\b(hats?|caps?|beanies?|visors?|headwear|berets?|fedora|chullo)\b", f"{full_text} {sub_lower}"))
+        or "כובע" in full_text
+        or "כובע" in sub_lower
+    ) and not any(w in sub_lower or w in full_text for w in ("cape", "poncho", "capes & ponchos", "שכמי", "פונצ'ו"))
     is_belt_item = any(w in full_text or w in sub_lower for w in ("belt", "חגור"))
     if is_headwear_item:
         res["category"] = "Accessories"
@@ -4387,7 +4391,11 @@ def _enforce_segformer_category(
 
     # If the LLM has identified the crop as Headwear (hat, cap, beanie, visor, כובע),
     # never override it with SegFormer's non-accessory/non-headwear kind (SegFormer often confuses hats/caps with tops, pants, or footwear).
-    is_llm_headwear = any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in ("hat", "cap", "beanie", "visor", "headwear", "beret", "fedora", "כובע", "chullo"))
+    _hw_txt = f"{curr_low} {sub_low} {title_low} {desc_low}"
+    is_llm_headwear = (
+        bool(re.search(r"\b(hats?|caps?|beanies?|visors?|headwear|berets?|fedora|chullo)\b", _hw_txt))
+        or "כובע" in _hw_txt
+    ) and not any(w in _hw_txt for w in ("cape", "poncho", "capes & ponchos", "שכמי", "פונצ'ו"))
     if is_llm_headwear and "bag" not in lbl_low and kind != "bag":
         analysis["category"] = "Accessories"
         if not analysis.get("sub_category") or analysis.get("sub_category").lower() in ("top", "bottom", "shoes", "footwear", "pants", "shirt", "trousers", "sweatpants", "t-shirt"):
