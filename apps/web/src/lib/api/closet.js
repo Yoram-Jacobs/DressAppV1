@@ -322,16 +322,16 @@ export const closet = {
       .post(`/closet/${itemId}/repair`, {
         user_hint: userHint || null,
         force,
-      }, { params: { preview } })
+      }, { params: { preview }, timeout: 180000 })
       .then((r) => r.data),
   cleanItemBackground: (itemId, preview = false) =>
-    client.post(`/closet/${itemId}/clean-background`, null, { params: { preview } }).then((r) => r.data),
+    client.post(`/closet/${itemId}/clean-background`, null, { params: { preview }, timeout: 90000 }).then((r) => r.data),
   reanalyzeItem: (itemId, { fill_empty_only = false, image_url = null } = {}) => {
     const params = {};
     if (fill_empty_only) params.fill_empty_only = true;
     if (image_url) params.image_url = image_url;
     return client
-      .post(`/closet/${itemId}/reanalyze`, null, { timeout: 90000, params })
+      .post(`/closet/${itemId}/reanalyze`, null, { timeout: 180000, params })
       .then((r) => r.data);
   },
   chatAnalyseItem: (itemId, { message, history = [], fill_empty_only = false } = {}) =>
@@ -340,7 +340,7 @@ export const closet = {
         message,
         history,
         fill_empty_only,
-      }, { timeout: 90000 })
+      }, { timeout: 180000 })
       .then((r) => r.data),
 
   // --- image import & processing ---

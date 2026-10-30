@@ -252,19 +252,25 @@ async def reconstruct(
     
     # Pre-matte the image to remove people/legs/hands and prevent safety blocks
     try:
-        from app.services.background_matting import remove_background
+        from app.services.background_matting import matte_crop
         from PIL import Image
         import io
-        bg_res = await remove_background(crop_bytes)
-        if bg_res.get("success") and bg_res.get("image_png"):
-            matte_img = Image.open(io.BytesIO(bg_res["image_png"]))
-            # Ensure it is in RGBA mode for alpha compositing
+        # Skip rembg if input is already an RGBA cutout
+        already_rgba = False
+        try:
+            _probe = Image.open(io.BytesIO(crop_bytes))
+            already_rgba = _probe.mode in ("RGBA", "LA") or (_probe.mode == "P" and "transparency" in _probe.info)
+        except Exception:
+            pass
+        matted_bytes = crop_bytes if already_rgba else await matte_crop(crop_bytes)
+        if matted_bytes:
+            matte_img = Image.open(io.BytesIO(matted_bytes))
             if matte_img.mode != "RGBA":
                 matte_img = matte_img.convert("RGBA")
             dressapp_card_bg = Image.new("RGBA", matte_img.size, (245, 242, 235, 255))
             composited = Image.alpha_composite(dressapp_card_bg, matte_img).convert("RGB")
             matted_io = io.BytesIO()
-            composited.save(matted_io, format="JPEG", quality=95)
+            composited.save(matted_io, format="JPEG", quality=92)
             crop_bytes = matted_io.getvalue()
     except Exception as matte_exc:
         logger.warning("Reconstruction pre-matting failed: %s", repr(matte_exc))
@@ -369,16 +375,16 @@ async def reconstruct(
     clean_image_url: str | None = None
     final_mime = "image/png"
     try:
-        from app.services.background_matting import remove_background
+        from app.services.background_matting import matte_crop
         import base64 as _b64
         from app.services.vision.image import ensure_transparent_vertical_card
         gen_raw = _b64.b64decode(image_b64)
 
         candidate_bytes = gen_raw
         try:
-            clean_res = await remove_background(gen_raw)
-            if clean_res.get("success") and clean_res.get("image_png"):
-                candidate_bytes = clean_res["image_png"]
+            matted_png = await matte_crop(gen_raw)
+            if matted_png:
+                candidate_bytes = matted_png
         except Exception as rembg_exc:
             logger.debug("rembg pass inside reconstruct skipped/failed: %s", rembg_exc)
 

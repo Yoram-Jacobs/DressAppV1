@@ -2376,13 +2376,21 @@ async def chat_analyse_item(
             "ازالة", "إزالة", "حذف", "entfernen", "eliminar", "supprimer",
         ]
     )
+    is_direct_unfold = any(
+        k in low_msg for k in [
+            "unfold", "sleeve", "sleeves", "flatten", "iron", "smooth", "unwrinkle", "dewrinkle",
+            "שרוול", "שרוולים", "גהץ", "פתח", "פרוש",
+            "كم", "أكمام", "فرد", "كوي", "ärmel", "entfalten", "glätten",
+            "manche", "manches", "déplier", "manga", "mangas", "desplegar",
+        ]
+    )
 
     item_title = item.get("title") or item.get("name") or item.get("category") or "garment"
     decision = None
 
     # Fast-path for direct image reconstruction/edit commands: skip LLM classification entirely
     # to eliminate CPU latency (Qwen/VPS) and execute immediately via Nano Banana.
-    if is_direct_reconstruct or is_direct_fill_holes or is_direct_align or is_direct_isolate or is_direct_remove:
+    if is_direct_reconstruct or is_direct_fill_holes or is_direct_align or is_direct_isolate or is_direct_remove or is_direct_unfold:
         decision = {"action": "image_edit"}
         if is_direct_reconstruct:
             decision["reply"] = _get_localized_closet_msg("image_reconstruct_processing", user_lang)
@@ -2408,6 +2416,12 @@ async def chat_analyse_item(
                 decision["image_edit_prompt"] = f"Remove the shoes and footwear at the bottom, isolating {item_title} cleanly on neutral #F5F2EB background"
             else:
                 decision["image_edit_prompt"] = f"Clean commercial studio photo of {item_title} on neutral #F5F2EB background, removing requested elements: {user_msg}"
+        elif is_direct_unfold:
+            decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+            decision["image_edit_prompt"] = (
+                f"Commercial studio flat-lay photograph of {item_title} on clean solid neutral #F5F2EB background, "
+                f"completely unfolded with both sleeves extended straight and symmetrical: {user_msg}"
+            )
 
     if decision is None:
         user_api_key = resolve_user_gemini_api_key(user)
@@ -2455,7 +2469,9 @@ async def chat_analyse_item(
 
         prompt_text = f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys and image_edit_prompt which MUST be English)."
         from app.services.llm_gateway import call_main_llm
-        raw_b64 = base64.b64encode(raw).decode("ascii")
+        from app.services.vision.image import _shrink_for_vision
+        shrunk_raw = _shrink_for_vision(raw, max_side=384, q=75)
+        raw_b64 = base64.b64encode(shrunk_raw).decode("ascii")
 
         try:
             decision_raw = await call_main_llm(
@@ -2580,14 +2596,17 @@ async def chat_analyse_item(
                     mime = edit_res.mime_type
                     image_url_out = f"data:{mime};base64,{res_b64}"
 
-                    # Unbind generated garment from background (transparent clean cutout)
+                    # Unbind generated garment from background (transparent clean cutout, already fitted to 900x1200 card)
                     from app.services.garment_visuals import GarmentVisuals
-                    clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(res_b64)
+                    clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(res_b64, skip_clip_check=True)
 
                     # Update in-memory reconstructed_image_url & clean_image_url
                     # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
-                    from app.services.vision.image import fit_image_data_url_to_card
-                    final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
+                    if clean_image_url_out:
+                        final_img = clean_image_url_out
+                    else:
+                        from app.services.vision.image import fit_image_data_url_to_card
+                        final_img = fit_image_data_url_to_card(image_url_out)
                     updated_doc["reconstructed_image_url"] = final_img
                     # Do NOT overwrite clean_image_url (preserving the original cutout)
                     image_url_out = final_img

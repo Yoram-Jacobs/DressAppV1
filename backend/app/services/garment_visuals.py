@@ -66,25 +66,31 @@ class GarmentVisuals:
             return None, None
 
     @classmethod
-    async def ensure_transparent_cutout(cls, image_input: bytes | str) -> str | None:
+    async def ensure_transparent_cutout(
+        cls, image_input: bytes | str, *, skip_clip_check: bool = False
+    ) -> str | None:
         """Extract an isolated, transparent PNG cutout with alpha channel.
 
         Tries primary matting (remove_background) and automatically falls back
         to lightweight rembg (matte_crop) if the primary check fails.
-        Guarantees that garments layer seamlessly without background boxes.
+        When ``skip_clip_check=True`` (e.g. Nano Banana studio output), runs
+        ``matte_crop`` directly to skip 2x CPU FashionCLIP embeddings.
         """
         raw_bytes, _ = cls._extract_bytes(image_input)
         if not raw_bytes:
             return None
 
         try:
-            # 1. Primary matting
-            clean_res = await remove_background(raw_bytes)
-            matted_png = clean_res.get("image_png") if isinstance(clean_res, dict) else None
-
-            # 2. Secondary fallback
-            if not matted_png:
+            matted_png: bytes | None = None
+            if skip_clip_check:
                 matted_png = await matte_crop(raw_bytes)
+            else:
+                # 1. Primary matting
+                clean_res = await remove_background(raw_bytes)
+                matted_png = clean_res.get("image_png") if isinstance(clean_res, dict) else None
+                # 2. Secondary fallback
+                if not matted_png:
+                    matted_png = await matte_crop(raw_bytes)
 
             if matted_png:
                 from app.services.vision.image import _fit_crop_to_card
