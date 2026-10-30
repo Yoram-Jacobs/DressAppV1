@@ -248,3 +248,11 @@ def test_stylist_brain_tester_and_tiers(tester_user_dressapp, tester_user_gemini
         assert brain_mgr.primary._svc.model == "gemini-3.5-flash-lite"
         assert brain_mgr.fallback.provider_name == "gemma"
 
+
+def test_gemini_client_normalises_retired_25_flash_lite():
+    from app.services.gemini_client import _normalise_model, DEFAULT_VISION_MODEL
+    assert _normalise_model("gemini-2.5-flash-lite") == DEFAULT_VISION_MODEL
+    assert _normalise_model("models/gemini-2.5-flash-lite") == DEFAULT_VISION_MODEL
+    assert _normalise_model("gemini-2.5-flash") == "gemini-2.5-flash"
+
+

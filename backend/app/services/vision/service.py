@@ -3784,7 +3784,7 @@ class GarmentVisionService:
                             chunk_crops = standard_slots[chunk_start : chunk_start + CHUNK_SIZE]
                             chunk_bytes = [_prepare_vlm_crop_and_color_stats(c[3], c[2]) for c in chunk_crops]
                             chunk_hints = [
-                                (c[2].get("kind") or c[2].get("category") or c[2].get("label"))
+                                None if c[2].get("is_single_item") else (c[2].get("kind") or c[2].get("category") or c[2].get("label"))
                                 for c in chunk_crops
                             ]
                             photo_ids = {c[1] for c in chunk_crops}

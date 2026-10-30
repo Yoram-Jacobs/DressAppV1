@@ -4396,12 +4396,17 @@ def _enforce_segformer_category(
 
     # If the LLM has identified the crop as Top or Outerwear (blazer, jacket, suit, coat, shirt, polo, sweater, poncho, hoodie),
     # never override it with SegFormer's headwear or accessory kind!
+    item_low = (analysis.get("item_type") or "").lower()
+    name_low = (analysis.get("name") or "").lower()
+    cap_low = (analysis.get("caption") or "").lower()
+    combined_upper_txt = f"{curr_low} {sub_low} {item_low} {name_low} {title_low} {desc_low} {cap_low}"
     is_llm_upper = (
         current.lower() in ("top", "outerwear", "suit", "full body")
-        or any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in (
+        or any(w in combined_upper_txt for w in (
             "blazer", "jacket", "suit", "coat", "shirt", "sweater", "hoodie", "cardigan", "blouse", "top", "vest",
-            "polo", "poncho", "cape", "shawl", "t-shirt", "tee",
-            "ז'קט", "חליפה", "מעיל", "חולצה", "חולצת", "פולו", "סוודר", "סריג", "קפוצ'ון", "פונצ'ו", "שכמייה", "של"
+            "polo", "poncho", "cape", "shawl", "t-shirt", "tee", "knit", "knitwear", "crochet", "tunic", "pullover",
+            "ז'קט", "חליפה", "מעיל", "חולצה", "חולצת", "פולו", "סוודר", "סריג", "סריגים", "קפוצ'ון", "פונצ'ו",
+            "שכמייה", "של", "עליונית", "טוניקה", "קרושה", "קרדיגן"
         ))
     )
     if is_llm_upper and kind in ("headwear", "accessory") and "bag" not in lbl_low:

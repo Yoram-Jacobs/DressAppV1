@@ -231,11 +231,26 @@ class GeminiClient:
             tools=tools,
             thinking_budget=thinking_budget,
         )
-        resp = await self._client.aio.models.generate_content(
-            model=_normalise_model(model),
-            contents=user_text,
-            config=config,
-        )
+        target_model = _normalise_model(model)
+        try:
+            resp = await self._client.aio.models.generate_content(
+                model=target_model,
+                contents=user_text,
+                config=config,
+            )
+        except Exception as exc:
+            if _is_model_not_found_error(exc) and target_model != DEFAULT_TEXT_MODEL:
+                logger.warning(
+                    "Gemini model %r unavailable (%s); retrying with %r",
+                    target_model, repr(exc)[:160], DEFAULT_TEXT_MODEL,
+                )
+                resp = await self._client.aio.models.generate_content(
+                    model=DEFAULT_TEXT_MODEL,
+                    contents=user_text,
+                    config=config,
+                )
+            else:
+                raise
         return _coerce_text(resp)
 
     async def search_grounded_text(
@@ -326,11 +341,26 @@ class GeminiClient:
             thinking_budget=thinking_budget,
         )
         contents = _coerce_content_parts(user_parts)
-        resp = await self._client.aio.models.generate_content(
-            model=_normalise_model(model),
-            contents=contents,
-            config=config,
-        )
+        target_model = _normalise_model(model)
+        try:
+            resp = await self._client.aio.models.generate_content(
+                model=target_model,
+                contents=contents,
+                config=config,
+            )
+        except Exception as exc:
+            if _is_model_not_found_error(exc) and target_model != DEFAULT_VISION_MODEL:
+                logger.warning(
+                    "Gemini vision model %r unavailable (%s); retrying with %r",
+                    target_model, repr(exc)[:160], DEFAULT_VISION_MODEL,
+                )
+                resp = await self._client.aio.models.generate_content(
+                    model=DEFAULT_VISION_MODEL,
+                    contents=contents,
+                    config=config,
+                )
+            else:
+                raise
         return _coerce_text(resp)
 
     # --------------------------------------------------------------- streaming
@@ -356,21 +386,52 @@ class GeminiClient:
             thinking_budget=thinking_budget,
         )
         contents = _coerce_content_parts(user_parts)
-        stream = await self._client.aio.models.generate_content_stream(
-            model=_normalise_model(model),
-            contents=contents,
-            config=config,
-        )
-        async for chunk in stream:
-            txt = getattr(chunk, "text", None)
-            if txt:
-                yield txt
+        target_model = _normalise_model(model)
+        try:
+            stream = await self._client.aio.models.generate_content_stream(
+                model=target_model,
+                contents=contents,
+                config=config,
+            )
+            async for chunk in stream:
+                txt = getattr(chunk, "text", None)
+                if txt:
+                    yield txt
+        except Exception as exc:
+            if _is_model_not_found_error(exc) and target_model != DEFAULT_VISION_MODEL:
+                logger.warning(
+                    "Gemini stream_vision model %r unavailable (%s); retrying with %r",
+                    target_model, repr(exc)[:160], DEFAULT_VISION_MODEL,
+                )
+                stream = await self._client.aio.models.generate_content_stream(
+                    model=DEFAULT_VISION_MODEL,
+                    contents=contents,
+                    config=config,
+                )
+                async for chunk in stream:
+                    txt = getattr(chunk, "text", None)
+                    if txt:
+                        yield txt
+            else:
+                raise
 
 
 # ---------------------------------------------------------------------- helpers
+def _is_model_not_found_error(exc: Exception) -> bool:
+    """Return True when Google API rejects a retired/unavailable model ID with 404."""
+    msg = str(exc).lower()
+    return (
+        "404" in msg
+        or "not_found" in msg
+        or "no longer available" in msg
+        or "is not found for api version" in msg
+    )
+
+
 def _normalise_model(model: str) -> str:
     """Strip provider prefixes the legacy ``litellm`` path required,
-    and map non-Gemini aliases (e.g. 'Eyes v1', 'gemma') to the default Gemini model.
+    and map non-Gemini aliases (e.g. 'Eyes v1', 'gemma') or retired model IDs
+    to supported active Gemini models.
     """
     if not model:
         return DEFAULT_TEXT_MODEL
@@ -382,9 +443,16 @@ def _normalise_model(model: str) -> str:
     # If the model name is not a valid Gemini model identifier (e.g. 'Eyes v1', 'gemma')
     if not clean.lower().startswith("gemini") and not clean.lower().startswith("models/"):
         return DEFAULT_VISION_MODEL
-    # Normalize non-existent gemini-3.5-pro to official default gemini-3.5-flash-lite
     clean_lower = clean.lower()
-    if clean_lower in ("gemini-3.5-pro", "models/gemini-3.5-pro", "gemini-pro"):
+    # Normalize non-existent gemini-3.5-pro or retired gemini-2.5-flash-lite (HTTP 404 on new API keys)
+    if clean_lower in (
+        "gemini-3.5-pro",
+        "models/gemini-3.5-pro",
+        "gemini-pro",
+        "gemini-2.5-flash-lite",
+        "models/gemini-2.5-flash-lite",
+        "gemini-2.5-flash-lite-preview",
+    ):
         return DEFAULT_VISION_MODEL
     return clean
 

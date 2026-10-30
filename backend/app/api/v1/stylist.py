@@ -774,6 +774,23 @@ async def planner_scout_endpoint(
     async for doc in cursor:
         garments.append(doc)
 
+    def norm_category(cat, item_text=""):
+        s = str(cat or "").strip().lower().replace(" ", "_")
+        txt = f"{s} {str(item_text or '').lower()}"
+        if any(k in txt for k in ("sari", "saree", "dress", "gown", "jumpsuit", "kaftan", "abaya", "galabiya", "thobe", "full_body", "one_piece", "romper")):
+            return "full_body"
+        if any(k in txt for k in ("outerwear", "jacket", "coat", "blazer", "cardigan", "parka", "trench", "overcoat", "puffer", "vest", "achkan")):
+            return "outerwear"
+        if any(k in txt for k in ("watch", "hat", "cap", "belt", "glasses", "sunglasses", "scarf", "earring", "glove", "bag", "accessory", "accessories")):
+            return "accessories"
+        if any(k in txt for k in ("top", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse", "hoodie", "tank", "tee", "crop", "poncho", "knit")):
+            return "top"
+        if any(k in txt for k in ("bottom", "pants", "shorts", "jeans", "skirt", "trousers", "joggers", "slacks")):
+            return "bottom"
+        if any(k in txt for k in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe", "heels", "loafers")):
+            return "footwear"
+        return s
+
     # Hydrate group members if they are part of a set
     group_ids = [r["group_id"] for r in garments if r.get("group_id")]
     if group_ids:
@@ -788,23 +805,6 @@ async def planner_scout_endpoint(
         members_by_group = defaultdict(list)
         for m in members:
             members_by_group[m["group_id"]].append(m)
-            
-        def norm_category(cat, item_text=""):
-            s = str(cat or "").strip().lower().replace(" ", "_")
-            txt = f"{s} {str(item_text or '').lower()}"
-            if any(k in txt for k in ("sari", "saree", "dress", "gown", "jumpsuit", "kaftan", "abaya", "galabiya", "thobe", "full_body", "one_piece", "romper")):
-                return "full_body"
-            if any(k in txt for k in ("outerwear", "jacket", "coat", "blazer", "cardigan", "parka", "trench", "overcoat", "puffer", "vest", "achkan")):
-                return "outerwear"
-            if any(k in txt for k in ("watch", "hat", "cap", "belt", "glasses", "sunglasses", "scarf", "earring", "glove", "bag", "accessory", "accessories")):
-                return "accessories"
-            if any(k in txt for k in ("top", "shirt", "t-shirt", "t_shirt", "polo", "sweater", "blouse", "hoodie", "tank", "tee", "crop")):
-                return "top"
-            if any(k in txt for k in ("bottom", "pants", "shorts", "jeans", "skirt", "trousers", "joggers", "slacks")):
-                return "bottom"
-            if any(k in txt for k in ("footwear", "shoes", "sneakers", "boots", "sandals", "shoe", "heels", "loafers")):
-                return "footwear"
-            return s
             
         final_garments = []
         for g in garments:
@@ -914,13 +914,41 @@ async def planner_scout_endpoint(
         f"}}"
     )
 
-    brain = stylist_brain_service(api_key=api_key_resolved, model=user_model, user=user)
-    res_json = await brain.advise(
-        session_id=f"planner-scout-{uuid.uuid4().hex[:8]}",
+    from app.services.llm_gateway import call_main_llm
+    from app.services.gemini_stylist import _parse_json
+    planner_schema = {
+        "type": "object",
+        "properties": {
+            "full_body_id": {"type": "string", "nullable": True},
+            "top_id": {"type": "string", "nullable": True},
+            "bottom_id": {"type": "string", "nullable": True},
+            "shoes_id": {"type": "string"},
+            "outerwear_id": {"type": "string", "nullable": True},
+            "accessory_id": {"type": "string", "nullable": True},
+            "why": {"type": "string"},
+        },
+        "required": ["shoes_id", "why"],
+    }
+    raw_planner = await call_main_llm(
         user_text=prompt,
-        image_base64=None,
-        user_profile=user,
+        system_prompt="You are the AI Stylist for DressApp. Return ONLY a JSON object matching the requested schema.",
+        json_schema=planner_schema,
+        response_mime_type="application/json",
+        api_key=api_key_resolved,
+        model=user_model,
+        user=user,
     )
+    res_json = _parse_json(raw_planner) if isinstance(raw_planner, str) else (raw_planner or {})
+    if not isinstance(res_json, dict):
+        res_json = {}
+    if not res_json.get("shoes_id") and shoes:
+        res_json["shoes_id"] = shoes[0]["id"]
+    if not res_json.get("full_body_id") and not res_json.get("top_id"):
+        if has_separates:
+            res_json["top_id"] = tops[0]["id"]
+            res_json["bottom_id"] = bottoms[0]["id"]
+        elif has_full_body:
+            res_json["full_body_id"] = full_bodies[0]["id"]
 
     updated_user = await db.users.find_one({"id": user["id"]})
     current_credits = (updated_user.get("ai_configuration") or {}).get("current_credits", 0)
