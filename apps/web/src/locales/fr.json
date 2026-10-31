@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Débloquer le Turbo instantané",
     "standardUploadDesc": "File de traitement standard. Analyse approfondie du vêtement en cours.",
     "standardStylistDesc": "File de traitement standard. Le styliste IA compose votre look.",
-    "standardSuitcaseDesc": "File de traitement standard. Composition de votre garde-robe de voyage en cours."
+    "standardSuitcaseDesc": "File de traitement standard. Composition de votre garde-robe de voyage en cours.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "Corps entier (Robe / Combinaison / Sari)",
     "restrictedBySeparates": "Désactivé pour les pièces séparées",
     "restrictedByFullBody": "Désactivé pour les tenues une pièce",
-    "activateSection": "Basculer vers ceci"
+    "activateSection": "Basculer vers ceci",
+    "vibe": {
+      "casual": "Décontracté",
+      "sporty": "Sportif",
+      "formal": "Habillé",
+      "classic": "Classique"
+    },
+    "season": {
+      "daily": "Quotidien",
+      "summer": "Été",
+      "winter": "Hiver"
+    },
+    "suffix": {
+      "hangout": "Sortie",
+      "workout": "Entraînement",
+      "attire": "Tenue"
+    },
+    "colorConnector": " et ",
+    "outfitTitleWithColorsPattern": "Tenue {{vibe}} {{season}} en {{colors}}",
+    "outfitTitlePattern": "Tenue {{vibe}} {{season}}",
+    "outfitDescriptionPattern": "Une combinaison soigneusement assortie comprenant {{items}}. Parfaite pour un look harmonieux et confortable."
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",

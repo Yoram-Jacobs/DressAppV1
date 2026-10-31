@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ 解锁极速 Turbo",
     "standardUploadDesc": "标准处理队列。正在深度分析服装。",
     "standardStylistDesc": "标准处理队列。AI 造型师正在设计您的造型。",
-    "standardSuitcaseDesc": "标准处理队列。正在生成精选旅行衣橱。"
+    "standardSuitcaseDesc": "标准处理队列。正在生成精选旅行衣橱。",
+    "listSeparator": "、"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "全身单品 (连衣裙 / 连体裤 / 纱丽)",
     "restrictedBySeparates": "分体搭配时已禁用",
     "restrictedByFullBody": "全身穿搭时已禁用",
-    "activateSection": "切换至此项"
+    "activateSection": "切换至此项",
+    "vibe": {
+      "casual": "休闲",
+      "sporty": "运动",
+      "formal": "正式",
+      "classic": "经典"
+    },
+    "season": {
+      "daily": "日常",
+      "summer": "夏季",
+      "winter": "冬季"
+    },
+    "suffix": {
+      "hangout": "出行",
+      "workout": "健身",
+      "attire": "装束"
+    },
+    "colorConnector": " 与 ",
+    "outfitTitleWithColorsPattern": "{{colors}}{{season}}{{vibe}}{{suffix}}",
+    "outfitTitlePattern": "{{season}}{{vibe}}{{suffix}}",
+    "outfitDescriptionPattern": "精心搭配的造型组合，包含 {{items}}。兼具协调感与舒适感。"
   },
   "outfitCompletion": {
     "cta": "完成搭配",

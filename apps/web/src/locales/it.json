@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Sblocca Turbo Istantaneo",
     "standardUploadDesc": "Coda di elaborazione standard. Scansione approfondita del capo in corso.",
     "standardStylistDesc": "Coda di elaborazione standard. Lo stylist AI sta creando il tuo look.",
-    "standardSuitcaseDesc": "Coda di elaborazione standard. Generazione del guardaroba da viaggio curato."
+    "standardSuitcaseDesc": "Coda di elaborazione standard. Generazione del guardaroba da viaggio curato.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "Bentornato",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "Corpo intero (Abito / Tuta / Sari)",
     "restrictedBySeparates": "Disabilitato per capi separati",
     "restrictedByFullBody": "Disabilitato per look a corpo intero",
-    "activateSection": "Passa a questo"
+    "activateSection": "Passa a questo",
+    "vibe": {
+      "casual": "Casual",
+      "sporty": "Sportivo",
+      "formal": "Formale",
+      "classic": "Classico"
+    },
+    "season": {
+      "daily": "Quotidiano",
+      "summer": "Estivo",
+      "winter": "Invernale"
+    },
+    "suffix": {
+      "hangout": "Uscita",
+      "workout": "Allenamento",
+      "attire": "Completo"
+    },
+    "colorConnector": " e ",
+    "outfitTitleWithColorsPattern": "Look {{vibe}} {{season}} in {{colors}}",
+    "outfitTitlePattern": "Look {{vibe}} {{season}}",
+    "outfitDescriptionPattern": "Una combinazione curata nei dettagli che include {{items}}. Perfetta per un look coordinato e confortevole."
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",

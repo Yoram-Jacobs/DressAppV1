@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Разблокировать Instant Turbo",
     "standardUploadDesc": "Стандартная очередь обработки. Выполняется глубокий анализ одежды.",
     "standardStylistDesc": "Стандартная очередь обработки. AI-стилист подбирает ваш образ.",
-    "standardSuitcaseDesc": "Стандартная очередь обработки. Формируется дорожный гардероб."
+    "standardSuitcaseDesc": "Стандартная очередь обработки. Формируется дорожный гардероб.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "С возвращением",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "Полный образ (Платье / Комбинезон / Сари)",
     "restrictedBySeparates": "Отключено для раздельных вещей",
     "restrictedByFullBody": "Отключено для цельных образов",
-    "activateSection": "Переключиться на это"
+    "activateSection": "Переключиться на это",
+    "vibe": {
+      "casual": "Повседневный",
+      "sporty": "Спортивный",
+      "formal": "Официальный",
+      "classic": "Классический"
+    },
+    "season": {
+      "daily": "На каждый день",
+      "summer": "Летний",
+      "winter": "Зимний"
+    },
+    "suffix": {
+      "hangout": "Выход",
+      "workout": "Тренировка",
+      "attire": "Образ"
+    },
+    "colorConnector": " и ",
+    "outfitTitleWithColorsPattern": "{{vibe}} {{season}} образ: {{colors}}",
+    "outfitTitlePattern": "{{vibe}} {{season}} образ",
+    "outfitDescriptionPattern": "Тщательно подобранное сочетание, включающее {{items}}. Идеально подходит для гармоничного и удобного образа."
   },
   "outfitCompletion": {
     "cta": "Завершить образ",

@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Sofortiges Turbo freischalten",
     "standardUploadDesc": "Standard-Warteschlange. Detaillierter Kleidungsscan läuft.",
     "standardStylistDesc": "Standard-Warteschlange. KI-Stylist erstellt Ihren Look.",
-    "standardSuitcaseDesc": "Standard-Warteschlange. Reisegarderobe wird zusammengestellt."
+    "standardSuitcaseDesc": "Standard-Warteschlange. Reisegarderobe wird zusammengestellt.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "Ganzkörper (Kleid / Jumpsuit / Sari)",
     "restrictedBySeparates": "Deaktiviert für Ober- & Unterteil-Zweiteiler",
     "restrictedByFullBody": "Deaktiviert für Ganzkörper-Looks",
-    "activateSection": "Hierhin wechseln"
+    "activateSection": "Hierhin wechseln",
+    "vibe": {
+      "casual": "Lässig",
+      "sporty": "Sportlich",
+      "formal": "Formell",
+      "classic": "Klassisch"
+    },
+    "season": {
+      "daily": "Alltag",
+      "summer": "Sommer",
+      "winter": "Winter"
+    },
+    "suffix": {
+      "hangout": "Treffen",
+      "workout": "Training",
+      "attire": "Outfit"
+    },
+    "colorConnector": " & ",
+    "outfitTitleWithColorsPattern": "{{vibe}} {{colors}} {{season}} {{suffix}}",
+    "outfitTitlePattern": "{{vibe}} {{season}} {{suffix}}",
+    "outfitDescriptionPattern": "Eine sorgfältig zusammengestellte Kombination mit {{items}}. Perfekt für einen stimmigen und bequemen Look."
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",

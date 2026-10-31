@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ तुरंत टर्बो अनलॉक करें",
     "standardUploadDesc": "मानक प्रसंस्करण कतार। कपड़ों की विस्तृत स्कैनिंग जारी है।",
     "standardStylistDesc": "मानक प्रसंस्करण कतार। AI स्टाइलिस्ट आपका लुक तैयार कर रहा है।",
-    "standardSuitcaseDesc": "मानक प्रसंस्करण कतार। अनुकूलित यात्रा वार्डरोब तैयार किया जा रहा है।"
+    "standardSuitcaseDesc": "मानक प्रसंस्करण कतार। अनुकूलित यात्रा वार्डरोब तैयार किया जा रहा है।",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "वापसी पर स्वागत है",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "फुल बॉडी (ड्रेस / जंपसूट / साड़ी)",
     "restrictedBySeparates": "अलग-अलग कपड़ों के लिए अक्षम",
     "restrictedByFullBody": "फुल-बॉडी लुक के लिए अक्षम",
-    "activateSection": "इस पर स्विच करें"
+    "activateSection": "इस पर स्विच करें",
+    "vibe": {
+      "casual": "कैजुअल",
+      "sporty": "स्पोर्टी",
+      "formal": "फॉर्मल",
+      "classic": "क्लासिक"
+    },
+    "season": {
+      "daily": "दैनिक",
+      "summer": "ग्रीष्मकालीन",
+      "winter": "शीतकालीन"
+    },
+    "suffix": {
+      "hangout": "हैंगआउट",
+      "workout": "वर्कआउट",
+      "attire": "पहनावा"
+    },
+    "colorConnector": " और ",
+    "outfitTitleWithColorsPattern": "{{colors}} में {{vibe}} {{season}} {{suffix}}",
+    "outfitTitlePattern": "{{vibe}} {{season}} {{suffix}}",
+    "outfitDescriptionPattern": "{{items}} से तैयार किया गया एक ख़ास संयोजन। एक समन्वित और आरामदायक लुक के लिए बिल्कुल उपयुक्त।"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",

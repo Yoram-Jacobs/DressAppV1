@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ インスタントターボを解除",
     "standardUploadDesc": "標準処理キュー。衣類の詳細スキャンを実行中です。",
     "standardStylistDesc": "標準処理キュー。AIスタイリストがコーディネートを作成中です。",
-    "standardSuitcaseDesc": "標準処理キュー。旅行向けワードローブを作成中です。"
+    "standardSuitcaseDesc": "標準処理キュー。旅行向けワードローブを作成中です。",
+    "listSeparator": "、"
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "全身 (ワンピース / サリー)",
     "restrictedBySeparates": "セパレート選択時は無効",
     "restrictedByFullBody": "全身コーデ選択時は無効",
-    "activateSection": "こちらに切り替え"
+    "activateSection": "こちらに切り替え",
+    "vibe": {
+      "casual": "カジュアル",
+      "sporty": "スポーティ",
+      "formal": "フォーマル",
+      "classic": "クラシック"
+    },
+    "season": {
+      "daily": "デイリー",
+      "summer": "サマー",
+      "winter": "ウィンター"
+    },
+    "suffix": {
+      "hangout": "おでかけ",
+      "workout": "ワークアウト",
+      "attire": "スタイル"
+    },
+    "colorConnector": "＆",
+    "outfitTitleWithColorsPattern": "{{colors}}の{{season}}{{vibe}}{{suffix}}",
+    "outfitTitlePattern": "{{season}}{{vibe}}{{suffix}}",
+    "outfitDescriptionPattern": "{{items}}を取り入れたこだわりのコーディネート。統一感があり、快適な着こなしに最適です。"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",

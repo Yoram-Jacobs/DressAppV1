@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ فتح وضع التوربو الفوري",
     "standardUploadDesc": "قائمة الانتظار القياسية. جارٍ الفحص الدقيق للملابس.",
     "standardStylistDesc": "قائمة الانتظار القياسية. المنسق الذكي يصمم إطلالتك الآن.",
-    "standardSuitcaseDesc": "قائمة الانتظار القياسية. جاري إعداد خزانة السفر المنسقة."
+    "standardSuitcaseDesc": "قائمة الانتظار القياسية. جاري إعداد خزانة السفر المنسقة.",
+    "listSeparator": "، "
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "إطلالة كاملة (فستان / جمبسوت / ساري)",
     "restrictedBySeparates": "معطل - تم اختيار قطع علوية وسفلية منفصلة",
     "restrictedByFullBody": "معطل للإطلالات الكاملة",
-    "activateSection": "التبديل إلى هذا"
+    "activateSection": "التبديل إلى هذا",
+    "vibe": {
+      "casual": "كاجوال",
+      "sporty": "رياضي",
+      "formal": "رسمي",
+      "classic": "كلاسيكي"
+    },
+    "season": {
+      "daily": "يومي",
+      "summer": "صيفي",
+      "winter": "شتوي"
+    },
+    "suffix": {
+      "hangout": "لقاء",
+      "workout": "تمارين",
+      "attire": "زي"
+    },
+    "colorConnector": " و",
+    "outfitTitleWithColorsPattern": "إطلالة {{vibe}} {{season}} بألوان {{colors}}",
+    "outfitTitlePattern": "إطلالة {{vibe}} {{season}}",
+    "outfitDescriptionPattern": "تنسيق أنيق ومتقن يضم {{items}}. مثالي لإطلالة متناسقة ومريحة."
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",

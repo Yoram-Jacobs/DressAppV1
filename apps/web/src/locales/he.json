@@ -117,7 +117,8 @@
     "unlockInstantTurbo": "⚡ שדרגו לטורבו מיידי",
     "standardUploadDesc": "תור עיבוד רגיל. סריקת בגד מעמיקה מתבצעת כעת.",
     "standardStylistDesc": "תור עיבוד רגיל. הסטייליסט החכם מרכיב את הלוק שלך.",
-    "standardSuitcaseDesc": "תור עיבוד רגיל. מייצר מלתחת נסיעות מותאמת."
+    "standardSuitcaseDesc": "תור עיבוד רגיל. מייצר מלתחת נסיעות מותאמת.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -1474,7 +1475,27 @@
     "modeFullBody": "חלק שלם (שמלה / סרבל / סארי)",
     "restrictedBySeparates": "מושבת - נבחרו חלקי עליון ותחתון נפרדים",
     "restrictedByFullBody": "מושבת עבור פריט גוף מלא (שמלה/סארי)",
-    "activateSection": "החלף לאפשרות זו"
+    "activateSection": "החלף לאפשרות זו",
+    "vibe": {
+      "casual": "קז'ואל",
+      "sporty": "ספורטיבי",
+      "formal": "רשמי",
+      "classic": "קלאסי"
+    },
+    "season": {
+      "daily": "יומיומי",
+      "summer": "קיצי",
+      "winter": "חורפי"
+    },
+    "suffix": {
+      "hangout": "מפגש",
+      "workout": "אימון",
+      "attire": "לבוש"
+    },
+    "colorConnector": " ו",
+    "outfitTitleWithColorsPattern": "{{suffix}} {{vibe}} {{season}} בצבעי {{colors}}",
+    "outfitTitlePattern": "{{suffix}} {{vibe}} {{season}}",
+    "outfitDescriptionPattern": "שילוב מוקפד הכולל {{items}}. מושלם למראה מתואם ונוח."
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",

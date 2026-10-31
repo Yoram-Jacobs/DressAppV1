@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Unlock Instant Turbo",
     "standardUploadDesc": "Standard processing queue. Deep clothing scan in progress.",
     "standardStylistDesc": "Standard processing queue. AI Stylist is crafting your look.",
-    "standardSuitcaseDesc": "Standard processing queue. Generating curated travel wardrobe."
+    "standardSuitcaseDesc": "Standard processing queue. Generating curated travel wardrobe.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -1450,7 +1451,27 @@
     "modeFullBody": "Full Body (Dress / Jumpsuit / Sari)",
     "restrictedBySeparates": "Disabled for Top & Bottom separates",
     "restrictedByFullBody": "Disabled for Full-Body looks",
-    "activateSection": "Switch to this"
+    "activateSection": "Switch to this",
+    "vibe": {
+      "casual": "Casual",
+      "sporty": "Sporty",
+      "formal": "Formal",
+      "classic": "Classic"
+    },
+    "season": {
+      "daily": "Daily",
+      "summer": "Summer",
+      "winter": "Winter"
+    },
+    "suffix": {
+      "hangout": "Hangout",
+      "workout": "Workout",
+      "attire": "Attire"
+    },
+    "colorConnector": " & ",
+    "outfitTitleWithColorsPattern": "{{vibe}} {{colors}} {{season}} {{suffix}}",
+    "outfitTitlePattern": "{{vibe}} {{season}} {{suffix}}",
+    "outfitDescriptionPattern": "A carefully styled combination featuring {{items}}. Perfect for a coordinated and comfortable look."
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",

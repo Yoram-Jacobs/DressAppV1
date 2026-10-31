@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { Loader2, AlertCircle, Sparkles, ImageOff } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import HarmonyBadge from '@/components/stylist/HarmonyBadge';
+import { formatOutfitTitle, formatOutfitDescription } from '@/lib/outfitLocalization';
 
 export default function SharedOutfit() {
   const { id } = useParams();
@@ -33,8 +34,8 @@ export default function SharedOutfit() {
   }, [id, t]);
 
   const outfit = sharedData?.outfit || {};
-  const outfitName = outfit.name || t('stylist.untitledConversation', { defaultValue: 'Untitled outfit' });
-  const outfitWhy = outfit.why || outfit.description || '';
+  const outfitName = formatOutfitTitle(outfit.name, t) || t('stylist.untitledConversation', { defaultValue: 'Untitled outfit' });
+  const outfitWhy = formatOutfitDescription(outfit.why || outfit.description || '', t);
   const shareCardImage = sharedData?.share_card_b64 || outfit.share_card_b64 || null;
 
   const outfitColors = useMemo(() => {

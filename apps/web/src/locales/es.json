@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Desbloquear Turbo Instantáneo",
     "standardUploadDesc": "Cola de procesamiento estándar. Escaneo profundo de prendas en curso.",
     "standardStylistDesc": "Cola de procesamiento estándar. El estilista de IA está creando tu look.",
-    "standardSuitcaseDesc": "Cola de procesamiento estándar. Generando guardarropa de viaje personalizado."
+    "standardSuitcaseDesc": "Cola de procesamiento estándar. Generando guardarropa de viaje personalizado.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "Cuerpo entero (Vestido / Mono / Sari)",
     "restrictedBySeparates": "Desactivado para prendas separadas",
     "restrictedByFullBody": "Desactivado para looks de cuerpo entero",
-    "activateSection": "Cambiar a esto"
+    "activateSection": "Cambiar a esto",
+    "vibe": {
+      "casual": "Casual",
+      "sporty": "Deportivo",
+      "formal": "Formal",
+      "classic": "Clásico"
+    },
+    "season": {
+      "daily": "Diario",
+      "summer": "Verano",
+      "winter": "Invierno"
+    },
+    "suffix": {
+      "hangout": "Salida",
+      "workout": "Entrenamiento",
+      "attire": "Atuendo"
+    },
+    "colorConnector": " y ",
+    "outfitTitleWithColorsPattern": "Look {{vibe}} {{season}} en {{colors}}",
+    "outfitTitlePattern": "Look {{vibe}} {{season}}",
+    "outfitDescriptionPattern": "Una combinación cuidadosamente diseñada que incluye {{items}}. Perfecta para un look coordinado y cómodo."
   },
   "outfitCompletion": {
     "cta": "Completar el look",

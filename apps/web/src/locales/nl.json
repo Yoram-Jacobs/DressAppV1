@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Ontgrendel Instant Turbo",
     "standardUploadDesc": "Standaard wachtrij. Diepe kledingscan wordt uitgevoerd.",
     "standardStylistDesc": "Standaard wachtrij. AI Stylist stelt je look samen.",
-    "standardSuitcaseDesc": "Standaard wachtrij. Samengestelde reisgarderobe wordt gegenereerd."
+    "standardSuitcaseDesc": "Standaard wachtrij. Samengestelde reisgarderobe wordt gegenereerd.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -1461,7 +1462,27 @@
     "modeFullBody": "Volledig lichaam (Jurk / Jumpsuit / Sari)",
     "restrictedBySeparates": "Uitgeschakeld voor aparte delen",
     "restrictedByFullBody": "Uitgeschakeld voor eendelige looks",
-    "activateSection": "Hiernaar overschakelen"
+    "activateSection": "Hiernaar overschakelen",
+    "vibe": {
+      "casual": "Casual",
+      "sporty": "Sportief",
+      "formal": "Formeel",
+      "classic": "Klassiek"
+    },
+    "season": {
+      "daily": "Dagelijks",
+      "summer": "Zomer",
+      "winter": "Winter"
+    },
+    "suffix": {
+      "hangout": "Uitje",
+      "workout": "Workout",
+      "attire": "Outfit"
+    },
+    "colorConnector": " & ",
+    "outfitTitleWithColorsPattern": "{{vibe}} {{colors}} {{season}} {{suffix}}",
+    "outfitTitlePattern": "{{vibe}} {{season}} {{suffix}}",
+    "outfitDescriptionPattern": "Een zorgvuldig gestylde combinatie met {{items}}. Perfect voor een gecoördineerde en comfortabele look."
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",
