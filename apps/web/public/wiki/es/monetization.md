@@ -5,7 +5,7 @@ DressApp ofrece un generoso Plan Gratis junto con suscripciones mensuales y anua
 ## Resumen de planes
 
 1. **Plan Gratis**:
-   - Guarda hasta **50 prendas en tu armario** gratis y amplíalo hasta **150 prendas** compartiendo tu enlace de invitación con amigos (**+10 espacios gratis** por cada amigo que se registre).
+   - Guarda hasta **100 prendas en tu armario** gratis y amplíalo hasta **150 prendas** compartiendo tu enlace de invitación con amigos (**+10 espacios gratis** por cada amigo que se registre).
    - Funciona desde el primer momento con el **modelo de IA local de DressApp** (**10 créditos diarios**, acumulables hasta **300 créditos en 30 días**) más **5 créditos iniciales de Reconstrucción de Estudio**.
    - Admite fotos de una sola prenda y fotos de conjuntos puestos. La **carga de grupos de prendas** (armarios, perchas, zapateros o pilas de camisas) se desbloquea en el Plan Gratis cuando posees **15 o más créditos de reconstrucción con IA** (puedes adquirir paquetes de 10, 50 o 100 créditos en la página de Precios). Si tienes menos de 15 créditos, una sola foto podría agotar tu saldo, por lo que DressApp sugerirá omitir la imagen, comprar un paquete de créditos o mejorar tu plan. El **Agente de Migración de Armario** (importación masiva de 50+ prendas desde otras apps) está reservado a los planes **Manager** y **Professional**.
 
@@ -16,8 +16,8 @@ DressApp ofrece un generoso Plan Gratis junto con suscripciones mensuales y anua
    - Diseñado para estilistas profesionales, sastres y creadores de moda.
    - Incluye todo lo del plan Manager, además de perfil verificado en el **Directorio de Estilistas**, creación de campañas promocionales, soporte prioritario y **100 créditos mensuales de estilismo y reconstrucción**.
 
-## Cambio al Plan Gratis y conservación de las últimas 50 prendas
-- **Los usuarios Manager y Professional que bajen al Plan Gratis perderán sus espacios adicionales, quedando únicamente las últimas 50 prendas añadidas en su armario.**
+## Cambio al Plan Gratis y conservación de las últimas 100 prendas
+- **Los usuarios Manager y Professional que bajen al Plan Gratis perderán sus espacios adicionales, quedando únicamente las últimas 100 prendas añadidas en su armario.**
 - Cualquier prenda más antigua (más allá de las **50 prendas añadidas más recientemente**) se eliminará de forma permanente al pasar al Plan Gratis.
 - Antes de aceptar la bajada de plan o cancelación, DressApp muestra una advertencia clara sobre la pérdida de prendas antiguas y solicita tu confirmación expresa.
 

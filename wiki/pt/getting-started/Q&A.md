@@ -19,7 +19,7 @@ O DressApp elimina o cadastro manual e a indecisão matinal por meio de reconhec
 
 | Recurso | Plano Gratuito ($0) | Gestor de Guarda-Roupa ($10/mês ou $100/ano) | Stylist Pro ($15/mês ou $150/ano) |
 | :--- | :--- | :--- | :--- |
-| **Capacidade do Armário** | **50 peças** (até **150** convidando amigos) | **Ilimitada** | **Ilimitada** |
+| **Capacidade do Armário** | **100 peças** (até **150** convidando amigos) | **Ilimitada** | **Ilimitada** |
 | **Modelo de IA** | **Modelo de IA local do DressApp** | **Modelo de IA de ponta** + reserva local automática | **Modelo de IA de ponta** + reserva local automática |
 | **Créditos Diários** | **10/dia** (acumula até **300 / 30 dias**) | **Ilimitados** para estilo e digitalizações diárias | **Ilimitados** para estilo e digitalizações diárias |
 | **Reconstrução de Estúdio** | **5 créditos grátis** iniciais | **100 créditos mensais** de Reconstrução de Estúdio | **100 créditos mensais** de Reconstrução de Estúdio |

@@ -11,4 +11,4 @@
 
 ## 3. Abonnementsdegradatie en Behoud van Laatste 50 Items
 - **Oorzaak:** Bij degradatie van Manager (200 plekken) of Professional (300 plekken) naar Free (50 plekken) vervallen je extra kastplekken.
-- **Gevolg:** Alleen de **laatste 50 toegevoegde items** blijven behouden in je kast; oudere items worden permanent verwijderd. Bevestig de waarschuwing alleen als je hiermee akkoord gaat.
+- **Gevolg:** Alleen de **laatste 100 toegevoegde items** blijven behouden in je kast; oudere items worden permanent verwijderd. Bevestig de waarschuwing alleen als je hiermee akkoord gaat.

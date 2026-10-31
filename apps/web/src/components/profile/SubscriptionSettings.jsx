@@ -64,7 +64,7 @@ export function SubscriptionSettings() {
   const expiresAt = sub.expires_at ? new Date(sub.expires_at).toLocaleDateString() : '';
 
   const userTier = isTester ? 'professional' : ((isActive && planType !== 'free') ? tier : 'free');
-  const capacity = userTier === 'free' ? Math.min(150, 50 + (user?.closet_capacity_bonus || 0)) : 999999;
+  const capacity = userTier === 'free' ? Math.min(150, 100 + (user?.closet_capacity_bonus || 0)) : 999999;
 
   const fallbackCredits = useMemo(() => computeBucketCredits(user), [user]);
   const aiCredits = liveCredits !== null ? liveCredits : fallbackCredits;
@@ -131,7 +131,7 @@ export function SubscriptionSettings() {
       toast.success(
         t('profile.cancelSuccess', {
           defaultValue:
-            'Subscription cancelled. Your account is now on the Free plan and your last 50 added items were retained.',
+            'Subscription cancelled. Your account is now on the Free plan and your last 100 added items were retained.',
         })
       );
       await refresh();
@@ -376,7 +376,7 @@ export function SubscriptionSettings() {
             <DialogDescription className="text-sm text-text-brand pt-2 leading-relaxed">
               {t('pricing.demoteConfirmBody', {
                 defaultValue:
-                  'Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 50 added items in their closet. Older closet assets beyond the newest 50 items will be permanently removed.',
+                  'Manager and Professional users who demote to the Free plan lose their extra closet slots, leaving only the last 100 added items in their closet. Older closet assets beyond the newest 100 items will be permanently removed.',
               })}
             </DialogDescription>
           </DialogHeader>
@@ -384,22 +384,22 @@ export function SubscriptionSettings() {
             <div className="font-bold">
               {t('pricing.demoteClosetSummary', {
                 count: closetCount || 0,
-                limit: 50,
-                defaultValue: `Current closet items: ${closetCount || 0} (Free plan limit: 50 items)`,
+                limit: 100,
+                defaultValue: `Current closet items: ${closetCount || 0} (Free plan limit: 100 items)`,
               })}
             </div>
-            {(closetCount || 0) > 50 ? (
+            {(closetCount || 0) > 100 ? (
               <p className="font-semibold text-rose-800">
                 {t('pricing.demoteItemsWillBeLost', {
-                  lostCount: Math.max(0, (closetCount || 0) - 50),
-                  defaultValue: `Warning: Your ${Math.max(0, (closetCount || 0) - 50)} oldest closet items will be permanently deleted, leaving only the last 50 added items.`,
+                  lostCount: Math.max(0, (closetCount || 0) - 100),
+                  defaultValue: `Warning: Your ${Math.max(0, (closetCount || 0) - 100)} oldest closet items will be permanently deleted, leaving only the last 100 added items.`,
                 })}
               </p>
             ) : (
               <p className="text-rose-800">
                 {t('pricing.demoteUnderLimitNote', {
                   defaultValue:
-                    'Only the last 50 added items are kept on the Free plan, unlimited daily AI requests are disabled, and cluster uploads require at least 15 AI reconstruction credits.',
+                    'Only the last 100 added items are kept on the Free plan, unlimited daily AI requests are disabled, and cluster uploads require at least 15 AI reconstruction credits.',
                 })}
               </p>
             )}

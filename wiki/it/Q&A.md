@@ -19,7 +19,7 @@ DressApp elimina il lavoro manuale e l'indecisione mattutina grazie al riconosci
 
 | Caratteristica | Piano Gratuito ($0) | Gestore Guardaroba ($10/mese o $100/anno) | Stylist Pro ($15/mese o $150/anno) |
 | :--- | :--- | :--- | :--- |
-| **Capienza Armadio** | **50 capi** (fino a **150** invitando amici) | **Illimitata** | **Illimitata** |
+| **Capienza Armadio** | **100 capi** (fino a **150** invitando amici) | **Illimitata** | **Illimitata** |
 | **Modello IA** | **Modello IA interno di DressApp** | **Modello IA all'avanguardia** + supporto interno automatico | **Modello IA all'avanguardia** + supporto interno automatico |
 | **Crediti Giornalieri** | **10/giorno** (cumulabili fino a **300 / 30 giorni**) | **Illimitati** per styling e scansioni quotidiane | **Illimitati** per styling e scansioni quotidiane |
 | **Ricostruzione Studio** | **5 crediti gratuiti** di benvenuto | **100 crediti mensili** di Ricostruzione Studio | **100 crediti mensili** di Ricostruzione Studio |
@@ -75,7 +75,7 @@ Entro il quinto giorno avrai **50 capi essenziali** digitalizzati, sbloccando mi
 - **Passare al Piano Gestore Guardaroba ($10/mese o $100/anno)**: Sblocca **spazio illimitato nell'armadio**, **styling e scansioni giornaliere illimitate** con il **modello IA all'avanguardia**, **100 crediti mensili di Ricostruzione Studio**, notifiche mattutine con l'outfit del giorno, **Esploratore di Tendenze** e il **Marketplace**.
 
 ### D: Cosa succede se passo dal piano Manager o Professional al piano Free?
-**R:** Gli utenti Manager e Professional che passano al piano Free perdono gli slot extra dell'armadio, **lasciando nel guardaroba solo gli ultimi 50 capi aggiunti**. I capi più vecchi vengono eliminati definitivamente. Prima di accettare il declassamento, DressApp mostra un avviso e chiede la tua conferma.
+**R:** Gli utenti Manager e Professional che passano al piano Free perdono gli slot extra dell'armadio, **lasciando nel guardaroba solo gli ultimi 100 capi aggiunti**. I capi più vecchi vengono eliminati definitivamente. Prima di accettare il declassamento, DressApp mostra un avviso e chiede la tua conferma.
 
 ---
 

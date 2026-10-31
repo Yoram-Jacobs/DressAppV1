@@ -5,7 +5,7 @@ DressApp propose un forfait Gratuit généreux ainsi que des abonnements mensuel
 ## Présentation des forfaits
 
 1. **Forfait Gratuit** :
-   - Stockez jusqu'à **50 articles** gratuitement — et étendez votre garde-robe jusqu'à **150 articles** en partageant votre lien d'invitation avec vos amis (**+10 emplacements gratuits** par ami inscrit).
+   - Stockez jusqu'à **100 articles** gratuitement — et étendez votre garde-robe jusqu'à **150 articles** en partageant votre lien d'invitation avec vos amis (**+10 emplacements gratuits** par ami inscrit).
    - Fonctionne immédiatement grâce au **modèle d'IA local de DressApp** (**10 crédits quotidiens**, cumulables jusqu'à **300 crédits sur 30 jours**) ainsi que **5 crédits de départ de Reconstruction Studio**.
    - Prend en charge les photos d'un seul vêtement et les tenues portées. **L'import groupé de vêtements** (placards, cintres, étagères à chaussures ou piles de chemises) est débloqué sur le forfait Gratuit dès que vous possédez **15 crédits de reconstruction IA ou plus** (vous pouvez acheter des packs de 10, 50 ou 100 crédits sur la page Tarifs). Si vous avez moins de 15 crédits, DressApp vous proposera d'ignorer l'image, d'acheter un pack de crédits ou de mettre à niveau votre forfait. **L'Agent de Migration de Garde-Robe** (import massif de 50+ articles depuis d'autres applications) est réservé aux forfaits **Manager** et **Professionnel**.
 
@@ -16,7 +16,7 @@ DressApp propose un forfait Gratuit généreux ainsi que des abonnements mensuel
    - Conçu pour les stylistes professionnels, tailleurs et créateurs de mode.
    - Inclut tous les avantages du forfait Manager, plus une fiche vérifiée dans **l'Annuaire des Stylistes**, la création de campagnes promotionnelles, un support prioritaire et **100 crédits mensuels de stylisme et de reconstruction**.
 
-## Rétrogradation au forfait Gratuit et conservation des 50 derniers articles
+## Rétrogradation au forfait Gratuit et conservation des 100 derniers articles
 - **Les utilisateurs Manager et Professionnel qui passent au forfait Gratuit perdent leurs emplacements supplémentaires, ne laissant que les 100 derniers articles ajoutés dans leur garde-robe.**
 - Les articles plus anciens au-delà des **50 articles ajoutés le plus récemment** sont définitivement supprimés lors du passage au forfait Gratuit.
 - Avant d'accepter une rétrogradation ou une annulation, DressApp affiche un avertissement clair sur la perte des anciens articles et demande votre confirmation explicite.

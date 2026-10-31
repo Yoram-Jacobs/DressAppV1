@@ -3,7 +3,7 @@
 Here are simple solutions to the most common questions when using DressApp:
 
 ## 1. My closet is full and I can't add more clothes!
-- **Why it happens**: Free accounts start with 50 item slots (and can expand up to 150 item slots through friend referrals).
+- **Why it happens**: Free accounts start with 100 item slots (and can expand up to 150 item slots through friend referrals).
 - **Easy fix**: Share your personal invite link from your **Profile** page to earn **+10 free slots** for every friend who registers, or upgrade to the **Manager** or **Professional** plan for unlimited closet space.
 
 ## 2. Why was my cluster photo (closet, hangers, shoe rack, or pile of clothes) blocked on the Free plan?

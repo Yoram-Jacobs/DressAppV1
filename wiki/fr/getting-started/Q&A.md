@@ -19,7 +19,7 @@ DressApp supprime la saisie manuelle et l'hésitation matinale grâce à la reco
 
 | Fonctionnalité | Offre Gratuite (0 $) | Gestionnaire de Garde-Robe (10 $/mois ou 100 $/an) | Styliste Pro (15 $/mois ou 150 $/an) |
 | :--- | :--- | :--- | :--- |
-| **Capacité du Dressing** | **50 articles** (jusqu'à **150** via parrainage) | **Illimitée** | **Illimitée** |
+| **Capacité du Dressing** | **100 articles** (jusqu'à **150** via parrainage) | **Illimitée** | **Illimitée** |
 | **Modèle d'IA** | **Modèle d'IA interne de DressApp** | **Modèle d'IA de pointe** + relais interne automatique | **Modèle d'IA de pointe** + relais interne automatique |
 | **Crédits Quotidiens** | **10/jour** (cumulables jusqu'à **300 / 30 jours**) | **Illimités** pour le stylisme et les scans quotidiens | **Illimités** pour le stylisme et les scans quotidiens |
 | **Reconstruction Studio** | **5 crédits gratuits** de bienvenue | **100 crédits mensuels** de Reconstruction Studio | **100 crédits mensuels** de Reconstruction Studio |

@@ -59,9 +59,9 @@ export function SubscriptionSettings({
   const planType = subscription?.plan_type || 'monthly';
 
   // Closet capacity limits
-  const maxBonus = 100; // 50 base + up to 100 bonus = 150 max
+  const maxBonus = 50; // 100 base + up to 50 bonus = 150 max
   const effectiveBonus = Math.min(closetBonus, maxBonus);
-  const maxCapacity = Math.min(150, 50 + effectiveBonus);
+  const maxCapacity = Math.min(150, 100 + effectiveBonus);
   const capacityPct = Math.min(100, Math.round((closetCount / maxCapacity) * 100));
   const isCapacityFull = closetCount >= maxCapacity;
 

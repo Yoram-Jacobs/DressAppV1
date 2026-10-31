@@ -38,7 +38,7 @@ Il caricamento di gruppi di capi (pipeline massiva) è una funzione rivoluzionar
 4. **Può allucinare motivi e colori**: L'AI può talvolta inventare motivi e colori sulle parti nascoste.
 5. **Consuma crediti di ricostruzione**: Ogni capo ricostruito consuma crediti di ricostruzione.
 
-> **Nota sul declassamento del piano:** Gli utenti Manager o Professional che passano al piano Free perdono gli slot extra dell'armadio, **mantenendo solo gli ultimi 50 capi aggiunti**. DressApp mostra un avviso sulla perdita dei capi più vecchi e chiede conferma prima di procedere.
+> **Nota sul declassamento del piano:** Gli utenti Manager o Professional che passano al piano Free perdono gli slot extra dell'armadio, **mantenendo solo gli ultimi 100 capi aggiunti**. DressApp mostra un avviso sulla perdita dei capi più vecchi e chiede conferma prima di procedere.
 
 ### Le 4 Regole d'Oro per le Foto in Piano
 

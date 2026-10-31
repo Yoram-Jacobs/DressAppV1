@@ -13,7 +13,7 @@ As a Free plan user, DressApp gives you two dedicated credit pools so you can di
 | **On-Premises AI Credits** *(DressApp's On-Premises AI Model)* | **10 free credits / day**, cumulative over up to **30 days (up to 300 credits)**, then resets | Garment scanning, multi-item detection, AI Stylist chat, and Suitcase packing | • **Single garment scan**: 1 credit — • **Multi-item photo scan (e.g., 5 garments)**: 5 credits (1 per garment) — • **AI Stylist request**: 1 credit — • **Suitcase packing**: 1 credit per garment selected |
 | **Studio Reconstruction Credits** *(Cutting-Edge AI Model)* | **5 one-time onboarding bonus credits** (top up anytime with credit packs on the Pricing page) | Studio-grade garment reconstruction, crop repair, and AddItem re-analysis | • **1 Reconstruction credit** per studio image enhancement or re-analysis |
 
-> **Tip:** **Why Cumulative Credits Matter for Onboarding:** Because your **10 daily On-Premises AI Credits** accumulate up to **300 credits over 30 days**, you never lose a day's progress if you prefer to photograph clothes in batches. After just **5 days**, you will have **50 credits**—the exact amount needed to digitize a complete 50-item Free Plan closet!
+> **Tip:** **Why Cumulative Credits Matter for Onboarding:** Because your **10 daily On-Premises AI Credits** accumulate up to **300 credits over 30 days**, you never lose a day's progress if you prefer to photograph clothes in batches. After just **5 days**, you will have **50 credits**—the exact amount needed to digitize a complete 100-item Free Plan closet!
 
 ---
 
@@ -83,7 +83,7 @@ Upload and review 10 garments each day in just a few minutes:
 If you prefer to take all your photos first and upload them later, take advantage of **30-day credit accumulation**:
 
 - **Days 1–4 (Photograph & Accumulate):** Spend 5 minutes each day photographing one shelf or category into a dedicated album on your phone. While you shoot, your On-Premises AI Credits automatically accumulate (**10 → 20 → 30 → 40 credits**).
-- **Day 5 (Upload All 50 Garments):** On Day 5, your balance reaches **50 On-Premises AI Credits**. Open **Add Item**, select your photos (single items, full outfits, or multi-item layouts), and digitize your entire 50-item core wardrobe in one session!
+- **Day 5 (Upload All 50 Garments):** On Day 5, your balance reaches **50 On-Premises AI Credits**. Open **Add Item**, select your photos (single items, full outfits, or multi-item layouts), and digitize your entire 100-item core wardrobe in one session!
 
 ---
 

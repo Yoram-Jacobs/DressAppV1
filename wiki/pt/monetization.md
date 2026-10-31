@@ -18,6 +18,6 @@ O upload de conjunto de peças (pipeline `mass`) usa o Nano Banana para reconstr
 ## Aviso de Rebaixamento de Plano (Demotion para o Plano Grátis)
 Se um usuário **Manager** (200 espaços) ou **Professional** (300 espaços) rebaixar para o **Plano Grátis (Free)**:
 - **Perda dos espaços extras no armário:** A capacidade máxima do seu guarda-roupa volta para **50 itens**.
-- **Apenas os últimos 50 itens adicionados são mantidos:** O sistema preserva apenas as **últimas 50 peças adicionadas mais recentemente** no seu guarda-roupa.
+- **Apenas os últimos 50 itens adicionados são mantidos:** O sistema preserva apenas as **últimas 100 peças adicionadas mais recentemente** no seu guarda-roupa.
 - **Peças mais antigas são excluídas permanentemente:** Todos os itens mais antigos além dos últimos 50 adicionados são removidos de forma permanente.
 - **Confirmação obrigatória:** Antes de concluir o rebaixamento, o DressApp exibe um aviso claro sobre a perda das peças mais antigas e solicita sua confirmação.

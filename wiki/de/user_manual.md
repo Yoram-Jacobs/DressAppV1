@@ -235,7 +235,7 @@ Prüfung der Systemverfügbarkeit, Finanzbuchhaltung und Verwaltung von Nutzerko
 ## 5. Fehlerbehebung
 
 ### HTTP 402 Payment Required
-- **Problem**: Erfassung blockiert. Sie haben das Basislimit von 50 Kleiderschrankartikeln erreicht (bzw. bis zu 150 Artikel mit Empfehlungsboni).
+- **Problem**: Erfassung blockiert. Sie haben das Basislimit von 100 Kleiderschrankartikeln erreicht (bzw. bis zu 150 Artikel mit Empfehlungsboni).
 - **Lösung**: Öffnen Sie die **Preisseite** (`/pricing`) und abonnieren Sie den Manager- oder Professional-Tarif, oder teilen Sie Ihren Einladungslink, um +10 Plätze pro Registrierung zu erhalten (bis maximal 150 Artikel).
 
 ### SSRF blockiert / DNS-Fehler bei DPP

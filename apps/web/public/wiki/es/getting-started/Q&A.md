@@ -19,7 +19,7 @@ DressApp elimina el trabajo manual y la indecisión matutina mediante reconocimi
 
 | Característica | Plan Gratuito ($0) | Gestor de Armario ($10/mes o $100/año) | Estilista Pro ($15/mes o $100/año) |
 | :--- | :--- | :--- | :--- |
-| **Capacidad del Armario** | **50 prendas** (hasta **150** invitando a amigos) | **Ilimitada** | **Ilimitada** |
+| **Capacidad del Armario** | **100 prendas** (hasta **150** invitando a amigos) | **Ilimitada** | **Ilimitada** |
 | **Modelo de IA** | **Modelo de IA propio de DressApp** | **Modelo de IA de vanguardia** + respaldo local automático | **Modelo de IA de vanguardia** + respaldo local automático |
 | **Créditos Diarios** | **10/día** (acumulables hasta **300 / 30 días**) | **Ilimitados** para estilismo y escaneo diario | **Ilimitados** para estilismo y escaneo diario |
 | **Reconstrucción de Estudio** | **5 créditos gratis** de bienvenida | **100 créditos mensuales** de Reconstrucción de Estudio | **100 créditos mensuales** de Reconstrucción de Estudio |

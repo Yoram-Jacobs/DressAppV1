@@ -12,7 +12,7 @@ Most people wear only **20% of their wardrobe 80% of the time** because their cl
 ### How DressApp Solves It
 DressApp removes manual work and morning decision fatigue with smart visual recognition and personal styling:
 - **Effortless Closet Digitization**: Take a photo of a single item, a full-body mirror outfit, or several clothes laid out together—or import from an online store link, receipt, product QR code, or another wardrobe app. DressApp automatically detects the photo type, removes backgrounds, separates multiple items, and fills in key details (Category, Color, Fabric, Cut, Season, Dress Code, and Warmth).
-- **Cumulative Free Credit System**: Free users receive **10 daily On-Premises AI Credits** that accumulate up to **300 credits over 30 days**, plus **5 one-time onboarding bonus Studio Reconstruction Credits** when signing up. By photographing a few items a day over 5 days, you automatically have **50 credits** — enough to digitize a 50-item core wardrobe for free.
+- **Cumulative Free Credit System**: Free users receive **10 daily On-Premises AI Credits** that accumulate up to **300 credits over 30 days**, plus **5 one-time onboarding bonus Studio Reconstruction Credits** when signing up. By photographing a few items a day over 5 days, you automatically have **50 credits** — enough to digitize a 100-item core wardrobe for free.
 - **Personal Styling for Real Life**: Your AI Stylist combines the clothes in your closet, local weather forecasts, your calendar events, modesty preferences, and body measurements to suggest complete head-to-toe outfits or highlight missing wardrobe basics.
 
 ### Plans & Features at a Glance
@@ -47,7 +47,7 @@ DressApp removes manual work and morning decision fatigue with smart visual reco
 By Day 5, you will have **50 core items** in your digital closet — unlocking thousands of outfit combinations!
 
 ### Q: Can I import my clothes from another wardrobe app?
-**A:** Yes! On **Manager** and **Professional** plans, the **Wardrobe Migration Agent** in **Profile → Import Wardrobe** lets you bulk-import 50+ items and outfits from Whering, Acloset, Stylebook, or Indyx with automatic item separation, background removal, and detail recognition. (Free accounts use our on-premises Eyes AI model with a 50-item closet cap, so bulk Wardrobe Migration requires a Manager or Professional plan.)
+**A:** Yes! On **Manager** and **Professional** plans, the **Wardrobe Migration Agent** in **Profile → Import Wardrobe** lets you bulk-import 50+ items and outfits from Whering, Acloset, Stylebook, or Indyx with automatic item separation, background removal, and detail recognition. (Free accounts use our on-premises Eyes AI model with a 100-item closet cap, so bulk Wardrobe Migration requires a Manager or Professional plan.)
 
 ---
 

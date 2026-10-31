@@ -3,7 +3,7 @@
 Voici des solutions simples aux questions les plus fréquentes lors de l'utilisation de DressApp :
 
 ## 1. Ma garde-robe est pleine et je ne peux plus ajouter de vêtements !
-- **Pourquoi cela arrive** : Les comptes gratuits commencent avec 50 emplacements (extensibles jusqu'à 150 via le parrainage d'amis).
+- **Pourquoi cela arrive** : Les comptes gratuits commencent avec 100 emplacements (extensibles jusqu'à 150 via le parrainage d'amis).
 - **Solution rapide** : Partagez votre lien d'invitation depuis votre **Profil** pour gagner **+10 emplacements gratuits** par ami inscrit, ou passez au forfait **Manager** ou **Professionnel** pour un espace illimité.
 
 ## 2. Pourquoi ma photo groupée (placard, cintres, étagère à chaussures ou pile de linge) a-t-elle été bloquée sur le forfait Gratuit ?
@@ -20,7 +20,7 @@ Voici des solutions simples aux questions les plus fréquentes lors de l'utilisa
 - **Solution rapide** : Pour les vêtements aux imprimés complexes ou aux détails délicats, importez une photo individuelle nette.
 
 ## 4. Qu'arrive-t-il à mes vêtements si je rétrograde du forfait Manager ou Professionnel au forfait Gratuit ?
-- **Pourquoi cela arrive** : Le forfait Gratuit est limité à 50 emplacements de base. Lors du passage au forfait Gratuit, les utilisateurs Manager ou Professionnel perdent leurs emplacements supplémentaires et **ne conservent que les 100 derniers articles ajoutés à leur garde-robe**.
+- **Pourquoi cela arrive** : Le forfait Gratuit est limité à 100 emplacements de base. Lors du passage au forfait Gratuit, les utilisateurs Manager ou Professionnel perdent leurs emplacements supplémentaires et **ne conservent que les 100 derniers articles ajoutés à leur garde-robe**.
 - **À savoir** : DressApp vous avertit toujours avant la rétrogradation et demande votre confirmation, car les articles plus anciens sont définitivement supprimés.
 
 ## 5. Ma caméra ou mon microphone ne fonctionne pas !

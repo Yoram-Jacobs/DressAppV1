@@ -10,5 +10,5 @@
 - **Peças ignoradas e alucinações:** Algumas peças sobrepostas podem ser puladas e a IA pode alucinar padrões ou cores. Para peças detalhadas, tire fotos individuais.
 
 ## 3. Rebaixamento de Plano e Limite dos Últimos 50 Itens
-- **Causa:** Ao rebaixar de Manager (200 espaços) ou Professional (300 espaços) para o plano Grátis (50 espaços), você perde os espaços extras do armário.
+- **Causa:** Ao rebaixar de Manager (200 espaços) ou Professional (300 espaços) para o plano Grátis (100 espaços), você perde os espaços extras do armário.
 - **Resultado:** Apenas os **últimos 50 itens adicionados** permanecerão no seu guarda-roupa, e as peças mais antigas serão excluídas permanentemente. Leia atentamente o aviso antes de confirmar.

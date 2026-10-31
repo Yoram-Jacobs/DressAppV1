@@ -60,7 +60,7 @@ const DEFAULT_TIERS: PricingTier[] = [
     annual_price: 0,
     description: 'Basic styling & wardrobe tools for personal fashion exploration.',
     features: [
-      'Up to 50 closet items',
+      'Up to 100 closet items (expandable to 150)',
       'Up to 10 requests per day',
       'Community support',
       'Basic color palette analysis',

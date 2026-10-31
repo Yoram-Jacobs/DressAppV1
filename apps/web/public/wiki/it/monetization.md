@@ -17,7 +17,7 @@ Il caricamento di gruppi di capi (`mass`) utilizza Nano Banana per ricostruire m
 
 ## Avviso di Declassamento del Piano (Da Manager / Professional a Free)
 Se un utente **Manager** (200 slot) o **Professional** (300 slot) passa al piano **Free**:
-- **Perdita degli slot extra:** La capacità massima del guardaroba torna a **50 capi**.
-- **Conservazione degli ultimi 50 capi aggiunti:** Il sistema mantiene nell'armadio solo gli **ultimi 50 capi aggiunti più di recente**.
+- **Perdita degli slot extra:** La capacità massima del guardaroba torna a **100 capi**.
+- **Conservazione degli ultimi 100 capi aggiunti:** Il sistema mantiene nell'armadio solo gli **ultimi 100 capi aggiunti più di recente**.
 - **Eliminazione definitiva dei capi più vecchi:** Tutti i capi più vecchi oltre gli ultimi 50 aggiunti vengono eliminati definitivamente.
 - **Conferma obbligatoria:** Prima di procedere con il declassamento, DressApp mostra una finestra di avviso chiedendo conferma esplicita della perdita dei capi più vecchi.

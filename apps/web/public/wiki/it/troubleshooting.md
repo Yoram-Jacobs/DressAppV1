@@ -10,5 +10,5 @@
 - **Capi saltati o allucinazioni:** Alcuni capi molto sovrapposti possono essere saltati e l'AI può talvolta inventare motivi o colori. Per capi complessi, usa una foto singola.
 
 ## 3. Declassamento del Piano e Limite degli Ultimi 50 Capi
-- **Causa:** Passando da Manager (200 slot) o Professional (300 slot) al piano Free (50 slot), si perdono gli slot extra dell'armadio.
-- **Risultato:** Rimarranno nel guardaroba solo gli **ultimi 50 capi aggiunti** e i capi più vecchi verranno eliminati definitivamente. Leggi attentamente l'avviso di conferma prima di procedere.
+- **Causa:** Passando da Manager (200 slot) o Professional (300 slot) al piano Free (100 slot), si perdono gli slot extra dell'armadio.
+- **Risultato:** Rimarranno nel guardaroba solo gli **ultimi 100 capi aggiunti** e i capi più vecchi verranno eliminati definitivamente. Leggi attentamente l'avviso di conferma prima di procedere.

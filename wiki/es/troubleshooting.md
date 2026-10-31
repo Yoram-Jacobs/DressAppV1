@@ -3,7 +3,7 @@
 Aquí tienes soluciones sencillas para las dudas más frecuentes al usar DressApp:
 
 ## 1. ¡Mi armario está lleno y no puedo añadir más ropa!
-- **Por qué ocurre**: Las cuentas gratuitas comienzan con 50 espacios (ampliables hasta 150 invitando a amigos).
+- **Por qué ocurre**: Las cuentas gratuitas comienzan con 100 espacios (ampliables hasta 150 invitando a amigos).
 - **Solución fácil**: Comparte tu enlace personal desde tu **Perfil** para ganar **+10 espacios gratis** por cada amigo registrado, o mejora al plan **Manager** o **Professional** para tener espacio ilimitado.
 
 ## 2. ¿Por qué se bloqueó mi foto en grupo (armario, perchas, zapatero o pila de ropa) en el Plan Gratis?
@@ -20,7 +20,7 @@ Aquí tienes soluciones sencillas para las dudas más frecuentes al usar DressAp
 - **Solución fácil**: Para prendas con estampados complejos o detalles delicados, sube una foto individual clara.
 
 ## 4. ¿Qué ocurre con mi ropa si bajo del plan Manager o Professional al Plan Gratis?
-- **Por qué ocurre**: El Plan Gratis tiene un límite base de 50 espacios. Al bajar al Plan Gratis, los usuarios Manager o Professional pierden sus espacios adicionales y **solo conservan las últimas 50 prendas añadidas a su armario**.
+- **Por qué ocurre**: El Plan Gratis tiene un límite base de 100 espacios. Al bajar al Plan Gratis, los usuarios Manager o Professional pierden sus espacios adicionales y **solo conservan las últimas 100 prendas añadidas a su armario**.
 - **Qué esperar**: DressApp te avisa siempre antes de completar el cambio y pide tu confirmación, ya que las prendas más antiguas se eliminan permanentemente.
 
 ## 5. ¡Mi cámara o micrófono no funcionan!

@@ -19,7 +19,7 @@ DressApp elimina il lavoro manuale e l'indecisione mattutina grazie al riconosci
 
 | Caratteristica | Piano Gratuito ($0) | Gestore Guardaroba ($10/mese o $100/anno) | Stylist Pro ($15/mese o $150/anno) |
 | :--- | :--- | :--- | :--- |
-| **Capienza Armadio** | **50 capi** (fino a **150** invitando amici) | **Illimitata** | **Illimitata** |
+| **Capienza Armadio** | **100 capi** (fino a **150** invitando amici) | **Illimitata** | **Illimitata** |
 | **Modello IA** | **Modello IA interno di DressApp** | **Modello IA all'avanguardia** + supporto interno automatico | **Modello IA all'avanguardia** + supporto interno automatico |
 | **Crediti Giornalieri** | **10/giorno** (cumulabili fino a **300 / 30 giorni**) | **Illimitati** per styling e scansioni quotidiane | **Illimitati** per styling e scansioni quotidiane |
 | **Ricostruzione Studio** | **5 crediti gratuiti** di benvenuto | **100 crediti mensili** di Ricostruzione Studio | **100 crediti mensili** di Ricostruzione Studio |
