@@ -1,5 +1,5 @@
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { TopNav } from '@/components/TopNav';
 import { BottomTabs } from '@/components/BottomTabs';
 import { LanguageSync } from '@/components/LanguageSync';
@@ -117,12 +117,20 @@ export const AppLayout = () => {
       navigator.serviceWorker.ready.then(async (reg) => {
         try {
           let sub = await reg.pushManager.getSubscription();
+          const endpoint = sub?.endpoint || 'no-sub';
+          const permission = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+          const syncKey = `${user.id}:${endpoint}:${permission}`;
+          if (lastPushSyncKeyRef.current === syncKey) {
+            return;
+          }
+
           const res = await api.getVapidKey();
           const pubKey = urlBase64ToUint8Array(res.public_key);
 
           const registerSub = async (subscription) => {
             try {
               await api.subscribeWebPush(subscription.toJSON());
+              lastPushSyncKeyRef.current = syncKey;
             } catch (err) {
               console.warn('Failed to register web push on server', err);
             }
@@ -166,6 +174,8 @@ export const AppLayout = () => {
               applicationServerKey: pubKey,
             });
             await registerSub(sub);
+          } else {
+            lastPushSyncKeyRef.current = syncKey;
           }
         } catch (err) {
           console.warn('Auto Web Push subscription failed', err);

@@ -18,6 +18,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from 'react';
 import { api } from './api';
 import { AuthContext } from './auth';
@@ -187,6 +188,9 @@ export function LocationProvider({ children }) {
   const cached = loadCached();
   const auth = useContext(AuthContext);
   const user = auth?.user;
+  const updateUserLocal = auth?.updateUserLocal;
+  const lastGeocodedAddrKeyRef = useRef("");
+  const inFlightGeocodeRef = useRef(false);
 
   const [state, setState] = useState({
     coords: cached?.coords || null,
@@ -244,6 +248,7 @@ export function LocationProvider({ children }) {
 
     const addr = user?.address;
     const homeLoc = user?.home_location;
+    const addrKey = addr ? `${addr.line1 || ''}|${addr.city || ''}|${addr.country || ''}`.trim() : '';
 
     // Fast path: home_location already contains resolved coordinates
     if (homeLoc?.lat != null && (homeLoc?.lng != null || homeLoc?.lon != null)) {
@@ -262,9 +267,6 @@ export function LocationProvider({ children }) {
             source: 'contact_details',
             lastUpdatedAt: homeLoc.updated_at || s.lastUpdatedAt || new Date().toISOString(),
           };
-          // Bail out when nothing changed: a fresh `coords` object on every pass would
-          // retrigger this effect (it depends on state.coords) in an endless render loop
-          // for users whose browser denies geolocation.
           const unchanged =
             s.isFallback === true &&
             s.source === 'contact_details' &&
@@ -282,7 +284,14 @@ export function LocationProvider({ children }) {
 
     // Otherwise geocode from contact address (line1, city, country)
     if (addr && (addr.city || addr.line1 || addr.country)) {
+      if (lastGeocodedAddrKeyRef.current === addrKey || inFlightGeocodeRef.current) {
+        return;
+      }
+      inFlightGeocodeRef.current = true;
+      lastGeocodedAddrKeyRef.current = addrKey;
+
       geocodeContactAddress(addr).then((resolved) => {
+        inFlightGeocodeRef.current = false;
         if (cancelled || !resolved) return;
         setState((s) => ({
           ...s,
@@ -298,24 +307,26 @@ export function LocationProvider({ children }) {
 
         // Silently persist coordinates to home_location if not yet recorded
         if (!homeLoc?.lat) {
-          api.patchMe({
-            home_location: {
-              lat: resolved.coords.lat,
-              lng: resolved.coords.lng,
-              city: resolved.city,
-              country: resolved.country,
-              country_code: resolved.country_code,
-              updated_at: new Date().toISOString(),
-            },
-          }).catch(() => {});
+          const newHomeLoc = {
+            lat: resolved.coords.lat,
+            lng: resolved.coords.lng,
+            city: resolved.city,
+            country: resolved.country,
+            country_code: resolved.country_code,
+            updated_at: new Date().toISOString(),
+          };
+          updateUserLocal?.({ home_location: newHomeLoc });
+          api.patchMe({ home_location: newHomeLoc }).catch(() => {});
         }
+      }).catch(() => {
+        inFlightGeocodeRef.current = false;
       });
     }
 
     return () => {
       cancelled = true;
     };
-  }, [state.permissionState, user?.address, user?.home_location, state.coords, state.isFallback, state.source]);
+  }, [state.permissionState, user?.address, user?.home_location, updateUserLocal]);
 
   const persistToServer = useCallback(async (payload) => {
     try {

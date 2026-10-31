@@ -88,6 +88,7 @@ export default function ClosetGuidedTour({
   const [tourOpen, setTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState(null);
+  const checkedCalendarUserIdRef = useRef(null);
 
   // Keep form synced when user object updates
   useEffect(() => {
@@ -108,15 +109,6 @@ export default function ClosetGuidedTour({
   // Check calendar connection status once on mount & handle post-OAuth return
   useEffect(() => {
     if (!user) return;
-    let mounted = true;
-    api
-      .calendarStatus()
-      .then((res) => {
-        if (mounted && res) {
-          setCalendarConnected(Boolean(res.connected));
-        }
-      })
-      .catch(() => {});
 
     // Listen for ?calendar=connected or ?calendar=error from Google OAuth redirect
     const cal = searchParams.get('calendar');
@@ -127,6 +119,7 @@ export default function ClosetGuidedTour({
       nextParams.delete('calendar');
       setSearchParams(nextParams, { replace: true });
       refresh?.().catch(() => {});
+      return;
     } else if (cal === 'error') {
       const reason = searchParams.get('reason') || 'unknown_error';
       toast.error(`${t('calendar.connectFailed', { defaultValue: 'Connection failed' })}: ${reason.replaceAll('_', ' ')}`);
@@ -134,12 +127,27 @@ export default function ClosetGuidedTour({
       nextParams.delete('calendar');
       nextParams.delete('reason');
       setSearchParams(nextParams, { replace: true });
+      return;
     }
+
+    // Only query calendarStatus once per user session
+    if (checkedCalendarUserIdRef.current === user.id) return;
+    checkedCalendarUserIdRef.current = user.id;
+
+    let mounted = true;
+    api
+      .calendarStatus()
+      .then((res) => {
+        if (mounted && res) {
+          setCalendarConnected(Boolean(res.connected));
+        }
+      })
+      .catch(() => {});
 
     return () => {
       mounted = false;
     };
-  }, [user, searchParams, setSearchParams, t, refresh]);
+  }, [user?.id, searchParams, setSearchParams, t, refresh]);
 
   // Auto-launch tour for newly onboarded users landing in /closet or when triggered via ?tour=1 / custom event
   useEffect(() => {
