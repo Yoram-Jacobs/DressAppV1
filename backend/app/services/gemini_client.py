@@ -196,7 +196,12 @@ class GeminiClient:
         if thinking_budget is not None and _genai_types is not None:
             try:
                 tb_val = int(thinking_budget)
-                if tb_val >= 0:
+                if tb_val == 0:
+                    # In google-genai SDK, thinking_budget=0 is rejected with 400 INVALID_ARGUMENT
+                    # by Gemini 3.5 / Gemini 3.1 endpoints. A value of 1 instructs the model to
+                    # produce direct outputs with minimal/no thinking overhead.
+                    tb_val = 1
+                if tb_val > 0:
                     thinking_cls = getattr(_genai_types, "ThinkingConfig", None)
                     if thinking_cls:
                         cfg_kwargs["thinking_config"] = thinking_cls(thinking_budget=tb_val)

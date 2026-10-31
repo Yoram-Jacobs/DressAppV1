@@ -4461,7 +4461,6 @@ def _enforce_segformer_category(
                 analysis["item_type"] = "Handbag"
                 curr_name_raw = analysis.get("name") or analysis.get("title") or ""
                 if "belt" in curr_name_raw.lower():
-                    import re
                     new_name = re.sub(r"(?i)\b(rope\s+)?belt(\s+accessory)?\b", "Basket Bag", curr_name_raw).strip()
                     if not new_name or new_name.lower() == curr_name_raw.lower():
                         new_name = "Textured Basket Bag"
@@ -4498,7 +4497,6 @@ def _enforce_segformer_category(
                     )
                     analysis["sub_category"] = "Sneakers"
                     analysis["item_type"] = "Low-Top Sneakers"
-                    import re
                     orig_name = analysis.get("name") or analysis.get("title") or "White Sneakers"
                     new_name = re.sub(r"(?i)\b(ankle\s+)?boots?\b", "Sneakers", orig_name).strip()
                     analysis["name"] = new_name
