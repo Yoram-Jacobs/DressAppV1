@@ -272,6 +272,9 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
   const thetaTarget = Math.atan2(target.y - pivotY, target.x - pivotX);
   const applied = [];
 
+  const yWrist = isMale ? 0.93 : 0.89;
+  const yPelvisLimit = isMale ? 0.94 : 0.90;
+
   [-1, 1].forEach((side) => {
     let best = -1;
     let bestR = 0;
@@ -279,7 +282,7 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
       if (!inside[idx]) continue;
       const x = xs[idx] * side;
       const y = ys[idx];
-      if (x <= 0 || y < 0.8) continue;
+      if (x <= 0 || y < yPelvisLimit) continue;
       const torso = getTorsoSlice(y, isMale);
       if (x <= torso.rx + layerOffset + 0.06) continue;
       const r = Math.hypot(x - pivotX, y - pivotY);
@@ -292,7 +295,7 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
 
     const thetaPhoto = Math.atan2(ys[best] - pivotY, xs[best] * side - pivotX);
     const phi = thetaTarget - thetaPhoto;
-    if (Math.abs(phi) < 0.05 || Math.abs(phi) > 1.95) return;
+    if (thetaPhoto < -1.25 || Math.abs(phi) < 0.14 || Math.abs(phi) > 1.95) return;
 
     // For short sleeves (T-shirts with bestR < 0.24m):
     // Soften rotation angle so short sleeves drape naturally rather than shearing aggressively into sharp robotic angles
@@ -300,12 +303,11 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
     const effectivePhi = phi * sleeveLengthFactor;
     const cos = Math.cos(effectivePhi);
     const sin = Math.sin(effectivePhi);
-    const yWrist = isMale ? 0.93 : 0.89;
 
     for (let idx = 0; idx < vw * vh; idx++) {
       const x = xs[idx] * side;
       const y = ys[idx];
-      if (x <= 0 || y < 0.75) continue;
+      if (x <= 0 || y < yPelvisLimit) continue;
       const torso = getTorsoSlice(y, isMale);
       const r = Math.hypot(x - pivotX, y - pivotY);
       const w = smoothstep01((x - (torso.rx + layerOffset)) / 0.05) * smoothstep01(r / 0.08);
@@ -313,10 +315,7 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
       const dxp = x - pivotX;
       const dyp = y - pivotY;
       const nx2 = pivotX + dxp * cos - dyp * sin;
-      let ny2 = pivotY + dxp * sin + dyp * cos;
-      if (ny2 < yWrist) {
-        ny2 = yWrist + (ny2 - yWrist) * 0.15;
-      }
+      const ny2 = pivotY + dxp * sin + dyp * cos;
       xs[idx] = side * (x + (nx2 - x) * w);
       ys[idx] = y + (ny2 - y) * w;
     }
@@ -846,7 +845,15 @@ export function buildSilhouetteShell({
     const targetTrunkHalf = getTorsoSlice(isMale ? 1.24 : 1.18, isMale).rx + effOffset;
     const sTrunk = targetTrunkHalf / trunkHalfWorld;
 
-    sCorr = clamp(isWideOrLoose ? sShoulder : Math.max(sShoulder, sTrunk * 0.96), 0.55, 1.65);
+        const isOuter = slot === 'outerwear';
+    if (isOuter) {
+      // Outerwear keeps its full authentic photographed width & drape; never squashed narrower than body
+      sCorr = clamp(Math.max(1.0, sShoulder), 0.95, 1.25);
+    } else if (isWideOrLoose) {
+      sCorr = clamp(Math.max(0.96, sShoulder), 0.85, 1.45);
+    } else {
+      sCorr = clamp(Math.max(sShoulder, sTrunk * 0.96), 0.55, 1.65);
+    }
   } else {
     sCorr = clamp(percentile(ratios, 0.85), 0.72, 1.4);
   }
@@ -1270,9 +1277,7 @@ export function buildSilhouetteShell({
         }
       }
 
-      if (!isStandalone && shoulderWeight >= 0.85) {
-        ys[jFirst * vw + i] = yTarget;
-      }
+
     }
 
     // Enforce strict vertical monotonicity down every column so triangles never fold backwards or invert normals
@@ -1328,7 +1333,8 @@ export function buildSilhouetteShell({
     }
     if (jFirst > 0) {
       const src = jFirst * vw + i;
-      for (let j = 0; j < jFirst; j++) {
+      const jMinSnap = Math.max(0, jFirst - 2);
+      for (let j = jMinSnap; j < jFirst; j++) {
         const dst = j * vw + i;
         xs[dst] = xs[src];
         ys[dst] = ys[src];
@@ -1340,7 +1346,8 @@ export function buildSilhouetteShell({
     }
     if (jLast >= 0 && jLast < vh - 1) {
       const src = jLast * vw + i;
-      for (let j = jLast + 1; j < vh; j++) {
+      const jMaxSnap = Math.min(vh - 1, jLast + 2);
+      for (let j = jLast + 1; j <= jMaxSnap; j++) {
         const dst = j * vw + i;
         xs[dst] = xs[src];
         ys[dst] = ys[src];
@@ -1443,7 +1450,7 @@ export function buildSilhouetteShell({
     for (let r = j; r <= j + 1; r++) {
       const runs = runsByRow[r];
       for (let k = 0; k < runs.length; k++) {
-        if (runs[k][0] <= hi && runs[k][1] >= lo) return true;
+        if (runs[k][0] <= hi - 0.15 && runs[k][1] >= lo + 0.15) return true;
       }
     }
     return false;

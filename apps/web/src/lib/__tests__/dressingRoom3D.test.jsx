@@ -720,4 +720,74 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     // Collar center (j=0, i=20) is aligned with avatar neck center (x = 0)
     expect(Math.abs(topFrontPos.getX(20))).toBeLessThan(0.005);
   });
+
+  test('Outerwear / Cardigan preserves authentic width and does not distort lower hem or vertical sleeves', () => {
+    const {
+      resolveShellFit,
+      getTorsoSlice,
+      getLegSlice,
+    } = require('@/components/GarmentMesh3D');
+    const { buildSilhouetteShell, retargetSleeves } = require('@/lib/garmentSilhouette');
+
+    const fit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: 'long black open cardigan coat',
+      isMale: false,
+    });
+    expect(fit.isWideOrLoose).toBe(true);
+    expect(fit.yBottom).toBeLessThanOrEqual(0.50); // Mid-thigh length
+
+    // Long cardigan silhouette (40 cols x 60 rows) with hanging sleeves / drape
+    const nx = 40;
+    const ny = 60;
+    const cardiganRuns = [];
+    for (let j = 0; j <= ny; j++) {
+      cardiganRuns.push([[10, 30]]); // Wide torso & drape
+    }
+    const shell = buildSilhouetteShell({
+      runsByRow: cardiganRuns,
+      nx,
+      ny,
+      aspect: 0.70,
+      slot: 'outerwear',
+      isMale: false,
+      isSkirt: false,
+      isWideOrLoose: true,
+      isStandalone: false,
+      yTop: fit.yTop,
+      yBottom: fit.yBottom,
+      layerOffset: fit.layerOffset,
+      fabricThickness: fit.fabricThickness,
+      poseSleeves: false, // Outerwear bypasses sleeve rotation
+      getTorsoSlice,
+      getLegSlice,
+    });
+    expect(shell.ok).toBe(true);
+    expect(shell.info.sCorr).toBeGreaterThanOrEqual(0.95); // Width is never shrunk narrower than 1:1
+
+    // Verify retargetSleeves skips rotation when sleeve in photo is already hanging down
+    const vw = nx + 1;
+    const vh = ny + 1;
+    const xs = new Float32Array(vw * vh);
+    const ys = new Float32Array(vw * vh);
+    const inside = new Uint8Array(vw * vh).fill(1);
+    for (let j = 0; j < vh; j++) {
+      for (let i = 0; i < vw; i++) {
+        xs[j * vw + i] = (i - 20) * 0.012;
+        ys[j * vw + i] = 1.45 - (j / ny) * 0.95;
+      }
+    }
+    const applied = retargetSleeves({
+      xs,
+      ys,
+      inside,
+      vw,
+      vh,
+      isMale: false,
+      layerOffset: 0.035,
+      getTorsoSlice,
+    });
+    // Already-downward / vertical drape sleeves are not forcibly rotated
+    expect(applied.length).toBe(0);
+  });
 });

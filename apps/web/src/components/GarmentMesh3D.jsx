@@ -2495,7 +2495,7 @@ export function resolveShellFit({
     if (isLong) yBottom = isMale ? 0.52 : 0.48;
     if (isCrop) yBottom = isMale ? 1.15 : 1.10;
     const fabricThickness = resolveFabricThickness(fullText, 'outerwear', false);
-    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.038 : 0.035, fabricThickness, isSkirt: false, isStrapless: false, isWideOrLoose };
+    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.038 : 0.035, fabricThickness, isSkirt: false, isStrapless: false, isWideOrLoose: true };
   }
   if (rawSlot === 'dress') {
     const isMini = has('mini', 'קצרה');
@@ -2749,7 +2749,7 @@ export default function GarmentMesh3D({
         yBottom: shellFit.yBottom,
         layerOffset: shellFit.layerOffset,
         fabricThickness: shellFit.fabricThickness,
-        poseSleeves: !isStandalone,
+        poseSleeves: !isStandalone && rawSlot !== 'outerwear',
         sideProfile,
         getTorsoSlice,
         getLegSlice,
