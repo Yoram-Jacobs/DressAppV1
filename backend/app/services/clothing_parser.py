@@ -2504,36 +2504,61 @@ def apply_alpha_intersection(
                 if apex_y > 2:
                     new_alpha[:max(0, apex_y - 2), :] = 0
 
-                # Column-wise contour trimming along the central neckline/collar notch
-                col_min_y = np.full(Wc, Hc, dtype=int)
-                np.minimum.at(col_min_y, xs, ys)
-                # Bounding: a neckline / V-neck curve never dips deeper than 28% of crop height from apex.
-                # Deeper dips are occlusions (hair, jewelry, scarves, hands) and must NOT slice the garment!
-                max_neck_dip = min(Hc - 1, apex_y + max(16, int(0.28 * Hc)))
-                col_min_y = np.minimum(col_min_y, max_neck_dip)
+                if not is_single_item:
+                    # Column-wise contour trimming along the central neckline/collar notch for human wearers
+                    col_min_y = np.full(Wc, Hc, dtype=int)
+                    np.minimum.at(col_min_y, xs, ys)
+                    # Bounding: a neckline / V-neck curve never dips deeper than 28% of crop height from apex.
+                    # Deeper dips are occlusions (hair, jewelry, scarves, hands) and must NOT slice the garment!
+                    max_neck_dip = min(Hc - 1, apex_y + max(16, int(0.28 * Hc)))
+                    col_min_y = np.minimum(col_min_y, max_neck_dip)
 
-                # Restrict column trimming to the central neck/throat corridor (18% to 82% of width)
-                # so shoulders, lapels, and fur collars on either side are never truncated.
-                neck_cols = np.zeros(Wc, dtype=bool)
-                neck_cols[int(0.18 * Wc):int(0.82 * Wc)] = True
-                valid_cols = (col_min_y < Hc) & neck_cols
-                if valid_cols.any():
-                    y_indices = np.arange(Hc)[:, None]
-                    # Pixels above the collar in the central neck zone are neck/face/background/hanger hook
-                    above_collar = (y_indices < (col_min_y[None, :] - 3)) & valid_cols[None, :]
-                    new_alpha = np.where(above_collar, np.uint8(0), new_alpha)
+                    # Restrict column trimming to the central neck/throat corridor (18% to 82% of width)
+                    # so shoulders, lapels, and fur collars on either side are never truncated.
+                    neck_cols = np.zeros(Wc, dtype=bool)
+                    neck_cols[int(0.18 * Wc):int(0.82 * Wc)] = True
+                    valid_cols = (col_min_y < Hc) & neck_cols
+                    if valid_cols.any():
+                        y_indices = np.arange(Hc)[:, None]
+                        # Pixels above the collar in the central neck zone are neck/face/background/hanger hook
+                        above_collar = (y_indices < (col_min_y[None, :] - 3)) & valid_cols[None, :]
+                        new_alpha = np.where(above_collar, np.uint8(0), new_alpha)
 
-                    # Wooden/plastic hanger triangle excision inside the collar notch:
-                    # Inside the collar opening between shoulders, where SegFormer has no fabric,
-                    # smoothly attenuate alpha so triangular hanger struts and crossbars are cleanly excised
-                    # without leaving a 2-3px dark wood fringe along the V-neck edge.
-                    in_neck_box = (y_indices <= max_neck_dip) & valid_cols[None, :]
-                    neck_weight = np.clip((mask_resized.astype(float) - 45.0) / 45.0, 0.0, 1.0)
-                    new_alpha = np.where(
-                        in_neck_box & (mask_resized < 90),
-                        (new_alpha.astype(float) * neck_weight).round().astype(np.uint8),
-                        new_alpha,
+                        # Smoothly attenuate alpha inside the collar opening between shoulders
+                        in_neck_box = (y_indices <= max_neck_dip) & valid_cols[None, :]
+                        neck_weight = np.clip((mask_resized.astype(float) - 45.0) / 45.0, 0.0, 1.0)
+                        new_alpha = np.where(
+                            in_neck_box & (mask_resized < 90),
+                            (new_alpha.astype(float) * neck_weight).round().astype(np.uint8),
+                            new_alpha,
+                        )
+                else:
+                    # Single items (flat lay or hanger): NO human throat/neck exists!
+                    # Excise wooden/plastic hanger struts and crossbars inside the neck opening
+                    # without cutting into legitimate garment fabric.
+                    max_neck_dip = min(Hc - 1, apex_y + max(16, int(0.28 * Hc)))
+                    neck_cols = np.zeros(Wc, dtype=bool)
+                    neck_cols[int(0.18 * Wc):int(0.82 * Wc)] = True
+                    in_neck_zone = (np.arange(Hc)[:, None] <= max_neck_dip) & neck_cols[None, :]
+
+                    r = arr[:, :, 0].astype(float)
+                    g = arr[:, :, 1].astype(float)
+                    b = arr[:, :, 2].astype(float)
+                    # Wood chrominance: warm brownish tones (r > g > b) with darker luminance
+                    is_wood = (
+                        (r > g) & (g > b) &
+                        (r < 175.0) & (g < 145.0) & (b < 120.0) &
+                        ((r - b) >= 16.0)
                     )
+                    # Dark plastic/wire: very low luminance
+                    is_dark_hanger = (r < 55.0) & (g < 55.0) & (b < 55.0)
+                    is_hanger_material = is_wood | is_dark_hanger
+
+                    # Only excise confirmed hanger material where SegFormer has low confidence,
+                    # and NEVER wipe legitimate bright/cream/colored garment fabric!
+                    hanger_to_remove = in_neck_zone & is_hanger_material & (mask_resized < 80)
+                    if hanger_to_remove.any():
+                        new_alpha = np.where(hanger_to_remove, np.uint8(0), new_alpha)
         except Exception as _neck_exc:
             logger.debug("apply_alpha_intersection collar neck trim: %s", _neck_exc)
 

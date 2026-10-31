@@ -1936,6 +1936,61 @@ def test_upper_garment_neckline_clamping():
     assert alpha[55, 30] > 200, "Jacket fabric must remain opaque!"
 
 
+def test_single_item_hanger_excision_preserves_fabric():
+    """Verify that apply_alpha_intersection on single items excises wooden hanger crossbar
+    without biting into legitimate garment fabric below the crossbar, even when SegFormer's
+    coarse mask has low confidence on open-knit/crochet fabric.
+    """
+    from PIL import Image
+    import io
+    from app.services.clothing_parser import apply_alpha_intersection
+
+    H, W = 100, 100
+    # Create canvas with cream poncho knit fabric by default
+    img_arr = np.full((H, W, 4), [220, 205, 185, 255], dtype=np.uint8)
+
+    # 1. Hanger hook above apex: rows 0..20, col 50
+    img_arr[:22, :, :3] = [215, 215, 215]  # background wall
+    img_arr[:22, :, 3] = 0  # rembg already removed background
+    img_arr[5:22, 48:52, :] = [100, 100, 100, 255]  # wire hook stalk
+
+    # 2. Wooden crossbar inside neckline: rows 30..34, cols 40..60
+    img_arr[30:35, 40:60, :] = [130, 95, 75, 255]  # brown wood
+
+    # 3. Poncho knit fabric below crossbar: rows 36..48, cols 40..60
+    img_arr[36:50, 40:60, :] = [225, 210, 190, 255]  # cream knit fabric
+
+    img = Image.fromarray(img_arr, "RGBA")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # SegFormer coarse mask: detects garment from apex row 25 downwards,
+    # but misses the loose knit at cols 40..60 (starts only at row 50 there)
+    seg_mask = np.zeros((H, W), dtype=np.uint8)
+    seg_mask[25:90, 20:80] = 200
+    # Simulate low-confidence dropout on cols 40..60 above row 50
+    seg_mask[25:50, 40:60] = 0
+
+    res = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask,
+        category="outerwear",
+        label="cape",
+        is_single_item=True,
+    )
+    assert res is not None
+    res_img = Image.open(io.BytesIO(res))
+    alpha = np.array(res_img.split()[-1])
+
+    # 1. Above apex (row 15): strictly 0 (hook removed)
+    assert alpha[15, 50] == 0, "Hanger hook above apex must be zeroed!"
+    # 2. Wooden crossbar at row 32, col 50: excised (alpha == 0)
+    assert alpha[32, 50] == 0, "Wooden hanger crossbar inside neck opening must be excised!"
+    # 3. Cream knit fabric below crossbar at row 42, col 50: MUST BE PRESERVED (no bite mark!)
+    assert alpha[42, 50] > 200, "Poncho knit fabric below crossbar must be preserved without bite marks!"
+
+
 def test_enforce_segformer_category_resolves_bottom_footwear_conflict():
     """Verify that SegFormer 'bottom' clears footwear misclassification from Gemini."""
     from app.services.vision.validation import _enforce_segformer_category
