@@ -3807,3 +3807,86 @@ def test_suppress_contained_items_preserves_bag_over_skirt():
     assert any("bag" in k.lower() or "wallet" in k.lower() for k in result.keys())
 
 
+
+def test_top_never_merged_with_shoes_in_nms():
+    """Verify that _suppress_overlapping_garments never merges a top into shoes even if touching."""
+    import numpy as np
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 500, 500
+    top_mask = np.zeros((H, W), dtype=np.uint8)
+    top_mask[50:200, 100:400] = 255
+
+    shoes_mask = np.zeros((H, W), dtype=np.uint8)
+    shoes_mask[195:450, 100:400] = 255  # Touches/overlaps with top at y=195-200
+
+    detections = {
+        "top, t-shirt, sweatshirt": {
+            "mask": top_mask,
+            "category": "top",
+            "label": "top, t-shirt, sweatshirt",
+            "bbox": [50, 100, 200, 400],
+        },
+        "Shoes": {
+            "mask": shoes_mask,
+            "category": "footwear",
+            "label": "Shoes",
+            "bbox": [195, 100, 450, 400],
+        },
+    }
+
+    result = _suppress_overlapping_garments(detections, has_human=False)
+    # Both top and Shoes must survive; top must NOT be merged into Shoes
+    assert "top, t-shirt, sweatshirt" in result
+    assert "Shoes" in result
+
+
+def test_full_body_outfit_blouse_skirt_boots_preserves_all_three_items():
+    """Verify that a full body outfit with white blouse, black skirt, and boots
+    is not collapsed into Shoes, but keeps all three distinct garments."""
+    import numpy as np
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 800, 400
+    # 1. White silk blouse: y = 100 to 280
+    top_mask = np.zeros((H, W), dtype=np.uint8)
+    top_mask[100:280, 120:280] = 1
+
+    # 2. Black mini skirt: y = 275 to 380 (touches blouse hem at 275-280)
+    skirt_mask = np.zeros((H, W), dtype=np.uint8)
+    skirt_mask[275:380, 130:270] = 1
+
+    # 3. Thigh-high boots: y = 370 to 780 (touches skirt hem at 370-380)
+    boots_mask = np.zeros((H, W), dtype=np.uint8)
+    boots_mask[370:780, 140:260] = 1
+
+    by_label = {
+        "top, t-shirt, sweatshirt": {
+            "mask": top_mask,
+            "category": "top",
+            "label": "top, t-shirt, sweatshirt",
+            "score": 0.95,
+        },
+        "skirt": {
+            "mask": skirt_mask,
+            "category": "bottom",
+            "label": "skirt",
+            "score": 0.95,
+        },
+        "Shoes": {
+            "mask": boots_mask,
+            "category": "footwear",
+            "label": "Shoes",
+            "score": 0.95,
+        },
+    }
+
+    result = _suppress_overlapping_garments(by_label, has_human=False)
+    assert len(result) == 3, f"Expected 3 garments (top, skirt, shoes), got: {list(result.keys())}"
+    assert "top, t-shirt, sweatshirt" in result
+    assert "skirt" in result
+    assert "Shoes" in result
+
+
+
+

@@ -4820,6 +4820,9 @@ def _enforce_segformer_category(
                 analysis["caption"] = "חולצה אלגנטית ונוחה להשלמת המראה." if is_he_override else "An elegant, comfortable top."
 
     elif default == "Footwear":
+        if is_llm_bag:
+            analysis["category"] = "Accessories"
+            return analysis
         analysis["sub_category"] = ("סניקרס" if "sneaker" in lbl_low else "נעליים") if is_he_override else ("Sneakers" if "sneaker" in lbl_low else "Shoes")
         analysis["item_type"] = ("סניקרס נמוכות" if "sneaker" in lbl_low else "נעלי קז'ואל") if is_he_override else ("Low-Top Sneakers" if "sneaker" in lbl_low else "Casual Shoes")
         if any(w in curr_name_low for w in ("sweater", "shirt", "top", "hoodie", "cardigan", "jacket", "coat", "pants", "skirt", "dress", "חולצה", "סוודר", "מעיל", "חצאית", "מכנסיים", "שמלה")):

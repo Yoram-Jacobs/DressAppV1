@@ -992,6 +992,13 @@ def _suppress_overlapping_garments(
     first_mask = nms_items[0][1]["mask"]
     H, W = first_mask.shape
 
+    has_torso_upper = any(
+        it.get("category") in ("top", "outerwear", "dress")
+        and _bbox(it["mask"]) is not None
+        and _bbox(it["mask"])[0] < int(0.40 * H)
+        for _, it, _ in nms_items
+    )
+
     kept: list[tuple[str, dict[str, Any], int]] = []
     suppressed: list[tuple[str, str, str, float, float]] = []
     for lbl, item, area in nms_items:
@@ -1105,20 +1112,21 @@ def _suppress_overlapping_garments(
 
             # Distinct fashion categories (e.g. headwear vs top, top vs bottom, bottom vs footwear, accessory vs garment)
             # must stay separate and not be merged, UNLESS one is footwear and the other is a sub-part fragment of that footwear.
-            # Real clothing categories (top, bottom, dress, outerwear, headwear) can NEVER merge with footwear on a human model!
+            # Real clothing categories (top, bottom, dress, outerwear, headwear) can NEVER merge with footwear!
             clothing_cats = {"top", "bottom", "dress", "outerwear", "headwear"}
             has_clothing = bool(clothing_cats & {kept_cat, item_cat})
             has_footwear = "footwear" in {kept_cat, item_cat}
 
-            if has_human and has_footwear and has_clothing:
+            if (has_human or has_torso_upper) and has_footwear and has_clothing:
                 continue
 
             is_flatlay_top_bottom = False
-            is_footwear_candidate = (not has_human) and has_footwear
+            is_footwear_candidate = (not has_human) and (not has_torso_upper) and has_footwear
             if kept_cat != item_cat:
                 garment_set = {"top", "dress", "outerwear"} if not has_human else {"top", "outerwear"}
                 is_garment_pair = kept_cat in garment_set and item_cat in garment_set
-                is_flatlay_top_bottom = (not has_human) and (count_hint is None or count_hint <= 1) and (
+                has_shoes_in_scene = any(it.get("category") == "footwear" for _, it, _ in nms_items)
+                is_flatlay_top_bottom = (not has_human) and (not has_shoes_in_scene) and (count_hint is None or count_hint <= 1) and (
                     {kept_cat, item_cat} == {"top", "bottom"}
                     or {kept_cat, item_cat} == {"top", "dress"}
                     or {kept_cat, item_cat} == {"bottom", "dress"}
@@ -1447,12 +1455,16 @@ async def parse_garments(
                         break
                 if is_side_by_side_unworn_cluster:
                     break
-        if not is_side_by_side_unworn_cluster and len(raw_bottom_bbs) >= 2:
+        if not is_side_by_side_unworn_cluster and len(raw_bottom_bbs) >= 2 and not raw_upper_bbs:
             bot_xs = [(b[1] + b[3]) / 2.0 for b in raw_bottom_bbs]
             bot_ws = [max(1, b[3] - b[1]) for b in raw_bottom_bbs]
             for i_a in range(len(raw_bottom_bbs)):
                 for i_b in range(i_a + 1, len(raw_bottom_bbs)):
-                    if abs(bot_xs[i_a] - bot_xs[i_b]) > 0.25 * min(bot_ws[i_a], bot_ws[i_b]):
+                    b_a = raw_bottom_bbs[i_a]
+                    b_b = raw_bottom_bbs[i_b]
+                    y_inter = max(0, min(b_a[2], b_b[2]) - max(b_a[0], b_b[0]))
+                    min_h = max(1, min(b_a[2] - b_a[0], b_b[2] - b_b[0]))
+                    if (y_inter / float(min_h)) >= 0.50 and abs(bot_xs[i_a] - bot_xs[i_b]) > 0.60 * min(bot_ws[i_a], bot_ws[i_b]):
                         is_side_by_side_unworn_cluster = True
                         break
                 if is_side_by_side_unworn_cluster:
@@ -1478,12 +1490,15 @@ async def parse_garments(
 
     has_anatomical_outfit_stack = False
     if not is_side_by_side_unworn_cluster:
-        # 1. Standing outfit with footwear at bottom and pants/dress directly above them
-        if raw_shoe_bbs and (raw_bottom_bbs or any(c == "dress" for c, _ in raw_major_bbs)):
+        # 1. Standing outfit with footwear at bottom and pants/skirt/dress/top directly above them
+        if raw_shoe_bbs and (raw_bottom_bbs or raw_upper_bbs or any(c == "dress" for c, _ in raw_major_bbs)):
             max_shoe_y2 = max(b[2] for b in raw_shoe_bbs)
             min_shoe_y1 = min(b[0] for b in raw_shoe_bbs)
-            min_cloth_y1 = min(b[0] for b in (raw_upper_bbs + raw_bottom_bbs)) if (raw_upper_bbs or raw_bottom_bbs) else 0
-            if min_shoe_y1 >= int(0.55 * H) and min_cloth_y1 <= int(0.50 * H) and (max_shoe_y2 - min_cloth_y1) >= int(0.45 * H):
+            all_cloth = raw_upper_bbs + raw_bottom_bbs
+            min_cloth_y1 = min(b[0] for b in all_cloth) if all_cloth else 0
+            # Footwear reaches the lower region (y2 >= 70% H) and clothing starts above it (y1 <= 60% H)
+            # spanning at least 40% of the image height. Accommodates tall boots (knee-high / thigh-high).
+            if max_shoe_y2 >= int(0.70 * H) and min_cloth_y1 <= int(0.60 * H) and (max_shoe_y2 - min_cloth_y1) >= int(0.40 * H):
                 has_anatomical_outfit_stack = True
         # 2. Upper garment stacked vertically above lower garment along the same body axis
         if not has_anatomical_outfit_stack and raw_upper_bbs and raw_bottom_bbs:
@@ -1492,11 +1507,13 @@ async def parse_garments(
                 for by1, bx1, by2, bx2 in raw_bottom_bbs:
                     bw = max(1, bx2 - bx1)
                     x_ov = max(0, min(ux2, bx2) - max(ux1, bx1))
+                    max_lower_y2 = by2
+                    if raw_shoe_bbs:
+                        max_lower_y2 = max(max_lower_y2, max(b[2] for b in raw_shoe_bbs))
                     if (
                         uy1 < by1
-                        and by2 > uy2 + int(0.10 * H)
-                        and (x_ov / float(min(uw, bw))) >= 0.40
-                        and (by2 - uy1) >= int(0.45 * H)
+                        and (x_ov / float(min(uw, bw))) >= 0.35
+                        and ((by2 - uy1) >= int(0.25 * H) or (max_lower_y2 - uy1) >= int(0.40 * H))
                     ):
                         has_anatomical_outfit_stack = True
                         break
@@ -1566,7 +1583,7 @@ async def parse_garments(
             human_blurred = ndimage.gaussian_filter(human_mask_full.astype(float), sigma=smooth_sigma)
             human_mask_full = (human_blurred >= 0.3).astype(np.uint8)
 
-    has_human = bool(has_head or has_any_human or (human_mask_full is not None and int(human_mask_full.sum()) >= 150))
+    has_human = bool(has_head or has_any_human or has_anatomical_outfit_stack or (human_mask_full is not None and int(human_mask_full.sum()) >= 150))
 
     # 1) First pass: keep only sufficiently-large instances; index by label.
     by_label: dict[str, dict[str, Any]] = {}
@@ -1637,8 +1654,14 @@ async def parse_garments(
                 "mask": combined,
             }
 
-    # 2a) Footwear Consolidation (when SegFormer fragments footwear into multiple pieces or mislabels shoe parts)
-    if "Shoes" in by_label:
+    has_torso_upper_scene = any(
+        it.get("category") in ("top", "outerwear", "dress")
+        and _mask_bbox(it["mask"]) is not None
+        and _mask_bbox(it["mask"])[0] < int(0.40 * H)
+        for it in by_label.values() if it.get("mask") is not None
+    )
+    # 2a) Footwear Consolidation (when SegFormer fragments footwear into multiple pieces or mislabels shoe parts on footwear-focused photos)
+    if "Shoes" in by_label and not has_torso_upper_scene and not has_human:
         from scipy import ndimage
         while True:
             shoes_mask = by_label["Shoes"]["mask"]
@@ -1656,10 +1679,14 @@ async def parse_garments(
                 oy1, ox1, oy2, ox2 = obb
                 o_cat = (other_it.get("category") or "").lower()
 
-                # If there is a genuine tall upper body garment or full-length pants, do not absorb it
-                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and (has_human or (oy1 < int(0.35 * H) and (oy2 - oy1) >= int(0.25 * H)))
-                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and (has_human or (oy1 < int(0.55 * H) and (oy2 - oy1) >= int(0.25 * H)))
-                if is_genuine_tall_top or is_genuine_tall_bottom:
+                # REAL APPAREL (top, bottom, skirt, pants, dress, outerwear) CAN NEVER BE FOOTWEAR!
+                # Shoes must NEVER absorb real clothing garments under any circumstances.
+                o_lbl = str(other_it.get("label") or other_key).lower()
+                is_real_apparel = (
+                    o_cat in ("top", "bottom", "dress", "outerwear")
+                    or any(k in o_lbl for k in ("skirt", "pant", "trouser", "jean", "short", "shirt", "blouse", "top", "sweater", "jacket", "coat", "dress", "suit", "blazer", "hoodie", "cardigan", "vest"))
+                )
+                if is_real_apparel:
                     continue
 
                 x_inter = max(0, min(sx2, ox2) - max(sx1, ox1))
