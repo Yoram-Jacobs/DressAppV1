@@ -500,6 +500,7 @@ export default function DressingRoom3D({
       hasDress: visibleSlots.has('dress'),
       hasBottom: visibleSlots.has('bottom'),
       hasShoes: visibleSlots.has('shoes'),
+      hasHeadwear: visibleSlots.has('headwear'),
     };
   }, [activeGarments, layerVisibility]);
 
@@ -766,6 +767,8 @@ export default function DressingRoom3D({
                       isMale={isMale}
                       visible={isVisible}
                       hasOuterwear={hasOuterwear}
+                      hasBottom={coveredZones.hasBottom}
+                      hasTop={coveredZones.hasTop}
                       morphInfluences={morphInfluences}
                       footPose={footPose}
                       showAvatar={showAvatar}

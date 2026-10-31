@@ -587,19 +587,32 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect((beltGeo.boundingBox.min.y + beltGeo.boundingBox.max.y) / 2).toBeCloseTo(1.05, 2);
     expect(beltGeo.boundingBox.max.z - beltGeo.boundingBox.min.z).toBeGreaterThan(0.20);
 
-    // 5. Physical overlay order: jacket (outerwear) > necktie > belt > shirt (top) > pants (bottom)
+    // 5. 9-Layer Collision Protocol physical overlay order:
+    // base_top (0.003) < bottom (0.007) < mid_layer (0.010) < belt (0.011) < outerwear (0.016) < outer_accessory (0.019)
+    const baseTopFit = resolveShellFit({ rawSlot: 'top', garmentText: 'fitted t-shirt', isMale: true, hasOuterwear: true });
     const bottomFit = resolveShellFit({ rawSlot: 'bottom', garmentText: 'dress pants', isMale: true });
-    const shirtFit = resolveShellFit({ rawSlot: 'top', garmentText: 'button-up shirt', isMale: true, hasOuterwear: true });
+    const midLayerFit = resolveShellFit({ rawSlot: 'top', garmentText: 'untucked shirt', isMale: true, hasOuterwear: false });
     const jacketFit = resolveShellFit({ rawSlot: 'outerwear', garmentText: 'suit blazer jacket', isMale: true });
 
-    expect(bottomFit.layerOffset).toBeLessThan(shirtFit.layerOffset);
-    expect(shirtFit.layerOffset).toBeLessThan(0.029); // necktie layerOffset
-    expect(0.029).toBeLessThan(jacketFit.layerOffset);
+    expect(baseTopFit.layerOffset).toBeCloseTo(0.003, 4);
+    expect(bottomFit.layerOffset).toBeCloseTo(0.007, 4);
+    expect(midLayerFit.layerOffset).toBeCloseTo(0.010, 4);
+    expect(jacketFit.layerOffset).toBeCloseTo(0.016, 4);
 
+    expect(baseTopFit.layerOffset).toBeLessThan(bottomFit.layerOffset);
+    expect(bottomFit.layerOffset).toBeLessThan(midLayerFit.layerOffset);
+    expect(midLayerFit.layerOffset).toBeLessThan(0.011); // belt layerOffset
+    expect(0.011).toBeLessThan(jacketFit.layerOffset);
+    expect(jacketFit.layerOffset).toBeLessThan(0.019); // outer scarf/strap layerOffset
+
+    expect(resolveGarmentRenderOrder('shoes', 'low sneakers')).toBeLessThan(resolveGarmentRenderOrder('bottom'));
     expect(resolveGarmentRenderOrder('bottom')).toBeLessThan(resolveGarmentRenderOrder('top'));
     expect(resolveGarmentRenderOrder('top')).toBeLessThan(resolveGarmentRenderOrder('belt'));
     expect(resolveGarmentRenderOrder('belt')).toBeLessThan(resolveGarmentRenderOrder('necktie'));
-    expect(resolveGarmentRenderOrder('necktie')).toBeLessThan(resolveGarmentRenderOrder('outerwear'));
+    expect(resolveGarmentRenderOrder('necktie')).toBeLessThan(resolveGarmentRenderOrder('shoes', 'chelsea boots'));
+    expect(resolveGarmentRenderOrder('shoes', 'chelsea boots')).toBeLessThan(resolveGarmentRenderOrder('outerwear'));
+    expect(resolveGarmentRenderOrder('outerwear')).toBeLessThan(resolveGarmentRenderOrder('necktie', 'cashmere scarf'));
+    expect(resolveGarmentRenderOrder('outerwear')).toBeLessThan(resolveGarmentRenderOrder('bag', 'crossbody bag'));
   });
 
   test('retractCoveredAvatarSkin retracts covered torso, pelvis, and foot skin vertices so skin never shows through garments', () => {
@@ -789,5 +802,184 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     });
     // Already-downward / vertical drape sleeves are not forcibly rotated
     expect(applied.length).toBe(0);
+  });
+
+  test('Outerwear drapes OVER skirts/pants (never tucked in), inner top sleeves never stick out of outerwear, and 9-Layer Accessory Protocol is enforced', () => {
+    const THREE = require('three');
+    const {
+      LAYER_COLLISION_OFFSETS,
+      createAnatomicalAccessoryGeometry,
+      resolveShellFit,
+      getTorsoSlice,
+      getLegSlice,
+    } = require('@/components/GarmentMesh3D');
+    const { buildSilhouetteShell } = require('@/lib/garmentSilhouette');
+    const { retractCoveredAvatarSkin } = require('@/components/AvatarMesh3D');
+
+    // 1. Verify exact 9-Layer Collision Protocol radial offsets
+    expect(LAYER_COLLISION_OFFSETS).toMatchObject({
+      avatar_body: 0.000,
+      undergarment: 0.003,
+      base_top: 0.003,
+      socks: 0.003,
+      low_shoes: 0.004,
+      bottom: 0.007,
+      mid_layer: 0.010,
+      belt: 0.011,
+      belt_over_bottom: 0.002,
+      boots: 0.013,
+      outerwear: 0.016,
+      outer_accessory: 0.019,
+      bag_strap_delta: 0.003,
+    });
+
+    // 2. Outerwear (long black cardigan) vs pleated denim skirt below the waist:
+    //    Cardigan front Z must strictly exceed skirt front Z at hip/thigh so cardigan is NEVER tucked into skirt.
+    const nx = 40;
+    const ny = 60;
+    const runs = [];
+    for (let j = 0; j <= ny; j++) {
+      runs.push([[8, 32]]);
+    }
+    const skirtFit = resolveShellFit({
+      rawSlot: 'bottom',
+      garmentText: 'חצאית ג׳ינס פליסה באינדיגו כהה pleated denim skirt',
+      isMale: false,
+      hasOuterwear: true,
+    });
+    const cardiganFit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: 'קרדיגן שחור ארוך וצנוע בגזרה פתוחה long black cardigan',
+      isMale: false,
+      hasOuterwear: true,
+    });
+
+    const skirtShell = buildSilhouetteShell({
+      runsByRow: runs,
+      nx,
+      ny,
+      aspect: 0.70,
+      slot: 'bottom',
+      isMale: false,
+      isSkirt: true,
+      hasOuterwear: true,
+      yTop: skirtFit.yTop,
+      yBottom: skirtFit.yBottom,
+      layerOffset: skirtFit.layerOffset,
+      fabricThickness: skirtFit.fabricThickness,
+      getTorsoSlice,
+      getLegSlice,
+    });
+    const cardiganShell = buildSilhouetteShell({
+      runsByRow: runs,
+      nx,
+      ny,
+      aspect: 0.70,
+      slot: 'outerwear',
+      isMale: false,
+      isSkirt: false,
+      isWideOrLoose: true,
+      hasOuterwear: true,
+      yTop: cardiganFit.yTop,
+      yBottom: cardiganFit.yBottom,
+      layerOffset: cardiganFit.layerOffset,
+      fabricThickness: cardiganFit.fabricThickness,
+      poseSleeves: false,
+      getTorsoSlice,
+      getLegSlice,
+    });
+
+    expect(skirtShell.ok).toBe(true);
+    expect(cardiganShell.ok).toBe(true);
+
+    // Compare front Z at hip height (y ~ 0.85m) near center column (i = 20)
+    const vw = nx + 1;
+    const skirtPos = skirtShell.front.getAttribute('position');
+    const cardiganPos = cardiganShell.front.getAttribute('position');
+    // Find row closest to y = 0.85 in each shell
+    let skirtRow = 0;
+    let cardiganRow = 0;
+    for (let j = 0; j <= ny; j++) {
+      if (Math.abs(skirtPos.getY(j * vw + 20) - 0.85) < Math.abs(skirtPos.getY(skirtRow * vw + 20) - 0.85)) {
+        skirtRow = j;
+      }
+      if (Math.abs(cardiganPos.getY(j * vw + 20) - 0.85) < Math.abs(cardiganPos.getY(cardiganRow * vw + 20) - 0.85)) {
+        cardiganRow = j;
+      }
+    }
+    const skirtHipZ = skirtPos.getZ(skirtRow * vw + 20);
+    const cardiganHipZ = cardiganPos.getZ(cardiganRow * vw + 20);
+    expect(cardiganHipZ).toBeGreaterThan(skirtHipZ + 0.008);
+
+    // 3. Inner top under outerwear (`hasOuterwear: true`):
+    //    Cap/short sleeves are clipped to the central torso corridor so they never stick out past the cardigan shoulders
+    const wideSleeveTopRuns = [];
+    for (let j = 0; j <= ny; j++) {
+      wideSleeveTopRuns.push([[2, 38]]); // Wide cap sleeves in photo
+    }
+    const innerTopFit = resolveShellFit({
+      rawSlot: 'top',
+      garmentText: 'חולצת טריקו שחורה מחוייטת במבנה צמודה fitted black t-shirt',
+      isMale: false,
+      hasOuterwear: true,
+    });
+    const innerTopShell = buildSilhouetteShell({
+      runsByRow: wideSleeveTopRuns,
+      nx,
+      ny,
+      aspect: 0.75,
+      slot: 'top',
+      isMale: false,
+      isSkirt: false,
+      hasOuterwear: true,
+      yTop: innerTopFit.yTop,
+      yBottom: innerTopFit.yBottom,
+      layerOffset: innerTopFit.layerOffset,
+      fabricThickness: innerTopFit.fabricThickness,
+      getTorsoSlice,
+      getLegSlice,
+    });
+    expect(innerTopShell.ok).toBe(true);
+    innerTopShell.front.computeBoundingBox();
+    // Max X extent of inner top is strictly inside the torso chest corridor (< 0.14m), never sticking out at shoulder (0.20m+)
+    expect(innerTopShell.front.boundingBox.max.x).toBeLessThan(0.145);
+    expect(innerTopShell.front.boundingBox.min.x).toBeGreaterThan(-0.145);
+
+    // 4. Belt buckle protection (`deformWeight = 0.0` at center front, `1.0` on strap) & dynamic parent target
+    const beltOverBottom = createAnatomicalAccessoryGeometry('belt', { isMale: false, hasBottom: true });
+    const beltWeights = beltOverBottom.getAttribute('deformWeight');
+    expect(beltWeights).toBeDefined();
+    let hasRigidBuckle = false;
+    let hasDeformableStrap = false;
+    for (let i = 0; i < beltWeights.count; i++) {
+      if (beltWeights.getX(i) === 0.0) hasRigidBuckle = true;
+      if (beltWeights.getX(i) === 1.0) hasDeformableStrap = true;
+    }
+    expect(hasRigidBuckle).toBe(true);
+    expect(hasDeformableStrap).toBe(true);
+
+    // 5. Crossbody bag includes rigid Bag_Body (`0.0`) + conforming Strap (`1.0`)
+    const crossbodyGeo = createAnatomicalAccessoryGeometry('bag', {
+      isMale: false,
+      hasOuterwear: true,
+      garmentText: 'leather crossbody shoulder bag',
+    });
+    const bagWeights = crossbodyGeo.getAttribute('deformWeight');
+    let bagRigidCount = 0;
+    let bagStrapCount = 0;
+    for (let i = 0; i < bagWeights.count; i++) {
+      if (bagWeights.getX(i) === 0.0) bagRigidCount++;
+      if (bagWeights.getX(i) === 1.0) bagStrapCount++;
+    }
+    expect(bagRigidCount).toBeGreaterThan(0);
+    expect(bagStrapCount).toBeGreaterThan(0);
+
+    // 6. Hat crown downward hair collision mask (`hasHeadwear: true`)
+    const hairGeo = new THREE.BufferGeometry();
+    hairGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0.08, 1.68, 0.06]), 3));
+    retractCoveredAvatarSkin(hairGeo, { hasHeadwear: true }, false);
+    const hairPos = hairGeo.getAttribute('position');
+    expect(hairPos.getY(0)).toBeLessThan(1.68);
+    expect(hairPos.getX(0)).toBeLessThan(0.08);
   });
 });

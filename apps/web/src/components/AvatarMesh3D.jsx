@@ -51,8 +51,8 @@ export function getAvatarMetricTransform({ isMale = false, height = 170, morphIn
  */
 export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale = false) {
   if (!geometry || !coveredZones) return geometry;
-  const { hasTop, hasOuterwear, hasDress, hasBottom, hasShoes } = coveredZones;
-  if (!hasTop && !hasOuterwear && !hasDress && !hasBottom && !hasShoes) return geometry;
+  const { hasTop, hasOuterwear, hasDress, hasBottom, hasShoes, hasHeadwear } = coveredZones;
+  if (!hasTop && !hasOuterwear && !hasDress && !hasBottom && !hasShoes && !hasHeadwear) return geometry;
 
   const pos = geometry.attributes?.position;
   if (!pos) return geometry;
@@ -60,6 +60,7 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
   const n = pos.count;
   const footCx = isMale ? 0.148 : 0.170;
   const footCz = isMale ? 0.055 : 0.095;
+  const hatBrimY = isMale ? 1.66 : 1.58;
 
   for (let i = 0; i < n; i++) {
     const idx = i * 3;
@@ -67,6 +68,16 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     const y = arr[idx + 1];
     const z = arr[idx + 2];
     const absX = Math.abs(x);
+
+    // 0. Headwear hair/crown collision mask: subtly depress hair/crown geometry above hat brim
+    // so hair never punches through the crown of a hat or cap.
+    if (hasHeadwear && y > hatBrimY) {
+      const tCrown = Math.min(1.0, (y - hatBrimY) / 0.12);
+      arr[idx] = x * (1 - 0.08 * tCrown);
+      arr[idx + 1] = y - 0.012 * tCrown;
+      arr[idx + 2] = 0.03 + (z - 0.03) * (1 - 0.08 * tCrown);
+      continue;
+    }
 
     // 1. Foot enclosure under shoes: retract foot & sole surface inward toward foot core
     if (hasShoes && y < 0.088) {
@@ -210,7 +221,7 @@ export default function AvatarMesh3D({
     if (!clonedScene) return;
     const hasCoverage = Boolean(
       coveredZones &&
-      (coveredZones.hasTop || coveredZones.hasOuterwear || coveredZones.hasDress || coveredZones.hasBottom || coveredZones.hasShoes)
+      (coveredZones.hasTop || coveredZones.hasOuterwear || coveredZones.hasDress || coveredZones.hasBottom || coveredZones.hasShoes || coveredZones.hasHeadwear)
     );
     clonedScene.traverse((node) => {
       const original = node.userData?.originalGeometry;
@@ -221,8 +232,8 @@ export default function AvatarMesh3D({
       }
       if (!footPose?.active && !hasCoverage) return;
       if (!original.boundingBox) original.computeBoundingBox?.();
-      // Skip hair/head-only meshes located high above the shoulders
-      if (original.boundingBox && original.boundingBox.min.y > 1.42) return;
+      // Skip hair/head-only meshes located high above the shoulders unless a hat is worn (crown collision mask)
+      if (original.boundingBox && original.boundingBox.min.y > 1.42 && !coveredZones?.hasHeadwear) return;
       let nextGeo = original.clone();
       if (hasCoverage) {
         nextGeo = retractCoveredAvatarSkin(nextGeo, coveredZones, isMale);

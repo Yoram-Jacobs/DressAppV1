@@ -328,10 +328,10 @@ export function getTopTopography(garment, hasOuterwear = false) {
   }
 
   // 4. Standard Top (Default: shirts, t-shirts, sweaters, hoodies, polos)
-  // Anchored at base of neck at top-[23.0%], rests on shoulders (y=24.9%). When outerwear is worn, width 70%
+  // Anchored at base of neck at top-[23.0%], rests on shoulders (y=24.9%). When outerwear is worn, width 52% to stay inside outerwear
   return {
     classes: hasOuterwear
-      ? 'top-[23.0%] left-1/2 w-[70%] h-[33%] z-[20]'
+      ? 'top-[23.0%] left-1/2 w-[52%] h-[33%] z-[20]'
       : 'top-[23.0%] left-1/2 w-[76%] h-[33%] z-[20]',
     align: 'object-top'
   };
@@ -341,11 +341,13 @@ export function getOuterwearTopography(garment) {
   if (!garment) return { classes: 'top-[22.0%] left-1/2 w-[82%] h-[42%] z-[30] drop-shadow-lg', align: 'object-top' };
   const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
 
-  // 1. Long coats, trench coats, overcoats, dusters, parkas
+  // 1. Long coats, trench coats, overcoats, dusters, parkas, long cardigans
   if (
     text.includes('overcoat') ||
     text.includes('trench') ||
     text.includes('duster') ||
+    text.includes('cardigan') ||
+    text.includes('קרדיגן') ||
     text.includes('מעיל ארוך') ||
     text.includes('טרנץ') ||
     text.includes('пальто') ||
@@ -709,6 +711,7 @@ export function FittedGarmentLayer({
   avatarFit,
   liveAnatomy,
   roleKey,
+  hasOuterwear = false,
   clickable = false,
   onClick,
   zIndexClass = 'z-[20]',
@@ -855,9 +858,29 @@ export function FittedGarmentLayer({
       const dw = widthLive * SCALE;
       const dh = heightLive * SCALE + 0.85; // sub-pixel overlap prevents slice seams
 
-      ctx.drawImage(activeImageSource, 0, sy, natW, sh, dx, dy, dw, dh);
+      if (roleKey === 'top' && hasOuterwear && y0Top < defaultAnatomy.yHip) {
+        // Clip the inner top slice to the central neck/chest corridor so its cap/short
+        // sleeves never stick out past the outerwear shoulders or sleeves.
+        const tCorridor = clamp01(
+          (y0Mid - defaultAnatomy.yShoulders) /
+            Math.max(1, defaultAnatomy.yChest - defaultAnatomy.yShoulders)
+        );
+        const corridorHalf = 15 + tCorridor * 7; // 15 SVG units at neck -> 22 at chest
+        const clipLeft = Math.max(xLeftLive, sliceCenter - corridorHalf);
+        const clipRight = Math.min(xLeftLive + widthLive, sliceCenter + corridorHalf);
+        if (clipRight > clipLeft) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(clipLeft * SCALE, dy, (clipRight - clipLeft) * SCALE, dh);
+          ctx.clip();
+          ctx.drawImage(activeImageSource, 0, sy, natW, sh, dx, dy, dw, dh);
+          ctx.restore();
+        }
+      } else {
+        ctx.drawImage(activeImageSource, 0, sy, natW, sh, dx, dy, dw, dh);
+      }
     }
-  }, [activeImageSource, activeAvatarFit, defaultAnatomy, liveAnatomy, layerEaseMultiplier, roleKey]);
+  }, [activeImageSource, activeAvatarFit, defaultAnatomy, liveAnatomy, layerEaseMultiplier, roleKey, hasOuterwear]);
 
   const fallbackBox = useMemo(() => {
     const vb = activeAvatarFit?.default_viewbox || { x: 55, y: 75, width: 90, height: 150 };
@@ -1639,6 +1662,7 @@ export default function AvatarViewer2D({
           avatarFit={onboardingFit}
           liveAnatomy={liveAnatomy}
           roleKey={roleKey}
+          hasOuterwear={hasOuterwear}
           clickable={Boolean(clickable)}
           onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
           zIndexClass={zIndexClass}

@@ -213,6 +213,7 @@ function findNearest(field, x, y, z, includeArms = false) {
  */
 export function applyAvatarMorphsToGeometry(geometry, field, influences, options = {}) {
   if (!geometry || !field) return geometry;
+  if (options?.rigidAnchor) return geometry;
   const infObj = influences || {};
   const active = Object.entries(infObj).filter(
     ([name, w]) => field.targets[name] && Math.abs(Number(w) || 0) > 1e-4
@@ -224,15 +225,56 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
 
   const out = geometry.clone();
   const pos = out.attributes.position;
+  const deformWeightAttr = out.attributes.deformWeight || null;
   const heavyInf = Math.max(0, Number(infObj.heavy) || 0);
   const waistInf = Math.max(0, Number(infObj.waist_thick) || 0);
   const hipsInf = Math.max(0, Number(infObj.hips_wide) || 0);
   const bustInf = Math.max(0, Number(infObj.busty) || 0);
 
+  // If geometry carries a `deformWeight` attribute (e.g. Belt_Buckle = 0, Belt_Strap = 1,
+  // or Bag_Body = 0, Strap = 1), compute a single rigid anchor translation at the centroid of
+  // weight-0 vertices so buckles and bag bodies translate with the body without warping.
+  let rigidAnchorDelta = null;
+  if (deformWeightAttr) {
+    let cx = 0, cy = 0, cz = 0, rCount = 0;
+    for (let vi = 0; vi < pos.count; vi++) {
+      if (deformWeightAttr.getX(vi) < 0.5) {
+        cx += pos.getX(vi);
+        cy += pos.getY(vi);
+        cz += pos.getZ(vi);
+        rCount++;
+      }
+    }
+    if (rCount > 0) {
+      cx /= rCount; cy /= rCount; cz /= rCount;
+      const nnR = findNearest(field, cx, cy, cz, includeArms);
+      let rwSum = 0, rox = 0, roy = 0, roz = 0;
+      for (let n = 0; n < nnR.length; n++) {
+        const { i, d2 } = nnR[n];
+        const w = 1 / (d2 + 1e-6);
+        let dx = 0, dy = 0, dz = 0;
+        for (let t = 0; t < active.length; t++) {
+          const [name, inf] = active[t];
+          const arr = field.targets[name];
+          dx += inf * arr[i * 3];
+          dy += inf * arr[i * 3 + 1];
+          dz += inf * arr[i * 3 + 2];
+        }
+        rox += w * dx; roy += w * dy; roz += w * dz; rwSum += w;
+      }
+      rigidAnchorDelta = rwSum > 0 ? [rox / rwSum, roy / rwSum, roz / rwSum] : [0, 0, 0];
+    }
+  }
+
   for (let vi = 0; vi < pos.count; vi++) {
     const x = pos.getX(vi);
     const y = pos.getY(vi);
     const z = pos.getZ(vi);
+    const dWeight = deformWeightAttr ? deformWeightAttr.getX(vi) : 1.0;
+    if (dWeight <= 1e-4 && rigidAnchorDelta) {
+      pos.setXYZ(vi, x + rigidAnchorDelta[0], y + rigidAnchorDelta[1], z + rigidAnchorDelta[2]);
+      continue;
+    }
     const isOuterArmVertex = includeArms || (Math.abs(x) > 0.212 && y >= 0.80 && y <= 1.42);
     const nn = findNearest(field, x, y, z, isOuterArmVertex);
     if (nn.length === 0) continue;
@@ -277,6 +319,12 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
         const minBackPush = -(heavyInf * 0.024 + waistInf * 0.010 + hipsInf * 0.012) * backWeight;
         if (dzFinal > minBackPush) dzFinal = minBackPush;
       }
+    }
+
+    if (dWeight < 1.0 && rigidAnchorDelta) {
+      dxFinal = rigidAnchorDelta[0] * (1 - dWeight) + dxFinal * dWeight;
+      dyFinal = rigidAnchorDelta[1] * (1 - dWeight) + dyFinal * dWeight;
+      dzFinal = rigidAnchorDelta[2] * (1 - dWeight) + dzFinal * dWeight;
     }
 
     const finalZ = z + dzFinal;

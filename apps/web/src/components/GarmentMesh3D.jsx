@@ -2039,23 +2039,63 @@ export function createAnatomicalFootwearGeometry({
 }
 
 /**
+ * Complete 9-Layer Collision Protocol Radial Offsets (in meters):
+ *  - Layer 0 (Avatar Body): 0.000m
+ *  - Layer 1 (Undergarments / Base Tops / Socks): +0.003m (3mm)
+ *  - Layer 2 (Footwear - Low Shoes / Sneakers): +0.004m (4mm)
+ *  - Layer 3 (Bottoms - Trousers / Jeans / Skirts): +0.007m (7mm)
+ *  - Layer 4 (Mid-Layers - Sweaters / Untucked Shirts): +0.010m (10mm)
+ *  - Layer 5 (Waist Accessories - Belts / Sashes): +0.011m (11mm; +0.002m over active bottom)
+ *  - Layer 6 (Footwear - Mid & High-Shaft Boots): +0.013m (13mm above legs/bottoms)
+ *  - Layer 7 (Outerwear - Cardigans / Jackets / Coats): +0.016m (16mm)
+ *  - Layer 8 (Outer Accessories - Scarves / Shawls / Crossbody Straps): +0.019m (19mm)
+ */
+export const LAYER_COLLISION_OFFSETS = Object.freeze({
+  avatar_body: 0.000,
+  undergarment: 0.003,
+  base_top: 0.003,
+  socks: 0.003,
+  low_shoes: 0.004,
+  bottom: 0.007,
+  mid_layer: 0.010,
+  belt: 0.011,
+  belt_over_bottom: 0.002,
+  boots: 0.013,
+  outerwear: 0.016,
+  outer_accessory: 0.019,
+  bag_strap_delta: 0.003,
+});
+
+/**
  * Creates 3D accessory geometry mapped directly to its anatomical anchor on the avatar:
  *  - 'watch': Wristwatch / bracelet wrapped around the avatar's LEFT wrist (+X side)
  *             with a raised watch dial/bezel on the dorsal wrist surface.
  *  - 'necktie': Contoured collar band + knot + tapered front blade hanging from the
  *               neckline (y = 1.50 M / 1.44 F) down to the beltline (y = 1.06 M / 1.04 F),
- *               layered cleanly outside the shirt (`layerOffset = 0.029`) and inside jackets.
- *  - 'belt': 360° contoured elliptical strap + raised front buckle around the waistline
- *            (y = 1.08 M / 1.05 F), overlaying tops and bottoms (`layerOffset = 0.026`).
- *  - 'headwear': Contoured crown dome + visor/brim on the head.
- *  - 'glasses': Contoured front frame + nose bridge + side temples resting on the face.
- *  - 'bag': Structured handbag/shoulder bag positioned on the right hip/hand side.
+ *               or outer scarf/shawl at Layer 8 (+0.019m) over outerwear.
+ *  - 'belt': 360° contoured elliptical strap (`deformWeight = 1.0`) + flat rigid front buckle
+ *            (`deformWeight = 0.0`) around the waistline (y = 1.08 M / 1.05 F), dynamically
+ *            wrapping active bottom (`+0.002m` over Layer 3) or bare avatar/dress (`+0.011m`).
+ *  - 'headwear': Rigid crown dome + visor/brim on the head (`deformWeight = 0.0`).
+ *  - 'glasses': Rigid front frame + nose bridge + side temples resting on the face (`deformWeight = 0.0`).
+ *  - 'bag': Rigid handbag/shoulder bag body (`deformWeight = 0.0`) + conforming shoulder/crossbody
+ *           strap (`deformWeight = 1.0`) wrapped `+0.003m` over the outermost active torso layer.
  */
-export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerOffset = 0.026 } = {}) {
+export function createAnatomicalAccessoryGeometry(
+  type,
+  {
+    isMale = false,
+    layerOffset = LAYER_COLLISION_OFFSETS.belt,
+    hasBottom = false,
+    hasOuterwear = false,
+    garmentText = '',
+  } = {}
+) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
   const uvs = [];
   const indices = [];
+  const deformWeights = [];
 
   const baseHeadY = isMale ? 1.70 : 1.62;
 
@@ -2072,7 +2112,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
     const ny = 6;
     const nx = 24;
 
-    // 1. 360° Wrist Strap Band
+    // 1. 360° Wrist Strap Band (deformable band = 1.0)
     for (let i = 0; i <= ny; i++) {
       const v = i / ny;
       const y = cy + bandHalfH - v * (bandHalfH * 2);
@@ -2083,6 +2123,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
         const z = cz + rz * Math.cos(theta);
         verts.push(x, y, z);
         uvs.push(u, 1 - v);
+        deformWeights.push(1.0);
       }
     }
     for (let i = 0; i < ny; i++) {
@@ -2095,7 +2136,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       }
     }
 
-    // 2. Raised Watch Case / Bezel on outer/front-lateral wrist surface (theta around +pi/4)
+    // 2. Raised Watch Case / Bezel on outer/front-lateral wrist surface (rigid case = 0.0)
     const caseStartIdx = verts.length / 3;
     const caseAngle = Math.PI * 0.25; // front-outer aspect of left wrist
     const nCaseR = 16;
@@ -2112,6 +2153,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
     // Center vertex of watch face
     verts.push(dialCenterX, dialCenterY, dialCenterZ);
     uvs.push(0.5, 0.5);
+    deformWeights.push(0.0);
     for (let j = 0; j <= nCaseR; j++) {
       const phi = (j / nCaseR) * 2 * Math.PI;
       const localU = Math.cos(phi) * caseRadius;
@@ -2121,14 +2163,17 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       const RimZ = dialCenterZ + localU * tzDir;
       verts.push(RimX, RimY, RimZ);
       uvs.push(0.5 + 0.35 * Math.cos(phi), 0.5 + 0.35 * Math.sin(phi));
+      deformWeights.push(0.0);
     }
     for (let j = 1; j <= nCaseR; j++) {
       indices.push(caseStartIdx, caseStartIdx + j, caseStartIdx + j + 1);
     }
-  } else if (type === 'necktie') {
-    // Contoured 3D Necktie anchored from the neckline down over the sternum to the beltline.
-    // Overlays shirt (0.022m) and sits cleanly beneath outerwear (0.038m).
-    const tieOffset = Math.max(0.029, layerOffset);
+  } else if (type === 'necktie' || type === 'scarf') {
+    // Contoured 3D Necktie or Outer Scarf/Shawl (Layer 8: +0.019m over jackets and collars)
+    const isScarf = type === 'scarf' || /(?:scarf|shawl|wrap|stole|pashmina|צעיף|שאל|מטפחת)/i.test(garmentText);
+    const tieOffset = isScarf
+      ? Math.max(LAYER_COLLISION_OFFSETS.outer_accessory, layerOffset)
+      : Math.max(LAYER_COLLISION_OFFSETS.mid_layer + 0.002, layerOffset);
     const yTop = isMale ? 1.50 : 1.44;
     const yKnotBottom = isMale ? 1.44 : 1.385;
     const yTip = isMale ? 1.06 : 1.04;
@@ -2141,13 +2186,14 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       const v = i / nyCollar;
       const y = yTop - v * (yTop - yKnotBottom);
       const slice = getTorsoSlice(y, isMale);
-      const rx = Math.min(slice.rx, isMale ? 0.082 : 0.068) + tieOffset * 0.7;
-      const rz = Math.min(slice.rz, isMale ? 0.078 : 0.066) + tieOffset * 0.7;
+      const rx = Math.min(slice.rx, isMale ? 0.082 : 0.068) + tieOffset;
+      const rz = Math.min(slice.rz, isMale ? 0.078 : 0.066) + tieOffset;
       for (let j = 0; j <= nxCollar; j++) {
         const u = j / nxCollar;
         const theta = -Math.PI + u * 2 * Math.PI;
         verts.push(rx * Math.sin(theta), y, slice.cz + rz * Math.cos(theta));
         uvs.push(0.35 + u * 0.30, 0.96 - v * 0.08);
+        deformWeights.push(1.0);
       }
     }
     for (let i = 0; i < nyCollar; i++) {
@@ -2157,7 +2203,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       }
     }
 
-    // 2. Front Tie Knot & Tapered Blade with Pointed Diamond Tip (yTop -> yTip)
+    // 2. Front Tie Knot / Scarf Drape Blade (yTop -> yTip)
     const nyBlade = 18;
     const nxBlade = 6;
     const bladeStartIdx = verts.length / 3;
@@ -2166,10 +2212,12 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       const y = yTop - v * (yTop - yTip);
       const slice = getTorsoSlice(y, isMale);
 
-      // Width profile: knot at top (v < 0.14), narrow neck (v = 0.16), widening blade (v = 0.85), pointed tip (v = 1.0)
       let halfWidth;
       let knotBumpZ = 0;
-      if (v < 0.14) {
+      if (isScarf) {
+        halfWidth = 0.065 + Math.sin(v * Math.PI) * 0.020;
+        knotBumpZ = 0.006;
+      } else if (v < 0.14) {
         const kt = v / 0.14;
         halfWidth = 0.028 - kt * 0.011; // 2.8cm down to 1.7cm at knot base
         knotBumpZ = Math.sin(kt * Math.PI) * 0.009;
@@ -2185,11 +2233,11 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       for (let j = 0; j <= nxBlade; j++) {
         const u = j / nxBlade; // 0..1 across tie width
         const x = (u - 0.5) * 2 * halfWidth;
-        // Slight convex bevel across the blade so it has 3D thickness
         const bevelZ = Math.sin(u * Math.PI) * 0.004;
         const z = slice.cz + rzFront + bevelZ;
         verts.push(x, y, z);
         uvs.push(0.32 + u * 0.36, 0.98 - v * 0.94);
+        deformWeights.push(1.0);
       }
     }
     for (let i = 0; i < nyBlade; i++) {
@@ -2202,6 +2250,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       }
     }
   } else if (type === 'headwear') {
+    // Rigid Anchor Transformation: fixed scale offset on Head crown with zero shrinkwrap deformation
     const ny = 8;
     const nx = 20;
     const rHead = 0.125;
@@ -2216,6 +2265,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
         const theta = -Math.PI + u * 2 * Math.PI;
         verts.push(r * Math.sin(theta), y, 0.04 + r * Math.cos(theta));
         uvs.push(u, 1 - v);
+        deformWeights.push(0.0);
       }
     }
     for (let i = 0; i < ny; i++) {
@@ -2225,6 +2275,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       }
     }
   } else if (type === 'glasses') {
+    // Rigid Anchor Transformation: positioned at nose bridge and temples with zero vertex displacement
     const yEye = isMale ? 1.62 : 1.56;
     const nxG = 12;
     const nyG = 2;
@@ -2237,6 +2288,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
         const curveZ = 0.138 - Math.pow(Math.abs(u - 0.5) * 2, 1.8) * 0.022;
         verts.push(x, y, curveZ);
         uvs.push(u, 1 - v);
+        deformWeights.push(0.0);
       }
     }
     for (let i = 0; i < nyG; i++) {
@@ -2246,7 +2298,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
       }
     }
   } else if (type === 'bag') {
-    // Structured 3D bag carried near right hip/hand (-X side)
+    // 1. Rigid Bag_Body (`deformWeight = 0.0`) near right hip/hand (-X side)
     const cx = isMale ? -0.27 : -0.24;
     const cy = isMale ? 0.84 : 0.80;
     const cz = 0.04;
@@ -2263,6 +2315,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
         const theta = -Math.PI + u * 2 * Math.PI;
         verts.push(cx + hw * Math.sin(theta), y, cz + hd * Math.cos(theta));
         uvs.push(u, 1 - v);
+        deformWeights.push(0.0);
       }
     }
     for (let i = 0; i < nyB; i++) {
@@ -2271,15 +2324,57 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
         indices.push(a, a + nxB + 1, a + 1, a + 1, a + nxB + 1, a + nxB + 2);
       }
     }
+
+    // 2. Conforming Strap (`deformWeight = 1.0`) for crossbody / shoulder / backpack bags:
+    // Shrinkwraps against outermost active torso layer (Outerwear +0.016m or Mid-Layer +0.010m) + 0.003m
+    const hasStrap = /(?:crossbody|shoulder|messenger|satchel|tote|backpack|תיק צד|תיק כתף|תרמיל|גב)/i.test(garmentText);
+    if (hasStrap) {
+      const strapStartIdx = verts.length / 3;
+      const baseTorsoLayer = hasOuterwear
+        ? LAYER_COLLISION_OFFSETS.outerwear
+        : LAYER_COLLISION_OFFSETS.mid_layer;
+      const strapOffset = baseTorsoLayer + LAYER_COLLISION_OFFSETS.bag_strap_delta;
+      const yShoulder = isMale ? 1.46 : 1.40;
+      const yBagTop = cy + hh;
+      const nyS = 14;
+      const nxS = 2;
+      const strapHalfW = 0.012;
+      for (let i = 0; i <= nyS; i++) {
+        const v = i / nyS;
+        const y = yShoulder - v * (yShoulder - yBagTop);
+        const slice = getTorsoSlice(y, isMale);
+        const xCenter = (isMale ? 0.11 : 0.09) * (1 - v) + cx * v;
+        const rzFront = (slice.rzFront || slice.rz) + strapOffset;
+        for (let j = 0; j <= nxS; j++) {
+          const u = j / nxS;
+          const x = xCenter + (u - 0.5) * 2 * strapHalfW;
+          const z = slice.cz + rzFront;
+          verts.push(x, y, z);
+          uvs.push(0.45 + u * 0.1, 0.95 - v * 0.4);
+          deformWeights.push(1.0);
+        }
+      }
+      for (let i = 0; i < nyS; i++) {
+        for (let j = 0; j < nxS; j++) {
+          const a = strapStartIdx + i * (nxS + 1) + j;
+          indices.push(a, a + nxS + 1, a + 1, a + 1, a + nxS + 1, a + nxS + 2);
+        }
+      }
+    }
   } else {
-    // Belt / Waistline accessory: 360° contoured elliptical strap + front buckle on the waistline
+    // Belt / Waistline accessory (Layer 5):
+    // Dynamic Parent Target: if an active bottom exists, wraps bottom_garment_obj (+0.007m + 0.002m = +0.009m);
+    // if worn over bare avatar/dress, wraps avatar_body at +0.011m.
+    // Buckle Protection Group: Belt_Strap (deformWeight = 1.0) vs Belt_Buckle (deformWeight = 0.0, flat Z plane).
     const yBelt = isMale ? 1.08 : 1.05;
     const beltHalfH = 0.022;
     const slice = getTorsoSlice(yBelt, isMale);
-    const beltOffset = Math.max(0.026, layerOffset);
+    const beltOffset = hasBottom
+      ? LAYER_COLLISION_OFFSETS.bottom + LAYER_COLLISION_OFFSETS.belt_over_bottom
+      : Math.max(LAYER_COLLISION_OFFSETS.belt, layerOffset);
     const rx = slice.rx + beltOffset;
     const rzFront = (slice.rzFront || slice.rz) + beltOffset;
-    const rzBack = (slice.rzBack || slice.rz) + beltOffset + 0.006;
+    const rzBack = (slice.rzBack || slice.rz) + beltOffset + 0.004;
     const nyB = 4;
     const nxB = 28;
 
@@ -2291,14 +2386,16 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
         const theta = -Math.PI + u * 2 * Math.PI;
         const isFront = Math.cos(theta) >= 0;
         const x = rx * Math.sin(theta);
-        // Subtle front buckle relief at center-front (|sin(theta)| < 0.18)
+        // Buckle Protection Group at center-front (|sin(theta)| < 0.18): flat undeformed plane
         const isBuckle = isFront && Math.abs(Math.sin(theta)) < 0.18;
-        const buckleBoost = isBuckle ? 0.005 : 0;
-        const z = isFront
-          ? slice.cz + (rzFront + buckleBoost) * Math.cos(theta)
-          : slice.cz - rzBack * Math.abs(Math.cos(theta));
+        const z = isBuckle
+          ? slice.cz + rzFront + 0.004
+          : isFront
+            ? slice.cz + rzFront * Math.cos(theta)
+            : slice.cz - rzBack * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
         uvs.push(u, 1 - v);
+        deformWeights.push(isBuckle ? 0.0 : 1.0);
       }
     }
     for (let i = 0; i < nyB; i++) {
@@ -2314,6 +2411,7 @@ export function createAnatomicalAccessoryGeometry(type, { isMale = false, layerO
 
   geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setAttribute('deformWeight', new THREE.Float32BufferAttribute(deformWeights, 1));
   geo.setIndex(indices);
   geo.computeVertexNormals();
   return geo;
@@ -2394,11 +2492,22 @@ export function resolveMaterialPBRProps(garmentText = '', rawSlot = 'top') {
 }
 
 /**
- * Returns the physical layering renderOrder for each garment slot:
- * bottom (6) < top (8) < dress (9) < belt (10) < necktie (11) < outerwear (12) < shoes (14) < watch/accessory (15)
+ * Returns the physical layering renderOrder for each garment slot according to the
+ * 9-Layer Collision Protocol:
+ *  - Layer 2 (Low Shoes / Sneakers): 5
+ *  - Layer 3 (Bottoms - Trousers / Jeans / Skirts): 6
+ *  - Layer 1 / 4 (Base Tops / Mid-Layers): 8
+ *  - Layer 4 (Dresses): 9
+ *  - Layer 5 (Waist Accessories - Belts / Sashes): 10
+ *  - Necktie (under outerwear): 11
+ *  - Layer 6 (Mid & High-Shaft Boots): 12
+ *  - Layer 7 (Outerwear - Cardigans / Jackets / Coats): 14
+ *  - Layer 8 (Outer Accessories - Scarves / Shawls / Bags / Headwear / Glasses / Watch): 16
  */
-export function resolveGarmentRenderOrder(rawSlot) {
+export function resolveGarmentRenderOrder(rawSlot, garmentText = '') {
   switch (rawSlot) {
+    case 'shoes':
+      return /(?:boot|chelsea|מגפיים|מגפי)/i.test(garmentText) ? 12 : 5;
     case 'bottom':
       return 6;
     case 'top':
@@ -2408,17 +2517,16 @@ export function resolveGarmentRenderOrder(rawSlot) {
     case 'belt':
       return 10;
     case 'necktie':
-      return 11;
+      return /(?:scarf|shawl|wrap|stole|pashmina|צעיף|שאל|מטפחת)/i.test(garmentText) ? 16 : 11;
     case 'outerwear':
-      return 12;
-    case 'shoes':
       return 14;
+    case 'scarf':
     case 'watch':
     case 'glasses':
     case 'headwear':
     case 'bag':
     case 'accessory':
-      return 15;
+      return 16;
     default:
       return 10;
   }
@@ -2463,7 +2571,7 @@ export function resolveFabricThickness(fullText = '', rawSlot = 'top', isSkirt =
 /**
  * Vertical placement + clearance of a garment shell for each clothing slot,
  * expressed in the avatar's base (un-morphed) metric space.
- * Enforces strict physical layering offsets and realistic fabric thickness (0.2 mm to 3.0 mm).
+ * Enforces the 9-Layer Collision Protocol radial offsets and realistic fabric thickness (0.2 mm to 3.0 mm).
  */
 export function resolveShellFit({
   rawSlot,
@@ -2485,8 +2593,11 @@ export function resolveShellFit({
     if (isLongline) yBottom = isMale ? 0.75 : 0.70;
     const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
     const fabricThickness = resolveFabricThickness(fullText, 'top', false);
-    // Shirt/top always clears bottom (0.016m) and sits cleanly under necktie (0.029m) & outerwear (0.035m+)
-    return { yTop, yBottom, layerOffset: 0.022, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
+    // Layer 1 (+0.003m) when worn under outerwear; Layer 4 (+0.010m) when worn as outer mid-layer
+    const layerOffset = hasOuterwear
+      ? LAYER_COLLISION_OFFSETS.base_top
+      : LAYER_COLLISION_OFFSETS.mid_layer;
+    return { yTop, yBottom, layerOffset, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
   }
   if (rawSlot === 'outerwear') {
     const isLong = has('overcoat', 'trench', 'duster', 'מעיל ארוך', 'cardigan', 'קרדיגן', 'coat', 'parka', 'robe');
@@ -2495,7 +2606,16 @@ export function resolveShellFit({
     if (isLong) yBottom = isMale ? 0.52 : 0.48;
     if (isCrop) yBottom = isMale ? 1.15 : 1.10;
     const fabricThickness = resolveFabricThickness(fullText, 'outerwear', false);
-    return { yTop: isMale ? 1.53 : 1.45, yBottom, layerOffset: isMale ? 0.038 : 0.035, fabricThickness, isSkirt: false, isStrapless: false, isWideOrLoose: true };
+    // Layer 7 (+0.016m): worn strictly outside bottoms (+0.007m) and mid-layers (+0.010m)
+    return {
+      yTop: isMale ? 1.53 : 1.45,
+      yBottom,
+      layerOffset: LAYER_COLLISION_OFFSETS.outerwear,
+      fabricThickness,
+      isSkirt: false,
+      isStrapless: false,
+      isWideOrLoose: true,
+    };
   }
   if (rawSlot === 'dress') {
     const isMini = has('mini', 'קצרה');
@@ -2505,7 +2625,15 @@ export function resolveShellFit({
     if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
     const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
     const fabricThickness = resolveFabricThickness(fullText, 'dress', false);
-    return { yTop, yBottom, layerOffset: 0.023, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
+    return {
+      yTop,
+      yBottom,
+      layerOffset: LAYER_COLLISION_OFFSETS.mid_layer,
+      fabricThickness,
+      isSkirt: false,
+      isStrapless,
+      isWideOrLoose,
+    };
   }
   if (rawSlot === 'bottom') {
     const isSkirt = has('skirt', 'חצאית');
@@ -2520,7 +2648,7 @@ export function resolveShellFit({
     return {
       yTop: isMale ? 1.08 : 1.05,
       yBottom,
-      layerOffset: isSkirt ? 0.014 : 0.0025,
+      layerOffset: LAYER_COLLISION_OFFSETS.bottom,
       fabricThickness,
       isSkirt,
       isStrapless: false,
@@ -2545,6 +2673,8 @@ export default function GarmentMesh3D({
   isMale = false,
   visible = true,
   hasOuterwear = false,
+  hasBottom = false,
+  hasTop = false,
   morphInfluences = null,
   footPose = null,
   showAvatar = true,
@@ -2609,12 +2739,12 @@ export default function GarmentMesh3D({
       if (isCrop) yBottom = (isMale ? 1.18 : 1.12) + yShift;
       if (isLongline) yBottom = (isMale ? 0.75 : 0.70) + yShift;
 
-      const layerOffset = 0.022 + rxShift;
+      const layerOffset = (hasOuterwear ? LAYER_COLLISION_OFFSETS.base_top : LAYER_COLLISION_OFFSETS.mid_layer) + rxShift;
 
       return createAnatomicalTopGeometry({
         isMale,
-        hasSleeves: sleeveStyle.type !== 'sleeveless',
-        sleeveFactor: sleeveStyle.factor,
+        hasSleeves: !hasOuterwear && sleeveStyle.type !== 'sleeveless',
+        sleeveFactor: hasOuterwear ? 0 : sleeveStyle.factor,
         yTop,
         yBottom,
         layerOffset,
@@ -2636,8 +2766,8 @@ export default function GarmentMesh3D({
       if (isLongCoat) yBottom = (isMale ? 0.52 : 0.48) + yShift;
       if (isCropJacket) yBottom = (isMale ? 1.15 : 1.10) + yShift;
 
-      // Layered cleanly outside tops and neckties with generous clearance
-      const layerOffset = (isMale ? 0.038 : 0.035) + rxShift;
+      // Layer 7 (+0.016m): layered cleanly outside tops and bottoms
+      const layerOffset = LAYER_COLLISION_OFFSETS.outerwear + rxShift;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -2671,7 +2801,7 @@ export default function GarmentMesh3D({
         sleeveFactor: sleeveStyle.factor,
         yTop,
         yBottom,
-        layerOffset: 0.023 + rxShift,
+        layerOffset: LAYER_COLLISION_OFFSETS.mid_layer + rxShift,
         uSwatch: solidU,
         vSwatch: solidV,
       });
@@ -2695,7 +2825,7 @@ export default function GarmentMesh3D({
         isShorts,
         yTop: (isMale ? 1.08 : 1.05) + yShift,
         yHem,
-        layerOffset: 0.016 + rxShift,
+        layerOffset: LAYER_COLLISION_OFFSETS.bottom + rxShift,
         uSwatch: solidU,
         vSwatch: solidV,
       });
@@ -2710,16 +2840,29 @@ export default function GarmentMesh3D({
       });
     }
 
-    // 6. ACCESSORIES (watch, necktie, belt, headwear, glasses, bag)
-    const accessoryLayerOffset = rawSlot === 'necktie' ? 0.029 : rawSlot === 'belt' ? 0.026 : 0.042;
-    return createAnatomicalAccessoryGeometry(rawSlot, { isMale, layerOffset: accessoryLayerOffset });
-  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, autoHasSleeves, aspect, solidU, solidV, footwearSpec, shoeLayout, isStandalone]);
+    // 6. ACCESSORIES (watch, necktie/scarf, belt, headwear, glasses, bag)
+    const accessoryLayerOffset =
+      rawSlot === 'necktie'
+        ? LAYER_COLLISION_OFFSETS.outer_accessory
+        : rawSlot === 'belt'
+          ? LAYER_COLLISION_OFFSETS.belt
+          : LAYER_COLLISION_OFFSETS.outer_accessory;
+    return createAnatomicalAccessoryGeometry(rawSlot, {
+      isMale,
+      layerOffset: accessoryLayerOffset,
+      hasBottom,
+      hasOuterwear,
+      garmentText,
+    });
+  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, hasBottom, autoHasSleeves, aspect, solidU, solidV, footwearSpec, shoeLayout, isStandalone]);
 
   const geometry = useMemo(() => {
+    const isRigidAccessory = rawSlot === 'headwear' || rawSlot === 'glasses';
     const morphed = isStandalone
       ? baseGeometry
       : applyAvatarMorphsToGeometry(baseGeometry, morphField, morphInfluences, {
           includeArms: rawSlot === 'watch',
+          rigidAnchor: isRigidAccessory,
         });
     // Footwear follows the heeled foot pose applied to the avatar
     return rawSlot === 'shoes' ? poseGeometry(morphed, footPose) : morphed;
@@ -2750,6 +2893,7 @@ export default function GarmentMesh3D({
         layerOffset: shellFit.layerOffset,
         fabricThickness: shellFit.fabricThickness,
         poseSleeves: !isStandalone && rawSlot !== 'outerwear',
+        hasOuterwear,
         sideProfile,
         getTorsoSlice,
         getLegSlice,
@@ -2759,7 +2903,7 @@ export default function GarmentMesh3D({
       console.warn('Silhouette shell unavailable, using procedural fallback:', err);
       return null;
     }
-  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone, sideProfile]);
+  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone, hasOuterwear, sideProfile]);
   const shellGeos = useMemo(() => {
     if (!shell) return null;
     if (isStandalone) {
@@ -2808,7 +2952,7 @@ export default function GarmentMesh3D({
   // Never flash an untextured (white) body-shaped placeholder while the photo loads
   if (isCoreClothing && !textureReady) return null;
 
-  const renderOrder = resolveGarmentRenderOrder(rawSlot);
+  const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText);
 
   if (shellGeos && texture) {
     const shellMaterialProps = {
@@ -2822,8 +2966,8 @@ export default function GarmentMesh3D({
       envMapIntensity: pbrProps.envMapIntensity,
       alphaToCoverage: false,
       polygonOffset: true,
-      polygonOffsetFactor: -1,
-      polygonOffsetUnits: -1,
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
     };
     return (
       <>
