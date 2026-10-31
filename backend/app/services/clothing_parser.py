@@ -1155,6 +1155,21 @@ def _suppress_overlapping_garments(
                         and kept_cat in {"top", "bottom", "dress", "outerwear", "footwear"}
                         and item_cat in {"accessory", "bag", "belt", "scarf", "headwear", "footwear"}
                     ):
+                        if (kept_cat == "bottom" or kept_lbl == "skirt") and (item_cat in {"bag", "accessory"} or "bag" in lbl.lower() or "wallet" in lbl.lower()):
+                            # SegFormer often hallucinates trapezoidal/A-line bags as skirts.
+                            # Never discard bag detection in favor of skirt! Re-label kept_item as bag.
+                            kept_lbl = "bag, wallet"
+                            kept_item["label"] = "bag, wallet"
+                            kept_item["category"] = "accessory"
+                            kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                            kept[kept_idx] = (
+                                kept_lbl,
+                                kept_item,
+                                int(kept_item["mask"].sum()),
+                            )
+                            merged = True
+                            suppressed.append((lbl, kept_lbl, item_cat or "?", 0.0, 0.0))
+                            break
                         if area <= 0.25 * kept_area:
                             merged = True
                             suppressed.append((lbl, kept_lbl, item_cat or "?", 0.0, 0.0))
@@ -1246,6 +1261,14 @@ def _suppress_overlapping_garments(
                 kept_lbl = "Upper-clothes"
                 kept_item["label"] = "Upper-clothes"
                 kept_item["category"] = "top"
+            elif (kept_cat == "bottom" or kept_lbl == "skirt") and (item_cat in {"bag", "accessory"} or "bag" in lbl.lower() or "wallet" in lbl.lower()):
+                kept_lbl = "bag, wallet"
+                kept_item["label"] = "bag, wallet"
+                kept_item["category"] = "accessory"
+            elif (item_cat == "bottom" or lbl == "skirt") and (kept_cat in {"bag", "accessory"} or "bag" in kept_lbl.lower() or "wallet" in kept_lbl.lower()):
+                kept_lbl = "bag, wallet"
+                kept_item["label"] = "bag, wallet"
+                kept_item["category"] = "accessory"
             kept[kept_idx] = (
                 kept_lbl,
                 kept_item,

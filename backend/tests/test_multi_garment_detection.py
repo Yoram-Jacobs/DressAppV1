@@ -3716,3 +3716,94 @@ async def test_wall_hooks_two_pants_and_belt_never_triggers_false_human_skin_and
     assert all(r.get("has_human_skin") is False for r in res), "Warm wall + hanging pants/belt must not trigger has_human_skin!"
     assert all(r.get("_unworn_cluster_hint") is True for r in res), "Side-by-side hanging garments + vertical belt must set _unworn_cluster_hint=True!"
 
+
+def test_tote_bag_never_overridden_to_skirt_or_bottom():
+    """Verify that when Gemini correctly identifies a tote bag, SegFormer's mistaken
+    kind='bottom' and label='skirt' does not override it into Bottom / Skirt / Classic Skirt."""
+    tote_analysis = {
+        "name": "Beige Faux Leather Tote",
+        "title": "Beige Faux Leather Tote",
+        "caption": "A structured beige tote bag featuring an all-over monogram pattern and dual shoulder straps.",
+        "category": "Accessories",
+        "sub_category": "Handbag",
+        "item_type": "Handbag",
+        "brand": "Guess",
+        "size": "",
+        "colors": [{"name": "Beige", "hex": "#F5F5DC"}],
+    }
+
+    fixed = _enforce_segformer_category(
+        tote_analysis,
+        segformer_kind="bottom",
+        label="skirt",
+        is_single_item=True,
+    )
+
+    assert fixed["category"] == "Accessories"
+    assert fixed["sub_category"] in ("Handbag", "Bag", "Bags", "תיקים")
+    assert "skirt" not in str(fixed.get("sub_category", "")).lower()
+    assert "skirt" not in str(fixed.get("item_type", "")).lower()
+    assert "skirt" not in str(fixed.get("name", "")).lower()
+    assert "Bottom" != fixed["category"]
+
+
+def test_tote_bag_hebrew_never_overridden_to_skirt():
+    """Verify that a Hebrew tote bag analysis is not overridden to skirt."""
+    bag_analysis = {
+        "name": "תיק צד בז'",
+        "title": "תיק צד בז'",
+        "caption": "תיק צד אופנתי עם רצועות כתף ודוגמה מובלטת.",
+        "category": "Accessories",
+        "sub_category": "תיקי יד",
+        "item_type": "תיק יד",
+        "brand": "Guess",
+        "colors": [{"name": "בז'", "hex": "#F5F5DC"}],
+    }
+
+    fixed = _enforce_segformer_category(
+        bag_analysis,
+        segformer_kind="bottom",
+        label="skirt",
+        is_single_item=True,
+        language="he",
+    )
+
+    assert fixed["category"] == "Accessories"
+    assert "חצאית" not in str(fixed.get("sub_category", ""))
+    assert "חצאית" not in str(fixed.get("item_type", ""))
+    assert fixed["category"] != "Bottom"
+
+
+def test_suppress_contained_items_preserves_bag_over_skirt():
+    """Verify that SegFormer NMS does not suppress a bag in favor of a skirt, but re-labels the kept item as bag."""
+    import numpy as np
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 500, 500
+    skirt_mask = np.zeros((H, W), dtype=np.uint8)
+    skirt_mask[100:400, 100:400] = 255  # Large area
+
+    bag_mask = np.zeros((H, W), dtype=np.uint8)
+    bag_mask[150:250, 150:250] = 255  # Overlapping smaller area
+
+    detections = {
+        "skirt": {
+            "mask": skirt_mask,
+            "category": "bottom",
+            "label": "skirt",
+            "bbox": [100, 100, 400, 400],
+        },
+        "bag, wallet": {
+            "mask": bag_mask,
+            "category": "accessory",
+            "label": "bag, wallet",
+            "bbox": [150, 150, 250, 250],
+        },
+    }
+
+    result = _suppress_overlapping_garments(detections, has_human=False)
+    # The output should NOT have label 'skirt', it should have 'bag, wallet' or 'bag'
+    assert "skirt" not in result
+    assert any("bag" in k.lower() or "wallet" in k.lower() for k in result.keys())
+
+

@@ -4425,6 +4425,34 @@ def _enforce_segformer_category(
         _sanitize_cross_category_contamination(analysis, language=language)
         return analysis
 
+    # If the LLM has identified the crop as a Bag / Handbag / Tote / Backpack / Purse / Clutch / Wallet,
+    # never override it with SegFormer's non-accessory kind (SegFormer often confuses flared/trapezoidal tote bags with skirts or bottoms).
+    _bag_txt = f"{curr_low} {sub_low} {item_low} {name_low} {title_low} {desc_low} {cap_low}"
+    is_llm_bag = (
+        any(w in _bag_txt for w in _BAG_DETECTION_TERMS)
+        or any(w in _bag_txt for w in (
+            "bag", "tote", "handbag", "purse", "backpack", "clutch", "crossbody", "satchel",
+            "duffel", "duffle", "wallet", "pouch", "briefcase", "fanny pack", "messenger",
+            "תיק", "ארנק", "תרמיל", "ילקוט", "פאוץ'"
+        ))
+    )
+    if is_llm_bag and kind in ("bottom", "top", "outerwear", "dress", "footwear"):
+        logger.info(
+            "garment_vision: preserving LLM bag/accessory (%s / %s / %s) over SegFormer %r kind (label=%r)",
+            current, analysis.get("sub_category"), analysis.get("item_type"), kind, label,
+        )
+        analysis["category"] = "Accessories"
+        if not analysis.get("sub_category") or str(analysis.get("sub_category")).lower() in (
+            "top", "bottom", "skirt", "pants", "shoes", "footwear", "shirt", "trousers", "חצאית", "מכנסיים", "חולצה"
+        ):
+            analysis["sub_category"] = "תיקים" if (language in ("he", "iw") or any("\u0590" <= ch <= "\u05ea" for ch in _bag_txt)) else "Bags"
+        if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in (
+            "classic skirt", "skirt", "pants", "casual pants", "חצאית קלאסית", "חצאית", "מכנסיים"
+        ):
+            analysis["item_type"] = "תיק יד" if (language in ("he", "iw") or any("\u0590" <= ch <= "\u05ea" for ch in _bag_txt)) else "Handbag"
+        _sanitize_bag_or_accessory(analysis, label="bag, wallet", kind="accessory", language=language)
+        return analysis
+
     if current.lower() in allowed:
         # Category is compatible with SegFormer, but check sub_category & item_type anchors
         # (e.g. prevent straw basket bag from being classified as a Belt under Accessories,
@@ -4508,6 +4536,12 @@ def _enforce_segformer_category(
             item_low = (analysis.get("item_type") or "").lower()
             curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
             combined_txt = f"{sub_low} {item_low} {curr_name} {str(analysis.get('caption') or '').lower()}"
+            if is_llm_bag or any(w in combined_txt for w in _BAG_DETECTION_TERMS) or any(w in combined_txt for w in ("bag", "tote", "handbag", "purse", "backpack", "clutch", "crossbody")):
+                analysis["category"] = "Accessories"
+                if not analysis.get("sub_category") or analysis.get("sub_category").lower() in ("skirt", "bottom"):
+                    analysis["sub_category"] = "Bags"
+                _sanitize_bag_or_accessory(analysis, label="bag, wallet", kind="accessory", language=language)
+                return analysis
             is_skirt = sub_low in ("skirt", "skirts") and not any(p in item_low for p in ("pant", "trouser", "jean", "chino", "slack"))
             if not is_skirt:
                 logger.warning(
@@ -4798,6 +4832,12 @@ def _enforce_segformer_category(
                 analysis["name"] = f"{color_prefix}Shoes".strip()
             analysis["title"] = analysis["name"]
     elif default == "Bottom":
+        if is_llm_bag or any(w in curr_name_low or w in curr_cap_raw.lower() for w in _BAG_DETECTION_TERMS) or any(w in curr_name_low or w in curr_cap_raw.lower() for w in ("bag", "tote", "handbag", "purse", "backpack", "clutch", "crossbody")):
+            analysis["category"] = "Accessories"
+            analysis["sub_category"] = "תיקים" if is_he_override else "Bags"
+            analysis["item_type"] = "תיק יד" if is_he_override else "Handbag"
+            _sanitize_bag_or_accessory(analysis, label="bag, wallet", kind="accessory", language=language)
+            return analysis
         if "skirt" in lbl_low:
             analysis["sub_category"] = "חצאית" if is_he_override else "Skirt"
             analysis["item_type"] = ("חצאית פליסה" if ("pleat" in curr_name_low or "פליסה" in curr_name_low) else "חצאית קלאסית") if is_he_override else ("Pleated Skirt" if "pleat" in curr_name_low else "Classic Skirt")

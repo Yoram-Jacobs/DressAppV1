@@ -454,8 +454,20 @@ const hydrate = (a, user, t, i18n) => {
     }
   }
 
+  // Category Integrity Guard: Bags / Backpacks / Totes / Clutches must ALWAYS be Accessories!
+  const fullBagBlob = `${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''} ${out.caption || ''}`.toLowerCase();
+  const isBag = /bag|backpack|tote|purse|handbag|clutch|crossbody|satchel|תיק|תרמיל|ארנק/i.test(fullBagBlob) &&
+    !/sleeping bag|tea bag|garbage bag|punching bag/i.test(fullBagBlob);
+  if (isBag) {
+    out.category = 'Accessories';
+    subRaw = 'bags';
+    if (/skirt|pant|trouser|jean|shirt|dress|חצאית|מכנס|חולצה|שמלה/i.test(itemRaw)) {
+      itemRaw = /tote/i.test(fullBagBlob) ? 'tote_bag' : (/backpack|תרמיל/i.test(fullBagBlob) ? 'backpack' : (/clutch/i.test(fullBagBlob) ? 'clutch' : 'handbag'));
+    }
+  }
+
   // Category Integrity Guard: Apparel (Polo, Shirt, Knitwear, Sweater, Coat, Jacket, Poncho, Cape, Pants, Skirt, Dress) must NEVER be Accessories!
-  const isApparelInAccessories = (catLower === 'accessories' || catLower === 'accessory' || catLower === 'אקססוריז') &&
+  const isApparelInAccessories = !isBag && (catLower === 'accessories' || catLower === 'accessory' || catLower === 'אקססוריז') &&
     (/polo|פולו|shirt|חולצ|tee|t-shirt|sweater|סוודר|סריג|cardigan|hoodie|קפוצ|jacket|זקט|מעיל|coat|poncho|פונצ|cape|שכמי|pant|מכנס|skirt|חצאית|dress|שמל/i.test(`${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''}`));
   if (isApparelInAccessories) {
     if (/coat|jacket|מעיל|זקט|poncho|פונצ|cape|שכמי/i.test(`${subRaw} ${itemRaw} ${out.name || ''} ${out.title || ''}`)) {
@@ -495,11 +507,9 @@ const hydrate = (a, user, t, i18n) => {
     }
   } else if (/boot|מגפ/i.test(itemRaw)) {
     subRaw = 'boots';
-  } else if (/bag|backpack|tote|purse|clutch|תיק/i.test(itemRaw)) {
+  } else if (isBag || /bag|backpack|tote|purse|clutch|תיק/i.test(itemRaw) || /bag|backpack|tote|purse|clutch|תיק/i.test(fullBagBlob)) {
     subRaw = 'bags';
-    if (!out.category || out.category.toLowerCase() !== 'accessories') {
-      out.category = 'Accessories';
-    }
+    out.category = 'Accessories';
   }
   const subCanonical = subRaw.toLowerCase().replace(/[\s\-]+/g, '_');
   const isGenericItem = !itemRaw || ['top', 'tops', 'bottom', 'bottoms', 'outerwear', 'full body', 'footwear', 'shoes', 'accessories', 'clothing', 'garment', 'item'].includes(String(itemRaw).toLowerCase().trim()) || String(itemRaw).trim().toLowerCase() === String(subRaw).trim().toLowerCase() || String(itemRaw).trim().toLowerCase() === String(catLower).trim().toLowerCase();
