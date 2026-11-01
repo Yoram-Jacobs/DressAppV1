@@ -992,4 +992,90 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(hairPos.getY(0)).toBeLessThan(1.68);
     expect(hairPos.getX(0)).toBeLessThan(0.08);
   });
+
+  test('Trench coat and long outerwear maintain knee-length coverage and do not shrink into a mini dress', () => {
+    const { resolveShellFit, getTorsoSlice, getLegSlice } = require('@/components/GarmentMesh3D');
+    const { buildSilhouetteShell } = require('@/lib/garmentSilhouette');
+
+    // 1. Belted cream trench coat in Hebrew: "מעיל טרנץ' קלאסי בגוון שמנת עם חגורה"
+    const trenchFit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: "מעיל טרנץ' קלאסי בגוון שמנת עם חגורה",
+      isMale: false,
+      aspect: 0.72,
+    });
+    expect(trenchFit.yBottom).toBeCloseTo(0.48, 2); // Knee/mid-thigh length (NOT shrunk to 0.84 crotch level)
+    expect(trenchFit.yTop - trenchFit.yBottom).toBeGreaterThanOrEqual(0.95); // Full ~0.97m vertical span
+
+    // 2. Multilingual coat & long outerwear keywords
+    const hebrewCoatFit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: 'מעיל צמר איכותי',
+      isMale: true,
+      aspect: 0.85,
+    });
+    expect(hebrewCoatFit.yBottom).toBeCloseTo(0.52, 2); // Male knee level
+
+    const frenchCoatFit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: 'manteau long beige',
+      isMale: false,
+      aspect: 0.78,
+    });
+    expect(frenchCoatFit.yBottom).toBeCloseTo(0.48, 2);
+
+    // 3. Cutout with aspect <= 0.88 without keywords is automatically detected as long outerwear
+    const aspectCoatFit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: 'casual outerwear',
+      isMale: false,
+      aspect: 0.74,
+    });
+    expect(aspectCoatFit.yBottom).toBeCloseTo(0.48, 2);
+
+    // 4. Explicit cropped jacket stops high (yBottom >= 1.10)
+    const cropJacketFit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: 'ג\'קט ג\'ינס קרופ קצר cropped denim jacket',
+      isMale: false,
+      aspect: 1.05,
+    });
+    expect(cropJacketFit.yBottom).toBeGreaterThanOrEqual(1.10);
+
+    // 5. Build trench coat shell geometry and verify knee-level bottom boundary and authentic width
+    const nx = 40;
+    const ny = 60;
+    const trenchRuns = [];
+    for (let j = 0; j <= ny; j++) {
+      // Silhouette flares gently below waist
+      const flare = j > 30 ? (j - 30) * 0.2 : 0;
+      trenchRuns.push([[12 - flare, 28 + flare]]);
+    }
+    const trenchShell = buildSilhouetteShell({
+      runsByRow: trenchRuns,
+      nx,
+      ny,
+      aspect: 0.72,
+      slot: 'outerwear',
+      isMale: false,
+      isSkirt: false,
+      isWideOrLoose: true,
+      yTop: trenchFit.yTop,
+      yBottom: trenchFit.yBottom,
+      layerOffset: trenchFit.layerOffset,
+      fabricThickness: trenchFit.fabricThickness,
+      poseSleeves: false,
+      getTorsoSlice,
+      getLegSlice,
+    });
+    expect(trenchShell.ok).toBe(true);
+    trenchShell.front.computeBoundingBox();
+    const box = trenchShell.front.boundingBox;
+    // Bottom edge reaches knee level (~0.48m)
+    expect(box.min.y).toBeCloseTo(0.48, 1);
+    // Vertical span is at least 0.95m
+    expect(box.max.y - box.min.y).toBeGreaterThanOrEqual(0.95);
+    // Authentic horizontal width is preserved (at least 0.58m wide at flared hem, not compressed to < 0.42m)
+    expect(box.max.x - box.min.x).toBeGreaterThan(0.58);
+  });
 });

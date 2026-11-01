@@ -2607,11 +2607,23 @@ export function resolveShellFit({
     return { yTop, yBottom, layerOffset, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
   }
   if (rawSlot === 'outerwear') {
-    const isLong = has('overcoat', 'trench', 'duster', 'מעיל ארוך', 'cardigan', 'קרדיגן', 'coat', 'parka', 'robe');
-    const isCrop = has('bolero', 'shrug', 'עליונית קצרה') || (has('jacket') && has('crop'));
+    const isMaxi = has('maxi', 'מקסי', 'ankle', 'קרסול', 'floor', 'עד הרצפה', 'דאסטר', 'duster');
+    const isCrop = has('bolero', 'shrug', 'עליונית קצרה', 'קרופ', 'crop') || (has('jacket', 'זקט', 'גקט') && has('crop', 'קרופ', 'קצר', 'קצרה'));
+    const isExplicitShortJacket = has('bomber', 'biker', 'בומבר', 'אופנוענים', 'short jacket') ||
+      ((has('זקט', 'גקט', 'jacket', 'בלייזר', 'blazer') && (has('קצר', 'קצרה', 'waist') || aspect > 0.95)) &&
+      !has('trench', 'טרנץ', 'overcoat', 'מעיל', 'coat'));
+    const isLong = isMaxi || (!isCrop && !isExplicitShortJacket && (
+      has(
+        'overcoat', 'trench', 'trenchcoat', 'duster', 'cardigan', 'coat', 'parka', 'robe', 'raincoat', 'mac', 'peacoat', 'kimono',
+        'מעיל', 'טרנץ', 'קרדיגן', 'חלוק', 'קימונו', 'מעיל גשם', 'מעיל רוח', 'מעיל פוך', 'מעיל צמר', 'מעיל חורף',
+        'manteau', 'mantel', 'cappotto', 'abrigo', 'пальто', 'плащ'
+      ) ||
+      aspect <= 0.88
+    ));
     let yBottom = isMale ? 0.88 : 0.84;
-    if (isLong) yBottom = isMale ? 0.52 : 0.48;
-    if (isCrop) yBottom = isMale ? 1.15 : 1.10;
+    if (isMaxi) yBottom = isMale ? 0.22 : 0.18;
+    else if (isLong) yBottom = isMale ? 0.52 : 0.48;
+    else if (isCrop) yBottom = isMale ? 1.15 : 1.10;
     const fabricThickness = resolveFabricThickness(fullText, 'outerwear', false);
     // Layer 7 (+0.016m): worn strictly outside bottoms (+0.007m) and mid-layers (+0.010m)
     return {
@@ -2763,15 +2775,26 @@ export default function GarmentMesh3D({
 
     // 2. OUTERWEAR (Blazers, Suits, Coats, Jackets, Cardigans)
     if (rawSlot === 'outerwear') {
-      const isLongCoat = garmentText.includes('overcoat') || garmentText.includes('trench') || garmentText.includes('duster') || garmentText.includes('מעיל ארוך') || garmentText.includes('cardigan') || garmentText.includes('קרדיגן');
-      const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('עליונית קצרה') || (garmentText.includes('jacket') && garmentText.includes('crop'));
+      const isMaxi = garmentText.includes('maxi') || garmentText.includes('מקסי') || garmentText.includes('ankle') || garmentText.includes('קרסול') || garmentText.includes('duster');
+      const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('עליונית קצרה') || garmentText.includes('קרופ') || (garmentText.includes('jacket') && garmentText.includes('crop'));
+      const isExplicitShortJacket = (garmentText.includes('bomber') || garmentText.includes('biker') || garmentText.includes('בומבר') || garmentText.includes('קצר') || garmentText.includes('קצרה')) && !garmentText.includes('trench') && !garmentText.includes('טרנץ') && !garmentText.includes('מעיל');
+      const isLongCoat = isMaxi || (!isCropJacket && !isExplicitShortJacket && (
+        garmentText.includes('overcoat') || garmentText.includes('trench') || garmentText.includes('trenchcoat') ||
+        garmentText.includes('duster') || garmentText.includes('coat') || garmentText.includes('parka') ||
+        garmentText.includes('raincoat') || garmentText.includes('mac') || garmentText.includes('robe') ||
+        garmentText.includes('cardigan') || garmentText.includes('מעיל') || garmentText.includes('טרנץ') ||
+        garmentText.includes('קרדיגן') || garmentText.includes('חלוק') || garmentText.includes('manteau') ||
+        garmentText.includes('mantel') || garmentText.includes('cappotto') || garmentText.includes('abrigo') ||
+        garmentText.includes('пальто') || garmentText.includes('плащ') || aspect <= 0.88
+      ));
       const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'outerwear', aspect });
 
       // Outerwear collar stands at 1.48 (F) / 1.54 (M), shoulder line overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
       const yTop = (isMale ? 1.54 : 1.48) + yShift;
       let yBottom = (isMale ? 0.88 : 0.84) + yShift;
-      if (isLongCoat) yBottom = (isMale ? 0.52 : 0.48) + yShift;
-      if (isCropJacket) yBottom = (isMale ? 1.15 : 1.10) + yShift;
+      if (isMaxi) yBottom = (isMale ? 0.22 : 0.18) + yShift;
+      else if (isLongCoat) yBottom = (isMale ? 0.52 : 0.48) + yShift;
+      else if (isCropJacket) yBottom = (isMale ? 1.15 : 1.10) + yShift;
 
       // Layer 7 (+0.016m): layered cleanly outside tops and bottoms
       const layerOffset = LAYER_COLLISION_OFFSETS.outerwear + rxShift;

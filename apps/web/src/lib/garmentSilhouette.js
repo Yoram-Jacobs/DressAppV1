@@ -1220,16 +1220,28 @@ export function buildSilhouetteShell({
       for (let i = iStart; i <= iEnd; i++) {
         const u = clamp((i - mid) / effectiveHalf, -1, 1);
         const s = Math.max(0, 1 - u * u);
-        // Tight 0.06 flank taper and fuller s^0.36 super-ellipse for bottoms, skirts, and lower outerwear so
+        // Tight 0.05 flank taper and fuller s^0.34 super-ellipse for bottoms, skirts, and lower outerwear so
         // waistbands, pant legs, and cardigans/coats wrap cleanly around the waist, hip, and thigh.
         const taperWidth = (isBottom || isSkirt || isOuterLowerBody) ? 0.05 : 0.16;
         const edgeTaper = isShoulderZone
-          ? smoothstep01((1 - Math.abs(u)) / 0.05)
+          ? smoothstep01((1 - Math.abs(u)) / 0.15)
           : smoothstep01((1 - Math.abs(u)) / taperWidth);
         const hhFront = ((isBottom || isSkirt || isOuterLowerBody) ? Math.pow(s, 0.34) : (isBodySpan ? Math.pow(s, 0.42) : Math.sqrt(s))) * edgeTaper;
         const hhBack = ((isBottom || isSkirt || isOuterLowerBody) ? Math.pow(s, 0.34) : (isBodySpan ? Math.pow(s, 0.40) : Math.pow(s, 0.46))) * edgeTaper;
-        offF[j * vw + i] = ampFront * hhFront;
-        offB[j * vw + i] = ampBack * hhBack;
+
+        // Shoulder Rolloff: For columns beyond the anatomical shoulder boundary (deltoid crest),
+        // roll depth off smoothly into garment drape depth so outerwear / tops don't project boxy square wings
+        const xCol = (i - nx / 2) * dxUniform;
+        const absX = Math.abs(xCol);
+        const shoulderRx = (torso.rx || (isMale ? 0.22 : 0.192)) + effOffset;
+        let shoulderRolloff = 1.0;
+        if (isShoulderZone && absX > shoulderRx) {
+          const overReach = (absX - shoulderRx) / 0.08;
+          shoulderRolloff = Math.max(0.42, 1 - 0.58 * smoothstep01(overReach));
+        }
+
+        offF[j * vw + i] = ampFront * hhFront * shoulderRolloff;
+        offB[j * vw + i] = ampBack * hhBack * shoulderRolloff;
       }
     });
   }
@@ -1332,8 +1344,8 @@ export function buildSilhouetteShell({
       // Anatomically contoured deltoid & trapezius depth that rolls smoothly over the shoulder cap
       // and guarantees full anterior clavicle & posterior trapezius clearance (zero shoulder skin holes!)
       const lateralRolloff = Math.cos(clamp(absX / (maxShoulderX + 0.045), 0, 1) * (Math.PI * 0.42));
-      const minShFront = (shSlice.rzFront + effOffset + 0.004) * Math.max(0.72, lateralRolloff) * shoulderWeight;
-      const minShBack = (shSlice.rzBack + effOffset + 0.004) * Math.max(0.72, lateralRolloff) * shoulderWeight;
+      const minShFront = (shSlice.rzFront + effOffset + 0.004) * Math.max(0.48, lateralRolloff) * shoulderWeight;
+      const minShBack = (shSlice.rzBack + effOffset + 0.004) * Math.max(0.48, lateralRolloff) * shoulderWeight;
 
       for (let dj = 0; dj <= 6 && jFirst + dj < vh; dj++) {
         const sIdx = (jFirst + dj) * vw + i;
