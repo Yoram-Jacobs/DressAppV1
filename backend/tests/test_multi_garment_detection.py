@@ -3997,6 +3997,76 @@ def test_skirt_never_swallowed_by_shoes_in_post_nms_stage():
     assert "Shoes" in by_label
 
 
+def test_mini_skirt_never_absorbs_boot_shaft_from_hallucinated_pants():
+    """Verify that when SegFormer detects both skirt and pants on a mini skirt + tall boots outfit,
+    the skirt does NOT absorb the boot shaft, and the boot shaft is routed to Shoes."""
+    import numpy as np
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 800, 400
+    # 1. Top (blouse): y = 100 to 280
+    top_mask = np.zeros((H, W), dtype=np.uint8)
+    top_mask[100:280, 120:280] = 1
+
+    # 2. Mini wrap skirt: y = 275 to 380
+    skirt_mask = np.zeros((H, W), dtype=np.uint8)
+    skirt_mask[275:380, 130:270] = 1
+
+    # 3. Hallucinated pants covering skirt + right leg down into boot: y = 275 to 700
+    pants_mask = np.zeros((H, W), dtype=np.uint8)
+    pants_mask[275:700, 140:200] = 1
+
+    # 4. Shoes (left boot: 370..780, right foot: 680..780):
+    shoes_mask = np.zeros((H, W), dtype=np.uint8)
+    shoes_mask[370:780, 210:270] = 1  # left boot
+    shoes_mask[680:780, 140:200] = 1  # right foot
+
+    by_label = {
+        "top, t-shirt, sweatshirt": {
+            "mask": top_mask,
+            "category": "top",
+            "label": "top, t-shirt, sweatshirt",
+            "score": 0.95,
+        },
+        "skirt": {
+            "mask": skirt_mask,
+            "category": "bottom",
+            "label": "skirt",
+            "score": 0.95,
+        },
+        "pants": {
+            "mask": pants_mask,
+            "category": "bottom",
+            "label": "pants",
+            "score": 0.90,
+        },
+        "Shoes": {
+            "mask": shoes_mask,
+            "category": "footwear",
+            "label": "Shoes",
+            "score": 0.95,
+        },
+    }
+
+    result = _suppress_overlapping_garments(by_label, has_human=True)
+
+    # 1. Exactly 3 garments preserved (pants suppressed)
+    assert "top, t-shirt, sweatshirt" in result
+    assert "skirt" in result
+    assert "Shoes" in result
+    assert "pants" not in result
+
+    # 2. Skirt must NOT extend into the boot zone (max y <= 390)
+    skirt_ys, _ = np.where(result["skirt"]["mask"])
+    assert skirt_ys.max() <= 390, f"Skirt absorbed boot leg! Max y is {skirt_ys.max()}, expected <= 390"
+
+    # 3. Shoes must have absorbed the right boot shaft from pants (has pixels on right leg between 400 and 650)
+    shoes_mask_out = result["Shoes"]["mask"]
+    right_leg_shaft = shoes_mask_out[450:650, 140:200]
+    assert right_leg_shaft.sum() > 0, "Shoes did not receive the right boot shaft from pants!"
+
+
+
 
 
 

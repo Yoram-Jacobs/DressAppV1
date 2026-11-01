@@ -1219,6 +1219,77 @@ def _suppress_overlapping_garments(
                     continue
             else:
                 # Same category (e.g. SegFormer splitting a maxi skirt into 'pants' + 'skirt', or two pieces of pants/top)
+                is_skirt_pants_overlap = (
+                    ("skirt" in kept_lbl_l and any(p in item_lbl_l for p in ("pant", "trouser", "jean")))
+                    or ("skirt" in item_lbl_l and any(p in kept_lbl_l for p in ("pant", "trouser", "jean")))
+                )
+                if is_skirt_pants_overlap and bb_item and bb_kept:
+                    # When SegFormer detects both skirt and pants on a model wearing a skirt:
+                    # The user is wearing a skirt (e.g. mini skirt), but SegFormer hallucinated 'pants' on the legs/boots.
+                    skirt_idx = kept_idx if "skirt" in kept_lbl_l else None
+                    skirt_item_obj = kept_item if "skirt" in kept_lbl_l else item
+                    skirt_bb = bb_kept if "skirt" in kept_lbl_l else bb_item
+                    pants_item_obj = item if "skirt" in kept_lbl_l else kept_item
+                    pants_bb = bb_item if "skirt" in kept_lbl_l else bb_kept
+                    pants_lbl = lbl if "skirt" in kept_lbl_l else kept_lbl
+
+                    skirt_bot = skirt_bb[2]
+                    pants_bot = pants_bb[2]
+
+                    y_coords = np.arange(H)[:, None]
+                    if pants_bot > skirt_bot + int(0.08 * H):
+                        # Pants extends down into the leg/boot zone below the skirt hem.
+                        # 1. The skirt must NEVER absorb the leg pixels below its bottom hem!
+                        skirt_only_mask = np.logical_and(
+                            np.maximum(skirt_item_obj["mask"], pants_item_obj["mask"]),
+                            y_coords <= skirt_bot
+                        ).astype(np.uint8)
+
+                        # 2. The pixels below the skirt hem are the leg/boot shaft!
+                        leg_shaft_mask = np.logical_and(
+                            pants_item_obj["mask"],
+                            y_coords > skirt_bot
+                        ).astype(np.uint8)
+
+                        # Route the leg/boot shaft to Shoes if Shoes exists in the scene
+                        shoes_routed = False
+                        for k_i, (k_l, k_it, _) in enumerate(kept):
+                            if k_it.get("category") == "footwear" or "shoe" in str(k_l).lower():
+                                k_it["mask"] = np.maximum(k_it["mask"], leg_shaft_mask)
+                                kept[k_i] = (k_l, k_it, int(k_it["mask"].sum()))
+                                shoes_routed = True
+                                break
+                        if not shoes_routed:
+                            for n_i, (n_l, n_it, _) in enumerate(nms_items):
+                                if n_it.get("category") == "footwear" or "shoe" in str(n_l).lower():
+                                    n_it["mask"] = np.maximum(n_it["mask"], leg_shaft_mask)
+                                    nms_items[n_i] = (n_l, n_it, int(n_it["mask"].sum()))
+                                    shoes_routed = True
+                                    break
+
+                        # Update the kept skirt
+                        if skirt_idx is not None:
+                            kept_item["mask"] = skirt_only_mask
+                            kept[kept_idx] = ("skirt", kept_item, int(skirt_only_mask.sum()))
+                        else:
+                            item["mask"] = skirt_only_mask
+                            kept[kept_idx] = ("skirt", item, int(skirt_only_mask.sum()))
+
+                        merged = True
+                        suppressed.append((pants_lbl, "skirt", "bottom", 1.0, 1.0))
+                        break
+                    else:
+                        # Normal skirt+pants merge where both span the skirt area
+                        if skirt_idx is not None:
+                            kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                            kept[kept_idx] = ("skirt", kept_item, int(kept_item["mask"].sum()))
+                        else:
+                            item["mask"] = np.maximum(item["mask"], kept_item["mask"])
+                            kept[kept_idx] = ("skirt", item, int(item["mask"].sum()))
+                        merged = True
+                        suppressed.append((pants_lbl, "skirt", "bottom", 1.0, 1.0))
+                        break
+
                 if bb_item and bb_kept and (not has_human or kept_cat == "bottom"):
                     if _is_same_garment_component(bb_item, bb_kept, min(H, W)):
                         kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
