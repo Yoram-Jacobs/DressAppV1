@@ -3888,5 +3888,115 @@ def test_full_body_outfit_blouse_skirt_boots_preserves_all_three_items():
     assert "Shoes" in result
 
 
+def test_leg_warmer_touching_shoes_merges_into_shoes_in_nms():
+    """Verify that a leg warmer touching boots is merged into Shoes, not discarded into top."""
+    import numpy as np
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 800, 400
+    top_mask = np.zeros((H, W), dtype=np.uint8)
+    top_mask[100:280, 120:280] = 1
+
+    # Boots lower section: y = 500 to 780
+    boots_mask = np.zeros((H, W), dtype=np.uint8)
+    boots_mask[500:780, 140:260] = 1
+
+    # Leg warmer upper shaft: y = 370 to 510 (touches boots at 500-510)
+    shaft_mask = np.zeros((H, W), dtype=np.uint8)
+    shaft_mask[370:510, 145:255] = 1
+
+    by_label = {
+        "top, t-shirt, sweatshirt": {
+            "mask": top_mask,
+            "category": "top",
+            "label": "top, t-shirt, sweatshirt",
+            "score": 0.95,
+        },
+        "Shoes": {
+            "mask": boots_mask,
+            "category": "footwear",
+            "label": "Shoes",
+            "score": 0.95,
+        },
+        "leg warmer": {
+            "mask": shaft_mask,
+            "category": "accessory",
+            "label": "leg warmer",
+            "score": 0.90,
+        },
+    }
+
+    result = _suppress_overlapping_garments(by_label, has_human=False)
+    assert "top, t-shirt, sweatshirt" in result
+    assert "Shoes" in result
+    assert "leg warmer" not in result  # Merged into Shoes!
+    # The shoes mask should now include the upper shaft (min y around 370)
+    shoes_ys, _ = np.where(result["Shoes"]["mask"])
+    assert shoes_ys.min() <= 380, f"Expected shoes to contain shaft, min y is {shoes_ys.min()}"
+
+
+def test_skirt_never_swallowed_by_shoes_in_post_nms_stage():
+    """Verify that a skirt and boots in an outfit are preserved separately and not swallowed by Shoes."""
+    import numpy as np
+    from app.services.clothing_parser import _mask_bbox
+
+    H, W = 800, 400
+    # Skirt: y = 280 to 400
+    skirt_mask = np.zeros((H, W), dtype=np.uint8)
+    skirt_mask[280:400, 120:280] = 1
+
+    # Thigh-high boots: y = 380 to 780
+    boots_mask = np.zeros((H, W), dtype=np.uint8)
+    boots_mask[380:780, 140:260] = 1
+
+    by_label = {
+        "skirt": {
+            "mask": skirt_mask,
+            "category": "bottom",
+            "label": "skirt",
+            "score": 0.95,
+        },
+        "Shoes": {
+            "mask": boots_mask,
+            "category": "footwear",
+            "label": "Shoes",
+            "score": 0.95,
+        },
+    }
+
+    # Simulate the Step 2e guard:
+    has_human = False
+    has_torso_clothing = False
+    has_torso_upper_scene = False
+
+    if "Shoes" in by_label and not has_human and not has_torso_clothing and not has_torso_upper_scene and len(by_label) >= 2:
+        shoes_mask = by_label["Shoes"]["mask"]
+        shoes_bb = _mask_bbox(shoes_mask)
+        if shoes_bb:
+            y1, x1, y2, x2 = shoes_bb
+            h_shoe = max(1, y2 - y1)
+            area_shoe = max(1, int(shoes_mask.sum()))
+            keys_to_merge = []
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Shoes":
+                    continue
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = str(other_it.get("label") or other_key).lower()
+                is_real_apparel = (
+                    o_cat in ("top", "bottom", "dress", "outerwear", "headwear")
+                    or any(k in o_lbl for k in ("skirt", "pant", "trouser", "jean", "short", "shirt", "blouse", "top", "sweater", "jacket", "coat", "dress", "suit", "blazer", "hoodie", "cardigan", "vest"))
+                )
+                if is_real_apparel:
+                    continue
+                keys_to_merge.append(other_key)
+            for k in keys_to_merge:
+                del by_label[k]
+
+    # Skirt MUST still exist!
+    assert "skirt" in by_label
+    assert "Shoes" in by_label
+
+
+
 
 

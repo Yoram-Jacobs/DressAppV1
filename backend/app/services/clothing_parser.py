@@ -1107,6 +1107,31 @@ def _suppress_overlapping_garments(
                     suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
                     break
 
+            # Footwear shaft fragments (leg warmer, sock) on boots/shoes:
+            # SegFormer often detects the shaft of tall/thigh-high boots as 'leg warmer' or 'sock'.
+            # If a leg warmer or sock touches or overlaps footwear, merge it into the footwear!
+            is_footwear_shaft = (
+                any(any(k in l for k in ("shoe", "boot", "footwear")) for l in (kept_lbl_l, item_lbl_l))
+                and any(any(t in l for t in ("leg warmer", "leg warmers", "sock")) for l in (kept_lbl_l, item_lbl_l))
+            )
+            if is_footwear_shaft and bb_item and bb_kept:
+                dil_i = ndimage.binary_dilation(item["mask"], iterations=10)
+                dil_k = ndimage.binary_dilation(kept_item["mask"], iterations=10)
+                touches_footwear = np.logical_and(dil_i, dil_k).any()
+                if touches_footwear:
+                    if kept_cat == "footwear" or any(k in kept_lbl_l for k in ("shoe", "boot", "footwear")):
+                        kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                        kept[kept_idx] = (kept_lbl, kept_item, int(kept_item["mask"].sum()))
+                        merged = True
+                        suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
+                        break
+                    else:
+                        item["mask"] = np.maximum(item["mask"], kept_item["mask"])
+                        kept[kept_idx] = (lbl, item, int(item["mask"].sum()))
+                        merged = True
+                        suppressed.append((kept_lbl, lbl, kept_cat or "?", 1.0, 1.0))
+                        break
+
             if is_layering:
                 continue
 
@@ -1178,7 +1203,16 @@ def _suppress_overlapping_garments(
                             merged = True
                             suppressed.append((lbl, kept_lbl, item_cat or "?", 0.0, 0.0))
                             break
-                        if area <= 0.25 * kept_area:
+                        # A speck on a flat-lay garment must actually overlap or be contained in that garment!
+                        speck_containment = 0.0
+                        if bb_item and bb_kept:
+                            iy = max(0, min(bb_item[2], bb_kept[2]) - max(bb_item[0], bb_kept[0]))
+                            ix = max(0, min(bb_item[3], bb_kept[3]) - max(bb_item[1], bb_kept[1]))
+                            if iy > 0 and ix > 0:
+                                item_bb_area = max(1, (bb_item[2] - bb_item[0]) * (bb_item[3] - bb_item[1]))
+                                speck_containment = (iy * ix) / float(item_bb_area)
+
+                        if speck_containment >= 0.35 and area <= 0.25 * kept_area:
                             merged = True
                             suppressed.append((lbl, kept_lbl, item_cat or "?", 0.0, 0.0))
                             break
@@ -1472,12 +1506,14 @@ async def parse_garments(
         if not is_side_by_side_unworn_cluster and len(raw_shoe_bbs) >= 3:
             is_side_by_side_unworn_cluster = True
 
-    if not is_side_by_side_unworn_cluster:
+    if not is_side_by_side_unworn_cluster and not raw_shoe_bbs:
         for i_a in range(len(raw_major_bbs)):
             _ca, (ay1, ax1, ay2, ax2) = raw_major_bbs[i_a]
             aw = max(1, ax2 - ax1)
             for i_b in range(i_a + 1, len(raw_major_bbs)):
                 _cb, (by1, bx1, by2, bx2) = raw_major_bbs[i_b]
+                if _ca != _cb:
+                    continue
                 bw = max(1, bx2 - bx1)
                 x_ov = max(0, min(ax2, bx2) - max(ax1, bx1))
                 y_ov = max(0, min(ay2, by2) - max(ay1, by1))
@@ -1955,7 +1991,7 @@ async def parse_garments(
 
     distinct_cats = {it.get("category") for it in by_label.values()}
     has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
-    has_human = bool(has_head or has_any_human or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
+    has_human = bool(has_human or has_head or has_any_human or has_anatomical_outfit_stack or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
 
     # 2b) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one
@@ -1997,8 +2033,8 @@ async def parse_garments(
     # 2e) Footwear Partner Recovery after suppression:
     # If a footwear item survived alongside another side-by-side item at the footwear height tier
     # (e.g. left shoe predicted as Shoes and right shoe mislabeled as pants/cardigan),
-    # merge them into a single Shoes pair.
-    if "Shoes" in by_label and not has_human and len(by_label) >= 2:
+    # merge them into a single Shoes pair. Strictly for isolated shoe photos (no torso apparel, no outfit).
+    if "Shoes" in by_label and not has_human and not has_torso_clothing and not has_torso_upper_scene and len(by_label) >= 2:
         shoes_mask = by_label["Shoes"]["mask"]
         shoes_bb = _mask_bbox(shoes_mask)
         if shoes_bb:
@@ -2016,6 +2052,20 @@ async def parse_garments(
                 if not obb:
                     continue
                 oy1, ox1, oy2, ox2 = obb
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = str(other_it.get("label") or other_key).lower()
+                is_real_apparel = (
+                    o_cat in ("top", "bottom", "dress", "outerwear", "headwear")
+                    or any(k in o_lbl for k in ("skirt", "pant", "trouser", "jean", "short", "shirt", "blouse", "top", "sweater", "jacket", "coat", "dress", "suit", "blazer", "hoodie", "cardigan", "vest"))
+                )
+                if is_real_apparel:
+                    continue
+
+                # Shoes pair recovery is strictly for side-by-side shoes at the bottom tier of the frame
+                x_center_diff = abs(((x1 + x2) / 2.0) - ((ox1 + ox2) / 2.0))
+                if x_center_diff < int(0.10 * W):
+                    continue
+
                 h_other = max(1, oy2 - oy1)
                 area_other = max(1, int(other_mask.sum()))
                 vert_center_diff = abs(((y1 + y2) / 2.0) - ((oy1 + oy2) / 2.0))
