@@ -308,9 +308,14 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
       const x = xs[idx] * side;
       const y = ys[idx];
       if (x <= 0 || y < yPelvisLimit) continue;
+      // Vertices at or above the shoulder pivot belong to the clavicle, trapezius, and deltoid cap.
+      // Rotating vertices above the pivot throws them outward and downward into sharp winged flares.
+      // Only the sleeve hanging below the shoulder joint swings with the arm.
+      if (y >= pivotY) continue;
+      const shoulderFalloff = smoothstep01((pivotY - y) / 0.04);
       const torso = getTorsoSlice(y, isMale);
       const r = Math.hypot(x - pivotX, y - pivotY);
-      const w = smoothstep01((x - (torso.rx + layerOffset)) / 0.05) * smoothstep01(r / 0.08);
+      const w = smoothstep01((x - (torso.rx + layerOffset)) / 0.05) * smoothstep01(r / 0.08) * shoulderFalloff;
       if (w <= 0) continue;
       const dxp = x - pivotX;
       const dyp = y - pivotY;
