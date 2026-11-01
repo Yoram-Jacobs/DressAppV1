@@ -379,6 +379,16 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(normalizeGarmentRole('item_0', 'cultural', 'Thobe')).toBe('dress');
     expect(normalizeGarmentRole('item_0', 'cultural', 'Kurta')).toBe('top');
 
+    // 4b. Core garments with belt detail MUST normalize to the garment, never to belt
+    expect(normalizeGarmentRole('item_0', 'מעיל', "מעיל טרנץ' קלאסי בגוון שמנת עם חגורה")).toBe('outerwear');
+    expect(normalizeGarmentRole('item_0', 'outerwear', 'Classic belted trench coat with belt')).toBe('outerwear');
+    expect(normalizeGarmentRole('item_0', 'dress', 'שמלה פרחונית עם חגורת מותן')).toBe('dress');
+    expect(normalizeGarmentRole('item_0', 'dress', 'Belted wrap midi dress')).toBe('dress');
+    expect(normalizeGarmentRole('item_0', 'bottom', 'High-waisted trousers with leather belt')).toBe('bottom');
+    // Standalone belts normalize to belt
+    expect(normalizeGarmentRole('item_0', 'accessories', 'חגורת עור קלאסית בצבע שחור')).toBe('belt');
+    expect(normalizeGarmentRole('item_0', 'accessories', 'Classic Brown Leather Belt')).toBe('belt');
+
     // 5. Profile calibration checks: shoulders & collar heights (aligned to torso acromion, not wrapping arms)
     const collarFemale = TORSO_PROFILE_FEMALE.find((p) => p.y >= 1.45);
     expect(collarFemale.y).toBeCloseTo(1.46, 2);

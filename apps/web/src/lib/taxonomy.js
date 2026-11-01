@@ -463,7 +463,37 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('small_good') || normalized.includes('ארנקים') || normalized.includes('бумажник') || normalized.includes('кошелек')) return 'small_goods';
   if (normalized.includes('cape') || normalized.includes('poncho') || normalized.includes('שכמי') || normalized.includes('פונצו') || normalized.includes('пончо')) return 'capes_and_ponchos';
   if (normalized.includes('headwear') || normalized.includes('hat') || (normalized.includes('cap') && !normalized.includes('cape')) || normalized.includes('beanie') || normalized.includes('כובע') || normalized.includes('כובעים') || normalized.includes('головн_убор') || normalized.includes('шапк') || normalized.includes('шляп') || normalized.includes('قبعة') || normalized.includes('hut') || normalized.includes('mütze') || normalized.includes('sombrero') || normalized.includes('gorra') || normalized.includes('chapeau') || normalized.includes('cappello') || normalized.includes('chapéu') || normalized.includes('टोपी') || normalized.includes('帽子')) return 'headwear';
-  if (normalized.includes('belt') || normalized.includes('חגורה') || normalized.includes('חגורות') || normalized.includes('ремень') || normalized.includes('ремни') || normalized.includes('пояс') || normalized.includes('حزام') || normalized.includes('gürtel') || normalized.includes('cintur') || normalized.includes('ceinture') || normalized.includes('cinto') || normalized.includes('बेल्ट') || normalized.includes('ベルト') || normalized.includes('腰带')) return 'belts';
+  const hasCoreClothingInRaw =
+    normalized.includes('coat') ||
+    normalized.includes('overcoat') ||
+    normalized.includes('trench') ||
+    normalized.includes('parka') ||
+    normalized.includes('מעיל') ||
+    normalized.includes('пальто') ||
+    normalized.includes('jacket') ||
+    normalized.includes('זקט') ||
+    normalized.includes('גקט') ||
+    normalized.includes('куртк') ||
+    normalized.includes('blazer') ||
+    normalized.includes('בלייזר') ||
+    normalized.includes('cardigan') ||
+    normalized.includes('קרדיגן') ||
+    normalized.includes('dress') ||
+    normalized.includes('שמלה') ||
+    normalized.includes('שמלת') ||
+    normalized.includes('плать') ||
+    normalized.includes('pant') ||
+    normalized.includes('trouser') ||
+    normalized.includes('מכנסי') ||
+    normalized.includes('מכנס') ||
+    normalized.includes('skirt') ||
+    normalized.includes('חצאית') ||
+    normalized.includes('юбк') ||
+    normalized.includes('top') ||
+    normalized.includes('shirt') ||
+    normalized.includes('חולצ');
+
+  if (!hasCoreClothingInRaw && (normalized.includes('belt') || normalized.includes('חגורה') || normalized.includes('חגורות') || normalized.includes('ремень') || normalized.includes('ремни') || normalized.includes('пояс') || normalized.includes('حزام') || normalized.includes('gürtel') || normalized.includes('cintur') || normalized.includes('ceinture') || normalized.includes('cinto') || normalized.includes('बेल्ट') || normalized.includes('ベルト') || normalized.includes('腰带'))) return 'belts';
   if (normalized.includes('glove') || normalized.includes('כפפה') || normalized.includes('כפפות') || normalized.includes('перчат') || normalized.includes('варежк') || normalized.includes('قفاز') || normalized.includes('handschuh') || normalized.includes('guante') || normalized.includes('gant') || normalized.includes('guanti') || normalized.includes('luva') || normalized.includes('दस्ताने') || normalized.includes('手袋') || normalized.includes('手套')) return 'gloves';
   if (normalized.includes('scarf') || normalized.includes('wrap') || normalized.includes('צעיף') || normalized.includes('צעיפים') || normalized.includes('шарф') || normalized.includes('платок') || normalized.includes('وشاح') || normalized.includes('schal') || normalized.includes('bufanda') || normalized.includes('écharpe') || normalized.includes('echarpe') || normalized.includes('sciarpa') || normalized.includes('cachecol') || normalized.includes('स्कार्फ') || normalized.includes('スカーフ') || normalized.includes('围巾')) return 'scarves_and_wraps';
   if (normalized.includes('sock') || normalized.includes('hosiery') || normalized.includes('tight') || normalized.includes('גרבי') || normalized.includes('גרב') || normalized.includes('колгот')) return 'hosiery_and_socks';

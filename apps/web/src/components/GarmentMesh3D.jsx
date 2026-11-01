@@ -111,13 +111,19 @@ export function getLegSlice(y, isMale) {
 export function inferRoleFromName(title) {
   const text = String(title || '').toLowerCase();
   if (!text) return null;
-  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|שעון יד|שעון|צמיד)/i.test(text)) return 'watch';
-  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת)/i.test(text)) return 'necktie';
-  if (/(?:\b(?:belt)\b|חגורה|חגורת)/i.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) return 'belt';
+  // 1. Wearable core apparel (outerwear, dress, bottom, top, shoes) takes precedence
+  // over accessory details (e.g. "מעיל טרנץ' עם חגורה", "belted trench coat", "dress with tie", "pants with belt").
   if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|מעיל|ז['’]קט|ג['’]קט|בלייזר|קרדיגן)/i.test(text)) return 'outerwear';
   if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|שמלה|שמלת|אוברול|סרבל)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks|watch)\b/i.test(text)) return 'dress';
   if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|leggings|joggers|slacks|sweatpants)\b|מכנס|ג['’]ינס|חצאית|שורטס|טייץ)/i.test(text)) return 'bottom';
   if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey)\b|חולצ|סוודר|גופי)/i.test(text)) return 'top';
+  if (/(?:\b(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?)\b|הנעלה|נעליים|נעלי|מגפיים|מגפי|סנדלים)/i.test(text)) return 'shoes';
+  if (/(?:\b(?:hat|cap|headwear|beanie|beret)\b|כובע|כיפה|ברט)/i.test(text)) return 'headwear';
+  if (/(?:\b(?:glasses|sunglasses|eyewear)\b|משקפיים|משקפי)/i.test(text)) return 'glasses';
+  if (/(?:\b(?:bag|purse|tote|backpack|handbag|satchel|crossbody)\b|תיק|ארנק)/i.test(text)) return 'bag';
+  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|שעון יד|שעון|צמיד)/i.test(text)) return 'watch';
+  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת)/i.test(text)) return 'necktie';
+  if (/(?:\b(?:belt)\b|חגורה|חגורת)/i.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) return 'belt';
   return null;
 }
 
@@ -161,7 +167,8 @@ function normalizeDeclaredGarmentRole(role, category, title) {
   if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker|neck\s*scarf)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת|ربطة عنق|قلادة|cravate|collier|krawatte|halskette|corbata|collar|cravatta|collana|галстук|ожерелье|领带|项链|ネクタイ|ネックレス)/i.test(text)) {
     return 'necktie';
   }
-  if (/(?:\bbelt\b|חגורה|חגורות|חגור|حزام|cinturón|cinturon|ceinture|gürtel|guertel|cintura|cinto|пояс|ремень|腰带|皮带|ベルト|riem|बेल्ट)/i.test(text) && !/\b(?:trench|coat|jacket|dress|pants|trousers|bag)\b/i.test(text)) {
+  const hasCoreClothingKeywords = /(?:outerwear|jacket|coat|blazer|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|מעיל|ז['’]קט|ג['’]קט|בלייזר|עליונית|קרדיגן|dress|gown|jumpsuit|romper|שמלה|שמלת|pants|jeans|trousers|shorts?|skirt|leggings|מכנסיים|מכנס|חצאית|שורטס|חולצה|חולצת|top|shirt|blouse|sweater|hoodie|tee)/i.test(text);
+  if (/(?:\bbelt\b|חגורה|חגורות|חגור|حزام|cinturón|cinturon|ceinture|gürtel|guertel|cintura|cinto|пояс|ремень|腰带|皮带|ベルト|riem|बेल्ट)/i.test(text) && !hasCoreClothingKeywords) {
     return 'belt';
   }
 
