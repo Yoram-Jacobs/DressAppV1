@@ -1077,5 +1077,35 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(box.max.y - box.min.y).toBeGreaterThanOrEqual(0.95);
     // Authentic horizontal width is preserved (at least 0.58m wide at flared hem, not compressed to < 0.42m)
     expect(box.max.x - box.min.x).toBeGreaterThan(0.58);
+
+    // 6. Monotonic A-Line Expansion: Coat gets strictly wider from the waist down
+    const vw = nx + 1;
+    const trenchPos = trenchShell.front.getAttribute('position');
+    const getRowWidth = (targetY) => {
+      let bestRow = 0;
+      for (let j = 0; j <= ny; j++) {
+        if (Math.abs(trenchPos.getY(j * vw + 20) - targetY) < Math.abs(trenchPos.getY(bestRow * vw + 20) - targetY)) {
+          bestRow = j;
+        }
+      }
+      let minX = Infinity;
+      let maxX = -Infinity;
+      for (let i = 0; i < vw; i++) {
+        const xVal = trenchPos.getX(bestRow * vw + i);
+        if (xVal < minX) minX = xVal;
+        if (xVal > maxX) maxX = xVal;
+      }
+      return maxX - minX;
+    };
+    const widthAtWaist = getRowWidth(1.05);
+    const widthAtHips = getRowWidth(0.90);
+    const widthAtHem = getRowWidth(0.48);
+
+    // Hem must be strictly wider than hips, which must be strictly wider than waist
+    expect(widthAtHem).toBeGreaterThan(widthAtHips);
+    expect(widthAtHips).toBeGreaterThan(widthAtWaist);
+
+    // 7. Depth profile does not balloon into an oversized sphere
+    expect(box.max.z - box.min.z).toBeLessThan(0.38);
   });
 });

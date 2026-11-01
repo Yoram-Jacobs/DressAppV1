@@ -1021,18 +1021,53 @@ export function buildSilhouetteShell({
         if (!isInnerTopUnderOuterwear && y >= minExpandY && y <= yShoulderAvatar - 0.04 && run && run[0] <= rowCenter && run[1] >= rowCenter) {
           const trunkHalfWorld = Math.max(1e-3, ((run[1] - run[0]) * 0.5) * dx);
           const yWaistBody = isMale ? 1.08 : 1.05;
-          const hipPeakSlice = getTorsoSlice(isMale ? 0.92 : 0.90, isMale);
-          const belowWaistT = smoothstep01((yWaistBody - y) / 0.10);
-          const baseRx = (isOuterwear || slot === 'dress') && y < (isMale ? 0.92 : 0.90)
-            ? Math.max(torso.rx, hipPeakSlice.rx)
-            : torso.rx;
-          const outerDrapeClearance = isOuterwear ? 0.014 * belowWaistT : 0;
-          const minTrunkHalf = baseRx + effOffset + outerDrapeClearance;
+          const yHips = isMale ? 0.92 : 0.90;
+          const hipPeakSlice = getTorsoSlice(yHips, isMale);
+          let minTrunkHalf;
+          if (isOuterwear && y <= yWaistBody) {
+            // Trench coat / long outerwear A-line silhouette:
+            // Cinched at waist, clears hips, and continuously widens from waist down all the way to the hem!
+            const waistHalf = torso.rx + effOffset + 0.008;
+            const hipHalf = hipPeakSlice.rx + effOffset + 0.024;
+            if (y >= yHips) {
+              const tWtoH = smoothstep01((yWaistBody - y) / Math.max(1e-3, yWaistBody - yHips));
+              minTrunkHalf = waistHalf * (1 - tWtoH) + hipHalf * tWtoH;
+            } else {
+              const flareBelowHip = (yHips - y) * 0.28;
+              minTrunkHalf = hipHalf + flareBelowHip;
+            }
+          } else {
+            const belowWaistT = smoothstep01((yWaistBody - y) / 0.10);
+            const baseRx = (isOuterwear || slot === 'dress') && y < yHips
+              ? Math.max(torso.rx, hipPeakSlice.rx)
+              : torso.rx;
+            const outerDrapeClearance = isOuterwear ? 0.014 * belowWaistT : 0;
+            minTrunkHalf = baseRx + effOffset + outerDrapeClearance;
+          }
           if (trunkHalfWorld < minTrunkHalf) {
             const trunkMid = (run[0] + run[1]) * 0.5;
             const scaleBoost = minTrunkHalf / trunkHalfWorld;
             x = (col - trunkMid) * dx * scaleBoost;
           }
+        }
+      } else if (isStandalone && isOuterwear && y <= (isMale ? 1.08 : 1.05) && run && run[0] <= colMid && run[1] >= colMid) {
+        // Standalone 3D Garment View: Trench coat flares outward progressively from waist down
+        const yWaistBody = isMale ? 1.08 : 1.05;
+        const yHips = isMale ? 0.92 : 0.90;
+        const trunkHalfWorld = Math.max(1e-3, ((run[1] - run[0]) * 0.5) * dx);
+        const waistHalf = (isMale ? 0.155 : 0.145) + layerOffset;
+        const hipHalf = (isMale ? 0.20 : 0.19) + layerOffset;
+        let minTrunkHalf;
+        if (y >= yHips) {
+          const tWtoH = smoothstep01((yWaistBody - y) / Math.max(1e-3, yWaistBody - yHips));
+          minTrunkHalf = waistHalf * (1 - tWtoH) + hipHalf * tWtoH;
+        } else {
+          minTrunkHalf = hipHalf + (yHips - y) * 0.26;
+        }
+        if (trunkHalfWorld < minTrunkHalf) {
+          const trunkMid = (run[0] + run[1]) * 0.5;
+          const scaleBoost = minTrunkHalf / trunkHalfWorld;
+          x = (col - trunkMid) * dx * scaleBoost;
         }
       } else if (isSkirt && !isStandalone) {
         // Align top-hem slice center to waist (x = 0) and scale top-hem slice to avatar waist circumference,
@@ -1171,15 +1206,19 @@ export function buildSilhouetteShell({
         // outside all lower-body garments (skirts, jeans, trousers) and mid-layers.
         const yWaistBody = isMale ? 1.08 : 1.05;
         const tBelowWaist = smoothstep01((yWaistBody + 0.04 - y) / 0.10);
-        const hipPeakSlice = getTorsoSlice(isMale ? 0.92 : 0.90, isMale);
-        const belowHipT = smoothstep01(((isMale ? 0.92 : 0.90) - y) / 0.14);
-        const outerDrapeBoost = (!isStandalone && isOuterwear) ? (0.026 * tBelowWaist) : 0;
+        const yHips = isMale ? 0.92 : 0.90;
+        const hipPeakSlice = getTorsoSlice(yHips, isMale);
+        const belowHipT = smoothstep01((yHips - y) / 0.14);
+        const outerDrapeBoost = (!isStandalone && isOuterwear) ? (0.016 * tBelowWaist) : 0;
         const baseRzFront = ((torso.rzFront || torso.rz) * (1 - belowHipT) + (hipPeakSlice.rzFront || hipPeakSlice.rz) * belowHipT) + effOffset + outerDrapeBoost;
         const baseRzBack = ((torso.rzBack || torso.rz) * (1 - belowHipT) + (hipPeakSlice.rzBack || hipPeakSlice.rz) * belowHipT) + effOffset + outerDrapeBoost;
-        const flareScale = isOuterwear ? 0.46 : 0.42;
-        const lateralFlare = Math.max(0, halfWorld - (torso.rx + effOffset)) * flareScale * tBelowWaist;
-        bodyRzFront = (baseRzFront + lateralFlare) * sideMod;
-        bodyRzBack = (baseRzBack + lateralFlare) * sideMod;
+        // Natural A-line cone drape in Z (never ballooning into a sphere from horizontal sleeve span!)
+        const aLineDrapeZ = isOuterwear ? (Math.max(0, yHips - y) * 0.07) : 0;
+        const flareScale = isOuterwear ? 0.10 : 0.35;
+        const maxExcess = isOuterwear ? 0.08 : 0.25;
+        const lateralFlare = Math.max(0, Math.min(maxExcess, halfWorld - (torso.rx + effOffset))) * flareScale * tBelowWaist;
+        bodyRzFront = (baseRzFront + lateralFlare + aLineDrapeZ) * sideMod;
+        bodyRzBack = (baseRzBack + lateralFlare + aLineDrapeZ) * sideMod;
       } else {
         const minF = (torso.rzFront || torso.rz) + effOffset;
         const minB = (torso.rzBack || torso.rz) + effOffset;
@@ -1194,8 +1233,8 @@ export function buildSilhouetteShell({
         bodyRzBack *= 0.82;
       }
 
-      // Dresses / ball gowns / long coats flare below the hips proportional to their silhouette width
-      if (!isBottom && !isSkirt && !isStandalone && y < 0.84) {
+      // Dresses / ball gowns flare below the hips proportional to their silhouette width (excluding outerwear)
+      if (!isBottom && !isSkirt && !isOuterwear && slot === 'dress' && !isStandalone && y < 0.84) {
         const hipRx = getTorsoSlice(0.88, isMale).rx + effOffset;
         const dressFlare = Math.max(0, halfWorld - hipRx) * 0.48;
         bodyRzFront = Math.max(bodyRzFront, bodyRzFront + dressFlare);
