@@ -37,6 +37,7 @@ export const AppLayout = () => {
   const { user, loading, refresh } = useAuth();
   const { canAccessMigration } = useTierLimits();
   const [show, setShow] = useState(false);
+  const lastPushSyncKeyRef = useRef(null);
   const { items, total, isLoaded, error: closetError } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
     return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';

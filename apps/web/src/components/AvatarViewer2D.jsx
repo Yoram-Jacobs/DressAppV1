@@ -861,9 +861,13 @@ export function FittedGarmentLayer({
       if (roleKey === 'top' && hasOuterwear && y0Top < defaultAnatomy.yHip) {
         // Clip the inner top slice to the central neck/chest corridor so its cap/short
         // sleeves never stick out past the outerwear shoulders or sleeves.
-        const tCorridor = clamp01(
-          (y0Mid - defaultAnatomy.yShoulders) /
-            Math.max(1, defaultAnatomy.yChest - defaultAnatomy.yShoulders)
+        const tCorridor = Math.max(
+          0,
+          Math.min(
+            1,
+            (y0Mid - defaultAnatomy.yShoulders) /
+              Math.max(1, defaultAnatomy.yChest - defaultAnatomy.yShoulders)
+          )
         );
         const corridorHalf = 15 + tCorridor * 7; // 15 SVG units at neck -> 22 at chest
         const clipLeft = Math.max(xLeftLive, sliceCenter - corridorHalf);
