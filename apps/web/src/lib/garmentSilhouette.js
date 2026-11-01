@@ -266,14 +266,14 @@ export function resolveBottomLength({
 export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, getTorsoSlice }) {
   const yShoulder = isMale ? 1.48 : 1.42;
   const sh = getTorsoSlice(yShoulder, isMale);
-  const pivotX = sh.rx * 0.92;
-  const pivotY = yShoulder - 0.04;
-  const target = isMale ? { x: 0.285, y: 0.95 } : { x: 0.26, y: 0.90 };
+  const pivotX = isMale ? 0.205 : 0.177;
+  const pivotY = isMale ? 1.435 : 1.368;
+  const target = isMale ? { x: 0.440, y: 1.00 } : { x: 0.410, y: 0.95 };
   const thetaTarget = Math.atan2(target.y - pivotY, target.x - pivotX);
   const applied = [];
 
-  const yWrist = isMale ? 0.93 : 0.89;
-  const yPelvisLimit = isMale ? 0.94 : 0.90;
+  const yWrist = isMale ? 0.98 : 0.93;
+  const yPelvisLimit = isMale ? 0.72 : 0.68;
 
   [-1, 1].forEach((side) => {
     let best = -1;
