@@ -10,6 +10,11 @@ import {
   poseGeometry,
 } from '@/lib/footwearFit';
 import {
+  resolveGarmentTemplate,
+  getTemplateGlbUrl,
+  AVAILABLE_TEMPLATES,
+} from '@/lib/garmentTemplates';
+import {
   buildSilhouetteShell,
   chooseGridResolution,
   resampleAlphaMask,
@@ -2686,6 +2691,95 @@ export function resolveShellFit({
  * inflated to the avatar's body profile; item-group back views supply the back sheet.
  * Footwear and accessories use dedicated fitted geometry.
  */
+/**
+ * Renders a canonical 3D GLB garment archetype model with custom fabric texture,
+ * avatar morph-field compliance, and physical layering order.
+ */
+export function GarmentTemplateMesh({
+  templateId,
+  texture,
+  backTexture,
+  dominantColor,
+  pbrProps,
+  renderOrder,
+  morphField,
+  morphInfluences,
+  rawSlot,
+  isMale = false,
+  layerOffset = 0,
+  fallbackGeometry = null,
+  heelGeometry = null,
+}) {
+  const url = getTemplateGlbUrl(templateId);
+  const gltf = useGLTF(url);
+
+  const geometry = useMemo(() => {
+    let geo = null;
+    if (gltf?.scene) {
+      gltf.scene.traverse((child) => {
+        if (child.isMesh && child.geometry && !geo) {
+          geo = child.geometry.clone();
+        }
+      });
+    }
+    if (!geo && fallbackGeometry) {
+      geo = fallbackGeometry;
+    }
+    if (!geo) return null;
+    if (morphField && morphInfluences && Object.keys(morphInfluences).length > 0) {
+      try {
+        return applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
+          minClearance: layerOffset,
+        });
+      } catch (e) {
+        return geo;
+      }
+    }
+    return geo;
+  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset]);
+
+  const material = useMemo(() => {
+    const matProps = {
+      color: texture ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#F3F4F6'),
+      roughness: pbrProps?.roughness ?? 0.70,
+      metalness: pbrProps?.metalness ?? 0.05,
+      side: THREE.DoubleSide,
+      depthWrite: true,
+      polygonOffset: true,
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+    };
+    if (texture) {
+      matProps.map = texture;
+    }
+    return new THREE.MeshStandardMaterial(matProps);
+  }, [texture, dominantColor, pbrProps, rawSlot]);
+
+  if (!geometry) return null;
+
+  return (
+    <>
+      {heelGeometry && (
+        <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial
+            color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B'}
+            roughness={0.35}
+            metalness={0.12}
+          />
+        </mesh>
+      )}
+      <mesh
+        name={`garment-template-${templateId}`}
+        geometry={geometry}
+        material={material}
+        castShadow
+        receiveShadow
+        renderOrder={renderOrder}
+      />
+    </>
+  );
+}
+
 export default function GarmentMesh3D({
   garment,
   slot,
@@ -2959,6 +3053,17 @@ export default function GarmentMesh3D({
     [rawSlot, visible, isMale, footwearSpec, footPose]
   );
 
+  const matchedTemplateId = useMemo(() => {
+    if (rawSlot === 'shoes') return null;
+    return resolveGarmentTemplate({
+      rawSlot,
+      garmentText,
+      aspect,
+      slot: slot || garment?.slot,
+      category: garment?.category || garment?.rawItem?.category,
+    });
+  }, [rawSlot, garmentText, aspect, slot, garment]);
+
   // VRAM cleanup: dispose transient morphed and generated geometries on unmount / recompute
   useEffect(() => {
     return () => {
@@ -2983,6 +3088,26 @@ export default function GarmentMesh3D({
   if (isCoreClothing && !textureReady) return null;
 
   const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText);
+
+  if (matchedTemplateId && !bypassSilhouette) {
+    return (
+      <GarmentTemplateMesh
+        templateId={matchedTemplateId}
+        texture={filledTexture || opaqueTexture || texture}
+        backTexture={backTexture}
+        dominantColor={dominantColor}
+        pbrProps={pbrProps}
+        renderOrder={renderOrder}
+        morphField={morphField}
+        morphInfluences={morphInfluences}
+        rawSlot={rawSlot}
+        isMale={isMale}
+        layerOffset={shellFit?.layerOffset || 0}
+        fallbackGeometry={geometry}
+        heelGeometry={heelGeometry}
+      />
+    );
+  }
 
   if (shellGeos && texture) {
     const shellMaterialProps = {
