@@ -93,13 +93,13 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     const armCutUpper = hasOuterwear
       ? (isMale ? 0.32 : 0.28)
       : (y >= 1.30
-        ? (isMale ? 0.220 : 0.196)
-        : 0.165 + Math.max(0, Math.min(1, (1.12 - y) / 0.40)) * 0.033);
+        ? (isMale ? 0.285 : 0.250)
+        : 0.175 + Math.max(0, Math.min(1, (1.12 - y) / 0.40)) * 0.040);
     const maxShoulderY = isMale ? 1.52 : 1.435;
-    const minNeckAbsX = isMale ? 0.064 : 0.055;
+    const minNeckAbsX = isMale ? 0.060 : 0.052;
     if (
       (hasTop || hasOuterwear || hasDress) &&
-      y >= 0.90 &&
+      y >= 0.88 &&
       y <= maxShoulderY &&
       absX <= armCutUpper &&
       (y <= 1.38 || absX >= minNeckAbsX)
@@ -120,12 +120,13 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       ? 0.165 + Math.max(0, Math.min(1, (1.10 - y) / 0.38)) * 0.033
       : 0.30;
     const minBottomY = hasBottom ? 0.12 : 0.74;
-    if ((hasBottom || hasDress) && y >= minBottomY && y <= 1.07 && absX <= armCutLower) {
+    const maxBottomY = isMale ? 1.10 : 1.07;
+    if ((hasBottom || hasDress) && y >= minBottomY && y <= maxBottomY && absX <= armCutLower) {
       const sign = x < 0 ? -1 : 1;
       // Smooth blend at top waist (if no top is worn) and at bottom ankle
       const wTop = (hasTop || hasOuterwear || hasDress)
         ? 1.0
-        : Math.max(0, Math.min(1, (1.07 - y) / 0.04));
+        : Math.max(0, Math.min(1, (maxBottomY - y) / 0.04));
       const wBot = Math.max(0, Math.min(1, (y - minBottomY) / 0.05));
       const w = wTop * wBot;
 

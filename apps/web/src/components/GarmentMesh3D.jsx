@@ -2726,6 +2726,24 @@ export function GarmentTemplateMesh({
       geo = fallbackGeometry;
     }
     if (!geo) return null;
+    if (texture && ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot)) {
+      const pos = geo.attributes.position;
+      const uv = geo.attributes.uv;
+      if (pos && uv) {
+        geo.computeBoundingBox();
+        const bb = geo.boundingBox;
+        if (bb) {
+          const dx = Math.max(1e-4, bb.max.x - bb.min.x);
+          const dy = Math.max(1e-4, bb.max.y - bb.min.y);
+          for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i);
+            const y = pos.getY(i);
+            uv.setXY(i, Math.max(0, Math.min(1, (x - bb.min.x) / dx)), Math.max(0, Math.min(1, (y - bb.min.y) / dy)));
+          }
+          uv.needsUpdate = true;
+        }
+      }
+    }
     if (morphField && morphInfluences && Object.keys(morphInfluences).length > 0) {
       try {
         return applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
@@ -3089,6 +3107,36 @@ export default function GarmentMesh3D({
 
   const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText);
 
+  // 1. Primary for core clothing: Render the customized silhouette shell so garments keep their
+  //    authentic photographed cut, sleeves, lapels, waist, pockets, and photo texture.
+  if (isCoreClothing && shellGeos && texture && !bypassSilhouette) {
+    const shellMaterialProps = {
+      color: '#FFFFFF',
+      alphaTest: 0.02,
+      transparent: false,
+      depthWrite: true,
+      side: THREE.DoubleSide,
+      roughness: pbrProps.roughness,
+      metalness: pbrProps.metalness,
+      envMapIntensity: pbrProps.envMapIntensity,
+      alphaToCoverage: false,
+      polygonOffset: true,
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+    };
+    return (
+      <>
+        <mesh name="garment-front-sheet" geometry={shellGeos.front} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial map={texture} {...shellMaterialProps} />
+        </mesh>
+        <mesh name="garment-back-sheet" geometry={shellGeos.back} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial map={backTexture || texture} {...shellMaterialProps} />
+        </mesh>
+      </>
+    );
+  }
+
+  // 2. Canonical 3D Templates: Used for accessories (hats, bags, belts) or as fallback when no silhouette shell could be built
   if (matchedTemplateId && !bypassSilhouette) {
     return (
       <GarmentTemplateMesh
@@ -3109,6 +3157,7 @@ export default function GarmentMesh3D({
     );
   }
 
+  // 3. Fallback to silhouette shell if available
   if (shellGeos && texture) {
     const shellMaterialProps = {
       color: '#FFFFFF',
