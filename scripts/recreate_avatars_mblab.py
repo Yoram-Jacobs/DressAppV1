@@ -316,7 +316,7 @@ if __name__ == '__main__':
     )
     recreate_avatar_mblab(
         gender='male',
-        clean_glb_path='temp_m_112b.glb',
+        clean_glb_path='temp_m_6c0.glb',
         output_glb_path='apps/web/public/models/avatar_male_1.glb',
         out_preview_path='avatar_male_preview.png'
     )

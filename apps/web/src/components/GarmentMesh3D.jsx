@@ -3016,7 +3016,7 @@ export default function GarmentMesh3D({
         yBottom: shellFit.yBottom,
         layerOffset: shellFit.layerOffset,
         fabricThickness: shellFit.fabricThickness,
-        poseSleeves: !isStandalone && rawSlot !== 'outerwear',
+        poseSleeves: false,
         hasOuterwear,
         sideProfile,
         getTorsoSlice,
