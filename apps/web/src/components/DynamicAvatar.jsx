@@ -5,8 +5,8 @@ import * as THREE from 'three';
 import { RotateCcw } from 'lucide-react';
 import { isMaleGender } from '@/lib/gender';
 
-const MALE_GLB_URL = '/models/avatar_male_1.glb?v=apose2';
-const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=apose2';
+const MALE_GLB_URL = '/models/avatar_male_1.glb?v=mblab1';
+const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=mblab1';
 
 export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png?v=male2';
 export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png';
