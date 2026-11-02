@@ -29,8 +29,8 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
     expect(AVAILABLE_TEMPLATES).toContain('belt');
   });
 
-  it('contains all 12 dedicated Blender avatar-reproduced canonical basemeshes', () => {
-    expect(CANONICAL_TEMPLATES).toHaveLength(12);
+  it('contains all 13 dedicated Blender avatar-reproduced canonical basemeshes', () => {
+    expect(CANONICAL_TEMPLATES).toHaveLength(13);
     expect(CANONICAL_TEMPLATES).toEqual([
       'top_tshirt',
       'top_longsleeve',
@@ -38,6 +38,7 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
       'bottom_trousers',
       'bottom_shorts',
       'bottom_skirt',
+      'dress',
       'shoes_sneakers',
       'shoes_boots',
       'accessory_belt',

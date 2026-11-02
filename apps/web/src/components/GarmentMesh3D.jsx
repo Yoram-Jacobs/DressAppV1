@@ -2740,8 +2740,36 @@ export function resolveShellFit({
  * Renders a canonical 3D GLB garment archetype model with custom fabric texture,
  * avatar morph-field compliance, and physical layering order.
  */
-export function GarmentTemplateMesh({
+class GarmentTemplateErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.warn('[GarmentTemplate] Error loading 3D template, falling back to procedural mesh:', error?.message);
+    if (this.props.url) {
+      try {
+        useGLTF.clear?.(this.props.url);
+      } catch (_) {}
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || null;
+    }
+    return this.props.children;
+  }
+}
+
+function GarmentTemplateMeshInner({
   templateId,
+  url,
   texture,
   backTexture,
   dominantColor,
@@ -2756,7 +2784,6 @@ export function GarmentTemplateMesh({
   fallbackGeometry = null,
   heelGeometry = null,
 }) {
-  const url = getTemplateGlbUrl(templateId, isMale);
   const gltf = useGLTF(url);
 
   const geometry = useMemo(() => {
@@ -2892,6 +2919,65 @@ export function GarmentTemplateMesh({
         renderOrder={renderOrder}
       />
     </>
+  );
+}
+
+export function GarmentTemplateMesh(props) {
+  const {
+    templateId,
+    isMale = false,
+    fallbackGeometry = null,
+    heelGeometry = null,
+    dominantColor,
+    pbrProps,
+    renderOrder,
+    rawSlot,
+    texture,
+  } = props;
+  const url = getTemplateGlbUrl(templateId, isMale);
+
+  const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
+  const fallbackNode = (
+    <>
+      {heelGeometry && (
+        <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial
+            color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B'}
+            roughness={0.35}
+            metalness={0.12}
+          />
+        </mesh>
+      )}
+      {fallbackGeometry && (
+        <mesh
+          geometry={fallbackGeometry}
+          castShadow
+          receiveShadow
+          renderOrder={renderOrder}
+        >
+          <meshStandardMaterial
+            map={texture || null}
+            color={rawSlot === 'shoes'
+              ? (texture ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#94A3B8'))
+              : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
+            side={THREE.DoubleSide}
+            depthWrite={true}
+            transparent={!isOpaqueSlot}
+            alphaTest={isOpaqueSlot ? 0 : 0.02}
+            roughness={pbrProps?.roughness ?? 0.70}
+            metalness={pbrProps?.metalness ?? 0.05}
+          />
+        </mesh>
+      )}
+    </>
+  );
+
+  if (!url) return fallbackNode;
+
+  return (
+    <GarmentTemplateErrorBoundary url={url} fallback={fallbackNode}>
+      <GarmentTemplateMeshInner {...props} url={url} />
+    </GarmentTemplateErrorBoundary>
   );
 }
 

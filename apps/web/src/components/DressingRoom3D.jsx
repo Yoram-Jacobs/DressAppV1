@@ -28,6 +28,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import AvatarMesh3D, { getAvatarMetricTransform } from './AvatarMesh3D';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { useGLTF } from '@react-three/drei';
 import GarmentMesh3D, {
   normalizeGarmentRole,
   resolveGarmentRenderOrder,
@@ -666,6 +668,15 @@ export default function DressingRoom3D({
 
         {/* ─── Main 3D Viewport & Overlay Controls ─── */}
         <div className="relative flex-1 w-full h-full overflow-hidden select-none bg-[#FAF7F2]">
+          <ErrorBoundary
+            title={t('dressing_room_3d.errorTitle', { defaultValue: '3D Studio' })}
+            description={t('dressing_room_3d.errorDesc', { defaultValue: 'An unexpected 3D loading error occurred. Tap to retry.' })}
+            onReset={() => {
+              try {
+                useGLTF.clear();
+              } catch (_) {}
+            }}
+          >
           <Suspense
             fallback={(
               <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-[#6B7280]" data-testid="dressing-room-3d-loading">
@@ -782,6 +793,7 @@ export default function DressingRoom3D({
             </Suspense>
           </Canvas>
           </Suspense>
+          </ErrorBoundary>
 
           {/* ─── Floating Interaction & Drag Hint ─── */}
           <div className="absolute top-4 start-4 z-10 pointer-events-none">
