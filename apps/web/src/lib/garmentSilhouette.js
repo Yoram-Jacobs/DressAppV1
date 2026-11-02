@@ -634,13 +634,13 @@ export function buildSilhouetteShell({
         }
         if (rMax > rMin) runsByRow[j] = [[rMin, rMax]];
       } else {
-        // For general tops: bridge small/medium cutout gaps between adjacent runs within the torso
-        // (tears, wrinkle artifacts, or arm-torso boundary seams up to 14% of width)
+        // For general tops: only bridge tiny interior pinhole tears within the torso (<= 2.5% width);
+        // never bridge across empty armpit gaps between hanging sleeves and the chest!
         const merged = [];
         let cur = [r[0][0], r[0][1]];
         for (let k = 1; k < r.length; k++) {
           const gap = r[k][0] - cur[1];
-          if (gap <= Math.max(3, 0.14 * nx)) {
+          if (gap <= Math.max(1.5, 0.025 * nx)) {
             cur[1] = Math.max(cur[1], r[k][1]);
           } else {
             merged.push(cur);
@@ -1022,7 +1022,7 @@ export function buildSilhouetteShell({
         const tCollar = clamp((j - jFabricTop) / Math.max(1, 0.20 * fabricHeight), 0, 1);
         const rowCenter = collarCenterCol * (1 - tCollar) + spineCenterCol * tCollar;
         x = (col - rowCenter) * dx;
-        const minExpandY = (isOuterwear || slot === 'dress') ? 0.10 : 0.80;
+        const minExpandY = 0.10;
         if (!isInnerTopUnderOuterwear && y >= minExpandY && y <= yShoulderAvatar - 0.04 && run && run[0] <= rowCenter && run[1] >= rowCenter) {
           const trunkHalfWorld = Math.max(1e-3, ((run[1] - run[0]) * 0.5) * dx);
           const yWaistBody = isMale ? 1.08 : 1.05;
@@ -1043,10 +1043,10 @@ export function buildSilhouetteShell({
             }
           } else {
             const belowWaistT = smoothstep01((yWaistBody - y) / 0.10);
-            const baseRx = (isOuterwear || slot === 'dress') && y < yHips
+            const baseRx = y < yHips
               ? Math.max(torso.rx, hipPeakSlice.rx)
               : torso.rx;
-            const outerDrapeClearance = isOuterwear ? 0.014 * belowWaistT : 0;
+            const outerDrapeClearance = isOuterwear ? 0.014 * belowWaistT : (y < yHips ? 0.006 * belowWaistT : 0);
             minTrunkHalf = baseRx + effOffset + outerDrapeClearance;
           }
           if (trunkHalfWorld < minTrunkHalf) {
@@ -1204,21 +1204,20 @@ export function buildSilhouetteShell({
         const lateralFlare = Math.max(0, halfWorld - (torso.rx + fitOff)) * skirtFlareScale * tWaist;
         bodyRzFront = (baseRzFront + lateralFlare) * sideMod;
         bodyRzBack = (baseRzBack + lateralFlare) * sideMod;
-      } else if (isOuterwear || slot === 'dress') {
-        // Layer 7 (Outerwear: +0.016m) and Layer 4 (Dresses: +0.010m):
-        // Outerwear is NEVER tucked into a skirt or pants! Below the waist, outerwear follows the
-        // full hipPeakSlice contour plus outer-layer radial drape clearance so it sits strictly
-        // outside all lower-body garments (skirts, jeans, trousers) and mid-layers.
+      } else if (isTopOrBody) {
+        // Layer 7 (Outerwear: +0.016m) and Layer 4 (Dresses / Tunics / Tops: +0.010m):
+        // Outerwear and untucked tops/tunics follow the full hipPeakSlice contour below the waist
+        // so lower flanks never narrow or slice into the avatar's hips/underwear.
         const yWaistBody = isMale ? 1.08 : 1.05;
         const tBelowWaist = smoothstep01((yWaistBody + 0.04 - y) / 0.10);
         const yHips = isMale ? 0.92 : 0.90;
         const hipPeakSlice = getTorsoSlice(yHips, isMale);
         const belowHipT = smoothstep01((yHips - y) / 0.14);
-        const outerDrapeBoost = (!isStandalone && isOuterwear) ? (0.016 * tBelowWaist) : 0;
+        const outerDrapeBoost = !isStandalone ? ((isOuterwear ? 0.016 : 0.008) * tBelowWaist) : 0;
         const baseRzFront = ((torso.rzFront || torso.rz) * (1 - belowHipT) + (hipPeakSlice.rzFront || hipPeakSlice.rz) * belowHipT) + effOffset + outerDrapeBoost;
         const baseRzBack = ((torso.rzBack || torso.rz) * (1 - belowHipT) + (hipPeakSlice.rzBack || hipPeakSlice.rz) * belowHipT) + effOffset + outerDrapeBoost;
         // Natural A-line cone drape in Z (never ballooning into a sphere from horizontal sleeve span!)
-        const aLineDrapeZ = isOuterwear ? (Math.max(0, yHips - y) * 0.07) : 0;
+        const aLineDrapeZ = isOuterwear ? (Math.max(0, yHips - y) * 0.07) : (Math.max(0, yHips - y) * 0.03);
         const flareScale = isOuterwear ? 0.10 : 0.35;
         const maxExcess = isOuterwear ? 0.08 : 0.25;
         const lateralFlare = Math.max(0, Math.min(maxExcess, halfWorld - (torso.rx + effOffset))) * flareScale * tBelowWaist;
@@ -1247,7 +1246,7 @@ export function buildSilhouetteShell({
       }
 
       const isShoulderZone = !isBottom && !isSkirt && y >= (isMale ? 1.35 : 1.29);
-      const isOuterLowerBody = isOuterwear && y <= (isMale ? 1.08 : 1.05);
+      const isOuterLowerBody = isTopOrBody && y <= (isMale ? 1.08 : 1.05);
       const isBodySpan = isBottom || isSkirt || isOuterLowerBody || halfWorld >= torso.rx * 0.72 || isShoulderZone;
       const ampFront = (isBottom || isSkirt || isOuterLowerBody) ? bodyRzFront : (isBodySpan ? bodyRzFront : Math.min(bodyRzFront, halfWorld + 0.010));
       const ampBack = (isBottom || isSkirt || isOuterLowerBody) ? bodyRzBack : (isBodySpan ? bodyRzBack : Math.min(bodyRzBack, halfWorld + 0.010));
@@ -1476,7 +1475,7 @@ export function buildSilhouetteShell({
         uCols[dst] = uCols[src];
       }
     }
-    if (jLast >= 0 && jLast < vh - 1) {
+    if (jLast >= Math.max(0, jFabricBottom - Math.round(0.15 * fabricHeight)) && jLast < vh - 1) {
       const src = jLast * vw + i;
       const jMaxSnap = Math.min(vh - 1, jLast + 2);
       for (let j = jLast + 1; j <= jMaxSnap; j++) {

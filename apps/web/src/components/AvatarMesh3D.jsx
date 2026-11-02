@@ -99,17 +99,18 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     const minNeckAbsX = isMale ? 0.060 : 0.052;
     if (
       (hasTop || hasOuterwear || hasDress) &&
-      y >= 0.88 &&
+      y >= 0.78 &&
       y <= maxShoulderY &&
       absX <= armCutUpper &&
       (y <= 1.38 || absX >= minNeckAbsX)
     ) {
       const cz = 0.020;
-      arr[idx] = x * 0.88;
+      const wVertical = hasBottom || hasDress ? 1.0 : Math.max(0, Math.min(1, (y - 0.78) / 0.08));
+      arr[idx] = x * (1 - 0.12 * wVertical);
       if (y > 1.34 && absX >= minNeckAbsX) {
         arr[idx + 1] = y - 0.012;
       }
-      arr[idx + 2] = cz + (z - cz) * 0.85;
+      arr[idx + 2] = cz + (z - cz) * (1 - 0.15 * wVertical);
       continue;
     }
 

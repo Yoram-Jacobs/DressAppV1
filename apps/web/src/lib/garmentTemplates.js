@@ -27,8 +27,70 @@ export const AVAILABLE_TEMPLATES = [
   'belt',
 ];
 
-export function getTemplateGlbUrl(templateId) {
-  if (!templateId || !AVAILABLE_TEMPLATES.includes(templateId)) return null;
+export const CANONICAL_TEMPLATES = [
+  'top_tshirt',
+  'top_longsleeve',
+  'top_outerwear_jacket',
+  'bottom_trousers',
+  'bottom_shorts',
+  'bottom_skirt',
+  'shoes_sneakers',
+  'shoes_boots',
+  'accessory_belt',
+  'accessory_hat',
+  'accessory_glasses',
+  'accessory_crossbody_bag',
+];
+
+export const CANONICAL_TEMPLATE_MAP = {
+  singlet: 'top_tshirt',
+  tshirt: 'top_tshirt',
+  top_tshirt: 'top_tshirt',
+  shirt: 'top_longsleeve',
+  hoodie: 'top_longsleeve',
+  top_longsleeve: 'top_longsleeve',
+  trench_coat: 'top_outerwear_jacket',
+  cardigan: 'top_outerwear_jacket',
+  jacket_blazer: 'top_outerwear_jacket',
+  top_outerwear_jacket: 'top_outerwear_jacket',
+  kaftan: 'bottom_skirt',
+  pants: 'bottom_trousers',
+  bottom_trousers: 'bottom_trousers',
+  shorts: 'bottom_shorts',
+  bermuda: 'bottom_shorts',
+  bottom_shorts: 'bottom_shorts',
+  skirt_aline: 'bottom_skirt',
+  skirt_pencil: 'bottom_skirt',
+  dress: 'bottom_skirt',
+  bottom_skirt: 'bottom_skirt',
+  sneakers: 'shoes_sneakers',
+  shoes_sneakers: 'shoes_sneakers',
+  boots: 'shoes_boots',
+  shoes_boots: 'shoes_boots',
+  hat_cap: 'accessory_hat',
+  hat_fedora: 'accessory_hat',
+  accessory_hat: 'accessory_hat',
+  glasses: 'accessory_glasses',
+  accessory_glasses: 'accessory_glasses',
+  bag_handbag: 'accessory_crossbody_bag',
+  bag_crossbody: 'accessory_crossbody_bag',
+  accessory_crossbody_bag: 'accessory_crossbody_bag',
+  belt: 'accessory_belt',
+  accessory_belt: 'accessory_belt',
+};
+
+export function getTemplateGlbUrl(templateId, isMale) {
+  if (!templateId) return null;
+  const isValid =
+    AVAILABLE_TEMPLATES.includes(templateId) ||
+    CANONICAL_TEMPLATES.includes(templateId) ||
+    Boolean(CANONICAL_TEMPLATE_MAP[templateId]);
+  if (!isValid) return null;
+  if (typeof isMale === 'boolean') {
+    const genderDir = isMale ? 'male' : 'female';
+    const canonicalName = CANONICAL_TEMPLATE_MAP[templateId] || templateId;
+    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon2`;
+  }
   return `/models/templates/${templateId}.glb`;
 }
 
@@ -68,7 +130,7 @@ export function resolveGarmentTemplate({
   if (rawSlot === 'outerwear') {
     if (has('cardigan', 'קרדיגן')) return 'cardigan';
     if (has('blazer', 'suit', 'בלייזר', 'מקטורן')) return 'jacket_blazer';
-    if (has('trench', 'overcoat', 'coat', 'parka', 'duster', 'raincoat', 'טרנץ', 'טרנץ\'', 'מעיל', 'מנטו')) return 'trench_coat';
+    if (has('trench', 'overcoat', 'coat', 'parka', 'duster', 'raincoat', 'טרנץ', "טרנץ'", 'מעיל', 'מנטו')) return 'trench_coat';
     return aspect <= 0.85 ? 'trench_coat' : 'jacket_blazer';
   }
 
@@ -96,7 +158,7 @@ export function resolveGarmentTemplate({
   // 6. TOPS
   if (rawSlot === 'top') {
     if (has('tank', 'singlet', 'sleeveless', 'vest', 'camisole', 'גופיה', 'גופייה', 'גופית', 'גופיית', 'בלי שרוולים')) return 'singlet';
-    if (has('hoodie', 'sweatshirt', 'sweater', 'knit', 'pullover', 'fleece', 'סוודר', 'סווטשירט', 'קפוצ\'ון', 'סריג')) return 'hoodie';
+    if (has('hoodie', 'sweatshirt', 'sweater', 'knit', 'pullover', 'fleece', 'סוודר', 'סווטשירט', "קפוצ'ון", 'סריג')) return 'hoodie';
     if (has('button', 'collared', 'dress shirt', 'blouse', 'חולצה מכופתרת', 'מכופתרת', 'חולצה אלגנטית')) return 'shirt';
     if (has('t-shirt', 'tshirt', 'tee', 'טי שירט', 'חולצת טי', 'חולצה קצרה', 'טריקו')) return 'tshirt';
     return aspect < 0.70 ? 'shirt' : 'tshirt';

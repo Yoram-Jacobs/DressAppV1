@@ -1,5 +1,6 @@
 import {
   AVAILABLE_TEMPLATES,
+  CANONICAL_TEMPLATES,
   getTemplateGlbUrl,
   resolveGarmentTemplate,
 } from '../garmentTemplates';
@@ -28,10 +29,32 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
     expect(AVAILABLE_TEMPLATES).toContain('belt');
   });
 
-  it('correctly maps template IDs to static GLB asset URLs', () => {
+  it('contains all 12 dedicated Blender avatar-reproduced canonical basemeshes', () => {
+    expect(CANONICAL_TEMPLATES).toHaveLength(12);
+    expect(CANONICAL_TEMPLATES).toEqual([
+      'top_tshirt',
+      'top_longsleeve',
+      'top_outerwear_jacket',
+      'bottom_trousers',
+      'bottom_shorts',
+      'bottom_skirt',
+      'shoes_sneakers',
+      'shoes_boots',
+      'accessory_belt',
+      'accessory_hat',
+      'accessory_glasses',
+      'accessory_crossbody_bag',
+    ]);
+  });
+
+  it('correctly maps template IDs to static and gender-tailored GLB asset URLs', () => {
     expect(getTemplateGlbUrl('trench_coat')).toBe('/models/templates/trench_coat.glb');
     expect(getTemplateGlbUrl('kaftan')).toBe('/models/templates/kaftan.glb');
     expect(getTemplateGlbUrl('singlet')).toBe('/models/templates/singlet.glb');
+    expect(getTemplateGlbUrl('tshirt', false)).toBe('/models/templates/female/top_tshirt.glb?v=canon2');
+    expect(getTemplateGlbUrl('tshirt', true)).toBe('/models/templates/male/top_tshirt.glb?v=canon2');
+    expect(getTemplateGlbUrl('pants', false)).toBe('/models/templates/female/bottom_trousers.glb?v=canon2');
+    expect(getTemplateGlbUrl('pants', true)).toBe('/models/templates/male/bottom_trousers.glb?v=canon2');
     expect(getTemplateGlbUrl('invalid_template')).toBeNull();
   });
 

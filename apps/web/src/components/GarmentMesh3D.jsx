@@ -30,14 +30,14 @@ import {
 
 export const TORSO_PROFILE_FEMALE = [
   { y: 1.46, rx: 0.125, cz: 0.030, rz: 0.082, rzFront: 0.082, rzBack: 0.075 }, // High collar / neck base
-  { y: 1.42, rx: 0.192, cz: 0.015, rz: 0.078, rzFront: 0.078, rzBack: 0.072 }, // Shoulder line / clavicle (zMin=-0.045, zMax=+0.067)
-  { y: 1.36, rx: 0.215, cz: 0.020, rz: 0.098, rzFront: 0.098, rzBack: 0.090 }, // Upper chest / scapulae top (zMin=-0.063, zMax=+0.100)
-  { y: 1.25, rx: 0.210, cz: 0.052, rz: 0.124, rzFront: 0.126, rzBack: 0.114 }, // Bust peak & scapulae (zMin=-0.057, zMax=+0.170)
-  { y: 1.15, rx: 0.174, cz: 0.054, rz: 0.106, rzFront: 0.110, rzBack: 0.094 }, // Under-bust (zMin=-0.028, zMax=+0.155)
-  { y: 1.05, rx: 0.142, cz: 0.052, rz: 0.095, rzFront: 0.095, rzBack: 0.095 }, // Natural waist (rx=0.142, zMin=-0.042, zMax=+0.147)
-  { y: 0.95, rx: 0.168, cz: 0.019, rz: 0.120, rzFront: 0.120, rzBack: 0.120 }, // Upper hips / glutes (zMin=-0.101, zMax=+0.139)
-  { y: 0.82, rx: 0.186, cz: 0.014, rz: 0.114, rzFront: 0.114, rzBack: 0.114 }, // Pelvis / crotch (zMin=-0.100, zMax=+0.118)
-  { y: 0.65, rx: 0.183, cz: 0.032, rz: 0.105, rzFront: 0.105, rzBack: 0.100 }, // Upper thigh flare (skirts/dresses)
+  { y: 1.42, rx: 0.192, cz: 0.015, rz: 0.078, rzFront: 0.082, rzBack: 0.072 }, // Shoulder line / clavicle (zMin=-0.045, zMax=+0.067)
+  { y: 1.36, rx: 0.215, cz: 0.020, rz: 0.104, rzFront: 0.112, rzBack: 0.090 }, // Upper chest / scapulae top (zMin=-0.063, zMax=+0.100)
+  { y: 1.25, rx: 0.210, cz: 0.052, rz: 0.130, rzFront: 0.136, rzBack: 0.114 }, // Bust peak & scapulae (zMin=-0.057, zMax=+0.170)
+  { y: 1.15, rx: 0.174, cz: 0.054, rz: 0.118, rzFront: 0.128, rzBack: 0.094 }, // Under-bust (zMin=-0.028, zMax=+0.165)
+  { y: 1.05, rx: 0.146, cz: 0.052, rz: 0.110, rzFront: 0.116, rzBack: 0.095 }, // Natural waist / belly (rx=0.142, zMin=-0.042, zMax=+0.155)
+  { y: 0.95, rx: 0.172, cz: 0.024, rz: 0.128, rzFront: 0.138, rzBack: 0.120 }, // Upper hips / lower belly (zMin=-0.101, zMax=+0.151)
+  { y: 0.82, rx: 0.188, cz: 0.016, rz: 0.118, rzFront: 0.124, rzBack: 0.114 }, // Pelvis / crotch (zMin=-0.100, zMax=+0.128)
+  { y: 0.65, rx: 0.186, cz: 0.032, rz: 0.108, rzFront: 0.112, rzBack: 0.100 }, // Upper thigh flare (skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
@@ -745,7 +745,7 @@ async function fetchAndCropTexture(url) {
             const lum = 0.299 * r + 0.587 * g + 0.114 * b;
             const chroma = Math.max(r, g, b) - Math.min(r, g, b);
             const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
-            return lum >= 138 && chroma <= 32 && distCore > 42;
+            return (lum >= 195 && chroma <= 45 && distCore > 38) || (lum >= 138 && chroma <= 32 && distCore > 42);
           };
           const fQueue = new Int32Array(w * h);
           let fHead = 0;
@@ -754,9 +754,20 @@ async function fetchAndCropTexture(url) {
             for (let x = 0; x < w; x++) {
               const p = y * w + x;
               if (bgMask[p]) continue;
-              const touchesBg =
-                x === 0 || x === w - 1 || y === 0 || y === h - 1 ||
-                bgMask[p - 1] || bgMask[p + 1] || bgMask[p - w] || bgMask[p + w];
+              let touchesBg = x <= 1 || x >= w - 2 || y <= 1 || y >= h - 2;
+              if (!touchesBg) {
+                for (let dy = -2; dy <= 2 && !touchesBg; dy++) {
+                  const ny = y + dy;
+                  if (ny < 0 || ny >= h) continue;
+                  for (let dx = -2; dx <= 2; dx++) {
+                    const nx = x + dx;
+                    if (nx >= 0 && nx < w && bgMask[ny * w + nx]) {
+                      touchesBg = true;
+                      break;
+                    }
+                  }
+                }
+              }
               if (touchesBg && isStudioFringe(p)) {
                 bgMask[p] = 1;
                 fQueue[fTail++] = p;
@@ -767,21 +778,19 @@ async function fetchAndCropTexture(url) {
             const p = fQueue[fHead++];
             const x = p % w;
             const y = (p - x) / w;
-            if (x > 0 && !bgMask[p - 1] && isStudioFringe(p - 1)) {
-              bgMask[p - 1] = 1;
-              fQueue[fTail++] = p - 1;
-            }
-            if (x < w - 1 && !bgMask[p + 1] && isStudioFringe(p + 1)) {
-              bgMask[p + 1] = 1;
-              fQueue[fTail++] = p + 1;
-            }
-            if (y > 0 && !bgMask[p - w] && isStudioFringe(p - w)) {
-              bgMask[p - w] = 1;
-              fQueue[fTail++] = p - w;
-            }
-            if (y < h - 1 && !bgMask[p + w] && isStudioFringe(p + w)) {
-              bgMask[p + w] = 1;
-              fQueue[fTail++] = p + w;
+            for (let dy = -2; dy <= 2; dy++) {
+              const ny = y + dy;
+              if (ny < 0 || ny >= h) continue;
+              for (let dx = -2; dx <= 2; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const nx = x + dx;
+                if (nx < 0 || nx >= w) continue;
+                const np = ny * w + nx;
+                if (!bgMask[np] && isStudioFringe(np)) {
+                  bgMask[np] = 1;
+                  fQueue[fTail++] = np;
+                }
+              }
             }
           }
         }
@@ -1133,16 +1142,46 @@ async function fetchAndCropTexture(url) {
           right = cx;
         }
       }
-      if (left >= 0 && right > left) {
-        // Interior holes between garment parts: fill with clean dominant fabric color
-        for (let cx = left; cx <= right; cx++) {
+      if (left >= 0 && right >= left) {
+        const leftSample = Math.min(right, left + 2);
+        const rightSample = Math.max(left, right - 2);
+        const lOff = row + leftSample * 4;
+        const rOff = row + rightSample * 4;
+        const lR = px[lOff + 3] >= ALPHA_ON ? px[lOff] : domR;
+        const lG = px[lOff + 3] >= ALPHA_ON ? px[lOff + 1] : domG;
+        const lB = px[lOff + 3] >= ALPHA_ON ? px[lOff + 2] : domB;
+        const rR = px[rOff + 3] >= ALPHA_ON ? px[rOff] : domR;
+        const rG = px[rOff + 3] >= ALPHA_ON ? px[rOff + 1] : domG;
+        const rB = px[rOff + 3] >= ALPHA_ON ? px[rOff + 2] : domB;
+
+        for (let cx = 0; cx < cropW; cx++) {
           const o = row + cx * 4;
           if (px[o + 3] < ALPHA_ON) {
-            px[o] = domR;
-            px[o + 1] = domG;
-            px[o + 2] = domB;
+            if (cx < left) {
+              px[o] = lR;
+              px[o + 1] = lG;
+              px[o + 2] = lB;
+            } else if (cx > right) {
+              px[o] = rR;
+              px[o + 1] = rG;
+              px[o + 2] = rB;
+            } else {
+              px[o] = domR;
+              px[o + 1] = domG;
+              px[o + 2] = domB;
+            }
+            px[o + 3] = 255;
+          } else {
             px[o + 3] = 255;
           }
+        }
+      } else {
+        for (let cx = 0; cx < cropW; cx++) {
+          const o = row + cx * 4;
+          px[o] = domR;
+          px[o + 1] = domG;
+          px[o + 2] = domB;
+          px[o + 3] = 255;
         }
       }
     }
@@ -1540,12 +1579,15 @@ export function createAnatomicalTopGeometry({
       const x = rx * Math.sin(theta);
       const isFront = Math.cos(theta) >= 0;
 
-      // Anatomical bust / chest projection guaranteeing zero penetration
-      const bustFactor = Math.max(0, Math.cos(theta * 1.5));
-      const bustBulge = (y >= 1.15 && y <= 1.32 && !isMale) ? 0.022 * bustFactor : 0.0;
+      // Anatomical bust / chest & belly projection guaranteeing zero penetration
+      const bustFactor = Math.max(0, Math.cos(theta * 1.3));
+      const bustBulge = (y >= 1.12 && y <= 1.34 && !isMale) ? 0.026 * bustFactor : 0.0;
+      const frontCos = Math.pow(Math.max(0, Math.cos(theta)), 0.65);
+      const rzFrontEff = (slice.rzFront || rz) + layerOffset;
+      const rzBackEff = (slice.rzBack || rz) + layerOffset;
       const z = isFront
-        ? cz + (rz + bustBulge) * Math.cos(theta)
-        : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
+        ? cz + (rzFrontEff + bustBulge) * frontCos
+        : cz - (rzBackEff + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
       // Continuous 360° UV projection: front and back views share the same texture and pattern
@@ -1701,12 +1743,15 @@ export function createAnatomicalDressGeometry({
       const x = rx * Math.sin(theta);
       const isFront = Math.cos(theta) >= 0;
 
-      // Anatomical bust / chest projection
-      const bustFactor = Math.max(0, Math.cos(theta * 1.5));
-      const bustBulge = (y >= 1.15 && y <= 1.32 && !isMale) ? 0.022 * bustFactor : 0.0;
+      // Anatomical bust / chest & belly projection
+      const bustFactor = Math.max(0, Math.cos(theta * 1.3));
+      const bustBulge = (y >= 1.12 && y <= 1.34 && !isMale) ? 0.026 * bustFactor : 0.0;
+      const frontCos = Math.pow(Math.max(0, Math.cos(theta)), 0.65);
+      const rzFrontEff = (slice.rzFront || rz) + layerOffset;
+      const rzBackEff = (slice.rzBack || rz) + layerOffset;
       const z = isFront
-        ? cz + (rz + bustBulge) * Math.cos(theta)
-        : cz - (rz + 0.012) * Math.abs(Math.cos(theta));
+        ? cz + (rzFrontEff + bustBulge) * frontCos
+        : cz - (rzBackEff + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
       const uT = uLeft + ((Math.sin(theta) + 1) * 0.5) * (uRight - uLeft);
@@ -2707,10 +2752,11 @@ export function GarmentTemplateMesh({
   rawSlot,
   isMale = false,
   layerOffset = 0,
+  shellFit = null,
   fallbackGeometry = null,
   heelGeometry = null,
 }) {
-  const url = getTemplateGlbUrl(templateId);
+  const url = getTemplateGlbUrl(templateId, isMale);
   const gltf = useGLTF(url);
 
   const geometry = useMemo(() => {
@@ -2726,21 +2772,71 @@ export function GarmentTemplateMesh({
       geo = fallbackGeometry;
     }
     if (!geo) return null;
-    if (texture && ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot)) {
+    if (['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot)) {
       const pos = geo.attributes.position;
       const uv = geo.attributes.uv;
-      if (pos && uv) {
+      if (pos) {
         geo.computeBoundingBox();
         const bb = geo.boundingBox;
         if (bb) {
-          const dx = Math.max(1e-4, bb.max.x - bb.min.x);
-          const dy = Math.max(1e-4, bb.max.y - bb.min.y);
-          for (let i = 0; i < pos.count; i++) {
-            const x = pos.getX(i);
-            const y = pos.getY(i);
-            uv.setXY(i, Math.max(0, Math.min(1, (x - bb.min.x) / dx)), Math.max(0, Math.min(1, (y - bb.min.y) / dy)));
+          // Adapt canonical upper-body template torso hem to shellFit.yBottom (e.g. longline tunic or crop top)
+          const targetYBottom = shellFit?.yBottom;
+          const yArmpitPivot = isMale ? 1.24 : 1.18;
+          const xTorsoMax = isMale ? 0.215 : 0.195;
+          if (
+            ['top', 'outerwear', 'dress'].includes(rawSlot) &&
+            Number.isFinite(targetYBottom) &&
+            Math.abs(targetYBottom - bb.min.y) > 0.02 &&
+            yArmpitPivot > bb.min.y + 0.05
+          ) {
+            const origSpan = yArmpitPivot - bb.min.y;
+            const newSpan = yArmpitPivot - targetYBottom;
+            for (let i = 0; i < pos.count; i++) {
+              const x = pos.getX(i);
+              const y = pos.getY(i);
+              const z = pos.getZ(i);
+              if (y < yArmpitPivot && Math.abs(x) <= xTorsoMax) {
+                const t = (yArmpitPivot - y) / origSpan;
+                const yNew = yArmpitPivot - t * newSpan;
+                let xNew = x;
+                let zNew = z;
+                if (yNew < 0.96) {
+                  const sl = getTorsoSlice(Math.max(0.65, yNew), isMale);
+                  const minRx = sl.rx + layerOffset + 0.008;
+                  const minRz = (z >= sl.cz ? (sl.rzFront || sl.rz) : (sl.rzBack || sl.rz)) + layerOffset + 0.008;
+                  const rad = Math.hypot(x, z - sl.cz);
+                  if (rad > 1e-4) {
+                    const cosA = x / rad;
+                    const sinA = (z - sl.cz) / rad;
+                    const targetX = minRx * cosA;
+                    const targetZ = sl.cz + minRz * sinA;
+                    if (Math.abs(targetX) > Math.abs(xNew)) xNew = targetX;
+                    if (Math.abs(targetZ - sl.cz) > Math.abs(zNew - sl.cz)) zNew = targetZ;
+                  }
+                }
+                pos.setXYZ(i, xNew, yNew, zNew);
+              }
+            }
+            pos.needsUpdate = true;
+            geo.computeBoundingBox();
+            geo.computeVertexNormals();
           }
-          uv.needsUpdate = true;
+
+          if (texture && uv) {
+            const bbUpdated = geo.boundingBox;
+            const dx = Math.max(1e-4, bbUpdated.max.x - bbUpdated.min.x);
+            const dy = Math.max(1e-4, bbUpdated.max.y - bbUpdated.min.y);
+            for (let i = 0; i < pos.count; i++) {
+              const x = pos.getX(i);
+              const y = pos.getY(i);
+              uv.setXY(
+                i,
+                Math.max(0.01, Math.min(0.99, (x - bbUpdated.min.x) / dx)),
+                Math.max(0.01, Math.min(0.99, (y - bbUpdated.min.y) / dy))
+              );
+            }
+            uv.needsUpdate = true;
+          }
         }
       }
     }
@@ -2754,7 +2850,7 @@ export function GarmentTemplateMesh({
       }
     }
     return geo;
-  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset]);
+  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, shellFit, texture]);
 
   const material = useMemo(() => {
     const matProps = {
@@ -3045,7 +3141,7 @@ export default function GarmentMesh3D({
       console.warn('Silhouette shell unavailable, using procedural fallback:', err);
       return null;
     }
-  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone, hasOuterwear, sideProfile]);
+  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone, hasOuterwear, sideProfile, bypassSilhouette]);
   const shellGeos = useMemo(() => {
     if (!shell) return null;
     if (isStandalone) {
@@ -3136,8 +3232,10 @@ export default function GarmentMesh3D({
     );
   }
 
-  // 2. Canonical 3D Templates: Used for accessories (hats, bags, belts) or as fallback when no silhouette shell could be built
-  if (matchedTemplateId && !bypassSilhouette) {
+  // 2. Canonical 3D Templates (Reproduced from Avatar Body via Blender):
+  //    Used when 3D Tailored mode (bypassSilhouette) is active, for accessories (hats, bags, belts, glasses),
+  //    or as fallback when no silhouette shell could be built.
+  if (matchedTemplateId) {
     return (
       <GarmentTemplateMesh
         templateId={matchedTemplateId}
@@ -3151,6 +3249,7 @@ export default function GarmentMesh3D({
         rawSlot={rawSlot}
         isMale={isMale}
         layerOffset={shellFit?.layerOffset || 0}
+        shellFit={shellFit}
         fallbackGeometry={geometry}
         heelGeometry={heelGeometry}
       />
