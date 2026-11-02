@@ -2781,37 +2781,39 @@ export function GarmentTemplateMesh({
         if (bb) {
           // Adapt canonical upper-body template torso hem to shellFit.yBottom (e.g. longline tunic or crop top)
           const targetYBottom = shellFit?.yBottom;
-          const yArmpitPivot = isMale ? 1.24 : 1.18;
-          const xTorsoMax = isMale ? 0.215 : 0.195;
+          const yTorsoApex = isMale ? 1.15 : 1.08;
           if (
             ['top', 'outerwear', 'dress'].includes(rawSlot) &&
             Number.isFinite(targetYBottom) &&
             Math.abs(targetYBottom - bb.min.y) > 0.02 &&
-            yArmpitPivot > bb.min.y + 0.05
+            yTorsoApex > bb.min.y + 0.05
           ) {
-            const origSpan = yArmpitPivot - bb.min.y;
-            const newSpan = yArmpitPivot - targetYBottom;
+            const origSpan = yTorsoApex - bb.min.y;
+            const newSpan = yTorsoApex - targetYBottom;
             for (let i = 0; i < pos.count; i++) {
               const x = pos.getX(i);
               const y = pos.getY(i);
               const z = pos.getZ(i);
-              if (y < yArmpitPivot && Math.abs(x) <= xTorsoMax) {
-                const t = (yArmpitPivot - y) / origSpan;
-                const yNew = yArmpitPivot - t * newSpan;
+              if (y < yTorsoApex) {
+                const t = (yTorsoApex - y) / Math.max(1e-4, origSpan);
+                const yNew = yTorsoApex - t * newSpan;
                 let xNew = x;
                 let zNew = z;
-                if (yNew < 0.96) {
-                  const sl = getTorsoSlice(Math.max(0.65, yNew), isMale);
-                  const minRx = sl.rx + layerOffset + 0.008;
-                  const minRz = (z >= sl.cz ? (sl.rzFront || sl.rz) : (sl.rzBack || sl.rz)) + layerOffset + 0.008;
+                if (yNew < 0.92) {
+                  const sl = getTorsoSlice(Math.max(0.60, yNew), isMale);
+                  const minRx = sl.rx + layerOffset + 0.012;
+                  const minRzFront = (sl.rzFront || sl.rz) + layerOffset + 0.012;
+                  const minRzBack = (sl.rzBack || sl.rz) + layerOffset + 0.012;
                   const rad = Math.hypot(x, z - sl.cz);
                   if (rad > 1e-4) {
                     const cosA = x / rad;
                     const sinA = (z - sl.cz) / rad;
+                    const minRz = z >= sl.cz ? minRzFront : minRzBack;
                     const targetX = minRx * cosA;
                     const targetZ = sl.cz + minRz * sinA;
-                    if (Math.abs(targetX) > Math.abs(xNew)) xNew = targetX;
-                    if (Math.abs(targetZ - sl.cz) > Math.abs(zNew - sl.cz)) zNew = targetZ;
+                    const tHip = Math.min(1, Math.max(0, (0.92 - yNew) / 0.16));
+                    xNew = x * (1 - tHip) + (Math.abs(targetX) > Math.abs(x) ? targetX : x) * tHip;
+                    zNew = z * (1 - tHip) + (Math.abs(targetZ - sl.cz) > Math.abs(z - sl.cz) ? targetZ : z) * tHip;
                   }
                 }
                 pos.setXYZ(i, xNew, yNew, zNew);
@@ -2822,20 +2824,19 @@ export function GarmentTemplateMesh({
             geo.computeVertexNormals();
           }
 
-          if (texture && uv) {
+          // Preserve authored GLB UVs; generate bounding-box fallback only if template geometry lacks UVs
+          if (texture && !uv) {
             const bbUpdated = geo.boundingBox;
             const dx = Math.max(1e-4, bbUpdated.max.x - bbUpdated.min.x);
             const dy = Math.max(1e-4, bbUpdated.max.y - bbUpdated.min.y);
+            const fallbackUvs = new Float32Array(pos.count * 2);
             for (let i = 0; i < pos.count; i++) {
               const x = pos.getX(i);
               const y = pos.getY(i);
-              uv.setXY(
-                i,
-                Math.max(0.01, Math.min(0.99, (x - bbUpdated.min.x) / dx)),
-                Math.max(0.01, Math.min(0.99, (y - bbUpdated.min.y) / dy))
-              );
+              fallbackUvs[i * 2] = Math.max(0.01, Math.min(0.99, (x - bbUpdated.min.x) / dx));
+              fallbackUvs[i * 2 + 1] = Math.max(0.01, Math.min(0.99, (y - bbUpdated.min.y) / dy));
             }
-            uv.needsUpdate = true;
+            geo.setAttribute('uv', new THREE.BufferAttribute(fallbackUvs, 2));
           }
         }
       }
@@ -3168,7 +3169,7 @@ export default function GarmentMesh3D({
   );
 
   const matchedTemplateId = useMemo(() => {
-    if (rawSlot === 'shoes') return null;
+    if (rawSlot === 'shoes' && !bypassSilhouette) return null;
     return resolveGarmentTemplate({
       rawSlot,
       garmentText,
@@ -3176,7 +3177,7 @@ export default function GarmentMesh3D({
       slot: slot || garment?.slot,
       category: garment?.category || garment?.rawItem?.category,
     });
-  }, [rawSlot, garmentText, aspect, slot, garment]);
+  }, [rawSlot, garmentText, aspect, slot, garment, bypassSilhouette]);
 
   // VRAM cleanup: dispose transient morphed and generated geometries on unmount / recompute
   useEffect(() => {

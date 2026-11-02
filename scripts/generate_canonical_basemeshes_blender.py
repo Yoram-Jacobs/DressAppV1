@@ -10,6 +10,7 @@ Run via:
 import os
 import sys
 import math
+import time
 import shutil
 import bpy
 import bmesh
@@ -21,6 +22,20 @@ WEB_MODELS_DIR = os.path.join(ROOT_DIR, "apps", "web", "public", "models")
 WEB_TEMPLATES_DIR = os.path.join(WEB_MODELS_DIR, "templates")
 ASSETS_AVATARS_DIR = os.path.join(ROOT_DIR, "assets", "avatars")
 ASSETS_TEMPLATES_DIR = os.path.join(ROOT_DIR, "assets", "templates")
+
+
+def safe_copy(src, dst):
+    src_norm = os.path.normcase(os.path.abspath(src))
+    dst_norm = os.path.normcase(os.path.abspath(dst))
+    if src_norm == dst_norm:
+        return
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    for attempt in range(10):
+        try:
+            shutil.copy2(src, dst)
+            return
+        except (PermissionError, OSError):
+            time.sleep(0.15)
 
 
 def ensure_dirs():
@@ -250,15 +265,141 @@ def add_closed_tube_to_bm(bm, rings, cap_ends=True, thickness=0.0018):
         except ValueError:
             pass
 
-    all_vert_weights = []
+    vert_weights = []
     for r in outer_verts:
         for v, _, wdict in r:
-            all_vert_weights.append((v, wdict))
+            vert_weights.append((v, wdict))
     for r in inner_verts:
         for v, _, wdict in r:
-            all_vert_weights.append((v, wdict))
+            vert_weights.append((v, wdict))
 
-    return faces_uvs, all_vert_weights
+    return faces_uvs, vert_weights
+
+
+def add_open_strip_to_bm(bm, rings, thickness=0.0020):
+    """
+    Adds an open, quad-dominant manifold sheet to bmesh with inner and outer walls.
+    Each ring in rings is a list of (Vector(x, y, z), (u, v), weight_dict) along an OPEN arc (j from 0 to n_seg - 1).
+    Bridged along top, bottom, and both side edges (j=0 and j=n_seg-1) so non-manifold edges = 0!
+    """
+    n_rings = len(rings)
+    n_seg = len(rings[0])
+    outer_verts = []
+    inner_verts = []
+
+    for r_idx, ring in enumerate(rings):
+        cx = sum(p[0].x for p in ring) / n_seg
+        cy = sum(p[0].y for p in ring) / n_seg
+        cz = sum(p[0].z for p in ring) / n_seg
+        center = Vector((cx, cy, cz))
+
+        o_row = []
+        i_row = []
+        for p_co, uv, wdict in ring:
+            v_out = bm.verts.new(p_co)
+            radial = p_co - center
+            radial_xy = Vector((radial.x, radial.y, 0.0))
+            if radial_xy.length > 1e-4:
+                in_dir = radial_xy.normalized()
+            elif radial.length > 1e-4:
+                in_dir = radial.normalized()
+            else:
+                in_dir = Vector((0.0, -1.0, 0.0))
+            v_in = bm.verts.new(p_co - in_dir * thickness)
+            o_row.append((v_out, uv, wdict))
+            i_row.append((v_in, uv, wdict))
+        outer_verts.append(o_row)
+        inner_verts.append(i_row)
+
+    faces_uvs = []
+    # Outer faces (j from 0 to n_seg - 2)
+    for i in range(n_rings - 1):
+        for j in range(n_seg - 1):
+            jn = j + 1
+            v0, uv0, _ = outer_verts[i][j]
+            v1, uv1, _ = outer_verts[i + 1][j]
+            v2, uv2, _ = outer_verts[i + 1][jn]
+            v3, uv3, _ = outer_verts[i][jn]
+            try:
+                f = bm.faces.new((v0, v1, v2, v3))
+                faces_uvs.append((f, [uv0, uv1, uv2, uv3]))
+            except ValueError:
+                pass
+
+    # Inner faces (reverse winding)
+    for i in range(n_rings - 1):
+        for j in range(n_seg - 1):
+            jn = j + 1
+            v0, uv0, _ = inner_verts[i][j]
+            v1, uv1, _ = inner_verts[i + 1][j]
+            v2, uv2, _ = inner_verts[i + 1][jn]
+            v3, uv3, _ = inner_verts[i][jn]
+            try:
+                f = bm.faces.new((v3, v2, v1, v0))
+                faces_uvs.append((f, [uv3, uv2, uv1, uv0]))
+            except ValueError:
+                pass
+
+    # Top boundary bridge (ring 0)
+    for j in range(n_seg - 1):
+        jn = j + 1
+        vo0, uvo0, _ = outer_verts[0][j]
+        vo1, uvo1, _ = outer_verts[0][jn]
+        vi0, uvi0, _ = inner_verts[0][j]
+        vi1, uvi1, _ = inner_verts[0][jn]
+        try:
+            f = bm.faces.new((vo0, vi0, vi1, vo1))
+            faces_uvs.append((f, [uvo0, uvi0, uvi1, uvo1]))
+        except ValueError:
+            pass
+
+    # Bottom boundary bridge (ring n_rings - 1)
+    last = n_rings - 1
+    for j in range(n_seg - 1):
+        jn = j + 1
+        vo0, uvo0, _ = outer_verts[last][j]
+        vo1, uvo1, _ = outer_verts[last][jn]
+        vi0, uvi0, _ = inner_verts[last][j]
+        vi1, uvi1, _ = inner_verts[last][jn]
+        try:
+            f = bm.faces.new((vo0, vo1, vi1, vi0))
+            faces_uvs.append((f, [uvo0, uvo1, uvi1, uvi0]))
+        except ValueError:
+            pass
+
+    # Left boundary bridge (j = 0)
+    for i in range(n_rings - 1):
+        vo0, uvo0, _ = outer_verts[i][0]
+        vo1, uvo1, _ = outer_verts[i + 1][0]
+        vi0, uvi0, _ = inner_verts[i][0]
+        vi1, uvi1, _ = inner_verts[i + 1][0]
+        try:
+            f = bm.faces.new((vo0, vi0, vi1, vo1))
+            faces_uvs.append((f, [uvo0, uvi0, uvi1, uvo0]))
+        except ValueError:
+            pass
+
+    # Right boundary bridge (j = n_seg - 1)
+    for i in range(n_rings - 1):
+        vo0, uvo0, _ = outer_verts[i][n_seg - 1]
+        vo1, uvo1, _ = outer_verts[i + 1][n_seg - 1]
+        vi0, uvi0, _ = inner_verts[i][n_seg - 1]
+        vi1, uvi1, _ = inner_verts[i + 1][n_seg - 1]
+        try:
+            f = bm.faces.new((vo0, vo1, vi1, vi0))
+            faces_uvs.append((f, [uvo0, uvo1, uvi1, uvi0]))
+        except ValueError:
+            pass
+
+    vert_weights = []
+    for r in range(n_rings):
+        for j in range(n_seg):
+            vo, _, wo = outer_verts[r][j]
+            vi, _, wi = inner_verts[r][j]
+            vert_weights.append((vo, wo))
+            vert_weights.append((vi, wi))
+
+    return faces_uvs, vert_weights
 
 
 def finalize_and_export_mesh(
@@ -315,6 +456,25 @@ def finalize_and_export_mesh(
                 if vg_name in vgroups:
                     vgroups[vg_name].add([v_idx], float(weight), "REPLACE")
 
+    # 🔴 Blocker 1: Export custom vertex attributes _DEFORM_WEIGHT and COLOR_0
+    # Because glTF 2.0 strips vertex_groups without armatures, export point attributes!
+    deform_attr = mesh.attributes.new(name="_DEFORM_WEIGHT", type='FLOAT', domain='POINT')
+    color_attr = mesh.color_attributes.new(name="COLOR_0", type='FLOAT_COLOR', domain='POINT')
+
+    for v_bm, wdict in vert_weights:
+        if v_bm.is_valid and v_bm.index < len(mesh.vertices):
+            v_idx = v_bm.index
+            w_val = 1.0
+            for vg_name, weight in wdict.items():
+                if "Sole" in vg_name or "Hardware" in vg_name or "Bag_Body" in vg_name:
+                    if weight < 0.5:
+                        w_val = 0.0
+                elif "Deform" in vg_name or "Upper" in vg_name or "Strap" in vg_name:
+                    if weight > 0.5:
+                        w_val = 1.0
+            deform_attr.data[v_idx].value = float(w_val)
+            color_attr.data[v_idx].color = (float(w_val), float(w_val), float(w_val), 1.0)
+
     if use_mirror:
         mod = obj.modifiers.new(name="MirrorX", type="MIRROR")
         mod.use_axis[0] = True
@@ -356,9 +516,11 @@ def finalize_and_export_mesh(
         export_format="GLB",
         export_apply=True,
         export_yup=True,
+        export_attributes=True,
+        export_all_vertex_colors=True,
     )
     for extra_path in export_paths[1:]:
-        shutil.copy2(first_path, extra_path)
+        safe_copy(first_path, extra_path)
 
     bm.free()
     return obj, len(non_manifold_edges), len(zero_area_faces)
@@ -406,7 +568,7 @@ def build_top_template(avatar_data, variant="tshirt"):
     torso_rings = []
 
     # Determine full horizontal span for planar UV normalization
-    x_arm_start = 0.195 if is_male else 0.175
+    x_arm_start = 0.178 if is_male else 0.158
     x_arm_wrist = 0.435 if is_male else 0.395
     x_cuff = x_arm_start + sleeve_frac * (x_arm_wrist - x_arm_start)
     max_half_span = max(0.26, x_cuff + 0.045)
@@ -455,7 +617,37 @@ def build_top_template(avatar_data, variant="tshirt"):
             ring.append((Vector((px, py, pz)), (u_torso, v_uv), {"Torso_Deform": 1.0}))
         torso_rings.append(ring)
 
-    f_uvs, v_wts = add_closed_tube_to_bm(bm, torso_rings, thickness=0.0018)
+    if variant == "jacket":
+        jacket_rings = []
+        n_seg_j = 26
+        for i in range(n_rings + 1):
+            t = i / n_rings
+            z = z_top - t * (z_top - z_bottom)
+            sl = measure_torso_slice(verts, z)
+            if z > z_shoulder:
+                t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
+                neck_rx = 0.082 if is_male else 0.072
+                neck_ry = 0.068 if is_male else 0.060
+                rx = (1.0 - t_neck) * sl["rx"] + t_neck * neck_rx + offset
+                ry = (1.0 - t_neck) * sl["ry"] + t_neck * neck_ry + offset
+                cy = sl["cy"]
+            else:
+                rx = sl["rx"] + offset
+                ry = sl["ry"] + offset
+                cy = sl["cy"]
+            ring = []
+            for j in range(n_seg_j):
+                theta = (-0.38 * math.pi) + (1.76 * math.pi * j) / (n_seg_j - 1)
+                px = rx * math.cos(theta)
+                py = cy + ry * math.sin(theta)
+                pz = z
+                u_torso = 0.50 + 0.44 * (px / max_half_span)
+                v_uv = 0.04 + 0.92 * t
+                ring.append((Vector((px, py, pz)), (max(0.02, min(0.98, u_torso)), max(0.02, min(0.98, v_uv))), {"Torso_Deform": 1.0}))
+            jacket_rings.append(ring)
+        f_uvs, v_wts = add_open_strip_to_bm(bm, jacket_rings, thickness=0.0022)
+    else:
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, torso_rings, thickness=0.0018)
     all_faces_uvs.extend(f_uvs)
     all_vert_weights.extend(v_wts)
 
@@ -733,6 +925,78 @@ def build_footwear_template(avatar_data, variant="sneakers"):
     return bm, all_faces_uvs, all_vert_weights, ["Footwear_Upper", "Footwear_Sole"]
 
 
+
+def build_dress_template(avatar_data):
+    """
+    Generates a full-length one-piece dress (bodice + A-line skirt) tailored to the avatar:
+    Bodice from shoulders (1.42 F / 1.50 M) down to waist (0.98), flaring into skirt down to knee (0.50).
+    Seamless continuous manifold mesh!
+    """
+    gender = avatar_data["gender"]
+    verts = avatar_data["verts"]
+    is_male = gender == "male"
+    offset = 0.007
+
+    z_top = 1.48 if is_male else 1.42
+    z_waist = 1.05 if is_male else 0.98
+    z_bottom = 0.52 if is_male else 0.48
+    z_shoulder = 1.44 if is_male else 1.36
+
+    bm = bmesh.new()
+    all_faces_uvs = []
+    all_vert_weights = []
+
+    n_rings = 28
+    n_seg = 28
+    dress_rings = []
+    max_half_span = 0.32
+
+    for i in range(n_rings + 1):
+        t = i / n_rings
+        z = z_top - t * (z_top - z_bottom)
+        sl = measure_torso_slice(verts, z)
+
+        if z > z_shoulder:
+            t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
+            neck_rx = 0.082 if is_male else 0.072
+            neck_ry = 0.068 if is_male else 0.060
+            rx = (1.0 - t_neck) * sl["rx"] + t_neck * neck_rx + offset
+            ry = (1.0 - t_neck) * sl["ry"] + t_neck * neck_ry + offset
+            cy = sl["cy"]
+        elif z >= z_waist:
+            rx = sl["rx"] + offset
+            ry = sl["ry"] + offset
+            cy = sl["cy"]
+        else:
+            # Below waist: A-line flare
+            t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
+            base_rx = sl["rx"] + offset
+            flare_rx = base_rx + 0.075 * t_flare
+            rx = flare_rx
+            ry = sl["ry"] + offset + 0.035 * t_flare
+            cy = sl["cy"]
+
+        ring = []
+        for j in range(n_seg):
+            theta = -0.5 * math.pi + (2.0 * math.pi * j) / n_seg
+            x = rx * math.cos(theta)
+            y = cy + ry * math.sin(theta)
+            p = Vector((x, y, z))
+
+            u = 0.50 + 0.44 * (x / max_half_span)
+            v = 0.04 + 0.92 * t
+            u = max(0.02, min(0.98, u))
+            v = max(0.02, min(0.98, v))
+
+            ring.append((p, (u, v), {"Torso_Deform": 1.0}))
+        dress_rings.append(ring)
+
+    faces_uvs, vert_weights = add_closed_tube_to_bm(bm, dress_rings, cap_ends=True, thickness=0.0020)
+    all_faces_uvs.extend(faces_uvs)
+    all_vert_weights.extend(vert_weights)
+    return bm, all_faces_uvs, all_vert_weights, ["Torso_Deform"]
+
+
 def build_accessory_template(avatar_data, variant="belt"):
     """
     Reproduces canonical accessory templates anchored to avatar landmarks:
@@ -844,31 +1108,30 @@ def build_accessory_template(avatar_data, variant="belt"):
         z_max = max(v.z for v in verts)
         z_eye = z_max - 0.115
         head_pts = [v for v in verts if abs(v.z - z_eye) <= 0.025]
-        y_front = min(v.y for v in head_pts) - 0.008  # Nose bridge front (-Y)
+        y_front = min(v.y for v in head_pts) - 0.008
         rx_face = max(abs(v.x) for v in head_pts) + 0.004
 
-        # Horizontal rings stacked from z_eye + 0.022 down to z_eye - 0.022 wrapping front & temples
         frame_rings = []
         n_z = 4
-        n_seg = 20
+        n_seg = 21
         for i in range(n_z + 1):
             t = i / n_z
             z = (z_eye + 0.022) - t * 0.044
             v_uv = 0.78 - t * 0.56
             ring = []
             for j in range(n_seg):
-                theta = (j / n_seg) * 2.0 * math.pi
+                theta = (-0.15 * math.pi) - (0.70 * math.pi * j) / (n_seg - 1)
                 px = rx_face * math.cos(theta)
-                # Flatten front lens plane near -Y, wrap temples along sides
                 py = (y_front + 0.038) + 0.042 * math.sin(theta)
                 u_uv = 0.06 + (0.5 + 0.5 * math.cos(theta)) * 0.88
-                ring.append((Vector((px, py, z)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+                ring.append((Vector((px, py, z)), (u_uv, v_uv), {"Rigid_Hardware": 0.0}))
             frame_rings.append(ring)
 
-        f_uvs, v_wts = add_closed_tube_to_bm(bm, frame_rings, thickness=0.0016)
+        f_uvs, v_wts = add_open_strip_to_bm(bm, frame_rings, thickness=0.0016)
         all_faces_uvs.extend(f_uvs)
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
 
     if variant == "crossbody_bag":
         # 1. Strap_Deform (Weight: 1.0): diagonal torso strap from right shoulder (+X) to left hip (-X)
@@ -947,7 +1210,8 @@ CANONICAL_SPECS = [
     # Lower Body
     ("bottom_trousers", "bottom", "trousers", ["pants.glb"]),
     ("bottom_shorts", "bottom", "shorts", ["shorts.glb", "bermuda.glb"]),
-    ("bottom_skirt", "bottom", "skirt", ["skirt.glb", "skirt_aline.glb", "skirt_pencil.glb", "dress.glb", "kaftan.glb"]),
+    ("bottom_skirt", "bottom", "skirt", ["skirt.glb", "skirt_aline.glb", "skirt_pencil.glb"]),
+    ("dress", "dress", "dress", ["dress.glb", "kaftan.glb"]),
     # Footwear
     ("shoes_sneakers", "footwear", "sneakers", ["sneakers.glb", "sandals.glb"]),
     ("shoes_boots", "footwear", "boots", ["boots.glb", "heels.glb"]),
@@ -1054,6 +1318,8 @@ def main():
         for asset_name, category, variant, legacy_names in CANONICAL_SPECS:
             if category == "top":
                 bm, faces_uvs, vert_weights, vg_names = build_top_template(avatar_data, variant)
+            elif category == "dress":
+                bm, faces_uvs, vert_weights, vg_names = build_dress_template(avatar_data)
             elif category == "bottom":
                 bm, faces_uvs, vert_weights, vg_names = build_bottom_template(avatar_data, variant)
             elif category == "footwear":
@@ -1061,19 +1327,26 @@ def main():
             else:
                 bm, faces_uvs, vert_weights, vg_names = build_accessory_template(avatar_data, variant)
 
-            export_paths = [
+            raw_paths = [
                 os.path.join(ASSETS_TEMPLATES_DIR, gender, f"{asset_name}.glb"),
                 os.path.join(WEB_TEMPLATES_DIR, gender, f"{asset_name}.glb"),
             ]
-            # Also populate flat canonical & legacy paths (female is default un-prefixed template, plus gender folder legacy)
             for leg_file in legacy_names:
-                export_paths.append(os.path.join(ASSETS_TEMPLATES_DIR, gender, leg_file))
-                export_paths.append(os.path.join(WEB_TEMPLATES_DIR, gender, leg_file))
+                raw_paths.append(os.path.join(ASSETS_TEMPLATES_DIR, gender, leg_file))
+                raw_paths.append(os.path.join(WEB_TEMPLATES_DIR, gender, leg_file))
                 if gender == "female":
-                    export_paths.append(os.path.join(ASSETS_TEMPLATES_DIR, leg_file))
-                    export_paths.append(os.path.join(WEB_TEMPLATES_DIR, leg_file))
-                    export_paths.append(os.path.join(ASSETS_TEMPLATES_DIR, f"{asset_name}.glb"))
-                    export_paths.append(os.path.join(WEB_TEMPLATES_DIR, f"{asset_name}.glb"))
+                    raw_paths.append(os.path.join(ASSETS_TEMPLATES_DIR, leg_file))
+                    raw_paths.append(os.path.join(WEB_TEMPLATES_DIR, leg_file))
+                    raw_paths.append(os.path.join(ASSETS_TEMPLATES_DIR, f"{asset_name}.glb"))
+                    raw_paths.append(os.path.join(WEB_TEMPLATES_DIR, f"{asset_name}.glb"))
+
+            seen_paths = set()
+            export_paths = []
+            for p in raw_paths:
+                norm_p = os.path.normcase(os.path.abspath(p))
+                if norm_p not in seen_paths:
+                    seen_paths.add(norm_p)
+                    export_paths.append(p)
 
             obj, non_manifold, zero_area = finalize_and_export_mesh(
                 name=f"{asset_name}_{gender}",

@@ -120,7 +120,8 @@ export function extractRowRuns(alpha, w, h, nx, ny, threshold = 110) {
       let nextJ = j + 1;
       while (nextJ <= lastFabric && (!runsByRow[nextJ] || !runsByRow[nextJ].length)) nextJ++;
 
-      if (prevJ >= firstFabric && nextJ <= lastFabric && (nextJ - prevJ) <= 6) {
+      const maxBridgeGap = Math.max(16, Math.floor(ny * 0.25));
+      if (prevJ >= firstFabric && nextJ <= lastFabric && (nextJ - prevJ) <= maxBridgeGap) {
         const t = (j - prevJ) / (nextJ - prevJ);
         const prevRuns = runsByRow[prevJ];
         const nextRuns = runsByRow[nextJ];
@@ -1280,7 +1281,7 @@ export function buildSilhouetteShell({
         let shoulderRolloff = 1.0;
         if (isShoulderZone && absX > shoulderRx) {
           const overReach = (absX - shoulderRx) / 0.08;
-          shoulderRolloff = Math.max(0.42, 1 - 0.58 * smoothstep01(overReach));
+          shoulderRolloff = Math.max(0.18, 1 - 0.82 * smoothstep01(overReach));
         }
 
         offF[j * vw + i] = ampFront * hhFront * shoulderRolloff;

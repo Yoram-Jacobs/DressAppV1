@@ -225,7 +225,11 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
 
   const out = geometry.clone();
   const pos = out.attributes.position;
-  const deformWeightAttr = out.attributes.deformWeight || null;
+  const deformWeightAttr =
+    out.attributes.deformWeight ||
+    out.attributes._DEFORM_WEIGHT ||
+    out.attributes._deform_weight ||
+    (out.attributes.color ? { getX: (i) => out.attributes.color.getX(i) } : null);
   const heavyInf = Math.max(0, Number(infObj.heavy) || 0);
   const waistInf = Math.max(0, Number(infObj.waist_thick) || 0);
   const hipsInf = Math.max(0, Number(infObj.hips_wide) || 0);

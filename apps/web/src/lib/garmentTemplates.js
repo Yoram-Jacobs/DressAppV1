@@ -34,6 +34,7 @@ export const CANONICAL_TEMPLATES = [
   'bottom_trousers',
   'bottom_shorts',
   'bottom_skirt',
+  'dress',
   'shoes_sneakers',
   'shoes_boots',
   'accessory_belt',
@@ -53,7 +54,7 @@ export const CANONICAL_TEMPLATE_MAP = {
   cardigan: 'top_outerwear_jacket',
   jacket_blazer: 'top_outerwear_jacket',
   top_outerwear_jacket: 'top_outerwear_jacket',
-  kaftan: 'bottom_skirt',
+  kaftan: 'dress',
   pants: 'bottom_trousers',
   bottom_trousers: 'bottom_trousers',
   shorts: 'bottom_shorts',
@@ -61,7 +62,7 @@ export const CANONICAL_TEMPLATE_MAP = {
   bottom_shorts: 'bottom_shorts',
   skirt_aline: 'bottom_skirt',
   skirt_pencil: 'bottom_skirt',
-  dress: 'bottom_skirt',
+  dress: 'dress',
   bottom_skirt: 'bottom_skirt',
   sneakers: 'shoes_sneakers',
   shoes_sneakers: 'shoes_sneakers',
@@ -108,7 +109,7 @@ export function resolveGarmentTemplate({
   const has = (...words) => words.some((w) => fullText.includes(w));
 
   // 1. STANDALONE ACCESSORIES (Only when slot is accessory or explicit accessory slot)
-  const isAccessoryRole = ['belt', 'headwear', 'bag', 'accessory', 'scarf', 'jewelry'].includes(rawSlot);
+  const isAccessoryRole = ['belt', 'headwear', 'bag', 'accessory', 'scarf', 'jewelry', 'glasses'].includes(rawSlot);
   if (rawSlot === 'belt' || (isAccessoryRole && has('belt', 'חגורה'))) {
     return 'belt';
   }
@@ -119,6 +120,9 @@ export function resolveGarmentTemplate({
   if (rawSlot === 'bag' || (isAccessoryRole && has('bag', 'handbag', 'tote', 'crossbody', 'purse', 'clutch', 'תיק', 'ארנק'))) {
     if (has('crossbody', 'shoulder', 'side', 'אלכסון', 'צד')) return 'bag_crossbody';
     return 'bag_handbag';
+  }
+  if (rawSlot === 'glasses' || (isAccessoryRole && has('glasses', 'sunglasses', 'משקפיים', 'משקפי'))) {
+    return 'accessory_glasses';
   }
 
   // 2. FULL-BODY / ROBES / KAFTAN / GALABIYE
@@ -137,6 +141,12 @@ export function resolveGarmentTemplate({
   // 4. DRESS
   if (rawSlot === 'dress') {
     return 'dress';
+  }
+
+  // 4b. FOOTWEAR / SHOES
+  if (rawSlot === 'shoes') {
+    if (has('boot', 'boots', 'chelsea', 'מגף', 'מגפיים', 'מגפי')) return 'shoes_boots';
+    return 'shoes_sneakers';
   }
 
   // 5. BOTTOMS
