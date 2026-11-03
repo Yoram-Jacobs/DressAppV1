@@ -252,3 +252,21 @@ def setup_bag_fitting(
     if shrink is not None and "Strap" in bag_obj.vertex_groups:
         shrink.vertex_group = "Strap"
     return shrink
+
+
+def fit_garment_on_avatar(avatar_path, garment_path, output_path, layer="top", method="auto", offset=None):
+    """
+    High-level entrypoint for automated on-the-fly garment & accessory fitting in Blender.
+    Preserves authored UVs, custom generic attributes (_DEFORM_WEIGHT, COLOR_0),
+    vertex groups, and PBR material networks.
+    """
+    from fit_garment_headless import dress_and_export
+    return dress_and_export(
+        avatar_path=avatar_path,
+        garment_path=garment_path,
+        output_path=output_path,
+        layer=layer,
+        method=method,
+        offset=offset
+    )
+
