@@ -2811,7 +2811,8 @@ function GarmentTemplateMeshInner({
         if (bb) {
           // Adapt canonical upper-body template torso hem to shellFit.yBottom (e.g. longline tunic or crop top)
           const targetYBottom = shellFit?.yBottom;
-          const yTorsoApex = isMale ? 1.15 : 1.08;
+          // Anchor at waist (1.02m / 0.96m) so shoulders, armpits, and sleeves remain completely untouched and continuous!
+          const yTorsoApex = isMale ? 1.02 : 0.96;
           if (
             ['top', 'outerwear', 'dress'].includes(rawSlot) &&
             Number.isFinite(targetYBottom) &&

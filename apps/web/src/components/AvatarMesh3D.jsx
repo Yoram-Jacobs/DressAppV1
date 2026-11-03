@@ -6,8 +6,8 @@ import { resolveHairProperties, applyAvatarAppearance } from './DynamicAvatar';
 
 export { applyAvatarAppearance };
 
-export const MALE_GLB_URL = '/models/avatar_male_1.glb?v=mblab3';
-export const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=mblab3';
+export const MALE_GLB_URL = '/models/avatar_male_1.glb?v=mblab4';
+export const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=mblab4';
 
 // Metric scaling and floor positioning helper for the 3D human avatar model
 export function getAvatarMetricTransform({ isMale = false, height = 170, morphInfluences = {} } = {}) {
@@ -89,18 +89,18 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       continue;
     }
 
-    // 2. Upper torso & shoulder ridge under top / outerwear / dress (exclude neck column and head)
+    // 2. Upper torso, deltoid shoulders & underarm under top / outerwear / dress (exclude neck column and head)
     const maxShoulderY = isMale ? 1.52 : 1.435;
     const minNeckAbsX = isMale ? 0.060 : 0.052;
-    const minTorsoY = hasBottom || hasDress ? 0.78 : 0.70;
+    const minTorsoY = hasBottom || hasDress ? 0.76 : 0.65;
     if (
       (hasTop || hasOuterwear || hasDress) &&
       y >= minTorsoY &&
       y <= maxShoulderY &&
       (y <= 1.38 || absX >= minNeckAbsX)
     ) {
-      const armCutInner = isMale ? 0.19 : 0.17;
-      const armCutOuter = isMale ? 0.29 : 0.26;
+      const armCutInner = isMale ? 0.22 : 0.20;
+      const armCutOuter = isMale ? 0.32 : 0.29;
       const armBlend = absX <= armCutInner
         ? 1.0
         : (absX >= armCutOuter ? 0.0 : 0.5 * (1 + Math.cos(Math.PI * (absX - armCutInner) / (armCutOuter - armCutInner))));
@@ -109,20 +109,20 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const cz = 0.020;
         const wVertical = hasBottom || hasDress ? 1.0 : Math.max(0, Math.min(1, (y - minTorsoY) / 0.08));
         const wTorso = wVertical * armBlend;
-        arr[idx] = x * (1 - 0.025 * wTorso);
+        arr[idx] = x * (1 - 0.030 * wTorso);
         if (y > 1.34 && absX >= minNeckAbsX) {
-          arr[idx + 1] = y - 0.004 * wTorso;
+          arr[idx + 1] = y - 0.005 * wTorso;
         }
-        arr[idx + 2] = cz + (z - cz) * (1 - 0.030 * wTorso);
+        arr[idx + 2] = cz + (z - cz) * (1 - 0.035 * wTorso);
         continue;
       }
     }
 
-    // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress:
-    // Uses smooth lateral cosine falloff so outer hip/thigh skin never tears into knife-edge fins or wings.
-    const minBottomY = hasBottom ? 0.12 : 0.74;
+    // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress / top:
+    // Smooth lateral cosine falloff eliminates thigh/hip skin poking through tunics, dresses or bottoms.
+    const minBottomY = hasBottom ? 0.12 : (hasDress || hasTop ? 0.60 : 0.74);
     const maxBottomY = isMale ? 1.10 : 1.07;
-    if ((hasBottom || hasDress) && y >= minBottomY && y <= maxBottomY) {
+    if ((hasBottom || hasDress || hasTop) && y >= minBottomY && y <= maxBottomY) {
       const hipCutInner = isMale ? 0.19 : 0.18;
       const hipCutOuter = isMale ? 0.29 : 0.27;
       const hipBlend = absX <= hipCutInner

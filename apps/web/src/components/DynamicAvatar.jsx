@@ -5,8 +5,8 @@ import * as THREE from 'three';
 import { RotateCcw } from 'lucide-react';
 import { isMaleGender } from '@/lib/gender';
 
-const MALE_GLB_URL = '/models/avatar_male_1.glb?v=mblab3';
-const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=mblab3';
+const MALE_GLB_URL = '/models/avatar_male_1.glb?v=mblab4';
+const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=mblab4';
 
 export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png?v=male2';
 export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png';
@@ -760,6 +760,12 @@ export function applyAvatarAppearance(scene, {
         mat.color.set(activeHairColor);
         mat.roughness = activeHairRoughness;
         mat.metalness = activeHairMetalness;
+        mat.transparent = false;
+        mat.opacity = 1.0;
+        mat.depthWrite = true;
+        mat.depthTest = true;
+        mat.alphaTest = 0;
+        mat.side = THREE.DoubleSide;
         mat.needsUpdate = true;
       } else if (matName.includes('teeth')) {
         mat.color.set('#F8F5F0');

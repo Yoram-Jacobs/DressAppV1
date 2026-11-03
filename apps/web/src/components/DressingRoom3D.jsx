@@ -301,7 +301,7 @@ export default function DressingRoom3D({
 
   const [autoRotate, setAutoRotate] = useState(false);
   const [cameraPreset, setCameraPreset] = useState(null);
-  const [meshMode, setMeshMode] = useState('photo'); // 'photo' (cutout shell) | 'tailored' (bypass cutout defects)
+  const [meshMode, setMeshMode] = useState('tailored'); // 'tailored' (canonical basemesh) | 'photo' (cutout shell)
   const [layerVisibility, setLayerVisibility] = useState({});
   const [showRack, setShowRack] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? false : true));
   const [isFullscreen, setIsFullscreen] = useState(false);

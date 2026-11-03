@@ -82,6 +82,7 @@ def load_avatar_data(gender):
         "verts": verts,
         "bm": bm,
         "bvh": bvh,
+        "avatar_obj": main_obj,
     }
 
 
@@ -527,302 +528,228 @@ def finalize_and_export_mesh(
 
 
 def build_top_template(avatar_data, variant="tshirt"):
-    """
-    Reproduces upper-body canonical template directly from avatar torso & 27-deg A-pose arms:
-      - variant='tshirt': top_tshirt.glb (Crewneck short sleeve, +0.004m offset)
-      - variant='longsleeve': top_longsleeve.glb (Long sleeve fitted shirt, +0.005m offset)
-      - variant='singlet': singlet.glb / tank.glb (Sleeveless tank top, +0.004m offset)
-      - variant='hoodie': hoodie.glb (Relaxed fit hoodie, +0.012m offset)
-      - variant='jacket'/'top_outerwear_jacket': top_outerwear_jacket.glb (Open-front jacket, +0.016m offset)
-      - variant='jacket_blazer': jacket_blazer.glb (Tailored structured blazer, +0.016m offset)
-      - variant='cardigan': cardigan.glb (Soft open knit cardigan, +0.014m offset)
-      - variant='vest': vest.glb (Sleeveless outerwear vest, +0.016m offset)
-      - variant='coat': coat.glb (Tailored wool overcoat, +0.018m offset)
-      - variant='trench_coat': trench_coat.glb (Classic A-line knee-length belted trench coat, +0.018m offset)
-    Features balanced quad topology, bilateral symmetry, and planar front/back UVs in [0, 1] x [0, 1].
-    """
     gender = avatar_data["gender"]
-    verts = avatar_data["verts"]
+    avatar_obj = avatar_data["avatar_obj"]
     is_male = gender == "male"
 
     is_open_front = False
-    is_trench = variant == "trench_coat"
-    is_coat = variant == "coat"
-    is_cardigan = variant == "cardigan"
-    is_blazer = variant == "jacket_blazer"
-    is_vest = variant == "vest"
-    is_singlet = variant == "singlet"
-    is_hoodie = variant == "hoodie"
+    flare_hips = False
 
     if variant == "tshirt":
-        offset = 0.0045
-        z_top = 1.50 if is_male else 1.40
-        z_bottom = 0.88 if is_male else 0.84
-        sleeve_frac = 0.38
+        offset = 0.0055
+        z_neck = 1.48 if is_male else 1.38
+        z_hem = 0.88 if is_male else 0.84
+        x_arm_max = 0.285 if is_male else 0.265
+        sleeve_type = "short"
     elif variant == "singlet":
-        offset = 0.0040
-        z_top = 1.48 if is_male else 1.38
-        z_bottom = 0.88 if is_male else 0.84
-        sleeve_frac = 0.0  # Sleeveless
+        offset = 0.0045
+        z_neck = 1.46 if is_male else 1.36
+        z_hem = 0.88 if is_male else 0.84
+        x_arm_max = 0.205 if is_male else 0.185
+        sleeve_type = "sleeveless"
     elif variant == "vest":
         offset = 0.0160
-        z_top = 1.52 if is_male else 1.42
-        z_bottom = 0.80 if is_male else 0.76
-        sleeve_frac = 0.0  # Sleeveless outerwear vest
+        z_neck = 1.48 if is_male else 1.38
+        z_hem = 0.80 if is_male else 0.76
+        x_arm_max = 0.205 if is_male else 0.185
+        sleeve_type = "sleeveless"
         is_open_front = True
     elif variant == "longsleeve":
-        offset = 0.0055
-        z_top = 1.51 if is_male else 1.41
-        z_bottom = 0.87 if is_male else 0.83
-        sleeve_frac = 0.95
+        offset = 0.0065
+        z_neck = 1.49 if is_male else 1.39
+        z_hem = 0.86 if is_male else 0.82
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
     elif variant == "hoodie":
-        offset = 0.0120
-        z_top = 1.52 if is_male else 1.42
-        z_bottom = 0.84 if is_male else 0.80
-        sleeve_frac = 0.96
+        offset = 0.0140
+        z_neck = 1.50 if is_male else 1.40
+        z_hem = 0.82 if is_male else 0.78
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
     elif variant in ("jacket", "top_outerwear_jacket"):
         offset = 0.0160
-        z_top = 1.52 if is_male else 1.42
-        z_bottom = 0.80 if is_male else 0.76
-        sleeve_frac = 0.98
+        z_neck = 1.50 if is_male else 1.40
+        z_hem = 0.80 if is_male else 0.76
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
         is_open_front = True
     elif variant == "jacket_blazer":
         offset = 0.0160
-        z_top = 1.52 if is_male else 1.42
-        z_bottom = 0.78 if is_male else 0.74
-        sleeve_frac = 0.98
+        z_neck = 1.50 if is_male else 1.40
+        z_hem = 0.78 if is_male else 0.74
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
         is_open_front = True
     elif variant == "cardigan":
         offset = 0.0140
-        z_top = 1.51 if is_male else 1.41
-        z_bottom = 0.68 if is_male else 0.64
-        sleeve_frac = 0.96
+        z_neck = 1.49 if is_male else 1.39
+        z_hem = 0.70 if is_male else 0.66
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
         is_open_front = True
     elif variant == "coat":
         offset = 0.0180
-        z_top = 1.53 if is_male else 1.43
-        z_bottom = 0.54 if is_male else 0.50
-        sleeve_frac = 0.98
+        z_neck = 1.51 if is_male else 1.41
+        z_hem = 0.54 if is_male else 0.50
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
         is_open_front = True
     elif variant == "trench_coat":
         offset = 0.0180
-        z_top = 1.54 if is_male else 1.44
-        z_bottom = 0.48 if is_male else 0.44  # Knee length!
-        sleeve_frac = 0.98
+        z_neck = 1.52 if is_male else 1.42
+        z_hem = 0.48 if is_male else 0.44
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
         is_open_front = True
+        flare_hips = True
+    elif variant in ("tunic", "top_tunic"):
+        offset = 0.0130
+        z_neck = 1.48 if is_male else 1.38
+        z_hem = 0.66 if is_male else 0.62
+        x_arm_max = 0.285 if is_male else 0.265
+        sleeve_type = "short"
+        flare_hips = True
     else:
-        offset = 0.0160
-        z_top = 1.52 if is_male else 1.42
-        z_bottom = 0.84 if is_male else 0.80
-        sleeve_frac = 0.98
+        offset = 0.0120
+        z_neck = 1.50 if is_male else 1.40
+        z_hem = 0.84 if is_male else 0.80
+        x_arm_max = 0.415 if is_male else 0.382
+        sleeve_type = "long"
 
-    z_shoulder = 1.45 if is_male else 1.35
-    z_waist = 1.05 if is_male else 1.00
-    z_hip_peak = 0.92 if is_male else 0.86
-    hip_slice = measure_torso_slice(verts, z_hip_peak)
-
+    mw = avatar_obj.matrix_world
     bm = bmesh.new()
-    all_faces_uvs = []
-    all_vert_weights = []
+    bm.from_mesh(avatar_obj.data)
+    bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
 
-    # 1. Torso rings (from z_top down to z_bottom)
-    n_rings = 24 if (is_trench or is_coat) else 18
-    n_seg = 28
-    torso_rings = []
+    body_mat_indices = set()
+    for i, m in enumerate(avatar_obj.data.materials):
+        m_name = m.name.lower()
+        if "skin" in m_name or "generic" in m_name:
+            body_mat_indices.add(i)
 
-    # Determine full horizontal span for planar UV normalization
-    x_arm_start = 0.178 if is_male else 0.158
-    x_arm_wrist = 0.435 if is_male else 0.395
-    x_cuff = x_arm_start + sleeve_frac * (x_arm_wrist - x_arm_start)
-    max_half_span = max(0.26, x_cuff + 0.045)
+    crotch_z = 0.84 if is_male else 0.80
+    del_faces = []
+    for f in bm.faces:
+        if f.material_index not in body_mat_indices:
+            del_faces.append(f)
+            continue
+        zs = [v.co.z for v in f.verts]
+        xs = [abs(v.co.x) for v in f.verts]
+        ys = [v.co.y for v in f.verts]
+        max_z, min_z, max_x = max(zs), min(zs), max(xs)
 
-    for i in range(n_rings + 1):
-        t = i / n_rings
-        z = z_top - t * (z_top - z_bottom)
-        sl = measure_torso_slice(verts, max(0.60, min(1.40, z)))
+        if max_z > z_neck:
+            del_faces.append(f)
+            continue
+        if max_x > x_arm_max:
+            del_faces.append(f)
+            continue
+        if min_z < z_hem:
+            del_faces.append(f)
+            continue
+        if not flare_hips and min_z < crotch_z and max_x < 0.19 and min_z < z_hem + 0.02:
+            del_faces.append(f)
+            continue
+        if is_open_front and max_x < 0.014 and max(ys) < -0.02 and max_z < (z_neck - 0.02) and min_z > (z_hem + 0.01):
+            del_faces.append(f)
+            continue
 
-        if z > z_shoulder:
-            t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
-            neck_rx = 0.082 if is_male else 0.072
-            neck_ry = 0.068 if is_male else 0.060
-            rx = (1.0 - t_neck) * sl["rx"] + t_neck * neck_rx + offset
-            ry = (1.0 - t_neck) * sl["ry"] + t_neck * neck_ry + offset
-            cy = sl["cy"]
-        elif is_trench and z < z_waist:
-            # Trench coat authentic A-line flare widening all the way down to knee hem:
-            t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
-            base_rx = max(sl["rx"], hip_slice["rx"])
-            flare_rx = 0.118 * (t_flare ** 1.12)
-            flare_ry = 0.075 * (t_flare ** 1.12)
-            rx = base_rx + offset + flare_rx
-            ry = sl["ry"] + offset + flare_ry
-            cy = sl["cy"]
-        elif is_coat and z < z_waist:
-            # Tailored coat flare
-            t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
-            base_rx = max(sl["rx"], hip_slice["rx"])
-            rx = base_rx + offset + 0.065 * t_flare
-            ry = sl["ry"] + offset + 0.045 * t_flare
-            cy = sl["cy"]
-        else:
-            base_rx = max(sl["rx"], hip_slice["rx"]) if z < z_hip_peak else sl["rx"]
-            rx = base_rx + offset
-            ry = sl["ry"] + offset
-            cy = sl["cy"]
+    bmesh.ops.delete(bm, geom=del_faces, context='FACES')
 
-        v_uv = 0.96 - t * 0.92
+    islands = []
+    visited = set()
+    for f in bm.faces:
+        if f in visited:
+            continue
+        isl, q = [], [f]
+        visited.add(f)
+        while q:
+            curr = q.pop()
+            isl.append(curr)
+            for e in curr.edges:
+                for lf in e.link_faces:
+                    if lf not in visited:
+                        visited.add(lf)
+                        q.append(lf)
+        islands.append(isl)
 
-        ring = []
-        for j in range(n_seg):
-            theta = (j / n_seg) * 2.0 * math.pi
-            px = rx * math.cos(theta)
-            sin_t = math.sin(theta)
-            if sin_t < 0:
-                sin_s = -((-sin_t) ** 0.62)
-                py = cy + (ry + 0.012) * sin_s
-            else:
-                sin_s = sin_t ** 0.85
-                py = cy + (ry + 0.006) * sin_s
-            pz = z
+    if not islands:
+        bm.free()
+        raise RuntimeError(f"No faces remained for {variant}_{gender}")
 
-            u_torso = 0.5 + (px / max(0.18, rx)) * 0.28
-            ring.append((Vector((px, py, pz)), (max(0.02, min(0.98, u_torso)), max(0.02, min(0.98, v_uv))), {"Torso_Deform": 1.0}))
-        torso_rings.append(ring)
+    main_isl = max(islands, key=len)
+    other = [f for isl in islands if isl != main_isl for f in isl]
+    if other:
+        bmesh.ops.delete(bm, geom=other, context='FACES')
 
-    if is_open_front:
-        open_rings = []
-        n_seg_j = 26
-        for i in range(n_rings + 1):
-            t = i / n_rings
-            z = z_top - t * (z_top - z_bottom)
-            sl = measure_torso_slice(verts, max(0.60, min(1.40, z)))
-            if z > z_shoulder:
-                t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
-                neck_rx = 0.082 if is_male else 0.072
-                neck_ry = 0.068 if is_male else 0.060
-                rx = (1.0 - t_neck) * sl["rx"] + t_neck * neck_rx + offset
-                ry = (1.0 - t_neck) * sl["ry"] + t_neck * neck_ry + offset
-                cy = sl["cy"]
-            elif is_trench and z < z_waist:
-                t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
-                base_rx = max(sl["rx"], hip_slice["rx"])
-                rx = base_rx + offset + 0.118 * (t_flare ** 1.12)
-                ry = sl["ry"] + offset + 0.075 * (t_flare ** 1.12)
-                cy = sl["cy"]
-            elif is_coat and z < z_waist:
-                t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
-                base_rx = max(sl["rx"], hip_slice["rx"])
-                rx = base_rx + offset + 0.065 * t_flare
-                ry = sl["ry"] + offset + 0.045 * t_flare
-                cy = sl["cy"]
-            else:
-                base_rx = max(sl["rx"], hip_slice["rx"]) if z < z_hip_peak else sl["rx"]
-                rx = base_rx + offset
-                ry = sl["ry"] + offset
-                cy = sl["cy"]
-            ring = []
-            for j in range(n_seg_j):
-                theta = (-0.38 * math.pi) + (1.76 * math.pi * j) / (n_seg_j - 1)
-                px = rx * math.cos(theta)
-                py = cy + ry * math.sin(theta)
-                pz = z
-                u_torso = 0.50 + 0.44 * (px / max_half_span)
-                v_uv = 0.04 + 0.92 * t
-                ring.append((Vector((px, py, pz)), (max(0.02, min(0.98, u_torso)), max(0.02, min(0.98, v_uv))), {"Torso_Deform": 1.0}))
-            open_rings.append(ring)
-        f_uvs, v_wts = add_open_strip_to_bm(bm, open_rings, thickness=0.0022)
-    else:
-        f_uvs, v_wts = add_closed_tube_to_bm(bm, torso_rings, thickness=0.0018)
+    loose_edges = [e for e in bm.edges if not e.link_faces]
+    if loose_edges:
+        bmesh.ops.delete(bm, geom=loose_edges, context='EDGES')
+    loose_verts = [v for v in bm.verts if not v.link_edges]
+    if loose_verts:
+        bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
-    all_faces_uvs.extend(f_uvs)
-    all_vert_weights.extend(v_wts)
+    for v in bm.verts:
+        v.co += v.normal * offset
+        if flare_hips and v.co.z < 0.92:
+            t_flare = min(1.0, max(0.0, (0.92 - v.co.z) / 0.35))
+            v.co.x += (0.025 * t_flare) * (1.0 if v.co.x > 0 else -1.0)
+            v.co.y += (0.015 * t_flare) * (1.0 if v.co.y > 0 else -1.0)
 
-    # 2. Left & Right Sleeves reproduced from avatar's anatomical arm trajectory
-    if sleeve_frac > 0.05:
-        n_sleeve_rings = 10 if variant == "tshirt" else 16
-        n_sleeve_seg = 16
+    temp_mesh = bpy.data.meshes.new(f"temp_top_{variant}_{gender}")
+    bm.to_mesh(temp_mesh)
+    bm.free()
 
-        if is_male:
-            p_sh_left = Vector((0.218, 0.007, 1.378))
-            p_wr_left = Vector((0.412, -0.012, 1.069))
-            r_sh = 0.076
-            r_wr = 0.052
-        else:
-            p_sh_left = Vector((0.198, -0.008, 1.259))
-            p_wr_left = Vector((0.375, -0.009, 0.956))
-            r_sh = 0.062
-            r_wr = 0.040
+    temp_obj = bpy.data.objects.new(f"temp_top_{variant}_{gender}", temp_mesh)
+    bpy.context.scene.collection.objects.link(temp_obj)
+    mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
+    mod.thickness = 0.0022
+    with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
+        bpy.ops.object.modifier_apply(modifier=mod.name)
 
-        u_arm = (p_wr_left - p_sh_left).normalized()
-        v_coronal = Vector((-u_arm.z, 0.0, u_arm.x)).normalized()
-        w_sagittal = u_arm.cross(v_coronal).normalized()
-        if w_sagittal.y < 0:
-            w_sagittal = -w_sagittal
+    bm_final = bmesh.new()
+    bm_final.from_mesh(temp_mesh)
+    bpy.data.objects.remove(temp_obj, do_unlink=True)
+    bpy.data.meshes.remove(temp_mesh)
 
-        arm_clearance = 0.010 if variant == "tshirt" else (0.014 if variant == "longsleeve" else 0.022)
+    bad_boundary = [e for e in bm_final.edges if not e.is_manifold and len(e.link_faces) <= 1]
+    if bad_boundary:
+        bmesh.ops.delete(bm_final, geom=bad_boundary, context='EDGES')
 
-        for side in (-1.0, 1.0):
-            sleeve_rings = []
-            v_dir = Vector((side * v_coronal.x, v_coronal.y, v_coronal.z))
-            w_dir = Vector((side * w_sagittal.x, w_sagittal.y, w_sagittal.z))
-            p_sh = Vector((side * p_sh_left.x, p_sh_left.y, p_sh_left.z))
-            p_wr = Vector((side * p_wr_left.x, p_wr_left.y, p_wr_left.z))
+    verts = [v.co for v in bm_final.verts]
+    min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)
+    min_z, max_z = min(v.z for v in verts), max(v.z for v in verts)
+    dx = max(1e-4, max_x - min_x)
+    dz = max(1e-4, max_z - min_z)
 
-            for i in range(n_sleeve_rings + 1):
-                t = i / n_sleeve_rings
-                s_frac = t * sleeve_frac
-                c_pos = p_sh + s_frac * (p_wr - p_sh)
-                r_arm = (1.0 - s_frac) * r_sh + s_frac * r_wr + arm_clearance
+    faces_uvs = []
+    for f in bm_final.faces:
+        uvs = []
+        for l in f.loops:
+            v = l.vert.co
+            u = (v.x - min_x) / dx
+            v_norm = (v.z - min_z) / dz
+            uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
+        faces_uvs.append((f, uvs))
 
-                ring = []
-                for j in range(n_sleeve_seg):
-                    theta = (j / n_sleeve_seg) * 2.0 * math.pi
-                    cos_th = math.cos(theta)
-                    sin_th = math.sin(theta)
-
-                    p = c_pos + r_arm * (cos_th * v_dir + sin_th * w_dir)
-
-                    v_uv = (p.z - z_bottom) / max(0.20, z_top - z_bottom)
-                    v_uv = max(0.04, min(0.96, v_uv))
-                    if side < 0:
-                        u_uv = 0.32 - s_frac * 0.26 - 0.03 * cos_th
-                    else:
-                        u_uv = 0.68 + s_frac * 0.26 + 0.03 * cos_th
-                    u_uv = max(0.02, min(0.98, u_uv))
-
-                    ring.append((p, (u_uv, v_uv), {"Torso_Deform": 1.0}))
-                sleeve_rings.append(ring)
-
-            f_uvs, v_wts = add_closed_tube_to_bm(bm, sleeve_rings, thickness=0.0016)
-            all_faces_uvs.extend(f_uvs)
-            all_vert_weights.extend(v_wts)
-
-    return bm, all_faces_uvs, all_vert_weights, ["Torso_Deform"]
+    vert_weights = [(v, {"Torso_Deform": 1.0}) for v in bm_final.verts]
+    return bm_final, faces_uvs, vert_weights, ["Torso_Deform"]
 
 
 def build_bottom_template(avatar_data, variant="trousers"):
-    """
-    Reproduces lower-body canonical template directly from avatar waist, pelvis & legs:
-      - variant='trousers': bottom_trousers.glb / pants.glb (Straight-leg pants, cuff at Z=0.105m)
-      - variant='shorts': bottom_shorts.glb / shorts.glb (Mid-thigh shorts, hem at Z=0.58m)
-      - variant='bermuda': bermuda.glb (Knee-length bermuda shorts, hem at Z=0.46m)
-      - variant='skirt'/'skirt_aline': bottom_skirt.glb / skirt_aline.glb (Flared A-line knee skirt)
-      - variant='skirt_pencil': skirt_pencil.glb (Form-fitting knee pencil skirt)
-    """
     gender = avatar_data["gender"]
     verts = avatar_data["verts"]
+    avatar_obj = avatar_data["avatar_obj"]
     is_male = gender == "male"
-
-    offset = 0.0075
-    z_waist = 1.06 if is_male else 1.02
-    z_crotch = 0.80 if is_male else 0.75
-
-    bm = bmesh.new()
-    all_faces_uvs = []
-    all_vert_weights = []
 
     is_skirt = variant in ("skirt", "skirt_aline", "skirt_pencil", "bottom_skirt")
     if is_skirt:
+        offset = 0.0075
+        z_waist = 1.06 if is_male else 1.02
+        z_crotch = 0.80 if is_male else 0.75
         z_hem = 0.47 if is_male else 0.45
         n_rings = 18
         n_seg = 28
@@ -850,79 +777,135 @@ def build_bottom_template(avatar_data, variant="trousers"):
                 ring.append((Vector((px, py, z)), (max(0.02, min(0.98, u_uv)), max(0.02, min(0.98, v_uv))), {"Lower_Deform": 1.0}))
             skirt_rings.append(ring)
 
-        f_uvs, v_wts = add_closed_tube_to_bm(bm, skirt_rings, thickness=0.0018)
-        all_faces_uvs.extend(f_uvs)
-        all_vert_weights.extend(v_wts)
-        return bm, all_faces_uvs, all_vert_weights, ["Lower_Deform"]
+        bm_skirt = bmesh.new()
+        f_uvs, v_wts = add_closed_tube_to_bm(bm_skirt, skirt_rings, thickness=0.0018)
+        return bm_skirt, f_uvs, v_wts, ["Lower_Deform"]
 
-    # Trousers, Shorts, or Bermuda:
+    # Continuous Avatar extraction for trousers, shorts, and bermuda:
     if variant == "bermuda":
         z_hem = 0.46 if is_male else 0.44
+        offset = 0.0065
     elif variant in ("shorts", "bottom_shorts"):
         z_hem = 0.58 if is_male else 0.55
+        offset = 0.0060
     else:  # trousers
         z_hem = 0.105 if is_male else 0.100
+        offset = 0.0075
 
-    pelvis_span_uv = (z_waist - z_crotch) / max(0.20, z_waist - z_hem)
-    n_pelvis_rings = 7
-    n_pelvis_seg = 28
-    pelvis_rings = []
-    hip_sl = measure_torso_slice(verts, 0.88 if is_male else 0.84)
+    z_waist = 1.06 if is_male else 1.02
 
-    for i in range(n_pelvis_rings + 1):
-        t = i / n_pelvis_rings
-        z = z_waist - t * (z_waist - z_crotch)
-        sl = measure_torso_slice(verts, z)
-        base_rx = max(sl["rx"], hip_sl["rx"] if z < 0.88 else sl["rx"])
-        rx = base_rx + offset
-        ry = sl["ry"] + offset
-        cy = sl["cy"]
-        v_uv = 0.96 - t * pelvis_span_uv * 0.92
+    mw = avatar_obj.matrix_world
+    bm = bmesh.new()
+    bm.from_mesh(avatar_obj.data)
+    bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
 
-        ring = []
-        for j in range(n_pelvis_seg):
-            theta = (j / n_pelvis_seg) * 2.0 * math.pi
-            px = rx * math.cos(theta)
-            py = cy + ry * math.sin(theta)
-            u_uv = 0.5 + (px / max(0.16, rx)) * 0.42
-            ring.append((Vector((px, py, z)), (max(0.02, min(0.98, u_uv)), max(0.02, min(0.98, v_uv))), {"Lower_Deform": 1.0}))
-        pelvis_rings.append(ring)
+    body_mat_indices = set()
+    for i, m in enumerate(avatar_obj.data.materials):
+        m_name = m.name.lower()
+        if "skin" in m_name or "generic" in m_name:
+            body_mat_indices.add(i)
 
-    f_uvs, v_wts = add_closed_tube_to_bm(bm, pelvis_rings, thickness=0.0018)
-    all_faces_uvs.extend(f_uvs)
-    all_vert_weights.extend(v_wts)
+    del_faces = []
+    for f in bm.faces:
+        if f.material_index not in body_mat_indices:
+            del_faces.append(f)
+            continue
+        zs = [v.co.z for v in f.verts]
+        xs = [abs(v.co.x) for v in f.verts]
+        if max(zs) > z_waist:
+            del_faces.append(f)
+            continue
+        if min(zs) < z_hem:
+            del_faces.append(f)
+            continue
+        # Exclude arms/hands hanging near hips
+        if max(xs) > 0.28:
+            del_faces.append(f)
+            continue
 
-    # 2. Left & Right Legs from z_crotch down to z_hem
-    n_leg_rings = 12 if variant == "trousers" else (8 if variant == "bermuda" else 6)
-    n_leg_seg = 16
-    leg_span_uv = 1.0 - pelvis_span_uv
+    bmesh.ops.delete(bm, geom=del_faces, context='FACES')
 
-    for side in (-1.0, 1.0):
-        leg_rings = []
-        for i in range(n_leg_rings + 1):
-            t = i / n_leg_rings
-            z = z_crotch - t * (z_crotch - z_hem)
-            sl = measure_leg_slice(verts, z, side)
-            rx = sl["rx"] + offset + 0.003
-            ry = sl["ry"] + offset + 0.003
-            cx = sl["cx"]
-            cy = sl["cy"]
-            v_uv = 0.96 - (pelvis_span_uv + t * leg_span_uv) * 0.92
+    islands = []
+    visited = set()
+    for f in bm.faces:
+        if f in visited:
+            continue
+        isl, q = [], [f]
+        visited.add(f)
+        while q:
+            curr = q.pop()
+            isl.append(curr)
+            for e in curr.edges:
+                for lf in e.link_faces:
+                    if lf not in visited:
+                        visited.add(lf)
+                        q.append(lf)
+        islands.append(isl)
 
-            ring = []
-            for j in range(n_leg_seg):
-                theta = (j / n_leg_seg) * 2.0 * math.pi
-                px = cx + rx * math.cos(theta)
-                py = cy + ry * math.sin(theta)
-                u_leg = 0.28 + (px / (cx + (rx if side > 0 else -rx))) * 0.22 if side < 0 else 0.72 + (px / (cx + (rx if side > 0 else -rx))) * 0.22
-                ring.append((Vector((px, py, z)), (max(0.02, min(0.98, u_leg)), max(0.02, min(0.98, v_uv))), {"Lower_Deform": 1.0}))
-            leg_rings.append(ring)
+    if not islands:
+        bm.free()
+        raise RuntimeError(f"No faces remained for bottom {variant}_{gender}")
 
-        f_uvs, v_wts = add_closed_tube_to_bm(bm, leg_rings, thickness=0.0018)
-        all_faces_uvs.extend(f_uvs)
-        all_vert_weights.extend(v_wts)
+    main_isl = max(islands, key=len)
+    other = [f for isl in islands if isl != main_isl for f in isl]
+    if other:
+        bmesh.ops.delete(bm, geom=other, context='FACES')
 
-    return bm, all_faces_uvs, all_vert_weights, ["Lower_Deform"]
+    loose_edges = [e for e in bm.edges if not e.link_faces]
+    if loose_edges:
+        bmesh.ops.delete(bm, geom=loose_edges, context='EDGES')
+    loose_verts = [v for v in bm.verts if not v.link_edges]
+    if loose_verts:
+        bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
+
+    for v in bm.verts:
+        v.co += v.normal * offset
+        if variant == "trousers" and v.co.z < 0.22:
+            t_cuff = min(1.0, max(0.0, (0.22 - v.co.z) / 0.12))
+            v.co.x += (0.012 * t_cuff) * (1.0 if v.co.x > 0 else -1.0)
+            v.co.y += (0.008 * t_cuff) * (1.0 if v.co.y > 0 else -1.0)
+
+    temp_mesh = bpy.data.meshes.new(f"temp_bottom_{variant}_{gender}")
+    bm.to_mesh(temp_mesh)
+    bm.free()
+
+    temp_obj = bpy.data.objects.new(f"temp_bottom_{variant}_{gender}", temp_mesh)
+    bpy.context.scene.collection.objects.link(temp_obj)
+    mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
+    mod.thickness = 0.0022
+    with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+
+    bm_final = bmesh.new()
+    bm_final.from_mesh(temp_mesh)
+    bpy.data.objects.remove(temp_obj, do_unlink=True)
+    bpy.data.meshes.remove(temp_mesh)
+
+    bad_boundary = [e for e in bm_final.edges if not e.is_manifold and len(e.link_faces) <= 1]
+    if bad_boundary:
+        bmesh.ops.delete(bm_final, geom=bad_boundary, context='EDGES')
+
+    verts = [v.co for v in bm_final.verts]
+    min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)
+    min_z, max_z = min(v.z for v in verts), max(v.z for v in verts)
+    dx = max(1e-4, max_x - min_x)
+    dz = max(1e-4, max_z - min_z)
+
+    faces_uvs = []
+    for f in bm_final.faces:
+        uvs = []
+        for l in f.loops:
+            v = l.vert.co
+            u = (v.x - min_x) / dx
+            v_norm = (v.z - min_z) / dz
+            uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
+        faces_uvs.append((f, uvs))
+
+    vert_weights = [(v, {"Lower_Deform": 1.0}) for v in bm_final.verts]
+    return bm_final, faces_uvs, vert_weights, ["Lower_Deform"]
 
 
 def build_footwear_template(avatar_data, variant="sneakers"):
@@ -1032,120 +1015,129 @@ def build_footwear_template(avatar_data, variant="sneakers"):
 
 
 def build_dress_template(avatar_data, variant="dress"):
-    """
-    Generates full-body dress / kaftan templates:
-      - variant='dress': knee-length dress with fitted bodice & flared skirt (Z in [0.48, 1.44])
-      - variant='kaftan': ankle-length traditional robe with wide flowing A-line flare & sleeves (Z in [0.18, 1.48])
-    """
     gender = avatar_data["gender"]
-    verts = avatar_data["verts"]
+    avatar_obj = avatar_data["avatar_obj"]
     is_male = gender == "male"
     is_kaftan = variant == "kaftan"
 
-    offset = 0.012 if is_kaftan else 0.007
-    z_top = (1.50 if is_male else 1.44) if is_kaftan else (1.48 if is_male else 1.42)
-    z_waist = 1.05 if is_male else 0.98
-    z_bottom = (0.22 if is_male else 0.18) if is_kaftan else (0.52 if is_male else 0.48)
-    z_shoulder = 1.44 if is_male else 1.36
+    z_neck = 1.48 if is_male else 1.38
+    z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.52 if is_male else 0.48)
+    sleeve_type = "long" if is_kaftan else "short"
+    x_arm_max = (0.415 if is_male else 0.382) if is_kaftan else (0.285 if is_male else 0.265)
+    offset = 0.015 if is_kaftan else 0.009
 
+    mw = avatar_obj.matrix_world
     bm = bmesh.new()
-    all_faces_uvs = []
-    all_vert_weights = []
+    bm.from_mesh(avatar_obj.data)
+    bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
 
-    n_rings = 32 if is_kaftan else 28
-    n_seg = 28
-    dress_rings = []
-    max_half_span = 0.38 if is_kaftan else 0.32
+    body_mat_indices = set()
+    for i, m in enumerate(avatar_obj.data.materials):
+        m_name = m.name.lower()
+        if "skin" in m_name or "generic" in m_name:
+            body_mat_indices.add(i)
 
-    for i in range(n_rings + 1):
-        t = i / n_rings
-        z = z_top - t * (z_top - z_bottom)
-        sl = measure_torso_slice(verts, max(0.60, min(1.40, z)))
+    del_faces = []
+    for f in bm.faces:
+        if f.material_index not in body_mat_indices:
+            del_faces.append(f)
+            continue
+        zs = [v.co.z for v in f.verts]
+        xs = [abs(v.co.x) for v in f.verts]
+        if max(zs) > z_neck:
+            del_faces.append(f)
+            continue
+        if min(zs) < z_hem:
+            del_faces.append(f)
+            continue
+        if max(xs) > x_arm_max:
+            del_faces.append(f)
+            continue
 
-        if z > z_shoulder:
-            t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
-            neck_rx = 0.082 if is_male else 0.072
-            neck_ry = 0.068 if is_male else 0.060
-            rx = (1.0 - t_neck) * sl["rx"] + t_neck * neck_rx + offset
-            ry = (1.0 - t_neck) * sl["ry"] + t_neck * neck_ry + offset
-            cy = sl["cy"]
-        elif z >= z_waist:
-            rx = sl["rx"] + offset
-            ry = sl["ry"] + offset
-            cy = sl["cy"]
-        else:
-            t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
-            base_rx = sl["rx"] + offset
-            flare_scale_x = 0.140 if is_kaftan else 0.085
-            flare_scale_y = 0.080 if is_kaftan else 0.040
-            rx = base_rx + flare_scale_x * (t_flare ** 1.08)
-            ry = sl["ry"] + offset + flare_scale_y * (t_flare ** 1.08)
-            cy = sl["cy"]
+    bmesh.ops.delete(bm, geom=del_faces, context='FACES')
 
-        ring = []
-        for j in range(n_seg):
-            theta = -0.5 * math.pi + (2.0 * math.pi * j) / n_seg
-            x = rx * math.cos(theta)
-            y = cy + ry * math.sin(theta)
-            p = Vector((x, y, z))
+    islands = []
+    visited = set()
+    for f in bm.faces:
+        if f in visited:
+            continue
+        isl, q = [], [f]
+        visited.add(f)
+        while q:
+            curr = q.pop()
+            isl.append(curr)
+            for e in curr.edges:
+                for lf in e.link_faces:
+                    if lf not in visited:
+                        visited.add(lf)
+                        q.append(lf)
+        islands.append(isl)
 
-            u = 0.50 + 0.44 * (x / max_half_span)
-            v = 0.04 + 0.92 * t
-            u = max(0.02, min(0.98, u))
-            v = max(0.02, min(0.98, v))
+    if not islands:
+        bm.free()
+        raise RuntimeError(f"No faces remained for dress {variant}_{gender}")
 
-            ring.append((p, (u, v), {"Torso_Deform": 1.0}))
-        dress_rings.append(ring)
+    main_isl = max(islands, key=len)
+    other = [f for isl in islands if isl != main_isl for f in isl]
+    if other:
+        bmesh.ops.delete(bm, geom=other, context='FACES')
 
-    faces_uvs, vert_weights = add_closed_tube_to_bm(bm, dress_rings, cap_ends=False, thickness=0.0020)
-    all_faces_uvs.extend(faces_uvs)
-    all_vert_weights.extend(vert_weights)
+    loose_edges = [e for e in bm.edges if not e.link_faces]
+    if loose_edges:
+        bmesh.ops.delete(bm, geom=loose_edges, context='EDGES')
+    loose_verts = [v for v in bm.verts if not v.link_edges]
+    if loose_verts:
+        bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
-    if is_kaftan:
-        # Flowing kaftan sleeves
-        n_sleeve_rings = 14
-        n_sleeve_seg = 16
-        if is_male:
-            p_sh_left = Vector((0.218, 0.007, 1.378))
-            p_wr_left = Vector((0.412, -0.012, 1.069))
-            r_sh, r_wr = 0.082, 0.068
-        else:
-            p_sh_left = Vector((0.198, -0.008, 1.259))
-            p_wr_left = Vector((0.375, -0.009, 0.956))
-            r_sh, r_wr = 0.070, 0.058
+    for v in bm.verts:
+        v.co += v.normal * offset
+        if v.co.z < 0.92:
+            t_flare = min(1.0, max(0.0, (0.92 - v.co.z) / 0.70))
+            flare_amount = 0.075 if is_kaftan else 0.045
+            v.co.x += (flare_amount * t_flare) * (1.0 if v.co.x > 0 else -1.0)
+            v.co.y += (flare_amount * 0.6 * t_flare) * (1.0 if v.co.y > 0 else -1.0)
 
-        u_arm = (p_wr_left - p_sh_left).normalized()
-        v_coronal = Vector((-u_arm.z, 0.0, u_arm.x)).normalized()
-        w_sagittal = u_arm.cross(v_coronal).normalized()
-        if w_sagittal.y < 0:
-            w_sagittal = -w_sagittal
+    temp_mesh = bpy.data.meshes.new(f"temp_dress_{variant}_{gender}")
+    bm.to_mesh(temp_mesh)
+    bm.free()
 
-        for side in (-1.0, 1.0):
-            sleeve_rings = []
-            v_dir = Vector((side * v_coronal.x, v_coronal.y, v_coronal.z))
-            w_dir = Vector((side * w_sagittal.x, w_sagittal.y, w_sagittal.z))
-            p_sh = Vector((side * p_sh_left.x, p_sh_left.y, p_sh_left.z))
-            p_wr = Vector((side * p_wr_left.x, p_wr_left.y, p_wr_left.z))
+    temp_obj = bpy.data.objects.new(f"temp_dress_{variant}_{gender}", temp_mesh)
+    bpy.context.scene.collection.objects.link(temp_obj)
+    mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
+    mod.thickness = 0.0022
+    with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
+        bpy.ops.object.modifier_apply(modifier=mod.name)
 
-            for i in range(n_sleeve_rings + 1):
-                t = i / n_sleeve_rings
-                s_frac = t * 0.94
-                c_pos = p_sh + s_frac * (p_wr - p_sh)
-                r_arm = (1.0 - s_frac) * r_sh + s_frac * r_wr + 0.018
+    bm_final = bmesh.new()
+    bm_final.from_mesh(temp_mesh)
+    bpy.data.objects.remove(temp_obj, do_unlink=True)
+    bpy.data.meshes.remove(temp_mesh)
 
-                ring = []
-                for j in range(n_sleeve_seg):
-                    theta = (j / n_sleeve_seg) * 2.0 * math.pi
-                    p = c_pos + r_arm * (math.cos(theta) * v_dir + math.sin(theta) * w_dir)
-                    v_uv = max(0.04, min(0.96, (p.z - z_bottom) / max(0.20, z_top - z_bottom)))
-                    u_uv = max(0.02, min(0.98, (0.32 - s_frac * 0.26) if side < 0 else (0.68 + s_frac * 0.26)))
-                    ring.append((p, (u_uv, v_uv), {"Torso_Deform": 1.0}))
-                sleeve_rings.append(ring)
-            f_uvs, v_wts = add_closed_tube_to_bm(bm, sleeve_rings, thickness=0.0018)
-            all_faces_uvs.extend(f_uvs)
-            all_vert_weights.extend(v_wts)
+    bad_boundary = [e for e in bm_final.edges if not e.is_manifold and len(e.link_faces) <= 1]
+    if bad_boundary:
+        bmesh.ops.delete(bm_final, geom=bad_boundary, context='EDGES')
 
-    return bm, all_faces_uvs, all_vert_weights, ["Torso_Deform"]
+    verts = [v.co for v in bm_final.verts]
+    min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)
+    min_z, max_z = min(v.z for v in verts), max(v.z for v in verts)
+    dx = max(1e-4, max_x - min_x)
+    dz = max(1e-4, max_z - min_z)
+
+    faces_uvs = []
+    for f in bm_final.faces:
+        uvs = []
+        for l in f.loops:
+            v = l.vert.co
+            u = (v.x - min_x) / dx
+            v_norm = (v.z - min_z) / dz
+            uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
+        faces_uvs.append((f, uvs))
+
+    vert_weights = [(v, {"Torso_Deform": 1.0}) for v in bm_final.verts]
+    return bm_final, faces_uvs, vert_weights, ["Torso_Deform"]
 
 
 def build_accessory_template(avatar_data, variant="belt"):
@@ -1360,6 +1352,7 @@ CANONICAL_SPECS = [
     ("vest", "top", "vest", ["vest.glb"]),
     ("coat", "top", "coat", ["coat.glb"]),
     ("trench_coat", "top", "trench_coat", ["trench_coat.glb"]),
+    ("top_tunic", "top", "tunic", ["tunic.glb"]),
     # Lower Body
     ("bottom_trousers", "bottom", "trousers", ["pants.glb"]),
     ("bottom_shorts", "bottom", "shorts", ["shorts.glb"]),
