@@ -98,15 +98,18 @@ async def call_main_llm(
     # If caller didn't explicitly specify a model, check if user has a custom/tier Gemini model preference
     if user and provider == "gemini":
         if not is_tester_user(user) and not is_paid_tier_user(user):
-            # Free-tier users route to Gemini 2.5 Flash-Lite
-            target_model = getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
+            # Free-tier users route to Gemini 3.5 Flash-Lite
+            target_model = getattr(settings, "FREE_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
         elif not model and not fallback_model:
             custom_gemini_model = resolve_user_gemini_model(user)
             if custom_gemini_model:
                 target_model = custom_gemini_model
 
-    # Normalization: replace deprecated 3.5-flash/pro strings with 3.5-flash-lite (preserve 2.5-flash / 2.5-flash-lite)
-    if target_model in ("gemini-3.5-flash", "gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro"):
+    # Normalization: replace deprecated 3.5-flash/pro and retired 2.5-flash strings with 3.5-flash-lite
+    if target_model in (
+        "gemini-3.5-flash", "gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro",
+        "gemini-2.5-flash", "models/gemini-2.5-flash", "gemini-2.5-flash-lite", "models/gemini-2.5-flash-lite",
+    ):
         target_model = DEFAULT_MAIN_MODEL
 
     is_json_mode = bool(json_schema or (response_mime_type and "json" in response_mime_type.lower()))

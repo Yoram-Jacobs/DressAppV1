@@ -176,11 +176,20 @@ class GeminiClient:
         response_schema: dict[str, Any] | None,
         tools: list[Any] | None = None,
         thinking_budget: int | None = None,
+        thinking_level: str | None = None,
+        model: str | None = None,
     ) -> Any:
         cfg_kwargs: dict[str, Any] = {}
         if system:
             cfg_kwargs["system_instruction"] = system
-        if temperature is not None:
+
+        target_model_name = (model or "").lower()
+        is_35_or_newer = bool("3.5" in target_model_name or "3." in target_model_name)
+
+        # Sampling parameters:
+        # Custom temperature, top_p, and top_k are deprecated and ignored/rejected in Gemini 3.5 Flash-Lite.
+        # Only set temperature for older models or when model is unspecified/legacy.
+        if temperature is not None and not is_35_or_newer:
             cfg_kwargs["temperature"] = float(temperature)
         if max_tokens is not None:
             cfg_kwargs["max_output_tokens"] = int(max_tokens)
@@ -193,20 +202,42 @@ class GeminiClient:
                 cfg_kwargs["response_schema"] = response_schema
         if tools:
             cfg_kwargs["tools"] = tools
-        if thinking_budget is not None and _genai_types is not None:
-            try:
-                tb_val = int(thinking_budget)
-                if tb_val == 0:
-                    # In google-genai SDK, thinking_budget=0 is rejected with 400 INVALID_ARGUMENT
-                    # by Gemini 3.5 / Gemini 3.1 endpoints. A value of 1 instructs the model to
-                    # produce direct outputs with minimal/no thinking overhead.
-                    tb_val = 1
-                if tb_val > 0:
-                    thinking_cls = getattr(_genai_types, "ThinkingConfig", None)
-                    if thinking_cls:
-                        cfg_kwargs["thinking_config"] = thinking_cls(thinking_budget=tb_val)
-            except Exception:
-                pass
+
+        # Thinking configuration:
+        # Gemini 3.5 Flash-Lite uses thinking_level ("minimal", "low", "medium", "high")
+        # instead of numeric thinking_budget.
+        if _genai_types is not None:
+            thinking_cls = getattr(_genai_types, "ThinkingConfig", None)
+            if thinking_cls:
+                level_to_use = thinking_level
+                if not level_to_use and is_35_or_newer:
+                    if thinking_budget is not None:
+                        tb = int(thinking_budget)
+                        if tb <= 1:
+                            level_to_use = "minimal"
+                        elif tb <= 1024:
+                            level_to_use = "low"
+                        elif tb <= 4096:
+                            level_to_use = "medium"
+                        else:
+                            level_to_use = "high"
+                    else:
+                        level_to_use = "minimal"
+
+                if level_to_use and hasattr(thinking_cls, "model_fields") and "thinking_level" in thinking_cls.model_fields:
+                    try:
+                        cfg_kwargs["thinking_config"] = thinking_cls(thinking_level=level_to_use)
+                    except Exception:
+                        pass
+                elif thinking_budget is not None:
+                    try:
+                        tb_val = int(thinking_budget)
+                        if tb_val == 0:
+                            tb_val = 1
+                        if tb_val > 0:
+                            cfg_kwargs["thinking_config"] = thinking_cls(thinking_budget=tb_val)
+                    except Exception:
+                        pass
 
         if cfg_kwargs and _genai_types is not None:
             return _genai_types.GenerateContentConfig(**cfg_kwargs)
@@ -225,8 +256,10 @@ class GeminiClient:
         response_schema: dict[str, Any] | None = None,
         tools: list[Any] | None = None,
         thinking_budget: int | None = 0,
+        thinking_level: str | None = None,
     ) -> str:
         """Text-only completion. Returns the model's response text."""
+        target_model = _normalise_model(model)
         config = self._build_config(
             system=system,
             temperature=temperature,
@@ -235,8 +268,9 @@ class GeminiClient:
             response_schema=response_schema,
             tools=tools,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
+            model=target_model,
         )
-        target_model = _normalise_model(model)
         try:
             resp = await self._client.aio.models.generate_content(
                 model=target_model,
@@ -277,6 +311,7 @@ class GeminiClient:
         if _genai_types is not None:
             tools = [_genai_types.Tool(google_search=_genai_types.GoogleSearch())]
 
+        target_model = _normalise_model(model)
         config = self._build_config(
             system=system,
             temperature=temperature,
@@ -284,9 +319,10 @@ class GeminiClient:
             response_mime_type=None,
             response_schema=None,
             tools=tools,
+            model=target_model,
         )
         resp = await self._client.aio.models.generate_content(
-            model=_normalise_model(model),
+            model=target_model,
             contents=prompt,
             config=config,
         )
@@ -330,6 +366,7 @@ class GeminiClient:
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
         thinking_budget: int | None = 0,
+        thinking_level: str | None = None,
     ) -> str:
         """Multimodal completion (text + image parts). Non-streaming.
 
@@ -337,6 +374,7 @@ class GeminiClient:
         as image/jpeg or png), ``(bytes, mime_type)`` tuples, or any SDK
         ``types.Part``. Order is preserved.
         """
+        target_model = _normalise_model(model)
         config = self._build_config(
             system=system,
             temperature=temperature,
@@ -344,9 +382,10 @@ class GeminiClient:
             response_mime_type=response_mime_type,
             response_schema=response_schema,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
+            model=target_model,
         )
         contents = _coerce_content_parts(user_parts)
-        target_model = _normalise_model(model)
         try:
             resp = await self._client.aio.models.generate_content(
                 model=target_model,
@@ -380,8 +419,10 @@ class GeminiClient:
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
         thinking_budget: int | None = 0,
+        thinking_level: str | None = None,
     ) -> AsyncIterator[str]:
         """Streaming multimodal completion. Yields text deltas."""
+        target_model = _normalise_model(model)
         config = self._build_config(
             system=system,
             temperature=temperature,
@@ -389,9 +430,10 @@ class GeminiClient:
             response_mime_type=response_mime_type,
             response_schema=response_schema,
             thinking_budget=thinking_budget,
+            thinking_level=thinking_level,
+            model=target_model,
         )
         contents = _coerce_content_parts(user_parts)
-        target_model = _normalise_model(model)
         try:
             stream = await self._client.aio.models.generate_content_stream(
                 model=target_model,
@@ -449,7 +491,7 @@ def _normalise_model(model: str) -> str:
     if not clean.lower().startswith("gemini") and not clean.lower().startswith("models/"):
         return DEFAULT_VISION_MODEL
     clean_lower = clean.lower()
-    # Normalize non-existent gemini-3.5-pro or retired gemini-2.5-flash-lite (HTTP 404 on new API keys)
+    # Normalize non-existent gemini-3.5-pro or retired gemini-2.5-flash / gemini-2.5-flash-lite (auto-redirect to 3.5-flash-lite)
     if clean_lower in (
         "gemini-3.5-pro",
         "models/gemini-3.5-pro",
@@ -457,6 +499,9 @@ def _normalise_model(model: str) -> str:
         "gemini-2.5-flash-lite",
         "models/gemini-2.5-flash-lite",
         "gemini-2.5-flash-lite-preview",
+        "gemini-2.5-flash",
+        "models/gemini-2.5-flash",
+        "gemini-2.5-flash-preview",
     ):
         return DEFAULT_VISION_MODEL
     return clean

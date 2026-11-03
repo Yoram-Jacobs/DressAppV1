@@ -35,7 +35,7 @@ subgrafie Backend-services
         
         API --> Hersenen[Stylist Hersenservice]
         Hersenen -->|Tekstreactie| TTS[TTS-service: GeminiTTSService]
-        TTS -->|gemini-2.5-flash respons_modaliteiten: AUDIO| GeminiTTS[Gemini 2.5 Flash multimodaal]
+        TTS -->|gemini-3.8-flash-tts respons_modaliteiten: AUDIO| GeminiTTS[Gemini 2.5 Flash multimodaal]
     einde
 
 GeminiTTS -->|Ruwe audiobytes| TTS

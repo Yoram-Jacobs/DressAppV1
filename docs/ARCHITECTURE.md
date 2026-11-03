@@ -18,7 +18,7 @@ DressApp is an AI-powered fashion editor and digital wardrobe platform that turn
    - Standard EU DPP QR-code ingestion parsing fabric composition, manufacturer traceability, and care guides.
 2. **Conversational AI Stylist & Multimodal Audio**:
    - Hands-free stylist assistant processing voice and text inputs with local weather, Google Calendar events, user sizing profile, and wardrobe history.
-   - Multi-tier speech pipeline routing between native Gemini Audio (`gemini-2.5-flash`), Deepgram STT/TTS, browser Web Speech API, and mobile offline VITS models (Piper ONNX).
+   - Multi-tier speech pipeline routing between native Gemini Audio (`gemini-3.8-flash-tts` / `gemini-3.5-flash-lite`), Deepgram STT/TTS, browser Web Speech API, and mobile offline VITS models (Piper ONNX).
 3. **Monorepo Client Architecture**:
    - Web application (`apps/web`): React 19 SPA with `useSyncExternalStore` thread-safe state, Tailwind CSS, Shadcn UI primitives, and 13 localized languages.
    - Mobile application (`apps/mobile`): Expo SDK 53 / React Native 0.79 with React Navigation Native Stack, NativeWind styling, and offline SWR caching via `MobileClosetRepository`.

@@ -35,7 +35,7 @@ graph TD
         
         API --> Brain[Stylist Brain Service]
         Brain -->|Text Response| TTS[TTS Service: GeminiTTSService]
-        TTS -->|gemini-2.5-flash response_modalities: AUDIO| GeminiTTS[Gemini 2.5 Flash Multimodal]
+        TTS -->|gemini-3.8-flash-tts response_modalities: AUDIO| GeminiTTS[Gemini 2.5 Flash Multimodal]
     end
 
     GeminiTTS -->|Raw Audio Bytes| TTS

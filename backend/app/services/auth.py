@@ -293,14 +293,17 @@ def resolve_user_gemini_model(user: dict[str, Any] | None = None) -> str:
     - Free tier: defaults to settings.FREE_STYLIST_MODEL ('gemini-2.5-flash-lite').
     """
     default_model = getattr(settings, "DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
-    free_model = getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
+    free_model = getattr(settings, "FREE_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
     if user and isinstance(user, dict):
         if is_tester_user(user):
             ai_config = user.get("ai_configuration") or {}
             selected = ai_config.get("selected_model")
             if selected and isinstance(selected, str) and selected.strip():
                 selected = selected.strip()
-                if selected in ("gemini-3.5-flash", "gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro"):
+                if selected in (
+                    "gemini-3.5-flash", "gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro",
+                    "gemini-2.5-flash", "models/gemini-2.5-flash", "gemini-2.5-flash-lite", "models/gemini-2.5-flash-lite",
+                ):
                     return "gemini-3.5-flash-lite"
                 if selected in ("Eyes v1", "gemma", "dressapp", "gemma-4-E4B-it-Q3_K_M.gguf"):
                     return default_model
@@ -398,8 +401,8 @@ def resolve_user_ai_model(user: dict[str, Any] | None) -> str:
             return "Eyes v1"
         if is_paid_tier_user(user):
             return getattr(settings, "DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
-        return getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
-    return getattr(settings, "FREE_STYLIST_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
+        return getattr(settings, "FREE_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
+    return getattr(settings, "FREE_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
 
 
 def resolve_user_custom_gemini_api_key(user: dict[str, Any] | None = None) -> str | None:

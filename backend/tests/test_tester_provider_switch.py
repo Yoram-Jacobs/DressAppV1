@@ -148,18 +148,18 @@ async def test_llm_gateway_routes_tester_gemini_switch(tester_user_gemini):
 
 
 @pytest.mark.anyio
-async def test_llm_gateway_free_user_defaults_to_gemini_25_flash_lite(regular_user):
+async def test_llm_gateway_free_user_defaults_to_gemini_35_flash_lite(regular_user):
     with patch("app.services.gemini_client.GeminiClient.text", new_callable=AsyncMock) as mock_gemini, \
          patch("app.config.settings.GEMINI_API_KEY", "test_key"), \
          patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma:
-        mock_gemini.return_value = '{"result": "gemini 2.5 flash lite output"}'
+        mock_gemini.return_value = '{"result": "gemini 3.5 flash lite output"}'
         res = await call_main_llm(
             user_text="Suggest outfit",
             user=regular_user,
         )
-        assert res == '{"result": "gemini 2.5 flash lite output"}'
+        assert res == '{"result": "gemini 3.5 flash lite output"}'
         mock_gemini.assert_awaited_once()
-        assert mock_gemini.await_args.kwargs["model"] == "gemini-2.5-flash-lite"
+        assert mock_gemini.await_args.kwargs["model"] == "gemini-3.5-flash-lite"
         mock_gemma.assert_not_awaited()
 
 
@@ -190,20 +190,20 @@ def test_vision_service_tester_and_tiers(tester_user_dressapp, tester_user_gemin
         v_tester_gem = get_garment_vision_service(user=tester_user_gemini)
         assert v_tester_gem.provider == "gemini"
 
-    # 3. Free non-tester user gets Gemini 2.5 Flash-Lite (with fallback to on-prem Eyes if GEMINI_API_KEY unset)
+    # 3. Free non-tester user gets Gemini 3.5 Flash-Lite (with fallback to on-prem Eyes if GEMINI_API_KEY unset)
     with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
         v_reg = get_garment_vision_service(user=regular_user)
         assert v_reg.provider == "gemini"
-        assert v_reg.model == "gemini-2.5-flash-lite"
-        assert v_reg.crop_model == "gemini-2.5-flash-lite"
-        assert v_reg.detect_model == "gemini-2.5-flash-lite"
+        assert v_reg.model == "gemini-3.5-flash-lite"
+        assert v_reg.crop_model == "gemini-3.5-flash-lite"
+        assert v_reg.detect_model == "gemini-3.5-flash-lite"
 
-    # 4. Manager / Professional non-tester user gets Hybrid Setup (gemini-2.5-flash crop/single + gemini-3.5-flash-lite detect)
+    # 4. Manager / Professional non-tester user gets Gemini 3.5 Flash-Lite
     with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
         v_mgr = get_garment_vision_service(user=manager_user)
         assert v_mgr.provider == "gemini"
-        assert v_mgr.model == "gemini-2.5-flash"
-        assert v_mgr.crop_model == "gemini-2.5-flash"
+        assert v_mgr.model == "gemini-3.5-flash-lite"
+        assert v_mgr.crop_model == "gemini-3.5-flash-lite"
         assert v_mgr.detect_model == "gemini-3.5-flash-lite"
 
     # 5. Developer / tester user without explicit Gemma selection respects active platform provider (Gemini)
@@ -232,12 +232,12 @@ def test_stylist_brain_tester_and_tiers(tester_user_dressapp, tester_user_gemini
         else:
             assert brain_tester_gem.provider_name == "gemini"
 
-    # 3. Free user gets primary GeminiStylistBrain (gemini-2.5-flash-lite) with GemmaStylistBrain fallback
+    # 3. Free user gets primary GeminiStylistBrain (gemini-3.5-flash-lite) with GemmaStylistBrain fallback
     with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
         brain_free = stylist_brain_service(user=regular_user)
         assert isinstance(brain_free, FallbackBrain)
         assert brain_free.primary.provider_name == "gemini"
-        assert brain_free.primary._svc.model == "gemini-2.5-flash-lite"
+        assert brain_free.primary._svc.model == "gemini-3.5-flash-lite"
         assert brain_free.fallback.provider_name == "gemma"
 
     # 4. Manager user gets primary GeminiStylistBrain (gemini-3.5-flash-lite) with GemmaStylistBrain fallback
@@ -249,10 +249,11 @@ def test_stylist_brain_tester_and_tiers(tester_user_dressapp, tester_user_gemini
         assert brain_mgr.fallback.provider_name == "gemma"
 
 
-def test_gemini_client_normalises_retired_25_flash_lite():
+def test_gemini_client_normalises_retired_25_flash_and_lite():
     from app.services.gemini_client import _normalise_model, DEFAULT_VISION_MODEL
     assert _normalise_model("gemini-2.5-flash-lite") == DEFAULT_VISION_MODEL
     assert _normalise_model("models/gemini-2.5-flash-lite") == DEFAULT_VISION_MODEL
-    assert _normalise_model("gemini-2.5-flash") == "gemini-2.5-flash"
+    assert _normalise_model("gemini-2.5-flash") == DEFAULT_VISION_MODEL
+    assert _normalise_model("models/gemini-2.5-flash") == DEFAULT_VISION_MODEL
 
 

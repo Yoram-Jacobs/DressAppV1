@@ -671,11 +671,11 @@ class GarmentVisionService:
         # DB-backed runtime resolution via eyes_override.get_active_provider().
         self.provider = provider
         if self.provider == "gemini":
-            self.model = model if (model and model.lower().startswith("gemini")) else (settings.GARMENT_VISION_MODEL or "gemini-2.5-flash")
+            self.model = model if (model and model.lower().startswith("gemini")) else (settings.GARMENT_VISION_MODEL or "gemini-3.5-flash-lite")
         elif self.provider:
             self.model = model or settings.GARMENT_VISION_MODEL or "Eyes v1"
         else:
-            self.model = model or settings.GARMENT_VISION_MODEL or "gemini-2.5-flash"
+            self.model = model or settings.GARMENT_VISION_MODEL or "gemini-3.5-flash-lite"
         # Detection stays on Gemini Flash until we upgrade to a fine-tuned vision model.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
         self.detect_model = (
@@ -686,7 +686,7 @@ class GarmentVisionService:
         self.crop_model = (
             crop_model
             or (model if (model and model.lower().startswith("gemini")) else None)
-            or (settings.GARMENT_VISION_CROP_MODEL or "gemini-2.5-flash")
+            or (settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash-lite")
         )
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
         # Gemini chat key — explicit parameter, else direct GEMINI_API_KEY from .env.
@@ -4987,7 +4987,7 @@ def get_garment_vision_service(
                     except Exception as exc:
                         logger.warning("Failed to build tester custom-key Gemini GarmentVisionService: %s", exc)
                 try:
-                    return GarmentVisionService(model=gemini_model or "gemini-3.5-flash-lite", crop_model=gemini_model or "gemini-2.5-flash", detect_model=gemini_model or "gemini-3.5-flash-lite", provider="gemini", user_gender=user_gender)
+                    return GarmentVisionService(model=gemini_model or "gemini-3.5-flash-lite", crop_model=gemini_model or "gemini-3.5-flash-lite", detect_model=gemini_model or "gemini-3.5-flash-lite", provider="gemini", user_gender=user_gender)
                 except Exception as exc:
                     logger.warning("Failed to build tester Gemini GarmentVisionService: %s", exc)
 
@@ -5022,15 +5022,15 @@ def get_garment_vision_service(
                 try:
                     return GarmentVisionService(
                         provider="gemini",
-                        model=settings.GARMENT_VISION_MODEL or "gemini-2.5-flash",
-                        crop_model=settings.GARMENT_VISION_CROP_MODEL or "gemini-2.5-flash",
+                        model=settings.GARMENT_VISION_MODEL or "gemini-3.5-flash-lite",
+                        crop_model=settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash-lite",
                         detect_model=settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash-lite",
                         user_gender=user_gender,
                     )
                 except Exception as exc:
                     logger.warning("Failed to build Paid Hybrid Gemini GarmentVisionService: %s", exc)
             else:
-                free_vision_model = getattr(settings, "FREE_VISION_MODEL", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite"
+                free_vision_model = getattr(settings, "FREE_VISION_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
                 try:
                     return GarmentVisionService(
                         provider="gemini",

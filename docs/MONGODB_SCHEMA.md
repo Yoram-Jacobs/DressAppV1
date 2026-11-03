@@ -74,7 +74,7 @@ Represents user accounts, authentication data, styling profile, body sizing, and
     "mode": "standard",
     "provider": "gemini",
     "custom_gemini_api_key": null,
-    "model": "gemini-2.5-flash"
+    "model": "gemini-3.5-flash-lite"
   },
   "stripe_account_id": "acct_1N...",
   "stripe_onboarding_complete": true,
