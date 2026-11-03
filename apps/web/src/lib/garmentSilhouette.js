@@ -1952,6 +1952,27 @@ export function synthesizeBackFabricData(data, w, h) {
       }
     }
 
+    // 4. Fill collar cavity & inner neck lining in upper 16% of garment height
+    // On the back view of a jacket, coat, or shirt, the collar is high and continuous,
+    // without the scoop or interior lining seen from the front.
+    if (vRel < 0.16) {
+      const cStart = Math.floor(0.38 * span);
+      const cEnd = Math.min(span - 1, Math.ceil(0.62 * span));
+      const colL = Math.max(0, cStart - 2);
+      const colR = Math.min(span - 1, cEnd + 2);
+      const collarR = (curR[colL] + curR[colR]) / 2;
+      const collarG = (curG[colL] + curG[colR]) / 2;
+      const collarB = (curB[colL] + curB[colR]) / 2;
+      for (let i = cStart; i <= cEnd; i++) {
+        const dNeck = Math.hypot(curR[i] - collarR, curG[i] - collarG, curB[i] - collarB);
+        if (dNeck > 12 || diffBase[i] > 8) {
+          curR[i] = collarR;
+          curG[i] = collarG;
+          curB[i] = collarB;
+        }
+      }
+    }
+
     for (let i = 0; i < span; i++) {
       const idx = rowOffset + (xMin + i) * 4;
       data[idx] = Math.max(0, Math.min(255, Math.round(curR[i])));

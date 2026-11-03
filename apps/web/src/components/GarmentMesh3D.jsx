@@ -118,7 +118,7 @@ export function inferRoleFromName(title) {
   if (!text) return null;
   // 1. Wearable core apparel (outerwear, dress, bottom, top, shoes) takes precedence
   // over accessory details (e.g. "מעיל טרנץ' עם חגורה", "belted trench coat", "dress with tie", "pants with belt").
-  if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|מעיל|ז['’]קט|ג['’]קט|בלייזר|קרדיגן)/i.test(text)) return 'outerwear';
+  if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|מעיל|ז['’׳]קט|ג['’׳]קט|טרנץ['’׳]?|בלייזר|קרדיגן)/i.test(text)) return 'outerwear';
   if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|שמלה|שמלת|אוברול|סרבל)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks|watch)\b/i.test(text)) return 'dress';
   if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|leggings|joggers|slacks|sweatpants)\b|מכנס|ג['’]ינס|חצאית|שורטס|טייץ)/i.test(text)) return 'bottom';
   if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey)\b|חולצ|סוודר|גופי)/i.test(text)) return 'top';
@@ -128,7 +128,10 @@ export function inferRoleFromName(title) {
   if (/(?:\b(?:bag|purse|tote|backpack|handbag|satchel|crossbody)\b|תיק|ארנק)/i.test(text)) return 'bag';
   if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|שעון יד|שעון|צמיד)/i.test(text)) return 'watch';
   if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת)/i.test(text)) return 'necktie';
-  if (/(?:\b(?:belt)\b|חגורה|חגורת)/i.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) return 'belt';
+  if (/(?:\b(?:belt)\b|חגורה|חגורת)/i.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) {
+    if (/(?:trench|coat|jacket|blazer|dress|pants|trousers|shirt|מעיל|טרנץ|שמלה|מכנס|חולצה)/i.test(text)) return null;
+    return 'belt';
+  }
   return null;
 }
 
@@ -2821,6 +2824,11 @@ function GarmentTemplateMeshInner({
               const x = pos.getX(i);
               const y = pos.getY(i);
               const z = pos.getZ(i);
+              // GUARD: Only deform torso vertices! Sleeves have |x| > torso radius
+              const slRef = getTorsoSlice(Math.max(0.60, Math.min(1.40, y)), isMale);
+              const isTorso = Math.abs(x) <= ((slRef?.rx || 0.18) + 0.045);
+              if (!isTorso) continue;
+
               if (y < yTorsoApex) {
                 const t = (yTorsoApex - y) / Math.max(1e-4, origSpan);
                 const yNew = yTorsoApex - t * newSpan;
@@ -2880,9 +2888,49 @@ function GarmentTemplateMeshInner({
     return geo;
   }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, shellFit, texture]);
 
-  const material = useMemo(() => {
-    const matProps = {
-      color: texture ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#F3F4F6'),
+  // Split geometry faces into front (Nz >= -0.05) and back (Nz < -0.05) groups
+  // so backTexture renders on the back view without front details (zippers, logos, pockets)
+  useEffect(() => {
+    if (!geometry || !geometry.index) return;
+    const pos = geometry.attributes.position;
+    const idx = geometry.index.array;
+    const frontTriangles = [];
+    const backTriangles = [];
+    const pA = new THREE.Vector3();
+    const pB = new THREE.Vector3();
+    const pC = new THREE.Vector3();
+    const cb = new THREE.Vector3();
+    const ab = new THREE.Vector3();
+
+    for (let i = 0; i < idx.length; i += 3) {
+      const i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
+      pA.fromBufferAttribute(pos, i0);
+      pB.fromBufferAttribute(pos, i1);
+      pC.fromBufferAttribute(pos, i2);
+      cb.subVectors(pC, pB);
+      ab.subVectors(pA, pB);
+      cb.cross(ab).normalize();
+      const cz = (pA.z + pB.z + pC.z) / 3;
+      if (cb.z < -0.05 && cz < 0.01) {
+        backTriangles.push(i0, i1, i2);
+      } else {
+        frontTriangles.push(i0, i1, i2);
+      }
+    }
+    if (backTriangles.length > 0) {
+      const newIdx = new (idx.constructor)(frontTriangles.length + backTriangles.length);
+      newIdx.set(frontTriangles, 0);
+      newIdx.set(backTriangles, frontTriangles.length);
+      geometry.setIndex(new THREE.BufferAttribute(newIdx, 1));
+      geometry.clearGroups();
+      geometry.addGroup(0, frontTriangles.length, 0);
+      geometry.addGroup(frontTriangles.length, backTriangles.length, 1);
+    }
+  }, [geometry]);
+
+  const materials = useMemo(() => {
+    const baseProps = {
+      color: dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#FFFFFF',
       roughness: pbrProps?.roughness ?? 0.70,
       metalness: pbrProps?.metalness ?? 0.05,
       side: THREE.DoubleSide,
@@ -2891,11 +2939,16 @@ function GarmentTemplateMeshInner({
       polygonOffsetFactor: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
       polygonOffsetUnits: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
     };
-    if (texture) {
-      matProps.map = texture;
-    }
-    return new THREE.MeshStandardMaterial(matProps);
-  }, [texture, dominantColor, pbrProps, rawSlot]);
+    const frontMat = new THREE.MeshStandardMaterial({
+      ...baseProps,
+      map: texture || null,
+    });
+    const backMat = new THREE.MeshStandardMaterial({
+      ...baseProps,
+      map: backTexture || texture || null,
+    });
+    return [frontMat, backMat];
+  }, [texture, backTexture, dominantColor, pbrProps, rawSlot]);
 
   if (!geometry) return null;
 
@@ -2913,7 +2966,7 @@ function GarmentTemplateMeshInner({
       <mesh
         name={`garment-template-${templateId}`}
         geometry={geometry}
-        material={material}
+        material={materials}
         castShadow
         receiveShadow
         renderOrder={renderOrder}

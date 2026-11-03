@@ -651,46 +651,68 @@ def build_top_template(avatar_data, variant="tshirt"):
     all_faces_uvs.extend(f_uvs)
     all_vert_weights.extend(v_wts)
 
-    # 2. Left & Right Sleeves reproduced from avatar's 27-degree A-pose arms
-    n_sleeve_rings = 8 if variant == "tshirt" else 14
+    # 2. Left & Right Sleeves reproduced from avatar's anatomical arm trajectory
+    n_sleeve_rings = 10 if variant == "tshirt" else 16
     n_sleeve_seg = 16
 
-    z_arm_start = 1.38 if is_male else 1.28
-    z_arm_wrist = 0.98 if is_male else 0.87
+    # Anatomical arm trajectory points measured directly from avatar meshes:
+    # Shoulder anchor (where arm joins torso) and wrist end
+    if is_male:
+        p_sh_left = Vector((0.218, 0.007, 1.378))
+        p_wr_left = Vector((0.412, -0.012, 1.069))
+        r_sh = 0.076
+        r_wr = 0.052
+    else:
+        p_sh_left = Vector((0.198, -0.008, 1.259))
+        p_wr_left = Vector((0.375, -0.009, 0.956))
+        r_sh = 0.062
+        r_wr = 0.040
+
+    # Arm direction unit vector
+    u_arm = (p_wr_left - p_sh_left).normalized()
+    # Orthonormal coronal basis vector perpendicular to arm direction
+    v_coronal = Vector((-u_arm.z, 0.0, u_arm.x)).normalized()
+    # Orthonormal sagittal basis vector perpendicular to both
+    w_sagittal = u_arm.cross(v_coronal).normalized()
+    if w_sagittal.y < 0:
+        w_sagittal = -w_sagittal
+
+    arm_clearance = 0.008 if variant == "tshirt" else (0.012 if variant == "longsleeve" else 0.018)
 
     for side in (-1.0, 1.0):
         sleeve_rings = []
+        # Flip across X for opposite arm
+        v_dir = Vector((side * v_coronal.x, v_coronal.y, v_coronal.z))
+        w_dir = Vector((side * w_sagittal.x, w_sagittal.y, w_sagittal.z))
+        p_sh = Vector((side * p_sh_left.x, p_sh_left.y, p_sh_left.z))
+        p_wr = Vector((side * p_wr_left.x, p_wr_left.y, p_wr_left.z))
+
         for i in range(n_sleeve_rings + 1):
             t = i / n_sleeve_rings
             s_frac = t * sleeve_frac
-            x_abs = x_arm_start + s_frac * (x_arm_wrist - x_arm_start)
-            arm_sl = measure_arm_slice(verts, x_abs)
-
-            # Smoothly interpolate arm center Z along the 27-deg A-pose trajectory
-            cz_line = z_arm_start - s_frac * (z_arm_start - z_arm_wrist)
-            cz = 0.65 * cz_line + 0.35 * arm_sl["cz"]
-            cy = arm_sl["cy"]
-            rz = max(0.040, min(0.058, arm_sl["rz"])) + offset
-            ry = max(0.038, min(0.055, arm_sl["ry"])) + offset
+            c_pos = p_sh + s_frac * (p_wr - p_sh)
+            r_arm = (1.0 - s_frac) * r_sh + s_frac * r_wr + arm_clearance
 
             ring = []
             for j in range(n_sleeve_seg):
                 theta = (j / n_sleeve_seg) * 2.0 * math.pi
-                # Cross section perpendicular to arm axis
-                local_z = rz * math.cos(theta)
-                local_y = ry * math.sin(theta)
-                px = side * (x_abs - 0.35 * local_z)
-                py = cy + local_y
-                pz = cz + 0.92 * local_z
+                cos_th = math.cos(theta)
+                sin_th = math.sin(theta)
 
-                # Planar UV mapping for sleeves: left sleeve in [0.04, 0.24], right sleeve in [0.76, 0.96]
-                v_uv = (pz - z_bottom) / max(0.20, z_top - z_bottom)
-                v_uv = max(0.06, min(0.94, 0.04 + v_uv * 0.92))
+                p = c_pos + r_arm * (cos_th * v_dir + sin_th * w_dir)
+
+                # Planar UV mapping for sleeves:
+                # Left side of screen (side < 0): u in [0.04, 0.32]
+                # Right side of screen (side > 0): u in [0.68, 0.96]
+                v_uv = (p.z - z_bottom) / max(0.20, z_top - z_bottom)
+                v_uv = max(0.04, min(0.96, v_uv))
                 if side < 0:
-                    u_uv = 0.22 - s_frac * 0.16 + 0.03 * math.sin(theta)
+                    u_uv = 0.32 - s_frac * 0.26 - 0.03 * cos_th
                 else:
-                    u_uv = 0.78 + s_frac * 0.16 + 0.03 * math.sin(theta)
-                ring.append((Vector((px, py, pz)), (u_uv, v_uv), {"Torso_Deform": 1.0}))
+                    u_uv = 0.68 + s_frac * 0.26 + 0.03 * cos_th
+                u_uv = max(0.02, min(0.98, u_uv))
+
+                ring.append((p, (u_uv, v_uv), {"Torso_Deform": 1.0}))
             sleeve_rings.append(ring)
 
         f_uvs, v_wts = add_closed_tube_to_bm(bm, sleeve_rings, thickness=0.0016)
