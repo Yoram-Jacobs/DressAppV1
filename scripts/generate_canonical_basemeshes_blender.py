@@ -536,84 +536,84 @@ def build_top_template(avatar_data, variant="tshirt"):
     flare_hips = False
 
     if variant == "tshirt":
-        offset = 0.0055
-        z_neck = 1.48 if is_male else 1.38
+        offset = 0.0065
+        z_neck = 1.53 if is_male else 1.435
         z_hem = 0.88 if is_male else 0.84
-        x_arm_max = 0.285 if is_male else 0.265
+        x_arm_max = 0.315 if is_male else 0.280
         sleeve_type = "short"
     elif variant == "singlet":
-        offset = 0.0045
-        z_neck = 1.46 if is_male else 1.36
+        offset = 0.0055
+        z_neck = 1.50 if is_male else 1.405
         z_hem = 0.88 if is_male else 0.84
-        x_arm_max = 0.205 if is_male else 0.185
+        x_arm_max = 0.210 if is_male else 0.185
         sleeve_type = "sleeveless"
     elif variant == "vest":
         offset = 0.0160
-        z_neck = 1.48 if is_male else 1.38
+        z_neck = 1.54 if is_male else 1.440
         z_hem = 0.80 if is_male else 0.76
-        x_arm_max = 0.205 if is_male else 0.185
+        x_arm_max = 0.210 if is_male else 0.185
         sleeve_type = "sleeveless"
         is_open_front = True
     elif variant == "longsleeve":
-        offset = 0.0065
-        z_neck = 1.49 if is_male else 1.39
+        offset = 0.0075
+        z_neck = 1.54 if is_male else 1.440
         z_hem = 0.86 if is_male else 0.82
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
     elif variant == "hoodie":
-        offset = 0.0140
-        z_neck = 1.50 if is_male else 1.40
+        offset = 0.0150
+        z_neck = 1.56 if is_male else 1.460
         z_hem = 0.82 if is_male else 0.78
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
     elif variant in ("jacket", "top_outerwear_jacket"):
-        offset = 0.0160
-        z_neck = 1.50 if is_male else 1.40
+        offset = 0.0170
+        z_neck = 1.56 if is_male else 1.460
         z_hem = 0.80 if is_male else 0.76
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
     elif variant == "jacket_blazer":
-        offset = 0.0160
-        z_neck = 1.50 if is_male else 1.40
+        offset = 0.0170
+        z_neck = 1.56 if is_male else 1.460
         z_hem = 0.78 if is_male else 0.74
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
     elif variant == "cardigan":
-        offset = 0.0140
-        z_neck = 1.49 if is_male else 1.39
+        offset = 0.0150
+        z_neck = 1.54 if is_male else 1.440
         z_hem = 0.70 if is_male else 0.66
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
     elif variant == "coat":
-        offset = 0.0180
-        z_neck = 1.51 if is_male else 1.41
+        offset = 0.0190
+        z_neck = 1.56 if is_male else 1.460
         z_hem = 0.54 if is_male else 0.50
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
     elif variant == "trench_coat":
-        offset = 0.0180
-        z_neck = 1.52 if is_male else 1.42
+        offset = 0.0190
+        z_neck = 1.56 if is_male else 1.460
         z_hem = 0.48 if is_male else 0.44
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
         flare_hips = True
     elif variant in ("tunic", "top_tunic"):
-        offset = 0.0130
-        z_neck = 1.48 if is_male else 1.38
+        offset = 0.0140
+        z_neck = 1.54 if is_male else 1.440
         z_hem = 0.66 if is_male else 0.62
-        x_arm_max = 0.285 if is_male else 0.265
+        x_arm_max = 0.315 if is_male else 0.280
         sleeve_type = "short"
         flare_hips = True
     else:
-        offset = 0.0120
-        z_neck = 1.50 if is_male else 1.40
+        offset = 0.0130
+        z_neck = 1.55 if is_male else 1.450
         z_hem = 0.84 if is_male else 0.80
-        x_arm_max = 0.415 if is_male else 0.382
+        x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
 
     mw = avatar_obj.matrix_world
@@ -647,7 +647,7 @@ def build_top_template(avatar_data, variant="tshirt"):
         if max_x > x_arm_max:
             del_faces.append(f)
             continue
-        if min_z < z_hem:
+        if max_x <= 0.22 and min_z < z_hem:
             del_faces.append(f)
             continue
         if not flare_hips and min_z < crotch_z and max_x < 0.19 and min_z < z_hem + 0.02:
@@ -694,10 +694,11 @@ def build_top_template(avatar_data, variant="tshirt"):
 
     for v in bm.verts:
         v.co += v.normal * offset
-        if flare_hips and v.co.z < 0.92:
-            t_flare = min(1.0, max(0.0, (0.92 - v.co.z) / 0.35))
-            v.co.x += (0.025 * t_flare) * (1.0 if v.co.x > 0 else -1.0)
-            v.co.y += (0.015 * t_flare) * (1.0 if v.co.y > 0 else -1.0)
+        if flare_hips and v.co.z < 0.98:
+            t_flare = min(1.0, max(0.0, (0.98 - v.co.z) / 0.45))
+            s_flare = (1.0 - math.cos(t_flare * math.pi)) * 0.5
+            v.co.x += (0.018 * s_flare) * (1.0 if v.co.x > 0 else -1.0)
+            v.co.y += (0.012 * s_flare) * (1.0 if v.co.y > 0 else -1.0)
 
     temp_mesh = bpy.data.meshes.new(f"temp_top_{variant}_{gender}")
     bm.to_mesh(temp_mesh)
@@ -707,6 +708,8 @@ def build_top_template(avatar_data, variant="tshirt"):
     bpy.context.scene.collection.objects.link(temp_obj)
     mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
     mod.thickness = 0.0022
+    mod.use_even_offset = True
+    mod.use_quality_normals = True
     with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
         bpy.ops.object.modifier_apply(modifier=mod.name)
 
@@ -715,9 +718,8 @@ def build_top_template(avatar_data, variant="tshirt"):
     bpy.data.objects.remove(temp_obj, do_unlink=True)
     bpy.data.meshes.remove(temp_mesh)
 
-    bad_boundary = [e for e in bm_final.edges if not e.is_manifold and len(e.link_faces) <= 1]
-    if bad_boundary:
-        bmesh.ops.delete(bm_final, geom=bad_boundary, context='EDGES')
+        # Solidify modifier preserves clean manifold shell
+    pass
 
     verts = [v.co for v in bm_final.verts]
     min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)
@@ -818,7 +820,7 @@ def build_bottom_template(avatar_data, variant="trousers"):
         if max(zs) > z_waist:
             del_faces.append(f)
             continue
-        if min(zs) < z_hem:
+        if max(xs) <= 0.22 and min(zs) < z_hem:
             del_faces.append(f)
             continue
         # Exclude arms/hands hanging near hips
@@ -876,6 +878,8 @@ def build_bottom_template(avatar_data, variant="trousers"):
     bpy.context.scene.collection.objects.link(temp_obj)
     mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
     mod.thickness = 0.0022
+    mod.use_even_offset = True
+    mod.use_quality_normals = True
     with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
         bpy.ops.object.modifier_apply(modifier=mod.name)
 
@@ -884,9 +888,8 @@ def build_bottom_template(avatar_data, variant="trousers"):
     bpy.data.objects.remove(temp_obj, do_unlink=True)
     bpy.data.meshes.remove(temp_mesh)
 
-    bad_boundary = [e for e in bm_final.edges if not e.is_manifold and len(e.link_faces) <= 1]
-    if bad_boundary:
-        bmesh.ops.delete(bm_final, geom=bad_boundary, context='EDGES')
+        # Solidify modifier preserves clean manifold shell
+    pass
 
     verts = [v.co for v in bm_final.verts]
     min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)
@@ -1020,11 +1023,11 @@ def build_dress_template(avatar_data, variant="dress"):
     is_male = gender == "male"
     is_kaftan = variant == "kaftan"
 
-    z_neck = 1.48 if is_male else 1.38
+    z_neck = 1.54 if is_male else 1.440
     z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.52 if is_male else 0.48)
     sleeve_type = "long" if is_kaftan else "short"
-    x_arm_max = (0.415 if is_male else 0.382) if is_kaftan else (0.285 if is_male else 0.265)
-    offset = 0.015 if is_kaftan else 0.009
+    x_arm_max = (0.475 if is_male else 0.430) if is_kaftan else (0.315 if is_male else 0.280)
+    offset = 0.015 if is_kaftan else 0.010
 
     mw = avatar_obj.matrix_world
     bm = bmesh.new()
@@ -1050,7 +1053,7 @@ def build_dress_template(avatar_data, variant="dress"):
         if max(zs) > z_neck:
             del_faces.append(f)
             continue
-        if min(zs) < z_hem:
+        if max(xs) <= 0.22 and min(zs) < z_hem:
             del_faces.append(f)
             continue
         if max(xs) > x_arm_max:
@@ -1108,6 +1111,8 @@ def build_dress_template(avatar_data, variant="dress"):
     bpy.context.scene.collection.objects.link(temp_obj)
     mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
     mod.thickness = 0.0022
+    mod.use_even_offset = True
+    mod.use_quality_normals = True
     with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
         bpy.ops.object.modifier_apply(modifier=mod.name)
 
@@ -1116,9 +1121,8 @@ def build_dress_template(avatar_data, variant="dress"):
     bpy.data.objects.remove(temp_obj, do_unlink=True)
     bpy.data.meshes.remove(temp_mesh)
 
-    bad_boundary = [e for e in bm_final.edges if not e.is_manifold and len(e.link_faces) <= 1]
-    if bad_boundary:
-        bmesh.ops.delete(bm_final, geom=bad_boundary, context='EDGES')
+        # Solidify modifier preserves clean manifold shell
+    pass
 
     verts = [v.co for v in bm_final.verts]
     min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)

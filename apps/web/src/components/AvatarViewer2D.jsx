@@ -725,6 +725,24 @@ export function FittedGarmentLayer({
   const [imgDone, setImgDone] = useState(
     () => Boolean(effectiveUrl && loadedOnboardingImageCache.has(effectiveUrl))
   );
+  const [redrawCounter, setRedrawCounter] = useState(0);
+
+  // Redraw canvas whenever returning from 3D dressing room, window refocus, or visibility change
+  useEffect(() => {
+    const handleRedraw = () => {
+      setTimeout(() => {
+        setRedrawCounter((c) => c + 1);
+      }, 50);
+    };
+    window.addEventListener('dressapp:redraw2d', handleRedraw);
+    window.addEventListener('focus', handleRedraw);
+    document.addEventListener('visibilitychange', handleRedraw);
+    return () => {
+      window.removeEventListener('dressapp:redraw2d', handleRedraw);
+      window.removeEventListener('focus', handleRedraw);
+      document.removeEventListener('visibilitychange', handleRedraw);
+    };
+  }, []);
 
   const defaultSex = useMemo(
     () => avatarFit?.default_sex || (liveAnatomy?.isMale ? 'male' : 'female'),
@@ -884,7 +902,7 @@ export function FittedGarmentLayer({
         ctx.drawImage(activeImageSource, 0, sy, natW, sh, dx, dy, dw, dh);
       }
     }
-  }, [activeImageSource, activeAvatarFit, defaultAnatomy, liveAnatomy, layerEaseMultiplier, roleKey, hasOuterwear]);
+  }, [activeImageSource, activeAvatarFit, defaultAnatomy, liveAnatomy, layerEaseMultiplier, roleKey, hasOuterwear, redrawCounter]);
 
   const fallbackBox = useMemo(() => {
     const vb = activeAvatarFit?.default_viewbox || { x: 55, y: 75, width: 90, height: 150 };

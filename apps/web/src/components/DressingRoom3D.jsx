@@ -281,10 +281,21 @@ export default function DressingRoom3D({
       onOpenChange?.(val);
       if (!val) {
         onClose?.();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('dressapp:redraw2d'));
+        }
       }
     },
     [onOpenChange, onClose]
   );
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('dressapp:redraw2d'));
+      }
+    };
+  }, []);
 
   const { user } = useAuth?.() || {};
   const storedUser = user || userStore?.get?.() || EMPTY_OBJ;

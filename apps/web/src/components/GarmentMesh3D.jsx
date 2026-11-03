@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { buildAvatarMorphField, applyAvatarMorphsToGeometry } from '@/lib/avatarMorphField';
@@ -2809,56 +2809,7 @@ function GarmentTemplateMeshInner({
         geo.computeBoundingBox();
         const bb = geo.boundingBox;
         if (bb) {
-          // Adapt canonical upper-body template torso hem to shellFit.yBottom (e.g. longline tunic or crop top)
-          const targetYBottom = shellFit?.yBottom;
-          // Anchor at waist (1.02m / 0.96m) so shoulders, armpits, and sleeves remain completely untouched and continuous!
-          const yTorsoApex = isMale ? 1.02 : 0.96;
-          if (
-            ['top', 'outerwear', 'dress'].includes(rawSlot) &&
-            Number.isFinite(targetYBottom) &&
-            Math.abs(targetYBottom - bb.min.y) > 0.02 &&
-            yTorsoApex > bb.min.y + 0.05
-          ) {
-            const origSpan = yTorsoApex - bb.min.y;
-            const newSpan = yTorsoApex - targetYBottom;
-            for (let i = 0; i < pos.count; i++) {
-              const x = pos.getX(i);
-              const y = pos.getY(i);
-              const z = pos.getZ(i);
-              // GUARD: Only deform torso vertices! Sleeves have |x| > torso radius
-              const slRef = getTorsoSlice(Math.max(0.60, Math.min(1.40, y)), isMale);
-              const isTorso = Math.abs(x) <= ((slRef?.rx || 0.18) + 0.045);
-              if (!isTorso) continue;
-
-              if (y < yTorsoApex) {
-                const t = (yTorsoApex - y) / Math.max(1e-4, origSpan);
-                const yNew = yTorsoApex - t * newSpan;
-                let xNew = x;
-                let zNew = z;
-                if (yNew < 0.92) {
-                  const sl = getTorsoSlice(Math.max(0.60, yNew), isMale);
-                  const minRx = sl.rx + layerOffset + 0.012;
-                  const minRzFront = (sl.rzFront || sl.rz) + layerOffset + 0.012;
-                  const minRzBack = (sl.rzBack || sl.rz) + layerOffset + 0.012;
-                  const rad = Math.hypot(x, z - sl.cz);
-                  if (rad > 1e-4) {
-                    const cosA = x / rad;
-                    const sinA = (z - sl.cz) / rad;
-                    const minRz = z >= sl.cz ? minRzFront : minRzBack;
-                    const targetX = minRx * cosA;
-                    const targetZ = sl.cz + minRz * sinA;
-                    const tHip = Math.min(1, Math.max(0, (0.92 - yNew) / 0.16));
-                    xNew = x * (1 - tHip) + (Math.abs(targetX) > Math.abs(x) ? targetX : x) * tHip;
-                    zNew = z * (1 - tHip) + (Math.abs(targetZ - sl.cz) > Math.abs(z - sl.cz) ? targetZ : z) * tHip;
-                  }
-                }
-                pos.setXYZ(i, xNew, yNew, zNew);
-              }
-            }
-            pos.needsUpdate = true;
-            geo.computeBoundingBox();
-            geo.computeVertexNormals();
-          }
+          // Canonical templates retain their continuous, welded, pre-tailored Blender geometry.
 
           // Preserve authored GLB UVs; generate bounding-box fallback only if template geometry lacks UVs
           if (texture && !uv) {
@@ -3030,7 +2981,9 @@ export function GarmentTemplateMesh(props) {
 
   return (
     <GarmentTemplateErrorBoundary url={url} fallback={fallbackNode}>
-      <GarmentTemplateMeshInner {...props} url={url} />
+      <Suspense fallback={fallbackNode}>
+        <GarmentTemplateMeshInner {...props} url={url} />
+      </Suspense>
     </GarmentTemplateErrorBoundary>
   );
 }
@@ -3309,7 +3262,6 @@ export default function GarmentMesh3D({
   );
 
   const matchedTemplateId = useMemo(() => {
-    if (rawSlot === 'shoes' && !bypassSilhouette) return null;
     return resolveGarmentTemplate({
       rawSlot,
       garmentText,
@@ -3317,7 +3269,7 @@ export default function GarmentMesh3D({
       slot: slot || garment?.slot,
       category: garment?.category || garment?.rawItem?.category,
     });
-  }, [rawSlot, garmentText, aspect, slot, garment, bypassSilhouette]);
+  }, [rawSlot, garmentText, aspect, slot, garment]);
 
   // VRAM cleanup: dispose transient morphed and generated geometries on unmount / recompute
   useEffect(() => {
@@ -3344,8 +3296,31 @@ export default function GarmentMesh3D({
 
   const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText);
 
-  // 1. Primary for core clothing: Render the customized silhouette shell so garments keep their
-  //    authentic photographed cut, sleeves, lapels, waist, pockets, and photo texture.
+  // 1. Dedicated Canonical 3D Templates (Reproduced from Avatar Body via Blender):
+  //    Rendered in 3D Tailored mode (default) and whenever a canonical 3D template matches,
+  //    so garments wrap smoothly around the avatar with full 3D continuous volume (no flat razor-blade sheets).
+  if (matchedTemplateId && (!shellGeos || bypassSilhouette || isStandalone)) {
+    return (
+      <GarmentTemplateMesh
+        templateId={matchedTemplateId}
+        texture={filledTexture || opaqueTexture || texture}
+        backTexture={backTexture}
+        dominantColor={dominantColor}
+        pbrProps={pbrProps}
+        renderOrder={renderOrder}
+        morphField={morphField}
+        morphInfluences={morphInfluences}
+        rawSlot={rawSlot}
+        isMale={isMale}
+        layerOffset={shellFit?.layerOffset || 0}
+        shellFit={shellFit}
+        fallbackGeometry={geometry}
+        heelGeometry={heelGeometry}
+      />
+    );
+  }
+
+  // 2. Photo Cutout Silhouette Shell (when user explicitly selects photo cutout mode)
   if (isCoreClothing && shellGeos && texture && !bypassSilhouette) {
     const shellMaterialProps = {
       color: '#FFFFFF',
@@ -3373,9 +3348,6 @@ export default function GarmentMesh3D({
     );
   }
 
-  // 2. Canonical 3D Templates (Reproduced from Avatar Body via Blender):
-  //    Used when 3D Tailored mode (bypassSilhouette) is active, for accessories (hats, bags, belts, glasses),
-  //    or as fallback when no silhouette shell could be built.
   if (matchedTemplateId) {
     return (
       <GarmentTemplateMesh
