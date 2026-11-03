@@ -4139,6 +4139,48 @@ def test_two_tone_sweater_yoke_restoration_by_segformer():
     assert (arr_out[120:250, 250:550, 3] > 180).all(), "Yoke interior must be healed with solid alpha!"
 
 
+def test_two_tone_sweater_chest_gap_between_sleeves_healed():
+    """Verify that apply_alpha_intersection heals a light chest band between dark sleeves when rembg drops the chest."""
+    import io
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import numpy as np
+
+    H, W = 800, 800
+    arr = np.full((H, W, 4), 220, dtype=np.uint8)
+
+    # Rembg dropped the top yoke (y < 250) and dropped the white chest band (y=250..380 in center x=250..550)
+    arr[:250, :, 3] = 0
+    # Dark sleeves detected starting at y=250 on left and right
+    arr[250:600, 50:200, 3] = 255
+    arr[250:600, 600:750, 3] = 255
+    # Dark body detected starting at y=380 in center
+    arr[380:700, 200:600, 3] = 255
+
+    buf = io.BytesIO()
+    Image.fromarray(arr, "RGBA").save(buf, format="PNG")
+    rembg_matted = buf.getvalue()
+
+    # SegFormer detected the whole sweater including yoke (y=80..250) and chest (y=250..380)
+    seg_mask = np.zeros((H, W), dtype=np.uint8)
+    seg_mask[80:700, 200:600] = 255
+    seg_mask[250:600, 50:750] = 255
+
+    refined_bytes = apply_alpha_intersection(
+        rembg_matted,
+        seg_mask,
+        category="top",
+        label="sweater",
+        is_single_item=True,
+    )
+    arr_out = np.array(Image.open(io.BytesIO(refined_bytes)))
+
+    # Verify that the chest center at y=300..360, x=300..500 is NOT missing (healed with solid alpha!)
+    chest_patch = arr_out[300:360, 300:500, 3]
+    assert (chest_patch > 180).all(), f"Chest band has missing piece! Min alpha: {chest_patch.min()}"
+
+
+
 
 
 

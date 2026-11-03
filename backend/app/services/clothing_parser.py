@@ -2827,11 +2827,25 @@ def apply_alpha_intersection(
                 alpha_top = int(alpha_rows.min())
                 g_h = max(1, int(seg_rows.max()) - seg_top)
                 if alpha_top > seg_top + max(25, int(0.06 * g_h)):
-                    upper_dropout = garment_core & (np.arange(Hc)[:, None] < alpha_top)
+                    # In tops, outerwear, and dresses, dark sleeves may register in rembg higher than a light
+                    # chest/yoke band. Check where the central torso/chest actually starts in rembg so the entire
+                    # light chest band is restored along with the collar/yoke:
+                    dropout_end_y = alpha_top
+                    if norm_cat in {"top", "outerwear", "dress"}:
+                        seg_cols = np.where(garment_core)[1]
+                        c_x = float(seg_cols.mean()) if len(seg_cols) > 0 else (Wc / 2.0)
+                        g_w = max(1, int(seg_cols.max()) - int(seg_cols.min())) if len(seg_cols) > 0 else Wc
+                        center_torso = np.abs(np.arange(Wc) - c_x) <= (0.20 * g_w)
+                        torso_rembg_ys = np.where((new_alpha > 20) & center_torso[None, :])[0]
+                        if len(torso_rembg_ys) > 0:
+                            torso_alpha_top = int(torso_rembg_ys.min())
+                            dropout_end_y = max(alpha_top, torso_alpha_top)
+
+                    upper_dropout = garment_core & (np.arange(Hc)[:, None] < dropout_end_y)
                     effective_core = effective_core | upper_dropout
                     logger.info(
                         "apply_alpha_intersection: restored %d px of upper garment dropout (y=%d..%d)",
-                        int(upper_dropout.sum()), seg_top, alpha_top,
+                        int(upper_dropout.sum()), seg_top, dropout_end_y,
                     )
         else:
             effective_core = garment_core
