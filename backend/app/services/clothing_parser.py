@@ -2783,13 +2783,29 @@ def apply_alpha_intersection(
             )
             filled = closed if is_multi_segment else ndimage.binary_fill_holes(closed)
             
-            filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
             if is_single_item:
                 env_dilate = max(14, int(0.06 * min(Hc, Wc)))
             else:
                 env_dilate = 2 if (is_eyewear or is_footwear or is_acc) else dilate_px
+
             if env_dilate > 0:
-                filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * env_dilate + 1))
+                max_dim = max(Hc, Wc)
+                if max_dim > 320:
+                    scale = 256.0 / max_dim
+                    sw, sh = max(1, int(Wc * scale)), max(1, int(Hc * scale))
+                    small_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L").resize(
+                        (sw, sh), Image.Resampling.NEAREST
+                    )
+                    sd = max(1, int(round(env_dilate * scale)))
+                    small_dilated = small_im.filter(ImageFilter.MaxFilter(2 * sd + 1))
+                    filled_im = small_dilated.resize((Wc, Hc), Image.Resampling.BILINEAR)
+                else:
+                    filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L").filter(
+                        ImageFilter.MaxFilter(2 * env_dilate + 1)
+                    )
+            else:
+                filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
+
             blur_r = 1.5 if (is_eyewear or is_footwear or is_acc) else 3.0
             filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=blur_r))
             soft_envelope = np.array(filled_im).astype(float) / 255.0

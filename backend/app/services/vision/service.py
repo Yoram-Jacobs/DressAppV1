@@ -1437,67 +1437,65 @@ class GarmentVisionService:
                     dt,
                     len(result),
                 )
-                try:
-                    from app.services.background_matting import drop_disconnected_islands, strip_hanger_hook
-                    result = drop_disconnected_islands(result, min_area_ratio=0.05)
-
-                    # Only strip hanger hook if rembg detected from near the true top of the garment.
-                    # If SegFormer detected the garment starting significantly above rembg's y_min,
-                    # rembg suffered a salience dropout on the upper garment (e.g. light yoke on bedsheet)
-                    # — do NOT treat the middle of the garment as a hanger hook!
-                    should_strip_hook = True
-                    if detections:
-                        garment_top_y = None
-                        for d in detections:
-                            bb = d.get("bbox")
-                            if bb and len(bb) >= 4:
-                                garment_top_y = bb[0] if garment_top_y is None else min(garment_top_y, bb[0])
-                        if garment_top_y is not None:
-                            arr_chk = np.array(Image.open(io.BytesIO(result) if isinstance(result, (bytes, bytearray)) else result))
-                            solid_ys = np.where(arr_chk[:, :, 3] >= 32)[0]
-                            if len(solid_ys) > 0 and int(solid_ys.min()) > garment_top_y + 25:
-                                should_strip_hook = False
-                                logger.info(
-                                    "already-cropped matte: rembg y_min=%d is below SegFormer top_y=%d (upper dropout), skipping strip_hanger_hook",
-                                    int(solid_ys.min()), garment_top_y,
-                                )
-
-                    if should_strip_hook:
-                        result = strip_hanger_hook(result)
-                except Exception as exc:
-                    logger.debug("_whole_image_matte island filter failed: %s", exc)
-
-                # Heal interior dropouts (e.g. bitten sleeves / light fabric folds on white backgrounds)
-                # using SegFormer mask if available in detections
-                if detections:
+                def _postprocess_whole_matte(res_b: bytes) -> bytes:
                     try:
-                        best_det = max(
-                            detections,
-                            key=lambda d: (
-                                max(0, d.get("bbox", [0, 0, 0, 0])[2] - d.get("bbox", [0, 0, 0, 0])[0])
-                                * max(0, d.get("bbox", [0, 0, 0, 0])[3] - d.get("bbox", [0, 0, 0, 0])[1])
-                            ),
-                        )
-                        seg_mask = best_det.get("mask") if best_det.get("mask") is not None else best_det.get("_mask_bbox")
-                        if seg_mask is not None and bool(seg_mask.any()):
-                            from app.services import clothing_parser as _cp
-                            h_mask = best_det.get("_human_mask_full") if best_det.get("_human_mask_full") is not None else (best_det.get("_human_mask_bbox") if best_det.get("_human_mask_bbox") is not None else best_det.get("_global_human_mask"))
-                            refined = _cp.apply_alpha_intersection(
-                                result,
-                                seg_mask,
-                                category=best_det.get("category") or best_det.get("kind"),
-                                label=best_det.get("label"),
-                                human_mask=h_mask,
-                                is_single_item=True,
-                            )
-                            if refined:
-                                result = refined
-                                logger.info(
-                                    "already-cropped matte: SegFormer healed interior dropouts for %s",
-                                    best_det.get("label"),
-                                )
+                        from app.services.background_matting import drop_disconnected_islands, strip_hanger_hook
+                        res_b = drop_disconnected_islands(res_b, min_area_ratio=0.05)
+
+                        should_strip_hook = True
+                        if detections:
+                            garment_top_y = None
+                            for d in detections:
+                                bb = d.get("bbox")
+                                if bb and len(bb) >= 4:
+                                    garment_top_y = bb[0] if garment_top_y is None else min(garment_top_y, bb[0])
+                            if garment_top_y is not None:
+                                arr_chk = np.array(Image.open(io.BytesIO(res_b) if isinstance(res_b, (bytes, bytearray)) else res_b))
+                                solid_ys = np.where(arr_chk[:, :, 3] >= 32)[0]
+                                if len(solid_ys) > 0 and int(solid_ys.min()) > garment_top_y + 25:
+                                    should_strip_hook = False
+                                    logger.info(
+                                        "already-cropped matte: rembg y_min=%d is below SegFormer top_y=%d (upper dropout), skipping strip_hanger_hook",
+                                        int(solid_ys.min()), garment_top_y,
+                                    )
+
+                        if should_strip_hook:
+                            res_b = strip_hanger_hook(res_b)
                     except Exception as exc:
-                        logger.debug("_whole_image_matte SegFormer heal failed: %s", exc)
+                        logger.debug("_whole_image_matte island filter failed: %s", exc)
+
+                    if detections:
+                        try:
+                            best_det = max(
+                                detections,
+                                key=lambda d: (
+                                    max(0, d.get("bbox", [0, 0, 0, 0])[2] - d.get("bbox", [0, 0, 0, 0])[0])
+                                    * max(0, d.get("bbox", [0, 0, 0, 0])[3] - d.get("bbox", [0, 0, 0, 0])[1])
+                                ),
+                            )
+                            seg_mask = best_det.get("mask") if best_det.get("mask") is not None else best_det.get("_mask_bbox")
+                            if seg_mask is not None and bool(seg_mask.any()):
+                                from app.services import clothing_parser as _cp
+                                h_mask = best_det.get("_human_mask_full") if best_det.get("_human_mask_full") is not None else (best_det.get("_human_mask_bbox") if best_det.get("_human_mask_bbox") is not None else best_det.get("_global_human_mask"))
+                                refined = _cp.apply_alpha_intersection(
+                                    res_b,
+                                    seg_mask,
+                                    category=best_det.get("category") or best_det.get("kind"),
+                                    label=best_det.get("label"),
+                                    human_mask=h_mask,
+                                    is_single_item=True,
+                                )
+                                if refined:
+                                    res_b = refined
+                                    logger.info(
+                                        "already-cropped matte: SegFormer healed interior dropouts for %s",
+                                        best_det.get("label"),
+                                    )
+                        except Exception as exc:
+                            logger.debug("_whole_image_matte SegFormer heal failed: %s", exc)
+                    return res_b
+
+                result = await asyncio.to_thread(_postprocess_whole_matte, result)
             else:
                 logger.warning(
                     "already-cropped matte: rembg returned None after %.1fs "
