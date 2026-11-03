@@ -185,9 +185,10 @@ def strip_hanger_hook(image_rgba: Image.Image | bytes) -> Image.Image | bytes:
     y_indices, x_indices = np.where(solid)
     y_min = int(y_indices.min())
 
-    max_scan_y = min(Hc, y_min + int(Hc * 0.40))
-    narrow_threshold = max(45, int(Wc * 0.12))
+    max_scan_y = min(Hc, y_min + int(Hc * 0.35))
+    narrow_threshold = min(35, max(15, int(Wc * 0.05)))
     shoulder_y = None
+    hook_rows_x: list[tuple[int, int]] = []
 
     for y in range(y_min, max_scan_y):
         xs = np.where(solid[y, :])[0]
@@ -195,27 +196,36 @@ def strip_hanger_hook(image_rgba: Image.Image | bytes) -> Image.Image | bytes:
             continue
         w = int(xs[-1] - xs[0] + 1)
         x_center = float(xs[-1] + xs[0]) / 2.0
-        if w >= max(80, int(Wc * 0.20)) and (0.15 * Wc <= x_center <= 0.85 * Wc):
+        # If row width exceeds narrow threshold or is broad, we have reached garment shoulders/collar
+        if w > narrow_threshold or w >= max(50, int(Wc * 0.10)):
             shoulder_y = y
             break
-        if w > narrow_threshold:
-            shoulder_y = y
-            break
+        if 0.25 * Wc <= x_center <= 0.75 * Wc:
+            hook_rows_x.append((int(xs[0]), int(xs[-1])))
 
-    if shoulder_y is not None and shoulder_y > y_min + 8:
-        hook_mask = np.zeros_like(solid, dtype=bool)
-        hook_mask[max(0, y_min - 2):max(0, shoulder_y - 2), int(0.15 * Wc):int(0.85 * Wc)] = True
-        arr[:, :, 3] = np.where(hook_mask, 0, arr[:, :, 3])
-        cleaned = Image.fromarray(arr, "RGBA")
-        logger.info(
-            "strip_hanger_hook: stripped hanger hook above shoulder y=%d (y_min=%d)",
-            shoulder_y, y_min,
-        )
-        if is_bytes:
-            buf = io.BytesIO()
-            cleaned.save(buf, format="PNG", optimize=True)
-            return buf.getvalue()
-        return cleaned
+    # Must be a true vertical hook stalk (at least 8 rows tall, average width <= narrow_threshold)
+    if shoulder_y is not None and shoulder_y > y_min + 8 and hook_rows_x:
+        widths = [x1 - x0 + 1 for x0, x1 in hook_rows_x]
+        avg_w = float(np.mean(widths))
+        if avg_w <= narrow_threshold:
+            min_hx = max(0, min(x0 for x0, x1 in hook_rows_x) - 4)
+            max_hx = min(Wc, max(x1 for x0, x1 in hook_rows_x) + 5)
+            arr[max(0, y_min - 2):max(0, shoulder_y - 2), min_hx:max_hx, 3] = 0
+            cleaned = Image.fromarray(arr, "RGBA")
+            logger.info(
+                "strip_hanger_hook: stripped hanger hook stalk above shoulder y=%d (y_min=%d, avg_w=%.1f, cols %d..%d)",
+                shoulder_y, y_min, avg_w, min_hx, max_hx,
+            )
+            if is_bytes:
+                buf = io.BytesIO()
+                cleaned.save(buf, format="PNG", optimize=True)
+                return buf.getvalue()
+            return cleaned
+        else:
+            logger.debug(
+                "strip_hanger_hook: candidate stalk avg_w=%.1f > %d, keeping fabric",
+                avg_w, narrow_threshold,
+            )
 
     return image_rgba
 

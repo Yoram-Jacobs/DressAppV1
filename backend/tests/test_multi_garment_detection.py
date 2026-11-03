@@ -4066,6 +4066,80 @@ def test_mini_skirt_never_absorbs_boot_shaft_from_hallucinated_pants():
     assert right_leg_shaft.sum() > 0, "Shoes did not receive the right boot shaft from pants!"
 
 
+def test_strip_hanger_hook_rejects_broad_garment_apex():
+    """Verify that strip_hanger_hook does not slice the top of a garment whose apex is broad fabric."""
+    import io
+    from app.services.background_matting import strip_hanger_hook
+    from PIL import Image
+    import numpy as np
+
+    # Synthetic image 500x500
+    H, W = 500, 500
+    arr = np.zeros((H, W, 4), dtype=np.uint8)
+    arr[:, :, :3] = 128  # grey fabric
+
+    # Fabric starting at y=100 with width 60px (widening to 300px at y=150)
+    for y in range(100, 400):
+        w = int(60 + (y - 100) * 4.8)
+        w = min(w, 400)
+        x_start = (W - w) // 2
+        arr[y, x_start:x_start + w, 3] = 255
+
+    buf = io.BytesIO()
+    Image.fromarray(arr, "RGBA").save(buf, format="PNG")
+    cleaned_bytes = strip_hanger_hook(buf.getvalue())
+    arr_out = np.array(Image.open(io.BytesIO(cleaned_bytes)))
+
+    # Since average width at top is > 35px, it must NOT be stripped as a hook!
+    solid_ys = np.where(arr_out[:, :, 3] >= 32)[0]
+    assert len(solid_ys) > 0
+    assert solid_ys.min() == 100, f"Expected top y=100 preserved, got {solid_ys.min()}"
+
+
+def test_two_tone_sweater_yoke_restoration_by_segformer():
+    """Verify that apply_alpha_intersection heals a missing light yoke/collar when rembg drops it."""
+    import io
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import numpy as np
+
+    H, W = 800, 800
+    arr = np.full((H, W, 4), 220, dtype=np.uint8)  # light beige/grey sweater
+
+    # Rembg only detected the lower dark body starting at y=300 to y=700
+    arr[:300, :, 3] = 0
+    arr[300:700, 150:650, 3] = 255
+    arr[700:, :, 3] = 0
+
+    buf = io.BytesIO()
+    Image.fromarray(arr, "RGBA").save(buf, format="PNG")
+    rembg_matted = buf.getvalue()
+
+    # SegFormer correctly detected the ENTIRE sweater from y=80 to y=700
+    seg_mask = np.zeros((H, W), dtype=np.uint8)
+    # Yoke / collar: y=80..300, x=200..600
+    seg_mask[80:300, 200:600] = 255
+    # Lower body: y=300..700, x=150..650
+    seg_mask[300:700, 150:650] = 255
+
+    refined_bytes = apply_alpha_intersection(
+        rembg_matted,
+        seg_mask,
+        category="top",
+        label="sweater",
+        is_single_item=True,
+    )
+    arr_out = np.array(Image.open(io.BytesIO(refined_bytes)))
+    solid_ys = np.where(arr_out[:, :, 3] >= 32)[0]
+
+    assert len(solid_ys) > 0
+    # The restored sweater top must extend up to near SegFormer's apex y=80 (allowing erosion/feather)
+    assert solid_ys.min() <= 90, f"Expected healed top yoke y <= 90, got {solid_ys.min()}"
+    # Verify the yoke has strong alpha
+    assert (arr_out[120:250, 250:550, 3] > 180).all(), "Yoke interior must be healed with solid alpha!"
+
+
+
 
 
 

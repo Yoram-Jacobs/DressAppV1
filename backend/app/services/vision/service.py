@@ -1440,7 +1440,30 @@ class GarmentVisionService:
                 try:
                     from app.services.background_matting import drop_disconnected_islands, strip_hanger_hook
                     result = drop_disconnected_islands(result, min_area_ratio=0.05)
-                    result = strip_hanger_hook(result)
+
+                    # Only strip hanger hook if rembg detected from near the true top of the garment.
+                    # If SegFormer detected the garment starting significantly above rembg's y_min,
+                    # rembg suffered a salience dropout on the upper garment (e.g. light yoke on bedsheet)
+                    # — do NOT treat the middle of the garment as a hanger hook!
+                    should_strip_hook = True
+                    if detections:
+                        garment_top_y = None
+                        for d in detections:
+                            bb = d.get("bbox")
+                            if bb and len(bb) >= 4:
+                                garment_top_y = bb[0] if garment_top_y is None else min(garment_top_y, bb[0])
+                        if garment_top_y is not None:
+                            arr_chk = np.array(Image.open(io.BytesIO(result) if isinstance(result, (bytes, bytearray)) else result))
+                            solid_ys = np.where(arr_chk[:, :, 3] >= 32)[0]
+                            if len(solid_ys) > 0 and int(solid_ys.min()) > garment_top_y + 25:
+                                should_strip_hook = False
+                                logger.info(
+                                    "already-cropped matte: rembg y_min=%d is below SegFormer top_y=%d (upper dropout), skipping strip_hanger_hook",
+                                    int(solid_ys.min()), garment_top_y,
+                                )
+
+                    if should_strip_hook:
+                        result = strip_hanger_hook(result)
                 except Exception as exc:
                     logger.debug("_whole_image_matte island filter failed: %s", exc)
 

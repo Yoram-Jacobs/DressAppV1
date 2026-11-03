@@ -2813,12 +2813,29 @@ def apply_alpha_intersection(
     # must never be bitten away by background matting salience dropouts!
     # To prevent staircases and sharp cliffs, we smoothly feather the interior core mask with Gaussian blur.
     if garment_core is not None and garment_core.any():
+        from scipy import ndimage
         if is_single_item:
-            from scipy import ndimage
             filled_alpha = ndimage.binary_fill_holes(new_alpha > 20)
             effective_core = garment_core & filled_alpha
+
+            # Check for upper dropout where rembg missed the top of the garment
+            # (e.g. light Fair-Isle sweater yoke / white collar on beige bedding)
+            seg_rows = np.where(garment_core)[0]
+            alpha_rows = np.where(new_alpha > 20)[0]
+            if len(seg_rows) > 0 and len(alpha_rows) > 0:
+                seg_top = int(seg_rows.min())
+                alpha_top = int(alpha_rows.min())
+                g_h = max(1, int(seg_rows.max()) - seg_top)
+                if alpha_top > seg_top + max(25, int(0.06 * g_h)):
+                    upper_dropout = garment_core & (np.arange(Hc)[:, None] < alpha_top)
+                    effective_core = effective_core | upper_dropout
+                    logger.info(
+                        "apply_alpha_intersection: restored %d px of upper garment dropout (y=%d..%d)",
+                        int(upper_dropout.sum()), seg_top, alpha_top,
+                    )
         else:
             effective_core = garment_core
+
         core_u8 = (effective_core * 255).astype(np.uint8)
         if norm_cat in {"top", "outerwear", "dress"}:
             # Preserve crew-neck collar opening at top-center of tops if transparent in input
@@ -2830,10 +2847,18 @@ def apply_alpha_intersection(
                 g_h = max(1, b_y - t_y)
                 g_w = max(1, r_x - l_x)
                 c_x = (l_x + r_x) / 2.0
+
+                # A true collar opening must be flanked by solid fabric on both shoulders.
+                # If a row has no alpha on either side, it is an upper dropout, NOT a collar opening!
+                row_has_both_sides = (
+                    (new_alpha[:, :int(c_x)] > 20).any(axis=1) &
+                    (new_alpha[:, int(c_x):] > 20).any(axis=1)
+                )
                 y_idx, x_idx = np.indices((Hc, Wc))
                 is_collar_zone = (
-                    (y_idx >= t_y) & (y_idx <= t_y + 0.35 * g_h) &
-                    (np.abs(x_idx - c_x) <= 0.25 * g_w)
+                    (y_idx >= t_y) & (y_idx <= t_y + int(0.35 * g_h)) &
+                    (np.abs(x_idx - c_x) <= 0.25 * g_w) &
+                    row_has_both_sides[:, None]
                 )
                 core_u8 = np.where(is_collar_zone & (new_alpha == 0), np.uint8(0), core_u8)
 
