@@ -2936,8 +2936,8 @@ function GarmentTemplateMeshInner({
       side: THREE.DoubleSide,
       depthWrite: true,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
     };
     const frontMat = new THREE.MeshStandardMaterial({
       ...baseProps,
@@ -3357,8 +3357,8 @@ export default function GarmentMesh3D({
       envMapIntensity: pbrProps.envMapIntensity,
       alphaToCoverage: false,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
     };
     return (
       <>
@@ -3409,8 +3409,8 @@ export default function GarmentMesh3D({
       envMapIntensity: pbrProps.envMapIntensity,
       alphaToCoverage: false,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -4 : (rawSlot === 'bottom' ? 2 : -1),
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
     };
     return (
       <>

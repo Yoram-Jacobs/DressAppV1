@@ -1039,7 +1039,7 @@ export function buildSilhouetteShell({
               const tWtoH = smoothstep01((yWaistBody - y) / Math.max(1e-3, yWaistBody - yHips));
               minTrunkHalf = waistHalf * (1 - tWtoH) + hipHalf * tWtoH;
             } else {
-              const flareBelowHip = (yHips - y) * 0.28;
+              const flareBelowHip = (yHips - y) * 0.38;
               minTrunkHalf = hipHalf + flareBelowHip;
             }
           } else {
@@ -1068,7 +1068,7 @@ export function buildSilhouetteShell({
           const tWtoH = smoothstep01((yWaistBody - y) / Math.max(1e-3, yWaistBody - yHips));
           minTrunkHalf = waistHalf * (1 - tWtoH) + hipHalf * tWtoH;
         } else {
-          minTrunkHalf = hipHalf + (yHips - y) * 0.26;
+          minTrunkHalf = hipHalf + (yHips - y) * 0.38;
         }
         if (trunkHalfWorld < minTrunkHalf) {
           const trunkMid = (run[0] + run[1]) * 0.5;
@@ -1875,80 +1875,30 @@ export function synthesizeBackFabricData(data, w, h) {
       }
     }
 
-    // 2b. Dump front pockets (hip slash pockets, patch pockets, cargo pockets, kangaroo pockets),
-    // belt loops, rivets, and fine front stitching/details across the interior when flanks are uniform/horizontally striped
-    if (sigma < 22) {
-      const pStart = Math.floor(0.08 * span);
-      const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
-      if (pEnd > pStart + 2) {
-        const fineThreshold = Math.max(7, sigma * 1.15);
-        for (let i = pStart + 1; i < pEnd; i++) {
-          const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
-          if (diffBase[i] > fineThreshold || prevDiff > Math.max(9, sigma * 1.3)) {
-            let synR = baseR[i];
-            let synG = baseG[i];
-            let synB = baseB[i];
-            if (grainSrc.length > 0) {
-              const gSample = grainSrc[i % grainSrc.length];
-              synR = Math.max(0, Math.min(255, synR + (gSample[0] - midR) * 0.65));
-              synG = Math.max(0, Math.min(255, synG + (gSample[1] - midG) * 0.65));
-              synB = Math.max(0, Math.min(255, synB + (gSample[2] - midB) * 0.65));
-            }
-            curR[i] = synR;
-            curG[i] = synG;
-            curB[i] = synB;
-            diffBase[i] = 0;
+    // 2b. Unconditionally eliminate all front-view details: double-breasted buttons, zippers,
+    // zipper pulls, breast pockets, kangaroo/patch pockets, chest graphics, lettering, and plackets
+    // across the entire interior torso (u_rel in [0.08, 0.92]).
+    const pStart = Math.floor(0.08 * span);
+    const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
+    if (pEnd > pStart + 2) {
+      const fineThreshold = Math.max(4.0, Math.min(10.0, sigma * 0.85));
+      for (let i = pStart + 1; i < pEnd; i++) {
+        const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
+        if (diffBase[i] > fineThreshold || prevDiff > Math.max(6.0, sigma * 0.95)) {
+          let synR = baseR[i];
+          let synG = baseG[i];
+          let synB = baseB[i];
+          if (grainSrc.length > 0) {
+            const gSample = grainSrc[i % grainSrc.length];
+            synR = Math.max(0, Math.min(255, synR + (gSample[0] - midR) * 0.55));
+            synG = Math.max(0, Math.min(255, synG + (gSample[1] - midG) * 0.55));
+            synB = Math.max(0, Math.min(255, synB + (gSample[2] - midB) * 0.55));
           }
+          curR[i] = synR;
+          curG[i] = synG;
+          curB[i] = synB;
+          diffBase[i] = 0;
         }
-      }
-    }
-
-    // 3. Inpaint remaining graphic prints & fine front details (contiguous anomalies in torso u_rel in [0.12, 0.88])
-    const torsoStart = Math.floor(0.12 * span);
-    const torsoEnd = Math.min(span - 1, Math.ceil(0.88 * span));
-    let inRun = false;
-    let runStart = 0;
-    const runsToInpaint = [];
-    for (let i = torsoStart; i <= torsoEnd; i++) {
-      const isAnomaly = diffBase[i] > tol;
-      if (isAnomaly && !inRun) {
-        inRun = true;
-        runStart = i;
-      } else if (!isAnomaly && inRun) {
-        runsToInpaint.push([runStart, i - 1]);
-        inRun = false;
-      }
-    }
-    if (inRun) {
-      runsToInpaint.push([runStart, torsoEnd]);
-    }
-
-    for (const [rStartIdx, rEndIdx] of runsToInpaint) {
-      const bLeft = Math.max(0, rStartIdx - 1);
-      const bRight = Math.min(span - 1, rEndIdx + 1);
-      const blR = curR[bLeft], blG = curG[bLeft], blB = curB[bLeft];
-      const brR = curR[bRight], brG = curG[bRight], brB = curB[bRight];
-      const runLen = rEndIdx - rStartIdx + 1;
-      for (let k = 0; k < runLen; k++) {
-        const idx = rStartIdx + k;
-        const t = (k + 1) / (runLen + 1);
-        let synR = (1 - t) * blR + t * brR;
-        let synG = (1 - t) * blG + t * brG;
-        let synB = (1 - t) * blB + t * brB;
-
-        if (grainSrc.length > 0) {
-          const gSample = grainSrc[idx % grainSrc.length];
-          const gdr = gSample[0] - midR;
-          const gdg = gSample[1] - midG;
-          const gdb = gSample[2] - midB;
-          synR = Math.max(0, Math.min(255, synR + gdr * 0.65));
-          synG = Math.max(0, Math.min(255, synG + gdg * 0.65));
-          synB = Math.max(0, Math.min(255, synB + gdb * 0.65));
-        }
-
-        curR[idx] = synR;
-        curG[idx] = synG;
-        curB[idx] = synB;
       }
     }
 

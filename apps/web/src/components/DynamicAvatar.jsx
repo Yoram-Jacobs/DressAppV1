@@ -20,6 +20,8 @@ const slotReleaseSubscribers = new Set();
 let activeWebGLCanvasCount = 0;
 const MAX_CONCURRENT_WEBGL_CANVASES = 2;
 
+export const clamp01 = (v, max = 1.35) => Math.max(0, Math.min(max, Number(v) || 0));
+
 /**
  * Checks if the WebGL canvas has drawn non-transparent pixels at the center of the frame.
  * Prevents blank transparent frames from being captured as snapshots.

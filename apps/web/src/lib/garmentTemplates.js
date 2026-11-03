@@ -10,21 +10,34 @@ export const AVAILABLE_TEMPLATES = [
   'tshirt',
   'shirt',
   'hoodie',
-  'trench_coat',
-  'cardigan',
+  'top_outerwear_jacket',
+  'jacket',
   'jacket_blazer',
+  'cardigan',
+  'vest',
+  'coat',
+  'trench_coat',
   'kaftan',
+  'dress',
   'pants',
+  'bottom_trousers',
   'shorts',
+  'bottom_shorts',
   'bermuda',
+  'skirt',
+  'bottom_skirt',
   'skirt_aline',
   'skirt_pencil',
-  'dress',
+  'hat',
   'hat_cap',
   'hat_fedora',
+  'bag',
   'bag_handbag',
   'bag_crossbody',
   'belt',
+  'shoes_sneakers',
+  'shoes_boots',
+  'accessory_glasses',
 ];
 
 export const CANONICAL_TEMPLATES = [
@@ -44,35 +57,42 @@ export const CANONICAL_TEMPLATES = [
 ];
 
 export const CANONICAL_TEMPLATE_MAP = {
-  singlet: 'top_tshirt',
+  singlet: 'singlet',
+  tank: 'singlet',
   tshirt: 'top_tshirt',
   top_tshirt: 'top_tshirt',
   shirt: 'top_longsleeve',
-  hoodie: 'top_longsleeve',
+  hoodie: 'hoodie',
   top_longsleeve: 'top_longsleeve',
-  trench_coat: 'top_outerwear_jacket',
-  cardigan: 'top_outerwear_jacket',
-  jacket_blazer: 'top_outerwear_jacket',
   top_outerwear_jacket: 'top_outerwear_jacket',
-  kaftan: 'dress',
+  jacket: 'top_outerwear_jacket',
+  jacket_blazer: 'jacket_blazer',
+  cardigan: 'cardigan',
+  vest: 'vest',
+  coat: 'coat',
+  trench_coat: 'trench_coat',
+  kaftan: 'kaftan',
+  dress: 'dress',
   pants: 'bottom_trousers',
   bottom_trousers: 'bottom_trousers',
   shorts: 'bottom_shorts',
-  bermuda: 'bottom_shorts',
   bottom_shorts: 'bottom_shorts',
-  skirt_aline: 'bottom_skirt',
-  skirt_pencil: 'bottom_skirt',
-  dress: 'dress',
+  bermuda: 'bermuda',
+  skirt: 'bottom_skirt',
   bottom_skirt: 'bottom_skirt',
+  skirt_aline: 'bottom_skirt',
+  skirt_pencil: 'skirt_pencil',
   sneakers: 'shoes_sneakers',
   shoes_sneakers: 'shoes_sneakers',
   boots: 'shoes_boots',
   shoes_boots: 'shoes_boots',
+  hat: 'accessory_hat',
   hat_cap: 'accessory_hat',
   hat_fedora: 'accessory_hat',
   accessory_hat: 'accessory_hat',
   glasses: 'accessory_glasses',
   accessory_glasses: 'accessory_glasses',
+  bag: 'accessory_crossbody_bag',
   bag_handbag: 'accessory_crossbody_bag',
   bag_crossbody: 'accessory_crossbody_bag',
   accessory_crossbody_bag: 'accessory_crossbody_bag',
@@ -132,10 +152,15 @@ export function resolveGarmentTemplate({
 
   // 3. OUTERWEAR
   if (rawSlot === 'outerwear') {
+    if (has('trench', 'טרנץ', "טרנץ'")) return 'trench_coat';
     if (has('cardigan', 'קרדיגן')) return 'cardigan';
+    if (has('vest', 'וסט', 'אפודה')) return 'vest';
     if (has('blazer', 'suit', 'בלייזר', 'מקטורן')) return 'jacket_blazer';
-    if (has('trench', 'overcoat', 'coat', 'parka', 'duster', 'raincoat', 'טרנץ', "טרנץ'", 'מעיל', 'מנטו')) return 'trench_coat';
-    return aspect <= 0.85 ? 'trench_coat' : 'jacket_blazer';
+    if (has('overcoat', 'coat', 'מעיל', 'מנטו', 'cappotto', 'abrigo', 'mantel', 'пальто', 'duster', 'parka')) {
+      return aspect <= 0.78 ? 'trench_coat' : 'coat';
+    }
+    if (has('jacket', 'זקט', 'גקט')) return 'top_outerwear_jacket';
+    return aspect <= 0.82 ? 'trench_coat' : 'top_outerwear_jacket';
   }
 
   // 4. DRESS

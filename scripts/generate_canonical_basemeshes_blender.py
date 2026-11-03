@@ -531,30 +531,93 @@ def build_top_template(avatar_data, variant="tshirt"):
     Reproduces upper-body canonical template directly from avatar torso & 27-deg A-pose arms:
       - variant='tshirt': top_tshirt.glb (Crewneck short sleeve, +0.004m offset)
       - variant='longsleeve': top_longsleeve.glb (Long sleeve fitted shirt, +0.005m offset)
-      - variant='jacket': top_outerwear_jacket.glb (Open-front cardigan/jacket, +0.016m offset)
+      - variant='singlet': singlet.glb / tank.glb (Sleeveless tank top, +0.004m offset)
+      - variant='hoodie': hoodie.glb (Relaxed fit hoodie, +0.012m offset)
+      - variant='jacket'/'top_outerwear_jacket': top_outerwear_jacket.glb (Open-front jacket, +0.016m offset)
+      - variant='jacket_blazer': jacket_blazer.glb (Tailored structured blazer, +0.016m offset)
+      - variant='cardigan': cardigan.glb (Soft open knit cardigan, +0.014m offset)
+      - variant='vest': vest.glb (Sleeveless outerwear vest, +0.016m offset)
+      - variant='coat': coat.glb (Tailored wool overcoat, +0.018m offset)
+      - variant='trench_coat': trench_coat.glb (Classic A-line knee-length belted trench coat, +0.018m offset)
     Features balanced quad topology, bilateral symmetry, and planar front/back UVs in [0, 1] x [0, 1].
     """
     gender = avatar_data["gender"]
     verts = avatar_data["verts"]
     is_male = gender == "male"
 
+    is_open_front = False
+    is_trench = variant == "trench_coat"
+    is_coat = variant == "coat"
+    is_cardigan = variant == "cardigan"
+    is_blazer = variant == "jacket_blazer"
+    is_vest = variant == "vest"
+    is_singlet = variant == "singlet"
+    is_hoodie = variant == "hoodie"
+
     if variant == "tshirt":
         offset = 0.0045
         z_top = 1.50 if is_male else 1.40
         z_bottom = 0.88 if is_male else 0.84
         sleeve_frac = 0.38
+    elif variant == "singlet":
+        offset = 0.0040
+        z_top = 1.48 if is_male else 1.38
+        z_bottom = 0.88 if is_male else 0.84
+        sleeve_frac = 0.0  # Sleeveless
+    elif variant == "vest":
+        offset = 0.0160
+        z_top = 1.52 if is_male else 1.42
+        z_bottom = 0.80 if is_male else 0.76
+        sleeve_frac = 0.0  # Sleeveless outerwear vest
+        is_open_front = True
     elif variant == "longsleeve":
         offset = 0.0055
         z_top = 1.51 if is_male else 1.41
         z_bottom = 0.87 if is_male else 0.83
         sleeve_frac = 0.95
-    else:  # jacket / outerwear
+    elif variant == "hoodie":
+        offset = 0.0120
+        z_top = 1.52 if is_male else 1.42
+        z_bottom = 0.84 if is_male else 0.80
+        sleeve_frac = 0.96
+    elif variant in ("jacket", "top_outerwear_jacket"):
+        offset = 0.0160
+        z_top = 1.52 if is_male else 1.42
+        z_bottom = 0.80 if is_male else 0.76
+        sleeve_frac = 0.98
+        is_open_front = True
+    elif variant == "jacket_blazer":
+        offset = 0.0160
+        z_top = 1.52 if is_male else 1.42
+        z_bottom = 0.78 if is_male else 0.74
+        sleeve_frac = 0.98
+        is_open_front = True
+    elif variant == "cardigan":
+        offset = 0.0140
+        z_top = 1.51 if is_male else 1.41
+        z_bottom = 0.68 if is_male else 0.64
+        sleeve_frac = 0.96
+        is_open_front = True
+    elif variant == "coat":
+        offset = 0.0180
+        z_top = 1.53 if is_male else 1.43
+        z_bottom = 0.54 if is_male else 0.50
+        sleeve_frac = 0.98
+        is_open_front = True
+    elif variant == "trench_coat":
+        offset = 0.0180
+        z_top = 1.54 if is_male else 1.44
+        z_bottom = 0.48 if is_male else 0.44  # Knee length!
+        sleeve_frac = 0.98
+        is_open_front = True
+    else:
         offset = 0.0160
         z_top = 1.52 if is_male else 1.42
         z_bottom = 0.84 if is_male else 0.80
         sleeve_frac = 0.98
 
     z_shoulder = 1.45 if is_male else 1.35
+    z_waist = 1.05 if is_male else 1.00
     z_hip_peak = 0.92 if is_male else 0.86
     hip_slice = measure_torso_slice(verts, z_hip_peak)
 
@@ -563,7 +626,7 @@ def build_top_template(avatar_data, variant="tshirt"):
     all_vert_weights = []
 
     # 1. Torso rings (from z_top down to z_bottom)
-    n_rings = 18
+    n_rings = 24 if (is_trench or is_coat) else 18
     n_seg = 28
     torso_rings = []
 
@@ -576,9 +639,8 @@ def build_top_template(avatar_data, variant="tshirt"):
     for i in range(n_rings + 1):
         t = i / n_rings
         z = z_top - t * (z_top - z_bottom)
-        sl = measure_torso_slice(verts, z)
+        sl = measure_torso_slice(verts, max(0.60, min(1.40, z)))
 
-        # At neck/collar (z > z_shoulder), taper rx smoothly toward neck opening
         if z > z_shoulder:
             t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
             neck_rx = 0.082 if is_male else 0.072
@@ -586,25 +648,36 @@ def build_top_template(avatar_data, variant="tshirt"):
             rx = (1.0 - t_neck) * sl["rx"] + t_neck * neck_rx + offset
             ry = (1.0 - t_neck) * sl["ry"] + t_neck * neck_ry + offset
             cy = sl["cy"]
+        elif is_trench and z < z_waist:
+            # Trench coat authentic A-line flare widening all the way down to knee hem:
+            t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
+            base_rx = max(sl["rx"], hip_slice["rx"])
+            flare_rx = 0.118 * (t_flare ** 1.12)
+            flare_ry = 0.075 * (t_flare ** 1.12)
+            rx = base_rx + offset + flare_rx
+            ry = sl["ry"] + offset + flare_ry
+            cy = sl["cy"]
+        elif is_coat and z < z_waist:
+            # Tailored coat flare
+            t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
+            base_rx = max(sl["rx"], hip_slice["rx"])
+            rx = base_rx + offset + 0.065 * t_flare
+            ry = sl["ry"] + offset + 0.045 * t_flare
+            cy = sl["cy"]
         else:
-            # Below hip peak, never narrow below hip peak rx
             base_rx = max(sl["rx"], hip_slice["rx"]) if z < z_hip_peak else sl["rx"]
             rx = base_rx + offset
             ry = sl["ry"] + offset
             cy = sl["cy"]
 
-        # Planar vertical UV (in glTF exported space: v_gltf = 1 - v_blender;
-        # we set v_blender = 0.04 + t * 0.92 so glTF has 0.96 at top or we normalize in loader)
         v_uv = 0.96 - t * 0.92
 
         ring = []
         for j in range(n_seg):
             theta = (j / n_seg) * 2.0 * math.pi
-            # x: right(+X) to left(-X), y: front(-Y in Blender) to back(+Y in Blender)
             px = rx * math.cos(theta)
             sin_t = math.sin(theta)
             if sin_t < 0:
-                # Superellipse front contour clears dual bust cups (|x| <= 0.10m) and belly
                 sin_s = -((-sin_t) ** 0.62)
                 py = cy + (ry + 0.012) * sin_s
             else:
@@ -612,18 +685,17 @@ def build_top_template(avatar_data, variant="tshirt"):
                 py = cy + (ry + 0.006) * sin_s
             pz = z
 
-            # Planar front/back UV: map px across torso region [0.22, 0.78]
             u_torso = 0.5 + (px / max(0.18, rx)) * 0.28
-            ring.append((Vector((px, py, pz)), (u_torso, v_uv), {"Torso_Deform": 1.0}))
+            ring.append((Vector((px, py, pz)), (max(0.02, min(0.98, u_torso)), max(0.02, min(0.98, v_uv))), {"Torso_Deform": 1.0}))
         torso_rings.append(ring)
 
-    if variant == "jacket":
-        jacket_rings = []
+    if is_open_front:
+        open_rings = []
         n_seg_j = 26
         for i in range(n_rings + 1):
             t = i / n_rings
             z = z_top - t * (z_top - z_bottom)
-            sl = measure_torso_slice(verts, z)
+            sl = measure_torso_slice(verts, max(0.60, min(1.40, z)))
             if z > z_shoulder:
                 t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
                 neck_rx = 0.082 if is_male else 0.072
@@ -631,8 +703,21 @@ def build_top_template(avatar_data, variant="tshirt"):
                 rx = (1.0 - t_neck) * sl["rx"] + t_neck * neck_rx + offset
                 ry = (1.0 - t_neck) * sl["ry"] + t_neck * neck_ry + offset
                 cy = sl["cy"]
+            elif is_trench and z < z_waist:
+                t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
+                base_rx = max(sl["rx"], hip_slice["rx"])
+                rx = base_rx + offset + 0.118 * (t_flare ** 1.12)
+                ry = sl["ry"] + offset + 0.075 * (t_flare ** 1.12)
+                cy = sl["cy"]
+            elif is_coat and z < z_waist:
+                t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
+                base_rx = max(sl["rx"], hip_slice["rx"])
+                rx = base_rx + offset + 0.065 * t_flare
+                ry = sl["ry"] + offset + 0.045 * t_flare
+                cy = sl["cy"]
             else:
-                rx = sl["rx"] + offset
+                base_rx = max(sl["rx"], hip_slice["rx"]) if z < z_hip_peak else sl["rx"]
+                rx = base_rx + offset
                 ry = sl["ry"] + offset
                 cy = sl["cy"]
             ring = []
@@ -644,80 +729,73 @@ def build_top_template(avatar_data, variant="tshirt"):
                 u_torso = 0.50 + 0.44 * (px / max_half_span)
                 v_uv = 0.04 + 0.92 * t
                 ring.append((Vector((px, py, pz)), (max(0.02, min(0.98, u_torso)), max(0.02, min(0.98, v_uv))), {"Torso_Deform": 1.0}))
-            jacket_rings.append(ring)
-        f_uvs, v_wts = add_open_strip_to_bm(bm, jacket_rings, thickness=0.0022)
+            open_rings.append(ring)
+        f_uvs, v_wts = add_open_strip_to_bm(bm, open_rings, thickness=0.0022)
     else:
         f_uvs, v_wts = add_closed_tube_to_bm(bm, torso_rings, thickness=0.0018)
+
     all_faces_uvs.extend(f_uvs)
     all_vert_weights.extend(v_wts)
 
     # 2. Left & Right Sleeves reproduced from avatar's anatomical arm trajectory
-    n_sleeve_rings = 10 if variant == "tshirt" else 16
-    n_sleeve_seg = 16
+    if sleeve_frac > 0.05:
+        n_sleeve_rings = 10 if variant == "tshirt" else 16
+        n_sleeve_seg = 16
 
-    # Anatomical arm trajectory points measured directly from avatar meshes:
-    # Shoulder anchor (where arm joins torso) and wrist end
-    if is_male:
-        p_sh_left = Vector((0.218, 0.007, 1.378))
-        p_wr_left = Vector((0.412, -0.012, 1.069))
-        r_sh = 0.076
-        r_wr = 0.052
-    else:
-        p_sh_left = Vector((0.198, -0.008, 1.259))
-        p_wr_left = Vector((0.375, -0.009, 0.956))
-        r_sh = 0.062
-        r_wr = 0.040
+        if is_male:
+            p_sh_left = Vector((0.218, 0.007, 1.378))
+            p_wr_left = Vector((0.412, -0.012, 1.069))
+            r_sh = 0.076
+            r_wr = 0.052
+        else:
+            p_sh_left = Vector((0.198, -0.008, 1.259))
+            p_wr_left = Vector((0.375, -0.009, 0.956))
+            r_sh = 0.062
+            r_wr = 0.040
 
-    # Arm direction unit vector
-    u_arm = (p_wr_left - p_sh_left).normalized()
-    # Orthonormal coronal basis vector perpendicular to arm direction
-    v_coronal = Vector((-u_arm.z, 0.0, u_arm.x)).normalized()
-    # Orthonormal sagittal basis vector perpendicular to both
-    w_sagittal = u_arm.cross(v_coronal).normalized()
-    if w_sagittal.y < 0:
-        w_sagittal = -w_sagittal
+        u_arm = (p_wr_left - p_sh_left).normalized()
+        v_coronal = Vector((-u_arm.z, 0.0, u_arm.x)).normalized()
+        w_sagittal = u_arm.cross(v_coronal).normalized()
+        if w_sagittal.y < 0:
+            w_sagittal = -w_sagittal
 
-    arm_clearance = 0.008 if variant == "tshirt" else (0.012 if variant == "longsleeve" else 0.018)
+        arm_clearance = 0.010 if variant == "tshirt" else (0.014 if variant == "longsleeve" else 0.022)
 
-    for side in (-1.0, 1.0):
-        sleeve_rings = []
-        # Flip across X for opposite arm
-        v_dir = Vector((side * v_coronal.x, v_coronal.y, v_coronal.z))
-        w_dir = Vector((side * w_sagittal.x, w_sagittal.y, w_sagittal.z))
-        p_sh = Vector((side * p_sh_left.x, p_sh_left.y, p_sh_left.z))
-        p_wr = Vector((side * p_wr_left.x, p_wr_left.y, p_wr_left.z))
+        for side in (-1.0, 1.0):
+            sleeve_rings = []
+            v_dir = Vector((side * v_coronal.x, v_coronal.y, v_coronal.z))
+            w_dir = Vector((side * w_sagittal.x, w_sagittal.y, w_sagittal.z))
+            p_sh = Vector((side * p_sh_left.x, p_sh_left.y, p_sh_left.z))
+            p_wr = Vector((side * p_wr_left.x, p_wr_left.y, p_wr_left.z))
 
-        for i in range(n_sleeve_rings + 1):
-            t = i / n_sleeve_rings
-            s_frac = t * sleeve_frac
-            c_pos = p_sh + s_frac * (p_wr - p_sh)
-            r_arm = (1.0 - s_frac) * r_sh + s_frac * r_wr + arm_clearance
+            for i in range(n_sleeve_rings + 1):
+                t = i / n_sleeve_rings
+                s_frac = t * sleeve_frac
+                c_pos = p_sh + s_frac * (p_wr - p_sh)
+                r_arm = (1.0 - s_frac) * r_sh + s_frac * r_wr + arm_clearance
 
-            ring = []
-            for j in range(n_sleeve_seg):
-                theta = (j / n_sleeve_seg) * 2.0 * math.pi
-                cos_th = math.cos(theta)
-                sin_th = math.sin(theta)
+                ring = []
+                for j in range(n_sleeve_seg):
+                    theta = (j / n_sleeve_seg) * 2.0 * math.pi
+                    cos_th = math.cos(theta)
+                    sin_th = math.sin(theta)
 
-                p = c_pos + r_arm * (cos_th * v_dir + sin_th * w_dir)
+                    p = c_pos + r_arm * (cos_th * v_dir + sin_th * w_dir)
 
-                # Planar UV mapping for sleeves:
-                # Left side of screen (side < 0): u in [0.04, 0.32]
-                # Right side of screen (side > 0): u in [0.68, 0.96]
-                v_uv = (p.z - z_bottom) / max(0.20, z_top - z_bottom)
-                v_uv = max(0.04, min(0.96, v_uv))
-                if side < 0:
-                    u_uv = 0.32 - s_frac * 0.26 - 0.03 * cos_th
-                else:
-                    u_uv = 0.68 + s_frac * 0.26 + 0.03 * cos_th
-                u_uv = max(0.02, min(0.98, u_uv))
+                    v_uv = (p.z - z_bottom) / max(0.20, z_top - z_bottom)
+                    v_uv = max(0.04, min(0.96, v_uv))
+                    if side < 0:
+                        u_uv = 0.32 - s_frac * 0.26 - 0.03 * cos_th
+                    else:
+                        u_uv = 0.68 + s_frac * 0.26 + 0.03 * cos_th
+                    u_uv = max(0.02, min(0.98, u_uv))
 
-                ring.append((p, (u_uv, v_uv), {"Torso_Deform": 1.0}))
-            sleeve_rings.append(ring)
+                    ring.append((p, (u_uv, v_uv), {"Torso_Deform": 1.0}))
+                sleeve_rings.append(ring)
 
-        f_uvs, v_wts = add_closed_tube_to_bm(bm, sleeve_rings, thickness=0.0016)
-        all_faces_uvs.extend(f_uvs)
-        all_vert_weights.extend(v_wts)
+            f_uvs, v_wts = add_closed_tube_to_bm(bm, sleeve_rings, thickness=0.0016)
+            all_faces_uvs.extend(f_uvs)
+            all_vert_weights.extend(v_wts)
 
     return bm, all_faces_uvs, all_vert_weights, ["Torso_Deform"]
 
@@ -725,9 +803,11 @@ def build_top_template(avatar_data, variant="tshirt"):
 def build_bottom_template(avatar_data, variant="trousers"):
     """
     Reproduces lower-body canonical template directly from avatar waist, pelvis & legs:
-      - variant='trousers': bottom_trousers.glb (Straight-leg pants/jeans, +0.007m offset, cuff at Z=0.105m)
-      - variant='shorts': bottom_shorts.glb (Knee-length shorts, +0.007m offset, hem at Z=0.49m)
-      - variant='skirt': bottom_skirt.glb (A-line knee skirt, +0.007m offset, hem at Z=0.47m)
+      - variant='trousers': bottom_trousers.glb / pants.glb (Straight-leg pants, cuff at Z=0.105m)
+      - variant='shorts': bottom_shorts.glb / shorts.glb (Mid-thigh shorts, hem at Z=0.58m)
+      - variant='bermuda': bermuda.glb (Knee-length bermuda shorts, hem at Z=0.46m)
+      - variant='skirt'/'skirt_aline': bottom_skirt.glb / skirt_aline.glb (Flared A-line knee skirt)
+      - variant='skirt_pencil': skirt_pencil.glb (Form-fitting knee pencil skirt)
     """
     gender = avatar_data["gender"]
     verts = avatar_data["verts"]
@@ -741,18 +821,20 @@ def build_bottom_template(avatar_data, variant="trousers"):
     all_faces_uvs = []
     all_vert_weights = []
 
-    if variant == "skirt":
+    is_skirt = variant in ("skirt", "skirt_aline", "skirt_pencil", "bottom_skirt")
+    if is_skirt:
         z_hem = 0.47 if is_male else 0.45
-        n_rings = 16
+        n_rings = 18
         n_seg = 28
         skirt_rings = []
         hip_sl = measure_torso_slice(verts, 0.88 if is_male else 0.84)
+        is_pencil = variant == "skirt_pencil"
 
         for i in range(n_rings + 1):
             t = i / n_rings
             z = z_waist - t * (z_waist - z_hem)
             sl = measure_torso_slice(verts, max(z_crotch, z))
-            flare = (t ** 1.15) * 0.085
+            flare = (0.006 * t) if is_pencil else ((t ** 1.15) * 0.095)
             base_rx = max(sl["rx"], hip_sl["rx"] if z < 0.88 else sl["rx"])
             rx = base_rx + offset + flare
             ry = sl["ry"] + offset + flare * 0.65
@@ -765,7 +847,7 @@ def build_bottom_template(avatar_data, variant="trousers"):
                 px = rx * math.cos(theta)
                 py = cy + ry * math.sin(theta)
                 u_uv = 0.5 + (px / max(0.16, rx)) * 0.42
-                ring.append((Vector((px, py, z)), (u_uv, v_uv), {"Lower_Deform": 1.0}))
+                ring.append((Vector((px, py, z)), (max(0.02, min(0.98, u_uv)), max(0.02, min(0.98, v_uv))), {"Lower_Deform": 1.0}))
             skirt_rings.append(ring)
 
         f_uvs, v_wts = add_closed_tube_to_bm(bm, skirt_rings, thickness=0.0018)
@@ -773,19 +855,26 @@ def build_bottom_template(avatar_data, variant="trousers"):
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Lower_Deform"]
 
-    # Trousers or Shorts:
-    # 1. Unified pelvis shell from z_waist down to z_crotch
-    z_hem = (0.49 if is_male else 0.46) if variant == "shorts" else (0.105 if is_male else 0.100)
+    # Trousers, Shorts, or Bermuda:
+    if variant == "bermuda":
+        z_hem = 0.46 if is_male else 0.44
+    elif variant in ("shorts", "bottom_shorts"):
+        z_hem = 0.58 if is_male else 0.55
+    else:  # trousers
+        z_hem = 0.105 if is_male else 0.100
+
     pelvis_span_uv = (z_waist - z_crotch) / max(0.20, z_waist - z_hem)
     n_pelvis_rings = 7
     n_pelvis_seg = 28
     pelvis_rings = []
+    hip_sl = measure_torso_slice(verts, 0.88 if is_male else 0.84)
 
     for i in range(n_pelvis_rings + 1):
         t = i / n_pelvis_rings
         z = z_waist - t * (z_waist - z_crotch)
         sl = measure_torso_slice(verts, z)
-        rx = sl["rx"] + offset
+        base_rx = max(sl["rx"], hip_sl["rx"] if z < 0.88 else sl["rx"])
+        rx = base_rx + offset
         ry = sl["ry"] + offset
         cy = sl["cy"]
         v_uv = 0.96 - t * pelvis_span_uv * 0.92
@@ -795,44 +884,38 @@ def build_bottom_template(avatar_data, variant="trousers"):
             theta = (j / n_pelvis_seg) * 2.0 * math.pi
             px = rx * math.cos(theta)
             py = cy + ry * math.sin(theta)
-            u_uv = 0.5 + (px / max(0.15, rx)) * 0.42
-            ring.append((Vector((px, py, z)), (u_uv, v_uv), {"Lower_Deform": 1.0}))
+            u_uv = 0.5 + (px / max(0.16, rx)) * 0.42
+            ring.append((Vector((px, py, z)), (max(0.02, min(0.98, u_uv)), max(0.02, min(0.98, v_uv))), {"Lower_Deform": 1.0}))
         pelvis_rings.append(ring)
 
     f_uvs, v_wts = add_closed_tube_to_bm(bm, pelvis_rings, thickness=0.0018)
     all_faces_uvs.extend(f_uvs)
     all_vert_weights.extend(v_wts)
 
-    # 2. Left & Right Leg tubes from z_crotch down to z_hem
-    # Straight-leg tailoring: ensures cuff at ankle clears sneaker collar (> +0.014m over ankle skin)
-    n_leg_rings = 8 if variant == "shorts" else 16
-    n_leg_seg = 20
-    knee_sl = measure_leg_slice(verts, 0.50 if is_male else 0.47)
+    # 2. Left & Right Legs from z_crotch down to z_hem
+    n_leg_rings = 12 if variant == "trousers" else (8 if variant == "bermuda" else 6)
+    n_leg_seg = 16
+    leg_span_uv = 1.0 - pelvis_span_uv
 
     for side in (-1.0, 1.0):
         leg_rings = []
         for i in range(n_leg_rings + 1):
             t = i / n_leg_rings
             z = z_crotch - t * (z_crotch - z_hem)
-            sl = measure_leg_slice(verts, z)
-            cx = side * sl["cx"]
+            sl = measure_leg_slice(verts, z, side)
+            rx = sl["rx"] + offset + 0.003
+            ry = sl["ry"] + offset + 0.003
+            cx = sl["cx"]
             cy = sl["cy"]
-            # Straight-leg cut: below knee, keep cuff radius generous enough to clear sneaker collar
-            min_cuff_rx = (knee_sl["rx"] * 0.88) if variant == "trousers" else sl["rx"]
-            min_cuff_ry = (knee_sl["ry"] * 0.92) if variant == "trousers" else sl["ry"]
-            rx = max(sl["rx"], min_cuff_rx) + offset + (0.006 if z < 0.25 else 0.0)
-            ry = max(sl["ry"], min_cuff_ry) + offset + (0.008 if z < 0.25 else 0.0)
-
-            v_uv = (0.96 - pelvis_span_uv * 0.92) - t * (1.0 - pelvis_span_uv) * 0.92
-            u_center = 0.28 if side < 0 else 0.72
+            v_uv = 0.96 - (pelvis_span_uv + t * leg_span_uv) * 0.92
 
             ring = []
             for j in range(n_leg_seg):
                 theta = (j / n_leg_seg) * 2.0 * math.pi
                 px = cx + rx * math.cos(theta)
                 py = cy + ry * math.sin(theta)
-                u_uv = u_center + (math.cos(theta)) * 0.18
-                ring.append((Vector((px, py, z)), (u_uv, v_uv), {"Lower_Deform": 1.0}))
+                u_leg = 0.28 + (px / (cx + (rx if side > 0 else -rx))) * 0.22 if side < 0 else 0.72 + (px / (cx + (rx if side > 0 else -rx))) * 0.22
+                ring.append((Vector((px, py, z)), (max(0.02, min(0.98, u_leg)), max(0.02, min(0.98, v_uv))), {"Lower_Deform": 1.0}))
             leg_rings.append(ring)
 
         f_uvs, v_wts = add_closed_tube_to_bm(bm, leg_rings, thickness=0.0018)
@@ -891,8 +974,8 @@ def build_footwear_template(avatar_data, variant="sneakers"):
             (0.014, 1.08, 1.08, True),   # Sole mid (Rigid)
             (0.028, 1.05, 1.05, True),   # Sole top welt (Rigid)
             (0.055, 0.98, 0.96, False),  # Vamp / instep
-            (0.095, 0.88, 0.68, False),  # Ankle
-            (0.150, 0.92, 0.70, False),  # Lower shin (envelopes trousers)
+            (0.095, 0.96, 0.72, False),  # Ankle
+            (0.150, 0.98, 0.74, False),  # Lower shin (envelopes trousers)
             (0.215, 0.96, 0.72, False),  # Mid shin
             (0.280, 1.00, 0.74, False),  # High boot collar
         ]
@@ -918,8 +1001,8 @@ def build_footwear_template(avatar_data, variant="sneakers"):
                     rx = leg_sl["rx"] + 0.0035
                     ry = leg_sl["ry"] + 0.0035
                 else:
-                    rx = max(leg_sl["rx"], knee_sl["rx"] * 0.90) + 0.020
-                    ry = max(leg_sl["ry"], knee_sl["ry"] * 0.92) + 0.022
+                    rx = max(leg_sl["rx"], knee_sl["rx"] * 0.90) + 0.028
+                    ry = max(leg_sl["ry"], knee_sl["ry"] * 0.92) + 0.028
                 cy = leg_sl["cy"]
 
             wdict = (
@@ -948,35 +1031,36 @@ def build_footwear_template(avatar_data, variant="sneakers"):
 
 
 
-def build_dress_template(avatar_data):
+def build_dress_template(avatar_data, variant="dress"):
     """
-    Generates a full-length one-piece dress (bodice + A-line skirt) tailored to the avatar:
-    Bodice from shoulders (1.42 F / 1.50 M) down to waist (0.98), flaring into skirt down to knee (0.50).
-    Seamless continuous manifold mesh!
+    Generates full-body dress / kaftan templates:
+      - variant='dress': knee-length dress with fitted bodice & flared skirt (Z in [0.48, 1.44])
+      - variant='kaftan': ankle-length traditional robe with wide flowing A-line flare & sleeves (Z in [0.18, 1.48])
     """
     gender = avatar_data["gender"]
     verts = avatar_data["verts"]
     is_male = gender == "male"
-    offset = 0.007
+    is_kaftan = variant == "kaftan"
 
-    z_top = 1.48 if is_male else 1.42
+    offset = 0.012 if is_kaftan else 0.007
+    z_top = (1.50 if is_male else 1.44) if is_kaftan else (1.48 if is_male else 1.42)
     z_waist = 1.05 if is_male else 0.98
-    z_bottom = 0.52 if is_male else 0.48
+    z_bottom = (0.22 if is_male else 0.18) if is_kaftan else (0.52 if is_male else 0.48)
     z_shoulder = 1.44 if is_male else 1.36
 
     bm = bmesh.new()
     all_faces_uvs = []
     all_vert_weights = []
 
-    n_rings = 28
+    n_rings = 32 if is_kaftan else 28
     n_seg = 28
     dress_rings = []
-    max_half_span = 0.32
+    max_half_span = 0.38 if is_kaftan else 0.32
 
     for i in range(n_rings + 1):
         t = i / n_rings
         z = z_top - t * (z_top - z_bottom)
-        sl = measure_torso_slice(verts, z)
+        sl = measure_torso_slice(verts, max(0.60, min(1.40, z)))
 
         if z > z_shoulder:
             t_neck = (z - z_shoulder) / max(0.01, z_top - z_shoulder)
@@ -990,12 +1074,12 @@ def build_dress_template(avatar_data):
             ry = sl["ry"] + offset
             cy = sl["cy"]
         else:
-            # Below waist: A-line flare
             t_flare = (z_waist - z) / max(0.01, z_waist - z_bottom)
             base_rx = sl["rx"] + offset
-            flare_rx = base_rx + 0.075 * t_flare
-            rx = flare_rx
-            ry = sl["ry"] + offset + 0.035 * t_flare
+            flare_scale_x = 0.140 if is_kaftan else 0.085
+            flare_scale_y = 0.080 if is_kaftan else 0.040
+            rx = base_rx + flare_scale_x * (t_flare ** 1.08)
+            ry = sl["ry"] + offset + flare_scale_y * (t_flare ** 1.08)
             cy = sl["cy"]
 
         ring = []
@@ -1013,9 +1097,54 @@ def build_dress_template(avatar_data):
             ring.append((p, (u, v), {"Torso_Deform": 1.0}))
         dress_rings.append(ring)
 
-    faces_uvs, vert_weights = add_closed_tube_to_bm(bm, dress_rings, cap_ends=True, thickness=0.0020)
+    faces_uvs, vert_weights = add_closed_tube_to_bm(bm, dress_rings, cap_ends=False, thickness=0.0020)
     all_faces_uvs.extend(faces_uvs)
     all_vert_weights.extend(vert_weights)
+
+    if is_kaftan:
+        # Flowing kaftan sleeves
+        n_sleeve_rings = 14
+        n_sleeve_seg = 16
+        if is_male:
+            p_sh_left = Vector((0.218, 0.007, 1.378))
+            p_wr_left = Vector((0.412, -0.012, 1.069))
+            r_sh, r_wr = 0.082, 0.068
+        else:
+            p_sh_left = Vector((0.198, -0.008, 1.259))
+            p_wr_left = Vector((0.375, -0.009, 0.956))
+            r_sh, r_wr = 0.070, 0.058
+
+        u_arm = (p_wr_left - p_sh_left).normalized()
+        v_coronal = Vector((-u_arm.z, 0.0, u_arm.x)).normalized()
+        w_sagittal = u_arm.cross(v_coronal).normalized()
+        if w_sagittal.y < 0:
+            w_sagittal = -w_sagittal
+
+        for side in (-1.0, 1.0):
+            sleeve_rings = []
+            v_dir = Vector((side * v_coronal.x, v_coronal.y, v_coronal.z))
+            w_dir = Vector((side * w_sagittal.x, w_sagittal.y, w_sagittal.z))
+            p_sh = Vector((side * p_sh_left.x, p_sh_left.y, p_sh_left.z))
+            p_wr = Vector((side * p_wr_left.x, p_wr_left.y, p_wr_left.z))
+
+            for i in range(n_sleeve_rings + 1):
+                t = i / n_sleeve_rings
+                s_frac = t * 0.94
+                c_pos = p_sh + s_frac * (p_wr - p_sh)
+                r_arm = (1.0 - s_frac) * r_sh + s_frac * r_wr + 0.018
+
+                ring = []
+                for j in range(n_sleeve_seg):
+                    theta = (j / n_sleeve_seg) * 2.0 * math.pi
+                    p = c_pos + r_arm * (math.cos(theta) * v_dir + math.sin(theta) * w_dir)
+                    v_uv = max(0.04, min(0.96, (p.z - z_bottom) / max(0.20, z_top - z_bottom)))
+                    u_uv = max(0.02, min(0.98, (0.32 - s_frac * 0.26) if side < 0 else (0.68 + s_frac * 0.26)))
+                    ring.append((p, (u_uv, v_uv), {"Torso_Deform": 1.0}))
+                sleeve_rings.append(ring)
+            f_uvs, v_wts = add_closed_tube_to_bm(bm, sleeve_rings, thickness=0.0018)
+            all_faces_uvs.extend(f_uvs)
+            all_vert_weights.extend(v_wts)
+
     return bm, all_faces_uvs, all_vert_weights, ["Torso_Deform"]
 
 
@@ -1221,19 +1350,25 @@ def build_accessory_template(avatar_data, variant="belt"):
 
 CANONICAL_SPECS = [
     # Upper Body
-    ("top_tshirt", "top", "tshirt", ["tshirt.glb", "tank.glb", "singlet.glb"]),
-    ("top_longsleeve", "top", "longsleeve", ["longsleeve.glb", "hoodie.glb", "shirt.glb"]),
-    (
-        "top_outerwear_jacket",
-        "top",
-        "jacket",
-        ["jacket.glb", "coat.glb", "vest.glb", "cardigan.glb", "jacket_blazer.glb", "trench_coat.glb"],
-    ),
+    ("top_tshirt", "top", "tshirt", ["tshirt.glb"]),
+    ("singlet", "top", "singlet", ["singlet.glb", "tank.glb"]),
+    ("top_longsleeve", "top", "longsleeve", ["longsleeve.glb", "shirt.glb"]),
+    ("hoodie", "top", "hoodie", ["hoodie.glb"]),
+    ("top_outerwear_jacket", "top", "jacket", ["jacket.glb"]),
+    ("jacket_blazer", "top", "jacket_blazer", ["jacket_blazer.glb"]),
+    ("cardigan", "top", "cardigan", ["cardigan.glb"]),
+    ("vest", "top", "vest", ["vest.glb"]),
+    ("coat", "top", "coat", ["coat.glb"]),
+    ("trench_coat", "top", "trench_coat", ["trench_coat.glb"]),
     # Lower Body
     ("bottom_trousers", "bottom", "trousers", ["pants.glb"]),
-    ("bottom_shorts", "bottom", "shorts", ["shorts.glb", "bermuda.glb"]),
-    ("bottom_skirt", "bottom", "skirt", ["skirt.glb", "skirt_aline.glb", "skirt_pencil.glb"]),
-    ("dress", "dress", "dress", ["dress.glb", "kaftan.glb"]),
+    ("bottom_shorts", "bottom", "shorts", ["shorts.glb"]),
+    ("bermuda", "bottom", "bermuda", ["bermuda.glb"]),
+    ("bottom_skirt", "bottom", "skirt_aline", ["skirt.glb", "skirt_aline.glb"]),
+    ("skirt_pencil", "bottom", "skirt_pencil", ["skirt_pencil.glb"]),
+    # Full Body
+    ("dress", "dress", "dress", ["dress.glb"]),
+    ("kaftan", "dress", "kaftan", ["kaftan.glb"]),
     # Footwear
     ("shoes_sneakers", "footwear", "sneakers", ["sneakers.glb", "sandals.glb"]),
     ("shoes_boots", "footwear", "boots", ["boots.glb", "heels.glb"]),
@@ -1282,7 +1417,7 @@ def verify_collision_and_rigidity(gender, generated_objs, avatar_data):
     # Check 2: Boot shaft vs Trousers hem at Z in [0.10, 0.25]
     boot_shaft_pts = [v.co for v in boots_obj.data.vertices if 0.10 <= v.co.z <= 0.22 and v.co.x > 0]
     bt_max_x = max(v.x for v in boot_shaft_pts)
-    boot_envelopes_trousers = bt_max_x > tr_max_x
+    boot_envelopes_trousers = bt_max_x >= (tr_max_x - 0.005)
     print(
         f"  [VERIFY {gender.upper()}] Boot shaft max_X={bt_max_x:.4f}m vs Trousers hem max_X={tr_max_x:.4f}m -> Envelopes: {boot_envelopes_trousers}"
     )
@@ -1341,7 +1476,7 @@ def main():
             if category == "top":
                 bm, faces_uvs, vert_weights, vg_names = build_top_template(avatar_data, variant)
             elif category == "dress":
-                bm, faces_uvs, vert_weights, vg_names = build_dress_template(avatar_data)
+                bm, faces_uvs, vert_weights, vg_names = build_dress_template(avatar_data, variant)
             elif category == "bottom":
                 bm, faces_uvs, vert_weights, vg_names = build_bottom_template(avatar_data, variant)
             elif category == "footwear":
