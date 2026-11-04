@@ -40,6 +40,23 @@ import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFit';
 
+class SafeGarmentWrapper extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err) {
+    console.warn(`[3D Dressing Room] Error rendering garment in slot ${this.props.slot}:`, err);
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
 // ─── Creamy Boutique Studio Pedestal & Room ───
 function StudioPedestal() {
   return (
@@ -782,21 +799,25 @@ export default function DressingRoom3D({
                 {activeGarments.map((garment) => {
                   const isVisible = layerVisibility[garment.slot] ?? true;
                   return (
-                    <GarmentMesh3D
+                    <SafeGarmentWrapper
                       key={`${garment.slot}-${garment.id}`}
-                      garment={garment}
                       slot={garment.slot}
-                      isMale={isMale}
-                      visible={isVisible}
-                      hasOuterwear={hasOuterwear}
-                      hasBottom={coveredZones.hasBottom}
-                      hasTop={coveredZones.hasTop}
-                      morphInfluences={morphInfluences}
-                      footPose={footPose}
-                      showAvatar={showAvatar}
-                      standaloneMode={!showAvatar}
-                      bypassSilhouette={meshMode === 'tailored'}
-                    />
+                    >
+                      <GarmentMesh3D
+                        garment={garment}
+                        slot={garment.slot}
+                        isMale={isMale}
+                        visible={isVisible}
+                        hasOuterwear={hasOuterwear}
+                        hasBottom={coveredZones.hasBottom}
+                        hasTop={coveredZones.hasTop}
+                        morphInfluences={morphInfluences}
+                        footPose={footPose}
+                        showAvatar={showAvatar}
+                        standaloneMode={!showAvatar}
+                        bypassSilhouette={meshMode === 'tailored'}
+                      />
+                    </SafeGarmentWrapper>
                   );
                 })}
                 </group>

@@ -498,6 +498,9 @@ def finalize_and_export_mesh(
     bm_check.from_mesh(obj.data)
     non_manifold_edges = [e for e in bm_check.edges if not e.is_manifold]
     zero_area_faces = [f for f in bm_check.faces if f.calc_area() <= 1e-9]
+    for v in obj.data.vertices:
+        if abs(v.co.x) > 1.2 or abs(v.co.y) > 1.2 or v.co.z < -0.05 or v.co.z > 2.2:
+            raise RuntimeError(f"Runaway vertex detected in {name}: {v.co}")
     bm_check.free()
 
     if non_manifold_edges or zero_area_faces:
@@ -708,8 +711,8 @@ def build_top_template(avatar_data, variant="tshirt"):
     bpy.context.scene.collection.objects.link(temp_obj)
     mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
     mod.thickness = 0.0022
-    mod.use_even_offset = True
-    mod.use_quality_normals = True
+    mod.use_even_offset = False
+    mod.use_quality_normals = False
     with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
         bpy.ops.object.modifier_apply(modifier=mod.name)
 
@@ -717,6 +720,12 @@ def build_top_template(avatar_data, variant="tshirt"):
     bm_final.from_mesh(temp_mesh)
     bpy.data.objects.remove(temp_obj, do_unlink=True)
     bpy.data.meshes.remove(temp_mesh)
+
+    # Safety clamp: prevent any stray edge vertices from shooting beyond anatomical bounds
+    for v in bm_final.verts:
+        v.co.z = min(z_neck + 0.015, max(z_hem - 0.015, v.co.z))
+        if abs(v.co.x) > (x_arm_max + 0.02):
+            v.co.x = math.copysign(x_arm_max + 0.02, v.co.x)
 
         # Solidify modifier preserves clean manifold shell
     pass
@@ -878,8 +887,8 @@ def build_bottom_template(avatar_data, variant="trousers"):
     bpy.context.scene.collection.objects.link(temp_obj)
     mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
     mod.thickness = 0.0022
-    mod.use_even_offset = True
-    mod.use_quality_normals = True
+    mod.use_even_offset = False
+    mod.use_quality_normals = False
     with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
         bpy.ops.object.modifier_apply(modifier=mod.name)
 
@@ -887,6 +896,12 @@ def build_bottom_template(avatar_data, variant="trousers"):
     bm_final.from_mesh(temp_mesh)
     bpy.data.objects.remove(temp_obj, do_unlink=True)
     bpy.data.meshes.remove(temp_mesh)
+
+    # Safety clamp: prevent any stray waist/hem vertices from shooting beyond bounds
+    for v in bm_final.verts:
+        v.co.z = min(z_waist + 0.015, max(z_hem - 0.015, v.co.z))
+        if abs(v.co.x) > 0.28:
+            v.co.x = math.copysign(0.28, v.co.x)
 
         # Solidify modifier preserves clean manifold shell
     pass
@@ -1111,8 +1126,8 @@ def build_dress_template(avatar_data, variant="dress"):
     bpy.context.scene.collection.objects.link(temp_obj)
     mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
     mod.thickness = 0.0022
-    mod.use_even_offset = True
-    mod.use_quality_normals = True
+    mod.use_even_offset = False
+    mod.use_quality_normals = False
     with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
         bpy.ops.object.modifier_apply(modifier=mod.name)
 
@@ -1120,6 +1135,10 @@ def build_dress_template(avatar_data, variant="dress"):
     bm_final.from_mesh(temp_mesh)
     bpy.data.objects.remove(temp_obj, do_unlink=True)
     bpy.data.meshes.remove(temp_mesh)
+
+    # Safety clamp: prevent any stray neck/hem vertices from shooting beyond bounds
+    for v in bm_final.verts:
+        v.co.z = min(z_neck + 0.015, max(z_hem - 0.015, v.co.z))
 
         # Solidify modifier preserves clean manifold shell
     pass

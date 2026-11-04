@@ -1314,7 +1314,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
         backTexture: null,
         backSource: null,
         sideProfile: null,
-        ready: false,
+        ready: true,
         bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
       });
       return undefined;
@@ -1369,25 +1369,38 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
         // Fallback standard texture loader
         const loader = new THREE.TextureLoader();
         loader.setCrossOrigin('anonymous');
-        loader.load(url, (tex) => {
-          if (!mounted) return;
-          tex.colorSpace = THREE.SRGBColorSpace;
-          setData({
-            texture: tex,
-            opaqueTexture: tex,
-            filledTexture: tex,
-            dominantColor: '#222226',
-            hasSleeves: true,
-            aspect: 1.0,
-            solidU: 0.5,
-            solidV: 0.5,
-            backTexture: null,
-            backSource: null,
-            sideProfile: null,
-            ready: true,
-            bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
-          });
-        });
+        loader.load(
+          url,
+          (tex) => {
+            if (!mounted) return;
+            tex.colorSpace = THREE.SRGBColorSpace;
+            setData({
+              texture: tex,
+              opaqueTexture: tex,
+              filledTexture: tex,
+              dominantColor: '#222226',
+              hasSleeves: true,
+              aspect: 1.0,
+              solidU: 0.5,
+              solidV: 0.5,
+              backTexture: null,
+              backSource: null,
+              sideProfile: null,
+              ready: true,
+              bounds: { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: true },
+            });
+          },
+          undefined,
+          (err) => {
+            if (!mounted) return;
+            console.warn('[useGarmentTexture] TextureLoader fallback failed for', url, err);
+            setData((prev) => ({
+              ...prev,
+              ready: true,
+              texture: null,
+            }));
+          }
+        );
       });
 
     return () => {
@@ -2881,8 +2894,10 @@ function GarmentTemplateMeshInner({
   }, [geometry]);
 
   const materials = useMemo(() => {
+    const hasFrontTex = Boolean(texture);
+    const hasBackTex = Boolean(backTexture || texture);
+    const fallbackCol = dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#CBD5E1';
     const baseProps = {
-      color: dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#FFFFFF',
       roughness: pbrProps?.roughness ?? 0.70,
       metalness: pbrProps?.metalness ?? 0.05,
       side: THREE.DoubleSide,
@@ -2893,10 +2908,12 @@ function GarmentTemplateMeshInner({
     };
     const frontMat = new THREE.MeshStandardMaterial({
       ...baseProps,
+      color: hasFrontTex ? '#FFFFFF' : fallbackCol,
       map: texture || null,
     });
     const backMat = new THREE.MeshStandardMaterial({
       ...baseProps,
+      color: hasBackTex ? '#FFFFFF' : fallbackCol,
       map: backTexture || texture || null,
     });
     return [frontMat, backMat];
@@ -2980,7 +2997,7 @@ export function GarmentTemplateMesh(props) {
   if (!url) return fallbackNode;
 
   return (
-    <GarmentTemplateErrorBoundary url={url} fallback={fallbackNode}>
+    <GarmentTemplateErrorBoundary key={url} url={url} fallback={fallbackNode}>
       <Suspense fallback={fallbackNode}>
         <GarmentTemplateMeshInner {...props} url={url} />
       </Suspense>
@@ -3291,8 +3308,8 @@ export default function GarmentMesh3D({
   if (!visible || !garment) return null;
 
   const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
-  // Never flash an untextured (white) body-shaped placeholder while the photo loads
-  if (isCoreClothing && !textureReady) return null;
+  // Allow canonical template meshes to render with dominantColor immediately while texture loads
+  if (isCoreClothing && !textureReady && !matchedTemplateId) return null;
 
   const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText);
 
