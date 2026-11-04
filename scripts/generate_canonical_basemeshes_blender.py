@@ -541,136 +541,175 @@ def build_top_template(avatar_data, variant="tshirt"):
 
     is_open_front = False
     flare_hips = False
+    neck_tilt = -0.22
 
     if variant == "tshirt":
-        offset = 0.0065
-        z_neck = 1.53 if is_male else 1.435
+        offset = 0.0070
+        z_neck = 1.455 if is_male else 1.400
         z_hem = 0.88 if is_male else 0.84
         x_arm_max = 0.315 if is_male else 0.280
         sleeve_type = "short"
+        neck_tilt = -0.22
     elif variant == "singlet":
-        offset = 0.0055
-        z_neck = 1.50 if is_male else 1.405
+        offset = 0.0060
+        z_neck = 1.430 if is_male else 1.375
         z_hem = 0.88 if is_male else 0.84
-        x_arm_max = 0.210 if is_male else 0.185
+        x_arm_max = 0.200 if is_male else 0.178
         sleeve_type = "sleeveless"
+        neck_tilt = -0.30
     elif variant == "vest":
-        offset = 0.0160
-        z_neck = 1.54 if is_male else 1.440
-        z_hem = 0.80 if is_male else 0.76
-        x_arm_max = 0.210 if is_male else 0.185
+        offset = 0.0150
+        z_neck = 1.455 if is_male else 1.400
+        z_hem = 0.82 if is_male else 0.78
+        x_arm_max = 0.205 if is_male else 0.182
         sleeve_type = "sleeveless"
         is_open_front = True
+        neck_tilt = -0.24
     elif variant == "longsleeve":
         offset = 0.0075
-        z_neck = 1.54 if is_male else 1.440
+        z_neck = 1.470 if is_male else 1.415
         z_hem = 0.86 if is_male else 0.82
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
+        neck_tilt = -0.15
     elif variant == "hoodie":
         offset = 0.0150
-        z_neck = 1.56 if is_male else 1.460
+        z_neck = 1.485 if is_male else 1.430
         z_hem = 0.82 if is_male else 0.78
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
+        neck_tilt = -0.15
     elif variant in ("jacket", "top_outerwear_jacket"):
-        offset = 0.0170
-        z_neck = 1.56 if is_male else 1.460
+        offset = 0.0160
+        z_neck = 1.475 if is_male else 1.420
         z_hem = 0.80 if is_male else 0.76
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
+        neck_tilt = -0.18
     elif variant == "jacket_blazer":
-        offset = 0.0170
-        z_neck = 1.56 if is_male else 1.460
+        offset = 0.0160
+        z_neck = 1.475 if is_male else 1.420
         z_hem = 0.78 if is_male else 0.74
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
+        neck_tilt = -0.22
     elif variant == "cardigan":
-        offset = 0.0150
-        z_neck = 1.54 if is_male else 1.440
+        offset = 0.0140
+        z_neck = 1.455 if is_male else 1.400
         z_hem = 0.70 if is_male else 0.66
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
+        neck_tilt = -0.25
     elif variant == "coat":
-        offset = 0.0190
-        z_neck = 1.56 if is_male else 1.460
+        offset = 0.0180
+        z_neck = 1.480 if is_male else 1.425
         z_hem = 0.54 if is_male else 0.50
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
+        neck_tilt = -0.18
     elif variant == "trench_coat":
-        offset = 0.0190
-        z_neck = 1.56 if is_male else 1.460
+        offset = 0.0180
+        z_neck = 1.480 if is_male else 1.425
         z_hem = 0.48 if is_male else 0.44
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
         flare_hips = True
+        neck_tilt = -0.18
     elif variant in ("tunic", "top_tunic"):
         offset = 0.0140
-        z_neck = 1.54 if is_male else 1.440
+        z_neck = 1.455 if is_male else 1.400
         z_hem = 0.66 if is_male else 0.62
         x_arm_max = 0.315 if is_male else 0.280
         sleeve_type = "short"
         flare_hips = True
+        neck_tilt = -0.22
     else:
         offset = 0.0130
-        z_neck = 1.55 if is_male else 1.450
+        z_neck = 1.465 if is_male else 1.410
         z_hem = 0.84 if is_male else 0.80
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
+        neck_tilt = -0.18
 
     mw = avatar_obj.matrix_world
     bm = bmesh.new()
     bm.from_mesh(avatar_obj.data)
     bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
-    bm.verts.ensure_lookup_table()
-    bm.faces.ensure_lookup_table()
 
-    body_mat_indices = set()
-    for i, m in enumerate(avatar_obj.data.materials):
-        m_name = m.name.lower()
-        if "skin" in m_name or "generic" in m_name:
-            body_mat_indices.add(i)
+    body_mat_indices = {i for i, m in enumerate(avatar_obj.data.materials) if 'skin' in m.name.lower() or 'generic' in m.name.lower()}
+    non_body = [f for f in bm.faces if f.material_index not in body_mat_indices]
+    if non_body:
+        bmesh.ops.delete(bm, geom=non_body, context='FACES')
 
-    crotch_z = 0.84 if is_male else 0.80
-    del_faces = []
-    for f in bm.faces:
-        if f.material_index not in body_mat_indices:
-            del_faces.append(f)
-            continue
-        zs = [v.co.z for v in f.verts]
-        xs = [abs(v.co.x) for v in f.verts]
-        ys = [v.co.y for v in f.verts]
-        max_z, min_z, max_x = max(zs), min(zs), max(xs)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0008)
+    bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
 
-        if max_z > z_neck:
-            del_faces.append(f)
-            continue
-        if max_x > x_arm_max:
-            del_faces.append(f)
-            continue
-        if max_x <= 0.22 and min_z < z_hem:
-            del_faces.append(f)
-            continue
-        if not flare_hips and min_z < crotch_z and max_x < 0.19 and min_z < z_hem + 0.02:
-            del_faces.append(f)
-            continue
-        if is_open_front and max_x < 0.014 and max(ys) < -0.02 and max_z < (z_neck - 0.02) and min_z > (z_hem + 0.01):
-            del_faces.append(f)
-            continue
+    # 1. Precision Hem Cut
+    bmesh.ops.bisect_plane(
+        bm,
+        geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+        plane_co=Vector((0.0, 0.0, z_hem)),
+        plane_no=Vector((0.0, 0.0, -1.0)),
+        clear_outer=True
+    )
 
-    bmesh.ops.delete(bm, geom=del_faces, context='FACES')
+    # 2. Precision Sleeve / Armhole Cuts
+    if sleeve_type in ("short", "long"):
+        arm_dir = Vector((0.536, 0.0, -0.844)).normalized()
+        z_cuff = (1.21 - (x_arm_max - 0.315) * 1.57) if is_male else (1.10 - (x_arm_max - 0.280) * 1.57)
 
+        # Right arm
+        r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max, 0.0, z_cuff)), plane_no=arm_dir, clear_outer=True)
+
+        # Left arm
+        arm_dir_l = Vector((-0.536, 0.0, -0.844)).normalized()
+        l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, z_cuff)), plane_no=arm_dir_l, clear_outer=True)
+    else:
+        # Sleeveless (singlet, vest) armholes at shoulder seam
+        r_geom = [v for v in bm.verts if v.co.x > (x_arm_max - 0.02)] + [e for e in bm.edges if all(v.co.x > (x_arm_max - 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x > (x_arm_max - 0.02) for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max, 0.0, 1.35)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
+
+        l_geom = [v for v in bm.verts if v.co.x < (-x_arm_max + 0.02)] + [e for e in bm.edges if all(v.co.x < (-x_arm_max + 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x < (-x_arm_max + 0.02) for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
+
+    # 3. Precision Neckline Cut
+    nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
+    neck_no = Vector((0.0, neck_tilt, nz)).normalized()
+    bmesh.ops.bisect_plane(
+        bm,
+        geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+        plane_co=Vector((0.0, 0.0, z_neck)),
+        plane_no=neck_no,
+        clear_outer=True
+    )
+
+    # 4. Open front placket (for jackets, vests, coats, cardigans)
+    if is_open_front:
+        gap = 0.013
+        # Remove narrow strip down center front
+        front_del = []
+        for f in bm.faces:
+            xs = [v.co.x for v in f.verts]
+            ys = [v.co.y for v in f.verts]
+            zs = [v.co.z for v in f.verts]
+            if max(ys) < -0.015 and min(zs) > (z_hem + 0.01) and max(zs) < (z_neck - 0.02):
+                if all(abs(x) < gap for x in xs):
+                    front_del.append(f)
+        if front_del:
+            bmesh.ops.delete(bm, geom=front_del, context='FACES')
+
+    # Keep largest island (torso + sleeves)
     islands = []
     visited = set()
     for f in bm.faces:
-        if f in visited:
-            continue
+        if f in visited: continue
         isl, q = [], [f]
         visited.add(f)
         while q:
@@ -692,6 +731,14 @@ def build_top_template(avatar_data, variant="tshirt"):
     if other:
         bmesh.ops.delete(bm, geom=other, context='FACES')
 
+    # Weld/fill small pinhole seams
+    small_holes = [e for e in bm.edges if e.is_boundary and e.verts[0].co.z > (z_hem + 0.01)]
+    if small_holes:
+        try:
+            bmesh.ops.holes_fill(bm, edges=small_holes, sides=8)
+        except Exception:
+            pass
+
     loose_edges = [e for e in bm.edges if not e.link_faces]
     if loose_edges:
         bmesh.ops.delete(bm, geom=loose_edges, context='EDGES')
@@ -699,6 +746,7 @@ def build_top_template(avatar_data, variant="tshirt"):
     if loose_verts:
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
+    # Apply normal offset and optional hip flare
     for v in bm.verts:
         v.co += v.normal * offset
         if flare_hips and v.co.z < 0.98:
@@ -707,32 +755,24 @@ def build_top_template(avatar_data, variant="tshirt"):
             v.co.x += (0.018 * s_flare) * (1.0 if v.co.x > 0 else -1.0)
             v.co.y += (0.012 * s_flare) * (1.0 if v.co.y > 0 else -1.0)
 
-    temp_mesh = bpy.data.meshes.new(f"temp_top_{variant}_{gender}")
-    bm.to_mesh(temp_mesh)
+    # Solidify modifier
+    mesh_tmp = bpy.data.meshes.new(f"temp_{variant}_{gender}")
+    bm.to_mesh(mesh_tmp)
     bm.free()
 
-    temp_obj = bpy.data.objects.new(f"temp_top_{variant}_{gender}", temp_mesh)
-    bpy.context.scene.collection.objects.link(temp_obj)
-    mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
+    obj_tmp = bpy.data.objects.new(f"temp_{variant}_{gender}", mesh_tmp)
+    bpy.context.scene.collection.objects.link(obj_tmp)
+    mod = obj_tmp.modifiers.new("Solidify", 'SOLIDIFY')
     mod.thickness = 0.0022
-    mod.use_even_offset = False
-    mod.use_quality_normals = False
-    with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
-        bpy.ops.object.modifier_apply(modifier=mod.name)
+    mod.offset = -1.0
+    mod.use_rim = True
+    bpy.context.view_layer.objects.active = obj_tmp
+    bpy.ops.object.modifier_apply(modifier=mod.name)
 
     bm_final = bmesh.new()
-    bm_final.from_mesh(temp_mesh)
-    bpy.data.objects.remove(temp_obj, do_unlink=True)
-    bpy.data.meshes.remove(temp_mesh)
-
-    # Safety clamp: prevent any stray edge vertices from shooting beyond anatomical bounds
-    for v in bm_final.verts:
-        v.co.z = min(z_neck + 0.015, max(z_hem - 0.015, v.co.z))
-        if abs(v.co.x) > (x_arm_max + 0.02):
-            v.co.x = math.copysign(x_arm_max + 0.02, v.co.x)
-
-        # Solidify modifier preserves clean manifold shell
-    pass
+    bm_final.from_mesh(obj_tmp.data)
+    bpy.data.objects.remove(obj_tmp, do_unlink=True)
+    bpy.data.meshes.remove(mesh_tmp)
 
     verts = [v.co for v in bm_final.verts]
     min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)
@@ -751,7 +791,12 @@ def build_top_template(avatar_data, variant="tshirt"):
         faces_uvs.append((f, uvs))
 
     vert_weights = [(v, {"Torso_Deform": 1.0}) for v in bm_final.verts]
+
+    non_man = [e for e in bm_final.edges if not e.is_manifold]
+    zero_f = [f for f in bm_final.faces if f.calc_area() <= 1e-9]
+
     return bm_final, faces_uvs, vert_weights, ["Torso_Deform"]
+
 
 
 def build_bottom_template(avatar_data, variant="trousers"):

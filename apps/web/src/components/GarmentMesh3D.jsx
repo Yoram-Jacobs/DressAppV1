@@ -1446,61 +1446,16 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     return { type: 'sleeveless', factor: 0.0 };
   }
 
-  // 2. Cap sleeve keywords
-  const isCapSleeve =
-    text.includes('cap sleeve') ||
-    text.includes('cap-sleeve') ||
-    text.includes('שרוול כנף') ||
-    text.includes('שרוול קפון');
-
-  if (isCapSleeve) {
-    return { type: 'cap', factor: 0.18 };
-  }
-
-  // 3. Short sleeve / T-shirt / polo keywords
-  const isShortSleeve =
-    text.includes('t-shirt') ||
-    text.includes('tshirt') ||
-    text.includes('t shirt') ||
-    text.includes('tee') ||
-    text.includes('polo') ||
-    text.includes('short sleeve') ||
-    text.includes('short-sleeve') ||
-    text.includes('short_sleeve') ||
-    text.includes('חולצת טריקו') ||
-    text.includes('חולצת טי') ||
-    text.includes('טישרט') ||
-    text.includes('שרוול קצר') ||
-    text.includes('שרוולים קצרים') ||
-    text.includes('חולצה קצרה') ||
-    text.includes('manga corta') ||
-    text.includes('manches courtes') ||
-    text.includes('kurzarm') ||
-    text.includes('نصف كم') ||
-    text.includes('أكمام قصيرة');
-
-  if (isShortSleeve) {
-    return { type: 'short', factor: 0.36 };
-  }
-
-  // 4. Three-quarter sleeve keywords
-  const isThreeQuarter =
-    text.includes('3/4') ||
-    text.includes('three-quarter') ||
-    text.includes('three quarter') ||
-    text.includes('שרוול 3/4') ||
-    text.includes('שרוול שלושת רבעי');
-
-  if (isThreeQuarter) {
-    return { type: 'three_quarter', factor: 0.65 };
-  }
-
-  // 5. Long sleeve keywords / Outerwear / Knitwear
+  // 2. Long sleeve keywords / Outerwear / Knitwear (higher precedence than t-shirt / short sleeve keywords!)
   const isExplicitLong =
     rawSlot === 'outerwear' ||
     text.includes('long sleeve') ||
     text.includes('long-sleeve') ||
     text.includes('long_sleeve') ||
+    text.includes('long-sleeved') ||
+    text.includes('long sleeved') ||
+    text.includes('long_sleeved') ||
+    text.includes('longsleeve') ||
     text.includes('sweater') ||
     text.includes('pullover') ||
     text.includes('cardigan') ||
@@ -1525,6 +1480,55 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
 
   if (isExplicitLong) {
     return { type: 'long', factor: 1.0 };
+  }
+
+  // 3. Three-quarter sleeve keywords
+  const isThreeQuarter =
+    text.includes('3/4') ||
+    text.includes('three-quarter') ||
+    text.includes('three quarter') ||
+    text.includes('שרוול 3/4') ||
+    text.includes('שרוול שלושת רבעי');
+
+  if (isThreeQuarter) {
+    return { type: 'three_quarter', factor: 0.65 };
+  }
+
+  // 4. Cap sleeve keywords
+  const isCapSleeve =
+    text.includes('cap sleeve') ||
+    text.includes('cap-sleeve') ||
+    text.includes('שרוול כנף') ||
+    text.includes('שרוול קפון');
+
+  if (isCapSleeve) {
+    return { type: 'cap', factor: 0.18 };
+  }
+
+  // 5. Short sleeve / T-shirt / polo keywords
+  const isShortSleeve =
+    text.includes('t-shirt') ||
+    text.includes('tshirt') ||
+    text.includes('t shirt') ||
+    text.includes('tee') ||
+    text.includes('polo') ||
+    text.includes('short sleeve') ||
+    text.includes('short-sleeve') ||
+    text.includes('short_sleeve') ||
+    text.includes('חולצת טריקו') ||
+    text.includes('חולצת טי') ||
+    text.includes('טישרט') ||
+    text.includes('שרוול קצר') ||
+    text.includes('שרוולים קצרים') ||
+    text.includes('חולצה קצרה') ||
+    text.includes('manga corta') ||
+    text.includes('manches courtes') ||
+    text.includes('kurzarm') ||
+    text.includes('نصف كم') ||
+    text.includes('أكمام قصيرة');
+
+  if (isShortSleeve) {
+    return { type: 'short', factor: 0.36 };
   }
 
   // 6. Silhouette aspect ratio fallback

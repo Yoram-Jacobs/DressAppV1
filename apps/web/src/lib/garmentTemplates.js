@@ -117,7 +117,7 @@ export function getTemplateGlbUrl(templateId, isMale) {
   if (typeof isMale === 'boolean') {
     const genderDir = isMale ? 'male' : 'female';
     const canonicalName = CANONICAL_TEMPLATE_MAP[templateId] || templateId;
-    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon3`;
+    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon4`;
   }
   return `/models/templates/${templateId}.glb`;
 }
@@ -133,7 +133,14 @@ export function resolveGarmentTemplate({
   category = '',
 } = {}) {
   const fullText = `${slot} ${category} ${rawSlot} ${garmentText}`.toLowerCase();
-  const has = (...words) => words.some((w) => fullText.includes(w));
+  const has = (...words) => words.some((w) => {
+    if (/^[a-z0-9_ -]+$/i.test(w)) {
+      const escaped = w.trim().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const reg = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+      return reg.test(fullText);
+    }
+    return fullText.includes(w.toLowerCase());
+  });
 
   // 1. STANDALONE ACCESSORIES (Only when slot is accessory or explicit accessory slot)
   const isAccessoryRole = ['belt', 'headwear', 'bag', 'accessory', 'scarf', 'jewelry', 'glasses'].includes(rawSlot);
@@ -152,8 +159,13 @@ export function resolveGarmentTemplate({
     return 'accessory_glasses';
   }
 
-  // 2. FULL-BODY / ROBES / KAFTAN / GALABIYE
-  if (has('kaftan', 'caftan', 'galabiye', 'galabeya', 'jalabiya', 'abaya', 'djellaba', 'thobe', 'robe', 'כפתן', 'גלבייה', 'גלביה', 'עבאיה', 'חלוק')) {
+  // 2. FULL-BODY / ROBES / KAFTAN / GALABIYE (Only for dresses / outerwear / robes, never for tops/bottoms)
+  const isFullBodyRole = ['dress', 'fullbody', 'robe', 'one-piece', 'kaftan', 'outerwear'].includes(rawSlot);
+  if (
+    (isFullBodyRole || !rawSlot) &&
+    !['top', 'bottom', 'shoes'].includes(rawSlot) &&
+    has('kaftan', 'caftan', 'galabiye', 'galabeya', 'jalabiya', 'abaya', 'djellaba', 'thobe', 'robe', 'robes', 'כפתן', 'גלבייה', 'גלביה', 'עבאיה', 'חלוק')
+  ) {
     return 'kaftan';
   }
 
@@ -198,11 +210,11 @@ export function resolveGarmentTemplate({
   }
 
   // 6. TOPS
-  if (rawSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'tunic';
-  if (rawSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'tunic';
+  if (rawSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'top_tunic';
   if (rawSlot === 'top') {
     if (has('tank', 'singlet', 'sleeveless', 'vest', 'camisole', 'גופיה', 'גופייה', 'גופית', 'גופיית', 'בלי שרוולים')) return 'singlet';
     if (has('hoodie', 'sweatshirt', 'sweater', 'knit', 'pullover', 'fleece', 'סוודר', 'סווטשירט', "קפוצ'ון", 'סריג')) return 'hoodie';
+    if (has('long sleeve', 'long-sleeve', 'longsleeve', 'long-sleeved', 'long sleeved', 'long_sleeve', 'שרוול ארוך', 'שרוולים ארוכים')) return 'top_longsleeve';
     if (has('button', 'collared', 'dress shirt', 'blouse', 'חולצה מכופתרת', 'מכופתרת', 'חולצה אלגנטית')) return 'shirt';
     if (has('t-shirt', 'tshirt', 'tee', 'טי שירט', 'חולצת טי', 'חולצה קצרה', 'טריקו')) return 'tshirt';
     return aspect < 0.70 ? 'shirt' : 'tshirt';
