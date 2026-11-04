@@ -8,6 +8,8 @@
 export const AVAILABLE_TEMPLATES = [
   'singlet',
   'tshirt',
+  'tunic',
+  'top_tunic',
   'shirt',
   'hoodie',
   'top_outerwear_jacket',
@@ -42,6 +44,7 @@ export const AVAILABLE_TEMPLATES = [
 
 export const CANONICAL_TEMPLATES = [
   'top_tshirt',
+  'top_tunic',
   'top_longsleeve',
   'top_outerwear_jacket',
   'bottom_trousers',
@@ -60,6 +63,10 @@ export const CANONICAL_TEMPLATE_MAP = {
   singlet: 'singlet',
   tank: 'singlet',
   tshirt: 'top_tshirt',
+  tunic: 'top_tunic',
+  top_tunic: 'top_tunic',
+  tunic: 'top_tunic',
+  top_tunic: 'top_tunic',
   top_tshirt: 'top_tshirt',
   shirt: 'top_longsleeve',
   hoodie: 'hoodie',
@@ -110,7 +117,7 @@ export function getTemplateGlbUrl(templateId, isMale) {
   if (typeof isMale === 'boolean') {
     const genderDir = isMale ? 'male' : 'female';
     const canonicalName = CANONICAL_TEMPLATE_MAP[templateId] || templateId;
-    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon2`;
+    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon3`;
   }
   return `/models/templates/${templateId}.glb`;
 }
@@ -191,6 +198,8 @@ export function resolveGarmentTemplate({
   }
 
   // 6. TOPS
+  if (rawSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'tunic';
+  if (rawSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'tunic';
   if (rawSlot === 'top') {
     if (has('tank', 'singlet', 'sleeveless', 'vest', 'camisole', 'גופיה', 'גופייה', 'גופית', 'גופיית', 'בלי שרוולים')) return 'singlet';
     if (has('hoodie', 'sweatshirt', 'sweater', 'knit', 'pullover', 'fleece', 'סוודר', 'סווטשירט', "קפוצ'ון", 'סריג')) return 'hoodie';
