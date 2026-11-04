@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
+import { mergeBufferGeometries } from 'three-stdlib';
 import { buildAvatarMorphField, applyAvatarMorphsToGeometry } from '@/lib/avatarMorphField';
 import { MALE_GLB_URL, FEMALE_GLB_URL } from './AvatarMesh3D';
 import {
@@ -2805,11 +2806,36 @@ function GarmentTemplateMeshInner({
   const geometry = useMemo(() => {
     let geo = null;
     if (gltf?.scene) {
+      const meshes = [];
       gltf.scene.traverse((child) => {
-        if (child.isMesh && child.geometry && !geo) {
-          geo = child.geometry.clone();
+        if (child.isMesh && child.geometry) {
+          meshes.push(child.geometry.clone());
         }
       });
+      if (meshes.length === 1) {
+        geo = meshes[0];
+      } else if (meshes.length > 1) {
+        try {
+          meshes.forEach((g) => {
+            if (!g.attributes.uv && g.attributes.position) {
+              g.computeBoundingBox();
+              const bb = g.boundingBox;
+              const dx = Math.max(1e-4, bb.max.x - bb.min.x);
+              const dy = Math.max(1e-4, bb.max.y - bb.min.y);
+              const uvs = new Float32Array(g.attributes.position.count * 2);
+              for (let i = 0; i < g.attributes.position.count; i++) {
+                uvs[i * 2] = (g.attributes.position.getX(i) - bb.min.x) / dx;
+                uvs[i * 2 + 1] = (g.attributes.position.getY(i) - bb.min.y) / dy;
+              }
+              g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+            }
+          });
+          geo = mergeBufferGeometries(meshes, false);
+        } catch (err) {
+          console.warn('[GarmentTemplate] mergeBufferGeometries fallback to primary mesh:', err);
+          geo = meshes[0];
+        }
+      }
     }
     if (!geo && fallbackGeometry) {
       geo = fallbackGeometry;

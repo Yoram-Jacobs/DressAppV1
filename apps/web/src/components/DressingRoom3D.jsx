@@ -803,20 +803,22 @@ export default function DressingRoom3D({
                       key={`${garment.slot}-${garment.id}`}
                       slot={garment.slot}
                     >
-                      <GarmentMesh3D
-                        garment={garment}
-                        slot={garment.slot}
-                        isMale={isMale}
-                        visible={isVisible}
-                        hasOuterwear={hasOuterwear}
-                        hasBottom={coveredZones.hasBottom}
-                        hasTop={coveredZones.hasTop}
-                        morphInfluences={morphInfluences}
-                        footPose={footPose}
-                        showAvatar={showAvatar}
-                        standaloneMode={!showAvatar}
-                        bypassSilhouette={meshMode === 'tailored'}
-                      />
+                      <Suspense fallback={null}>
+                        <GarmentMesh3D
+                          garment={garment}
+                          slot={garment.slot}
+                          isMale={isMale}
+                          visible={isVisible}
+                          hasOuterwear={hasOuterwear}
+                          hasBottom={coveredZones.hasBottom}
+                          hasTop={coveredZones.hasTop}
+                          morphInfluences={morphInfluences}
+                          footPose={footPose}
+                          showAvatar={showAvatar}
+                          standaloneMode={!showAvatar}
+                          bypassSilhouette={meshMode === 'tailored'}
+                        />
+                      </Suspense>
                     </SafeGarmentWrapper>
                   );
                 })}

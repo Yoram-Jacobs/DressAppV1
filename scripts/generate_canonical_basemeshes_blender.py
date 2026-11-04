@@ -431,8 +431,12 @@ def finalize_and_export_mesh(
     if zero_faces:
         bmesh.ops.delete(bm, geom=zero_faces, context="FACES")
 
+    for f in bm.faces:
+        f.material_index = 0
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
+    for poly in mesh.polygons:
+        poly.material_index = 0
 
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
