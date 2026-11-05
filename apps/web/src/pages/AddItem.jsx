@@ -85,6 +85,8 @@ import { useAuth } from "@/lib/auth";
 import { deriveSizeFromPreferences } from "@/lib/size_preferences";
 import {
   labelForCategory,
+  FIT_OPTIONS,
+  labelForFit,
   labelForDressCode,
   labelForGender,
   labelForPattern,
@@ -316,6 +318,7 @@ const blankFields = () => ({
   brand: "",
   gender: "",
   dress_code: "",
+  fit: "",
   season: [],
   tradition: "",
   colors: [],
@@ -667,6 +670,7 @@ const hydrate = (a, user, t, i18n) => {
 
   // 6. Fallback dress code & condition & quality & state
   if (!out.dress_code) out.dress_code = isTraditionalGarment ? 'traditional' : 'casual';
+  if (!out.fit) out.fit = isTraditionalGarment ? 'loose' : 'regular';
   if (!out.condition) out.condition = 'good';
   if (!out.quality) out.quality = 'mid';
   if (!out.state) out.state = 'used';
@@ -4338,6 +4342,7 @@ export default function AddItem() {
         brand: body.brand || null,
         gender: body.gender || null,
         dress_code: body.dress_code || null,
+        fit: body.fit || null,
         season: body.season || [],
         size: body.size || null,
         color: body.color || null,
@@ -7201,6 +7206,15 @@ function StylingTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
         labelForDressCode,
       )}
       {row(
+        t("addItem.fit", { defaultValue: "Fit" }),
+        fields.fit,
+        (v) => onChange({ fit: v }),
+        FIT_OPTIONS,
+        "add-item-fit",
+        t("addItem.fitPlaceholder", { defaultValue: "Select fit" }),
+        labelForFit,
+      )}
+      {row(
         t("addItem.pattern"),
         fields.pattern,
         (v) => onChange({ pattern: v }),
@@ -7452,6 +7466,7 @@ function buildCreatePayload(card, inSuitcase = false) {
     brand: f.brand || undefined,
     gender: f.gender || undefined,
     dress_code: f.dress_code || undefined,
+    fit: f.fit || undefined,
     season: f.season || [],
     tradition: f.tradition || undefined,
     size: f.size || undefined,

@@ -83,6 +83,8 @@ import { workStore } from '@/lib/workStore';
 import { bestImageUrl, resolveMediaUrl, getStoredViewPreference, setStoredViewPreference } from '@/lib/itemImage';
 import {
   labelForCategory,
+  FIT_OPTIONS,
+  labelForFit,
   labelForDressCode,
   labelForGender,
   labelForPattern,
@@ -191,6 +193,7 @@ const EDITABLE_FIELDS = [
   'brand',
   'gender',
   'dress_code',
+  'fit',
   'season',
   'tradition',
   'size',
@@ -260,6 +263,7 @@ function toFormState(rawItem, user = null, t = null) {
     brand: item.brand || '',
     gender: item.gender || '',
     dress_code: item.dress_code || '',
+    fit: item.fit || '',
     season: Array.isArray(item.season) ? item.season : [],
     tradition: item.tradition || '',
     size,
@@ -541,6 +545,7 @@ export default function ItemDetail() {
       case 'brand': return t('itemDetail.edit.brand', { defaultValue: 'Brand' });
       case 'gender': return t('itemDetail.edit.gender', { defaultValue: 'Gender' });
       case 'dress_code': return t('itemDetail.edit.dressCode', { defaultValue: 'Dress Code' });
+      case 'fit': return t('itemDetail.edit.fit', { defaultValue: 'Fit' });
       case 'season': return t('itemDetail.edit.season', { defaultValue: 'Season' });
       case 'tradition': return t('itemDetail.edit.tradition', { defaultValue: 'Tradition' });
       default: return field;
@@ -2567,6 +2572,17 @@ export default function ItemDetail() {
                     />
                   </Field>
                 </div>
+                <Field label={t('itemDetail.edit.fit', { defaultValue: 'Fit' })}>
+                  <NullableSelect
+                    value={form.fit}
+                    onChange={(v) => setField('fit', v)}
+                    options={FIT_OPTIONS}
+                    placeholder="—"
+                    testid="item-edit-field-fit"
+                    format={(o) => labelForFit(o, t)}
+                    className=""
+                  />
+                </Field>
                 <Field label={t('itemDetail.edit.season')}>
                   <PillMultiSelect
                     value={form.season}

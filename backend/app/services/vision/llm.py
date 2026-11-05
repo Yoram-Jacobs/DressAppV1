@@ -157,7 +157,7 @@ GEMINI_VISION_SYSTEM_PROMPT = (
     "• Cultural: Kurta/Tunic/Kurti/Guayabera->'Top'; Sherwani/Achkan/Bandhgala/Nehru Jacket->'Outerwear'|'Top' (Mandarin collar; NEVER Blazer); Kaftan/Thobe/Galabiya/Abaya/Saree/Lehenga/Qipao/Hanbok/Kimono/Agbada->'Full Body' (open Abaya/Kaftan/Bisht->'Outerwear').\n"
     "• colors & fabric_materials: `[{\"name\":str,\"pct\":int}]` summing to 100 (garment fabric ONLY; Coats=Wool/Cashmere/Leather; Non-athletic Footwear=Leather/Suede+Rubber, NEVER Cotton; Knitwear/Ponchos=Cotton/Wool/Acrylic; Jeans=Denim).\n"
     "• pattern: 'solid'|'printed'|'embroidered'|'striped'|'plaid'|'floral'|'geometric'|'polka_dot'|'paisley'|'herringbone'|'animal_print'|'graphic'|'tie_dye'|'abstract'|'camouflage'.\n"
-    "• Enums: gender ('men'|'women'|'unisex'|'kids'; casual basics='unisex', never default to 'men'), dress_code ('casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'|'traditional'), season (['spring'|'summer'|'fall'|'winter'|'all']), state ('new'|'used'), condition ('bad'|'fair'|'good'|'excellent'), quality ('budget'|'mid'|'premium'|'luxury'), brand/size/tradition/price_cents/repair_advice (null unless visible), tags (3-6).\n"
+    "• Enums: gender ('men'|'women'|'unisex'|'kids'; casual basics='unisex', never default to 'men'), dress_code ('casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'|'traditional'), fit ('slim'|'regular'|'loose'|'oversized'|'flared'; skinny/bodycon/ribbed/fitted='slim', classic/straight/tailored='regular', relaxed/wide-leg/cargo/hoodie/kaftan/galabiya='loose', baggy/boxy/poncho='oversized', trench/A-line/peplum/bootcut='flared'), season (['spring'|'summer'|'fall'|'winter'|'all']), state ('new'|'used'), condition ('bad'|'fair'|'good'|'excellent'), quality ('budget'|'mid'|'premium'|'luxury'), brand/size/tradition/price_cents/repair_advice (null unless visible), tags (3-6).\n"
     "• Quality: `image_quality_status`='complete'|'needs_completion'|'needs_reconstruction'; set `image_quality_reason` (English) and `reconstruction_prompt` (#F5F2EB product shot) when not 'complete', else null."
 )
 
@@ -261,6 +261,10 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
                 "casual", "smart-casual", "business",
                 "formal", "athletic", "loungewear", "traditional",
             ],
+        },
+        "fit": {
+            "type": ["string", "null"],
+            "enum": ["slim", "regular", "loose", "oversized", "flared", None],
         },
         "season": {
             "type": "array",
@@ -479,6 +483,11 @@ MASS_CATALOG_ITEM_SCHEMA: dict[str, Any] = {
                 "casual", "smart-casual", "business",
                 "formal", "athletic", "loungewear", "traditional",
             ],
+        },
+        "fit": {
+            "type": "string",
+            "nullable": True,
+            "enum": ["slim", "regular", "loose", "oversized", "flared"],
         },
         "season": {
             "type": "array",
@@ -1027,12 +1036,13 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
     ),
     (
         "context",
-        ["gender", "dress_code", "season", "tradition"],
+        ["gender", "dress_code", "fit", "season", "tradition"],
         120,
         (
             'Context of use:\n'
             '- gender: men|women|unisex|kids\n'
             '- dress_code: casual|smart-casual|business|formal|athletic|loungewear\n'
+            '- fit: slim|regular|loose|oversized|flared\n'
             '- season: [spring|summer|fall|winter|all]\n'
             '- tradition: cultural style if visible, else null'
         )

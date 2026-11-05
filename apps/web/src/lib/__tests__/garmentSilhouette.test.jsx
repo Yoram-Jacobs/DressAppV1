@@ -22,6 +22,7 @@ import {
   detectGarmentShoulderRow,
   getAvatarShoulderRidgeY,
   resolveBottomLength,
+  analyzeGarmentFit,
 } from '@/lib/garmentSilhouette';
 import {
   getTorsoSlice,
@@ -946,6 +947,33 @@ describe('shoulder line detection and hoodie mapping', () => {
         rowMaxX = Math.max(rowMaxX, Math.abs(pf.getX(j * vw + i)));
       }
       expect(rowMaxX).toBeLessThanOrEqual(0.195);
+
+    const slimTop = analyzeGarmentFit({
+      garment: { fit: 'slim', fabric_materials: '92% Cotton, 8% Elastane' },
+      rawSlot: 'top',
+      garmentText: 'fitted rib top',
+    });
+    expect(slimTop.fit).toBe('slim');
+    expect(slimTop.anchorType).toBe('shoulders_neckline');
+    expect(slimTop.bodyConformity).toBeGreaterThan(0.8);
+
+    const looseBottom = analyzeGarmentFit({
+      garment: { fit: 'loose', fabric_materials: '100% Linen' },
+      rawSlot: 'bottom',
+      garmentText: 'relaxed linen trousers',
+    });
+    expect(looseBottom.fit).toBe('loose');
+    expect(looseBottom.anchorType).toBe('waistline');
+    expect(looseBottom.lateralEase).toBeGreaterThan(slimTop.lateralEase);
+
+    const trench = analyzeGarmentFit({
+      garment: { category: 'outerwear' },
+      rawSlot: 'outerwear',
+      garmentText: 'Classic beige trench coat',
+    });
+    expect(trench.fit).toBe('flared');
+    expect(trench.anchorType).toBe('shoulders_neckline');
+    expect(trench.flareRate).toBeGreaterThan(0.1);
     }
   });
 });

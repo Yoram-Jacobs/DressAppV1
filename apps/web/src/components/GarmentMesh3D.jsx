@@ -16,6 +16,7 @@ import {
   AVAILABLE_TEMPLATES,
 } from '@/lib/garmentTemplates';
 import {
+  analyzeGarmentFit,
   buildSilhouetteShell,
   chooseGridResolution,
   resampleAlphaMask,
@@ -2810,6 +2811,7 @@ function GarmentTemplateMeshInner({
   isMale = false,
   layerOffset = 0,
   shellFit = null,
+  fitProfile = null,
   fallbackGeometry = null,
   heelGeometry = null,
 }) {
@@ -2860,7 +2862,78 @@ function GarmentTemplateMeshInner({
         geo.computeBoundingBox();
         const bb = geo.boundingBox;
         if (bb) {
-          // Canonical templates retain their continuous, welded, pre-tailored Blender geometry.
+          // Canonical templates retain their continuous, welded, pre-tailored Blender geometry,
+          // and apply anchor-locked radial & lateral ease below the anatomical anchor based on fitProfile:
+          //   • Tops / Outerwear / Dresses: anchored strictly at the shoulders & neckline (tDrop = 0 at shoulders).
+          //   • Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
+          const fitMode = fitProfile?.fit || 'regular';
+          if (fitMode !== 'regular') {
+            const wScale = Number.isFinite(fitProfile?.templateWidthScale) ? fitProfile.templateWidthScale : 1.0;
+            const dScale = Number.isFinite(fitProfile?.templateDepthScale) ? fitProfile.templateDepthScale : 1.0;
+            const yShoulderAnchor = isMale ? 1.48 : 1.42;
+            const yWaistAnchor = isMale ? 1.08 : 1.05;
+            const yCrotch = isMale ? 0.86 : 0.82;
+            const isBottomSlot = rawSlot === 'bottom';
+            const isSkirtSlot = Boolean(shellFit?.isSkirt);
+
+            for (let i = 0; i < pos.count; i++) {
+              let x = pos.getX(i);
+              const y = pos.getY(i);
+              let z = pos.getZ(i);
+
+              if (isBottomSlot) {
+                // Bottoms: locked 100% at the waistline (y >= yWaistAnchor - 0.03)
+                const tDrop = Math.max(0, Math.min(1, (yWaistAnchor - 0.03 - y) / 0.16));
+                const sDrop = tDrop * tDrop * (3 - 2 * tDrop);
+                if (sDrop > 0) {
+                  const slice = getTorsoSlice(Math.max(0.5, y), isMale);
+                  const cz = slice.cz || 0;
+                  if (isSkirtSlot || y >= yCrotch) {
+                    const flareAdd = fitMode === 'flared' ? Math.max(0, yCrotch - y) * (fitProfile?.flareRate || 0.28) : 0;
+                    x = x * (1 + (wScale - 1) * sDrop) + Math.sign(x) * flareAdd * sDrop;
+                    z = cz + (z - cz) * (1 + (dScale - 1) * sDrop) + Math.sign(z - cz) * flareAdd * 0.5 * sDrop;
+                  } else {
+                    // Pant / short legs: scale radially around each leg's anatomical center while preserving inner-crotch clearance
+                    const legSlice = getLegSlice(y, isMale);
+                    const side = x < 0 ? -1 : 1;
+                    const legCx = side * legSlice.cx;
+                    const dxLeg = x - legCx;
+                    const isInnerThigh = side * dxLeg < 0 && y > yCrotch - 0.10;
+                    const effWScale = isInnerThigh ? Math.min(1.02, wScale) : wScale;
+                    const flareLeg = fitMode === 'flared' ? Math.max(0, 0.50 - y) * (fitProfile?.flareRate || 0.22) : 0;
+                    x = legCx + dxLeg * (1 + (effWScale - 1) * sDrop) + (isInnerThigh ? 0 : side * flareLeg * sDrop);
+                    z = legSlice.cz + (z - legSlice.cz) * (1 + (dScale - 1) * sDrop);
+                  }
+                  pos.setXYZ(i, x, y, z);
+                }
+              } else {
+                // Tops / Outerwear / Full-Body: locked 100% at the shoulders & neckline (y >= yShoulderAnchor - 0.03)
+                const tDrop = Math.max(0, Math.min(1, (yShoulderAnchor - 0.03 - y) / 0.22));
+                const sDrop = tDrop * tDrop * (3 - 2 * tDrop);
+                if (sDrop > 0) {
+                  const slice = getTorsoSlice(Math.max(0.5, y), isMale);
+                  const cz = slice.cz || 0;
+                  const isSleeveVertex = Math.abs(x) > slice.rx + 0.045;
+                  if (isSleeveVertex) {
+                    // Sleeve vertices: anchored at shoulder armhole, modulated by sleeveEase in Z
+                    const zScaleSleeve = fitMode === 'slim' ? 0.92 : (fitMode === 'oversized' ? 1.18 : (fitMode === 'loose' ? 1.10 : 1.0));
+                    z = cz + (z - cz) * (1 + (zScaleSleeve - 1) * sDrop);
+                  } else {
+                    const isAlreadyFlaredTemplate = templateId === 'trench_coat' || templateId === 'kaftan';
+                    const flareAdd = (fitMode === 'flared' && !isAlreadyFlaredTemplate)
+                      ? Math.max(0, yWaistAnchor - y) * (fitProfile?.flareRate || 0.28)
+                      : 0;
+                    x = x * (1 + (wScale - 1) * sDrop) + Math.sign(x) * flareAdd * sDrop;
+                    z = cz + (z - cz) * (1 + (dScale - 1) * sDrop) + Math.sign(z - cz) * flareAdd * 0.45 * sDrop;
+                  }
+                  pos.setXYZ(i, x, y, z);
+                }
+              }
+            }
+            pos.needsUpdate = true;
+            geo.computeVertexNormals();
+            geo.computeBoundingBox();
+          }
 
           // Preserve authored GLB UVs; generate bounding-box fallback only if template geometry lacks UVs
           if (texture && !uv) {
@@ -2889,7 +2962,7 @@ function GarmentTemplateMeshInner({
       }
     }
     return geo;
-  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, shellFit, texture]);
+  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, shellFit, fitProfile, templateId, texture]);
 
   // Split geometry faces into front (Nz >= -0.05) and back (Nz < -0.05) groups
   // so backTexture renders on the back view without front details (zippers, logos, pockets)
@@ -3260,10 +3333,21 @@ export default function GarmentMesh3D({
     () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear, garment, aspect }),
     [rawSlot, garmentText, isMale, hasOuterwear, garment, aspect]
   );
+  const fitProfile = useMemo(
+    () => analyzeGarmentFit({
+      garment,
+      rawSlot,
+      garmentText,
+      shellMask,
+      isSkirt: Boolean(shellFit?.isSkirt),
+    }),
+    [garment, rawSlot, garmentText, shellMask, shellFit]
+  );
   const shell = useMemo(() => {
     if (!visible || !shellFit || !shellMask || bypassSilhouette) return null;
     try {
       const built = buildSilhouetteShell({
+        fitProfile,
         runsByRow: shellMask.runsByRow,
         mask: shellMask.mask,
         nx: shellMask.nx,
@@ -3290,7 +3374,7 @@ export default function GarmentMesh3D({
       console.warn('Silhouette shell unavailable, using procedural fallback:', err);
       return null;
     }
-  }, [visible, shellFit, shellMask, aspect, rawSlot, isMale, isStandalone, hasOuterwear, sideProfile, bypassSilhouette]);
+  }, [visible, shellFit, fitProfile, shellMask, aspect, rawSlot, isMale, isStandalone, hasOuterwear, sideProfile, bypassSilhouette]);
   const shellGeos = useMemo(() => {
     if (!shell) return null;
     if (isStandalone) {
@@ -3369,6 +3453,7 @@ export default function GarmentMesh3D({
         isMale={isMale}
         layerOffset={shellFit?.layerOffset || 0}
         shellFit={shellFit}
+        fitProfile={fitProfile}
         fallbackGeometry={geometry}
         heelGeometry={heelGeometry}
       />
@@ -3418,6 +3503,7 @@ export default function GarmentMesh3D({
         isMale={isMale}
         layerOffset={shellFit?.layerOffset || 0}
         shellFit={shellFit}
+        fitProfile={fitProfile}
         fallbackGeometry={geometry}
         heelGeometry={heelGeometry}
       />

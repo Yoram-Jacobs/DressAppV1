@@ -3019,6 +3019,7 @@ def _coerce_single_garment(
     _coerce_seasons(res)
     inferred_dc = _infer_garment_dress_code(res)
     res["dress_code"] = inferred_dc if inferred_dc in _VALID_DRESS_CODE else "casual"
+    res["fit"] = _infer_garment_fit(res)
     if not res.get("tradition") and res.get("dress_code") == "traditional":
         inferred_trad = _infer_cultural_tradition(res, language=language)
         if inferred_trad:
@@ -3419,6 +3420,134 @@ _DRESS_CODE_ALIASES = {
 }
 
 
+_VALID_FIT = {"slim", "regular", "loose", "oversized", "flared"}
+_FIT_ALIASES = {
+    "slim-fit": "slim",
+    "slim_fit": "slim",
+    "slimfit": "slim",
+    "skinny": "slim",
+    "fitted": "slim",
+    "tight": "slim",
+    "bodycon": "slim",
+    "compression": "slim",
+    "pencil": "slim",
+    "צמוד": "slim",
+    "סקיני": "slim",
+    "גזרה צרה": "slim",
+    "regular-fit": "regular",
+    "regular_fit": "regular",
+    "classic": "regular",
+    "straight": "regular",
+    "straight-leg": "regular",
+    "tailored": "regular",
+    "standard": "regular",
+    "רגיל": "regular",
+    "קלאסי": "regular",
+    "גזרה רגילה": "regular",
+    "גזרה ישרה": "regular",
+    "loose-fit": "loose",
+    "loose_fit": "loose",
+    "relaxed": "loose",
+    "relaxed-fit": "loose",
+    "wide": "loose",
+    "wide-leg": "loose",
+    "wide_leg": "loose",
+    "boyfriend": "loose",
+    "cargo": "loose",
+    "רפוי": "loose",
+    "רחב": "loose",
+    "גזרה רחבה": "loose",
+    "oversize": "oversized",
+    "over-sized": "oversized",
+    "baggy": "oversized",
+    "boxy": "oversized",
+    "slouchy": "oversized",
+    "אוברסייז": "oversized",
+    "באגי": "oversized",
+    "flare": "flared",
+    "a-line": "flared",
+    "a_line": "flared",
+    "aline": "flared",
+    "peplum": "flared",
+    "bootcut": "flared",
+    "skater": "flared",
+    "pleated": "flared",
+    "מתרחב": "flared",
+    "גזרת A": "flared",
+}
+
+
+def _normalise_fit(raw: str | None) -> str | None:
+    value = _norm_str(raw)
+    if not value:
+        return None
+    value_hyphen = value.replace(" ", "-")
+    if value in _VALID_FIT:
+        return value
+    if value_hyphen in _VALID_FIT:
+        return value_hyphen
+    return _FIT_ALIASES.get(value) or _FIT_ALIASES.get(value_hyphen)
+
+
+def _infer_garment_fit(parsed: dict[str, Any]) -> str:
+    """Infer the canonical garment fit ('slim' | 'regular' | 'loose' | 'oversized' | 'flared')
+    from explicit VLM prediction, cut/silhouette keywords, and fabric elasticity.
+    """
+    raw_fit = _normalise_fit(parsed.get("fit"))
+    sub = (parsed.get("sub_category") or "").lower().strip()
+    itype = (parsed.get("item_type") or "").lower().strip()
+    tags_str = " ".join(str(t) for t in (parsed.get("tags") or []))
+    full_text = f"{parsed.get('title', '')} {parsed.get('name', '')} {sub} {itype} {parsed.get('caption', '')} {tags_str}".lower()
+
+    # Check fabric materials for stretch (Spandex / Elastane)
+    fabrics = parsed.get("fabric_materials") or []
+    spandex_pct = 0
+    has_ribbed_or_stretch = any(w in full_text for w in ("ribbed", "spandex", "elastane", "lycra", "stretch", "bodycon", "ריב", "לייקרה", "אלסטן", "צמוד", "סקיני"))
+    if isinstance(fabrics, list):
+        for f in fabrics:
+            if isinstance(f, dict):
+                fname = str(f.get("name") or "").lower()
+                if fname in ("spandex", "elastane", "lycra"):
+                    spandex_pct += int(f.get("pct") or 0)
+
+    # 1. Explicit Flared / A-line / Trench / Peplum / Bootcut
+    if any(w in full_text for w in (
+        "trench", "a-line", "aline", "flared", "flare", "peplum", "skater", "ball gown",
+        "bootcut", "bell-bottom", "pleated skirt", "circle skirt",
+        "טרנץ", "גזרת a", "מתרחב", "פפלום", "קפלים",
+    )):
+        return "flared"
+
+    # 2. Explicit Oversized / Baggy / Poncho / Cape
+    if any(w in full_text for w in (
+        "oversized", "oversize", "baggy", "boxy", "slouchy", "poncho", "cape", "shawl", "hip-hop", "parachute",
+        "אוברסייז", "באגי", "פונצ'ו", "שכמייה",
+    )) or sub in ("poncho", "cape", "capes & ponchos", "shawl"):
+        return "oversized"
+
+    # 3. Explicit Loose / Relaxed / Wide-Leg / Kaftan / Galabiya / Abaya / Cargo / Sweatpants / Hoodie
+    if any(w in full_text for w in (
+        "loose", "relaxed", "wide-leg", "wide leg", "palazzo", "boyfriend", "mom jeans", "cargo",
+        "kaftan", "caftan", "galabiya", "galabiye", "jalabiya", "abaya", "thobe", "djellaba", "kimono",
+        "sweatpants", "jogger", "hoodie", "sweatshirt", "kurta", "tunic",
+        "רחב", "רפוי", "דגמ\"ח", "דגמח", "כפתן", "גלבייה", "גלביה", "עבאיה", "קפוצ'ון", "סווטשירט", "טרנינג", "טוניקה", "קורטה",
+    )) or sub in ("kaftan", "galabiya", "thobe", "abaya", "kimono", "sweatpants", "hoodie", "kurta"):
+        return "loose" if raw_fit not in ("oversized", "flared") else raw_fit
+
+    # 4. Explicit Slim / Skinny / Fitted / Pencil / Singlet / Tank
+    if any(w in full_text for w in (
+        "slim", "skinny", "fitted", "tight", "bodycon", "compression", "legging", "biker short",
+        "pencil skirt", "pencil", "sheath", "corset", "bustier", "singlet", "camisole", "tank top",
+        "צמוד", "סקיני", "טייץ", "עיפרון", "גופייה", "גופיה", "מחוך",
+    )) or has_ribbed_or_stretch or spandex_pct >= 6:
+        return "slim" if raw_fit not in ("flared",) else raw_fit
+
+    if raw_fit in _VALID_FIT:
+        return raw_fit
+
+    return "regular"
+
+
 def _normalise_dress_code(raw: str | None) -> str | None:
     """Return the dress-code token after space→hyphen + common renames."""
     value = _norm_str(raw)
@@ -3704,6 +3833,7 @@ def _coerce_enums(
 
     inferred_dc = _infer_garment_dress_code(parsed)
     parsed["dress_code"] = inferred_dc if inferred_dc in _VALID_DRESS_CODE else "casual"
+    parsed["fit"] = _infer_garment_fit(parsed)
     if not parsed.get("tradition") and parsed.get("dress_code") == "traditional":
         inferred_trad = _infer_cultural_tradition(parsed)
         if inferred_trad:
