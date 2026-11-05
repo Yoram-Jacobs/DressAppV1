@@ -169,14 +169,14 @@ function CameraController({
     const currentTarget = controlsRef?.current ? controlsRef.current.target : targetLookAt.current;
 
     if (cameraPreset === 'full') {
-      targetCamPos.current.set(0, 1.05, 2.5);
+      targetCamPos.current.set(0, 1.0, 2.5);
       targetLookAt.current.set(0, 0.95, 0);
-    } else if (cameraPreset === 'upper') {
-      targetCamPos.current.set(0, 1.35, 1.35);
-      targetLookAt.current.set(0, 1.30, 0);
-    } else if (cameraPreset === 'lower') {
-      targetCamPos.current.set(0, 0.45, 1.35);
-      targetLookAt.current.set(0, 0.35, 0);
+    } else if (cameraPreset === 'upper' || cameraPreset === 'torso') {
+      targetCamPos.current.set(0, 1.3, 1.2);
+      targetLookAt.current.set(0, 1.25, 0);
+    } else if (cameraPreset === 'lower' || cameraPreset === 'footwear') {
+      targetCamPos.current.set(0, 0.2, 0.9);
+      targetLookAt.current.set(0, 0.15, 0);
     } else if (cameraPreset === 'garment' || cameraPreset === 'item') {
       const slotConfig = GARMENT_CAMERA_TARGETS[activeGarmentSlot] || GARMENT_CAMERA_TARGETS.full;
       targetCamPos.current.set(...slotConfig.pos);
@@ -751,7 +751,7 @@ export default function DressingRoom3D({
               ref={controlsRef}
               makeDefault
               minPolarAngle={Math.PI / 6}
-              maxPolarAngle={Math.PI / 1.88}
+              maxPolarAngle={(100 * Math.PI) / 180}
               minDistance={0.5}
               maxDistance={4.2}
               enablePan={true}

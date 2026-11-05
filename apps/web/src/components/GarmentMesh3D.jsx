@@ -774,13 +774,15 @@ async function fetchAndCropTexture(url) {
                 }
               }
               // Enclosed sleeve gap: between sleeve and torso, studio background is trapped
-              // without touching the image border. Seed any light studio pixel in lateral/flank zones.
+              // without touching the image border. Seed any light/shadowed studio pixel in lateral/flank zones.
               const o = p * 4;
               const r = data[o], g = data[o + 1], b = data[o + 2];
+              const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+              const chroma = Math.max(r, g, b) - Math.min(r, g, b);
               const distBg = Math.hypot(r - bgR, g - bgG, b - bgB);
               const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
               const isLateralZone = (x < 0.42 * w || x > 0.58 * w || y > 0.38 * h);
-              const isEnclosedGap = isLateralZone && (distBg < 42 || (r > 220 && g > 220 && b > 220)) && distCore > 36;
+              const isEnclosedGap = isLateralZone && (distBg < 55 || (lum >= 170 && chroma <= 32)) && distCore > 36;
               if ((touchesBg || isEnclosedGap) && isStudioFringe(p)) {
                 bgMask[p] = 1;
                 fQueue[fTail++] = p;
@@ -1179,9 +1181,16 @@ async function fetchAndCropTexture(url) {
               px[o + 1] = rG;
               px[o + 2] = rB;
             } else {
-              px[o] = domR;
-              px[o + 1] = domG;
-              px[o + 2] = domB;
+              let gL = cx - 1;
+              while (gL > left && px[row + gL * 4 + 3] < ALPHA_ON) gL--;
+              let gR = cx + 1;
+              while (gR < right && px[row + gR * 4 + 3] < ALPHA_ON) gR++;
+              const oGL = row + Math.max(left, gL - 1) * 4;
+              const oGR = row + Math.min(right, gR + 1) * 4;
+              const tGap = (cx - gL) / Math.max(1, gR - gL);
+              px[o] = Math.round(px[oGL] * (1 - tGap) + px[oGR] * tGap);
+              px[o + 1] = Math.round(px[oGL + 1] * (1 - tGap) + px[oGR + 1] * tGap);
+              px[o + 2] = Math.round(px[oGL + 2] * (1 - tGap) + px[oGR + 2] * tGap);
             }
             px[o + 3] = 255;
           } else {
@@ -3438,7 +3447,7 @@ export default function GarmentMesh3D({
   // 1. Dedicated Canonical 3D Templates (Reproduced from Avatar Body via Blender):
   //    Rendered in 3D Tailored mode (default) and whenever a canonical 3D template matches,
   //    so garments wrap smoothly around the avatar with full 3D continuous volume (no flat razor-blade sheets).
-  if (matchedTemplateId && (!shellGeos || bypassSilhouette || isStandalone)) {
+  if (matchedTemplateId && (!shellGeos || bypassSilhouette)) {
     return (
       <GarmentTemplateMesh
         templateId={matchedTemplateId}

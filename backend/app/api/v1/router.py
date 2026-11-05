@@ -27,6 +27,7 @@ from app.api.v1 import (
     wiki,
     sync,
     daily_proposals,
+    dressing_room,
     weather,
     image_generation,
     internal,
@@ -74,6 +75,7 @@ api_v1_router.include_router(ai_credits.quota_router)            # Quota managem
 api_v1_router.include_router(auth.router)
 api_v1_router.include_router(users.router)
 api_v1_router.include_router(avatar.router)
+api_v1_router.include_router(dressing_room.router)
 api_v1_router.include_router(closet.router)
 api_v1_router.include_router(outfits.router)
 api_v1_router.include_router(listings.router)

@@ -642,6 +642,9 @@ def build_top_template(avatar_data, variant="tshirt"):
     bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
 
     body_mat_indices = {i for i, m in enumerate(avatar_obj.data.materials) if 'skin' in m.name.lower() or 'generic' in m.name.lower()}
+    bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if abs(v.co.x) < 0.25 and v.co.z < 1.35], dist=0.0005)
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
     non_body = [f for f in bm.faces if f.material_index not in body_mat_indices]
     if non_body:
         bmesh.ops.delete(bm, geom=non_body, context='FACES')
@@ -796,14 +799,26 @@ def build_top_template(avatar_data, variant="tshirt"):
     min_z, max_z = min(v.z for v in verts), max(v.z for v in verts)
     dx = max(1e-4, max_x - min_x)
     dz = max(1e-4, max_z - min_z)
+    x_torso = 0.185 if is_male else 0.170
+    has_sleeves = max_x > (x_torso + 0.05)
 
     faces_uvs = []
     for f in bm_final.faces:
         uvs = []
         for l in f.loops:
             v = l.vert.co
-            u = (v.x - min_x) / dx
-            v_norm = (v.z - min_z) / dz
+            if has_sleeves:
+                if abs(v.x) <= x_torso:
+                    u = 0.5 + (v.x / x_torso) * 0.29
+                else:
+                    t_sl = min(1.0, (abs(v.x) - x_torso) / max(1e-4, max_x - x_torso))
+                    u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
+            else:
+                u = (v.x - min_x) / dx
+            v_torso = 1.0 - (v.z - z_hem) / max(1e-4, max_z - z_hem)
+            v_arm = 1.0 - (v.z - min_z) / dz
+            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0
+            v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
 
@@ -875,7 +890,7 @@ def build_bottom_template(avatar_data, variant="trousers"):
     bm = bmesh.new()
     bm.from_mesh(avatar_obj.data)
     bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+    bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if abs(v.co.x) < 0.25 and v.co.z < 1.35], dist=0.0005)
     bm.verts.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
 
@@ -977,14 +992,26 @@ def build_bottom_template(avatar_data, variant="trousers"):
     min_z, max_z = min(v.z for v in verts), max(v.z for v in verts)
     dx = max(1e-4, max_x - min_x)
     dz = max(1e-4, max_z - min_z)
+    x_torso = 0.185 if is_male else 0.170
+    has_sleeves = max_x > (x_torso + 0.05)
 
     faces_uvs = []
     for f in bm_final.faces:
         uvs = []
         for l in f.loops:
             v = l.vert.co
-            u = (v.x - min_x) / dx
-            v_norm = (v.z - min_z) / dz
+            if has_sleeves:
+                if abs(v.x) <= x_torso:
+                    u = 0.5 + (v.x / x_torso) * 0.29
+                else:
+                    t_sl = min(1.0, (abs(v.x) - x_torso) / max(1e-4, max_x - x_torso))
+                    u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
+            else:
+                u = (v.x - min_x) / dx
+            v_torso = 1.0 - (v.z - z_hem) / max(1e-4, max_z - z_hem)
+            v_arm = 1.0 - (v.z - min_z) / dz
+            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0
+            v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
 
@@ -1114,7 +1141,7 @@ def build_dress_template(avatar_data, variant="dress"):
     bm = bmesh.new()
     bm.from_mesh(avatar_obj.data)
     bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0005)
+    bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if abs(v.co.x) < 0.25 and v.co.z < 1.35], dist=0.0005)
     bm.verts.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
 
@@ -1214,14 +1241,26 @@ def build_dress_template(avatar_data, variant="dress"):
     min_z, max_z = min(v.z for v in verts), max(v.z for v in verts)
     dx = max(1e-4, max_x - min_x)
     dz = max(1e-4, max_z - min_z)
+    x_torso = 0.185 if is_male else 0.170
+    has_sleeves = max_x > (x_torso + 0.05)
 
     faces_uvs = []
     for f in bm_final.faces:
         uvs = []
         for l in f.loops:
             v = l.vert.co
-            u = (v.x - min_x) / dx
-            v_norm = (v.z - min_z) / dz
+            if has_sleeves:
+                if abs(v.x) <= x_torso:
+                    u = 0.5 + (v.x / x_torso) * 0.29
+                else:
+                    t_sl = min(1.0, (abs(v.x) - x_torso) / max(1e-4, max_x - x_torso))
+                    u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
+            else:
+                u = (v.x - min_x) / dx
+            v_torso = 1.0 - (v.z - z_hem) / max(1e-4, max_z - z_hem)
+            v_arm = 1.0 - (v.z - min_z) / dz
+            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0
+            v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
 

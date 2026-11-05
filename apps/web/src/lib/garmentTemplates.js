@@ -117,7 +117,7 @@ export function getTemplateGlbUrl(templateId, isMale) {
   if (typeof isMale === 'boolean') {
     const genderDir = isMale ? 'male' : 'female';
     const canonicalName = CANONICAL_TEMPLATE_MAP[templateId] || templateId;
-    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon5`;
+    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon6`;
   }
   return `/models/templates/${templateId}.glb`;
 }
