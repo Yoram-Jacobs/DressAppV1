@@ -646,8 +646,7 @@ def build_top_template(avatar_data, variant="tshirt"):
     if non_body:
         bmesh.ops.delete(bm, geom=non_body, context='FACES')
 
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0008)
-    bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
+        bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
 
     # 1. Precision Hem Cut
     bmesh.ops.bisect_plane(
@@ -659,7 +658,19 @@ def build_top_template(avatar_data, variant="tshirt"):
     )
 
     # 2. Precision Sleeve / Armhole Cuts
-    if sleeve_type in ("short", "long"):
+    if sleeve_type == "long":
+        # Full long sleeve extending precisely to the wrist joint along the 3D forearm axis
+        wrist_r = Vector((0.486, -0.037, 0.876)) if is_male else Vector((0.428, -0.034, 0.846))
+        arm_dir_r = Vector((0.4638, -0.1090, -0.8792)).normalized() if is_male else Vector((0.5160, -0.1410, -0.8449)).normalized()
+
+        r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=wrist_r, plane_no=arm_dir_r, clear_outer=True)
+
+        wrist_l = Vector((-wrist_r.x, wrist_r.y, wrist_r.z))
+        arm_dir_l = Vector((-arm_dir_r.x, arm_dir_r.y, arm_dir_r.z))
+        l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
+    elif sleeve_type == "short":
         arm_dir = Vector((0.536, 0.0, -0.844)).normalized()
         z_cuff = (1.21 - (x_arm_max - 0.315) * 1.57) if is_male else (1.10 - (x_arm_max - 0.280) * 1.57)
 
@@ -731,8 +742,14 @@ def build_top_template(avatar_data, variant="tshirt"):
     if other:
         bmesh.ops.delete(bm, geom=other, context='FACES')
 
-    # Weld/fill small pinhole seams
-    small_holes = [e for e in bm.edges if e.is_boundary and e.verts[0].co.z > (z_hem + 0.01)]
+    # Weld/fill small pinhole seams (exclude intentional openings: hem, cuffs |x| > 0.25, neck)
+    small_holes = [
+        e for e in bm.edges
+        if e.is_boundary
+        and e.verts[0].co.z > (z_hem + 0.01)
+        and abs(e.verts[0].co.x) < 0.25
+        and e.verts[0].co.z < (z_neck - 0.03)
+    ]
     if small_holes:
         try:
             bmesh.ops.holes_fill(bm, edges=small_holes, sides=8)

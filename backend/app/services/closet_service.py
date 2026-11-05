@@ -442,6 +442,7 @@ def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
     parsed.setdefault("pattern", "solid")
     parsed.setdefault("gender", "unisex")
     parsed.setdefault("dress_code", "casual")
+    parsed.setdefault("fit", "regular")
     parsed.setdefault("state", "used")
     parsed.setdefault("condition", "good")
     parsed.setdefault("quality", "mid")
@@ -510,7 +511,7 @@ async def run_background_matte_and_analyze(
 
     ANALYSIS_KEYS = (
         "title", "name", "caption", "category", "sub_category", "item_type",
-        "brand", "gender", "dress_code", "season", "tradition", "colors",
+        "brand", "gender", "dress_code", "fit", "season", "tradition", "colors",
         "fabric_materials", "pattern", "state", "condition", "quality",
         "repair_advice", "tags", "image_quality_status", "image_quality_reason",
         "reconstruction_prompt",

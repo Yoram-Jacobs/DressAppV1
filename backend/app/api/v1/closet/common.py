@@ -13,6 +13,7 @@ from app.models.schemas import (
     DressCode,
     Formality,
     GarmentCondition,
+    GarmentFit,
     GarmentGender,
     GarmentQuality,
     GarmentState,
@@ -80,6 +81,7 @@ class CreateItemIn(BaseModel):
     brand: str | None = None
     gender: GarmentGender | None = None
     dress_code: DressCode | None = None
+    fit: GarmentFit | None = None
     season: list[str] = Field(default_factory=list)
     tradition: str | None = None
     # Composition
@@ -209,6 +211,7 @@ class UpdateItemIn(BaseModel):
     brand: str | None = None
     gender: GarmentGender | None = None
     dress_code: DressCode | None = None
+    fit: GarmentFit | None = None
     season: list[str] | None = None
     tradition: str | None = None
     # Composition

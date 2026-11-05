@@ -680,7 +680,7 @@ const hydrate = (a, user, t, i18n) => {
       const isHoodieOrSweatshirt = /hoodie|hooded|sweatshirt|קפוצ|סווטשירט|толстовק|худи/.test(fullGarmentBlob);
       if (isHoodieOrSweatshirt) {
         const isZip = /zip|רוכסן/.test(fullGarmentBlob);
-        out.category = (lang === 'he' || lang === 'iw') ? 'חלק עליון' : 'Top';
+        out.category = 'Top';
         out.sub_category = (lang === 'he' || lang === 'iw') ? "סווטשירטים וקפוצ'ונים" : t('taxonomy.sub_category.sweatshirts', { defaultValue: 'Sweatshirts & Hoodies' });
         out.item_type = isZip
           ? ((lang === 'he' || lang === 'iw') ? "קפוצ'ון עם רוכסן" : t('taxonomy.item_type.zip_hoodie', { defaultValue: 'Zip hoodie' }))
@@ -694,11 +694,11 @@ const hydrate = (a, user, t, i18n) => {
             ? slug(out.category)
             : String(out.category || '').trim().toLowerCase().replace(/\s+/g, '_');
           if (catCanonical === 'Top' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {
-            out.category = (lang === 'he' || lang === 'iw') ? 'חלק עליון' : 'Top';
+            out.category = 'Top';
           } else if (catCanonical === 'Outerwear' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {
-            out.category = (lang === 'he' || lang === 'iw') ? 'עליוניות' : 'Outerwear';
+            out.category = 'Outerwear';
           } else if (catCanonical === 'Bottom' && (currentCatSlug === 'accessories' || currentCatSlug === 'accessory' || currentCatSlug === 'אקססוריז')) {
-            out.category = (lang === 'he' || lang === 'iw') ? 'חלק תחתון' : 'Bottom';
+            out.category = 'Bottom';
           }
         }
         if (subKey && subKey !== 'other') {

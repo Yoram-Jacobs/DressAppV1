@@ -678,6 +678,7 @@ async def analyze_item_image(
                                         brand=analysis.get("brand"),
                                         gender=analysis.get("gender"),
                                         dress_code=analysis.get("dress_code"),
+                                        fit=analysis.get("fit"),
                                         season=analysis.get("season") or [],
                                         tradition=analysis.get("tradition"),
                                         size=analysis.get("size"),
@@ -968,6 +969,7 @@ async def analyze_item_image(
                                     brand=analysis.get("brand"),
                                     gender=analysis.get("gender"),
                                     dress_code=analysis.get("dress_code"),
+                                    fit=analysis.get("fit"),
                                     season=analysis.get("season") or [],
                                     tradition=analysis.get("tradition"),
                                     size=analysis.get("size"),
@@ -2061,6 +2063,7 @@ async def reanalyze_item(
         "brand",
         "gender",
         "dress_code",
+        "fit",
         "season",
         "tradition",
         "colors",
@@ -2632,7 +2635,7 @@ async def chat_analyse_item(
         for k, v in meta_updates.items():
             if k in (
                 "title", "name", "category", "sub_category", "item_type", "brand",
-                "gender", "dress_code", "season", "tradition", "colors", "color",
+                "gender", "dress_code", "fit", "season", "tradition", "colors", "color",
                 "fabric_materials", "material", "pattern", "state", "condition",
                 "quality", "repair_advice", "tags"
             ):

@@ -742,7 +742,7 @@ async function fetchAndCropTexture(url) {
         const coreLum = 0.299 * coreR + 0.587 * coreG + 0.114 * coreB;
         const coreChroma = Math.max(coreR, coreG, coreB) - Math.min(coreR, coreG, coreB);
         // Only strip light-gray/white studio background pockets if the core garment itself is not light gray/white
-        if (coreLum < 155 || coreChroma > 24) {
+        if (coreLum < 185 || coreChroma > 20) {
           const isStudioFringe = (p) => {
             const o = p * 4;
             const r = data[o], g = data[o + 1], b = data[o + 2];
@@ -772,7 +772,15 @@ async function fetchAndCropTexture(url) {
                   }
                 }
               }
-              if (touchesBg && isStudioFringe(p)) {
+              // Enclosed sleeve gap: between sleeve and torso, studio background is trapped
+              // without touching the image border. Seed any light studio pixel in lateral/flank zones.
+              const o = p * 4;
+              const r = data[o], g = data[o + 1], b = data[o + 2];
+              const distBg = Math.hypot(r - bgR, g - bgG, b - bgB);
+              const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
+              const isLateralZone = (x < 0.42 * w || x > 0.58 * w || y > 0.38 * h);
+              const isEnclosedGap = isLateralZone && (distBg < 42 || (r > 220 && g > 220 && b > 220)) && distCore > 36;
+              if ((touchesBg || isEnclosedGap) && isStudioFringe(p)) {
                 bgMask[p] = 1;
                 fQueue[fTail++] = p;
               }
@@ -2905,8 +2913,8 @@ function GarmentTemplateMeshInner({
       cb.subVectors(pC, pB);
       ab.subVectors(pA, pB);
       cb.cross(ab).normalize();
-      const cz = (pA.z + pB.z + pC.z) / 3;
-      if (cb.z < -0.05 && cz < 0.01) {
+      // Triangle facing backwards: outward face normal points away from front (+Z)
+      if (cb.z < -0.02) {
         backTriangles.push(i0, i1, i2);
       } else {
         frontTriangles.push(i0, i1, i2);

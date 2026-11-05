@@ -186,6 +186,7 @@ async def save_closet_item_document(
         brand=payload.brand,
         gender=payload.gender,
         dress_code=payload.dress_code,
+        fit=payload.fit,
         season=payload.season,
         tradition=payload.tradition,
         size=payload.size,

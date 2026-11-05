@@ -39,6 +39,7 @@ GarmentState = Literal["new", "used"]
 GarmentCondition = Literal["bad", "fair", "good", "excellent"]
 GarmentQuality = Literal["budget", "mid", "premium", "luxury"]
 GarmentGender = Literal["men", "women", "unisex", "kids"]
+GarmentFit = Literal["slim", "regular", "loose", "oversized", "flared"]
 MarketplaceIntent = Literal["own", "for_sale", "donate", "swap", "rent"]
 DressCode = Literal[
     "casual", "smart-casual", "business", "formal", "athletic", "loungewear", "traditional"
@@ -307,6 +308,7 @@ class ClosetItem(BaseDoc):
     brand: str | None = None
     gender: GarmentGender | None = None
     dress_code: DressCode | None = None
+    fit: GarmentFit | None = None
     season: list[str] = Field(default_factory=list)
     tradition: str | None = None  # e.g. "arabic", "jewish"; free-form
     # Structured composition
@@ -437,6 +439,7 @@ class GarmentAnalysis(BaseModel):
     brand: str | None = None
     gender: str | None = None
     dress_code: str | None = None
+    fit: str | None = None
     season: list[str] = Field(default_factory=list)
     tradition: str | None = None
     colors: list[WeightedTag] = Field(default_factory=list)
