@@ -1185,14 +1185,22 @@ def build_dress_template(avatar_data, variant="dress"):
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     else:
-        # Sleeveless dress armholes angled cleanly along the shoulder seam
-        arm_no_r = Vector((0.96, 0.0, -0.28)).normalized()
-        r_geom = [v for v in bm.verts if v.co.x > (x_arm_max - 0.02)] + [e for e in bm.edges if all(v.co.x > (x_arm_max - 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x > (x_arm_max - 0.02) for v in f.verts)]
-        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max, 0.0, 1.30)), plane_no=arm_no_r, clear_outer=True)
+        # Sleeveless dress armholes cut strictly in the shoulder/armpit zone (z > z_arm_cut_min)
+        # so the ribcage, waist, and hip ring at z_hip remain 100% closed on both sides!
+        z_arm_cut_min = 1.24 if is_male else 1.16
+        r_geom = (
+            [v for v in bm.verts if v.co.x > (x_arm_max - 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x > (x_arm_max - 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x > (x_arm_max - 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
+        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max, 0.0, 1.35)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
 
-        arm_no_l = Vector((-0.96, 0.0, -0.28)).normalized()
-        l_geom = [v for v in bm.verts if v.co.x < (-x_arm_max + 0.02)] + [e for e in bm.edges if all(v.co.x < (-x_arm_max + 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x < (-x_arm_max + 0.02) for v in f.verts)]
-        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.30)), plane_no=arm_no_l, clear_outer=True)
+        l_geom = (
+            [v for v in bm.verts if v.co.x < (-x_arm_max + 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x < (-x_arm_max + 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x < (-x_arm_max + 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
+        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
     # 3. Precision Curved Collar Cut (preserves 100% of shoulders & clavicles)
     nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
@@ -1268,7 +1276,16 @@ def build_dress_template(avatar_data, variant="dress"):
     if loose_verts:
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    # Strictly orient all face normals radially OUTWARD from the torso centerline (never inward!)
+    bm.normal_update()
+    cy_center = -0.015
+    for f in bm.faces:
+        fc = f.calc_center_median()
+        if abs(fc.x) < 0.22:
+            rad_dot = f.normal.x * fc.x + f.normal.y * (fc.y - cy_center)
+            if rad_dot < 0.0:
+                f.normal_flip()
+    bm.normal_update()
     for v in bm.verts:
         v.co += v.normal * offset
 
@@ -1310,7 +1327,9 @@ def build_dress_template(avatar_data, variant="dress"):
                     t_sl = min(1.0, (abs(v.x) - x_torso) / max(1e-4, max_x - x_torso))
                     u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
             else:
-                u = (v.x - min_x) / dx
+                # Continuous cylindrical wraparound UV across front, sides, and back (seam-free across y = cy_center)
+                theta = math.atan2(v.x, abs(v.y - cy_center) + 0.015)
+                u = 0.5 + (theta / (math.pi * 0.5)) * 0.46
             v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
             v_arm = (v.z - min_z) / dz
             t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0

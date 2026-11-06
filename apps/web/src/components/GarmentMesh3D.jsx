@@ -518,17 +518,15 @@ export function buildBackTexture({ frontCanvas, backCanvas }) {
   out.height = H;
   const ctx = out.getContext('2d', { willReadFrequently: true });
 
-  // Synthesize back fabric excluding front-only graphics, prints, pockets, zippers
-  const cleanBackCanvas = synthesizeBackFabricCanvas(frontCanvas);
-  ctx.drawImage(cleanBackCanvas, 0, 0);
-
   if (backCanvas) {
-    // When a verified back photograph is available from the item group, project it onto
-    // the back silhouette in original orientation so authentic asymmetric detailing,
-    // rear pockets, embroidery, or text remain un-inverted.
-    ctx.globalCompositeOperation = 'source-atop';
+    // When a verified back photograph is available from the item group, render the back
+    // photograph directly onto the back sheet so its authentic neckline/keyhole and pattern
+    // are preserved without front-photo bleed-through.
     ctx.drawImage(backCanvas, 0, 0, W, H);
-    ctx.globalCompositeOperation = 'source-over';
+  } else {
+    // Synthesize back fabric excluding front-only graphics, prints, pockets, zippers
+    const cleanBackCanvas = synthesizeBackFabricCanvas(frontCanvas);
+    ctx.drawImage(cleanBackCanvas, 0, 0);
   }
   const tex = new THREE.CanvasTexture(out);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -1163,6 +1161,7 @@ async function fetchAndCropTexture(url) {
   // Fills interior holes (armhole cutouts, inner wedges) with smooth dominant fabric color.
   // NO horizontal row-smear to eliminate barcode / zebra stripe distortion!
   let filledTexture = null;
+  let fillCanvas = null;
   try {
     const srcPixels = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, cropW, cropH).data;
     const fillData = new ImageData(new Uint8ClampedArray(srcPixels), cropW, cropH);
@@ -1213,6 +1212,7 @@ async function fetchAndCropTexture(url) {
                 px[o + 1] = lG;
                 px[o + 2] = lB;
               }
+              px[o + 3] = 255;
             } else if (cx > right) {
               const dist = cx - rightSample;
               const mirrorX = Math.max(leftSample, rightSample - (dist % spanLen));
@@ -1226,19 +1226,31 @@ async function fetchAndCropTexture(url) {
                 px[o + 1] = rG;
                 px[o + 2] = rB;
               }
+              px[o + 3] = 255;
             } else {
               let gL = cx - 1;
               while (gL > left && srcPixels[row + gL * 4 + 3] < ALPHA_ON) gL--;
               let gR = cx + 1;
               while (gR < right && srcPixels[row + gR * 4 + 3] < ALPHA_ON) gR++;
-              const oGL = row + Math.max(left, gL - 1) * 4;
-              const oGR = row + Math.min(right, gR + 1) * 4;
-              const tGap = (cx - gL) / Math.max(1, gR - gL);
-              px[o] = Math.round(srcPixels[oGL] * (1 - tGap) + srcPixels[oGR] * tGap);
-              px[o + 1] = Math.round(srcPixels[oGL + 1] * (1 - tGap) + srcPixels[oGR + 1] * tGap);
-              px[o + 2] = Math.round(srcPixels[oGL + 2] * (1 - tGap) + srcPixels[oGR + 2] * tGap);
+              const gapWidth = gR - gL - 1;
+              const isNeckKeyhole =
+                cy < cropH * 0.28 &&
+                gapWidth >= Math.max(6, Math.floor(cropW * 0.06)) &&
+                gL >= cropW * 0.25 &&
+                gR <= cropW * 0.75;
+              if (isNeckKeyhole) {
+                // Preserve intentional V-neck / open-back keyhole cutout transparency
+                px[o + 3] = 0;
+              } else {
+                const oGL = row + Math.max(left, gL - 1) * 4;
+                const oGR = row + Math.min(right, gR + 1) * 4;
+                const tGap = (cx - gL) / Math.max(1, gR - gL);
+                px[o] = Math.round(srcPixels[oGL] * (1 - tGap) + srcPixels[oGR] * tGap);
+                px[o + 1] = Math.round(srcPixels[oGL + 1] * (1 - tGap) + srcPixels[oGR + 1] * tGap);
+                px[o + 2] = Math.round(srcPixels[oGL + 2] * (1 - tGap) + srcPixels[oGR + 2] * tGap);
+                px[o + 3] = 255;
+              }
             }
-            px[o + 3] = 255;
           } else {
             px[o + 3] = 255;
           }
@@ -1253,7 +1265,7 @@ async function fetchAndCropTexture(url) {
         }
       }
     }
-    const fillCanvas = document.createElement('canvas');
+    fillCanvas = document.createElement('canvas');
     fillCanvas.width = cropW;
     fillCanvas.height = cropH;
     fillCanvas.getContext('2d', { willReadFrequently: true }).putImageData(fillData, 0, 0);
@@ -1314,7 +1326,7 @@ async function fetchAndCropTexture(url) {
   // pockets, zippers, while preserving base fabric colors, lighting, and repeating patterns.
   let backTexture = null;
   try {
-    backTexture = buildBackTexture({ frontCanvas: cropCanvas, backCanvas: null });
+    backTexture = buildBackTexture({ frontCanvas: fillCanvas || cropCanvas, backCanvas: null });
   } catch {
     backTexture = null;
   }
@@ -1330,6 +1342,7 @@ async function fetchAndCropTexture(url) {
     solidU,
     solidV,
     canvas: cropCanvas,
+    fillCanvas: fillCanvas || cropCanvas,
     shellMask,
     canvasStats,
     shoeLayout: { ...shoeLayout, solidU, solidV },
@@ -1408,7 +1421,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
             if (!other?.canvas) continue;
             const viewRole = classifyGroupView(res.canvasStats, other.canvasStats, u);
             if (!backCanvas && (viewRole === 'back' || isConsistentView(res.canvasStats, other.canvasStats))) {
-              backCanvas = other.canvas;
+              backCanvas = other.fillCanvas || other.canvas;
             } else if (!sideProfile && viewRole === 'side' && other.shellMask) {
               sideProfile = extractSideProfile(other.shellMask, other.aspect, res.aspect);
             }
@@ -1418,7 +1431,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
         }
         if (!mounted) return;
         const backTexture = buildBackTexture({
-          frontCanvas: res.canvas,
+          frontCanvas: res.fillCanvas || res.canvas,
           backCanvas,
         });
         setData((prev) => (prev.texture === res.texture
@@ -3044,8 +3057,10 @@ function GarmentTemplateMeshInner({
     return geo;
   }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, shellFit, fitProfile, templateId, texture]);
 
-  // Split geometry faces into front (Nz >= -0.05) and back (Nz < -0.05) groups
-  // so backTexture renders on the back view without front details (zippers, logos, pockets)
+  // Split geometry faces into front (midZ >= 0) and back (midZ < 0) spatial groups
+  // so frontMat (Front photo) is strictly on the anterior (+Z) half of the garment
+  // and backMat (Back photo / synthesized back) is strictly on the posterior (-Z) half,
+  // never swapping front and back on double-walled solidified meshes.
   useEffect(() => {
     if (!geometry || !geometry.index) return;
     const pos = geometry.attributes.position;
@@ -3055,19 +3070,14 @@ function GarmentTemplateMeshInner({
     const pA = new THREE.Vector3();
     const pB = new THREE.Vector3();
     const pC = new THREE.Vector3();
-    const cb = new THREE.Vector3();
-    const ab = new THREE.Vector3();
 
     for (let i = 0; i < idx.length; i += 3) {
       const i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
       pA.fromBufferAttribute(pos, i0);
       pB.fromBufferAttribute(pos, i1);
       pC.fromBufferAttribute(pos, i2);
-      cb.subVectors(pC, pB);
-      ab.subVectors(pA, pB);
-      cb.cross(ab).normalize();
-      // Triangle facing backwards: outward face normal points away from front (+Z)
-      if (cb.z < -0.02) {
+      const midZ = (pA.z + pB.z + pC.z) / 3;
+      if (midZ < 0) {
         backTriangles.push(i0, i1, i2);
       } else {
         frontTriangles.push(i0, i1, i2);
@@ -3092,6 +3102,7 @@ function GarmentTemplateMeshInner({
       roughness: pbrProps?.roughness ?? 0.70,
       metalness: pbrProps?.metalness ?? 0.05,
       side: THREE.DoubleSide,
+      alphaTest: 0.15,
       depthWrite: true,
       polygonOffset: true,
       polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
