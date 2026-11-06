@@ -43,6 +43,7 @@ import {
   Crown,
   Zap,
   Lock,
+  Shirt,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollToTop } from '@/components/ScrollToTop';
