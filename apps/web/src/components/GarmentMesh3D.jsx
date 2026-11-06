@@ -608,10 +608,26 @@ async function fetchAndCropTexture(url) {
   let bgR = 255, bgG = 255, bgB = 255;
   let bgMask = null;
 
+  let isMultiTonePattern = false;
   if (imgData) {
     const data = imgData.data;
 
-    // Detect solid/white background from 4 image corners
+    // Check if the image already has a transparent cutout border (e.g. rembg PNG)
+    let transparentBorderCount = 0;
+    let borderTotal = 0;
+    for (let x = 0; x < w; x++) {
+      borderTotal += 2;
+      if (data[(x) * 4 + 3] < 40) transparentBorderCount++;
+      if (data[((h - 1) * w + x) * 4 + 3] < 40) transparentBorderCount++;
+    }
+    for (let y = 1; y < h - 1; y++) {
+      borderTotal += 2;
+      if (data[(y * w) * 4 + 3] < 40) transparentBorderCount++;
+      if (data[(y * w + (w - 1)) * 4 + 3] < 40) transparentBorderCount++;
+    }
+    const alreadyCutout = borderTotal > 0 && (transparentBorderCount / borderTotal) > 0.25;
+
+    // Detect solid/white background from 4 image corners only when not already a transparent cutout
     const cornerOffsets = [
       (2 * w + 2) * 4,
       (2 * w + (w - 3)) * 4,
@@ -627,20 +643,20 @@ async function fetchAndCropTexture(url) {
         cCount++;
       }
     }
-    if (cCount > 0) {
+    if (cCount > 0 && !alreadyCutout) {
       bgR = crSum / cCount;
       bgG = cgSum / cCount;
       bgB = cbSum / cCount;
-      isLightBg = bgR > 215 && bgG > 215 && bgB > 215;
+      isLightBg = bgR > 220 && bgG > 220 && bgB > 220;
     }
 
     // Background mask: fully transparent pixels are always background; near-white
     // catalog backdrop is only background when it is connected to the image border
-    // (so white shirts / white sneakers keep their own white pixels).
+    // and closely matches the studio backdrop (so cream/white zebra stripes or white shirts stay intact).
     const isLightPixel = (o) => {
       const r = data[o], g = data[o + 1], b = data[o + 2];
-      if (Math.hypot(r - bgR, g - bgG, b - bgB) < 42) return true;
-      return r > 235 && g > 235 && b > 235;
+      if (Math.hypot(r - bgR, g - bgG, b - bgB) < 22 && r > 238 && g > 238 && b > 238) return true;
+      return r > 246 && g > 246 && b > 246;
     };
     bgMask = new Uint8Array(w * h);
     for (let p = 0; p < w * h; p++) {
@@ -669,8 +685,8 @@ async function fetchAndCropTexture(url) {
       }
     }
 
-    // Connected-component island filter: remove detached cutout shards / floating background remnants
-    // (any disconnected component smaller than 12% of the main garment component is marked as background).
+    // Connected-component island filter: remove tiny detached border shards / floating dust
+    // while keeping all garment pattern components (e.g. zebra stripes, color blocks).
     try {
       const visited = new Uint8Array(w * h);
       const compQueue = new Int32Array(w * h);
@@ -707,7 +723,7 @@ async function fetchAndCropTexture(url) {
       }
 
       if (components.length > 1 && maxCompSize > 0) {
-        const minKeepSize = Math.max(24, Math.floor(maxCompSize * 0.12));
+        const minKeepSize = Math.max(16, Math.floor(maxCompSize * 0.015));
         for (let c = 0; c < components.length; c++) {
           const comp = components[c];
           if (comp.length < minKeepSize) {
@@ -719,19 +735,25 @@ async function fetchAndCropTexture(url) {
       }
     } catch {}
 
-    // Flood-fill inward from exterior background (and image borders) into connected
-    // low-saturation light-gray/white studio background pockets attached to non-white garments
-    // (e.g. concave pocket indentations along the side of cargo shorts).
+    // Measure interior luminance distribution to distinguish solid dark garments
+    // from high-contrast multi-tone patterns (zebra print, black/white stripes, checks, florals).
     try {
       let coreR = 0, coreG = 0, coreB = 0, coreCount = 0;
+      let sumLum = 0, sumLumSq = 0, lightCount = 0, darkCount = 0;
       const step = Math.max(1, Math.floor(Math.sqrt((w * h) / 4000)));
       for (let y = Math.floor(h * 0.2); y < Math.floor(h * 0.8); y += step) {
         for (let x = Math.floor(w * 0.2); x < Math.floor(w * 0.8); x += step) {
           const p = y * w + x;
           if (!bgMask[p] && data[p * 4 + 3] >= 200) {
-            coreR += data[p * 4];
-            coreG += data[p * 4 + 1];
-            coreB += data[p * 4 + 2];
+            const r = data[p * 4], g = data[p * 4 + 1], b = data[p * 4 + 2];
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+            coreR += r;
+            coreG += g;
+            coreB += b;
+            sumLum += lum;
+            sumLumSq += lum * lum;
+            if (lum >= 175) lightCount++;
+            if (lum <= 95) darkCount++;
             coreCount++;
           }
         }
@@ -740,17 +762,27 @@ async function fetchAndCropTexture(url) {
         coreR /= coreCount;
         coreG /= coreCount;
         coreB /= coreCount;
-        const coreLum = 0.299 * coreR + 0.587 * coreG + 0.114 * coreB;
+        const coreLum = sumLum / coreCount;
+        const coreLumVar = Math.max(0, (sumLumSq / coreCount) - (coreLum * coreLum));
+        const coreLumStd = Math.sqrt(coreLumVar);
+        const lightCoreFrac = lightCount / coreCount;
+        const darkCoreFrac = darkCount / coreCount;
+        isMultiTonePattern =
+          coreLumStd >= 28 ||
+          (lightCoreFrac >= 0.08 && darkCoreFrac >= 0.08) ||
+          lightCoreFrac >= 0.22;
+
         const coreChroma = Math.max(coreR, coreG, coreB) - Math.min(coreR, coreG, coreB);
-        // Only strip light-gray/white studio background pockets if the core garment itself is not light gray/white
-        if (coreLum < 185 || coreChroma > 20) {
+        // Only strip light-gray/white studio background pockets on solid non-white garments
+        // (NEVER on zebra print, striped, or multi-tone patterned garments where white is part of the fabric!)
+        if (!isMultiTonePattern && (coreLum < 180 || coreChroma > 24)) {
           const isStudioFringe = (p) => {
             const o = p * 4;
             const r = data[o], g = data[o + 1], b = data[o + 2];
             const lum = 0.299 * r + 0.587 * g + 0.114 * b;
             const chroma = Math.max(r, g, b) - Math.min(r, g, b);
             const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
-            return (lum >= 195 && chroma <= 45 && distCore > 38) || (lum >= 138 && chroma <= 32 && distCore > 42);
+            return (lum >= 205 && chroma <= 35 && distCore > 48) || (lum >= 165 && chroma <= 24 && distCore > 55);
           };
           const fQueue = new Int32Array(w * h);
           let fHead = 0;
@@ -773,17 +805,7 @@ async function fetchAndCropTexture(url) {
                   }
                 }
               }
-              // Enclosed sleeve gap: between sleeve and torso, studio background is trapped
-              // without touching the image border. Seed any light/shadowed studio pixel in lateral/flank zones.
-              const o = p * 4;
-              const r = data[o], g = data[o + 1], b = data[o + 2];
-              const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-              const chroma = Math.max(r, g, b) - Math.min(r, g, b);
-              const distBg = Math.hypot(r - bgR, g - bgG, b - bgB);
-              const distCore = Math.hypot(r - coreR, g - coreG, b - coreB);
-              const isLateralZone = (x < 0.42 * w || x > 0.58 * w || y > 0.38 * h);
-              const isEnclosedGap = isLateralZone && (distBg < 55 || (lum >= 170 && chroma <= 32)) && distCore > 36;
-              if ((touchesBg || isEnclosedGap) && isStudioFringe(p)) {
+              if (touchesBg && isStudioFringe(p)) {
                 bgMask[p] = 1;
                 fQueue[fTail++] = p;
               }
@@ -793,10 +815,10 @@ async function fetchAndCropTexture(url) {
             const p = fQueue[fHead++];
             const x = p % w;
             const y = (p - x) / w;
-            for (let dy = -2; dy <= 2; dy++) {
+            for (let dy = -1; dy <= 1; dy++) {
               const ny = y + dy;
               if (ny < 0 || ny >= h) continue;
-              for (let dx = -2; dx <= 2; dx++) {
+              for (let dx = -1; dx <= 1; dx++) {
                 if (dx === 0 && dy === 0) continue;
                 const nx = x + dx;
                 if (nx < 0 || nx >= w) continue;
@@ -898,90 +920,94 @@ async function fetchAndCropTexture(url) {
     // 3. Per-row edge despill & light-fringe trim: compares outer 15% of each span against
     // adjacent interior fabric (15%..28% inward) to strip remaining gray/white cutout rims
     // and replace the outermost 4 edge pixels' RGB with clean local fabric color.
-    for (let y = 0; y < cropH; y++) {
-      const row = y * cropW;
-      let x = 0;
-      while (x < cropW) {
-        while (x < cropW && eData[(row + x) * 4 + 3] < 110) x++;
-        if (x >= cropW) break;
-        const a = x;
-        while (x < cropW && eData[(row + x) * 4 + 3] >= 110) x++;
-        const b = x - 1;
-        const span = b - a + 1;
-        if (span < 16) continue;
+    // Skip for multi-tone/high-contrast patterns (zebra print, bold stripes, plaid) where
+    // an outer white stripe next to an inner black stripe is part of the pattern, not a studio rim!
+    if (!isMultiTonePattern) {
+      for (let y = 0; y < cropH; y++) {
+        const row = y * cropW;
+        let x = 0;
+        while (x < cropW) {
+          while (x < cropW && eData[(row + x) * 4 + 3] < 110) x++;
+          if (x >= cropW) break;
+          const a = x;
+          while (x < cropW && eData[(row + x) * 4 + 3] >= 110) x++;
+          const b = x - 1;
+          const span = b - a + 1;
+          if (span < 16) continue;
 
-        const d0 = Math.max(3, Math.min(14, Math.floor(span * 0.14)));
-        const d1 = Math.max(d0 + 2, Math.min(24, Math.floor(span * 0.28)));
+          const d0 = Math.max(3, Math.min(14, Math.floor(span * 0.14)));
+          const d1 = Math.max(d0 + 2, Math.min(24, Math.floor(span * 0.28)));
 
-        // Left interior reference
-        let lR = 0, lG = 0, lB = 0, lN = 0;
-        for (let cx = a + d0; cx <= Math.min(b, a + d1); cx++) {
-          const o = (row + cx) * 4;
-          if (eData[o + 3] >= 180) {
-            lR += eData[o]; lG += eData[o + 1]; lB += eData[o + 2]; lN++;
-          }
-        }
-        // Right interior reference
-        let rR = 0, rG = 0, rB = 0, rN = 0;
-        for (let cx = Math.max(a, b - d1); cx <= b - d0; cx++) {
-          const o = (row + cx) * 4;
-          if (eData[o + 3] >= 180) {
-            rR += eData[o]; rG += eData[o + 1]; rB += eData[o + 2]; rN++;
-          }
-        }
-
-        let newA = a;
-        if (lN > 0) {
-          lR /= lN; lG /= lN; lB /= lN;
-          const lLum = 0.299 * lR + 0.587 * lG + 0.114 * lB;
-          const lChroma = Math.max(lR, lG, lB) - Math.min(lR, lG, lB);
-          for (let cx = a; cx < a + d0; cx++) {
+          // Left interior reference
+          let lR = 0, lG = 0, lB = 0, lN = 0;
+          for (let cx = a + d0; cx <= Math.min(b, a + d1); cx++) {
             const o = (row + cx) * 4;
-            const r = eData[o], g = eData[o + 1], bl = eData[o + 2];
-            const lum = 0.299 * r + 0.587 * g + 0.114 * bl;
-            const ch = Math.max(r, g, bl) - Math.min(r, g, bl);
-            if (lum - lLum > 24 && ch <= lChroma + 14) {
-              eData[o + 3] = 0;
-              newA = cx + 1;
-            } else {
-              break;
+            if (eData[o + 3] >= 180) {
+              lR += eData[o]; lG += eData[o + 1]; lB += eData[o + 2]; lN++;
             }
           }
-          for (let cx = newA; cx <= Math.min(b, newA + 4); cx++) {
+          // Right interior reference
+          let rR = 0, rG = 0, rB = 0, rN = 0;
+          for (let cx = Math.max(a, b - d1); cx <= b - d0; cx++) {
             const o = (row + cx) * 4;
-            const lum = 0.299 * eData[o] + 0.587 * eData[o + 1] + 0.114 * eData[o + 2];
-            if (lum - lLum > 14) {
-              eData[o] = Math.round(lR);
-              eData[o + 1] = Math.round(lG);
-              eData[o + 2] = Math.round(lB);
+            if (eData[o + 3] >= 180) {
+              rR += eData[o]; rG += eData[o + 1]; rB += eData[o + 2]; rN++;
             }
           }
-        }
 
-        let newB = b;
-        if (rN > 0) {
-          rR /= rN; rG /= rN; rB /= rN;
-          const rLum = 0.299 * rR + 0.587 * rG + 0.114 * rB;
-          const rChroma = Math.max(rR, rG, rB) - Math.min(rR, rG, rB);
-          for (let cx = b; cx > b - d0; cx--) {
-            const o = (row + cx) * 4;
-            const r = eData[o], g = eData[o + 1], bl = eData[o + 2];
-            const lum = 0.299 * r + 0.587 * g + 0.114 * bl;
-            const ch = Math.max(r, g, bl) - Math.min(r, g, bl);
-            if (lum - rLum > 24 && ch <= rChroma + 14) {
-              eData[o + 3] = 0;
-              newB = cx - 1;
-            } else {
-              break;
+          let newA = a;
+          if (lN > 0) {
+            lR /= lN; lG /= lN; lB /= lN;
+            const lLum = 0.299 * lR + 0.587 * lG + 0.114 * lB;
+            const lChroma = Math.max(lR, lG, lB) - Math.min(lR, lG, lB);
+            for (let cx = a; cx < a + d0; cx++) {
+              const o = (row + cx) * 4;
+              const r = eData[o], g = eData[o + 1], bl = eData[o + 2];
+              const lum = 0.299 * r + 0.587 * g + 0.114 * bl;
+              const ch = Math.max(r, g, bl) - Math.min(r, g, bl);
+              if (lum - lLum > 24 && ch <= lChroma + 14) {
+                eData[o + 3] = 0;
+                newA = cx + 1;
+              } else {
+                break;
+              }
+            }
+            for (let cx = newA; cx <= Math.min(b, newA + 4); cx++) {
+              const o = (row + cx) * 4;
+              const lum = 0.299 * eData[o] + 0.587 * eData[o + 1] + 0.114 * eData[o + 2];
+              if (lum - lLum > 14) {
+                eData[o] = Math.round(lR);
+                eData[o + 1] = Math.round(lG);
+                eData[o + 2] = Math.round(lB);
+              }
             }
           }
-          for (let cx = Math.max(newA, newB - 4); cx <= newB; cx++) {
-            const o = (row + cx) * 4;
-            const lum = 0.299 * eData[o] + 0.587 * eData[o + 1] + 0.114 * eData[o + 2];
-            if (lum - rLum > 14) {
-              eData[o] = Math.round(rR);
-              eData[o + 1] = Math.round(rG);
-              eData[o + 2] = Math.round(rB);
+
+          let newB = b;
+          if (rN > 0) {
+            rR /= rN; rG /= rN; rB /= rN;
+            const rLum = 0.299 * rR + 0.587 * rG + 0.114 * rB;
+            const rChroma = Math.max(rR, rG, rB) - Math.min(rR, rG, rB);
+            for (let cx = b; cx > b - d0; cx--) {
+              const o = (row + cx) * 4;
+              const r = eData[o], g = eData[o + 1], bl = eData[o + 2];
+              const lum = 0.299 * r + 0.587 * g + 0.114 * bl;
+              const ch = Math.max(r, g, bl) - Math.min(r, g, bl);
+              if (lum - rLum > 24 && ch <= rChroma + 14) {
+                eData[o + 3] = 0;
+                newB = cx - 1;
+              } else {
+                break;
+              }
+            }
+            for (let cx = Math.max(newA, newB - 4); cx <= newB; cx++) {
+              const o = (row + cx) * 4;
+              const lum = 0.299 * eData[o] + 0.587 * eData[o + 1] + 0.114 * eData[o + 2];
+              if (lum - rLum > 14) {
+                eData[o] = Math.round(rR);
+                eData[o + 1] = Math.round(rG);
+                eData[o + 2] = Math.round(rB);
+              }
             }
           }
         }
@@ -1160,37 +1186,57 @@ async function fetchAndCropTexture(url) {
       if (left >= 0 && right >= left) {
         const leftSample = Math.min(right, left + 2);
         const rightSample = Math.max(left, right - 2);
+        const spanLen = Math.max(1, rightSample - leftSample + 1);
         const lOff = row + leftSample * 4;
         const rOff = row + rightSample * 4;
-        const lR = px[lOff + 3] >= ALPHA_ON ? px[lOff] : domR;
-        const lG = px[lOff + 3] >= ALPHA_ON ? px[lOff + 1] : domG;
-        const lB = px[lOff + 3] >= ALPHA_ON ? px[lOff + 2] : domB;
-        const rR = px[rOff + 3] >= ALPHA_ON ? px[rOff] : domR;
-        const rG = px[rOff + 3] >= ALPHA_ON ? px[rOff + 1] : domG;
-        const rB = px[rOff + 3] >= ALPHA_ON ? px[rOff + 2] : domB;
+        const lR = srcPixels[lOff + 3] >= ALPHA_ON ? srcPixels[lOff] : domR;
+        const lG = srcPixels[lOff + 3] >= ALPHA_ON ? srcPixels[lOff + 1] : domG;
+        const lB = srcPixels[lOff + 3] >= ALPHA_ON ? srcPixels[lOff + 2] : domB;
+        const rR = srcPixels[rOff + 3] >= ALPHA_ON ? srcPixels[rOff] : domR;
+        const rG = srcPixels[rOff + 3] >= ALPHA_ON ? srcPixels[rOff + 1] : domG;
+        const rB = srcPixels[rOff + 3] >= ALPHA_ON ? srcPixels[rOff + 2] : domB;
 
         for (let cx = 0; cx < cropW; cx++) {
           const o = row + cx * 4;
-          if (px[o + 3] < ALPHA_ON) {
+          if (srcPixels[o + 3] < ALPHA_ON) {
             if (cx < left) {
-              px[o] = lR;
-              px[o + 1] = lG;
-              px[o + 2] = lB;
+              // Mirror-reflect interior span rather than smearing a single pixel horizontally
+              const dist = leftSample - cx;
+              const mirrorX = Math.min(rightSample, leftSample + (dist % spanLen));
+              const mOff = row + mirrorX * 4;
+              if (srcPixels[mOff + 3] >= ALPHA_ON) {
+                px[o] = srcPixels[mOff];
+                px[o + 1] = srcPixels[mOff + 1];
+                px[o + 2] = srcPixels[mOff + 2];
+              } else {
+                px[o] = lR;
+                px[o + 1] = lG;
+                px[o + 2] = lB;
+              }
             } else if (cx > right) {
-              px[o] = rR;
-              px[o + 1] = rG;
-              px[o + 2] = rB;
+              const dist = cx - rightSample;
+              const mirrorX = Math.max(leftSample, rightSample - (dist % spanLen));
+              const mOff = row + mirrorX * 4;
+              if (srcPixels[mOff + 3] >= ALPHA_ON) {
+                px[o] = srcPixels[mOff];
+                px[o + 1] = srcPixels[mOff + 1];
+                px[o + 2] = srcPixels[mOff + 2];
+              } else {
+                px[o] = rR;
+                px[o + 1] = rG;
+                px[o + 2] = rB;
+              }
             } else {
               let gL = cx - 1;
-              while (gL > left && px[row + gL * 4 + 3] < ALPHA_ON) gL--;
+              while (gL > left && srcPixels[row + gL * 4 + 3] < ALPHA_ON) gL--;
               let gR = cx + 1;
-              while (gR < right && px[row + gR * 4 + 3] < ALPHA_ON) gR++;
+              while (gR < right && srcPixels[row + gR * 4 + 3] < ALPHA_ON) gR++;
               const oGL = row + Math.max(left, gL - 1) * 4;
               const oGR = row + Math.min(right, gR + 1) * 4;
               const tGap = (cx - gL) / Math.max(1, gR - gL);
-              px[o] = Math.round(px[oGL] * (1 - tGap) + px[oGR] * tGap);
-              px[o + 1] = Math.round(px[oGL + 1] * (1 - tGap) + px[oGR + 1] * tGap);
-              px[o + 2] = Math.round(px[oGL + 2] * (1 - tGap) + px[oGR + 2] * tGap);
+              px[o] = Math.round(srcPixels[oGL] * (1 - tGap) + srcPixels[oGR] * tGap);
+              px[o + 1] = Math.round(srcPixels[oGL + 1] * (1 - tGap) + srcPixels[oGR + 1] * tGap);
+              px[o + 2] = Math.round(srcPixels[oGL + 2] * (1 - tGap) + srcPixels[oGR + 2] * tGap);
             }
             px[o + 3] = 255;
           } else {
@@ -2944,6 +2990,29 @@ function GarmentTemplateMeshInner({
             pos.needsUpdate = true;
             geo.computeVertexNormals();
             geo.computeBoundingBox();
+          }
+
+          // Dynamic dress skirt hem scaling: keep upper bodice & shoulders 100% locked above yHipAnchor,
+          // and scale skirt hem smoothly to match mini, midi, or maxi dress length from shellFit.yBottom.
+          if (rawSlot === 'dress' && Number.isFinite(shellFit?.yBottom)) {
+            const yHipAnchor = isMale ? 0.90 : 0.88;
+            const curHemY = bb.min.y;
+            const targetHemY = Math.max(0.16, Math.min(0.76, shellFit.yBottom));
+            const curSkirtSpan = Math.max(0.08, yHipAnchor - curHemY);
+            const targetSkirtSpan = Math.max(0.08, yHipAnchor - targetHemY);
+            if (Math.abs(targetHemY - curHemY) > 0.015) {
+              const skirtScaleY = targetSkirtSpan / curSkirtSpan;
+              for (let i = 0; i < pos.count; i++) {
+                const y = pos.getY(i);
+                if (y < yHipAnchor) {
+                  const newY = yHipAnchor - (yHipAnchor - y) * skirtScaleY;
+                  pos.setY(i, newY);
+                }
+              }
+              pos.needsUpdate = true;
+              geo.computeVertexNormals();
+              geo.computeBoundingBox();
+            }
           }
 
           // Preserve authored GLB UVs; generate bounding-box fallback only if template geometry lacks UVs

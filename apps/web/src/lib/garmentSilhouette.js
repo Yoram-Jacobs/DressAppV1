@@ -2170,6 +2170,8 @@ export function synthesizeBackFabricData(data, w, h) {
     }
     const sigma = grainSrc.length > 0 ? flankVarSum / grainSrc.length : 8;
     const tol = Math.max(18, sigma * 1.9);
+    const isAllOverPatternRow = sigma >= 30;
+    const tol = Math.max(18, sigma * 1.9);
 
     const curR = new Float32Array(span);
     const curG = new Float32Array(span);
@@ -2215,7 +2217,7 @@ export function synthesizeBackFabricData(data, w, h) {
     // 2. Dump center closures: zipper tracks, zipper pulls, button plackets, buttonflies, J-stitch fly seams, waistband button/fly
     const cMidL = Math.floor(0.35 * span);
     const cMidR = Math.min(span - 1, Math.ceil(0.65 * span));
-    if (cMidR > cMidL + 2) {
+    if (!isAllOverPatternRow && cMidR > cMidL + 2) {
       const colLR = curR[cMidL], colLG = curG[cMidL], colLB = curB[cMidL];
       const colRR = curR[cMidR], colRG = curG[cMidR], colRB = curB[cMidR];
       for (let i = cMidL + 1; i < cMidR; i++) {
@@ -2242,7 +2244,7 @@ export function synthesizeBackFabricData(data, w, h) {
     // across the entire interior torso (u_rel in [0.08, 0.92]).
     const pStart = Math.floor(0.08 * span);
     const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
-    if (pEnd > pStart + 2) {
+    if (!isAllOverPatternRow && pEnd > pStart + 2) {
       const fineThreshold = Math.max(4.0, Math.min(10.0, sigma * 0.85));
       for (let i = pStart + 1; i < pEnd; i++) {
         const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;

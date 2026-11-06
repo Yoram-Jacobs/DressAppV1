@@ -1327,29 +1327,58 @@ export default function AddItem() {
 
   const handleOpen3DPreview = (targetCard) => {
     if (targetCard) {
-      const rawCat = targetCard.fields?.category || "top";
+      const f = targetCard.fields || {};
+      const rawCat = f.category || "top";
       const slot = String(rawCat).toLowerCase();
+      const img = targetCard.previewUrl || targetCard.reconstructedUrl || targetCard.originalCropUrl;
       const itemLike = {
+        ...f,
         id: targetCard.id || "preview-item",
-        title: targetCard.fields?.name || targetCard.fields?.title || "Garment",
+        title: f.name || f.title || "Garment",
+        name: f.name || f.title || "Garment",
+        caption: f.caption || f.description || "",
+        description: f.description || f.caption || "",
         category: rawCat,
-        image_url: targetCard.previewUrl || targetCard.reconstructedUrl || targetCard.originalCropUrl,
-        clean_image_url: targetCard.previewUrl,
+        sub_category: f.sub_category || f.subCategory || "",
+        item_type: f.item_type || f.itemType || "",
+        pattern: f.pattern || "",
+        length: f.length || "",
+        sleeve_length: f.sleeve_length || f.sleeveLength || "",
+        fit: f.fit || "",
+        material: f.material || "",
+        colors: f.colors || [],
+        image_url: img,
+        clean_image_url: targetCard.previewUrl || img,
+        rawItem: f,
       };
       setPreview3DItems({ [slot]: itemLike });
     } else {
       const map = {};
       (cards || []).forEach((c) => {
-        const rawCat = c.fields?.category || "top";
+        const f = c.fields || {};
+        const rawCat = f.category || "top";
         const slot = String(rawCat).toLowerCase();
         const img = c.previewUrl || c.reconstructedUrl || c.originalCropUrl;
         if (!map[slot] && img) {
           map[slot] = {
+            ...f,
             id: c.id,
-            title: c.fields?.name || c.fields?.title || "Garment",
+            title: f.name || f.title || "Garment",
+            name: f.name || f.title || "Garment",
+            caption: f.caption || f.description || "",
+            description: f.description || f.caption || "",
             category: rawCat,
+            sub_category: f.sub_category || f.subCategory || "",
+            item_type: f.item_type || f.itemType || "",
+            pattern: f.pattern || "",
+            length: f.length || "",
+            sleeve_length: f.sleeve_length || f.sleeveLength || "",
+            fit: f.fit || "",
+            material: f.material || "",
+            colors: f.colors || [],
             image_url: img,
-            clean_image_url: img,
+            clean_image_url: c.previewUrl || img,
+            rawItem: f,
           };
         }
       });
