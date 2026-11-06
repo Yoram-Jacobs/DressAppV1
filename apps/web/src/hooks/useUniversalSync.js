@@ -15,6 +15,9 @@ import { outfitStore } from '@/lib/outfitStore';
 
 export function useUniversalSync(currentUser, onUserUpdated) {
   const onUserUpdatedRef = useRef(onUserUpdated);
+  const profileDebounceRef = useRef(null);
+  const isFetchingProfileRef = useRef(false);
+
   useEffect(() => {
     onUserUpdatedRef.current = onUserUpdated;
   }, [onUserUpdated]);
@@ -36,12 +39,21 @@ export function useUniversalSync(currentUser, onUserUpdated) {
 
       switch (type) {
         case 'profile_updated':
-          try {
-            const updated = await api.getMe();
-            if (updated && onUserUpdatedRef.current) {
-              onUserUpdatedRef.current(updated);
+          if (profileDebounceRef.current) {
+            clearTimeout(profileDebounceRef.current);
+          }
+          profileDebounceRef.current = setTimeout(async () => {
+            if (isFetchingProfileRef.current) return;
+            isFetchingProfileRef.current = true;
+            try {
+              const updated = await api.getMe();
+              if (updated && onUserUpdatedRef.current) {
+                onUserUpdatedRef.current(updated);
+              }
+            } catch {} finally {
+              isFetchingProfileRef.current = false;
             }
-          } catch {}
+          }, 350);
           break;
 
         case 'closet_updated':
@@ -112,6 +124,9 @@ export function useUniversalSync(currentUser, onUserUpdated) {
 
     return () => {
       unsubscribe();
+      if (profileDebounceRef.current) {
+        clearTimeout(profileDebounceRef.current);
+      }
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

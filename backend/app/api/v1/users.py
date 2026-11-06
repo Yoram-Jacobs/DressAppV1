@@ -487,8 +487,23 @@ async def update_me(
                 logger.warning("Failed to process/upload %s for user %s: %s", photo_field, user["id"], photo_exc)
 
 
-    set_ops["updated_at"] = datetime.now(timezone.utc).isoformat()
-    if set_ops:
+    def _is_field_changed(doc: dict, key: str, val: Any) -> bool:
+        if "." in key:
+            parts = key.split(".")
+            curr = doc
+            for p in parts[:-1]:
+                if not isinstance(curr, dict):
+                    return True
+                curr = curr.get(p)
+            if not isinstance(curr, dict):
+                return True
+            return curr.get(parts[-1]) != val
+        return doc.get(key) != val
+
+    has_substantive_change = any(_is_field_changed(user, k, v) for k, v in set_ops.items())
+
+    if has_substantive_change:
+        set_ops["updated_at"] = datetime.now(timezone.utc).isoformat()
         if "body_measurements" in set_ops or any(k.startswith("body_measurements.") for k in set_ops):
             raw_bm = set_ops.get("body_measurements") or user.get("body_measurements")
             current_measurements = dict(raw_bm) if isinstance(raw_bm, dict) else {}

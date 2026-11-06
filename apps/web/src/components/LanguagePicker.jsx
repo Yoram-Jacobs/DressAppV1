@@ -28,6 +28,7 @@ import {
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
+import { markLanguagePatched } from './LanguageSync';
 
 export const LanguagePicker = ({
   testIdSuffix = '',
@@ -41,7 +42,7 @@ export const LanguagePicker = ({
     const target = SUPPORTED_LANGUAGES.find((l) => l.code === code);
     const nativeName = target?.nativeName || code;
     // 0) Announce to the global overlay so the user gets a visible
-    //    "Switching to …" floater for the ~20 s wait. The overlay closes
+    //    "Switching to …" floater for the wait. The overlay closes
     //    itself on the matching `…-done` event, or after 30 s as a safety
     //    net if anything below throws.
     try {
@@ -52,14 +53,19 @@ export const LanguagePicker = ({
       );
     } catch { /* ignore */ }
     try {
-      // 1) Switch UI language synchronously so feedback is instant.
-      try { await i18n.changeLanguage(code); } catch { /* ignore */ }
+      // 1) Mark as patched in shared tracker to prevent LanguageSync from duplicate-patching
+      markLanguagePatched(code);
       // 2) Persist locally for the next page load (works for guests too).
       try { localStorage.setItem('dressapp.lang', code); } catch { /* ignore */ }
-      // 3) Mirror to the user's profile if signed in. We optimistically update
-      //    local auth state immediately, then persist in background.
+      // 3) Optimistically update local auth state FIRST so other components
+      //    immediately see preferred_language === code
       if (user) {
         updateUserLocal({ preferred_language: code });
+      }
+      // 4) Switch UI language synchronously so feedback is instant.
+      try { await i18n.changeLanguage(code); } catch { /* ignore */ }
+      // 5) Mirror to the user's profile on server if signed in.
+      if (user) {
         try {
           const updated = await api.patchMe({ preferred_language: code });
           if (updated) updateUserLocal(updated);

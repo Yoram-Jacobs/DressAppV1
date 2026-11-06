@@ -1,10 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { isRtl, SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { api } from '@/lib/api';
 
 const SUPPORTED_CODES = new Set(SUPPORTED_LANGUAGES.map((l) => l.code));
+
+// Module-level guard so all components (LanguagePicker, LanguageSync) share patch state
+let _lastPatchedLang = null;
+
+export const markLanguagePatched = (code) => {
+  if (code) _lastPatchedLang = code.toLowerCase();
+};
 
 /**
  * Applies the user's preferred language (or the already-selected i18n language)
@@ -16,7 +23,6 @@ const SUPPORTED_CODES = new Set(SUPPORTED_LANGUAGES.map((l) => l.code));
 export const LanguageSync = () => {
   const { user, updateUserLocal } = useAuth();
   const { i18n } = useTranslation();
-  const lastPatchedLangRef = useRef(null);
 
   // If the logged-in user has a preferred_language saved in the DB, adopt it
   // on initial session mount unless a local preference has been explicitly chosen.
@@ -37,8 +43,8 @@ export const LanguageSync = () => {
         if (current !== storedLang && i18n?.changeLanguage) {
           i18n.changeLanguage(storedLang);
         }
-        if (user && lang && lang !== storedLang && lastPatchedLangRef.current !== storedLang && typeof api?.patchMe === 'function') {
-          lastPatchedLangRef.current = storedLang;
+        if (user && lang && lang !== storedLang && _lastPatchedLang !== storedLang && typeof api?.patchMe === 'function') {
+          _lastPatchedLang = storedLang;
           api.patchMe({ preferred_language: storedLang })
             .then((updated) => { if (updateUserLocal) updateUserLocal(updated); })
             .catch(() => {});
@@ -68,8 +74,9 @@ export const LanguageSync = () => {
         }
         try { localStorage.setItem('dressapp.lang', validCode); } catch { /* ignore */ }
 
-        if (user && user.preferred_language !== validCode && lastPatchedLangRef.current !== validCode && typeof api?.patchMe === 'function') {
-          lastPatchedLangRef.current = validCode;
+        const userLang = (user?.preferred_language || '').toLowerCase();
+        if (user && userLang !== validCode && _lastPatchedLang !== validCode && typeof api?.patchMe === 'function') {
+          _lastPatchedLang = validCode;
           api.patchMe({ preferred_language: validCode })
             .then((updated) => { if (updateUserLocal) updateUserLocal(updated); })
             .catch(() => {});
@@ -92,4 +99,3 @@ export const LanguageSync = () => {
 
   return null;
 };
-
