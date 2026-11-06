@@ -2169,7 +2169,6 @@ export function synthesizeBackFabricData(data, w, h) {
       flankVarSum += Math.sqrt(dr * dr + dg * dg + db * db);
     }
     const sigma = grainSrc.length > 0 ? flankVarSum / grainSrc.length : 8;
-    const tol = Math.max(18, sigma * 1.9);
     const isAllOverPatternRow = sigma >= 30;
     const tol = Math.max(18, sigma * 1.9);
 
