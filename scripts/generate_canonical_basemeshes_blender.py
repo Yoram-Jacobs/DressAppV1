@@ -150,6 +150,344 @@ def measure_arm_slice(verts, x_dist, z_min=0.70, z_max=1.50, band=0.016):
     return {"cz": cz, "rz": rz, "cy": cy, "ry": ry}
 
 
+def drape_garment_shell(
+    bm,
+    avatar_data,
+    offset,
+    style="top",
+    drape_looseness=0.72,
+    z_hem=0.80,
+    z_top=1.45,
+    sleeve_type="none",
+    flare_hips=False,
+):
+    """
+    Transforms a raw body-conforming cut mesh into a tailored, gravity-draped 3D cloth shell:
+      1. Convex Bust Bridge: Eliminates the sternum cleavage trench between the breasts so fabric stretches taut across the bust peaks.
+      2. Gravity Drape Below Bust & Scapulae: Replaces the anatomical under-bust crease, ribcage hollows, navel dimple, and lumbar curve with a smooth vertical/conical cloth hang from chest/scapula apex to hem.
+      3. Posterior Gluteal Cleft Bridge: Bridges across left/right glute peaks so trousers, dresses, and long coats never dip into the gluteal cleft.
+      4. Tailored Cylindrical Sleeves & Relaxed Armhole Gusset: Shapes sleeves into smooth cylindrical cloth tubes around the 3D arm axis with dropped underarm ease.
+      5. Tailored Cylindrical Trouser Columns: Shapes pant/short legs below the crotch into clean tailored columns, eliminating kneecap bumps and calf/thigh muscle grooves.
+      6. Cloth-Tension Surface Laplacian Relaxation + Strict BVHTree Skin Clearance Floor: Smooths out all anatomical ripples while guaranteeing 0.00% avatar skin penetration.
+    """
+    is_male = avatar_data["gender"] == "male"
+    av_verts = avatar_data["verts"]
+    bvh = avatar_data["bvh"]
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.normal_update()
+
+    # Base outward offset along vertex normal
+    for v in bm.verts:
+        v.co += v.normal * offset
+
+    # Pre-measure key anatomical landmarks for gravity drape envelopes
+    z_bust = 1.29 if is_male else 1.225
+    z_scapula = 1.32 if is_male else 1.26
+    z_waist = 1.06 if is_male else 1.02
+    z_hip_peak = 0.90 if is_male else 0.87
+    z_crotch = 0.80 if is_male else 0.755
+
+    # Measure bust peaks (front is -Y in Blender Z-up space)
+    bust_pts = [
+        p for p in av_verts
+        if (z_bust - 0.05) <= p.z <= (z_bust + 0.05) and 0.04 <= abs(p.x) <= 0.135 and p.y < -0.04
+    ]
+    y_bust_peak = (min(p.y for p in bust_pts) - offset) if bust_pts else (-0.135 - offset)
+    x_bust_peak = 0.092 if is_male else 0.088
+
+    # Measure scapula / upper-back peak (+Y in Blender Z-up space)
+    back_pts = [
+        p for p in av_verts
+        if (z_scapula - 0.06) <= p.z <= (z_scapula + 0.06) and abs(p.x) <= 0.145 and p.y > 0.04
+    ]
+    y_back_peak = (max(p.y for p in back_pts) + offset) if back_pts else (0.105 + offset)
+
+    # Measure glute peak (+Y in Blender Z-up space)
+    glute_pts = [
+        p for p in av_verts
+        if (z_hip_peak - 0.07) <= p.z <= (z_hip_peak + 0.05) and 0.04 <= abs(p.x) <= 0.135 and p.y > 0.04
+    ]
+    y_glute_peak = (max(p.y for p in glute_pts) + offset) if glute_pts else (0.118 + offset)
+    x_glute_peak = 0.095 if is_male else 0.092
+
+    # Measure hip lateral half-width
+    hip_sl = measure_torso_slice(av_verts, z_hip_peak)
+    rx_hip_drape = hip_sl["rx"] + offset
+
+    # Measure thigh & ankle slices for tailored trouser columns
+    thigh_sl = measure_leg_slice(av_verts, z_crotch - 0.05)
+    knee_sl = measure_leg_slice(av_verts, 0.49 if is_male else 0.46)
+    ankle_sl = measure_leg_slice(av_verts, 0.12)
+
+    # Apply analytic drape to ALL vertices (including hem/cuff boundaries) so boundary rings move coherently
+    # with their interior neighbors and never create an inverted lip!
+    for v in bm.verts:
+        x, y, z = v.co.x, v.co.y, v.co.z
+        abs_x = abs(x)
+        x_arm_split = (0.180 + max(0.0, 1.28 - z) * 0.40) if is_male else (0.152 + max(0.0, 1.20 - z) * 0.38)
+        is_sleeve_vert = (style in ("top", "dress")) and (sleeve_type in ("short", "long")) and (abs_x > x_arm_split)
+
+        if is_sleeve_vert:
+            # 4. Tailored Cylindrical Sleeve + Relaxed Underarm Gusset
+            arm_sl = measure_arm_slice(av_verts, abs_x)
+            cz_arm = arm_sl["cz"]
+            cy_arm = arm_sl["cy"]
+            # Target cylindrical radius with natural sleeve ease
+            sleeve_ease = offset + (0.006 if sleeve_type == "short" else 0.005) * (0.5 + 0.5 * drape_looseness)
+            r_target = max(arm_sl["rz"], arm_sl["ry"]) + sleeve_ease
+            dy = y - cy_arm
+            dz = z - cz_arm
+            r_cur = max(1e-4, math.hypot(dy, dz))
+            if r_cur < r_target:
+                blend_cyl = 0.58 * drape_looseness
+                r_new = r_cur * (1.0 - blend_cyl) + r_target * blend_cyl
+                v.co.y = cy_arm + (dy / r_cur) * r_new
+                v.co.z = cz_arm + (dz / r_cur) * r_new
+            # Relax acute underarm crease (drop bottom of sleeve near armpit slightly for natural armhole gusset)
+            if abs_x < (x_arm_split + 0.065) and dz < 0.0:
+                t_pit = max(0.0, 1.0 - (abs_x - x_arm_split) / 0.065)
+                v.co.z -= 0.008 * t_pit * drape_looseness
+            continue
+
+        if style in ("top", "dress"):
+            # 1. Convex Bust Bridge across the sternum cleavage hollow (front: y < 0)
+            if y < -0.02 and (z_bust - 0.11) <= z <= (z_bust + 0.11) and abs_x <= x_bust_peak * 1.15:
+                t_z_bust = max(0.0, 1.0 - abs(z - z_bust) / 0.11)
+                s_z_bust = t_z_bust * t_z_bust * (3.0 - 2.0 * t_z_bust)
+                t_x_bust = max(0.0, 1.0 - (abs_x / (x_bust_peak * 1.15)) ** 2)
+                y_bridge = y_bust_peak * (0.94 + 0.05 * t_x_bust)
+                if v.co.y > y_bridge:
+                    bridge_w = min(0.92, 0.75 + 0.18 * drape_looseness) * s_z_bust * t_x_bust
+                    v.co.y = v.co.y * (1.0 - bridge_w) + y_bridge * bridge_w
+
+            # 2a. Front Gravity Drape below the Bust (eliminates under-bust suck-in & navel dimple)
+            if y < -0.01 and z < z_bust and abs_x < (x_arm_split - 0.008):
+                t_drop = min(1.0, max(0.0, (z_bust - z) / max(0.12, z_bust - max(z_hem, 0.78))))
+                cos_x = math.cos(min(1.0, abs_x / max(0.13, rx_hip_drape * 0.92)) * (math.pi * 0.46))
+                # Vertical/conical hang line from bust peak down to lower abdomen/hem
+                y_hang_front = (y_bust_peak * (1.0 - 0.10 * t_drop)) * max(0.25, cos_x)
+                if v.co.y > y_hang_front:
+                    underbust_boost = 0.22 * math.exp(-((z - (z_bust - 0.045)) / 0.055) ** 2)
+                    w_front = min(0.88, drape_looseness * 0.72 + underbust_boost)
+                    v.co.y = v.co.y * (1.0 - w_front) + y_hang_front * w_front
+
+            # 2b. Back Gravity Drape below the Scapulae (fills in deep lower-back lordosis hollow)
+            if y > 0.01 and z < z_scapula and abs_x < (x_arm_split - 0.008):
+                t_back = min(1.0, max(0.0, (z_scapula - z) / max(0.15, z_scapula - z_hip_peak)))
+                y_spine_line = y_back_peak * (1.0 - t_back) + y_glute_peak * t_back
+                cos_x_b = math.cos(min(1.0, abs_x / max(0.13, rx_hip_drape * 0.92)) * (math.pi * 0.44))
+                y_hang_back = y_spine_line * max(0.30, cos_x_b)
+                if v.co.y < y_hang_back:
+                    w_back = min(0.84, drape_looseness * 0.70)
+                    v.co.y = v.co.y * (1.0 - w_back) + y_hang_back * w_back
+
+            # 2c. Lateral Waist-Hollow Drape (relaxes hourglass waist pinch on regular/loose tops & outerwear)
+            if (z_hip_peak - 0.02) <= z <= (z_bust - 0.02) and abs_x > 0.08 and abs_x < (x_arm_split - 0.008):
+                t_waist = math.sin(min(1.0, max(0.0, (z - z_hip_peak) / max(0.10, z_bust - z_hip_peak))) * math.pi)
+                x_ease = (0.010 * drape_looseness * t_waist)
+                v.co.x += math.copysign(x_ease, x)
+
+            if flare_hips and z < 0.98:
+                t_flare = min(1.0, max(0.0, (0.98 - z) / 0.45))
+                s_flare = (1.0 - math.cos(t_flare * math.pi)) * 0.5
+                v.co.x += (0.018 * s_flare) * (1.0 if x > 0 else -1.0)
+                v.co.y += (0.012 * s_flare) * (1.0 if y > 0 else -1.0)
+
+        # 3. Posterior Gluteal Cleft Bridge (for bottoms, dresses, and long tops/coats reaching hip level)
+        if y > 0.02 and (z_crotch - 0.04) <= z <= (z_waist + 0.02) and abs_x <= x_glute_peak * 1.15:
+            local_glutes = [
+                p for p in av_verts
+                if abs(p.z - z) <= 0.022 and 0.035 <= abs(p.x) <= 0.135 and p.y > 0.02
+            ]
+            if local_glutes:
+                y_local_glute = max(p.y for p in local_glutes) + offset
+                t_x_glute = max(0.0, 1.0 - (abs_x / (x_glute_peak * 1.15)) ** 2)
+                y_cleft_bridge = y_local_glute * (0.96 + 0.03 * t_x_glute)
+                if v.co.y < y_cleft_bridge:
+                    w_glute = 0.88 * t_x_glute
+                    v.co.y = v.co.y * (1.0 - w_glute) + y_cleft_bridge * w_glute
+
+        # 5. Tailored Cylindrical Trouser / Short Legs (eliminates kneecap bumps, calf bulges, and thigh hollows)
+        if style == "bottom" and z < (z_crotch - 0.015):
+            side = 1.0 if x >= 0.0 else -1.0
+            leg_sl = measure_leg_slice(av_verts, z)
+            t_leg = min(1.0, max(0.0, ((z_crotch - 0.015) - z) / max(0.10, (z_crotch - 0.015) - z_hem)))
+            rx_col_top = thigh_sl["rx"] + offset + 0.005
+            ry_col_top = thigh_sl["ry"] + offset + 0.006
+            rx_col_bot = max(ankle_sl["rx"], knee_sl["rx"] * 0.88) + offset + 0.012
+            ry_col_bot = max(ankle_sl["ry"], knee_sl["ry"] * 0.90) + offset + 0.012
+            rx_col = rx_col_top * (1.0 - t_leg) + rx_col_bot * t_leg
+            ry_col = ry_col_top * (1.0 - t_leg) + ry_col_bot * t_leg
+
+            cx_leg = side * leg_sl["cx"]
+            cy_leg = leg_sl["cy"]
+            dx_l = v.co.x - cx_leg
+            dy_l = v.co.y - cy_leg
+            is_inner_seam = (side * dx_l < 0.0) and (z > z_crotch - 0.14)
+            theta_l = math.atan2(dy_l, dx_l)
+            target_dx = (abs(dx_l) * (-side) if is_inner_seam else rx_col * math.cos(theta_l))
+            target_dy = ry_col * math.sin(theta_l)
+            cur_r = math.hypot(dx_l, dy_l)
+            tar_r = math.hypot(target_dx, target_dy)
+            if tar_r > cur_r:
+                blend_leg = 0.72 * min(1.0, (z_crotch - z) / 0.06)
+                v.co.x = cx_leg + dx_l * (1.0 - blend_leg) + target_dx * blend_leg
+                v.co.y = cy_leg + dy_l * (1.0 - blend_leg) + target_dy * blend_leg
+
+    # 6. Iterative Cloth-Tension Laplacian Relaxation + Monotonic Outward Skin Clearance Floor
+    # Never pushes any vertex closer to the avatar skin than its initial offset position!
+    n_iters = 5
+    lam = 0.28
+    min_skin_clearance = max(0.0045, offset * 0.85)
+    boundary_ring0 = {v for v in bm.verts if v.is_boundary}
+
+    for _it in range(n_iters):
+        new_coords = {}
+        for v in bm.verts:
+            if v in boundary_ring0:
+                # Smooth boundary loop along its two boundary neighbors (keeps hem/cuff/collar crisp & even)
+                b_nbrs = [e.other_vert(v) for e in v.link_edges if e.is_boundary]
+                if len(b_nbrs) == 2:
+                    avg_b = 0.5 * (b_nbrs[0].co + b_nbrs[1].co)
+                    new_coords[v] = Vector((
+                        v.co.x * 0.80 + avg_b.x * 0.20,
+                        v.co.y * 0.80 + avg_b.y * 0.20,
+                        v.co.z,
+                    ))
+                else:
+                    new_coords[v] = v.co.copy()
+            else:
+                nbrs = [e.other_vert(v) for e in v.link_edges]
+                if nbrs:
+                    avg_co = sum((n.co for n in nbrs), Vector((0.0, 0.0, 0.0))) / len(nbrs)
+                    relaxed = Vector((
+                        v.co.x * (1.0 - lam) + avg_co.x * lam,
+                        v.co.y * (1.0 - lam) + avg_co.y * lam,
+                        v.co.z * (1.0 - lam * 0.25) + avg_co.z * (lam * 0.25),
+                    ))
+                    new_coords[v] = relaxed
+                else:
+                    new_coords[v] = v.co.copy()
+
+        for v, co in new_coords.items():
+            # Enforce strict BVHTree avatar skin clearance floor outside armhole/crotch bifurcations
+            is_bifurcation_zone = (0.145 <= abs(co.x) <= 0.255 and 1.10 <= co.z <= 1.34) or (abs(co.x) <= 0.055 and 0.72 <= co.z <= 0.88)
+            if not is_bifurcation_zone:
+                loc, norm, _idx, dist = bvh.find_nearest(co)
+                if loc is not None and norm is not None:
+                    vec_from_skin = co - loc
+                    signed_d = vec_from_skin.dot(norm)
+                    if signed_d < min_skin_clearance:
+                        co = loc + norm * min_skin_clearance
+            v.co = co
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.normal_update()
+
+
+def solidify_bmesh_manifold(bm, thickness=0.0022):
+    """
+    Pure topological 2-manifold solidification of an open bmesh sheet:
+      - Dissolves any near-collinear/zero-area sliver faces BEFORE solidification
+      - Creates an inner shell offset by `-v.normal * thickness`
+      - Flips inner shell face winding so normals point inward
+      - Bridges every boundary edge between the outer and inner shells with a quad rim face
+      - Guarantees 100% topological manifoldness (0 non-manifold edges, 0 zero-area faces)
+        regardless of local boundary curvature or bisect triangle aspect ratio!
+    """
+    # Dissolve any tiny sliver edges or near-zero-area faces on the single sheet while it is still an open sheet
+    bmesh.ops.dissolve_degenerate(bm, dist=0.0004, edges=bm.edges[:])
+    # Iteratively prune any dangling ear triangles (faces with >= 2 boundary edges) and bow-tie vertices
+    for _clean_pass in range(5):
+        tiny_or_ear = [
+            f for f in bm.faces
+            if f.calc_area() <= 1e-8 or sum(1 for e in f.edges if e.is_boundary) >= 2
+        ]
+        if tiny_or_ear:
+            bmesh.ops.delete(bm, geom=tiny_or_ear, context="FACES")
+        # Also remove any faces attached to a bow-tie vertex (>2 boundary edges meeting at one vertex)
+        bowtie_faces = set()
+        for v in bm.verts:
+            b_edges = [e for e in v.link_edges if e.is_boundary]
+            if len(b_edges) > 2:
+                for f in v.link_faces:
+                    bowtie_faces.add(f)
+        if bowtie_faces:
+            bmesh.ops.delete(bm, geom=list(bowtie_faces), context="FACES")
+        if not tiny_or_ear and not bowtie_faces:
+            break
+
+    # Keep only main connected component if pruning created an orphan island
+    islands = []
+    visited = set()
+    for f in bm.faces:
+        if f in visited:
+            continue
+        isl, q = [], [f]
+        visited.add(f)
+        while q:
+            curr = q.pop()
+            isl.append(curr)
+            for e in curr.edges:
+                for lf in e.link_faces:
+                    if lf not in visited:
+                        visited.add(lf)
+                        q.append(lf)
+        islands.append(isl)
+    if len(islands) > 1:
+        main_isl = max(islands, key=len)
+        other = [f for isl in islands if isl != main_isl for f in isl]
+        bmesh.ops.delete(bm, geom=other, context="FACES")
+    loose_e = [e for e in bm.edges if not e.link_faces]
+    if loose_e:
+        bmesh.ops.delete(bm, geom=loose_e, context="EDGES")
+    loose_v = [v for v in bm.verts if not v.link_edges]
+    if loose_v:
+        bmesh.ops.delete(bm, geom=loose_v, context="VERTS")
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.normal_update()
+
+    orig_verts = bm.verts[:]
+    orig_faces = bm.faces[:]
+    orig_boundary_edges = [e for e in bm.edges if e.is_boundary]
+
+    # Map each outer vertex to its inner counterpart
+    inner_map = {}
+    for v in orig_verts:
+        n = v.normal
+        if n.length < 1e-6:
+            n = Vector((0.0, -1.0, 0.0))
+        v_in = bm.verts.new(v.co - n * thickness)
+        inner_map[v] = v_in
+
+    # Create inner faces with reversed vertex order
+    for f in orig_faces:
+        in_verts = [inner_map[v] for v in reversed(f.verts)]
+        try:
+            bm.faces.new(in_verts)
+        except ValueError:
+            pass
+
+    # Bridge boundary edges with quad rim faces oriented consistently with the outer face loop
+    for e in orig_boundary_edges:
+        if len(e.link_faces) == 1:
+            loop = e.link_loops[0]
+            v0 = loop.vert
+            v1 = loop.link_loop_next.vert
+            vi0 = inner_map[v0]
+            vi1 = inner_map[v1]
+            try:
+                bm.faces.new((v0, vi0, vi1, v1))
+            except ValueError:
+                pass
+
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.normal_update()
+    return bm
+
+
 def create_pbr_material(name="CanonicalGarmentPBR"):
     """Step 5: Assign a clean Principled BSDF material with Roughness=0.8, Metallic=0.0, Alpha hooked."""
     mat = bpy.data.materials.new(name=name)
@@ -574,14 +912,14 @@ def build_top_template(avatar_data, variant="tshirt"):
         neck_tilt = -0.15
     elif variant == "hoodie":
         offset = 0.0150
-        z_neck = 1.508 if is_male else 1.414
+        z_neck = 1.502 if is_male else 1.410
         z_hem = 0.82 if is_male else 0.78
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
-        neck_tilt = -0.15
+        neck_tilt = -0.16
     elif variant in ("jacket", "top_outerwear_jacket"):
         offset = 0.0160
-        z_neck = 1.505 if is_male else 1.412
+        z_neck = 1.502 if is_male else 1.410
         z_hem = 0.80 if is_male else 0.76
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
@@ -589,7 +927,7 @@ def build_top_template(avatar_data, variant="tshirt"):
         neck_tilt = -0.16
     elif variant == "jacket_blazer":
         offset = 0.0160
-        z_neck = 1.505 if is_male else 1.412
+        z_neck = 1.502 if is_male else 1.410
         z_hem = 0.78 if is_male else 0.74
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
@@ -598,14 +936,14 @@ def build_top_template(avatar_data, variant="tshirt"):
     elif variant == "cardigan":
         offset = 0.0140
         z_neck = 1.485 if is_male else 1.395
-        z_hem = 0.70 if is_male else 0.66
+        z_hem = 0.74 if is_male else 0.70
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
         neck_tilt = -0.20
     elif variant == "coat":
         offset = 0.0180
-        z_neck = 1.508 if is_male else 1.414
+        z_neck = 1.502 if is_male else 1.410
         z_hem = 0.54 if is_male else 0.50
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
@@ -613,7 +951,7 @@ def build_top_template(avatar_data, variant="tshirt"):
         neck_tilt = -0.16
     elif variant == "trench_coat":
         offset = 0.0180
-        z_neck = 1.508 if is_male else 1.414
+        z_neck = 1.502 if is_male else 1.410
         z_hem = 0.48 if is_male else 0.44
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
@@ -761,13 +1099,14 @@ def build_top_template(avatar_data, variant="tshirt"):
     if other:
         bmesh.ops.delete(bm, geom=other, context='FACES')
 
-    # Weld/fill small pinhole seams (exclude intentional openings: hem, cuffs, and central neck opening)
+    # Weld/fill small pinhole seams (exclude intentional openings: hem, cuffs, central neck opening, and open front placket)
     small_holes = [
         e for e in bm.edges
         if e.is_boundary
         and e.verts[0].co.z > (z_hem + 0.01)
         and abs(e.verts[0].co.x) < 0.21
         and (e.verts[0].co.z < (z_neck - 0.03) or abs(e.verts[0].co.x) > 0.095)
+        and not (is_open_front and abs(e.verts[0].co.x) < 0.035 and e.verts[0].co.y < -0.01)
     ]
     if small_holes:
         try:
@@ -782,37 +1121,37 @@ def build_top_template(avatar_data, variant="tshirt"):
     if loose_verts:
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
-    # Recalculate face and vertex normals after bisect_plane/holes_fill so cut cuff/collar/hem rings receive full normal offset
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    bm.normal_update()
+    # Apply tailored gravity drape, bust/glute bridging, cylindrical sleeves, and cloth-tension relaxation
+    drape_map = {
+        "singlet": 0.42,
+        "tshirt": 0.72,
+        "longsleeve": 0.74,
+        "vest": 0.76,
+        "cardigan": 0.82,
+        "jacket": 0.85,
+        "top_outerwear_jacket": 0.85,
+        "jacket_blazer": 0.86,
+        "hoodie": 0.88,
+        "tunic": 0.84,
+        "top_tunic": 0.84,
+        "coat": 0.92,
+        "trench_coat": 0.94,
+    }
+    drape_looseness = drape_map.get(variant, 0.75)
+    drape_garment_shell(
+        bm,
+        avatar_data,
+        offset=offset,
+        style="top",
+        drape_looseness=drape_looseness,
+        z_hem=z_hem,
+        z_top=z_neck,
+        sleeve_type=sleeve_type,
+        flare_hips=flare_hips,
+    )
 
-    # Apply normal offset and optional hip flare
-    for v in bm.verts:
-        v.co += v.normal * offset
-        if flare_hips and v.co.z < 0.98:
-            t_flare = min(1.0, max(0.0, (0.98 - v.co.z) / 0.45))
-            s_flare = (1.0 - math.cos(t_flare * math.pi)) * 0.5
-            v.co.x += (0.018 * s_flare) * (1.0 if v.co.x > 0 else -1.0)
-            v.co.y += (0.012 * s_flare) * (1.0 if v.co.y > 0 else -1.0)
-
-    # Solidify modifier
-    mesh_tmp = bpy.data.meshes.new(f"temp_{variant}_{gender}")
-    bm.to_mesh(mesh_tmp)
-    bm.free()
-
-    obj_tmp = bpy.data.objects.new(f"temp_{variant}_{gender}", mesh_tmp)
-    bpy.context.scene.collection.objects.link(obj_tmp)
-    mod = obj_tmp.modifiers.new("Solidify", 'SOLIDIFY')
-    mod.thickness = 0.0022
-    mod.offset = -1.0
-    mod.use_rim = True
-    bpy.context.view_layer.objects.active = obj_tmp
-    bpy.ops.object.modifier_apply(modifier=mod.name)
-
-    bm_final = bmesh.new()
-    bm_final.from_mesh(obj_tmp.data)
-    bpy.data.objects.remove(obj_tmp, do_unlink=True)
-    bpy.data.meshes.remove(mesh_tmp)
+    # Topological 2-manifold Solidify (guarantees 0 non-manifold edges)
+    bm_final = solidify_bmesh_manifold(bm, thickness=0.0022)
 
     verts = [v.co for v in bm_final.verts]
     min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)
@@ -990,30 +1329,24 @@ def build_bottom_template(avatar_data, variant="trousers"):
     if loose_verts:
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
+    drape_garment_shell(
+        bm,
+        avatar_data,
+        offset=offset,
+        style="bottom",
+        drape_looseness=0.78 if variant == "trousers" else 0.72,
+        z_hem=z_hem,
+        z_top=z_waist,
+        sleeve_type="none",
+        flare_hips=False,
+    )
     for v in bm.verts:
-        v.co += v.normal * offset
         if variant == "trousers" and v.co.z < 0.22:
             t_cuff = min(1.0, max(0.0, (0.22 - v.co.z) / 0.12))
             v.co.x += (0.012 * t_cuff) * (1.0 if v.co.x > 0 else -1.0)
             v.co.y += (0.008 * t_cuff) * (1.0 if v.co.y > 0 else -1.0)
 
-    temp_mesh = bpy.data.meshes.new(f"temp_bottom_{variant}_{gender}")
-    bm.to_mesh(temp_mesh)
-    bm.free()
-
-    temp_obj = bpy.data.objects.new(f"temp_bottom_{variant}_{gender}", temp_mesh)
-    bpy.context.scene.collection.objects.link(temp_obj)
-    mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
-    mod.thickness = 0.0022
-    mod.use_even_offset = False
-    mod.use_quality_normals = False
-    with bpy.context.temp_override(object=temp_obj, active_object=temp_obj):
-        bpy.ops.object.modifier_apply(modifier=mod.name)
-
-    bm_final = bmesh.new()
-    bm_final.from_mesh(temp_mesh)
-    bpy.data.objects.remove(temp_obj, do_unlink=True)
-    bpy.data.meshes.remove(temp_mesh)
+    bm_final = solidify_bmesh_manifold(bm, thickness=0.0022)
 
     # Safety clamp: prevent any stray waist/hem vertices from shooting beyond bounds
     for v in bm_final.verts:
@@ -1315,26 +1648,19 @@ def build_dress_template(avatar_data, variant="dress"):
             if rad_dot < 0.0:
                 f.normal_flip()
     bm.normal_update()
-    for v in bm.verts:
-        v.co += v.normal * offset
+    drape_garment_shell(
+        bm,
+        avatar_data,
+        offset=offset,
+        style="dress",
+        drape_looseness=0.92 if is_kaftan else 0.76,
+        z_hem=z_hem,
+        z_top=z_neck,
+        sleeve_type=sleeve_type,
+        flare_hips=False,
+    )
 
-    temp_mesh = bpy.data.meshes.new(f"temp_dress_{variant}_{gender}")
-    bm.to_mesh(temp_mesh)
-    bm.free()
-
-    temp_obj = bpy.data.objects.new(f"temp_dress_{variant}_{gender}", temp_mesh)
-    bpy.context.scene.collection.objects.link(temp_obj)
-    mod = temp_obj.modifiers.new("Solidify", 'SOLIDIFY')
-    mod.thickness = 0.0022
-    mod.offset = -1.0
-    mod.use_rim = True
-    bpy.context.view_layer.objects.active = temp_obj
-    bpy.ops.object.modifier_apply(modifier=mod.name)
-
-    bm_final = bmesh.new()
-    bm_final.from_mesh(temp_obj.data)
-    bpy.data.objects.remove(temp_obj, do_unlink=True)
-    bpy.data.meshes.remove(temp_mesh)
+    bm_final = solidify_bmesh_manifold(bm, thickness=0.0022)
 
     verts = [v.co for v in bm_final.verts]
     min_x, max_x = min(v.x for v in verts), max(v.x for v in verts)

@@ -2935,11 +2935,15 @@ function GarmentTemplateMeshInner({
           //   • Tops / Outerwear / Dresses: anchored strictly at the shoulders & neckline (tDrop = 0 at shoulders).
           //   • Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
           const fitMode = fitProfile?.fit || 'regular';
-          if (fitMode !== 'regular') {
-            // Canonical templates already sit at exact skin-conforming clearance (+0.007m);
-            // only expand outward for loose/oversized/flared fits and never shrink < 1.0 into the avatar skin.
-            const wScale = Math.max(1.0, Number.isFinite(fitProfile?.templateWidthScale) ? fitProfile.templateWidthScale : 1.0);
-            const dScale = Math.max(1.0, Number.isFinite(fitProfile?.templateDepthScale) ? fitProfile.templateDepthScale : 1.0);
+          const preDrapedLooseTemplates = ['hoodie', 'cardigan', 'coat', 'trench_coat', 'kaftan', 'top_tunic', 'bermuda'];
+          const isPreDrapedLoose = preDrapedLooseTemplates.includes(templateId);
+          if (fitMode !== 'regular' && !(isPreDrapedLoose && fitMode === 'loose')) {
+            // Canonical templates already sit at exact draped cloth clearance;
+            // only apply gentle additional ease for loose/oversized/flared fits and never shrink < 1.0 into the avatar skin.
+            const rawW = Number.isFinite(fitProfile?.templateWidthScale) ? fitProfile.templateWidthScale : 1.0;
+            const rawD = Number.isFinite(fitProfile?.templateDepthScale) ? fitProfile.templateDepthScale : 1.0;
+            const wScale = Math.max(1.0, 1.0 + (rawW - 1.0) * (isPreDrapedLoose ? 0.35 : 0.65));
+            const dScale = Math.max(1.0, 1.0 + (rawD - 1.0) * (isPreDrapedLoose ? 0.35 : 0.65));
             const yShoulderAnchor = isMale ? 1.48 : 1.42;
             const yWaistAnchor = isMale ? 1.08 : 1.05;
             const yCrotch = isMale ? 0.86 : 0.82;
