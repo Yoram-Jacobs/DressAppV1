@@ -642,19 +642,28 @@ def build_top_template(avatar_data, variant="tshirt"):
     bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
 
     body_mat_indices = {i for i, m in enumerate(avatar_obj.data.materials) if 'skin' in m.name.lower() or 'generic' in m.name.lower()}
-    bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if abs(v.co.x) < 0.25 and v.co.z < 1.35], dist=0.0005)
-    bm.verts.ensure_lookup_table()
-    bm.faces.ensure_lookup_table()
     non_body = [f for f in bm.faces if f.material_index not in body_mat_indices]
     if non_body:
         bmesh.ops.delete(bm, geom=non_body, context='FACES')
+    # Weld all UV-seam duplicate vertices across the entire body, shoulders, and arms so normal offset never splits arm seams
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.0002)
+    bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
 
-        bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
+    # 1. Precision Hem Cut (restricted to torso so low hems on coats/tunics never clip hanging forearms/wrists)
+    def is_torso_for_hem(v):
+        x_split = (0.180 + max(0.0, 1.28 - v.co.z) * 0.36) if is_male else (0.154 + max(0.0, 1.20 - v.co.z) * 0.34)
+        return abs(v.co.x) < x_split
 
-    # 1. Precision Hem Cut
+    hem_geom = (
+        [v for v in bm.verts if is_torso_for_hem(v)]
+        + [e for e in bm.edges if all(is_torso_for_hem(v) for v in e.verts)]
+        + [f for f in bm.faces if all(is_torso_for_hem(v) for v in f.verts)]
+    )
     bmesh.ops.bisect_plane(
         bm,
-        geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+        geom=hem_geom,
         plane_co=Vector((0.0, 0.0, z_hem)),
         plane_no=Vector((0.0, 0.0, -1.0)),
         clear_outer=True
@@ -773,6 +782,10 @@ def build_top_template(avatar_data, variant="tshirt"):
     if loose_verts:
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
+    # Recalculate face and vertex normals after bisect_plane/holes_fill so cut cuff/collar/hem rings receive full normal offset
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.normal_update()
+
     # Apply normal offset and optional hip flare
     for v in bm.verts:
         v.co += v.normal * offset
@@ -808,25 +821,41 @@ def build_top_template(avatar_data, variant="tshirt"):
     dz = max(1e-4, max_z - min_z)
     x_torso = 0.185 if is_male else 0.170
     has_sleeves = max_x > (x_torso + 0.04)
+    z_sh_uv = 1.38 if is_male else 1.30
+    z_wrist_uv = 0.85 if is_male else 0.82
+    v_cuff_uv = 0.06 if z_hem > 0.65 else 0.36
 
     faces_uvs = []
     for f in bm_final.faces:
         uvs = []
         for l in f.loops:
             v = l.vert.co
+            v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
             if sleeve_type == "long" and has_sleeves:
-                if abs(v.x) <= x_torso:
-                    u = 0.5 + (v.x / x_torso) * 0.29
+                x_split = (0.180 + max(0.0, 1.28 - v.z) * 0.40) if is_male else (0.152 + max(0.0, 1.20 - v.z) * 0.38)
+                u_torso = 0.5 + (v.x / max(0.14, x_torso)) * 0.27
+                if abs(v.x) <= x_split:
+                    u = u_torso
+                    v_norm = v_torso
                 else:
-                    t_sl = min(1.0, (abs(v.x) - x_torso) / max(1e-4, max_x - x_torso))
-                    u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
+                    # Map 3D A-pose sleeve cross-section across the 2D flat-lay hanging sleeve strip
+                    t_down = min(1.0, max(0.0, (z_sh_uv - v.z) / max(1e-4, z_sh_uv - z_wrist_uv)))
+                    x_sl_in = (0.185 + t_down * 0.235) if is_male else (0.156 + t_down * 0.215)
+                    x_sl_out = (0.295 + t_down * 0.205) if is_male else (0.245 + t_down * 0.185)
+                    s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
+                    u_sl_in = 0.75 + 0.06 * t_down
+                    u_sl_out = 0.87 + 0.09 * t_down
+                    u_sl = 0.5 + math.copysign((u_sl_in - 0.5) + s_across * (u_sl_out - u_sl_in), v.x)
+                    v_sl = 0.78 - t_down * (0.78 - v_cuff_uv)
+                    # Smooth blend near shoulder/armhole transition so shoulder seam is continuous
+                    t_blend = min(1.0, max(0.0, (abs(v.x) - x_split) / 0.035))
+                    s_blend = t_blend * t_blend * (3.0 - 2.0 * t_blend)
+                    u = u_torso * (1.0 - s_blend) + u_sl * s_blend
+                    v_norm = v_torso * (1.0 - s_blend) + v_sl * s_blend
             else:
                 # Short-sleeve (T-shirt, tunic) and sleeveless tops span 1:1 across [min_x, max_x]
                 u = (v.x - min_x) / dx
-            v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
-            v_arm = (v.z - min_z) / dz
-            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if (sleeve_type == "long" and has_sleeves) else 0.0
-            v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
+                v_norm = v_torso
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
 
@@ -1151,10 +1180,6 @@ def build_dress_template(avatar_data, variant="dress"):
     bm = bmesh.new()
     bm.from_mesh(avatar_obj.data)
     bmesh.ops.transform(bm, matrix=mw, verts=bm.verts)
-    bmesh.ops.remove_doubles(bm, verts=[v for v in bm.verts if abs(v.co.x) < 0.25 and v.co.z < 1.35], dist=0.0005)
-    bm.verts.ensure_lookup_table()
-    bm.faces.ensure_lookup_table()
-
     body_mat_indices = {
         i for i, m in enumerate(avatar_obj.data.materials)
         if "skin" in m.name.lower() or "generic" in m.name.lower()
@@ -1162,7 +1187,10 @@ def build_dress_template(avatar_data, variant="dress"):
     non_body = [f for f in bm.faces if f.material_index not in body_mat_indices]
     if non_body:
         bmesh.ops.delete(bm, geom=non_body, context='FACES')
-        bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.0002)
+    bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
 
     # 1. Cut upper bodice cleanly above crotch bifurcation so torso is a single unified loop
     bmesh.ops.bisect_plane(
@@ -1175,7 +1203,7 @@ def build_dress_template(avatar_data, variant="dress"):
 
     # 2. Precision Sleeve / Armhole Cuts
     if sleeve_type == "long":
-        wrist_r = Vector((0.486, -0.037, 0.876)) if is_male else Vector((0.428, -0.034, 0.846))
+        wrist_r = Vector((0.465, -0.035, 0.935)) if is_male else Vector((0.415, -0.032, 0.915))
         arm_dir_r = Vector((0.4638, -0.1090, -0.8792)).normalized() if is_male else Vector((0.5160, -0.1410, -0.8449)).normalized()
         r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=wrist_r, plane_no=arm_dir_r, clear_outer=True)
@@ -1248,7 +1276,7 @@ def build_dress_template(avatar_data, variant="dress"):
 
     # 4. Extrude unified, continuous A-line dress skirt from the closed hip boundary loop down to z_hem
     # (Eliminates split pant legs and jagged hem edges on dresses!)
-    cur_edges = [e for e in bm.edges if e.is_boundary and all(abs(v.co.z - z_hip) < 0.008 for v in e.verts)]
+    cur_edges = [e for e in bm.edges if e.is_boundary and all(abs(v.co.z - z_hip) < 0.008 and abs(v.co.x) < 0.23 for v in e.verts)]
     if cur_edges:
         hip_verts = list({v for e in cur_edges for v in e.verts})
         cy_hip = 0.5 * (min(v.co.y for v in hip_verts) + max(v.co.y for v in hip_verts))
@@ -1277,6 +1305,7 @@ def build_dress_template(avatar_data, variant="dress"):
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
     # Strictly orient all face normals radially OUTWARD from the torso centerline (never inward!)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
     cy_center = -0.015
     for f in bm.faces:
@@ -1314,26 +1343,39 @@ def build_dress_template(avatar_data, variant="dress"):
     dz = max(1e-4, max_z - min_z)
     x_torso = 0.185 if is_male else 0.170
     has_sleeves = (sleeve_type == "long") and (max_x > (x_torso + 0.05))
+    z_sh_uv = 1.38 if is_male else 1.30
+    z_wrist_uv = 0.85 if is_male else 0.82
 
     faces_uvs = []
     for f in bm_final.faces:
         uvs = []
         for l in f.loops:
             v = l.vert.co
+            v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
             if has_sleeves:
-                if abs(v.x) <= x_torso:
-                    u = 0.5 + (v.x / x_torso) * 0.29
+                x_split = (0.180 + max(0.0, 1.28 - v.z) * 0.40) if is_male else (0.152 + max(0.0, 1.20 - v.z) * 0.38)
+                u_torso = 0.5 + (v.x / max(0.14, x_torso)) * 0.27
+                if abs(v.x) <= x_split:
+                    u = u_torso
+                    v_norm = v_torso
                 else:
-                    t_sl = min(1.0, (abs(v.x) - x_torso) / max(1e-4, max_x - x_torso))
-                    u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
+                    t_down = min(1.0, max(0.0, (z_sh_uv - v.z) / max(1e-4, z_sh_uv - z_wrist_uv)))
+                    x_sl_in = (0.185 + t_down * 0.235) if is_male else (0.156 + t_down * 0.215)
+                    x_sl_out = (0.295 + t_down * 0.205) if is_male else (0.245 + t_down * 0.185)
+                    s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
+                    u_sl_in = 0.75 + 0.06 * t_down
+                    u_sl_out = 0.87 + 0.09 * t_down
+                    u_sl = 0.5 + math.copysign((u_sl_in - 0.5) + s_across * (u_sl_out - u_sl_in), v.x)
+                    v_sl = 0.78 - t_down * (0.78 - 0.36)
+                    t_blend = min(1.0, max(0.0, (abs(v.x) - x_split) / 0.035))
+                    s_blend = t_blend * t_blend * (3.0 - 2.0 * t_blend)
+                    u = u_torso * (1.0 - s_blend) + u_sl * s_blend
+                    v_norm = v_torso * (1.0 - s_blend) + v_sl * s_blend
             else:
                 # Continuous cylindrical wraparound UV across front, sides, and back (seam-free across y = cy_center)
                 theta = math.atan2(v.x, abs(v.y - cy_center) + 0.015)
                 u = 0.5 + (theta / (math.pi * 0.5)) * 0.46
-            v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
-            v_arm = (v.z - min_z) / dz
-            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0
-            v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
+                v_norm = v_torso
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
 

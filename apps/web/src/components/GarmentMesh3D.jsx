@@ -2983,18 +2983,44 @@ function GarmentTemplateMeshInner({
                 if (sDrop > 0) {
                   const slice = getTorsoSlice(Math.max(0.5, y), isMale);
                   const cz = slice.cz || 0;
-                  const isSleeveVertex = Math.abs(x) > slice.rx + 0.045;
+                  // Anatomical armpit separation plane between torso ribcage and upper arm / sleeve
+                  const xArmpitSplit = isMale
+                    ? (0.180 + Math.max(0, 1.28 - y) * 0.42)
+                    : (0.150 + Math.max(0, 1.20 - y) * 0.40);
+                  const isSleeveVertex = Math.abs(x) > xArmpitSplit;
                   if (isSleeveVertex) {
-                    // Sleeve vertices: anchored at shoulder armhole, modulated by sleeveEase in Z
-                    const zScaleSleeve = fitMode === 'oversized' ? 1.18 : (fitMode === 'loose' ? 1.10 : 1.0);
-                    z = cz + (z - cz) * (1 + (zScaleSleeve - 1) * sDrop);
+                    // Sleeve vertices preserve their pre-tailored Blender inner-arm clearance (never pushed into the bicep),
+                    // while outer-arm X and Z depth expand radially around the true 3D arm axis (armCx, armCz).
+                    const side = x < 0 ? -1 : 1;
+                    const armCx = isMale
+                      ? (y >= 1.26 ? Math.max(0.215, 0.284 - (y - 1.26) * 0.95) : 0.284 + (1.26 - y) * 0.580)
+                      : (y >= 1.22 ? Math.max(0.165, 0.211 - (y - 1.22) * 1.10) : 0.211 + (1.22 - y) * 0.628);
+                    const armCz = isMale ? 0.004 : 0.008;
+                    const rScaleSleeve = fitMode === 'oversized' ? 1.10 : (fitMode === 'loose' ? 1.05 : 1.0);
+                    const dxArm = x - side * armCx;
+                    const dzArm = z - armCz;
+                    if (side * dxArm > 0) {
+                      x = side * armCx + dxArm * (1 + (rScaleSleeve - 1) * sDrop);
+                    }
+                    if (z >= armCz) {
+                      z = armCz + dzArm * (1 + (rScaleSleeve - 1) * sDrop);
+                    }
                   } else {
                     const isAlreadyFlaredTemplate = templateId === 'trench_coat' || templateId === 'kaftan';
                     const flareAdd = (fitMode === 'flared' && !isAlreadyFlaredTemplate)
                       ? Math.max(0, yWaistAnchor - y) * (fitProfile?.flareRate || 0.28)
                       : 0;
-                    x = x * (1 + (wScale - 1) * sDrop) + Math.sign(x) * flareAdd * sDrop;
-                    z = cz + (z - cz) * (1 + (dScale - 1) * sDrop) + Math.sign(z - cz) * flareAdd * 0.45 * sDrop;
+                    // Smoothly taper lateral torso X-scaling near the armpit boundary so torso wall never crowds inner sleeve
+                    const tTorsoX = Math.max(0, Math.min(1, (xArmpitSplit - Math.abs(x)) / 0.035));
+                    const sTorsoX = tTorsoX * tTorsoX * (3 - 2 * tTorsoX);
+                    const yArmpitTop = isMale ? 1.32 : 1.26;
+                    const yArmpitBot = isMale ? 1.18 : 1.14;
+                    const tArmpitY = y < yArmpitTop ? Math.max(0, Math.min(1, (yArmpitBot + 0.04 - y) / 0.12)) : 0;
+                    const sArmpitY = tArmpitY * tArmpitY * (3 - 2 * tArmpitY);
+                    const sLat = sDrop * sTorsoX * sArmpitY;
+                    const sDep = sDrop * sTorsoX;
+                    x = x * (1 + (wScale - 1) * sLat) + Math.sign(x) * flareAdd * sLat;
+                    z = cz + (z - cz) * (1 + (dScale - 1) * sDep) + Math.sign(z - cz) * flareAdd * 0.45 * sDep;
                   }
                   pos.setXYZ(i, x, y, z);
                 }
@@ -3049,6 +3075,7 @@ function GarmentTemplateMeshInner({
       try {
         return applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
           minClearance: layerOffset,
+          includeArms: ['top', 'outerwear', 'dress', 'watch'].includes(rawSlot),
         });
       } catch (e) {
         return geo;

@@ -121,7 +121,7 @@ function buildField(scene) {
     // Exclude hanging forearms, wrists, hands, and fingers (|x| > 0.188m at y in 0.70..1.28m)
     // from the primary torso/hip grid so waist, pelvis, hip, and thigh garment vertices
     // never inherit stationary hand morph weights.
-    if (Math.abs(bx) > 0.188 && by >= 0.70 && by <= 1.28) {
+    if (Math.abs(bx) > (0.156 + Math.max(0, 1.20 - by) * 0.38) && by >= 0.70 && by <= 1.26) {
       continue;
     }
     let bucket = grid.get(key);
@@ -279,7 +279,7 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
       pos.setXYZ(vi, x + rigidAnchorDelta[0], y + rigidAnchorDelta[1], z + rigidAnchorDelta[2]);
       continue;
     }
-    const isOuterArmVertex = includeArms || (Math.abs(x) > 0.212 && y >= 0.80 && y <= 1.42);
+    const isOuterArmVertex = includeArms || (Math.abs(x) > (0.156 + Math.max(0, 1.20 - y) * 0.38) && y >= 0.70 && y <= 1.42);
     const nn = findNearest(field, x, y, z, isOuterArmVertex);
     if (nn.length === 0) continue;
 
