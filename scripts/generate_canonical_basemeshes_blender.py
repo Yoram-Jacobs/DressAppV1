@@ -545,96 +545,96 @@ def build_top_template(avatar_data, variant="tshirt"):
 
     if variant == "tshirt":
         offset = 0.0070
-        z_neck = 1.455 if is_male else 1.400
+        z_neck = 1.495 if is_male else 1.402
         z_hem = 0.88 if is_male else 0.84
-        x_arm_max = 0.315 if is_male else 0.280
+        x_arm_max = 0.260 if is_male else 0.230
         sleeve_type = "short"
-        neck_tilt = -0.22
+        neck_tilt = -0.18
     elif variant == "singlet":
         offset = 0.0060
-        z_neck = 1.430 if is_male else 1.375
+        z_neck = 1.465 if is_male else 1.378
         z_hem = 0.88 if is_male else 0.84
         x_arm_max = 0.200 if is_male else 0.178
         sleeve_type = "sleeveless"
-        neck_tilt = -0.30
+        neck_tilt = -0.24
     elif variant == "vest":
         offset = 0.0150
-        z_neck = 1.455 if is_male else 1.400
+        z_neck = 1.485 if is_male else 1.395
         z_hem = 0.82 if is_male else 0.78
         x_arm_max = 0.205 if is_male else 0.182
         sleeve_type = "sleeveless"
         is_open_front = True
-        neck_tilt = -0.24
+        neck_tilt = -0.20
     elif variant == "longsleeve":
         offset = 0.0075
-        z_neck = 1.470 if is_male else 1.415
+        z_neck = 1.498 if is_male else 1.405
         z_hem = 0.86 if is_male else 0.82
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         neck_tilt = -0.15
     elif variant == "hoodie":
         offset = 0.0150
-        z_neck = 1.485 if is_male else 1.430
+        z_neck = 1.508 if is_male else 1.414
         z_hem = 0.82 if is_male else 0.78
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         neck_tilt = -0.15
     elif variant in ("jacket", "top_outerwear_jacket"):
         offset = 0.0160
-        z_neck = 1.475 if is_male else 1.420
+        z_neck = 1.505 if is_male else 1.412
         z_hem = 0.80 if is_male else 0.76
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.18
+        neck_tilt = -0.16
     elif variant == "jacket_blazer":
         offset = 0.0160
-        z_neck = 1.475 if is_male else 1.420
+        z_neck = 1.505 if is_male else 1.412
         z_hem = 0.78 if is_male else 0.74
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.22
+        neck_tilt = -0.18
     elif variant == "cardigan":
         offset = 0.0140
-        z_neck = 1.455 if is_male else 1.400
+        z_neck = 1.485 if is_male else 1.395
         z_hem = 0.70 if is_male else 0.66
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.25
+        neck_tilt = -0.20
     elif variant == "coat":
         offset = 0.0180
-        z_neck = 1.480 if is_male else 1.425
+        z_neck = 1.508 if is_male else 1.414
         z_hem = 0.54 if is_male else 0.50
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.18
+        neck_tilt = -0.16
     elif variant == "trench_coat":
         offset = 0.0180
-        z_neck = 1.480 if is_male else 1.425
+        z_neck = 1.508 if is_male else 1.414
         z_hem = 0.48 if is_male else 0.44
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
         flare_hips = True
-        neck_tilt = -0.18
+        neck_tilt = -0.16
     elif variant in ("tunic", "top_tunic"):
         offset = 0.0140
-        z_neck = 1.455 if is_male else 1.400
+        z_neck = 1.488 if is_male else 1.398
         z_hem = 0.66 if is_male else 0.62
-        x_arm_max = 0.315 if is_male else 0.280
+        x_arm_max = 0.260 if is_male else 0.230
         sleeve_type = "short"
         flare_hips = True
-        neck_tilt = -0.22
+        neck_tilt = -0.18
     else:
         offset = 0.0130
-        z_neck = 1.465 if is_male else 1.410
+        z_neck = 1.498 if is_male else 1.405
         z_hem = 0.84 if is_male else 0.80
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
-        neck_tilt = -0.18
+        neck_tilt = -0.16
 
     mw = avatar_obj.matrix_world
     bm = bmesh.new()
@@ -674,17 +674,20 @@ def build_top_template(avatar_data, variant="tshirt"):
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "short":
-        arm_dir = Vector((0.536, 0.0, -0.844)).normalized()
-        z_cuff = (1.21 - (x_arm_max - 0.315) * 1.57) if is_male else (1.10 - (x_arm_max - 0.280) * 1.57)
+        # Short sleeve ending midway (50%) between shoulder point (acromion) and elbow joint
+        arm_dir_r = Vector((0.581, 0.0, -0.814)).normalized() if is_male else Vector((0.526, 0.0, -0.850)).normalized()
+        cuff_r = Vector((x_arm_max, 0.0, 1.290 if is_male else 1.180))
+        x_cut_min = 0.190 if is_male else 0.172
 
         # Right arm
-        r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
-        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max, 0.0, z_cuff)), plane_no=arm_dir, clear_outer=True)
+        r_geom = [v for v in bm.verts if v.co.x > x_cut_min] + [e for e in bm.edges if all(v.co.x > x_cut_min for v in e.verts)] + [f for f in bm.faces if all(v.co.x > x_cut_min for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=cuff_r, plane_no=arm_dir_r, clear_outer=True)
 
         # Left arm
-        arm_dir_l = Vector((-0.536, 0.0, -0.844)).normalized()
-        l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
-        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, z_cuff)), plane_no=arm_dir_l, clear_outer=True)
+        arm_dir_l = Vector((-arm_dir_r.x, arm_dir_r.y, arm_dir_r.z))
+        cuff_l = Vector((-cuff_r.x, cuff_r.y, cuff_r.z))
+        l_geom = [v for v in bm.verts if v.co.x < -x_cut_min] + [e for e in bm.edges if all(v.co.x < -x_cut_min for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -x_cut_min for v in f.verts)]
+        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=cuff_l, plane_no=arm_dir_l, clear_outer=True)
     else:
         # Sleeveless (singlet, vest) armholes at shoulder seam
         r_geom = [v for v in bm.verts if v.co.x > (x_arm_max - 0.02)] + [e for e in bm.edges if all(v.co.x > (x_arm_max - 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x > (x_arm_max - 0.02) for v in f.verts)]
@@ -693,9 +696,11 @@ def build_top_template(avatar_data, variant="tshirt"):
         l_geom = [v for v in bm.verts if v.co.x < (-x_arm_max + 0.02)] + [e for e in bm.edges if all(v.co.x < (-x_arm_max + 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x < (-x_arm_max + 0.02) for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
-    # 3. Precision Neckline Cut
+    # 3. Precision Curved Collar Cut (cuts only the neck opening while preserving 100% of shoulders & clavicles)
     nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
     neck_no = Vector((0.0, neck_tilt, nz)).normalized()
+    for v in bm.verts:
+        v.co.z -= 0.65 * max(0.0, abs(v.co.x) - 0.030)
     bmesh.ops.bisect_plane(
         bm,
         geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
@@ -703,6 +708,8 @@ def build_top_template(avatar_data, variant="tshirt"):
         plane_no=neck_no,
         clear_outer=True
     )
+    for v in bm.verts:
+        v.co.z += 0.65 * max(0.0, abs(v.co.x) - 0.030)
 
     # 4. Open front placket (for jackets, vests, coats, cardigans)
     if is_open_front:
@@ -745,13 +752,13 @@ def build_top_template(avatar_data, variant="tshirt"):
     if other:
         bmesh.ops.delete(bm, geom=other, context='FACES')
 
-    # Weld/fill small pinhole seams (exclude intentional openings: hem, cuffs |x| > 0.25, neck)
+    # Weld/fill small pinhole seams (exclude intentional openings: hem, cuffs, and central neck opening)
     small_holes = [
         e for e in bm.edges
         if e.is_boundary
         and e.verts[0].co.z > (z_hem + 0.01)
-        and abs(e.verts[0].co.x) < 0.25
-        and e.verts[0].co.z < (z_neck - 0.03)
+        and abs(e.verts[0].co.x) < 0.21
+        and (e.verts[0].co.z < (z_neck - 0.03) or abs(e.verts[0].co.x) > 0.095)
     ]
     if small_holes:
         try:
@@ -800,24 +807,25 @@ def build_top_template(avatar_data, variant="tshirt"):
     dx = max(1e-4, max_x - min_x)
     dz = max(1e-4, max_z - min_z)
     x_torso = 0.185 if is_male else 0.170
-    has_sleeves = max_x > (x_torso + 0.05)
+    has_sleeves = max_x > (x_torso + 0.04)
 
     faces_uvs = []
     for f in bm_final.faces:
         uvs = []
         for l in f.loops:
             v = l.vert.co
-            if has_sleeves:
+            if sleeve_type == "long" and has_sleeves:
                 if abs(v.x) <= x_torso:
                     u = 0.5 + (v.x / x_torso) * 0.29
                 else:
                     t_sl = min(1.0, (abs(v.x) - x_torso) / max(1e-4, max_x - x_torso))
                     u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
             else:
+                # Short-sleeve (T-shirt, tunic) and sleeveless tops span 1:1 across [min_x, max_x]
                 u = (v.x - min_x) / dx
-            v_torso = 1.0 - (v.z - z_hem) / max(1e-4, max_z - z_hem)
-            v_arm = 1.0 - (v.z - min_z) / dz
-            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0
+            v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
+            v_arm = (v.z - min_z) / dz
+            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if (sleeve_type == "long" and has_sleeves) else 0.0
             v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
@@ -1008,8 +1016,8 @@ def build_bottom_template(avatar_data, variant="trousers"):
                     u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
             else:
                 u = (v.x - min_x) / dx
-            v_torso = 1.0 - (v.z - z_hem) / max(1e-4, max_z - z_hem)
-            v_arm = 1.0 - (v.z - min_z) / dz
+            v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
+            v_arm = (v.z - min_z) / dz
             t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0
             v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
@@ -1131,10 +1139,10 @@ def build_dress_template(avatar_data, variant="dress"):
     is_male = gender == "male"
     is_kaftan = variant == "kaftan"
 
-    z_neck = 1.54 if is_male else 1.440
+    z_neck = 1.500 if is_male else 1.405
     z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.52 if is_male else 0.48)
     sleeve_type = "long" if is_kaftan else "short"
-    x_arm_max = (0.475 if is_male else 0.430) if is_kaftan else (0.315 if is_male else 0.280)
+    x_arm_max = (0.475 if is_male else 0.430) if is_kaftan else (0.260 if is_male else 0.230)
     offset = 0.015 if is_kaftan else 0.010
 
     mw = avatar_obj.matrix_world
@@ -1158,7 +1166,7 @@ def build_dress_template(avatar_data, variant="dress"):
             continue
         zs = [v.co.z for v in f.verts]
         xs = [abs(v.co.x) for v in f.verts]
-        if max(zs) > z_neck:
+        if max(zs) > (z_neck + 0.65 * max(0.0, min(xs) - 0.030)):
             del_faces.append(f)
             continue
         if max(xs) <= 0.22 and min(zs) < z_hem:
@@ -1257,9 +1265,9 @@ def build_dress_template(avatar_data, variant="dress"):
                     u = 0.5 + math.copysign(0.29 + t_sl * 0.20, v.x)
             else:
                 u = (v.x - min_x) / dx
-            v_torso = 1.0 - (v.z - z_hem) / max(1e-4, max_z - z_hem)
-            v_arm = 1.0 - (v.z - min_z) / dz
-            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if has_sleeves else 0.0
+            v_torso = (v.z - z_hem) / max(1e-4, max_z - z_hem)
+            v_arm = (v.z - min_z) / dz
+            t_arm = min(1.0, max(0.0, (abs(v.x) - 0.175) / 0.045)) if (sleeve_type == "long" and has_sleeves) else 0.0
             v_norm = v_torso * (1.0 - t_arm) + v_arm * t_arm
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))

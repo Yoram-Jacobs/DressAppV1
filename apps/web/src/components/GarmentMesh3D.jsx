@@ -1546,14 +1546,14 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('أكمام قصيرة');
 
   if (isShortSleeve) {
-    return { type: 'short', factor: 0.36 };
+    return { type: 'short', factor: 0.50 };
   }
 
   // 6. Silhouette aspect ratio fallback
   if (aspect < 0.78) {
     return { type: 'sleeveless', factor: 0.0 };
   } else if (aspect < 1.20) {
-    return { type: 'short', factor: 0.36 };
+    return { type: 'short', factor: 0.50 };
   } else {
     return { type: 'long', factor: 1.0 };
   }
@@ -2877,8 +2877,10 @@ function GarmentTemplateMeshInner({
           //   • Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
           const fitMode = fitProfile?.fit || 'regular';
           if (fitMode !== 'regular') {
-            const wScale = Number.isFinite(fitProfile?.templateWidthScale) ? fitProfile.templateWidthScale : 1.0;
-            const dScale = Number.isFinite(fitProfile?.templateDepthScale) ? fitProfile.templateDepthScale : 1.0;
+            // Canonical templates already sit at exact skin-conforming clearance (+0.007m);
+            // only expand outward for loose/oversized/flared fits and never shrink < 1.0 into the avatar skin.
+            const wScale = Math.max(1.0, Number.isFinite(fitProfile?.templateWidthScale) ? fitProfile.templateWidthScale : 1.0);
+            const dScale = Math.max(1.0, Number.isFinite(fitProfile?.templateDepthScale) ? fitProfile.templateDepthScale : 1.0);
             const yShoulderAnchor = isMale ? 1.48 : 1.42;
             const yWaistAnchor = isMale ? 1.08 : 1.05;
             const yCrotch = isMale ? 0.86 : 0.82;
@@ -2925,7 +2927,7 @@ function GarmentTemplateMeshInner({
                   const isSleeveVertex = Math.abs(x) > slice.rx + 0.045;
                   if (isSleeveVertex) {
                     // Sleeve vertices: anchored at shoulder armhole, modulated by sleeveEase in Z
-                    const zScaleSleeve = fitMode === 'slim' ? 0.92 : (fitMode === 'oversized' ? 1.18 : (fitMode === 'loose' ? 1.10 : 1.0));
+                    const zScaleSleeve = fitMode === 'oversized' ? 1.18 : (fitMode === 'loose' ? 1.10 : 1.0);
                     z = cz + (z - cz) * (1 + (zScaleSleeve - 1) * sDrop);
                   } else {
                     const isAlreadyFlaredTemplate = templateId === 'trench_coat' || templateId === 'kaftan';
