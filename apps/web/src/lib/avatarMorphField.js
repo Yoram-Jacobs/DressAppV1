@@ -280,7 +280,8 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
       continue;
     }
     const isOuterArmVertex = includeArms || (Math.abs(x) > (0.156 + Math.max(0, 1.20 - y) * 0.38) && y >= 0.70 && y <= 1.42);
-    const nn = findNearest(field, x, y, z, isOuterArmVertex);
+    const lookupY = (includeArms && y < 0.91 && Math.abs(x) < 0.25) ? 0.91 : y;
+    const nn = findNearest(field, x, lookupY, z, isOuterArmVertex);
     if (nn.length === 0) continue;
 
     let wSum = 0;

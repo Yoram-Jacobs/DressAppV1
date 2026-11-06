@@ -371,15 +371,35 @@ def drape_garment_shell(
                     new_coords[v] = v.co.copy()
 
         for v, co in new_coords.items():
-            # Enforce strict BVHTree avatar skin clearance floor outside armhole/crotch bifurcations
-            is_bifurcation_zone = (0.145 <= abs(co.x) <= 0.255 and 1.10 <= co.z <= 1.34) or (abs(co.x) <= 0.055 and 0.72 <= co.z <= 0.88)
+            orig_z = v.co.z
+            is_hem_vert = (v in boundary_ring0) and (abs(orig_z - z_hem) < 0.018) and (abs(co.x) < 0.26)
+            # Enforce strict BVHTree avatar skin clearance floor outside armhole/crotch bifurcations.
+            # For tops and dresses below z=0.91, the central corridor (|x| <= 0.125) bridges across the legs
+            # and must never snap to the avatar's crotch or inner-thigh walls!
+            is_bifurcation_zone = (
+                (0.145 <= abs(co.x) <= 0.255 and 1.10 <= co.z <= 1.34)
+                or (abs(co.x) <= 0.055 and 0.72 <= co.z <= 0.88)
+                or (style in ("top", "dress") and co.z < 0.91 and abs(co.x) <= 0.125)
+            )
             if not is_bifurcation_zone:
                 loc, norm, _idx, dist = bvh.find_nearest(co)
                 if loc is not None and norm is not None:
                     vec_from_skin = co - loc
                     signed_d = vec_from_skin.dot(norm)
                     if signed_d < min_skin_clearance:
-                        co = loc + norm * min_skin_clearance
+                        if style in ("top", "dress") and co.z < 0.91:
+                            # Below the hip line on tops/dresses, push strictly outward in XY only (never inward toward x=0 or vertically in Z)
+                            nx_out = norm.x if (co.x * norm.x >= 0.0) else 0.0
+                            ny_out = norm.y
+                            n_len = math.hypot(nx_out, ny_out)
+                            if n_len > 1e-4:
+                                delta_d = min_skin_clearance - signed_d
+                                co.x += (nx_out / n_len) * delta_d
+                                co.y += (ny_out / n_len) * delta_d
+                        else:
+                            co = loc + norm * min_skin_clearance
+            if is_hem_vert:
+                co.z = z_hem
             v.co = co
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
@@ -989,7 +1009,10 @@ def build_top_template(avatar_data, variant="tshirt"):
     bm.verts.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
 
-    # 1. Precision Hem Cut (restricted to torso so low hems on coats/tunics never clip hanging forearms/wrists)
+    # 1. Precision Upper-Hip Torso Cut (cuts strictly above groin/crotch leg split at z_hip_cut
+    # so tops/sweaters/coats never map onto the avatar's individual legs or crotch notch!)
+    z_hip_cut = max(z_hem, 0.91 if is_male else 0.89)
+
     def is_torso_for_hem(v):
         x_split = (0.180 + max(0.0, 1.28 - v.co.z) * 0.36) if is_male else (0.154 + max(0.0, 1.20 - v.co.z) * 0.34)
         return abs(v.co.x) < x_split
@@ -1002,7 +1025,7 @@ def build_top_template(avatar_data, variant="tshirt"):
     bmesh.ops.bisect_plane(
         bm,
         geom=hem_geom,
-        plane_co=Vector((0.0, 0.0, z_hem)),
+        plane_co=Vector((0.0, 0.0, z_hip_cut)),
         plane_no=Vector((0.0, 0.0, -1.0)),
         clear_outer=True
     )
@@ -1058,6 +1081,77 @@ def build_top_template(avatar_data, variant="tshirt"):
     for v in bm.verts:
         v.co.z += 0.65 * max(0.0, abs(v.co.x) - 0.030)
 
+    # Keep largest island (upper torso + sleeves) before extruding unified lower hem tube
+    islands = []
+    visited = set()
+    for f in bm.faces:
+        if f in visited:
+            continue
+        isl, q = [], [f]
+        visited.add(f)
+        while q:
+            curr = q.pop()
+            isl.append(curr)
+            for e in curr.edges:
+                for lf in e.link_faces:
+                    if lf not in visited:
+                        visited.add(lf)
+                        q.append(lf)
+        islands.append(isl)
+
+    if not islands:
+        bm.free()
+        raise RuntimeError(f"No faces remained for {variant}_{gender}")
+
+    main_isl = max(islands, key=len)
+    other = [f for isl in islands if isl != main_isl for f in isl]
+    if other:
+        bmesh.ops.delete(bm, geom=other, context='FACES')
+
+    bmesh.ops.dissolve_degenerate(bm, dist=0.0004, edges=bm.edges[:])
+
+    # 3b. Extrude unified, continuous tubular garment hem from z_hip_cut down to z_hem
+    # (Ensures sweaters, hoodies, T-shirts, jackets, cardigans, tunics, and coats hang as a single
+    # continuous hem around the hips/thighs and NEVER split into two trouser legs at the crotch!)
+    if z_hem < (z_hip_cut - 0.005):
+        cur_edges = [
+            e for e in bm.edges
+            if e.is_boundary and all(abs(v.co.z - z_hip_cut) < 0.008 and abs(v.co.x) < 0.22 for v in e.verts)
+        ]
+        if cur_edges:
+            hip_verts = list({v for e in cur_edges for v in e.verts})
+            cy_hip = 0.5 * (min(v.co.y for v in hip_verts) + max(v.co.y for v in hip_verts))
+            front_peak_y = min((v.co.y for v in hip_verts if 0.04 <= abs(v.co.x) <= 0.12 and v.co.y < 0.0), default=-0.105)
+            back_peak_y = max((v.co.y for v in hip_verts if 0.04 <= abs(v.co.x) <= 0.12 and v.co.y > 0.0), default=0.115)
+            # Bridge any subtle groin/glute dimple on the starting hip ring so the extruded tube is 100% smooth
+            for hv in hip_verts:
+                hv.co.z = z_hip_cut
+                if abs(hv.co.x) <= 0.115:
+                    tx = max(0.0, 1.0 - (abs(hv.co.x) / 0.115) ** 2)
+                    if hv.co.y < 0.0 and hv.co.y > front_peak_y * 0.98:
+                        hv.co.y = hv.co.y * (1.0 - 0.88 * tx) + (front_peak_y * 0.99) * (0.88 * tx)
+                    elif hv.co.y > 0.0 and hv.co.y < back_peak_y * 0.98:
+                        hv.co.y = hv.co.y * (1.0 - 0.90 * tx) + (back_peak_y * 0.99) * (0.90 * tx)
+
+            span_z = z_hip_cut - z_hem
+            n_steps = max(4, min(16, int(round(span_z / 0.022))))
+            dz_step = span_z / n_steps
+            is_flared_or_coat = flare_hips or variant in ("coat", "trench_coat", "tunic", "top_tunic")
+            radial_x_step = (0.0036 if is_flared_or_coat else (0.018 / n_steps))
+            radial_y_step = (0.0026 if is_flared_or_coat else (0.012 / n_steps))
+            for _step in range(1, n_steps + 1):
+                ret = bmesh.ops.extrude_edge_only(bm, edges=cur_edges)
+                geom_ex = ret["geom"]
+                new_verts = [ele for ele in geom_ex if isinstance(ele, bmesh.types.BMVert)]
+                cur_edges = [ele for ele in geom_ex if isinstance(ele, bmesh.types.BMEdge)]
+                for v in new_verts:
+                    v.co.z -= dz_step
+                    dx_v = v.co.x
+                    dy_v = v.co.y - cy_hip
+                    r_v = max(1e-4, math.hypot(dx_v, dy_v))
+                    v.co.x += (dx_v / r_v) * radial_x_step
+                    v.co.y += (dy_v / r_v) * radial_y_step
+
     # 4. Open front placket (for jackets, vests, coats, cardigans)
     if is_open_front:
         gap = 0.013
@@ -1067,17 +1161,18 @@ def build_top_template(avatar_data, variant="tshirt"):
             xs = [v.co.x for v in f.verts]
             ys = [v.co.y for v in f.verts]
             zs = [v.co.z for v in f.verts]
-            if max(ys) < -0.015 and min(zs) > (z_hem + 0.01) and max(zs) < (z_neck - 0.02):
+            if max(ys) < -0.015 and min(zs) >= (z_hem - 0.005) and max(zs) < (z_neck - 0.02):
                 if all(abs(x) < gap for x in xs):
                     front_del.append(f)
         if front_del:
             bmesh.ops.delete(bm, geom=front_del, context='FACES')
 
-    # Keep largest island (torso + sleeves)
+    # Keep largest island after placket cut
     islands = []
     visited = set()
     for f in bm.faces:
-        if f in visited: continue
+        if f in visited:
+            continue
         isl, q = [], [f]
         visited.add(f)
         while q:
@@ -1120,6 +1215,18 @@ def build_top_template(avatar_data, variant="tshirt"):
     loose_verts = [v for v in bm.verts if not v.link_edges]
     if loose_verts:
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
+
+    # Strictly orient all face normals radially OUTWARD from the torso centerline (never inward!)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.normal_update()
+    cy_center = -0.015
+    for f in bm.faces:
+        fc = f.calc_center_median()
+        if abs(fc.x) < 0.22:
+            rad_dot = f.normal.x * fc.x + f.normal.y * (fc.y - cy_center)
+            if rad_dot < 0.0:
+                f.normal_flip()
+    bm.normal_update()
 
     # Apply tailored gravity drape, bust/glute bridging, cylindrical sleeves, and cloth-tension relaxation
     drape_map = {
@@ -1613,6 +1720,16 @@ def build_dress_template(avatar_data, variant="dress"):
     if cur_edges:
         hip_verts = list({v for e in cur_edges for v in e.verts})
         cy_hip = 0.5 * (min(v.co.y for v in hip_verts) + max(v.co.y for v in hip_verts))
+        front_peak_y = min((v.co.y for v in hip_verts if 0.04 <= abs(v.co.x) <= 0.12 and v.co.y < 0.0), default=-0.105)
+        back_peak_y = max((v.co.y for v in hip_verts if 0.04 <= abs(v.co.x) <= 0.12 and v.co.y > 0.0), default=0.115)
+        for hv in hip_verts:
+            hv.co.z = z_hip
+            if abs(hv.co.x) <= 0.115:
+                tx = max(0.0, 1.0 - (abs(hv.co.x) / 0.115) ** 2)
+                if hv.co.y < 0.0 and hv.co.y > front_peak_y * 0.98:
+                    hv.co.y = hv.co.y * (1.0 - 0.88 * tx) + (front_peak_y * 0.99) * (0.88 * tx)
+                elif hv.co.y > 0.0 and hv.co.y < back_peak_y * 0.98:
+                    hv.co.y = hv.co.y * (1.0 - 0.90 * tx) + (back_peak_y * 0.99) * (0.90 * tx)
         n_steps = 16 if is_kaftan else 10
         dz_step = (z_hip - z_hem) / n_steps
         radial_x_step = 0.0048 if is_kaftan else 0.0042

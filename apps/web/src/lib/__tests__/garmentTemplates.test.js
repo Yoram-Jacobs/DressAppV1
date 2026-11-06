@@ -47,13 +47,13 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
   });
 
   it('correctly maps template IDs to static and gender-tailored GLB asset URLs', () => {
-    expect(getTemplateGlbUrl('trench_coat')).toBe('/models/templates/trench_coat.glb?v=canon11');
-    expect(getTemplateGlbUrl('kaftan')).toBe('/models/templates/kaftan.glb?v=canon11');
-    expect(getTemplateGlbUrl('singlet')).toBe('/models/templates/singlet.glb?v=canon11');
-    expect(getTemplateGlbUrl('tshirt', false)).toBe('/models/templates/female/top_tshirt.glb?v=canon11');
-    expect(getTemplateGlbUrl('tshirt', true)).toBe('/models/templates/male/top_tshirt.glb?v=canon11');
-    expect(getTemplateGlbUrl('pants', false)).toBe('/models/templates/female/bottom_trousers.glb?v=canon11');
-    expect(getTemplateGlbUrl('pants', true)).toBe('/models/templates/male/bottom_trousers.glb?v=canon11');
+    expect(getTemplateGlbUrl('trench_coat')).toBe('/models/templates/trench_coat.glb?v=canon12');
+    expect(getTemplateGlbUrl('kaftan')).toBe('/models/templates/kaftan.glb?v=canon12');
+    expect(getTemplateGlbUrl('singlet')).toBe('/models/templates/singlet.glb?v=canon12');
+    expect(getTemplateGlbUrl('tshirt', false)).toBe('/models/templates/female/top_tshirt.glb?v=canon12');
+    expect(getTemplateGlbUrl('tshirt', true)).toBe('/models/templates/male/top_tshirt.glb?v=canon12');
+    expect(getTemplateGlbUrl('pants', false)).toBe('/models/templates/female/bottom_trousers.glb?v=canon12');
+    expect(getTemplateGlbUrl('pants', true)).toBe('/models/templates/male/bottom_trousers.glb?v=canon12');
     expect(getTemplateGlbUrl('invalid_template')).toBeNull();
   });
 
