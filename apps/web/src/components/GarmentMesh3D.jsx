@@ -1287,20 +1287,44 @@ async function fetchAndCropTexture(url) {
                 gapWidth >= Math.max(6, Math.floor(cropW * 0.06)) &&
                 gL >= cropW * 0.25 &&
                 gR <= cropW * 0.75;
-              const isUnderarmCavity =
-                gapWidth >= Math.max(3, Math.floor(cropW * 0.008)) &&
-                ((cx >= cropW * 0.05 && cx <= cropW * 0.45) || (cx >= cropW * 0.55 && cx <= cropW * 0.95)) &&
-                cy >= cropH * 0.20 && cy <= cropH * 0.90;
-              if (isNeckKeyhole || isUnderarmCavity) {
-                // Preserve intentional V-neck, open-back keyhole, and underarm cavity cutout transparency
+              if (isNeckKeyhole) {
+                // Preserve intentional V-neck / open-back keyhole cutout transparency
                 px[o + 3] = 0;
               } else {
-                const oGL = row + Math.max(left, gL - 1) * 4;
-                const oGR = row + Math.min(right, gR + 1) * 4;
+                // Synthesize continuous fabric across underarms and interior seams following
+                // the garment's authentic colors, weave texture, and micro-patterns.
+                // Step 4-6px inward from the cutout fringe into solid fabric to prevent white studio halo contamination:
+                const sampleInset = Math.min(8, Math.max(3, Math.floor(gapWidth * 0.12)));
+                const sL = Math.max(left, gL - sampleInset);
+                const sR = Math.min(right, gR + sampleInset);
+                const oGL = row + sL * 4;
+                const oGR = row + sR * 4;
                 const tGap = (cx - gL) / Math.max(1, gR - gL);
-                px[o] = Math.round(srcPixels[oGL] * (1 - tGap) + srcPixels[oGR] * tGap);
-                px[o + 1] = Math.round(srcPixels[oGL + 1] * (1 - tGap) + srcPixels[oGR + 1] * tGap);
-                px[o + 2] = Math.round(srcPixels[oGL + 2] * (1 - tGap) + srcPixels[oGR + 2] * tGap);
+
+                const colLR = srcPixels[oGL + 3] >= ALPHA_ON ? srcPixels[oGL] : domR;
+                const colLG = srcPixels[oGL + 3] >= ALPHA_ON ? srcPixels[oGL + 1] : domG;
+                const colLB = srcPixels[oGL + 3] >= ALPHA_ON ? srcPixels[oGL + 2] : domB;
+                const colRR = srcPixels[oGR + 3] >= ALPHA_ON ? srcPixels[oGR] : domR;
+                const colRG = srcPixels[oGR + 3] >= ALPHA_ON ? srcPixels[oGR + 1] : domG;
+                const colRB = srcPixels[oGR + 3] >= ALPHA_ON ? srcPixels[oGR + 2] : domB;
+
+                const baseR = colLR * (1 - tGap) + colRR * tGap;
+                const baseG = colLG * (1 - tGap) + colRG * tGap;
+                const baseB = colLB * (1 - tGap) + colRB * tGap;
+
+                // Micro-texture & weave noise synthesis from nearby fabric grain:
+                const grainSampleX = (cx % 2 === 0) ? sL : sR;
+                const oGrain = row + grainSampleX * 4;
+                const midRefR = (colLR + colRR) * 0.5;
+                const midRefG = (colLG + colRG) * 0.5;
+                const midRefB = (colLB + colRB) * 0.5;
+                const grainDeltaR = ((srcPixels[oGrain + 3] >= ALPHA_ON ? srcPixels[oGrain] : midRefR) - midRefR) * 0.45;
+                const grainDeltaG = ((srcPixels[oGrain + 3] >= ALPHA_ON ? srcPixels[oGrain + 1] : midRefG) - midRefG) * 0.45;
+                const grainDeltaB = ((srcPixels[oGrain + 3] >= ALPHA_ON ? srcPixels[oGrain + 2] : midRefB) - midRefB) * 0.45;
+
+                px[o] = Math.max(0, Math.min(255, Math.round(baseR + grainDeltaR)));
+                px[o + 1] = Math.max(0, Math.min(255, Math.round(baseG + grainDeltaG)));
+                px[o + 2] = Math.max(0, Math.min(255, Math.round(baseB + grainDeltaB)));
                 px[o + 3] = 255;
               }
             }
