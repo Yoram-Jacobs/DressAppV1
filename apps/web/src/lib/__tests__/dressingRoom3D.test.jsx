@@ -483,8 +483,8 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(minShortY).toBeGreaterThan(1.20);
     expect(minShortY).toBeLessThan(1.26);
 
-    // Long sleeve extends all the way down to wrist (y ~ 0.90m)
-    expect(minLongY).toBeCloseTo(0.90, 1);
+    // Long sleeve extends all the way down to wrist (y ~ 0.956m)
+    expect(minLongY).toBeCloseTo(0.956, 2);
   });
 
   test('DressingRoom3D standalone garment mode (Zara 3D style) allows viewing garment without avatar and toggling', () => {

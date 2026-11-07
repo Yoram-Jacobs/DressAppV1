@@ -1792,14 +1792,14 @@ export function createAnatomicalTopGeometry({
     const nxSleeve = 14;
 
     const yArmStart = isMale ? 1.48 : 1.42;
-    const fullYArmEnd = isMale ? 0.96 : 0.90;
+    const fullYArmEnd = isMale ? 1.069 : 0.956;
     const yArmEnd = yArmStart - sleeveFactor * (yArmStart - fullYArmEnd);
 
     const xArmStart = isMale ? (standalone ? 0.210 : 0.225) : (standalone ? 0.185 : 0.195);
-    const fullXArmEnd = isMale ? (standalone ? 0.225 : 0.280) : (standalone ? 0.200 : 0.255);
+    const fullXArmEnd = isMale ? (standalone ? 0.320 : 0.409) : (standalone ? 0.280 : 0.374);
     const xArmEnd = xArmStart + sleeveFactor * (fullXArmEnd - xArmStart);
 
-    const fullZArmEnd = standalone ? 0.025 : 0.040;
+    const fullZArmEnd = isMale ? 0.012 : 0.009;
     const zArmEnd = 0.020 + sleeveFactor * (fullZArmEnd - 0.020);
 
     // Slim, tailored sleeve radii (eliminates barrel appearance)
@@ -2956,6 +2956,7 @@ function GarmentTemplateMeshInner({
   morphField,
   morphInfluences,
   rawSlot,
+  garmentText = '',
   isMale = false,
   layerOffset = 0,
   shellFit = null,
@@ -3080,7 +3081,7 @@ function GarmentTemplateMeshInner({
                       ? (y >= 1.26 ? Math.max(0.215, 0.284 - (y - 1.26) * 0.95) : 0.284 + (1.26 - y) * 0.580)
                       : (y >= 1.22 ? Math.max(0.165, 0.211 - (y - 1.22) * 1.10) : 0.211 + (1.22 - y) * 0.628);
                     const armCz = isMale ? 0.004 : 0.008;
-                    const yWrist = isMale ? 0.915 : 0.855;
+                    const yWrist = isMale ? 1.069 : 0.956;
                     // Taper sleeve ease to 0 at the wrist cuff so the wrist cuff stays tight & snug
                     const tCuff = Math.max(0, Math.min(1, (y - yWrist) / 0.07));
                     const rScaleSleeve = 1.0 + (fitMode === 'oversized' ? 0.10 : (fitMode === 'loose' ? 0.05 : 0)) * tCuff;
@@ -3135,6 +3136,60 @@ function GarmentTemplateMeshInner({
                   pos.setY(i, newY);
                 }
               }
+              pos.needsUpdate = true;
+              geo.computeVertexNormals();
+              geo.computeBoundingBox();
+            }
+          }
+
+          // Planar Sleeve Hem & Cuff Alignment:
+          // Strictly lock sleeve cuffs to the planar cutting plane perpendicular to the forearm axis,
+          // ensuring sleeve hems end cleanly at the anatomical wrists with zero overshoot into palms or sawtooth spikes.
+          const longSleeveTemplates = ['hoodie', 'top_outerwear_jacket', 'jacket', 'jacket_blazer', 'cardigan', 'coat', 'trench_coat', 'top_longsleeve', 'shirt', 'longsleeve', 'kaftan'];
+          const isLongSleeveGarment = longSleeveTemplates.includes(templateId) || (['top', 'outerwear', 'dress'].includes(rawSlot) && detectSleeveStyle({ garmentText }).type === 'long');
+          if (isLongSleeveGarment && pos) {
+            const wristX = isMale ? 0.409 : 0.374;
+            const wristY = isMale ? 1.069 : 0.956;
+            const wristZ = isMale ? 0.012 : 0.009;
+            const armNx = isMale ? 0.5596 : 0.5653;
+            const armNy = isMale ? -0.8261 : -0.8217;
+            const armNz = isMale ? 0.0666 : 0.0723;
+            const xCuffThresh = isMale ? 0.24 : 0.22;
+            const yCuffMax = isMale ? 1.25 : 1.15;
+            let cuffModified = false;
+
+            for (let i = 0; i < pos.count; i++) {
+              let x = pos.getX(i);
+              let y = pos.getY(i);
+              let z = pos.getZ(i);
+
+              if (x > xCuffThresh && y < yCuffMax) {
+                const dx = x - wristX;
+                const dy = y - wristY;
+                const dz = z - wristZ;
+                const dot = dx * armNx + dy * armNy + dz * armNz;
+                if (dot > -0.004 || dot > 0) {
+                  x -= dot * armNx;
+                  y -= dot * armNy;
+                  z -= dot * armNz;
+                  pos.setXYZ(i, x, y, z);
+                  cuffModified = true;
+                }
+              } else if (x < -xCuffThresh && y < yCuffMax) {
+                const dx = x - (-wristX);
+                const dy = y - wristY;
+                const dz = z - wristZ;
+                const dot = dx * (-armNx) + dy * armNy + dz * armNz;
+                if (dot > -0.004 || dot > 0) {
+                  x -= dot * (-armNx);
+                  y -= dot * armNy;
+                  z -= dot * armNz;
+                  pos.setXYZ(i, x, y, z);
+                  cuffModified = true;
+                }
+              }
+            }
+            if (cuffModified) {
               pos.needsUpdate = true;
               geo.computeVertexNormals();
               geo.computeBoundingBox();
@@ -3656,6 +3711,7 @@ export function GarmentMeshCore({
         morphField={morphField}
         morphInfluences={morphInfluences}
         rawSlot={rawSlot}
+        garmentText={garmentText}
         isMale={isMale}
         layerOffset={shellFit?.layerOffset || 0}
         shellFit={shellFit}
@@ -3706,6 +3762,7 @@ export function GarmentMeshCore({
         morphField={morphField}
         morphInfluences={morphInfluences}
         rawSlot={rawSlot}
+        garmentText={garmentText}
         isMale={isMale}
         layerOffset={shellFit?.layerOffset || 0}
         shellFit={shellFit}
