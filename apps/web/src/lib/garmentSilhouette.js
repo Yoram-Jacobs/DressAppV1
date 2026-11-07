@@ -2111,186 +2111,217 @@ export function synthesizeBackFabricData(data, w, h) {
   for (let y = 0; y < h; y++) {
     const vRel = y / Math.max(1, h - 1);
     const rowOffset = y * w * 4;
-    let xMin = -1;
-    let xMax = -1;
+
+    // Segment row into continuous runs of opaque fabric
+    const runs = [];
+    let inRun = false;
+    let rStart = 0;
     for (let x = 0; x < w; x++) {
       if (data[rowOffset + x * 4 + 3] >= 96) {
-        if (xMin < 0) xMin = x;
-        xMax = x;
+        if (!inRun) {
+          inRun = true;
+          rStart = x;
+        }
+      } else if (inRun) {
+        inRun = false;
+        runs.push([rStart, x - 1]);
       }
     }
-    if (xMin < 0 || xMax - xMin < 16) continue;
-    const span = xMax - xMin + 1;
-
-    // Clean outer flanks: left [2%..15%], right [85%..98%]
-    const lStart = Math.min(span - 1, Math.max(0, Math.floor(0.02 * span)));
-    const lEnd = Math.min(span, Math.max(lStart + 1, Math.floor(0.15 * span)));
-    const rStart = Math.min(span - 1, Math.max(0, Math.floor(0.85 * span)));
-    const rEnd = Math.min(span, Math.max(rStart + 1, Math.floor(0.98 * span)));
-
-    let lSumR = 0, lSumG = 0, lSumB = 0, lCount = 0;
-    const lSamples = [];
-    for (let i = lStart; i < lEnd; i++) {
-      const idx = rowOffset + (xMin + i) * 4;
-      if (data[idx + 3] >= 96) {
-        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-        lSumR += r; lSumG += g; lSumB += b; lCount++;
-        lSamples.push([r, g, b]);
-      }
+    if (inRun) {
+      runs.push([rStart, w - 1]);
     }
 
-    let rSumR = 0, rSumG = 0, rSumB = 0, rCount = 0;
-    const rSamples = [];
-    for (let i = rStart; i < rEnd; i++) {
-      const idx = rowOffset + (xMin + i) * 4;
-      if (data[idx + 3] >= 96) {
-        const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-        rSumR += r; rSumG += g; rSumB += b; rCount++;
-        rSamples.push([r, g, b]);
+    // Merge runs separated by tiny gaps (<= 4 px)
+    const merged = [];
+    for (const r of runs) {
+      if (merged.length > 0 && r[0] - merged[merged.length - 1][1] <= 4) {
+        merged[merged.length - 1][1] = r[1];
+      } else {
+        merged.push(r);
       }
     }
 
-    if (lCount === 0 && rCount === 0) continue;
+    for (const [xMin, xMax] of merged) {
+      const span = xMax - xMin + 1;
+      if (span < 16) continue;
 
-    let cL = lCount > 0 ? [lSumR / lCount, lSumG / lCount, lSumB / lCount] : null;
-    let cR = rCount > 0 ? [rSumR / rCount, rSumG / rCount, rSumB / rCount] : null;
-    if (!cL) cL = cR;
-    if (!cR) cR = cL;
-
-    const grainSrc = [...lSamples, ...rSamples];
-    let flankVarSum = 0;
-    const midR = (cL[0] + cR[0]) / 2;
-    const midG = (cL[1] + cR[1]) / 2;
-    const midB = (cL[2] + cR[2]) / 2;
-    for (let s = 0; s < grainSrc.length; s++) {
-      const dr = grainSrc[s][0] - midR;
-      const dg = grainSrc[s][1] - midG;
-      const db = grainSrc[s][2] - midB;
-      flankVarSum += Math.sqrt(dr * dr + dg * dg + db * db);
-    }
-    const sigma = grainSrc.length > 0 ? flankVarSum / grainSrc.length : 8;
-    const isAllOverPatternRow = sigma >= 30;
-    const tol = Math.max(18, sigma * 1.9);
-
-    const curR = new Float32Array(span);
-    const curG = new Float32Array(span);
-    const curB = new Float32Array(span);
-    const baseR = new Float32Array(span);
-    const baseG = new Float32Array(span);
-    const baseB = new Float32Array(span);
-    const diffBase = new Float32Array(span);
-
-    for (let i = 0; i < span; i++) {
-      const idx = rowOffset + (xMin + i) * 4;
-      const cr = data[idx], cg = data[idx + 1], cb = data[idx + 2];
-      curR[i] = cr; curG[i] = cg; curB[i] = cb;
-
-      const u = i / (span - 1);
-      const bR = (1 - u) * cL[0] + u * cR[0];
-      const bG = (1 - u) * cL[1] + u * cR[1];
-      const bB = (1 - u) * cL[2] + u * cR[2];
-      baseR[i] = bR; baseG[i] = bG; baseB[i] = bB;
-
-      const dr = cr - bR;
-      const dg = cg - bG;
-      const db = cb - bB;
-      diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
-    }
-
-    // 1. Bilateral symmetry check for pockets / asymmetric details (coin pockets, breast pockets, logos)
-    for (let i = 0; i < span; i++) {
-      const mi = span - 1 - i;
-      const dAsym = Math.sqrt(
-        (curR[i] - curR[mi]) ** 2 +
-        (curG[i] - curG[mi]) ** 2 +
-        (curB[i] - curB[mi]) ** 2
-      );
-      if ((diffBase[i] - diffBase[mi] >= 10) || (dAsym >= 12 && diffBase[i] > diffBase[mi] + 6)) {
-        curR[i] = curR[mi];
-        curG[i] = curG[mi];
-        curB[i] = curB[mi];
-        diffBase[i] = diffBase[mi];
+      // If there are multiple disconnected runs in this row,
+      // outer runs that don't cross the central torso region (0.38..0.62) are sleeves!
+      // Keep sleeve fabric intact and pristine (no center closure removal or asymmetry mirroring).
+      if (merged.length > 1 && (xMax < w * 0.38 || xMin > w * 0.62)) {
+        continue;
       }
-    }
 
-    // 2. Dump center closures: zipper tracks, zipper pulls, button plackets, buttonflies, J-stitch fly seams, waistband button/fly
-    const cMidL = Math.floor(0.35 * span);
-    const cMidR = Math.min(span - 1, Math.ceil(0.65 * span));
-    if (!isAllOverPatternRow && cMidR > cMidL + 2) {
-      const colLR = curR[cMidL], colLG = curG[cMidL], colLB = curB[cMidL];
-      const colRR = curR[cMidR], colRG = curG[cMidR], colRB = curB[cMidR];
-      for (let i = cMidL + 1; i < cMidR; i++) {
-        const t = (i - cMidL) / (cMidR - cMidL);
-        const s = t * t * (3 - 2 * t);
-        const brR = (1 - s) * colLR + s * colRR;
-        const brG = (1 - s) * colLG + s * colRG;
-        const brB = (1 - s) * colLB + s * colRB;
-        const distFromBridge = Math.sqrt(
-          (curR[i] - brR) ** 2 + (curG[i] - brG) ** 2 + (curB[i] - brB) ** 2
+      // Clean outer flanks: left [2%..15%], right [85%..98%]
+      const lStart = Math.min(span - 1, Math.max(0, Math.floor(0.02 * span)));
+      const lEnd = Math.min(span, Math.max(lStart + 1, Math.floor(0.15 * span)));
+      const rStart = Math.min(span - 1, Math.max(0, Math.floor(0.85 * span)));
+      const rEnd = Math.min(span, Math.max(rStart + 1, Math.floor(0.98 * span)));
+
+      let lSumR = 0, lSumG = 0, lSumB = 0, lCount = 0;
+      const lSamples = [];
+      for (let i = lStart; i < lEnd; i++) {
+        const idx = rowOffset + (xMin + i) * 4;
+        if (data[idx + 3] >= 96) {
+          const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+          lSumR += r; lSumG += g; lSumB += b; lCount++;
+          lSamples.push([r, g, b]);
+        }
+      }
+
+      let rSumR = 0, rSumG = 0, rSumB = 0, rCount = 0;
+      const rSamples = [];
+      for (let i = rStart; i < rEnd; i++) {
+        const idx = rowOffset + (xMin + i) * 4;
+        if (data[idx + 3] >= 96) {
+          const r = data[idx], g = data[idx + 1], b = data[idx + 2];
+          rSumR += r; rSumG += g; rSumB += b; rCount++;
+          rSamples.push([r, g, b]);
+        }
+      }
+
+      if (lCount === 0 && rCount === 0) continue;
+
+      let cL = lCount > 0 ? [lSumR / lCount, lSumG / lCount, lSumB / lCount] : null;
+      let cR = rCount > 0 ? [rSumR / rCount, rSumG / rCount, rSumB / rCount] : null;
+      if (!cL) cL = cR;
+      if (!cR) cR = cL;
+
+      const grainSrc = [...lSamples, ...rSamples];
+      let flankVarSum = 0;
+      const midR = (cL[0] + cR[0]) / 2;
+      const midG = (cL[1] + cR[1]) / 2;
+      const midB = (cL[2] + cR[2]) / 2;
+      for (let s = 0; s < grainSrc.length; s++) {
+        const dr = grainSrc[s][0] - midR;
+        const dg = grainSrc[s][1] - midG;
+        const db = grainSrc[s][2] - midB;
+        flankVarSum += Math.sqrt(dr * dr + dg * dg + db * db);
+      }
+      const sigma = grainSrc.length > 0 ? flankVarSum / grainSrc.length : 8;
+      const isAllOverPatternRow = sigma >= 30;
+      const tol = Math.max(18, sigma * 1.9);
+
+      const curR = new Float32Array(span);
+      const curG = new Float32Array(span);
+      const curB = new Float32Array(span);
+      const baseR = new Float32Array(span);
+      const baseG = new Float32Array(span);
+      const baseB = new Float32Array(span);
+      const diffBase = new Float32Array(span);
+
+      for (let i = 0; i < span; i++) {
+        const idx = rowOffset + (xMin + i) * 4;
+        const cr = data[idx], cg = data[idx + 1], cb = data[idx + 2];
+        curR[i] = cr; curG[i] = cg; curB[i] = cb;
+
+        const u = i / (span - 1);
+        const bR = (1 - u) * cL[0] + u * cR[0];
+        const bG = (1 - u) * cL[1] + u * cR[1];
+        const bB = (1 - u) * cL[2] + u * cR[2];
+        baseR[i] = bR; baseG[i] = bG; baseB[i] = bB;
+
+        const dr = cr - bR;
+        const dg = cg - bG;
+        const db = cb - bB;
+        diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
+      }
+
+      // 1. Bilateral symmetry check for pockets / asymmetric details (coin pockets, breast pockets, logos)
+      for (let i = 0; i < span; i++) {
+        const mi = span - 1 - i;
+        const dAsym = Math.sqrt(
+          (curR[i] - curR[mi]) ** 2 +
+          (curG[i] - curG[mi]) ** 2 +
+          (curB[i] - curB[mi]) ** 2
         );
-        if (diffBase[i] > 6 || distFromBridge > 6) {
-          curR[i] = brR;
-          curG[i] = brG;
-          curB[i] = brB;
-          const dr = brR - baseR[i], dg = brG - baseG[i], db = brB - baseB[i];
-          diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
+        if ((diffBase[i] - diffBase[mi] >= 10) || (dAsym >= 12 && diffBase[i] > diffBase[mi] + 6)) {
+          curR[i] = curR[mi];
+          curG[i] = curG[mi];
+          curB[i] = curB[mi];
+          diffBase[i] = diffBase[mi];
         }
       }
-    }
 
-    // 2b. Unconditionally eliminate all front-view details: double-breasted buttons, zippers,
-    // zipper pulls, breast pockets, kangaroo/patch pockets, chest graphics, lettering, and plackets
-    // across the entire interior torso (u_rel in [0.08, 0.92]).
-    const pStart = Math.floor(0.08 * span);
-    const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
-    if (!isAllOverPatternRow && pEnd > pStart + 2) {
-      const fineThreshold = Math.max(4.0, Math.min(10.0, sigma * 0.85));
-      for (let i = pStart + 1; i < pEnd; i++) {
-        const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
-        if (diffBase[i] > fineThreshold || prevDiff > Math.max(6.0, sigma * 0.95)) {
-          let synR = baseR[i];
-          let synG = baseG[i];
-          let synB = baseB[i];
-          if (grainSrc.length > 0) {
-            const gSample = grainSrc[i % grainSrc.length];
-            synR = Math.max(0, Math.min(255, synR + (gSample[0] - midR) * 0.55));
-            synG = Math.max(0, Math.min(255, synG + (gSample[1] - midG) * 0.55));
-            synB = Math.max(0, Math.min(255, synB + (gSample[2] - midB) * 0.55));
+      // 2. Dump center closures: zipper tracks, zipper pulls, button plackets, buttonflies, J-stitch fly seams, waistband button/fly
+      const cMidL = Math.floor(0.35 * span);
+      const cMidR = Math.min(span - 1, Math.ceil(0.65 * span));
+      if (!isAllOverPatternRow && cMidR > cMidL + 2) {
+        const colLR = curR[cMidL], colLG = curG[cMidL], colLB = curB[cMidL];
+        const colRR = curR[cMidR], colRG = curG[cMidR], colRB = curB[cMidR];
+        for (let i = cMidL + 1; i < cMidR; i++) {
+          const t = (i - cMidL) / (cMidR - cMidL);
+          const s = t * t * (3 - 2 * t);
+          const brR = (1 - s) * colLR + s * colRR;
+          const brG = (1 - s) * colLG + s * colRG;
+          const brB = (1 - s) * colLB + s * colRB;
+          const distFromBridge = Math.sqrt(
+            (curR[i] - brR) ** 2 + (curG[i] - brG) ** 2 + (curB[i] - brB) ** 2
+          );
+          if (diffBase[i] > 6 || distFromBridge > 6) {
+            curR[i] = brR;
+            curG[i] = brG;
+            curB[i] = brB;
+            const dr = brR - baseR[i], dg = brG - baseG[i], db = brB - baseB[i];
+            diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
           }
-          curR[i] = synR;
-          curG[i] = synG;
-          curB[i] = synB;
-          diffBase[i] = 0;
         }
       }
-    }
 
-    // 4. Fill collar cavity & inner neck lining in upper 16% of garment height
-    // On the back view of a jacket, coat, or shirt, the collar is high and continuous,
-    // without the scoop or interior lining seen from the front.
-    if (vRel < 0.16) {
-      const cStart = Math.floor(0.38 * span);
-      const cEnd = Math.min(span - 1, Math.ceil(0.62 * span));
-      const colL = Math.max(0, cStart - 2);
-      const colR = Math.min(span - 1, cEnd + 2);
-      const collarR = (curR[colL] + curR[colR]) / 2;
-      const collarG = (curG[colL] + curG[colR]) / 2;
-      const collarB = (curB[colL] + curB[colR]) / 2;
-      for (let i = cStart; i <= cEnd; i++) {
-        const dNeck = Math.hypot(curR[i] - collarR, curG[i] - collarG, curB[i] - collarB);
-        if (dNeck > 12 || diffBase[i] > 8) {
-          curR[i] = collarR;
-          curG[i] = collarG;
-          curB[i] = collarB;
+      // 2b. Unconditionally eliminate all front-view details: double-breasted buttons, zippers,
+      // zipper pulls, breast pockets, kangaroo/patch pockets, chest graphics, lettering, and plackets
+      // across the entire interior torso (u_rel in [0.08, 0.92]).
+      const pStart = Math.floor(0.08 * span);
+      const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
+      if (!isAllOverPatternRow && pEnd > pStart + 2) {
+        const fineThreshold = Math.max(4.0, Math.min(10.0, sigma * 0.85));
+        for (let i = pStart + 1; i < pEnd; i++) {
+          const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
+          if (diffBase[i] > fineThreshold || prevDiff > Math.max(6.0, sigma * 0.95)) {
+            let synR = baseR[i];
+            let synG = baseG[i];
+            let synB = baseB[i];
+            if (grainSrc.length > 0) {
+              const gSample = grainSrc[i % grainSrc.length];
+              synR = Math.max(0, Math.min(255, synR + (gSample[0] - midR) * 0.55));
+              synG = Math.max(0, Math.min(255, synG + (gSample[1] - midG) * 0.55));
+              synB = Math.max(0, Math.min(255, synB + (gSample[2] - midB) * 0.55));
+            }
+            curR[i] = synR;
+            curG[i] = synG;
+            curB[i] = synB;
+            diffBase[i] = 0;
+          }
         }
       }
-    }
 
-    for (let i = 0; i < span; i++) {
-      const idx = rowOffset + (xMin + i) * 4;
-      data[idx] = Math.max(0, Math.min(255, Math.round(curR[i])));
-      data[idx + 1] = Math.max(0, Math.min(255, Math.round(curG[i])));
-      data[idx + 2] = Math.max(0, Math.min(255, Math.round(curB[i])));
+      // 4. Fill collar cavity & inner neck lining in upper 16% of garment height
+      // On the back view of a jacket, coat, or shirt, the collar is high and continuous,
+      // without the scoop or interior lining seen from the front.
+      if (vRel < 0.16) {
+        const cStart = Math.floor(0.38 * span);
+        const cEnd = Math.min(span - 1, Math.ceil(0.62 * span));
+        const colL = Math.max(0, cStart - 2);
+        const colR = Math.min(span - 1, cEnd + 2);
+        const collarR = (curR[colL] + curR[colR]) / 2;
+        const collarG = (curG[colL] + curG[colR]) / 2;
+        const collarB = (curB[colL] + curB[colR]) / 2;
+        for (let i = cStart; i <= cEnd; i++) {
+          const dNeck = Math.hypot(curR[i] - collarR, curG[i] - collarG, curB[i] - collarB);
+          if (dNeck > 12 || diffBase[i] > 8) {
+            curR[i] = collarR;
+            curG[i] = collarG;
+            curB[i] = collarB;
+          }
+        }
+      }
+
+      for (let i = 0; i < span; i++) {
+        const idx = rowOffset + (xMin + i) * 4;
+        data[idx] = Math.max(0, Math.min(255, Math.round(curR[i])));
+        data[idx + 1] = Math.max(0, Math.min(255, Math.round(curG[i])));
+        data[idx + 2] = Math.max(0, Math.min(255, Math.round(curB[i])));
+      }
     }
   }
 

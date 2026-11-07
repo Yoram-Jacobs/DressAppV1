@@ -144,9 +144,9 @@ def measure_arm_slice(verts, x_dist, z_min=0.70, z_max=1.50, band=0.016):
     if z1 - z0 > 0.22:
         z0 = z1 - 0.14
     cz = 0.5 * (z0 + z1)
-    rz = max(0.030, min(0.068, 0.5 * (z1 - z0)))
+    rz = max(0.018, min(0.068, 0.5 * (z1 - z0)))
     cy = 0.5 * (y0 + y1)
-    ry = max(0.030, min(0.065, 0.5 * (y1 - y0)))
+    ry = max(0.024, min(0.065, 0.5 * (y1 - y0)))
     return {"cz": cz, "rz": rz, "cy": cy, "ry": ry}
 
 
@@ -259,11 +259,14 @@ def drape_garment_shell(
                 # Right at the wrist cuff (t_arm > 0.82), tightly clamp to the wrist circumference
                 if t_arm > 0.82:
                     t_cuff_lock = (t_arm - 0.82) / 0.18
-                    r_cuff_tight = max(arm_sl["rz"], arm_sl["ry"]) + offset + 0.0025
-                    r_new = r_new * (1.0 - t_cuff_lock) + r_cuff_tight * t_cuff_lock
-
-                v.co.y = cy_arm + (dy / r_cur) * r_new
-                v.co.z = cz_arm + (dz / r_cur) * r_new
+                    # Snug wrist dimensions: an anatomical ellipse (not an inflated circle)
+                    ry_cuff = min(0.034 if is_male else 0.030, arm_sl["ry"]) + offset + 0.002
+                    rz_cuff = min(0.026 if is_male else 0.022, arm_sl["rz"]) + offset + 0.002
+                    v.co.y = cy_arm + (dy / r_cur) * (r_new * (1.0 - t_cuff_lock) + ry_cuff * t_cuff_lock)
+                    v.co.z = cz_arm + (dz / r_cur) * (r_new * (1.0 - t_cuff_lock) + rz_cuff * t_cuff_lock)
+                else:
+                    v.co.y = cy_arm + (dy / r_cur) * r_new
+                    v.co.z = cz_arm + (dz / r_cur) * r_new
 
                 # Soft fabric gravity droop under the loose sleeve (excluding tight cuff)
                 if dz < 0.0 and cuff_taper > 0.15:
@@ -1348,15 +1351,28 @@ def build_top_template(avatar_data, variant="tshirt"):
                     s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
                     if v.x > 0:
                         # Right arm (avatar left arm, viewer right)
-                        u_sl_in = 0.72 + 0.14 * t_down
-                        u_sl_out = 0.86 + 0.10 * t_down
+                        if t_down <= 0.85:
+                            v_sl = 0.78 - (t_down / 0.85) * (0.78 - 0.135)
+                            u_sl_in = 0.74 + 0.10 * t_down
+                            u_sl_out = 0.90 + 0.05 * t_down
+                        else:
+                            t_c = (t_down - 0.85) / 0.15
+                            v_sl = 0.135 - t_c * (0.135 - 0.065)
+                            u_sl_in = 0.825 + 0.050 * t_c
+                            u_sl_out = 0.945 + 0.015 * t_c
                         u_sl = u_sl_in + s_across * (u_sl_out - u_sl_in)
                     else:
                         # Left arm (avatar right arm, viewer left)
-                        u_sl_out = 0.14 + 0.11 * t_down
-                        u_sl_in = 0.28 + 0.09 * t_down
+                        if t_down <= 0.85:
+                            v_sl = 0.78 - (t_down / 0.85) * (0.78 - 0.250)
+                            u_sl_out = 0.08 - 0.035 * t_down
+                            u_sl_in = 0.26 - 0.1294 * t_down
+                        else:
+                            t_c = (t_down - 0.85) / 0.15
+                            v_sl = 0.250 - t_c * (0.250 - 0.175)
+                            u_sl_out = 0.050 - 0.005 * t_c
+                            u_sl_in = 0.150 - 0.030 * t_c
                         u_sl = u_sl_out + (1.0 - s_across) * (u_sl_in - u_sl_out)
-                    v_sl = 0.78 - t_down * (0.78 - v_cuff_uv)
                     # Smooth blend near shoulder/armhole transition so shoulder seam is continuous
                     t_blend = min(1.0, max(0.0, (abs(v.x) - x_split) / 0.035))
                     s_blend = t_blend * t_blend * (3.0 - 2.0 * t_blend)
@@ -1873,15 +1889,28 @@ def build_dress_template(avatar_data, variant="dress"):
                     s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
                     if v.x > 0:
                         # Right arm (avatar left arm, viewer right)
-                        u_sl_in = 0.72 + 0.14 * t_down
-                        u_sl_out = 0.86 + 0.10 * t_down
+                        if t_down <= 0.85:
+                            v_sl = 0.78 - (t_down / 0.85) * (0.78 - 0.135)
+                            u_sl_in = 0.74 + 0.10 * t_down
+                            u_sl_out = 0.90 + 0.05 * t_down
+                        else:
+                            t_c = (t_down - 0.85) / 0.15
+                            v_sl = 0.135 - t_c * (0.135 - 0.065)
+                            u_sl_in = 0.825 + 0.050 * t_c
+                            u_sl_out = 0.945 + 0.015 * t_c
                         u_sl = u_sl_in + s_across * (u_sl_out - u_sl_in)
                     else:
                         # Left arm (avatar right arm, viewer left)
-                        u_sl_out = 0.14 + 0.11 * t_down
-                        u_sl_in = 0.28 + 0.09 * t_down
+                        if t_down <= 0.85:
+                            v_sl = 0.78 - (t_down / 0.85) * (0.78 - 0.250)
+                            u_sl_out = 0.08 - 0.035 * t_down
+                            u_sl_in = 0.26 - 0.1294 * t_down
+                        else:
+                            t_c = (t_down - 0.85) / 0.15
+                            v_sl = 0.250 - t_c * (0.250 - 0.175)
+                            u_sl_out = 0.050 - 0.005 * t_c
+                            u_sl_in = 0.150 - 0.030 * t_c
                         u_sl = u_sl_out + (1.0 - s_across) * (u_sl_in - u_sl_out)
-                    v_sl = 0.78 - t_down * (0.78 - v_cuff_uv)
                     t_blend = min(1.0, max(0.0, (abs(v.x) - x_split) / 0.035))
                     s_blend = t_blend * t_blend * (3.0 - 2.0 * t_blend)
                     u = u_torso * (1.0 - s_blend) + u_sl * s_blend

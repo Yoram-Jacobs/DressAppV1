@@ -485,6 +485,68 @@ describe('back fabric synthesis (synthesizeBackFabricData)', () => {
     expect(data[idxPocket + 1]).toBe(data[idxMirror + 1]);
     expect(data[idxPocket + 2]).toBe(data[idxMirror + 2]);
   });
+
+  test('preserves disconnected sleeve runs without injecting torso graphics or bilateral mirroring', () => {
+    const w = 100;
+    const h = 100;
+    const data = new Uint8ClampedArray(w * h * 4);
+
+    // Torso: x in [35..65], y in [20..80], color solid blue [30, 60, 180]
+    for (let y = 20; y < 80; y++) {
+      for (let x = 35; x <= 65; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = 30; data[idx + 1] = 60; data[idx + 2] = 180; data[idx + 3] = 255;
+      }
+    }
+    // Add bright graphic on torso center: x in [45..55], y in [35..45]
+    for (let y = 35; y <= 45; y++) {
+      for (let x = 45; x <= 55; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = 255; data[idx + 1] = 255; data[idx + 2] = 0;
+      }
+    }
+
+    // Disconnected Left sleeve run: x in [5..22], y in [40..75], dark charcoal [40, 40, 42]
+    // with a light gray cuff at y in [65..75]: [180, 180, 185]
+    for (let y = 40; y <= 75; y++) {
+      const isCuff = y >= 65;
+      const r = isCuff ? 180 : 40;
+      const g = isCuff ? 180 : 40;
+      const b = isCuff ? 185 : 42;
+      for (let x = 5; x <= 22; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = r; data[idx + 1] = g; data[idx + 2] = b; data[idx + 3] = 255;
+      }
+    }
+
+    // Disconnected Right sleeve run: x in [78..95], y in [40..75], dark charcoal [40, 40, 42]
+    for (let y = 40; y <= 75; y++) {
+      for (let x = 78; x <= 95; x++) {
+        const idx = (y * w + x) * 4;
+        data[idx] = 40; data[idx + 1] = 40; data[idx + 2] = 42; data[idx + 3] = 255;
+      }
+    }
+
+    synthesizeBackFabricData(data, w, h);
+
+    // 1. Torso center graphic must be synthesized away to blue
+    const idxTorso = (40 * w + 50) * 4;
+    expect(data[idxTorso]).toBeCloseTo(30, -1);
+    expect(data[idxTorso + 1]).toBeCloseTo(60, -1);
+    expect(data[idxTorso + 2]).toBeCloseTo(180, -1);
+
+    // 2. Left sleeve cuff must remain 100% pristine light-gray
+    const idxLeftCuff = (70 * w + 12) * 4;
+    expect(data[idxLeftCuff]).toBe(180);
+    expect(data[idxLeftCuff + 1]).toBe(180);
+    expect(data[idxLeftCuff + 2]).toBe(185);
+
+    // 3. Right sleeve must NOT have the left sleeve cuff mirrored into it!
+    const idxRightSleeve = (70 * w + 85) * 4;
+    expect(data[idxRightSleeve]).toBe(40);
+    expect(data[idxRightSleeve + 1]).toBe(40);
+    expect(data[idxRightSleeve + 2]).toBe(42);
+  });
 });
 
 describe('shoulder line detection and hoodie mapping', () => {
