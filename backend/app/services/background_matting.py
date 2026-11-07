@@ -278,16 +278,18 @@ def carve_studio_background_cavities(
         return image_rgba
 
     # 1. Background profile: check outer perimeter (top/bottom/left/right 3% of image)
+    # Only sample OPAQUE pixels (alpha >= 40). If perimeter is already transparent (< 40),
+    # rembg has already removed the perimeter and we need to check missed interior cavities!
     margin_x = max(2, int(W * 0.03))
     margin_y = max(2, int(H * 0.03))
     perimeter_pixels = []
-    for sample in [
-        rgb[:margin_y, :],
-        rgb[-margin_y:, :],
-        rgb[:, :margin_x],
-        rgb[:, -margin_x:],
+    for sample, a_sample in [
+        (rgb[:margin_y, :], alpha[:margin_y, :]),
+        (rgb[-margin_y:, :], alpha[-margin_y:, :]),
+        (rgb[:, :margin_x], alpha[:, :margin_x]),
+        (rgb[:, -margin_x:], alpha[:, -margin_x:]),
     ]:
-        nz = sample[sample.sum(axis=-1) > 10]
+        nz = sample[(a_sample >= 40) & (sample.sum(axis=-1) > 10)]
         if len(nz) > 0:
             perimeter_pixels.append(nz)
 

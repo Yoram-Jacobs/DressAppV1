@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 
 /**
  * Silhouette-driven garment shells
@@ -7,19 +7,19 @@ import * as THREE from 'three';
  * pant legs and every other part of the real silhouette) the garment is rebuilt
  * from its own cut-out:
  *
- *   • The alpha channel of the (background-removed) photo is scanned row by row.
- *   • Every grid row is split into horizontal runs (torso, each sleeve, each leg)
+ *   ? The alpha channel of the (background-removed) photo is scanned row by row.
+ *   ? Every grid row is split into horizontal runs (torso, each sleeve, each leg)
  *     with sub-cell accurate left/right ends, so the shell meets the photographed
  *     outline exactly (no staircase edges).
- *   • Each run is inflated into an elliptical cross-section whose depth follows the
+ *   ? Each run is inflated into an elliptical cross-section whose depth follows the
  *     avatar's body profile (torso slice / leg slice), so the garment keeps the
  *     photographed silhouette AND hugs the avatar's point cloud.
- *   • Strict Anatomical Anchors:
+ *   ? Strict Anatomical Anchors:
  *       - Tops, outerwear, and full-body dresses (except strapless) are strictly
  *         anchored to the avatar's shoulder contour (cannot go lower or higher).
  *       - Bottoms are anchored to the waist and to the crotch (pants leg split
  *         can never go higher than the crotch line).
- *   • A front sheet carries the front photo; a back sheet carries the back photo of
+ *   ? A front sheet carries the front photo; a back sheet carries the back photo of
  *     the item group when available (otherwise a clean detail-damped back synthesis).
  *
  * The functions here are pure (no DOM / canvas) so they can be unit-tested.
@@ -89,7 +89,7 @@ export function extractRowRuns(alpha, w, h, nx, ny, threshold = 110) {
     const merged = [];
     px.forEach((r) => {
       const last = merged[merged.length - 1];
-      if (last && r[0] - last[1] <= Math.max(2, w * 0.012)) last[1] = r[1];
+      if (last && r[0] - last[1] <= 2) last[1] = r[1];
       else merged.push([r[0], r[1]]);
     });
     let rowGridRuns = merged
@@ -200,8 +200,8 @@ export function resolveBottomLength({
   const metaText = `${g.length || ''} ${g.bottom_length || ''} ${g.item_length || ''} ${g.metadata?.length || ''} ${garmentText}`.toLowerCase();
 
   if (isSkirt) {
-    const isMini = /\b(mini|micro|קצרה|מיני)\b/i.test(metaText);
-    const isMaxi = /\b(maxi|gown|long|ארוכה|מקסי)\b/i.test(metaText);
+    const isMini = /\b(mini|micro|????|????)\b/i.test(metaText);
+    const isMaxi = /\b(maxi|gown|long|?????|????)\b/i.test(metaText);
     if (isMini) return { lengthType: 'mini_skirt', yBottom: isMale ? 0.76 : 0.72 };
     if (isMaxi) return { lengthType: 'maxi_skirt', yBottom: isMale ? 0.16 : 0.12 };
     return { lengthType: 'midi_skirt', yBottom: isMale ? 0.48 : 0.44 };
@@ -210,12 +210,12 @@ export function resolveBottomLength({
   // Bottoms (pants, shorts, culottes, etc.)
   // 1. Explicit keywords in metadata or title
   // Note: Hebrew characters are non-ASCII (\w is ASCII-only in standard JS regex), so use unicode boundaries
-  const isMiniShorts = /(?:^|[^\p{L}\p{N}])(hot\s*pants|micro\s*short|mini\s*short|קצרצר|ביקיני|תחתונים|brief|thong|bikini)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  const isBermudaOrKnee = /(?:^|[^\p{L}\p{N}])(bermuda|knee|knee-high|knee_length|knee-length|ברמודה|עד הברך|ברך)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  const isShortsText = /(?:^|[^\p{L}\p{N}])(short|shorts|trunk|trunks|boxer|boxers|swim_short|שורט|שורטס|קצרים|קצר|מכנסי ים|מכנסי_ים|בוקסר)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  const isCapriOr78 = /(?:^|[^\p{L}\p{N}])(capri|cropped|culotte|culottes|3\/4|7\/8|seven_eighths|קפרי|שבע שמיניות|שלושת רבעי|שבע_שמיניות|ankle\s*pant)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
-  // Full-length pants keywords: e.g. "pants", "trousers", "chinos", "jeans", "slacks", "sweatpants", "מכנסיים", "מכנס", "דגמ\"ח"
-  const isFullPantsExplicit = /(?:^|[^\p{L}\p{N}])(pants|pant|trousers|trouser|chinos?|jeans?|slacks|sweatpants|joggers?|pantalon|pantaloni|calça|calca|hose|מכנס(?:יים|י)?|דגמ['״"]?ח)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isMiniShorts = /(?:^|[^\p{L}\p{N}])(hot\s*pants|micro\s*short|mini\s*short|?????|??????|???????|brief|thong|bikini)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isBermudaOrKnee = /(?:^|[^\p{L}\p{N}])(bermuda|knee|knee-high|knee_length|knee-length|??????|?? ????|???)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isShortsText = /(?:^|[^\p{L}\p{N}])(short|shorts|trunk|trunks|boxer|boxers|swim_short|????|?????|?????|???|????? ??|?????_??|?????)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  const isCapriOr78 = /(?:^|[^\p{L}\p{N}])(capri|cropped|culotte|culottes|3\/4|7\/8|seven_eighths|????|??? ???????|????? ????|???_???????|ankle\s*pant)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
+  // Full-length pants keywords: e.g. "pants", "trousers", "chinos", "jeans", "slacks", "sweatpants", "???????", "????", "???\"?"
+  const isFullPantsExplicit = /(?:^|[^\p{L}\p{N}])(pants|pant|trousers|trouser|chinos?|jeans?|slacks|sweatpants|joggers?|pantalon|pantaloni|cal?a|calca|hose|????(?:???|?)?|???['?"]??)(?:$|[^\p{L}\p{N}])/iu.test(metaText);
 
   let lengthType = 'full';
   if (isMiniShorts) {
@@ -394,16 +394,16 @@ const FIT_ALIASES = {
   bodycon: 'slim',
   compression: 'slim',
   pencil: 'slim',
-  'צמוד': 'slim',
-  'סקיני': 'slim',
+  '????': 'slim',
+  '?????': 'slim',
   'regular-fit': 'regular',
   regular_fit: 'regular',
   classic: 'regular',
   straight: 'regular',
   tailored: 'regular',
   standard: 'regular',
-  'רגיל': 'regular',
-  'קלאסי': 'regular',
+  '????': 'regular',
+  '?????': 'regular',
   'loose-fit': 'loose',
   loose_fit: 'loose',
   relaxed: 'loose',
@@ -412,14 +412,14 @@ const FIT_ALIASES = {
   wide: 'loose',
   boyfriend: 'loose',
   cargo: 'loose',
-  'רפוי': 'loose',
-  'רחב': 'loose',
+  '????': 'loose',
+  '???': 'loose',
   oversize: 'oversized',
   baggy: 'oversized',
   boxy: 'oversized',
   slouchy: 'oversized',
-  'אוברסייז': 'oversized',
-  'באגי': 'oversized',
+  '????????': 'oversized',
+  '????': 'oversized',
   flare: 'flared',
   'a-line': 'flared',
   a_line: 'flared',
@@ -427,7 +427,7 @@ const FIT_ALIASES = {
   peplum: 'flared',
   bootcut: 'flared',
   skater: 'flared',
-  'מתרחב': 'flared',
+  '?????': 'flared',
 };
 
 function normalizeFitValue(raw) {
@@ -442,9 +442,9 @@ function normalizeFitValue(raw) {
  * and returns anchor-locked 3D draping parameters.
  *
  * Common Anchoring Invariant Across All Fits:
- *   • Tops / Outerwear / Full-Body (`top`, `outerwear`, `dress`):
+ *   ? Tops / Outerwear / Full-Body (`top`, `outerwear`, `dress`):
  *     Anchored strictly to the avatar's shoulders and neckline (`anchorType: 'shoulders_neckline'`).
- *   • Bottoms (`bottom` — pants, jeans, shorts, skirts):
+ *   ? Bottoms (`bottom` ? pants, jeans, shorts, skirts):
  *     Anchored strictly to the avatar's waistline (`anchorType: 'waistline'`).
  */
 export function analyzeGarmentFit({
@@ -487,10 +487,10 @@ export function analyzeGarmentFit({
   // 1. Material elasticity & stiffness analysis
   const isHighStretchMaterial =
     spandexPct >= 6 ||
-    has('spandex', 'elastane', 'lycra', 'ribbed', 'compression', 'bodycon', 'לייקרה', 'אלסטן', 'ריב');
+    has('spandex', 'elastane', 'lycra', 'ribbed', 'compression', 'bodycon', '??????', '?????', '???');
   const isStructuredMaterial = has(
     'denim', 'leather', 'suede', 'wool', 'tweed', 'corduroy', 'canvas', 'linen', 'fleece',
-    "ג'ינס", 'עור', 'זמש', 'צמר', 'פשתן', 'פליז', 'קורדורוי'
+    "?'???", '???', '???', '???', '????', '????', '????????'
   );
 
   // 2. 2D Cutout Contour Analysis relative to the anatomical anchor (shoulders/neckline or waistline)
@@ -594,22 +594,22 @@ export function analyzeGarmentFit({
   const isFlaredKw = has(
     'trench', 'a-line', 'aline', 'flared', 'flare', 'peplum', 'skater', 'ball gown',
     'bootcut', 'bell-bottom', 'pleated skirt', 'circle skirt',
-    'טרנץ', 'גזרת a', 'מתרחב', 'פפלום', 'קפלים'
+    '????', '???? a', '?????', '?????', '?????'
   );
   const isOversizedKw = has(
     'oversized', 'oversize', 'baggy', 'boxy', 'slouchy', 'poncho', 'cape', 'shawl', 'hip-hop', 'parachute',
-    'אוברסייז', 'באגי', "פונצ'ו", 'שכמייה'
+    '????????', '????', "????'?", '??????'
   );
   const isLooseKw = has(
     'loose', 'relaxed', 'wide-leg', 'wide leg', 'wide', 'palazzo', 'boyfriend', 'mom jeans', 'cargo',
     'kaftan', 'caftan', 'galabiya', 'galabiye', 'jalabiya', 'abaya', 'thobe', 'djellaba', 'kimono',
     'sweatpants', 'jogger', 'hoodie', 'sweatshirt', 'kurta', 'tunic',
-    'רחב', 'רפוי', 'דגמ"ח', 'דגמח', 'כפתן', 'גלבייה', 'גלביה', 'עבאיה', "קפוצ'ון", 'סווטשירט', 'טרנינג', 'טוניקה', 'קורטה'
+    '???', '????', '???"?', '????', '????', '??????', '?????', '?????', "????'??", '????????', '??????', '??????', '?????'
   );
   const isSlimKw = has(
     'slim', 'skinny', 'fitted', 'tight', 'bodycon', 'compression', 'legging', 'biker short',
     'pencil skirt', 'pencil', 'sheath', 'corset', 'bustier', 'singlet', 'camisole', 'tank',
-    'צמוד', 'סקיני', 'טייץ', 'עיפרון', 'גופייה', 'גופיה', 'מחוך'
+    '????', '?????', '????', '??????', '??????', '?????', '????'
   );
 
   let fit = 'regular';
@@ -763,7 +763,7 @@ export function buildSilhouetteShell({
     : (isTopOrBody && isStrapless ? Math.min(yTop, isMale ? 1.34 : 1.30) : yTop);
   const hWorld = Math.max(0.10, effectiveYTop - yBottom);
 
-  // ── Row analysis & Detached Shard Pruning ──
+  // ?? Row analysis & Detached Shard Pruning ??
   const runsByRow = [];
   let total = 0;
   let minCol = Infinity;
@@ -845,7 +845,7 @@ export function buildSilhouetteShell({
     return sorted;
   };
 
-  // ── Bottoms: Strict Waist & Crotch Anchor Detection ──
+  // ?? Bottoms: Strict Waist & Crotch Anchor Detection ??
   // Pants are anchored at the waist (jFabricTop -> effectiveYTop) and at the crotch (crotchRow -> yCrotchBody).
   // In no case can pants split into legs higher than the crotch line (yCrotchBody)!
   const isShortBottom = isBottom && hWorld <= 0.66;
@@ -960,7 +960,7 @@ export function buildSilhouetteShell({
     }
   }
 
-  // ── Tops & Dresses: Continuous Torso & Waist Envelope Unification ──
+  // ?? Tops & Dresses: Continuous Torso & Waist Envelope Unification ??
   // For dresses, skirts, and tops below the bust line / armpits, the garment forms a single
   // continuous body sheath. Any interior transparency gap, wrinkle tear, or cutout artifact
   // must never slice holes or detach the torso into disconnected tubes.
@@ -1008,7 +1008,7 @@ export function buildSilhouetteShell({
     });
   });
 
-  // ── Horizontal scale & Shoulder line detection ──
+  // ?? Horizontal scale & Shoulder line detection ??
   const dxUniform = (aspect * hWorld) / nx;
 
   const detectedShoulder = isTopOrBody && !isStrapless
@@ -1085,7 +1085,7 @@ export function buildSilhouetteShell({
   if (isStandalone) {
     sCorr = 1.0;
   } else if (isSkirt) {
-    // ── Skirt Slicing: Align & scale top-hem slice with avatar's waist slice circumference (<= 2mm thick) ──
+    // ?? Skirt Slicing: Align & scale top-hem slice with avatar's waist slice circumference (<= 2mm thick) ??
     const yWaist = effectiveYTop;
     const waistTorso = getTorsoSlice(yWaist, isMale);
     const reqWaistHalf = waistTorso.rx + waistOffset;
@@ -1114,7 +1114,7 @@ export function buildSilhouetteShell({
     sWaistSkirt = sWaist;
     sCorr = clamp(sWaist, 0.45, 2.20);
   } else if (isBottom) {
-    // ── Bottom Slicing: Align & scale top-hem slice with avatar's waist slice circumference (<= 2mm thick) ──
+    // ?? Bottom Slicing: Align & scale top-hem slice with avatar's waist slice circumference (<= 2mm thick) ??
     const waistTorso = getTorsoSlice(effectiveYTop, isMale);
     const reqWaistHalf = waistTorso.rx + waistOffset;
     const waistScanEnd = Math.min(vh - 1, jFabricTop + Math.max(2, Math.floor(0.12 * fabricHeight)));
@@ -1139,7 +1139,7 @@ export function buildSilhouetteShell({
     const sWaist = reqWaistHalf / waistHalfWorld;
     sCorr = clamp(sWaist, 0.55, 1.65);
   } else if (isTopOrBody) {
-    // ── Top / Dress / Outerwear Slicing:
+    // ?? Top / Dress / Outerwear Slicing:
     // 1. Align the top's collar center with the avatar's neck center (x = 0).
     // 2. Align & scale the top's shoulder slices with the avatar's shoulder slice circumference.
     // 3. Keep the original silhouette and cut below the shoulders.
@@ -1308,7 +1308,7 @@ export function buildSilhouetteShell({
     return clamp(sideProfile.ratios[idx] || 1.0, 0.85, 1.30);
   };
 
-  // ── Per-row geometry ──
+  // ?? Per-row geometry ??
   const offF = new Float32Array(vw * vh);
   const offB = new Float32Array(vw * vh);
   const baseZ = new Float32Array(vw * vh);
@@ -1688,7 +1688,7 @@ export function buildSilhouetteShell({
     }
   }
 
-  // ── Strict Column-Wise Shoulder Line Anchor for Tops, Outerwear & Full-Body Garments ──
+  // ?? Strict Column-Wise Shoulder Line Anchor for Tops, Outerwear & Full-Body Garments ??
   // Anchors the top shoulder edge of every column across the left and right shoulders
   // smoothly along the avatar's anatomical shoulder contour without sharp shelves or skin holes.
   if (isTopOrBody && !isStrapless) {
@@ -1811,7 +1811,7 @@ export function buildSilhouetteShell({
     offB.set(tmpB);
   }
 
-  // ── Column-Wise Top & Bottom Boundary Vertex Snap ──
+  // ?? Column-Wise Top & Bottom Boundary Vertex Snap ??
   // For any column i, vertices strictly above jFirstCol[i] (or below jLastCol[i]) are outside the
   // garment's vertical span in that column. Snapping them onto (i, jFirstCol[i]) / (i, jLastCol[i])
   // collapses any stepped quad along a sloped shoulder, collar, waistband, or hem into a smooth
@@ -2056,8 +2056,8 @@ export function classifyGroupView(frontStats, otherStats, hintText = '') {
   const colorDist = Math.sqrt(dr * dr + dg * dg + db * db);
   if (colorDist >= 85) return null;
 
-  if (/(?:\b(?:side|profile)\b|צד|פרופיל)/i.test(hint)) return 'side';
-  if (/(?:\b(?:back|rear|behind)\b|גב|אחור)/i.test(hint)) return 'back';
+  if (/(?:\b(?:side|profile)\b|??|??????)/i.test(hint)) return 'side';
+  if (/(?:\b(?:back|rear|behind)\b|??|????)/i.test(hint)) return 'back';
 
   const aspectRatio = otherStats.aspect / Math.max(1e-3, frontStats.aspect);
   const areaRatio = otherStats.area / Math.max(1e-3, frontStats.area);
@@ -2296,3 +2296,4 @@ export function synthesizeBackFabricData(data, w, h) {
 
   return data;
 }
+
