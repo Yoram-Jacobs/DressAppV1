@@ -230,6 +230,186 @@ def strip_hanger_hook(image_rgba: Image.Image | bytes) -> Image.Image | bytes:
     return image_rgba
 
 
+def carve_studio_background_cavities(
+    image_rgba: Image.Image | bytes,
+    bg_brightness_min: float = 195.0,
+    bg_saturation_max: float = 0.18,
+    contrast_delta_min: float = 60.0,
+) -> Image.Image | bytes:
+    """Detect and carve out studio background pockets in underarm/armpit gaps.
+
+    Neural matting models (like u2net/birefnet in rembg) frequently miss narrow
+    enclosed or semi-enclosed gaps between sleeves and torso on studio photos,
+    assigning opaque alpha (~245) to the white studio background. This function:
+      1. Verifies that the perimeter background is a bright, uniform studio backdrop.
+      2. Computes the median color, brightness, and saturation of the garment fabric.
+      3. Safety Guard: If the garment itself is white/cream (Delta E < contrast_delta_min
+         or low saturation + high brightness), skips carving to protect white clothing.
+      4. Identifies candidate gap components in the left and right underarm flank zones
+         (between sleeve outer boundary and central torso column).
+      5. Confirms the component has significant height/aspect or connects to the exterior,
+         excluding central chest areas (preserving logos, graphics, and zipper pulls).
+      6. Zeroes out the alpha of the carved gaps with gentle boundary anti-aliasing.
+    """
+    from scipy import ndimage
+
+    is_bytes = isinstance(image_rgba, (bytes, bytearray))
+    if is_bytes:
+        im = Image.open(io.BytesIO(image_rgba)).convert("RGBA")
+    else:
+        im = image_rgba.convert("RGBA")
+
+    arr = np.array(im)
+    alpha = arr[:, :, 3]
+    rgb = arr[:, :, :3]
+    H, W = alpha.shape
+
+    solid = alpha >= 32
+    if not solid.any():
+        return image_rgba
+
+    ys, xs = np.where(solid)
+    y_min, y_max = int(ys.min()), int(ys.max())
+    x_min, x_max = int(xs.min()), int(xs.max())
+    bbox_h = y_max - y_min + 1
+    bbox_w = x_max - x_min + 1
+
+    if bbox_h < 40 or bbox_w < 40:
+        return image_rgba
+
+    # 1. Background profile: check outer perimeter (top/bottom/left/right 3% of image)
+    margin_x = max(2, int(W * 0.03))
+    margin_y = max(2, int(H * 0.03))
+    perimeter_pixels = []
+    for sample in [
+        rgb[:margin_y, :],
+        rgb[-margin_y:, :],
+        rgb[:, :margin_x],
+        rgb[:, -margin_x:],
+    ]:
+        nz = sample[sample.sum(axis=-1) > 10]
+        if len(nz) > 0:
+            perimeter_pixels.append(nz)
+
+    if perimeter_pixels:
+        all_perim = np.concatenate(perimeter_pixels, axis=0)
+        p_max = all_perim.max(axis=-1).astype(float)
+        p_min = all_perim.min(axis=-1).astype(float)
+        p_sat = (p_max - p_min) / np.maximum(p_max, 1.0)
+        p_bright = p_max
+        is_studio_bg = (np.median(p_bright) >= 185.0) and (np.median(p_sat) <= 0.20)
+    else:
+        is_studio_bg = True
+
+    if not is_studio_bg:
+        return image_rgba
+
+    # 2. Fabric profile: sample confident garment body pixels (alpha >= 200, within central core of bbox)
+    core_torso_mask = np.zeros((H, W), dtype=bool)
+    y_core_start = y_min + int(bbox_h * 0.20)
+    y_core_end = y_min + int(bbox_h * 0.70)
+    x_core_start = x_min + int(bbox_w * 0.30)
+    x_core_end = x_max - int(bbox_w * 0.30)
+    core_torso_mask[y_core_start:y_core_end, x_core_start:x_core_end] = True
+    core_torso_fabric = rgb[core_torso_mask & (alpha >= 200)]
+
+    if len(core_torso_fabric) < 100:
+        core_torso_fabric = rgb[solid]
+
+    fab_r = core_torso_fabric[:, 0].astype(float)
+    fab_g = core_torso_fabric[:, 1].astype(float)
+    fab_b = core_torso_fabric[:, 2].astype(float)
+    fab_max = np.maximum(np.maximum(fab_r, fab_g), fab_b)
+    fab_min = np.minimum(np.minimum(fab_r, fab_g), fab_b)
+    fab_sat = (fab_max - fab_min) / np.maximum(fab_max, 1.0)
+    fab_bright = fab_max
+
+    med_fab_color = np.median(core_torso_fabric, axis=0)
+    med_fab_sat = float(np.median(fab_sat))
+    med_fab_bright = float(np.median(fab_bright))
+
+    # Safety Guard for White / Cream / Light Gray clothing:
+    # If the garment is white (Delta E < contrast_delta_min against pure white and low saturation and high brightness),
+    # carving white regions risks punching holes into the chest of a white shirt!
+    white_ref = np.array([250.0, 250.0, 250.0])
+    color_dist = float(np.linalg.norm(med_fab_color - white_ref))
+    if color_dist < contrast_delta_min and med_fab_sat < 0.15 and med_fab_bright > 185.0:
+        return image_rgba
+
+    # 3. Candidate gap pixels inside opaque region:
+    # Brightness >= bg_brightness_min, saturation <= bg_saturation_max
+    r = rgb[:, :, 0].astype(float)
+    g = rgb[:, :, 1].astype(float)
+    b = rgb[:, :, 2].astype(float)
+    c_max = np.maximum(np.maximum(r, g), b)
+    c_min = np.minimum(np.minimum(r, g), b)
+    sat = (c_max - c_min) / np.maximum(c_max, 1.0)
+    bright = c_max
+
+    dist_to_white = np.sqrt((r - 250.0)**2 + (g - 250.0)**2 + (b - 250.0)**2)
+    is_white_gap = (solid) & (bright >= bg_brightness_min) & (sat <= bg_saturation_max) & (dist_to_white < 85.0)
+
+    # Spatial Restriction: Underarm / Armpit flank zones
+    flank_mask = np.zeros((H, W), dtype=bool)
+    left_flank_x1 = x_min + int(bbox_w * 0.06)
+    left_flank_x2 = x_min + int(bbox_w * 0.42)
+    right_flank_x1 = x_min + int(bbox_w * 0.58)
+    right_flank_x2 = x_min + int(bbox_w * 0.94)
+    flank_y1 = y_min + int(bbox_h * 0.20)
+    flank_y2 = y_min + int(bbox_h * 0.90)
+
+    flank_mask[flank_y1:flank_y2, left_flank_x1:left_flank_x2] = True
+    flank_mask[flank_y1:flank_y2, right_flank_x1:right_flank_x2] = True
+
+    candidate_mask = is_white_gap & flank_mask
+    if not candidate_mask.any():
+        return image_rgba
+
+    labeled, num_features = ndimage.label(candidate_mask)
+    if num_features == 0:
+        return image_rgba
+
+    sizes = ndimage.sum(candidate_mask, labeled, range(1, num_features + 1))
+    carve_mask = np.zeros((H, W), dtype=bool)
+
+    min_gap_area = max(20, int(bbox_h * bbox_w * 0.0003))
+
+    for idx, s in enumerate(sizes):
+        if s < min_gap_area:
+            continue
+        comp_mask = labeled == (idx + 1)
+        c_ys, c_xs = np.where(comp_mask)
+        comp_h = c_ys.max() - c_ys.min() + 1
+        comp_w = c_xs.max() - c_xs.min() + 1
+
+        if comp_h < 10 and comp_w < 10:
+            continue
+
+        carve_mask |= comp_mask
+
+    if not carve_mask.any():
+        return image_rgba
+
+    # Gentle dilation (1-2px) to eat the antialiased boundary of the gap without touching saturated fabric
+    dilated = ndimage.binary_dilation(carve_mask, iterations=2)
+    is_garment_fabric = (sat > bg_saturation_max + 0.08) | (bright < bg_brightness_min - 35.0) | (dist_to_white > 100.0)
+    final_carve = dilated & (~is_garment_fabric)
+
+    arr[:, :, 3] = np.where(final_carve, 0, alpha).astype(np.uint8)
+    cleaned = Image.fromarray(arr, "RGBA")
+    logger.info(
+        "carve_studio_background_cavities: carved %d px of studio gap in %d flank component(s)",
+        int(final_carve.sum()),
+        num_features,
+    )
+
+    if is_bytes:
+        buf = io.BytesIO()
+        cleaned.save(buf, format="PNG", optimize=True)
+        return buf.getvalue()
+    return cleaned
+
+
 def _rembg_remove(image_bytes: bytes) -> bytes | None:
     """Blocking helper — call inside asyncio.to_thread.
 
@@ -318,6 +498,7 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
                 alpha_full = alpha_small
             full_rgba = original.convert("RGBA")
             full_rgba.putalpha(alpha_full)
+            full_rgba = carve_studio_background_cavities(full_rgba)
             full_rgba = drop_disconnected_islands(full_rgba, min_area_ratio=0.05)
             full_rgba = strip_hanger_hook(full_rgba)
             buf = io.BytesIO()

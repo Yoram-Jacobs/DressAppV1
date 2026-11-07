@@ -1304,6 +1304,66 @@ async function fetchAndCropTexture(url) {
     const sData = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, cropW, cropH).data;
     const alpha = new Uint8Array(cropW * cropH);
     for (let p = 0; p < alpha.length; p++) alpha[p] = sData[p * 4 + 3];
+
+    // Underarm Studio White Gap Filter (defense-in-depth for legacy / cached cutouts):
+    // If a top / outerwear has non-white dominant fabric, identify bright studio-white pixels in the
+    // left and right flank underarm regions (x between 6%..42% and 58%..94% of width, y in 20%..88% of height)
+    // and treat them as transparent (alpha = 0) so row runs split into separate sleeve and torso tubes.
+    let didCarveUnderarmGaps = false;
+    if (dominantColor && (slot === 'top' || slot === 'outerwear' || slot === 'dress' || !slot)) {
+      const isDomWhite = (() => {
+        try {
+          const c = new THREE.Color(dominantColor);
+          const r = c.r * 255, g = c.g * 255, b = c.b * 255;
+          const maxC = Math.max(r, g, b);
+          const minC = Math.min(r, g, b);
+          const sat = (maxC - minC) / Math.max(maxC, 1);
+          return maxC > 210 && sat < 0.15;
+        } catch { return false; }
+      })();
+
+      if (!isDomWhite) {
+        const xFlankL1 = Math.round(cropW * 0.06);
+        const xFlankL2 = Math.round(cropW * 0.42);
+        const xFlankR1 = Math.round(cropW * 0.58);
+        const xFlankR2 = Math.round(cropW * 0.94);
+        const yFlank1 = Math.round(cropH * 0.20);
+        const yFlank2 = Math.round(cropH * 0.88);
+
+        for (let y = yFlank1; y < yFlank2; y++) {
+          const rowOff = y * cropW;
+          for (let x = 0; x < cropW; x++) {
+            if ((x >= xFlankL1 && x <= xFlankL2) || (x >= xFlankR1 && x <= xFlankR2)) {
+              const p = rowOff + x;
+              if (alpha[p] >= 32) {
+                const o = p * 4;
+                const r = sData[o];
+                const g = sData[o + 1];
+                const b = sData[o + 2];
+                const maxC = Math.max(r, g, b);
+                const minC = Math.min(r, g, b);
+                const sat = (maxC - minC) / Math.max(maxC, 1);
+                if (maxC >= 200 && sat <= 0.16) {
+                  const distWhite = Math.sqrt((r - 250) ** 2 + (g - 250) ** 2 + (b - 250) ** 2);
+                  if (distWhite < 80) {
+                    alpha[p] = 0;
+                    sData[o + 3] = 0;
+                    didCarveUnderarmGaps = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (didCarveUnderarmGaps && cropCtx) {
+      try {
+        const imgDataObj = cleanCropImgData || new ImageData(sData, cropW, cropH);
+        cropCtx.putImageData(imgDataObj, 0, 0);
+      } catch { /* ignore */ }
+    }
+
     const { nx, ny } = chooseGridResolution(aspect);
     shellMask = {
       mask: resampleAlphaMask(alpha, cropW, cropH, nx, ny),
