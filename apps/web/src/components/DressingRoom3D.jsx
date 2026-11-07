@@ -525,10 +525,13 @@ export default function DressingRoom3D({
 
   // Compute covered body zones from visible garments so AvatarMesh3D retracts covered skin
   const coveredZones = useMemo(() => {
-    const visibleSlots = new Set(
-      activeGarments
-        .filter((g) => layerVisibility[g.slot] ?? true)
-        .map((g) => g.slot)
+    const visibleGarments = activeGarments.filter((g) => layerVisibility[g.slot] ?? true);
+    const visibleSlots = new Set(visibleGarments.map((g) => g.slot));
+    const upperGarmentTexts = visibleGarments
+      .filter((g) => ['top', 'outerwear', 'dress'].includes(g.slot))
+      .map((g) => (g.name || g.title || g.category || g.item_type || '').toLowerCase());
+    const isSleeveless = upperGarmentTexts.length > 0 && upperGarmentTexts.every((t) =>
+      /(?:singlet|tank|vest|sleeveless|גופיי|סרבל)/i.test(t)
     );
     return {
       hasTop: visibleSlots.has('top'),
@@ -537,6 +540,7 @@ export default function DressingRoom3D({
       hasBottom: visibleSlots.has('bottom'),
       hasShoes: visibleSlots.has('shoes'),
       hasHeadwear: visibleSlots.has('headwear'),
+      isSleeveless,
     };
   }, [activeGarments, layerVisibility]);
 

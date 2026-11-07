@@ -1483,7 +1483,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
         if (!mounted || !res) return;
         setData({
           ...res,
-          backTexture: res.backTexture || res.texture,
+          backTexture: res.backTexture || null,
           backSource: 'front-aligned',
           sideProfile: null,
           ready: true,
@@ -3081,7 +3081,7 @@ function GarmentTemplateMeshInner({
                       ? (y >= 1.26 ? Math.max(0.215, 0.284 - (y - 1.26) * 0.95) : 0.284 + (1.26 - y) * 0.580)
                       : (y >= 1.22 ? Math.max(0.165, 0.211 - (y - 1.22) * 1.10) : 0.211 + (1.22 - y) * 0.628);
                     const armCz = isMale ? 0.004 : 0.008;
-                    const yWrist = isMale ? 1.069 : 0.956;
+                    const yWrist = isMale ? 1.015 : 0.956;
                     // Taper sleeve ease to 0 at the wrist cuff so the wrist cuff stays tight & snug
                     const tCuff = Math.max(0, Math.min(1, (y - yWrist) / 0.07));
                     const rScaleSleeve = 1.0 + (fitMode === 'oversized' ? 0.10 : (fitMode === 'loose' ? 0.05 : 0)) * tCuff;
@@ -3148,14 +3148,14 @@ function GarmentTemplateMeshInner({
           const longSleeveTemplates = ['hoodie', 'top_outerwear_jacket', 'jacket', 'jacket_blazer', 'cardigan', 'coat', 'trench_coat', 'top_longsleeve', 'shirt', 'longsleeve', 'kaftan'];
           const isLongSleeveGarment = longSleeveTemplates.includes(templateId) || (['top', 'outerwear', 'dress'].includes(rawSlot) && detectSleeveStyle({ garmentText }).type === 'long');
           if (isLongSleeveGarment && pos) {
-            const wristX = isMale ? 0.409 : 0.374;
-            const wristY = isMale ? 1.069 : 0.956;
-            const wristZ = isMale ? 0.012 : 0.009;
-            const armNx = isMale ? 0.5596 : 0.5653;
-            const armNy = isMale ? -0.8261 : -0.8217;
-            const armNz = isMale ? 0.0666 : 0.0723;
-            const xCuffThresh = isMale ? 0.24 : 0.22;
-            const yCuffMax = isMale ? 1.25 : 1.15;
+            const wristX = isMale ? 0.435 : 0.374;
+            const wristY = isMale ? 1.015 : 0.956;
+            const wristZ = isMale ? 0.018 : 0.009;
+            const armNx = isMale ? 0.5539 : 0.5653;
+            const armNy = isMale ? -0.8253 : -0.8217;
+            const armNz = isMale ? 0.1099 : 0.0723;
+            const xCuffThresh = isMale ? 0.28 : 0.22;
+            const yCuffMax = isMale ? 1.20 : 1.15;
             let cuffModified = false;
 
             for (let i = 0; i < pos.count; i++) {
@@ -3244,7 +3244,7 @@ function GarmentTemplateMeshInner({
         pB.fromBufferAttribute(pos, i1);
         pC.fromBufferAttribute(pos, i2);
         const midZ = (pA.z + pB.z + pC.z) / 3;
-        if (midZ < 0) {
+        if (midZ < 0.005) {
           backTriangles.push(i0, i1, i2);
         } else {
           frontTriangles.push(i0, i1, i2);
@@ -3269,7 +3269,7 @@ function GarmentTemplateMeshInner({
 
   const materials = useMemo(() => {
     const hasFrontTex = Boolean(texture);
-    const hasBackTex = Boolean(backTexture || texture);
+    const hasBackTex = Boolean(backTexture);
     const fallbackCol = dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#CBD5E1';
     const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
     const baseProps = {
@@ -3290,7 +3290,7 @@ function GarmentTemplateMeshInner({
     const backMat = new THREE.MeshStandardMaterial({
       ...baseProps,
       color: hasBackTex ? '#FFFFFF' : fallbackCol,
-      map: backTexture || texture || null,
+      map: backTexture || null,
     });
     return [frontMat, backMat];
   }, [texture, backTexture, dominantColor, pbrProps, rawSlot]);

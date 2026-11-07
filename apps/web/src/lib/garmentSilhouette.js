@@ -2188,18 +2188,11 @@ export function synthesizeBackFabricData(data, w, h) {
       if (!cR) cR = cL;
 
       const grainSrc = [...lSamples, ...rSamples];
-      let flankVarSum = 0;
-      const midR = (cL[0] + cR[0]) / 2;
-      const midG = (cL[1] + cR[1]) / 2;
-      const midB = (cL[2] + cR[2]) / 2;
-      for (let s = 0; s < grainSrc.length; s++) {
-        const dr = grainSrc[s][0] - midR;
-        const dg = grainSrc[s][1] - midG;
-        const db = grainSrc[s][2] - midB;
-        flankVarSum += Math.sqrt(dr * dr + dg * dg + db * db);
-      }
-      const sigma = grainSrc.length > 0 ? flankVarSum / grainSrc.length : 8;
-      const isAllOverPatternRow = sigma >= 30;
+      // Measure flank variance within each flank separately to be immune to lateral lighting gradients
+      const flankVarL = lSamples.length > 0 ? (lSamples.reduce((acc, s) => acc + Math.hypot(s[0] - cL[0], s[1] - cL[1], s[2] - cL[2]), 0) / lSamples.length) : 8;
+      const flankVarR = rSamples.length > 0 ? (rSamples.reduce((acc, s) => acc + Math.hypot(s[0] - cR[0], s[1] - cR[1], s[2] - cR[2]), 0) / rSamples.length) : 8;
+      const sigma = Math.max(flankVarL, flankVarR);
+      const isAllOverPatternRow = sigma >= 32;
       const tol = Math.max(18, sigma * 1.9);
 
       const curR = new Float32Array(span);
@@ -2268,24 +2261,30 @@ export function synthesizeBackFabricData(data, w, h) {
         }
       }
 
-      // 2b. Unconditionally eliminate all front-view details: double-breasted buttons, zippers,
+      // 2b. Eliminate all front-view details: double-breasted buttons, zippers,
       // zipper pulls, breast pockets, kangaroo/patch pockets, chest graphics, lettering, and plackets
       // across the entire interior torso (u_rel in [0.08, 0.92]).
+      // On the back sheet of any top or outerwear, central chest graphics (u in [0.15, 0.85] and v in [0.12, 0.75])
+      // MUST ALWAYS be removed even if there is flank grain!
+      const isChestTorsoZone = vRel >= 0.12 && vRel <= 0.75;
       const pStart = Math.floor(0.08 * span);
       const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
-      if (!isAllOverPatternRow && pEnd > pStart + 2) {
-        const fineThreshold = Math.max(4.0, Math.min(10.0, sigma * 0.85));
+      if ((!isAllOverPatternRow || isChestTorsoZone) && pEnd > pStart + 2) {
+        const fineThreshold = isAllOverPatternRow ? Math.max(8.0, sigma * 1.2) : Math.max(4.0, Math.min(10.0, sigma * 0.85));
         for (let i = pStart + 1; i < pEnd; i++) {
+          const u_rel = i / (span - 1);
+          const inChestBox = isChestTorsoZone && u_rel >= 0.16 && u_rel <= 0.84;
           const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
-          if (diffBase[i] > fineThreshold || prevDiff > Math.max(6.0, sigma * 0.95)) {
+          if (diffBase[i] > fineThreshold || prevDiff > Math.max(6.0, sigma * 0.95) || (inChestBox && diffBase[i] > Math.max(4.5, sigma * 0.85))) {
             let synR = baseR[i];
             let synG = baseG[i];
             let synB = baseB[i];
             if (grainSrc.length > 0) {
               const gSample = grainSrc[i % grainSrc.length];
-              synR = Math.max(0, Math.min(255, synR + (gSample[0] - midR) * 0.55));
-              synG = Math.max(0, Math.min(255, synG + (gSample[1] - midG) * 0.55));
-              synB = Math.max(0, Math.min(255, synB + (gSample[2] - midB) * 0.55));
+              const gRef = i < span / 2 ? cL : cR;
+              synR = Math.max(0, Math.min(255, synR + (gSample[0] - gRef[0]) * 0.55));
+              synG = Math.max(0, Math.min(255, synG + (gSample[1] - gRef[1]) * 0.55));
+              synB = Math.max(0, Math.min(255, synB + (gSample[2] - gRef[2]) * 0.55));
             }
             curR[i] = synR;
             curG[i] = synG;

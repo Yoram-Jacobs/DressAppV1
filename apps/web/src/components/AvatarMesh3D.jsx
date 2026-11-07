@@ -114,7 +114,44 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
           arr[idx + 1] = y - 0.005 * wTorso;
         }
         arr[idx + 2] = cz + (z - cz) * (1 - 0.035 * wTorso);
-        continue;
+      }
+    }
+
+    // 2b. Upper arm, bicep & underarm under top / outerwear / dress with sleeves:
+    // Retract covered arm skin radially toward the anatomical arm bone axis so inner arm
+    // and underarm skin never poke through sleeve seams or armpit cloth!
+    const isSleeveless = Boolean(coveredZones?.isSleeveless);
+    if ((hasTop || hasOuterwear || hasDress) && !isSleeveless) {
+      const yArmMin = isMale ? 1.015 : 0.956;
+      const yArmMax = isMale ? 1.48 : 1.42;
+      const armCutInner = isMale ? 0.22 : 0.19;
+      const armCutOuter = isMale ? 0.32 : 0.29;
+      if (y >= yArmMin && y <= yArmMax && absX >= armCutInner) {
+        const sign = x < 0 ? -1 : 1;
+        const xSh = isMale ? 0.220 : 0.192;
+        const ySh = isMale ? 1.480 : 1.420;
+        const zSh = isMale ? -0.004 : 0.012;
+        const xWr = isMale ? 0.435 : 0.374;
+        const yWr = isMale ? 1.015 : 0.956;
+        const zWr = isMale ? 0.029 : 0.029;
+
+        const tArm = Math.max(0, Math.min(1, (ySh - y) / Math.max(0.01, ySh - yWr)));
+        const armBoneX = sign * (xSh + tArm * (xWr - xSh));
+        const armBoneZ = zSh + tArm * (zWr - zSh);
+
+        // Smooth cosine falloff near the wrist hem so bare hands/wrists transition seamlessly
+        const tWristFalloff = Math.max(0, Math.min(1, (y - yArmMin) / 0.04));
+        const sWrist = tWristFalloff * tWristFalloff * (3 - 2 * tWristFalloff);
+
+        const dxBone = x - armBoneX;
+        const dzBone = z - armBoneZ;
+        const rBone = Math.hypot(dxBone, dzBone);
+        if (rBone > 0.002) {
+          const tArmBlend = Math.min(1.0, Math.max(0.0, (absX - armCutInner) / (armCutOuter - armCutInner)));
+          const shrink = 0.045 * sWrist * tArmBlend;
+          arr[idx] = armBoneX + dxBone * (1 - shrink);
+          arr[idx + 2] = armBoneZ + dzBone * (1 - shrink);
+        }
       }
     }
 
