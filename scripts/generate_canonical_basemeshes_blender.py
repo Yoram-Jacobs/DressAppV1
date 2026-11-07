@@ -229,21 +229,55 @@ def drape_garment_shell(
         is_sleeve_vert = (style in ("top", "dress")) and (sleeve_type in ("short", "long")) and (abs_x > x_arm_split)
 
         if is_sleeve_vert:
-            # 4. Tailored Cylindrical Sleeve + Relaxed Underarm Gusset
+            # 4. Tailored Cylindrical Sleeve + Relaxed Underarm Gusset + Loose Sleeves with Tight Wrist Cuff
             arm_sl = measure_arm_slice(av_verts, abs_x)
             cz_arm = arm_sl["cz"]
             cy_arm = arm_sl["cy"]
-            # Target cylindrical radius with natural sleeve ease
-            sleeve_ease = offset + (0.006 if sleeve_type == "short" else 0.005) * (0.5 + 0.5 * drape_looseness)
-            r_target = max(arm_sl["rz"], arm_sl["ry"]) + sleeve_ease
             dy = y - cy_arm
             dz = z - cz_arm
             r_cur = max(1e-4, math.hypot(dy, dz))
-            if r_cur < r_target:
-                blend_cyl = 0.58 * drape_looseness
-                r_new = r_cur * (1.0 - blend_cyl) + r_target * blend_cyl
+
+            if sleeve_type == "long":
+                x_wrist_end = 0.450 if is_male else 0.405
+                t_arm = min(1.0, max(0.0, (abs_x - x_arm_split) / max(1e-4, x_wrist_end - x_arm_split)))
+
+                # Knit sweaters (hoodie), cardigans, and loose long-sleeves have relaxed, voluminous sleeves along bicep/forearm
+                # and taper down to a snug, tight wrist cuff right at the wrist
+                is_sweater_or_knit = drape_looseness >= 0.80
+                max_ease = (0.016 if is_sweater_or_knit else 0.010) * drape_looseness
+                fullness = math.sin(min(1.0, t_arm / 0.78) * math.pi)
+
+                # Approaching the wrist cuff (t_arm > 0.78), cinch down to a tight wrist cuff
+                cuff_taper = 1.0 if t_arm <= 0.78 else max(0.0, 1.0 - ((t_arm - 0.78) / 0.22) ** 2)
+                sleeve_ease = offset + 0.0025 + (max_ease * fullness * cuff_taper)
+                r_target = max(arm_sl["rz"], arm_sl["ry"]) + sleeve_ease
+
+                # Expand along arm to full relaxed cylindrical target
+                blend_cyl = 0.65 * drape_looseness
+                r_new = max(r_cur, r_target) if is_sweater_or_knit else (r_cur * (1.0 - blend_cyl) + r_target * blend_cyl)
+
+                # Right at the wrist cuff (t_arm > 0.82), tightly clamp to the wrist circumference
+                if t_arm > 0.82:
+                    t_cuff_lock = (t_arm - 0.82) / 0.18
+                    r_cuff_tight = max(arm_sl["rz"], arm_sl["ry"]) + offset + 0.0025
+                    r_new = r_new * (1.0 - t_cuff_lock) + r_cuff_tight * t_cuff_lock
+
                 v.co.y = cy_arm + (dy / r_cur) * r_new
                 v.co.z = cz_arm + (dz / r_cur) * r_new
+
+                # Soft fabric gravity droop under the loose sleeve (excluding tight cuff)
+                if dz < 0.0 and cuff_taper > 0.15:
+                    v.co.z -= 0.007 * fullness * cuff_taper * drape_looseness
+            else:
+                # Short sleeve cylindrical shaping
+                sleeve_ease = offset + 0.006 * (0.5 + 0.5 * drape_looseness)
+                r_target = max(arm_sl["rz"], arm_sl["ry"]) + sleeve_ease
+                if r_cur < r_target:
+                    blend_cyl = 0.58 * drape_looseness
+                    r_new = r_cur * (1.0 - blend_cyl) + r_target * blend_cyl
+                    v.co.y = cy_arm + (dy / r_cur) * r_new
+                    v.co.z = cz_arm + (dz / r_cur) * r_new
+
             # Relax acute underarm crease (drop bottom of sleeve near armpit slightly for natural armhole gusset)
             if abs_x < (x_arm_split + 0.065) and dz < 0.0:
                 t_pit = max(0.0, 1.0 - (abs_x - x_arm_split) / 0.065)
@@ -1034,8 +1068,8 @@ def build_top_template(avatar_data, variant="tshirt"):
 
     # 2. Precision Sleeve / Armhole Cuts
     if sleeve_type == "long":
-        # Full long sleeve extending precisely to the wrist joint along the 3D forearm axis
-        wrist_r = Vector((0.486, -0.037, 0.876)) if is_male else Vector((0.428, -0.034, 0.846))
+        # Full long sleeve extending precisely to the wrist joint along the 3D forearm axis (stopping before palms)
+        wrist_r = Vector((0.452, -0.022, 0.985)) if is_male else Vector((0.408, -0.016, 0.905))
         arm_dir_r = Vector((0.4638, -0.1090, -0.8792)).normalized() if is_male else Vector((0.5160, -0.1410, -0.8449)).normalized()
 
         r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
@@ -1291,8 +1325,8 @@ def build_top_template(avatar_data, variant="tshirt"):
     x_torso = 0.185 if is_male else 0.170
     has_sleeves = max_x > (x_torso + 0.04)
     z_sh_uv = 1.38 if is_male else 1.30
-    z_wrist_uv = 0.85 if is_male else 0.82
-    v_cuff_uv = 0.06 if z_hem > 0.65 else 0.36
+    z_wrist_uv = 0.985 if is_male else 0.905
+    v_cuff_uv = 0.22 if z_hem > 0.65 else 0.36
 
     faces_uvs = []
     for f in bm_final.faces:
@@ -1312,8 +1346,8 @@ def build_top_template(avatar_data, variant="tshirt"):
                     x_sl_in = (0.185 + t_down * 0.235) if is_male else (0.156 + t_down * 0.215)
                     x_sl_out = (0.295 + t_down * 0.205) if is_male else (0.245 + t_down * 0.185)
                     s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
-                    u_sl_in = 0.75 + 0.06 * t_down
-                    u_sl_out = 0.87 + 0.09 * t_down
+                    u_sl_in = 0.70 + 0.02 * t_down
+                    u_sl_out = 0.84 + 0.03 * t_down
                     u_sl = 0.5 + math.copysign((u_sl_in - 0.5) + s_across * (u_sl_out - u_sl_in), v.x)
                     v_sl = 0.78 - t_down * (0.78 - v_cuff_uv)
                     # Smooth blend near shoulder/armhole transition so shoulder seam is continuous
@@ -1666,7 +1700,7 @@ def build_dress_template(avatar_data, variant="dress"):
 
     # 2. Precision Sleeve / Armhole Cuts
     if sleeve_type == "long":
-        wrist_r = Vector((0.465, -0.035, 0.935)) if is_male else Vector((0.415, -0.032, 0.915))
+        wrist_r = Vector((0.452, -0.022, 0.985)) if is_male else Vector((0.408, -0.016, 0.905))
         arm_dir_r = Vector((0.4638, -0.1090, -0.8792)).normalized() if is_male else Vector((0.5160, -0.1410, -0.8449)).normalized()
         r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=wrist_r, plane_no=arm_dir_r, clear_outer=True)
@@ -1810,7 +1844,8 @@ def build_dress_template(avatar_data, variant="dress"):
     x_torso = 0.185 if is_male else 0.170
     has_sleeves = (sleeve_type == "long") and (max_x > (x_torso + 0.05))
     z_sh_uv = 1.38 if is_male else 1.30
-    z_wrist_uv = 0.85 if is_male else 0.82
+    z_wrist_uv = 0.985 if is_male else 0.905
+    v_cuff_uv = 0.22
 
     faces_uvs = []
     for f in bm_final.faces:
@@ -1829,10 +1864,10 @@ def build_dress_template(avatar_data, variant="dress"):
                     x_sl_in = (0.185 + t_down * 0.235) if is_male else (0.156 + t_down * 0.215)
                     x_sl_out = (0.295 + t_down * 0.205) if is_male else (0.245 + t_down * 0.185)
                     s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
-                    u_sl_in = 0.75 + 0.06 * t_down
-                    u_sl_out = 0.87 + 0.09 * t_down
+                    u_sl_in = 0.70 + 0.02 * t_down
+                    u_sl_out = 0.84 + 0.03 * t_down
                     u_sl = 0.5 + math.copysign((u_sl_in - 0.5) + s_across * (u_sl_out - u_sl_in), v.x)
-                    v_sl = 0.78 - t_down * (0.78 - 0.36)
+                    v_sl = 0.78 - t_down * (0.78 - v_cuff_uv)
                     t_blend = min(1.0, max(0.0, (abs(v.x) - x_split) / 0.035))
                     s_blend = t_blend * t_blend * (3.0 - 2.0 * t_blend)
                     u = u_torso * (1.0 - s_blend) + u_sl * s_blend

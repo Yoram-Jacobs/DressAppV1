@@ -3060,7 +3060,10 @@ function GarmentTemplateMeshInner({
                       ? (y >= 1.26 ? Math.max(0.215, 0.284 - (y - 1.26) * 0.95) : 0.284 + (1.26 - y) * 0.580)
                       : (y >= 1.22 ? Math.max(0.165, 0.211 - (y - 1.22) * 1.10) : 0.211 + (1.22 - y) * 0.628);
                     const armCz = isMale ? 0.004 : 0.008;
-                    const rScaleSleeve = fitMode === 'oversized' ? 1.10 : (fitMode === 'loose' ? 1.05 : 1.0);
+                    const yWrist = isMale ? 0.985 : 0.905;
+                    // Taper sleeve ease to 0 at the wrist cuff so the wrist cuff stays tight & snug
+                    const tCuff = Math.max(0, Math.min(1, (y - yWrist) / 0.07));
+                    const rScaleSleeve = 1.0 + (fitMode === 'oversized' ? 0.10 : (fitMode === 'loose' ? 0.05 : 0)) * tCuff;
                     const dxArm = x - side * armCx;
                     const dzArm = z - armCz;
                     if (side * dxArm > 0) {
