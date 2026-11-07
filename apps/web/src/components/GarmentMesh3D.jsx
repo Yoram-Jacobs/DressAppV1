@@ -3129,11 +3129,12 @@ function GarmentTemplateMeshInner({
     const hasFrontTex = Boolean(texture);
     const hasBackTex = Boolean(backTexture || texture);
     const fallbackCol = dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#CBD5E1';
+    const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
     const baseProps = {
       roughness: pbrProps?.roughness ?? 0.70,
       metalness: pbrProps?.metalness ?? 0.05,
       side: THREE.DoubleSide,
-      alphaTest: 0.15,
+      alphaTest: isCoreClothing ? 0 : 0.15,
       depthWrite: true,
       polygonOffset: true,
       polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),

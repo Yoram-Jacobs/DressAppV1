@@ -418,11 +418,13 @@ def solidify_bmesh_manifold(bm, thickness=0.0022):
     """
     # Dissolve any tiny sliver edges or near-zero-area faces on the single sheet while it is still an open sheet
     bmesh.ops.dissolve_degenerate(bm, dist=0.0004, edges=bm.edges[:])
-    # Iteratively prune any dangling ear triangles (faces with >= 2 boundary edges) and bow-tie vertices
+    # Iteratively prune any dangling ear triangles (3-vert faces with >= 2 boundary edges, or any face with >= 3 boundary edges) and bow-tie vertices
     for _clean_pass in range(5):
         tiny_or_ear = [
             f for f in bm.faces
-            if f.calc_area() <= 1e-8 or sum(1 for e in f.edges if e.is_boundary) >= 2
+            if f.calc_area() <= 1e-8
+            or sum(1 for e in f.edges if e.is_boundary) >= 3
+            or (len(f.verts) == 3 and sum(1 for e in f.edges if e.is_boundary) >= 2)
         ]
         if tiny_or_ear:
             bmesh.ops.delete(bm, geom=tiny_or_ear, context="FACES")
@@ -1044,26 +1046,47 @@ def build_top_template(avatar_data, variant="tshirt"):
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "short":
-        # Short sleeve ending midway (50%) between shoulder point (acromion) and elbow joint
+        # Short sleeve ending midway (50%) between shoulder point (acromion) and elbow joint.
+        # Restrict bisect geometry strictly to the upper-arm zone (z > z_arm_cut_min) so the
+        # angled cuff plane never reaches down to slice the lateral hip ring at z_hip_cut!
         arm_dir_r = Vector((0.581, 0.0, -0.814)).normalized() if is_male else Vector((0.526, 0.0, -0.850)).normalized()
         cuff_r = Vector((x_arm_max, 0.0, 1.290 if is_male else 1.180))
         x_cut_min = 0.190 if is_male else 0.172
+        z_arm_cut_min = 1.14 if is_male else 1.06
 
         # Right arm
-        r_geom = [v for v in bm.verts if v.co.x > x_cut_min] + [e for e in bm.edges if all(v.co.x > x_cut_min for v in e.verts)] + [f for f in bm.faces if all(v.co.x > x_cut_min for v in f.verts)]
+        r_geom = (
+            [v for v in bm.verts if v.co.x > x_cut_min and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x > x_cut_min and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x > x_cut_min and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=cuff_r, plane_no=arm_dir_r, clear_outer=True)
 
         # Left arm
         arm_dir_l = Vector((-arm_dir_r.x, arm_dir_r.y, arm_dir_r.z))
         cuff_l = Vector((-cuff_r.x, cuff_r.y, cuff_r.z))
-        l_geom = [v for v in bm.verts if v.co.x < -x_cut_min] + [e for e in bm.edges if all(v.co.x < -x_cut_min for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -x_cut_min for v in f.verts)]
+        l_geom = (
+            [v for v in bm.verts if v.co.x < -x_cut_min and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x < -x_cut_min and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x < -x_cut_min and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=cuff_l, plane_no=arm_dir_l, clear_outer=True)
     else:
-        # Sleeveless (singlet, vest) armholes at shoulder seam
-        r_geom = [v for v in bm.verts if v.co.x > (x_arm_max - 0.02)] + [e for e in bm.edges if all(v.co.x > (x_arm_max - 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x > (x_arm_max - 0.02) for v in f.verts)]
+        # Sleeveless (singlet, vest) armholes cut strictly in the shoulder/armpit zone (z > z_arm_cut_min)
+        # so the ribcage, waist, and hip ring remain 100% closed on both sides!
+        z_arm_cut_min = 1.24 if is_male else 1.16
+        r_geom = (
+            [v for v in bm.verts if v.co.x > (x_arm_max - 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x > (x_arm_max - 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x > (x_arm_max - 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max, 0.0, 1.35)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
 
-        l_geom = [v for v in bm.verts if v.co.x < (-x_arm_max + 0.02)] + [e for e in bm.edges if all(v.co.x < (-x_arm_max + 0.02) for v in e.verts)] + [f for f in bm.faces if all(v.co.x < (-x_arm_max + 0.02) for v in f.verts)]
+        l_geom = (
+            [v for v in bm.verts if v.co.x < (-x_arm_max + 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x < (-x_arm_max + 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x < (-x_arm_max + 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
     # 3. Precision Curved Collar Cut (cuts only the neck opening while preserving 100% of shoulders & clavicles)
@@ -1116,7 +1139,7 @@ def build_top_template(avatar_data, variant="tshirt"):
     if z_hem < (z_hip_cut - 0.005):
         cur_edges = [
             e for e in bm.edges
-            if e.is_boundary and all(abs(v.co.z - z_hip_cut) < 0.008 and abs(v.co.x) < 0.22 for v in e.verts)
+            if e.is_boundary and all(abs(v.co.z - z_hip_cut) < 0.016 and abs(v.co.x) < 0.23 for v in e.verts)
         ]
         if cur_edges:
             hip_verts = list({v for e in cur_edges for v in e.verts})
@@ -1137,8 +1160,8 @@ def build_top_template(avatar_data, variant="tshirt"):
             n_steps = max(4, min(16, int(round(span_z / 0.022))))
             dz_step = span_z / n_steps
             is_flared_or_coat = flare_hips or variant in ("coat", "trench_coat", "tunic", "top_tunic")
-            radial_x_step = (0.0036 if is_flared_or_coat else (0.018 / n_steps))
-            radial_y_step = (0.0026 if is_flared_or_coat else (0.012 / n_steps))
+            radial_x_step = (0.0020 if is_flared_or_coat else (0.008 / n_steps))
+            radial_y_step = (0.0015 if is_flared_or_coat else (0.006 / n_steps))
             for _step in range(1, n_steps + 1):
                 ret = bmesh.ops.extrude_edge_only(bm, edges=cur_edges)
                 geom_ex = ret["geom"]
@@ -1716,7 +1739,7 @@ def build_dress_template(avatar_data, variant="dress"):
 
     # 4. Extrude unified, continuous A-line dress skirt from the closed hip boundary loop down to z_hem
     # (Eliminates split pant legs and jagged hem edges on dresses!)
-    cur_edges = [e for e in bm.edges if e.is_boundary and all(abs(v.co.z - z_hip) < 0.008 and abs(v.co.x) < 0.23 for v in e.verts)]
+    cur_edges = [e for e in bm.edges if e.is_boundary and all(abs(v.co.z - z_hip) < 0.016 and abs(v.co.x) < 0.23 for v in e.verts)]
     if cur_edges:
         hip_verts = list({v for e in cur_edges for v in e.verts})
         cy_hip = 0.5 * (min(v.co.y for v in hip_verts) + max(v.co.y for v in hip_verts))
