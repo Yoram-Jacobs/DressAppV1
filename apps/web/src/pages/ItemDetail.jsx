@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
+import { normalizeGarmentRole } from '@/components/GarmentMesh3D';
 import {
   ArrowLeft,
   Sparkles,
@@ -1645,14 +1646,18 @@ export default function ItemDetail() {
       .map(imageOf)
       .filter((u) => u && u !== frontImage);
     const rawCat = base.category || 'top';
-    const slot = String(rawCat).toLowerCase();
+    const normSlot = normalizeGarmentRole(
+      rawCat,
+      base.category,
+      base.title || base.name || base.sub_category || base.item_type
+    ) || 'top';
     const itemLike = {
       ...base,
       image_url: frontImage,
       clean_image_url: frontImage,
       view_urls: memberViews,
     };
-    return { [slot]: itemLike };
+    return { [normSlot]: itemLike };
   })();
   // "Repair photo" CTA visibility:
   //   • the one-pass /analyze response asked us to advise it
@@ -3379,7 +3384,7 @@ export default function ItemDetail() {
               measurements={user?.body_measurements || user?.measurements}
               initialShowAvatar={false}
               standaloneMode={true}
-              focusedSlot={Object.keys(studio3DItems)[0]}
+              focusedSlot={Object.keys(studio3DItems)[0] || 'top'}
             />
           </Suspense>
         )}

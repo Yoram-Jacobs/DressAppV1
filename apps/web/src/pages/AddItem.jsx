@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 
 const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
+import { normalizeGarmentRole } from "@/components/GarmentMesh3D";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1329,7 +1330,11 @@ export default function AddItem() {
     if (targetCard) {
       const f = targetCard.fields || {};
       const rawCat = f.category || "top";
-      const slot = String(rawCat).toLowerCase();
+      const slot = normalizeGarmentRole(
+        rawCat,
+        rawCat,
+        f.name || f.title || f.sub_category || f.item_type
+      ) || "top";
       const img = targetCard.previewUrl || targetCard.reconstructedUrl || targetCard.originalCropUrl;
       const itemLike = {
         ...f,
@@ -1357,7 +1362,11 @@ export default function AddItem() {
       (cards || []).forEach((c) => {
         const f = c.fields || {};
         const rawCat = f.category || "top";
-        const slot = String(rawCat).toLowerCase();
+        const slot = normalizeGarmentRole(
+          rawCat,
+          rawCat,
+          f.name || f.title || f.sub_category || f.item_type
+        ) || "top";
         const img = c.previewUrl || c.reconstructedUrl || c.originalCropUrl;
         if (!map[slot] && img) {
           map[slot] = {
@@ -6295,6 +6304,7 @@ export default function AddItem() {
               onClose={() => setIs3DPreviewOpen(false)}
               outfitItems={preview3DItems}
               garments={preview3DItems}
+              focusedSlot={Object.keys(preview3DItems)[0] || 'top'}
               profile={user?.profile || user || {}}
               sex={user?.gender || user?.sex || 'female'}
               skinColor={user?.skin_tone}

@@ -51,8 +51,13 @@ class SafeGarmentWrapper extends React.Component {
   componentDidCatch(err) {
     console.warn(`[3D Dressing Room] Error rendering garment in slot ${this.props.slot}:`, err);
   }
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && (prevProps.garmentId !== this.props.garmentId || prevProps.slot !== this.props.slot)) {
+      this.setState({ hasError: false });
+    }
+  }
   render() {
-    if (this.state.hasError) return null;
+    if (this.state.hasError) return this.props.fallback || null;
     return this.props.children;
   }
 }
@@ -608,8 +613,9 @@ export default function DressingRoom3D({
   const outfitName = outfit?.name || t('dressing_room_3d.default_outfit', { defaultValue: 'Current Outfit' });
 
   const primarySlot = useMemo(() => {
-    return (focusedSlot && GARMENT_CAMERA_TARGETS[focusedSlot])
-      ? focusedSlot
+    const normFocused = focusedSlot ? (normalizeGarmentRole(focusedSlot, focusedSlot, focusedSlot) || focusedSlot) : null;
+    return (normFocused && GARMENT_CAMERA_TARGETS[normFocused])
+      ? normFocused
       : (activeGarments[0]?.slot || 'top');
   }, [focusedSlot, activeGarments]);
 
@@ -803,6 +809,7 @@ export default function DressingRoom3D({
                     <SafeGarmentWrapper
                       key={`${garment.slot}-${garment.id}`}
                       slot={garment.slot}
+                      garmentId={garment.id}
                     >
                       <Suspense fallback={null}>
                         <GarmentMesh3D

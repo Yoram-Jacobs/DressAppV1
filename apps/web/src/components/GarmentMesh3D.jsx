@@ -3160,53 +3160,57 @@ function GarmentTemplateMeshInner({
     }
     if (morphField && morphInfluences && Object.keys(morphInfluences).length > 0) {
       try {
-        return applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
+        geo = applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
           minClearance: layerOffset,
           includeArms: ['top', 'outerwear', 'dress', 'watch'].includes(rawSlot),
         });
       } catch (e) {
-        return geo;
+        // proceed with base geo
       }
     }
+
+    // Split geometry faces into front (midZ >= 0) and back (midZ < 0) spatial groups
+    // so frontMat (Front photo) is strictly on the anterior (+Z) half of the garment
+    // and backMat (Back photo / synthesized back) is strictly on the posterior (-Z) half,
+    // never swapping front and back on double-walled solidified meshes.
+    // Done inside useMemo so geometry.groups is non-empty on frame 1 (preventing blank initial render).
+    if (geo && geo.index) {
+      const pos = geo.attributes.position;
+      const idx = geo.index.array;
+      const frontTriangles = [];
+      const backTriangles = [];
+      const pA = new THREE.Vector3();
+      const pB = new THREE.Vector3();
+      const pC = new THREE.Vector3();
+
+      for (let i = 0; i < idx.length; i += 3) {
+        const i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
+        pA.fromBufferAttribute(pos, i0);
+        pB.fromBufferAttribute(pos, i1);
+        pC.fromBufferAttribute(pos, i2);
+        const midZ = (pA.z + pB.z + pC.z) / 3;
+        if (midZ < 0) {
+          backTriangles.push(i0, i1, i2);
+        } else {
+          frontTriangles.push(i0, i1, i2);
+        }
+      }
+      if (backTriangles.length > 0) {
+        const newIdx = new (idx.constructor)(frontTriangles.length + backTriangles.length);
+        newIdx.set(frontTriangles, 0);
+        newIdx.set(backTriangles, frontTriangles.length);
+        geo.setIndex(new THREE.BufferAttribute(newIdx, 1));
+        geo.clearGroups();
+        geo.addGroup(0, frontTriangles.length, 0);
+        geo.addGroup(frontTriangles.length, backTriangles.length, 1);
+      } else {
+        geo.clearGroups();
+        geo.addGroup(0, idx.length, 0);
+      }
+    }
+
     return geo;
   }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, shellFit, fitProfile, templateId, texture]);
-
-  // Split geometry faces into front (midZ >= 0) and back (midZ < 0) spatial groups
-  // so frontMat (Front photo) is strictly on the anterior (+Z) half of the garment
-  // and backMat (Back photo / synthesized back) is strictly on the posterior (-Z) half,
-  // never swapping front and back on double-walled solidified meshes.
-  useEffect(() => {
-    if (!geometry || !geometry.index) return;
-    const pos = geometry.attributes.position;
-    const idx = geometry.index.array;
-    const frontTriangles = [];
-    const backTriangles = [];
-    const pA = new THREE.Vector3();
-    const pB = new THREE.Vector3();
-    const pC = new THREE.Vector3();
-
-    for (let i = 0; i < idx.length; i += 3) {
-      const i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
-      pA.fromBufferAttribute(pos, i0);
-      pB.fromBufferAttribute(pos, i1);
-      pC.fromBufferAttribute(pos, i2);
-      const midZ = (pA.z + pB.z + pC.z) / 3;
-      if (midZ < 0) {
-        backTriangles.push(i0, i1, i2);
-      } else {
-        frontTriangles.push(i0, i1, i2);
-      }
-    }
-    if (backTriangles.length > 0) {
-      const newIdx = new (idx.constructor)(frontTriangles.length + backTriangles.length);
-      newIdx.set(frontTriangles, 0);
-      newIdx.set(backTriangles, frontTriangles.length);
-      geometry.setIndex(new THREE.BufferAttribute(newIdx, 1));
-      geometry.clearGroups();
-      geometry.addGroup(0, frontTriangles.length, 0);
-      geometry.addGroup(frontTriangles.length, backTriangles.length, 1);
-    }
-  }, [geometry]);
 
   const materials = useMemo(() => {
     const hasFrontTex = Boolean(texture);
@@ -3322,7 +3326,7 @@ export function GarmentTemplateMesh(props) {
   );
 }
 
-export default function GarmentMesh3D({
+export function GarmentMeshCore({
   garment,
   slot,
   isMale = false,
@@ -3335,8 +3339,9 @@ export default function GarmentMesh3D({
   showAvatar = true,
   standaloneMode = false,
   bypassSilhouette = false,
+  morphField = null,
 }) {
-  const isStandalone = Boolean(!showAvatar);
+  const isStandalone = Boolean(!showAvatar || standaloneMode);
   const patternLabel = String(garment?.pattern || garment?.rawItem?.pattern || '').toLowerCase().trim();
   const isPatterned = Boolean(patternLabel) && !/^(solid|plain|—|-|none|חלק|אחיד)$/i.test(patternLabel);
   const {
@@ -3367,11 +3372,6 @@ export default function GarmentMesh3D({
     () => (rawSlot === 'shoes' ? resolveFootwearSpec(garment) : null),
     [rawSlot, garment]
   );
-
-  // Avatar morph field: lets garments inherit the exact body deformation
-  // (height, leg length, bust, shoulders...) applied to the avatar mesh.
-  const { scene: avatarScene } = useGLTF(isMale ? MALE_GLB_URL : FEMALE_GLB_URL);
-  const morphField = useMemo(() => buildAvatarMorphField(avatarScene), [avatarScene]);
 
   // Build the appropriate 3D geometry matching this slot and garment type
   // (authored in the avatar's base, un-morphed coordinate space)
@@ -3788,4 +3788,26 @@ export default function GarmentMesh3D({
     </mesh>
     </>
   );
+}
+
+
+function StandaloneGarmentMesh(props) {
+  // In standalone mode (Zara 3D garment studio), the human avatar is hidden.
+  // Avoid loading the 18 MB avatar GLB over the network; garments render directly from their template/cutout.
+  return <GarmentMeshCore {...props} morphField={null} />;
+}
+
+function AvatarFittedGarmentMesh(props) {
+  // Only download & build the 18 MB avatar morph field when the avatar is actually shown
+  const { scene: avatarScene } = useGLTF(props.isMale ? MALE_GLB_URL : FEMALE_GLB_URL);
+  const morphField = useMemo(() => buildAvatarMorphField(avatarScene), [avatarScene]);
+  return <GarmentMeshCore {...props} morphField={morphField} />;
+}
+
+export default function GarmentMesh3D(props) {
+  const isStandalone = Boolean(props.standaloneMode || !props.showAvatar);
+  if (isStandalone) {
+    return <StandaloneGarmentMesh {...props} />;
+  }
+  return <AvatarFittedGarmentMesh {...props} />;
 }

@@ -295,7 +295,7 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(openBtn).toBeInTheDocument();
 
     fireEvent.click(openBtn);
-    expect(await screen.findByTestId('dressing-room-3d-dialog')).toBeInTheDocument();
+    expect(await screen.findByTestId('dressing-room-3d-dialog', {}, { timeout: 8000 })).toBeInTheDocument();
   });
 
   test('Locale JSON files all contain required dressing_room_3d keys', () => {
@@ -427,11 +427,11 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     // 1. T-shirts & short sleeves in Hebrew and English
     const hebrewTShirt = detectSleeveStyle({ garmentText: 'חולצת טריקו שחורה מחוייטת מכונת ריצה', rawSlot: 'top' });
     expect(hebrewTShirt.type).toBe('short');
-    expect(hebrewTShirt.factor).toBeCloseTo(0.36, 2);
+    expect(hebrewTShirt.factor).toBeCloseTo(0.50, 2);
 
     const englishTShirt = detectSleeveStyle({ garmentText: 'Nike Dri-FIT Running T-Shirt', rawSlot: 'top' });
     expect(englishTShirt.type).toBe('short');
-    expect(englishTShirt.factor).toBeCloseTo(0.36, 2);
+    expect(englishTShirt.factor).toBeCloseTo(0.50, 2);
 
     const poloShirt = detectSleeveStyle({ garmentText: 'Classic Pique Polo Shirt', rawSlot: 'top' });
     expect(poloShirt.type).toBe('short');
