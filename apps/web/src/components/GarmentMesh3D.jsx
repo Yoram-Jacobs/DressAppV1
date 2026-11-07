@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState, useEffect, Suspense } from 'react';
+import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { mergeBufferGeometries } from 'three-stdlib';
@@ -28,7 +28,7 @@ import {
   resolveBottomLength,
 } from '@/lib/garmentSilhouette';
 
-// ??? Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ???
+// ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
 export const TORSO_PROFILE_FEMALE = [
   { y: 1.46, rx: 0.125, cz: 0.030, rz: 0.082, rzFront: 0.082, rzBack: 0.075 }, // High collar / neck base
@@ -119,19 +119,19 @@ export function inferRoleFromName(title) {
   const text = String(title || '').toLowerCase();
   if (!text) return null;
   // 1. Wearable core apparel (outerwear, dress, bottom, top, shoes) takes precedence
-  // over accessory details (e.g. "???? ????' ?? ?????", "belted trench coat", "dress with tie", "pants with belt").
-  if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|????|?['??]??|?['??]??|????['??]?|??????|??????)/i.test(text)) return 'outerwear';
-  if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|????|????|??????|????)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks|watch)\b/i.test(text)) return 'dress';
-  if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|leggings|joggers|slacks|sweatpants)\b|????|?['?]???|?????|?????|????)/i.test(text)) return 'bottom';
-  if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey)\b|????|?????|????)/i.test(text)) return 'top';
-  if (/(?:\b(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?)\b|?????|??????|????|??????|????|??????)/i.test(text)) return 'shoes';
-  if (/(?:\b(?:hat|cap|headwear|beanie|beret)\b|????|????|???)/i.test(text)) return 'headwear';
-  if (/(?:\b(?:glasses|sunglasses|eyewear)\b|???????|?????)/i.test(text)) return 'glasses';
-  if (/(?:\b(?:bag|purse|tote|backpack|handbag|satchel|crossbody)\b|???|????)/i.test(text)) return 'bag';
-  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|???? ??|????|????)/i.test(text)) return 'watch';
-  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|?????|?????|?????|?????)/i.test(text)) return 'necktie';
-  if (/(?:\b(?:belt)\b|?????|?????)/i.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) {
-    if (/(?:trench|coat|jacket|blazer|dress|pants|trousers|shirt|????|????|????|????|?????)/i.test(text)) return null;
+  // over accessory details (e.g. "מעיל טרנץ' עם חגורה", "belted trench coat", "dress with tie", "pants with belt").
+  if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|מעיל|ז['’׳]קט|ג['’׳]קט|טרנץ['’׳]?|בלייזר|קרדיגן)/i.test(text)) return 'outerwear';
+  if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|שמלה|שמלת|אוברול|סרבל)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks|watch)\b/i.test(text)) return 'dress';
+  if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|leggings|joggers|slacks|sweatpants)\b|מכנס|ג['’]ינס|חצאית|שורטס|טייץ)/i.test(text)) return 'bottom';
+  if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey)\b|חולצ|סוודר|גופי)/i.test(text)) return 'top';
+  if (/(?:\b(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?)\b|הנעלה|נעליים|נעלי|מגפיים|מגפי|סנדלים)/i.test(text)) return 'shoes';
+  if (/(?:\b(?:hat|cap|headwear|beanie|beret)\b|כובע|כיפה|ברט)/i.test(text)) return 'headwear';
+  if (/(?:\b(?:glasses|sunglasses|eyewear)\b|משקפיים|משקפי)/i.test(text)) return 'glasses';
+  if (/(?:\b(?:bag|purse|tote|backpack|handbag|satchel|crossbody)\b|תיק|ארנק)/i.test(text)) return 'bag';
+  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|שעון יד|שעון|צמיד)/i.test(text)) return 'watch';
+  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת)/i.test(text)) return 'necktie';
+  if (/(?:\b(?:belt)\b|חגורה|חגורת)/i.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) {
+    if (/(?:trench|coat|jacket|blazer|dress|pants|trousers|shirt|מעיל|טרנץ|שמלה|מכנס|חולצה)/i.test(text)) return null;
     return 'belt';
   }
   return null;
@@ -171,59 +171,59 @@ function normalizeDeclaredGarmentRole(role, category, title) {
   if (r === 'bag') return 'bag';
 
   // 1b. Specific Accessories (Wristwatch, Necktie, Belt) checked before general tops/outerwear
-  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|???? ??|????|????|????|montre|uhr|reloj|orologio|????|??|??|???)/i.test(text)) {
+  if (/(?:\b(?:wristwatch|smartwatch|watch|timepiece|bracelet|bangle)\b|שעון יד|שעון|צמיד|ساعة|montre|uhr|reloj|orologio|часы|手表|腕表|腕時計)/i.test(text)) {
     return 'watch';
   }
-  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker|neck\s*scarf)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|?????|?????|?????|?????|???? ???|?????|cravate|collier|krawatte|halskette|corbata|collar|cravatta|collana|???????|????????|??|??|????|?????)/i.test(text)) {
+  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker|neck\s*scarf)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|עניבה|עניבת|פפיון|שרשרת|ربطة عنق|قلادة|cravate|collier|krawatte|halskette|corbata|collar|cravatta|collana|галстук|ожерелье|领带|项链|ネクタイ|ネックレス)/i.test(text)) {
     return 'necktie';
   }
-  const hasCoreClothingKeywords = /(?:outerwear|jacket|coat|blazer|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|????|?['?]??|?['?]??|??????|???????|??????|dress|gown|jumpsuit|romper|????|????|pants|jeans|trousers|shorts?|skirt|leggings|???????|????|?????|?????|?????|?????|top|shirt|blouse|sweater|hoodie|tee)/i.test(text);
-  if (/(?:\bbelt\b|?????|??????|????|????|cintur?n|cinturon|ceinture|g?rtel|guertel|cintura|cinto|????|??????|??|??|???|riem|?????)/i.test(text) && !hasCoreClothingKeywords) {
+  const hasCoreClothingKeywords = /(?:outerwear|jacket|coat|blazer|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|מעיל|ז['’]קט|ג['’]קט|בלייזר|עליונית|קרדיגן|dress|gown|jumpsuit|romper|שמלה|שמלת|pants|jeans|trousers|shorts?|skirt|leggings|מכנסיים|מכנס|חצאית|שורטס|חולצה|חולצת|top|shirt|blouse|sweater|hoodie|tee)/i.test(text);
+  if (/(?:\bbelt\b|חגורה|חגורות|חגור|حزام|cinturón|cinturon|ceinture|gürtel|guertel|cintura|cinto|пояс|ремень|腰带|皮带|ベルト|riem|बेल्ट)/i.test(text) && !hasCoreClothingKeywords) {
     return 'belt';
   }
 
   // 2. Multi-lingual Outerwear (checked BEFORE general tops/bottoms)
-  if (/(?:outerwear|jacket|coat|blazer|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|????|?['?]??|?['?]??|??????|???????|??????|???|????? ??????|????|????|?????|?????|????????|ropa de abrigo|cazadora|chaleco|v?tements d['?]ext?rieur|v?tement d['?]ext?rieur|veste|manteau|gilet|outdoor-bekleidung|oberbekleidung|jacke|mantel|weste|capispalla|giacca|cappotto|casacos e jaquetas|agasalho|jaqueta|casaco|cardig?|??????? ??????|??????|??????|??????|???????|????????|??|??|??|??|??|????|???|????|??????|buitenmode|????????|?????|???|???????)/i.test(text)) {
+  if (/(?:outerwear|jacket|coat|blazer|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|מעיל|ז['’]קט|ג['’]קט|בלייזר|עליונית|קרדיגן|וסט|ملابس خارجية|معطف|سترة|جاكيت|بليزر|كارديجان|ropa de abrigo|cazadora|chaleco|vêtements d['’]extérieur|vêtement d['’]extérieur|veste|manteau|gilet|outdoor-bekleidung|oberbekleidung|jacke|mantel|weste|capispalla|giacca|cappotto|casacos e jaquetas|agasalho|jaqueta|casaco|cardigã|верхняя одежда|куртка|пальто|пиджак|блейзер|кардиган|外套|大衣|夹克|西装|开衫|アウター|コート|ブレザー|カーディガン|buitenmode|आउटरवियर|जैकेट|कोट|ब्लेज़र)/i.test(text)) {
     return 'outerwear';
   }
 
   // 3. Multi-lingual Dress & Full Body (including cultural attire)
-  if (/(?:dress|gown|jumpsuit|romper|overall|one_piece|full_body|abaya|kaftan|caftan|thobe|achkan|saree|sari|lehenga|anarkali|kurti|kimono|hanbok|????|????|?????|??????|????|????|??????|??? ???|?????|????|????|???|???? ?????|?????|??????|?????|?????|???|??????|cuerpo entero|vestido|mono|corps entier|robe|combinaison|ganzk?rper|kleid|completi e abiti|abito|tuta|corpo inteiro|macac?o|?????? ?????|?????|??????????|??|??|???|??|?????|???|???????|volledig lichaam|jurk|??? ????|?????|?????)/i.test(text)) {
+  if (/(?:dress|gown|jumpsuit|romper|overall|one_piece|full_body|abaya|kaftan|caftan|thobe|achkan|saree|sari|lehenga|anarkali|kurti|kimono|hanbok|שמלה|שמלת|שמלות|אוברול|סרבל|חלוק|גלבייה|חלק שלם|עבאיה|כפתן|סארי|תוב|قطعة كاملة|فستان|جمبسوت|عباية|قفطان|ثوب|جلابية|cuerpo entero|vestido|mono|corps entier|robe|combinaison|ganzkörper|kleid|completi e abiti|abito|tuta|corpo inteiro|macacão|полный образ|плать|комбинезон|连体|套装|连衣裙|裙装|ワンピース|ドレス|オールインワン|volledig lichaam|jurk|फुल बॉडी|साड़ी|लहंगा)/i.test(text)) {
     return 'dress';
   }
 
   // 4. Multi-lingual Bottoms (pants, jeans, skirts, shorts, leggings)
-  if (/(?:bottom|bottoms|pants|jeans|trousers|shorts?|skirt|leggings|sweatpants|joggers|slacks|chino|??? ?????|?????|???????|????|?????|??????|?['?]???|?????|????|???["?]?|??????|???? ?????|?????? ???????|?????|??????|?????|????|????|inferior|parte inferior|pantal?n|pantalones|falda|vaqueros|bas|pantalon|jupe|jean|unterteil|unterschicht|hose|rock|pantaloni|gonna|partes de baixo|cal?a|cal?as|saia|???|?????|?????|????|?????|??????|??|??|??|??|??|??|???|???|????|???|????|onderkleding|??????|?????|????|?????|???????|????)/i.test(text)) {
+  if (/(?:bottom|bottoms|pants|jeans|trousers|shorts?|skirt|leggings|sweatpants|joggers|slacks|chino|חלק תחתון|תחתון|מכנסיים|מכנס|חצאית|חצאיות|ג['’]ינס|שורטס|טייץ|דגמ["״]ח|ברמודה|قطعة سفلية|الطبقة السفلية|بنطال|بنطلون|تنورة|شورت|جينز|inferior|parte inferior|pantalón|pantalones|falda|vaqueros|bas|pantalon|jupe|jean|unterteil|unterschicht|hose|rock|pantaloni|gonna|partes de baixo|calça|calças|saia|низ|брюки|штаны|юбка|шорты|джинсы|下装|下层|裤子|长裤|短裤|裙子|半身裙|牛仔裤|ボトムス|ズボン|スカート|onderkleding|बॉटम्स|पतलून|पेंट|सलवार|पायजामा|जींस)/i.test(text)) {
     return 'bottom';
   }
 
   // 5. Multi-lingual Tops (shirts, blouses, sweaters, hoodies, tees, polos, tanks, camisoles, knitwear)
-  if (/(?:top|tops|shirt|blouse|sweater|hoodie|tee|t-shirt|polo|tank|crop|sweatshirt|pullover|camisole|jersey|tunic|kurta|??? ?????|?????|?????|?????|??????|?????|?????|???????|????????|????['?]??|??????|?????|??????|??????|???? ?????|?????? ???????|????|?????|????|?????|???|superior|parte superior|camisa|blusa|su?ter|sueter|camiseta|haut|chemise|chemisier|pull|oberteil|oberschicht|hemd|bluse|maglia|camicia|camicetta|maglione|partes de cima|????|???????|??????|??????|????????|???|???????|?????????|????|??|??|??|??|??|??|t?|????|???|????|????|bovenkleding|?????|???|??????|????|??????|??-????|??????)/i.test(text)) {
+  if (/(?:top|tops|shirt|blouse|sweater|hoodie|tee|t-shirt|polo|tank|crop|sweatshirt|pullover|camisole|jersey|tunic|kurta|חלק עליון|עליון|חולצה|חולצת|חולצות|בלוזה|סוודר|סוודרים|סווטשירט|קפוצ['’]ון|גופייה|גופיה|גופיות|טוניקה|قطعة علوية|الطبقة العلوية|قميص|بلوزة|كنزة|سويتر|توب|superior|parte superior|camisa|blusa|suéter|sueter|camiseta|haut|chemise|chemisier|pull|oberteil|oberschicht|hemd|bluse|maglia|camicia|camicetta|maglione|partes de cima|верх|рубашка|блузка|свитер|футболка|топ|джемпер|толстовка|худи|上装|顶层|上衣|衬衫|卫衣|毛衣|t恤|トップス|シャツ|ブラウス|セーター|bovenkleding|टॉप्स|टॉप|कुर्ता|शर्ट|ब्लाउज|टी-शर्ट|स्वेटर)/i.test(text)) {
     return 'top';
   }
 
   // 6. Multi-lingual Footwear / Shoes
-  if (/(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?|slippers?|pumps?|clogs?|espadrilles?|?????|??????|????|??????|????|??????|????????|?????|??????|?????|????|????|????|calzado|zapatos|botas|sandalias|zapatillas|chaussure|chaussures|bottes|schuhwerk|schuhe|stiefel|sneaker|scarpe|calzature|stivali|cal?ados|sapatos|?????|???????|?????|?????????|??????|????????|??|??|???|??|??|????|?|?????|???|????|schoenen|????|?????|?????)/i.test(text)) {
+  if (/(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?|slippers?|pumps?|clogs?|espadrilles?|הנעלה|נעליים|נעלי|מגפיים|מגפי|סנדלים|מוקסינים|עקבים|קבקבים|أحذية|حذاء|صندل|جزمة|calzado|zapatos|botas|sandalias|zapatillas|chaussure|chaussures|bottes|schuhwerk|schuhe|stiefel|sneaker|scarpe|calzature|stivali|calçados|sapatos|обувь|ботинки|туфли|кроссовки|сапоги|сандалии|鞋履|鞋子|运动鞋|靴子|凉鞋|シューズ|靴|スニーカー|ブーツ|サンダル|schoenen|जूते|सैंडल|चप्पल)/i.test(text)) {
     return 'shoes';
   }
 
   // 7. Multi-lingual Headwear
-  if (/(?:hat|cap|headwear|beanie|beret|turban|hijab|fedora|panama|sombrero|bonnet|????|????|???|?????? ???|?????|?????|????? ?????|???? ???|????|sombreros|gorro|chapeaux|chapeau|bonnet|kopfbedeckung|m?tze|hut|copricapo|cappello|chap?us|chap?u|???????? ????|?????|?????|?????|??|??|????|hoofddeksels|hoed|pet|???????|????)/i.test(text)) {
+  if (/(?:hat|cap|headwear|beanie|beret|turban|hijab|fedora|panama|sombrero|bonnet|כובע|כיפה|ברט|כיסויי ראש|מטפחת|טורבן|أغطية الرأس|غطاء رأس|قبعة|sombreros|gorro|chapeaux|chapeau|bonnet|kopfbedeckung|mütze|hut|copricapo|cappello|chapéus|chapéu|головной убор|шапка|шляпа|кепка|头饰|帽子|キャップ|hoofddeksels|hoed|pet|हेडवियर|टोपी)/i.test(text)) {
     return 'headwear';
   }
 
   // 8. Multi-lingual Glasses
-  if (/(?:glasses|sunglasses|eyewear|spectacles|???????|?????|????? ???|??????|anteojos|gafas|lunettes|gl?ser|brille|occhiali|copos|?culos|????|??|??|??|?????|bril|?????)/i.test(text)) {
+  if (/(?:glasses|sunglasses|eyewear|spectacles|משקפיים|משקפי|משקפי שמש|نظارات|anteojos|gafas|lunettes|gläser|brille|occhiali|copos|óculos|очки|眼镜|墨镜|眼鏡|サングラス|bril|चश्मा)/i.test(text)) {
     return 'glasses';
   }
 
   // 9. Multi-lingual Belt
-  if (/(?:belt|?????|??????|????|????|cintur?n|cinturon|ceinture|g?rtel|guertel|cintura|cinto|????|??????|??|??|???|riem|?????)/i.test(text)) {
+  if (/(?:belt|חגורה|חגורות|חגור|حزام|cinturón|cinturon|ceinture|gürtel|guertel|cintura|cinto|пояс|ремень|腰带|皮带|ベルト|riem|बेल्ट)/i.test(text)) {
     return 'belt';
   }
 
   // 10. Multi-lingual Bag / Purse
-  if (/(?:bag|purse|tote|backpack|handbag|clutch|satchel|crossbody|???|????|??? ??|?????|?????|????|bolso|mochila|sac|tasche|borsa|bolsa|?????|??????|?|??|??|???|?|tas|???|????)/i.test(text)) {
+  if (/(?:bag|purse|tote|backpack|handbag|clutch|satchel|crossbody|תיק|ארנק|תיק יד|תרמיל|حقيبة|شنطة|bolso|mochila|sac|tasche|borsa|bolsa|сумка|рюкзак|包|手袋|背包|バッグ|鞄|tas|बैग|पर्स)/i.test(text)) {
     return 'bag';
   }
 
@@ -240,7 +240,7 @@ export function extractImageAlphaBounds(img) {
   return { uMin: 0, uMax: 1, vMin: 0, vMax: 1, hasSleeves: (w / h) > 0.80 };
 }
 
-// ??? High-Fidelity Garment Texture Loader with In-Memory Alpha Tight-Cropping ???
+// ─── High-Fidelity Garment Texture Loader with In-Memory Alpha Tight-Cropping ───
 
 // Bounded LRU cache (capped at 16 textures) with automatic VRAM disposal
 const MAX_TEXTURE_CACHE_ENTRIES = 16;
@@ -1358,6 +1358,8 @@ async function fetchAndCropTexture(url) {
     const alpha = new Uint8Array(cropW * cropH);
     for (let p = 0; p < alpha.length; p++) alpha[p] = sData[p * 4 + 3];
 
+
+
     const { nx, ny } = chooseGridResolution(aspect);
     shellMask = {
       mask: resampleAlphaMask(alpha, cropW, cropH, nx, ny),
@@ -1463,7 +1465,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
           ready: true,
         });
 
-        // ?? Item group: inspect additional POV images for back and side views ??
+        // ── Item group: inspect additional POV images for back and side views ──
         if (!res.canvas || !res.shellMask) return;
         let backCanvas = null;
         let sideProfile = null;
@@ -1543,7 +1545,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
   return data;
 }
 
-// ??? Sleeve Classification & Length Resolution ???
+// ─── Sleeve Classification & Length Resolution ───
 
 /**
  * Detects sleeve style and relative arm-coverage factor (0.0 = sleeveless, 1.0 = wrist)
@@ -1561,17 +1563,17 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('camisole') ||
     text.includes('halter') ||
     text.includes('strapless') ||
-    text.includes('????') ||
-    text.includes('?????') ||
-    text.includes('??????') ||
-    text.includes('??????') ||
-    text.includes('???') ||
-    text.includes('??????') ||
-    text.includes('??? ???????') ||
+    text.includes('גופי') ||
+    text.includes('גופיה') ||
+    text.includes('גופייה') ||
+    text.includes('גופיית') ||
+    text.includes('וסט') ||
+    text.includes('סטרפלס') ||
+    text.includes('ללא שרוולים') ||
     text.includes('sin mangas') ||
     text.includes('sans manches') ||
-    text.includes('?rmellos') ||
-    text.includes('???? ?????');
+    text.includes('ärmellos') ||
+    text.includes('بدון أكمام');
 
   if (isExplicitSleeveless) {
     return { type: 'sleeveless', factor: 0.0 };
@@ -1595,19 +1597,19 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('jacket') ||
     text.includes('hoodie') ||
     text.includes('sweatshirt') ||
-    text.includes('?????') ||
-    text.includes('??????') ||
-    text.includes("?'??") ||
-    text.includes("?'??") ||
-    text.includes('????') ||
-    text.includes('??????') ||
-    text.includes("????'??") ||
-    text.includes('????? ????') ||
-    text.includes('??????? ??????') ||
+    text.includes('סוודר') ||
+    text.includes('בלייזר') ||
+    text.includes("ג'קט") ||
+    text.includes("ז'קט") ||
+    text.includes('מעיל') ||
+    text.includes('קרדיגן') ||
+    text.includes("קפוצ'ון") ||
+    text.includes('שרוול ארוך') ||
+    text.includes('שרוולים ארוכים') ||
     text.includes('manga larga') ||
     text.includes('manches longues') ||
     text.includes('langarm') ||
-    text.includes('?? ????');
+    text.includes('كم طويل');
 
   if (isExplicitLong) {
     return { type: 'long', factor: 1.0 };
@@ -1618,8 +1620,8 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('3/4') ||
     text.includes('three-quarter') ||
     text.includes('three quarter') ||
-    text.includes('????? 3/4') ||
-    text.includes('????? ????? ????');
+    text.includes('שרוול 3/4') ||
+    text.includes('שרוול שלושת רבעי');
 
   if (isThreeQuarter) {
     return { type: 'three_quarter', factor: 0.65 };
@@ -1629,8 +1631,8 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
   const isCapSleeve =
     text.includes('cap sleeve') ||
     text.includes('cap-sleeve') ||
-    text.includes('????? ???') ||
-    text.includes('????? ????');
+    text.includes('שרוול כנף') ||
+    text.includes('שרוול קפון');
 
   if (isCapSleeve) {
     return { type: 'cap', factor: 0.18 };
@@ -1646,17 +1648,17 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('short sleeve') ||
     text.includes('short-sleeve') ||
     text.includes('short_sleeve') ||
-    text.includes('????? ?????') ||
-    text.includes('????? ??') ||
-    text.includes('?????') ||
-    text.includes('????? ???') ||
-    text.includes('??????? ?????') ||
-    text.includes('????? ????') ||
+    text.includes('חולצת טריקו') ||
+    text.includes('חולצת טי') ||
+    text.includes('טישרט') ||
+    text.includes('שרוול קצר') ||
+    text.includes('שרוולים קצרים') ||
+    text.includes('חולצה קצרה') ||
     text.includes('manga corta') ||
     text.includes('manches courtes') ||
     text.includes('kurzarm') ||
-    text.includes('??? ??') ||
-    text.includes('????? ?????');
+    text.includes('نصف كم') ||
+    text.includes('أكمام قصيرة');
 
   if (isShortSleeve) {
     return { type: 'short', factor: 0.50 };
@@ -1672,11 +1674,11 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
   }
 }
 
-// ??? 3D Parametric Body-Wrapping Geometry Builders ???
+// ─── 3D Parametric Body-Wrapping Geometry Builders ───
 
 /**
  * Creates 3D Top or Outerwear geometry with anatomically contoured torso shell
- * wrapping seamlessly 360? around the avatar's body AND left/right sleeve shells.
+ * wrapping seamlessly 360° around the avatar's body AND left/right sleeve shells.
  */
 export function createAnatomicalTopGeometry({
   isMale = false,
@@ -1694,7 +1696,7 @@ export function createAnatomicalTopGeometry({
   const uvs = [];
   const indices = [];
 
-  // 1. Torso Shell (wrapping 360? continuously around collar, chest, waist, and hips)
+  // 1. Torso Shell (wrapping 360° continuously around collar, chest, waist, and hips)
   const ny = 20;
   const nx = 28;
   const yShoulder = isMale ? 1.48 : 1.42;
@@ -1742,7 +1744,7 @@ export function createAnatomicalTopGeometry({
         : cz - (rzBackEff + 0.012) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
-      // Continuous 360? UV projection: front and back views share the same texture and pattern
+      // Continuous 360° UV projection: front and back views share the same texture and pattern
       // without side-flank UV jumps or tears.
       const uT = uLeft + ((Math.sin(theta) + 1) * 0.5) * (uRight - uLeft);
       uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0.01, Math.min(0.99, vTex)));
@@ -1855,7 +1857,7 @@ export function createAnatomicalDressGeometry({
   const uvs = [];
   const indices = [];
 
-  // 1. Bodice & Flared Skirt 360? Shell
+  // 1. Bodice & Flared Skirt 360° Shell
   const ny = 22;
   const nx = 26;
   const yShoulder = isMale ? 1.48 : 1.42;
@@ -2041,7 +2043,7 @@ export function createAnatomicalBottomGeometry({
           : cz - rzBack * Math.abs(Math.cos(theta));
         verts.push(x, y, z);
 
-        // Continuous 360? UV mapping so front and back views share the skirt texture & pattern
+        // Continuous 360° UV mapping so front and back views share the skirt texture & pattern
         const uT = 0.5 + Math.sin(theta) * 0.42;
         uvs.push(Math.max(0.01, Math.min(0.99, uT)), Math.max(0.01, Math.min(0.99, vTex)));
       }
@@ -2066,7 +2068,7 @@ export function createAnatomicalBottomGeometry({
 
   // B. PANTS / JEANS / TROUSERS / SHORTS MODE
   // Strict Waist & Crotch Anchor:
-  // 1) Unified 360? pelvis shell from waistband (yWaist) down to crotch line (yCrotch).
+  // 1) Unified 360° pelvis shell from waistband (yWaist) down to crotch line (yCrotch).
   //    Pants can NEVER bifurcate or split higher than the crotch line.
   // 2) Bifurcated left/right leg cylinders exclusively from yCrotch down to yAnkle.
   const yWaist = yTop;
@@ -2282,7 +2284,7 @@ export const LAYER_COLLISION_OFFSETS = Object.freeze({
  *  - 'necktie': Contoured collar band + knot + tapered front blade hanging from the
  *               neckline (y = 1.50 M / 1.44 F) down to the beltline (y = 1.06 M / 1.04 F),
  *               or outer scarf/shawl at Layer 8 (+0.019m) over outerwear.
- *  - 'belt': 360? contoured elliptical strap (`deformWeight = 1.0`) + flat rigid front buckle
+ *  - 'belt': 360° contoured elliptical strap (`deformWeight = 1.0`) + flat rigid front buckle
  *            (`deformWeight = 0.0`) around the waistline (y = 1.08 M / 1.05 F), dynamically
  *            wrapping active bottom (`+0.002m` over Layer 3) or bare avatar/dress (`+0.011m`).
  *  - 'headwear': Rigid crown dome + visor/brim on the head (`deformWeight = 0.0`).
@@ -2321,7 +2323,7 @@ export function createAnatomicalAccessoryGeometry(
     const ny = 6;
     const nx = 24;
 
-    // 1. 360? Wrist Strap Band (deformable band = 1.0)
+    // 1. 360° Wrist Strap Band (deformable band = 1.0)
     for (let i = 0; i <= ny; i++) {
       const v = i / ny;
       const y = cy + bandHalfH - v * (bandHalfH * 2);
@@ -2379,7 +2381,7 @@ export function createAnatomicalAccessoryGeometry(
     }
   } else if (type === 'necktie' || type === 'scarf') {
     // Contoured 3D Necktie or Outer Scarf/Shawl (Layer 8: +0.019m over jackets and collars)
-    const isScarf = type === 'scarf' || /(?:scarf|shawl|wrap|stole|pashmina|????|???|?????)/i.test(garmentText);
+    const isScarf = type === 'scarf' || /(?:scarf|shawl|wrap|stole|pashmina|צעיף|שאל|מטפחת)/i.test(garmentText);
     const tieOffset = isScarf
       ? Math.max(LAYER_COLLISION_OFFSETS.outer_accessory, layerOffset)
       : Math.max(LAYER_COLLISION_OFFSETS.mid_layer + 0.002, layerOffset);
@@ -2536,7 +2538,7 @@ export function createAnatomicalAccessoryGeometry(
 
     // 2. Conforming Strap (`deformWeight = 1.0`) for crossbody / shoulder / backpack bags:
     // Shrinkwraps against outermost active torso layer (Outerwear +0.016m or Mid-Layer +0.010m) + 0.003m
-    const hasStrap = /(?:crossbody|shoulder|messenger|satchel|tote|backpack|??? ??|??? ???|?????|??)/i.test(garmentText);
+    const hasStrap = /(?:crossbody|shoulder|messenger|satchel|tote|backpack|תיק צד|תיק כתף|תרמיל|גב)/i.test(garmentText);
     if (hasStrap) {
       const strapStartIdx = verts.length / 3;
       const baseTorsoLayer = hasOuterwear
@@ -2676,22 +2678,22 @@ export function resolveGarmentMetadataText(garment) {
  */
 export function resolveMaterialPBRProps(garmentText = '', rawSlot = 'top') {
   const has = (...words) => words.some((w) => garmentText.includes(w));
-  if (rawSlot === 'watch' || has('gold', 'silver', 'metallic', 'metal', 'stainless', '???', '???', '????')) {
+  if (rawSlot === 'watch' || has('gold', 'silver', 'metallic', 'metal', 'stainless', 'זהב', 'כסף', 'מתכת')) {
     return { roughness: 0.25, metalness: 0.72, envMapIntensity: 1.35 };
   }
-  if (has('patent', 'latex', 'vinyl', '???', '?????')) {
+  if (has('patent', 'latex', 'vinyl', 'לקה', 'ויניל')) {
     return { roughness: 0.18, metalness: 0.15, envMapIntensity: 1.3 };
   }
-  if (has('leather', 'faux leather', 'suede', '???', '???')) {
+  if (has('leather', 'faux leather', 'suede', 'עור', 'זמש')) {
     return { roughness: 0.42, metalness: 0.08, envMapIntensity: 1.05 };
   }
-  if (has('silk', 'satin', 'velvet', 'chiffon', 'organza', '???', '????', '?????', '?????') || rawSlot === 'necktie') {
+  if (has('silk', 'satin', 'velvet', 'chiffon', 'organza', 'משי', 'סאטן', 'קטיפה', 'שיפון') || rawSlot === 'necktie') {
     return { roughness: 0.38, metalness: 0.06, envMapIntensity: 1.0 };
   }
-  if (has('denim', 'jeans', 'canvas', 'corduroy', '?????', "?'???", '????', '????????')) {
+  if (has('denim', 'jeans', 'canvas', 'corduroy', 'ג׳ינס', "ג'ינס", 'דנים', 'קורדורוי')) {
     return { roughness: 0.86, metalness: 0.01, envMapIntensity: 0.55 };
   }
-  if (has('wool', 'knit', 'cashmere', 'fleece', 'sweater', '???', '????', '?????', '????')) {
+  if (has('wool', 'knit', 'cashmere', 'fleece', 'sweater', 'צמר', 'סריג', 'קשמיר', 'פליז')) {
     return { roughness: 0.88, metalness: 0.01, envMapIntensity: 0.50 };
   }
   if (rawSlot === 'shoes' || rawSlot === 'belt' || rawSlot === 'bag') {
@@ -2716,7 +2718,7 @@ export function resolveMaterialPBRProps(garmentText = '', rawSlot = 'top') {
 export function resolveGarmentRenderOrder(rawSlot, garmentText = '') {
   switch (rawSlot) {
     case 'shoes':
-      return /(?:boot|chelsea|??????|????)/i.test(garmentText) ? 12 : 5;
+      return /(?:boot|chelsea|מגפיים|מגפי)/i.test(garmentText) ? 12 : 5;
     case 'bottom':
       return 6;
     case 'top':
@@ -2726,7 +2728,7 @@ export function resolveGarmentRenderOrder(rawSlot, garmentText = '') {
     case 'belt':
       return 10;
     case 'necktie':
-      return /(?:scarf|shawl|wrap|stole|pashmina|????|???|?????)/i.test(garmentText) ? 16 : 11;
+      return /(?:scarf|shawl|wrap|stole|pashmina|צעיף|שאל|מטפחת)/i.test(garmentText) ? 16 : 11;
     case 'outerwear':
       return 14;
     case 'scarf':
@@ -2748,29 +2750,29 @@ export function resolveGarmentRenderOrder(rawSlot, garmentText = '') {
  */
 export function resolveFabricThickness(fullText = '', rawSlot = 'top', isSkirt = false) {
   const has = (...words) => words.some((w) => fullText.includes(w));
-  if (rawSlot === 'outerwear' || has('coat', 'overcoat', 'trench', 'parka', 'puffer', 'blazer', 'jacket', '????', "?'??", '??????')) {
-    return has('heavy', 'puffer', 'winter', 'wool', 'fur', '???', '???') ? 0.0030 : 0.0027;
+  if (rawSlot === 'outerwear' || has('coat', 'overcoat', 'trench', 'parka', 'puffer', 'blazer', 'jacket', 'מעיל', "ז'קט", 'בלייזר')) {
+    return has('heavy', 'puffer', 'winter', 'wool', 'fur', 'פוך', 'צמר') ? 0.0030 : 0.0027;
   }
-  if (has('sweater', 'sweatshirt', 'hoodie', 'cardigan', 'fleece', 'knit', 'jumper', 'pullover', '?????', '????????', "????'??", '??????', '????', '????')) {
+  if (has('sweater', 'sweatshirt', 'hoodie', 'cardigan', 'fleece', 'knit', 'jumper', 'pullover', 'סוודר', 'סווטשירט', "קפוצ'ון", 'קרדיגן', 'סריג', 'פליז')) {
     return 0.0024;
   }
   if (rawSlot === 'bottom') {
     if (isSkirt) {
-      if (has('silk', 'satin', 'chiffon', '?????', '???', '????')) return 0.0008;
+      if (has('silk', 'satin', 'chiffon', 'שיפון', 'משי', 'סאטן')) return 0.0008;
       return 0.0016; // <= 2.0 mm on the waistline
     }
-    if (has('denim', 'jeans', 'cargo', 'corduroy', "?'???", '???"?')) return 0.0018;
-    if (has('linen', 'silk', '????', '???')) return 0.0010;
+    if (has('denim', 'jeans', 'cargo', 'corduroy', "ג'ינס", 'דגמ"ח')) return 0.0018;
+    if (has('linen', 'silk', 'פשתן', 'משי')) return 0.0010;
     return 0.0015;
   }
-  if (has('silk', 'chiffon', 'satin', 'lace', 'mesh', 'sheer', 'organza', '???', '?????', '????', '????')) {
+  if (has('silk', 'chiffon', 'satin', 'lace', 'mesh', 'sheer', 'organza', 'משי', 'שיפון', 'סאטן', 'תחרה')) {
     return 0.0005;
   }
-  if (has('linen', 'viscose', 'rayon', 'camisole', 'tank', '?????', '????')) {
+  if (has('linen', 'viscose', 'rayon', 'camisole', 'tank', 'גופיה', 'פשתן')) {
     return 0.0008;
   }
   if (rawSlot === 'dress') {
-    if (has('velvet', 'knit', 'wool', '?????', '????')) return 0.0020;
+    if (has('velvet', 'knit', 'wool', 'קטיפה', 'סריג')) return 0.0020;
     return 0.0014;
   }
   // Standard T-shirt, polo, button-up shirt, blouse: ~1.2 mm
@@ -2792,11 +2794,11 @@ export function resolveShellFit({
 } = {}) {
   const fullText = `${garmentText} ${resolveGarmentMetadataText(garment)}`.toLowerCase();
   const has = (...words) => words.some((w) => fullText.includes(w));
-  const isStrapless = has('strapless', 'tube', 'bandeau', '??????', '????', 'sans bretelles', 'tr?gerlos', 'palabra de honor');
-  const isWideOrLoose = has('wide', 'loose', 'baggy', 'oversized', 'hip-hop', 'hip hop', 'cargo', 'relaxed', 'boyfriend', 'flair', 'flare', 'palazzo', 'ball gown', '???', '????', '????????');
+  const isStrapless = has('strapless', 'tube', 'bandeau', 'סטרפלס', 'בנדו', 'sans bretelles', 'trägerlos', 'palabra de honor');
+  const isWideOrLoose = has('wide', 'loose', 'baggy', 'oversized', 'hip-hop', 'hip hop', 'cargo', 'relaxed', 'boyfriend', 'flair', 'flare', 'palazzo', 'ball gown', 'רחב', 'רפוי', 'אוברסייז');
   if (rawSlot === 'top') {
-    const isCrop = has('crop', 'sports_bra', 'bralette', '????', '????');
-    const isLongline = has('kurta', 'tunic', 'longline', 'thobe', '??????');
+    const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
+    const isLongline = has('kurta', 'tunic', 'longline', 'thobe', 'טוניקה');
     let yBottom = isMale ? 0.90 : 0.86;
     if (isCrop) yBottom = isMale ? 1.18 : 1.12;
     if (isLongline) yBottom = isMale ? 0.75 : 0.70;
@@ -2809,16 +2811,16 @@ export function resolveShellFit({
     return { yTop, yBottom, layerOffset, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
   }
   if (rawSlot === 'outerwear') {
-    const isMaxi = has('maxi', '????', 'ankle', '?????', 'floor', '?? ?????', '?????', 'duster');
-    const isCrop = has('bolero', 'shrug', '??????? ????', '????', 'crop') || (has('jacket', '???', '???') && has('crop', '????', '???', '????'));
-    const isExplicitShortJacket = has('bomber', 'biker', '?????', '?????????', 'short jacket') ||
-      ((has('???', '???', 'jacket', '??????', 'blazer') && (has('???', '????', 'waist') || aspect > 0.95)) &&
-      !has('trench', '????', 'overcoat', '????', 'coat'));
+    const isMaxi = has('maxi', 'מקסי', 'ankle', 'קרסול', 'floor', 'עד הרצפה', 'דאסטר', 'duster');
+    const isCrop = has('bolero', 'shrug', 'עליונית קצרה', 'קרופ', 'crop') || (has('jacket', 'זקט', 'גקט') && has('crop', 'קרופ', 'קצר', 'קצרה'));
+    const isExplicitShortJacket = has('bomber', 'biker', 'בומבר', 'אופנוענים', 'short jacket') ||
+      ((has('זקט', 'גקט', 'jacket', 'בלייזר', 'blazer') && (has('קצר', 'קצרה', 'waist') || aspect > 0.95)) &&
+      !has('trench', 'טרנץ', 'overcoat', 'מעיל', 'coat'));
     const isLong = isMaxi || (!isCrop && !isExplicitShortJacket && (
       has(
         'overcoat', 'trench', 'trenchcoat', 'duster', 'cardigan', 'coat', 'parka', 'robe', 'raincoat', 'mac', 'peacoat', 'kimono',
-        '????', '????', '??????', '????', '??????', '???? ???', '???? ???', '???? ???', '???? ???', '???? ????',
-        'manteau', 'mantel', 'cappotto', 'abrigo', '??????', '????'
+        'מעיל', 'טרנץ', 'קרדיגן', 'חלוק', 'קימונו', 'מעיל גשם', 'מעיל רוח', 'מעיל פוך', 'מעיל צמר', 'מעיל חורף',
+        'manteau', 'mantel', 'cappotto', 'abrigo', 'пальто', 'плащ'
       ) ||
       aspect <= 0.88
     ));
@@ -2839,8 +2841,8 @@ export function resolveShellFit({
     };
   }
   if (rawSlot === 'dress') {
-    const isMini = has('mini', '????');
-    const isMaxi = has('maxi', 'gown', 'evening', '?????', '????', 'kaftan', 'caftan', 'robe', 'abaya');
+    const isMini = has('mini', 'קצרה');
+    const isMaxi = has('maxi', 'gown', 'evening', 'ארוכה', 'מקסי', 'kaftan', 'caftan', 'robe', 'abaya');
     let yBottom = isMale ? 0.55 : 0.50;
     if (isMini) yBottom = isMale ? 0.78 : 0.74;
     if (isMaxi) yBottom = isMale ? 0.16 : 0.12;
@@ -2857,7 +2859,7 @@ export function resolveShellFit({
     };
   }
   if (rawSlot === 'bottom') {
-    const isSkirt = has('skirt', '?????');
+    const isSkirt = has('skirt', 'חצאית');
     const { lengthType, yBottom } = resolveBottomLength({
       garment,
       garmentText: fullText,
@@ -2986,8 +2988,8 @@ function GarmentTemplateMeshInner({
         if (bb) {
           // Canonical templates retain their continuous, welded, pre-tailored Blender geometry,
           // and apply anchor-locked radial & lateral ease below the anatomical anchor based on fitProfile:
-          //   ? Tops / Outerwear / Dresses: anchored strictly at the shoulders & neckline (tDrop = 0 at shoulders).
-          //   ? Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
+          //   • Tops / Outerwear / Dresses: anchored strictly at the shoulders & neckline (tDrop = 0 at shoulders).
+          //   • Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
           const fitMode = fitProfile?.fit || 'regular';
           const preDrapedLooseTemplates = ['hoodie', 'cardigan', 'coat', 'trench_coat', 'kaftan', 'top_tunic', 'bermuda'];
           const isPreDrapedLoose = preDrapedLooseTemplates.includes(templateId);
@@ -3312,7 +3314,7 @@ export default function GarmentMesh3D({
 }) {
   const isStandalone = Boolean(!showAvatar);
   const patternLabel = String(garment?.pattern || garment?.rawItem?.pattern || '').toLowerCase().trim();
-  const isPatterned = Boolean(patternLabel) && !/^(solid|plain|?|-|none|???|????)$/i.test(patternLabel);
+  const isPatterned = Boolean(patternLabel) && !/^(solid|plain|—|-|none|חלק|אחיד)$/i.test(patternLabel);
   const {
     texture,
     opaqueTexture = null,
@@ -3358,8 +3360,8 @@ export default function GarmentMesh3D({
 
     // 1. TOP
     if (rawSlot === 'top') {
-      const isCrop = garmentText.includes('crop') || garmentText.includes('sports_bra') || garmentText.includes('bralette') || garmentText.includes('????') || garmentText.includes('????');
-      const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('??????');
+      const isCrop = garmentText.includes('crop') || garmentText.includes('sports_bra') || garmentText.includes('bralette') || garmentText.includes('קרופ') || garmentText.includes('חזיה');
+      const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה');
       const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'top', aspect });
 
       // High collar at 1.47 (F) / 1.53 (M), shoulder seam overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
@@ -3385,17 +3387,17 @@ export default function GarmentMesh3D({
 
     // 2. OUTERWEAR (Blazers, Suits, Coats, Jackets, Cardigans)
     if (rawSlot === 'outerwear') {
-      const isMaxi = garmentText.includes('maxi') || garmentText.includes('????') || garmentText.includes('ankle') || garmentText.includes('?????') || garmentText.includes('duster');
-      const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('??????? ????') || garmentText.includes('????') || (garmentText.includes('jacket') && garmentText.includes('crop'));
-      const isExplicitShortJacket = (garmentText.includes('bomber') || garmentText.includes('biker') || garmentText.includes('?????') || garmentText.includes('???') || garmentText.includes('????')) && !garmentText.includes('trench') && !garmentText.includes('????') && !garmentText.includes('????');
+      const isMaxi = garmentText.includes('maxi') || garmentText.includes('מקסי') || garmentText.includes('ankle') || garmentText.includes('קרסול') || garmentText.includes('duster');
+      const isCropJacket = garmentText.includes('bolero') || garmentText.includes('shrug') || garmentText.includes('עליונית קצרה') || garmentText.includes('קרופ') || (garmentText.includes('jacket') && garmentText.includes('crop'));
+      const isExplicitShortJacket = (garmentText.includes('bomber') || garmentText.includes('biker') || garmentText.includes('בומבר') || garmentText.includes('קצר') || garmentText.includes('קצרה')) && !garmentText.includes('trench') && !garmentText.includes('טרנץ') && !garmentText.includes('מעיל');
       const isLongCoat = isMaxi || (!isCropJacket && !isExplicitShortJacket && (
         garmentText.includes('overcoat') || garmentText.includes('trench') || garmentText.includes('trenchcoat') ||
         garmentText.includes('duster') || garmentText.includes('coat') || garmentText.includes('parka') ||
         garmentText.includes('raincoat') || garmentText.includes('mac') || garmentText.includes('robe') ||
-        garmentText.includes('cardigan') || garmentText.includes('????') || garmentText.includes('????') ||
-        garmentText.includes('??????') || garmentText.includes('????') || garmentText.includes('manteau') ||
+        garmentText.includes('cardigan') || garmentText.includes('מעיל') || garmentText.includes('טרנץ') ||
+        garmentText.includes('קרדיגן') || garmentText.includes('חלוק') || garmentText.includes('manteau') ||
         garmentText.includes('mantel') || garmentText.includes('cappotto') || garmentText.includes('abrigo') ||
-        garmentText.includes('??????') || garmentText.includes('????') || aspect <= 0.88
+        garmentText.includes('пальто') || garmentText.includes('плащ') || aspect <= 0.88
       ));
       const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'outerwear', aspect });
 
@@ -3424,10 +3426,10 @@ export default function GarmentMesh3D({
 
     // 3. DRESS
     if (rawSlot === 'dress') {
-      const isMini = garmentText.includes('mini') || garmentText.includes('????');
-      const isMaxi = garmentText.includes('maxi') || garmentText.includes('gown') || garmentText.includes('evening') || garmentText.includes('?????') || garmentText.includes('????');
+      const isMini = garmentText.includes('mini') || garmentText.includes('קצרה');
+      const isMaxi = garmentText.includes('maxi') || garmentText.includes('gown') || garmentText.includes('evening') || garmentText.includes('ארוכה') || garmentText.includes('מקסי');
       const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'dress', aspect });
-      const hasDressSleeves = autoHasSleeves && (garmentText.includes('sleeve') || garmentText.includes('?????') || sleeveStyle.factor > 0);
+      const hasDressSleeves = autoHasSleeves && (garmentText.includes('sleeve') || garmentText.includes('שרוול') || sleeveStyle.factor > 0);
 
       // Dress bodice top overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
       const yTop = (isMale ? 1.53 : 1.47) + yShift;
@@ -3449,10 +3451,10 @@ export default function GarmentMesh3D({
 
     // 4. BOTTOM
     if (rawSlot === 'bottom') {
-      const isSkirt = garmentText.includes('skirt') || garmentText.includes('?????');
-      const isShorts = garmentText.includes('shorts') || garmentText.includes('??????') || garmentText.includes('?????') || garmentText.includes('?????');
-      const isMiniSkirt = isSkirt && (garmentText.includes('mini') || garmentText.includes('????'));
-      const isMaxiSkirt = isSkirt && (garmentText.includes('maxi') || garmentText.includes('?????') || garmentText.includes('????'));
+      const isSkirt = garmentText.includes('skirt') || garmentText.includes('חצאית');
+      const isShorts = garmentText.includes('shorts') || garmentText.includes('ברמודה') || garmentText.includes('קצרים') || garmentText.includes('שורטס');
+      const isMiniSkirt = isSkirt && (garmentText.includes('mini') || garmentText.includes('קצרה'));
+      const isMaxiSkirt = isSkirt && (garmentText.includes('maxi') || garmentText.includes('ארוכה') || garmentText.includes('מקסי'));
 
       let yHem = (isMale ? 0.11 : 0.10) + yShift;
       if (isMiniSkirt) yHem = (isMale ? 0.76 : 0.72) + yShift;
@@ -3508,7 +3510,7 @@ export default function GarmentMesh3D({
     return rawSlot === 'shoes' ? poseGeometry(morphed, footPose) : morphed;
   }, [baseGeometry, morphField, morphInfluences, rawSlot, footPose, isStandalone]);
 
-  // ?? Silhouette shell: the garment keeps its own photographed outline ??
+  // ── Silhouette shell: the garment keeps its own photographed outline ──
   const shellFit = useMemo(
     () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear, garment, aspect }),
     [rawSlot, garmentText, isMale, hasOuterwear, garment, aspect]
@@ -3763,4 +3765,3 @@ export default function GarmentMesh3D({
     </>
   );
 }
-
