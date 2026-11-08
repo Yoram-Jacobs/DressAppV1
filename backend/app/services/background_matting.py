@@ -330,12 +330,18 @@ def carve_studio_background_cavities(
     med_fab_sat = float(np.median(fab_sat))
     med_fab_bright = float(np.median(fab_bright))
 
-    # Safety Guard for White / Cream / Light Gray clothing:
-    # If the garment is white (Delta E < contrast_delta_min against pure white and low saturation and high brightness),
-    # carving white regions risks punching holes into the chest of a white shirt!
+    # Safety Guard for Light Clothing (White / Cream / Nude / Pale Pastel / Light Gray):
+    # If the garment is light (high brightness, low-to-medium saturation, and close to white),
+    # carving white regions risks punching holes into the folds, pleats, or flanks!
     white_ref = np.array([250.0, 250.0, 250.0])
-    color_dist = float(np.linalg.norm(med_fab_color - white_ref))
-    if color_dist < contrast_delta_min and med_fab_sat < 0.15 and med_fab_bright > 185.0:
+    color_dist_to_white = float(np.linalg.norm(med_fab_color - white_ref))
+    if color_dist_to_white < 110.0 and med_fab_sat < 0.32 and med_fab_bright > 180.0:
+        logger.info(
+            "carve_studio_background_cavities: skipped carving for light/nude garment (dist_to_white=%.1f, sat=%.3f, bright=%.1f)",
+            color_dist_to_white,
+            med_fab_sat,
+            med_fab_bright,
+        )
         return image_rgba
 
     # 3. Candidate gap pixels inside opaque region:
@@ -349,7 +355,9 @@ def carve_studio_background_cavities(
     bright = c_max
 
     dist_to_white = np.sqrt((r - 250.0)**2 + (g - 250.0)**2 + (b - 250.0)**2)
-    is_white_gap = (solid) & (bright >= bg_brightness_min) & (sat <= bg_saturation_max) & (dist_to_white < 85.0)
+    # The candidate gap must have high contrast away from the garment's median fabric color
+    dist_to_fabric = np.sqrt((r - med_fab_color[0])**2 + (g - med_fab_color[1])**2 + (b - med_fab_color[2])**2)
+    is_white_gap = (solid) & (bright >= bg_brightness_min) & (sat <= bg_saturation_max) & (dist_to_white < 75.0) & (dist_to_fabric >= contrast_delta_min)
 
     # Spatial Restriction: Underarm / Armpit flank zones
     flank_mask = np.zeros((H, W), dtype=bool)
@@ -358,7 +366,7 @@ def carve_studio_background_cavities(
     right_flank_x1 = x_min + int(bbox_w * 0.58)
     right_flank_x2 = x_min + int(bbox_w * 0.94)
     flank_y1 = y_min + int(bbox_h * 0.20)
-    flank_y2 = y_min + int(bbox_h * 0.90)
+    flank_y2 = y_min + int(bbox_h * 0.85)
 
     flank_mask[flank_y1:flank_y2, left_flank_x1:left_flank_x2] = True
     flank_mask[flank_y1:flank_y2, right_flank_x1:right_flank_x2] = True
@@ -374,7 +382,7 @@ def carve_studio_background_cavities(
     sizes = ndimage.sum(candidate_mask, labeled, range(1, num_features + 1))
     carve_mask = np.zeros((H, W), dtype=bool)
 
-    min_gap_area = max(20, int(bbox_h * bbox_w * 0.0003))
+    min_gap_area = max(25, int(bbox_h * bbox_w * 0.0004))
 
     for idx, s in enumerate(sizes):
         if s < min_gap_area:
@@ -387,6 +395,26 @@ def carve_studio_background_cavities(
         if comp_h < 10 and comp_w < 10:
             continue
 
+        # Check lateral enclosure: is there fabric to the left AND to the right of this component?
+        # A true armpit gap is strictly bounded between a sleeve (outer) and torso (inner).
+        # Without sleeves on either side (e.g. strapless dress or sleeveless bodice), carving is rejected.
+        enclosed_rows = 0
+        tested_rows = 0
+        for cy in range(int(c_ys.min()), int(c_ys.max()) + 1, max(1, (int(c_ys.max()) - int(c_ys.min())) // 10)):
+            row_xs = c_xs[c_ys == cy]
+            if len(row_xs) == 0:
+                continue
+            tested_rows += 1
+            left_x = int(row_xs.min())
+            right_x = int(row_xs.max())
+            has_left_fabric = np.any((solid[cy, x_min:left_x]) & (~candidate_mask[cy, x_min:left_x]))
+            has_right_fabric = np.any((solid[cy, right_x:x_max]) & (~candidate_mask[cy, right_x:x_max]))
+            if has_left_fabric and has_right_fabric:
+                enclosed_rows += 1
+
+        if tested_rows > 0 and (enclosed_rows / tested_rows) < 0.60:
+            continue
+
         carve_mask |= comp_mask
 
     if not carve_mask.any():
@@ -394,7 +422,7 @@ def carve_studio_background_cavities(
 
     # Gentle dilation (1-2px) to eat the antialiased boundary of the gap without touching saturated fabric
     dilated = ndimage.binary_dilation(carve_mask, iterations=2)
-    is_garment_fabric = (sat > bg_saturation_max + 0.08) | (bright < bg_brightness_min - 35.0) | (dist_to_white > 100.0)
+    is_garment_fabric = (sat > bg_saturation_max + 0.08) | (bright < bg_brightness_min - 35.0) | (dist_to_white > 90.0) | (dist_to_fabric < contrast_delta_min * 0.8)
     final_carve = dilated & (~is_garment_fabric)
 
     arr[:, :, 3] = np.where(final_carve, 0, alpha).astype(np.uint8)

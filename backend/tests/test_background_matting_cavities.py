@@ -69,3 +69,27 @@ def test_carve_studio_background_cavities_white_clothing_safety():
 
     # White shirt torso must be completely preserved
     assert out_arr[250, 200, 3] == 255, "White shirt fabric must not be carved"
+
+
+def test_carve_studio_background_cavities_nude_strapless_dress():
+    """Verify that nude / champagne / light beige strapless dresses are never carved or perforated."""
+    # Synthetic 500x350 strapless dress with nude color [227, 200, 183]
+    # No sleeves (single central torso column [x=100..250, y=80..460])
+    arr = np.zeros((500, 350, 4), dtype=np.uint8)
+    arr[:, :, :3] = [245, 245, 245]  # Studio white background
+
+    # Nude fabric
+    arr[80:460, 100:250, :3] = [227, 200, 183]
+    arr[80:460, 100:250, 3] = 255
+
+    # Lighter fabric highlight in ruched folds on flank [242, 230, 220]
+    arr[150:250, 105:135, :3] = [242, 230, 220]
+    arr[150:250, 105:135, 3] = 255
+
+    im = Image.fromarray(arr, "RGBA")
+    result = carve_studio_background_cavities(im)
+    out_arr = np.array(result)
+
+    # Flanks and highlights must remain 100% intact without any holes
+    assert np.all(out_arr[80:460, 100:250, 3] == 255), "Nude strapless dress fabric must not be carved"
+
