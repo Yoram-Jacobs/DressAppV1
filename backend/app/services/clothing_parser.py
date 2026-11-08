@@ -2561,6 +2561,10 @@ def apply_alpha_intersection(
     # Initialize new_alpha with rembg's studio-grade alpha
     new_alpha = arr[:, :, 3].copy()
     has_human = human_mask is not None and bool(human_mask.any())
+    has_other = other_mask is not None and bool(other_mask.any())
+    if is_footwear and (is_single_item or (not has_human and not has_other)):
+        return matted_png_bytes
+
     is_acc = (
         norm_cat in {"accessory", "headwear", "bag", "belt", "jewelry"}
         or norm_lbl in {"hat", "cap", "caps", "beanie", "bag", "belt", "necklace", "watch", "bracelet"}
@@ -2783,10 +2787,20 @@ def apply_alpha_intersection(
             )
             filled = closed if is_multi_segment else ndimage.binary_fill_holes(closed)
             
+            if is_footwear:
+                # Footwear parsing models (ATR / LIP / DeepFashion) omit ankle straps, buckles,
+                # wrap laces, and boot shafts above the vamp. The footwear envelope must extend
+                # all the way upward across the shoe columns so ankle straps and ties are never amputated!
+                footwear_ys = np.where(filled)[0]
+                if len(footwear_ys) > 0:
+                    footwear_cols = filled.any(axis=0)
+                    footwear_cols_dil = ndimage.binary_dilation(footwear_cols, structure=np.ones(9, dtype=bool))
+                    filled[:int(footwear_ys.max()), footwear_cols_dil] = True
+
             if is_single_item:
                 env_dilate = max(14, int(0.06 * min(Hc, Wc)))
             else:
-                env_dilate = 2 if (is_eyewear or is_footwear or is_acc) else dilate_px
+                env_dilate = 2 if (is_eyewear or is_acc) else dilate_px
 
             if env_dilate > 0:
                 max_dim = max(Hc, Wc)
@@ -2814,10 +2828,15 @@ def apply_alpha_intersection(
             # It must NEVER multiply or truncate rembg's anti-aliased alpha boundary inside the garment!
             new_alpha = np.where(soft_envelope <= 0.01, np.uint8(0), new_alpha)
 
-            # Footwear pavement smear cleanup: outside the two shoes (where mask_resized < 25), wipe any pavement/asphalt smear left by rembg
+            # Footwear pavement smear cleanup: outside the two shoes (where mask_resized < 25), wipe any pavement/asphalt smear left by rembg.
+            # Pavement smear is strictly at the BOTTOM under/around the sole contact plane, NEVER above the vamp or ankle where straps and laces live!
             if is_footwear:
-                pavement_smear = (mask_resized < 25) & (soft_envelope < 0.25)
-                new_alpha = np.where(pavement_smear, np.uint8(0), new_alpha)
+                footwear_ys = np.where(mask_resized > 30)[0]
+                if len(footwear_ys) > 0:
+                    sole_y = int(footwear_ys.min() + 0.80 * (footwear_ys.max() - footwear_ys.min()))
+                    is_sole_zone = np.arange(Hc)[:, None] >= sole_y
+                    pavement_smear = is_sole_zone & (mask_resized < 25) & (soft_envelope < 0.25)
+                    new_alpha = np.where(pavement_smear, np.uint8(0), new_alpha)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: soft-mask intersection failed: %s",

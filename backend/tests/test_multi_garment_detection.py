@@ -1300,6 +1300,66 @@ def test_apply_alpha_intersection_footwear_excises_legs():
     assert arr[50, 75, 3] == 0, "Leg above shoe must be excised"
 
 
+def test_apply_alpha_intersection_preserves_footwear_ankle_straps():
+    """Verify that ankle straps and buckles rising above the shoe vamp are preserved."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    H, W = 200, 150
+    # Shoe body at y: 110..180, x: 20..130
+    # Ankle strap and buckle looping up at y: 40..80, x: 40..110
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # Sole / vamp
+    for y in range(110, 180):
+        for x in range(20, 130):
+            img.putpixel((x, y), (20, 20, 20, 255))
+    # Ankle strap connected to shoe counter and looping up around ankle
+    for y in range(40, 110):
+        for x in range(40, 110):
+            if y < 45 or x < 45 or x > 105:
+                img.putpixel((x, y), (30, 30, 30, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # SegFormer only segmented the shoe body (y: 110..180), completely missing the strap above y=110
+    shoe_mask = np.zeros((H, W), dtype=np.uint8)
+    shoe_mask[110:180, 20:130] = 1
+
+    # 1. Standalone product photo (unworn, no human)
+    res_standalone = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=shoe_mask,
+        category="footwear",
+        label="sandals",
+        human_mask=None,
+    )
+    assert res_standalone is not None
+    arr_standalone = np.array(Image.open(io.BytesIO(res_standalone)))
+    # Top of ankle strap (y=42, x=70) must have solid alpha
+    assert arr_standalone[42, 70, 3] == 255, "Ankle strap must be preserved in standalone footwear cutout"
+    assert arr_standalone[130, 70, 3] == 255, "Shoe body must be preserved"
+
+    # 2. Multi-garment photo with human model legs
+    leg_mask = np.zeros((H, W), dtype=np.uint8)
+    leg_mask[10:100, 60:90] = 1  # leg inside ankle strap
+    res_worn = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=shoe_mask,
+        category="footwear",
+        label="heels",
+        human_mask=leg_mask,
+    )
+    assert res_worn is not None
+    arr_worn = np.array(Image.open(io.BytesIO(res_worn)))
+    # The ankle strap side loops (x=42, y=60) outside the leg mask must survive
+    assert arr_worn[60, 42, 3] == 255, "Ankle strap side loop must survive upward dilation"
+    assert arr_worn[130, 70, 3] == 255, "Shoe body must be preserved"
+    assert arr_worn[50, 75, 3] == 0, "Leg must be excised"
+
+
 def test_apply_alpha_intersection_bottoms_excises_torso_above_waistband():
     """Verify that bottoms cutouts zero out torso, arms, and tucked shirts above the waistband."""
     from app.services.clothing_parser import apply_alpha_intersection

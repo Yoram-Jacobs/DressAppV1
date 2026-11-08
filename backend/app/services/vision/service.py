@@ -1473,8 +1473,14 @@ class GarmentVisionService:
                                     * max(0, d.get("bbox", [0, 0, 0, 0])[3] - d.get("bbox", [0, 0, 0, 0])[1])
                                 ),
                             )
+                            best_cat = (best_det.get("category") or best_det.get("kind") or "").lower()
+                            best_lbl = (best_det.get("label") or "").lower()
+                            is_footwear_det = (
+                                best_cat in {"footwear", "shoes"}
+                                or any(w in best_lbl for w in ("shoe", "sandal", "heel", "boot", "sneaker", "slipper", "clog"))
+                            )
                             seg_mask = best_det.get("mask") if best_det.get("mask") is not None else best_det.get("_mask_bbox")
-                            if seg_mask is not None and bool(seg_mask.any()):
+                            if not is_footwear_det and seg_mask is not None and bool(seg_mask.any()):
                                 from app.services import clothing_parser as _cp
                                 h_mask = best_det.get("_human_mask_full") if best_det.get("_human_mask_full") is not None else (best_det.get("_human_mask_bbox") if best_det.get("_human_mask_bbox") is not None else best_det.get("_global_human_mask"))
                                 refined = _cp.apply_alpha_intersection(

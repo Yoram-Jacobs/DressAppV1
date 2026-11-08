@@ -73,7 +73,7 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     "fullbody":   (0.04, 0.04, 0.03, 0.04),
     "full body":  (0.04, 0.04, 0.03, 0.04),
     "outerwear":  (0.04, 0.04, 0.03, 0.04),
-    "footwear":   (0.04, 0.06, 0.04, 0.06),
+    "footwear":   (0.12, 0.06, 0.04, 0.06),
     "headwear":   (0.04, 0.04, 0.03, 0.04),
     "accessory":  (0.03, 0.04, 0.03, 0.04),
     "accessories": (0.03, 0.04, 0.03, 0.04),
