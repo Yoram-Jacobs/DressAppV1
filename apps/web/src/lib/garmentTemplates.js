@@ -7,6 +7,12 @@
 
 export const AVAILABLE_TEMPLATES = [
   'singlet',
+  'top_strapless',
+  'strapless',
+  'corset',
+  'tube',
+  'bandeau',
+  'bustier',
   'tshirt',
   'tunic',
   'top_tunic',
@@ -44,6 +50,7 @@ export const AVAILABLE_TEMPLATES = [
 
 export const CANONICAL_TEMPLATES = [
   'top_tshirt',
+  'top_strapless',
   'top_tunic',
   'top_longsleeve',
   'top_outerwear_jacket',
@@ -60,6 +67,12 @@ export const CANONICAL_TEMPLATES = [
 ];
 
 export const CANONICAL_TEMPLATE_MAP = {
+  top_strapless: 'top_strapless',
+  strapless: 'top_strapless',
+  corset: 'top_strapless',
+  tube: 'top_strapless',
+  bandeau: 'top_strapless',
+  bustier: 'top_strapless',
   singlet: 'singlet',
   tank: 'singlet',
   tshirt: 'top_tshirt',
@@ -210,6 +223,9 @@ export function resolveGarmentTemplate({
   }
 
   // 6. TOPS
+  if (rawSlot === 'top' && has('strapless', 'tube', 'corset', 'bustier', 'bandeau', 'sweetheart', 'סטרפלס', 'קורסט', 'מחוך', 'בוסטייה', 'בנדו', 'טיוב')) {
+    return 'top_strapless';
+  }
   if (rawSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'top_tunic';
   if (rawSlot === 'top') {
     if (has('tank', 'singlet', 'sleeveless', 'vest', 'camisole', 'גופיה', 'גופייה', 'גופית', 'גופיית', 'בלי שרוולים')) return 'singlet';

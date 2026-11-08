@@ -78,6 +78,7 @@ FASHION_GLOSSARY_HINTS: dict[str, dict[str, str]] = {
         "sherwani": "שרוואני",
         "smart-casual": "סמארט קז'ואל",
         "smart casual": "סמארט קז'ואל",
+        "nude": "בז' בהיר",
     }
 }
 
@@ -121,6 +122,10 @@ def _apply_fashion_glossary(text: str, target_lang: str) -> str:
         result = re.sub(r"\bסלוואר\b", "שרוואל", result)
         result = re.sub(r"\bסלבר\b", "שרוואל", result)
         result = re.sub(r"\bשלוואר\b", "שרוואל", result)
+        # Nude -> בז' בהיר
+        result = re.sub(r"\bבגוון ניוד\b", "בגוון בז' בהיר", result)
+        result = re.sub(r"\bבצבע ניוד\b", "בצבע בז' בהיר", result)
+        result = re.sub(r"\bניוד\b", "בז' בהיר", result)
     return result
 
 

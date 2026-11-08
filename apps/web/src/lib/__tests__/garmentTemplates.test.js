@@ -31,6 +31,7 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
 
   it('contains dedicated Blender avatar-reproduced canonical basemeshes', () => {
     expect(CANONICAL_TEMPLATES).toContain('top_tshirt');
+    expect(CANONICAL_TEMPLATES).toContain('top_strapless');
     expect(CANONICAL_TEMPLATES).toContain('top_tunic');
     expect(CANONICAL_TEMPLATES).toContain('top_longsleeve');
     expect(CANONICAL_TEMPLATES).toContain('top_outerwear_jacket');
@@ -65,7 +66,11 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
     expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Puffer Jacket', aspect: 0.95 })).toBe('top_outerwear_jacket');
   });
 
-  it('resolves top archetypes: singlet, t-shirt, shirt, hoodie', () => {
+  it('resolves top archetypes: strapless/corset, singlet, t-shirt, shirt, hoodie', () => {
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'חולצת קורסט קטיפה בורדו' })).toBe('top_strapless');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Strapless Tube Top' })).toBe('top_strapless');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Bandeau Bustier Top' })).toBe('top_strapless');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'מחוך סטרפלס אלגנטי' })).toBe('top_strapless');
     expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Athletic Tank Top' })).toBe('singlet');
     expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Graphic Tee T-Shirt' })).toBe('tshirt');
     expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Button Down Dress Shirt' })).toBe('shirt');

@@ -1001,19 +1001,26 @@ def build_top_template(avatar_data, variant="tshirt"):
         neck_tilt = -0.14
     elif variant == "singlet":
         offset = 0.0060
-        z_neck = 1.514 if is_male else 1.420
+        z_neck = 1.465 if is_male else 1.378
         z_hem = 0.88 if is_male else 0.84
         x_arm_max = 0.200 if is_male else 0.178
         sleeve_type = "sleeveless"
-        neck_tilt = -0.20
+        neck_tilt = -0.24
+    elif variant == "strapless":
+        offset = 0.0060
+        z_neck = 1.330 if is_male else 1.275
+        z_hem = 0.94 if is_male else 0.90
+        x_arm_max = 0.175 if is_male else 0.150
+        sleeve_type = "strapless"
+        neck_tilt = 0.0
     elif variant == "vest":
         offset = 0.0150
-        z_neck = 1.516 if is_male else 1.422
+        z_neck = 1.485 if is_male else 1.395
         z_hem = 0.82 if is_male else 0.78
         x_arm_max = 0.205 if is_male else 0.182
         sleeve_type = "sleeveless"
         is_open_front = True
-        neck_tilt = -0.16
+        neck_tilt = -0.20
     elif variant == "longsleeve":
         offset = 0.0075
         z_neck = 1.518 if is_male else 1.425
@@ -1030,53 +1037,53 @@ def build_top_template(avatar_data, variant="tshirt"):
         neck_tilt = -0.12
     elif variant in ("jacket", "top_outerwear_jacket"):
         offset = 0.0160
-        z_neck = 1.520 if is_male else 1.426
+        z_neck = 1.510 if is_male else 1.418
         z_hem = 0.80 if is_male else 0.76
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.14
+        neck_tilt = -0.16
     elif variant == "jacket_blazer":
         offset = 0.0160
-        z_neck = 1.520 if is_male else 1.426
+        z_neck = 1.502 if is_male else 1.410
         z_hem = 0.78 if is_male else 0.74
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.14
+        neck_tilt = -0.18
     elif variant == "cardigan":
         offset = 0.0140
-        z_neck = 1.516 if is_male else 1.422
+        z_neck = 1.485 if is_male else 1.395
         z_hem = 0.74 if is_male else 0.70
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.16
+        neck_tilt = -0.20
     elif variant == "coat":
         offset = 0.0180
-        z_neck = 1.520 if is_male else 1.426
+        z_neck = 1.510 if is_male else 1.418
         z_hem = 0.54 if is_male else 0.50
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.14
+        neck_tilt = -0.16
     elif variant == "trench_coat":
         offset = 0.0180
-        z_neck = 1.520 if is_male else 1.426
+        z_neck = 1.510 if is_male else 1.418
         z_hem = 0.48 if is_male else 0.44
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
         flare_hips = True
-        neck_tilt = -0.14
+        neck_tilt = -0.16
     elif variant in ("tunic", "top_tunic"):
         offset = 0.0140
-        z_neck = 1.516 if is_male else 1.422
+        z_neck = 1.488 if is_male else 1.398
         z_hem = 0.66 if is_male else 0.62
         x_arm_max = 0.260 if is_male else 0.230
         sleeve_type = "short"
         flare_hips = True
-        neck_tilt = -0.16
+        neck_tilt = -0.18
     else:
         offset = 0.0130
         z_neck = 1.518 if is_male else 1.425
@@ -1160,6 +1167,21 @@ def build_top_template(avatar_data, variant="tshirt"):
             + [f for f in bm.faces if all(v.co.x < -x_cut_min and v.co.z > z_arm_cut_min for v in f.verts)]
         )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=cuff_l, plane_no=arm_dir_l, clear_outer=True)
+    elif sleeve_type == "strapless":
+        # Strapless tops / corsets have NO arm sleeves at all;
+        # Completely remove all arm/hand vertices (X > x_arm_max or X < -x_arm_max)
+        x_cut = 0.178 if is_male else 0.154
+        # 1. Bisect armpit laterally so torso lateral wall is clean and planar
+        r_geom = [v for v in bm.verts if v.co.x > (x_cut - 0.02) and v.co.z > 0.95]
+        if r_geom:
+            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_cut, 0.0, 1.20)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
+        l_geom = [v for v in bm.verts if v.co.x < (-x_cut + 0.02) and v.co.z > 0.95]
+        if l_geom:
+            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_cut, 0.0, 1.20)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
+        # 2. Delete any remaining disconnected arm, elbow, forearm or hand vertices
+        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > x_cut or (abs(v.co.x) > 0.18 and v.co.z < 1.15)]
+        if stray_arm_verts:
+            bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:
         # Sleeveless (singlet, vest) armholes cut strictly in the shoulder/armpit zone (z > z_arm_cut_min)
         # so the ribcage, waist, and hip ring remain 100% closed on both sides!
@@ -1178,18 +1200,25 @@ def build_top_template(avatar_data, variant="tshirt"):
         )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
-    # 3. Precision Curved Collar Cut (cuts only the neck opening while preserving 100% of shoulders & clavicles)
-    # Uses smooth tilted planar bisect without piecewise slope distortion, ensuring a natural, round neckline
-    # that conforms seamlessly to the avatar's clavicles and trapezius with ZERO pointed collar ears!
-    nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
-    neck_no = Vector((0.0, neck_tilt, nz)).normalized()
-    bmesh.ops.bisect_plane(
-        bm,
-        geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
-        plane_co=Vector((0.0, 0.0, z_neck)),
-        plane_no=neck_no,
-        clear_outer=True
-    )
+    # 3. Precision Curved Collar / Strapless Cut (cuts only the neck opening or bustline while preserving 100% of body)
+    if variant == "strapless":
+        bmesh.ops.bisect_plane(
+            bm,
+            geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+            plane_co=Vector((0.0, 0.0, z_neck)),
+            plane_no=Vector((0.0, 0.0, 1.0)),
+            clear_outer=True
+        )
+    else:
+        nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
+        neck_no = Vector((0.0, neck_tilt, nz)).normalized()
+        bmesh.ops.bisect_plane(
+            bm,
+            geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+            plane_co=Vector((0.0, 0.0, z_neck)),
+            plane_no=neck_no,
+            clear_outer=True
+        )
 
     # Keep largest island (upper torso + sleeves) before extruding unified lower hem tube
     islands = []
@@ -1740,13 +1769,13 @@ def build_dress_template(avatar_data, variant="dress"):
     is_male = gender == "male"
     is_kaftan = variant == "kaftan"
 
-    z_neck = (1.520 if is_male else 1.426) if is_kaftan else (1.518 if is_male else 1.424)
+    z_neck = (1.510 if is_male else 1.418) if is_kaftan else (1.495 if is_male else 1.402)
     z_hip = 0.90 if is_male else 0.88
     z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.60 if is_male else 0.56)
     sleeve_type = "long" if is_kaftan else "sleeveless"
     x_arm_max = (0.475 if is_male else 0.430) if is_kaftan else (0.195 if is_male else 0.168)
     offset = 0.014 if is_kaftan else 0.009
-    neck_tilt = -0.14 if is_kaftan else -0.16
+    neck_tilt = -0.16 if is_kaftan else -0.18
 
     mw = avatar_obj.matrix_world
     bm = bmesh.new()
@@ -2180,6 +2209,7 @@ def build_accessory_template(avatar_data, variant="belt"):
 CANONICAL_SPECS = [
     # Upper Body
     ("top_tshirt", "top", "tshirt", ["tshirt.glb"]),
+    ("top_strapless", "top", "strapless", ["strapless.glb", "corset.glb", "tube.glb", "bandeau.glb", "bustier.glb"]),
     ("singlet", "top", "singlet", ["singlet.glb", "tank.glb"]),
     ("top_longsleeve", "top", "longsleeve", ["longsleeve.glb", "shirt.glb"]),
     ("hoodie", "top", "hoodie", ["hoodie.glb"]),
@@ -2297,12 +2327,21 @@ def main():
     ensure_dirs()
     total_exported = 0
 
+    target_assets = None
+    for i, arg in enumerate(sys.argv):
+        if arg.startswith("--only="):
+            target_assets = set(arg.split("=", 1)[1].split(","))
+        elif arg == "--only" and i + 1 < len(sys.argv):
+            target_assets = set(sys.argv[i + 1].split(","))
+
     for gender in ("male", "female"):
         print(f"\n=== GENERATING CANONICAL BASEMESHES FOR {gender.upper()} AVATAR ===")
         avatar_data = load_avatar_data(gender)
         generated_objs = {}
 
         for asset_name, category, variant, legacy_names in CANONICAL_SPECS:
+            if target_assets and asset_name not in target_assets:
+                continue
             if category == "top":
                 bm, faces_uvs, vert_weights, vg_names = build_top_template(avatar_data, variant)
             elif category == "dress":
@@ -2352,7 +2391,8 @@ def main():
                 f"  [OK] {gender}/{asset_name}.glb ({len(obj.data.vertices)} verts, {len(obj.data.polygons)} faces, non_manifold=0, zero_area=0)"
             )
 
-        verify_collision_and_rigidity(gender, generated_objs, avatar_data)
+        if "shoes_sneakers" in generated_objs and "bottom_trousers" in generated_objs:
+            verify_collision_and_rigidity(gender, generated_objs, avatar_data)
         avatar_data["bm"].free()
 
     print(f"\nALL {total_exported} CANONICAL BASEMESHES GENERATED AND VERIFIED SUCCESSFULLY.")

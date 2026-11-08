@@ -1587,12 +1587,21 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('camisole') ||
     text.includes('halter') ||
     text.includes('strapless') ||
+    text.includes('corset') ||
+    text.includes('bustier') ||
+    text.includes('bandeau') ||
+    text.includes('sweetheart') ||
     text.includes('גופי') ||
     text.includes('גופיה') ||
     text.includes('גופייה') ||
-    text.includes('גופיית') ||
+    text.includes('גופית') ||
     text.includes('וסט') ||
     text.includes('סטרפלס') ||
+    text.includes('קורסט') ||
+    text.includes('מחוך') ||
+    text.includes('בוסטייה') ||
+    text.includes('בנדו') ||
+    text.includes('טיוב') ||
     text.includes('ללא שרוולים') ||
     text.includes('sin mangas') ||
     text.includes('sans manches') ||
@@ -1697,6 +1706,66 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     return { type: 'long', factor: 1.0 };
   }
 }
+
+// ─── Neckline & Collar Style Resolution ───
+
+/**
+ * Detects neckline / collar style from garment text, attributes, and slot.
+ * Supported types:
+ *  - 'strapless': Strapless, tube, corset, bustier, sweetheart, bandeau
+ *  - 'v_neck': V-neck, plunging neck
+ *  - 'scoop': Scoop neck, low round neck, U-neck
+ *  - 'square': Square neck
+ *  - 'boat_neck': Boatneck, off-shoulder, bateau, bardot
+ *  - 'halter': Halter neck
+ *  - 'high_neck': Turtleneck, mock neck, funnel neck, roll neck
+ *  - 'collared': Collared shirt, button-down, polo, mandarin
+ *  - 'crew_neck': Round crew neck
+ *  - 'standard': Default
+ */
+export function detectNecklineStyle({ garmentText = '', garment = null } = {}) {
+  const metaText = garment ? resolveGarmentMetadataText(garment) : '';
+  const text = `${garmentText} ${metaText} ${garment?.neckline || ''}`.toLowerCase();
+
+  // 1. Strapless / Tube / Corset / Bustier / Sweetheart
+  if (/(?:strapless|tube|bandeau|corset|bustier|sweetheart|סטרפלס|בנדו|קורסט|מחוך|בוסטייה|טיוב|sans bretelles|trägerlos|palabra de honor|بدון حمالات|كورسيه)/i.test(text)) {
+    return 'strapless';
+  }
+  // 2. V-Neck / Plunge
+  if (/(?:v[-_\s]?neck|vneck|plunge|פתח וי|מחשוף וי|צווארון וי|v-ausschnitt|col en v|cuello en v)/i.test(text)) {
+    return 'v_neck';
+  }
+  // 3. Scoop Neck / U-Neck / Low Round
+  if (/(?:scoop|u[-_\s]?neck|low round|פתח עגול|מחשוף עגול|צווארון עגול נמוך|decollete)/i.test(text)) {
+    return 'scoop';
+  }
+  // 4. Square Neck
+  if (/(?:square[-_\s]?neck|square neck|צווארון מרובע|מחשוף מרובע)/i.test(text)) {
+    return 'square';
+  }
+  // 5. Boat Neck / Bateau / Off-Shoulder / Bardot
+  if (/(?:boat[-_\s]?neck|boatneck|bateau|off[-_\s]?shoulder|bardot|כתפיים חשופות|צווארון סירה)/i.test(text)) {
+    return 'boat_neck';
+  }
+  // 6. Halter Neck
+  if (/(?:halter|קולר|צווארון קולר)/i.test(text)) {
+    return 'halter';
+  }
+  // 7. Turtleneck / High Neck / Mock Neck / Roll Neck
+  if (/(?:turtleneck|mock[-_\s]?neck|high[-_\s]?neck|roll neck|funnel|גולף|צווארון גולף|צווארון גבוה)/i.test(text)) {
+    return 'high_neck';
+  }
+  // 8. Collared / Button-down / Polo / Shirt Collar
+  if (/(?:button|collared|shirt collar|polo|mandarin|צווארון|מכופתרת|פולו|סיני)/i.test(text)) {
+    return 'collared';
+  }
+  // 9. Crew Neck / Round Neck
+  if (/(?:crew[-_\s]?neck|crewneck|round neck|tee|t-shirt|טי שירט|חולצת טי|צווארון עגול)/i.test(text)) {
+    return 'crew_neck';
+  }
+  return 'standard';
+}
+
 
 // ─── 3D Parametric Body-Wrapping Geometry Builders ───
 
@@ -2818,7 +2887,12 @@ export function resolveShellFit({
 } = {}) {
   const fullText = `${garmentText} ${resolveGarmentMetadataText(garment)}`.toLowerCase();
   const has = (...words) => words.some((w) => fullText.includes(w));
-  const isStrapless = has('strapless', 'tube', 'bandeau', 'סטרפלס', 'בנדו', 'sans bretelles', 'trägerlos', 'palabra de honor');
+  const isStrapless = has(
+    'strapless', 'tube', 'bandeau', 'corset', 'bustier', 'sweetheart',
+    'סטרפלס', 'בנדו', 'קורסט', 'מחוך', 'בוסטייה', 'טיוב',
+    'sans bretelles', 'trägerlos', 'korsett', 'palabra de honor', 'corse', 'corsé',
+    'بدון حمالات', 'كورسيه', 'مشد'
+  );
   const isWideOrLoose = has('wide', 'loose', 'baggy', 'oversized', 'hip-hop', 'hip hop', 'cargo', 'relaxed', 'boyfriend', 'flair', 'flare', 'palazzo', 'ball gown', 'רחב', 'רפוי', 'אוברסייז');
   if (rawSlot === 'top') {
     const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
@@ -3196,6 +3270,103 @@ function GarmentTemplateMeshInner({
             }
           }
 
+          // Dynamic Collar & Neckline Tailoring:
+          // Adapts template collar geometry to match the authentic garment neckline (strapless, V-neck, scoop, square, boat neck),
+          // ensuring crew necks are NOT forced on non-crew garments.
+          const isCoreTop = ['top', 'outerwear', 'dress'].includes(rawSlot);
+          if (isCoreTop && pos) {
+            const necklineType = detectNecklineStyle({ garmentText });
+            const isStraplessTop = shellFit?.isStrapless || necklineType === 'strapless' || templateId === 'top_strapless';
+
+            if (isStraplessTop) {
+              // Enforce 100% strapless & sleeveless profile: zero sleeve volume, zero neck/shoulder coverage
+              const yBustMax = isMale ? 1.34 : 1.28;
+              const xArmMax = isMale ? 0.180 : 0.155;
+              let straplessModified = false;
+              for (let i = 0; i < pos.count; i++) {
+                let x = pos.getX(i);
+                let y = pos.getY(i);
+
+                if (y > yBustMax) {
+                  pos.setY(i, yBustMax);
+                  straplessModified = true;
+                }
+                if (Math.abs(x) > xArmMax) {
+                  pos.setX(i, Math.sign(x) * xArmMax);
+                  straplessModified = true;
+                }
+              }
+              if (straplessModified) {
+                pos.needsUpdate = true;
+                geo.computeVertexNormals();
+                geo.computeBoundingBox();
+              }
+            } else if (necklineType === 'v_neck') {
+              // V-Neck: smoothly contour front center neck vertices into an authentic V dip
+              let neckModified = false;
+              const yNeckBase = isMale ? 1.48 : 1.42;
+              const yVDip = isMale ? 1.40 : 1.34;
+              for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                const y = pos.getY(i);
+                const z = pos.getZ(i);
+                if (z > 0.005 && y > yVDip && Math.abs(x) < 0.09) {
+                  const targetY = yVDip + Math.abs(x) * ((yNeckBase - yVDip) / 0.09);
+                  if (y > targetY) {
+                    pos.setY(i, targetY);
+                    neckModified = true;
+                  }
+                }
+              }
+              if (neckModified) {
+                pos.needsUpdate = true;
+                geo.computeVertexNormals();
+                geo.computeBoundingBox();
+              }
+            } else if (necklineType === 'scoop') {
+              // Scoop Neck: round curved dip leaving clavicles and upper chest open
+              let neckModified = false;
+              const yScoopDip = isMale ? 1.42 : 1.36;
+              const yNeckBase = isMale ? 1.48 : 1.42;
+              for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                const y = pos.getY(i);
+                const z = pos.getZ(i);
+                if (z > 0.005 && y > yScoopDip && Math.abs(x) < 0.08) {
+                  const tAcross = Math.abs(x) / 0.08;
+                  const targetY = yScoopDip + (tAcross * tAcross) * (yNeckBase - yScoopDip);
+                  if (y > targetY) {
+                    pos.setY(i, targetY);
+                    neckModified = true;
+                  }
+                }
+              }
+              if (neckModified) {
+                pos.needsUpdate = true;
+                geo.computeVertexNormals();
+                geo.computeBoundingBox();
+              }
+            } else if (necklineType === 'square') {
+              // Square Neck: horizontal dip across the chest
+              let neckModified = false;
+              const ySquareDip = isMale ? 1.42 : 1.36;
+              for (let i = 0; i < pos.count; i++) {
+                const x = pos.getX(i);
+                const y = pos.getY(i);
+                const z = pos.getZ(i);
+                if (z > 0.005 && y > ySquareDip && Math.abs(x) < 0.075) {
+                  pos.setY(i, ySquareDip);
+                  neckModified = true;
+                }
+              }
+              if (neckModified) {
+                pos.needsUpdate = true;
+                geo.computeVertexNormals();
+                geo.computeBoundingBox();
+              }
+            }
+          }
+
           // Preserve authored GLB UVs; generate bounding-box fallback only if template geometry lacks UVs
           if (texture && !uv) {
             const bbUpdated = geo.boundingBox;
@@ -3445,9 +3616,20 @@ export function GarmentMeshCore({
       const isCrop = garmentText.includes('crop') || garmentText.includes('sports_bra') || garmentText.includes('bralette') || garmentText.includes('קרופ') || garmentText.includes('חזיה');
       const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה');
       const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'top', aspect });
+      const necklineStyle = detectNecklineStyle({ garmentText, garment });
+      const isStraplessTop = shellFit?.isStrapless || necklineStyle === 'strapless';
 
-      // High collar at 1.47 (F) / 1.53 (M), shoulder seam overlays avatar shoulder line at 1.42 (F) / 1.48 (M)
-      const yTop = (isMale ? 1.53 : 1.47) + yShift;
+      let yTopBase = isMale ? 1.49 : 1.43;
+      if (isStraplessTop) {
+        yTopBase = isMale ? 1.34 : 1.28;
+      } else if (necklineStyle === 'v_neck' || necklineStyle === 'scoop') {
+        yTopBase = isMale ? 1.44 : 1.38;
+      } else if (necklineStyle === 'high_neck') {
+        yTopBase = isMale ? 1.53 : 1.47;
+      } else if (necklineStyle === 'crew_neck') {
+        yTopBase = isMale ? 1.50 : 1.44;
+      }
+      const yTop = yTopBase + yShift;
       let yBottom = (isMale ? 0.90 : 0.86) + yShift;
       if (isCrop) yBottom = (isMale ? 1.18 : 1.12) + yShift;
       if (isLongline) yBottom = (isMale ? 0.75 : 0.70) + yShift;
@@ -3456,8 +3638,8 @@ export function GarmentMeshCore({
 
       return createAnatomicalTopGeometry({
         isMale,
-        hasSleeves: !hasOuterwear && sleeveStyle.type !== 'sleeveless',
-        sleeveFactor: hasOuterwear ? 0 : sleeveStyle.factor,
+        hasSleeves: !hasOuterwear && !isStraplessTop && sleeveStyle.type !== 'sleeveless',
+        sleeveFactor: hasOuterwear || isStraplessTop ? 0 : sleeveStyle.factor,
         yTop,
         yBottom,
         layerOffset,
