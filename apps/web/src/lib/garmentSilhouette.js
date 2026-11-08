@@ -2269,7 +2269,7 @@ export function synthesizeBackFabricData(data, w, h) {
       const isChestTorsoZone = vRel >= 0.12 && vRel <= 0.75;
       const pStart = Math.floor(0.08 * span);
       const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
-      if ((!isAllOverPatternRow || isChestTorsoZone) && pEnd > pStart + 2) {
+      if (!isAllOverPatternRow && pEnd > pStart + 2) {
         const fineThreshold = isAllOverPatternRow ? Math.max(8.0, sigma * 1.2) : Math.max(4.0, Math.min(10.0, sigma * 0.85));
         for (let i = pStart + 1; i < pEnd; i++) {
           const u_rel = i / (span - 1);
@@ -2279,16 +2279,13 @@ export function synthesizeBackFabricData(data, w, h) {
             let synR = baseR[i];
             let synG = baseG[i];
             let synB = baseB[i];
-            if (grainSrc.length > 0) {
-              const gSample = grainSrc[i % grainSrc.length];
-              const gRef = i < span / 2 ? cL : cR;
-              synR = Math.max(0, Math.min(255, synR + (gSample[0] - gRef[0]) * 0.55));
-              synG = Math.max(0, Math.min(255, synG + (gSample[1] - gRef[1]) * 0.55));
-              synB = Math.max(0, Math.min(255, synB + (gSample[2] - gRef[2]) * 0.55));
-            }
-            curR[i] = synR;
-            curG[i] = synG;
-            curB[i] = synB;
+            // Subtle high-frequency micro weave grain only; never repeat macro flank chunks
+            // that cause hallucinated periodic checkerboards!
+            const symI = Math.min(i, span - 1 - i);
+            const microNoise = Math.round(((symI * 37 + y * 17) % 5) - 2);
+            curR[i] = Math.max(0, Math.min(255, synR + microNoise));
+            curG[i] = Math.max(0, Math.min(255, synG + microNoise));
+            curB[i] = Math.max(0, Math.min(255, synB + microNoise));
             diffBase[i] = 0;
           }
         }
