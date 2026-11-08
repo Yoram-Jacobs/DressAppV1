@@ -1220,7 +1220,7 @@ class GarmentVisionService:
             parsed["title"] = parsed["name"]
         if not parsed.get("title"):
             parsed["title"] = "Unnamed garment"
-        parsed = _coerce_enums(parsed, user_gender=eff_gender)
+        parsed = _coerce_enums(parsed, user_gender=eff_gender, language=language)
         if isinstance(image_bytes, (bytes, bytearray)):
             _enforce_pixel_grounded_colors(parsed, crop_bytes=bytes(image_bytes))
         elif shrunk_list:

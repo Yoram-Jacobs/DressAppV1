@@ -3836,6 +3836,7 @@ def _coerce_enums(
     user_gender: str | None = None,
     *,
     model_gender: str | None = None,
+    language: str | None = None,
 ) -> dict[str, Any]:
     """Best-effort coercion of AI-returned enum values.
 
@@ -3972,8 +3973,9 @@ def _coerce_enums(
         parsed, "pattern", _VALID_PATTERN, aliases=_PATTERN_ALIASES, default="solid"
     )
     _coerce_seasons(parsed)
+    eff_lang = language or parsed.get("language")
     if parsed.get("colors"):
-        parsed["colors"] = normalize_weighted_tags(parsed["colors"], is_color=True, language=language)
+        parsed["colors"] = normalize_weighted_tags(parsed["colors"], is_color=True, language=eff_lang)
     if parsed.get("fabric_materials"):
         parsed["fabric_materials"] = normalize_weighted_tags(parsed["fabric_materials"])
     return parsed
