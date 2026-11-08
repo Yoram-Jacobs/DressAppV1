@@ -279,8 +279,14 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
       pos.setXYZ(vi, x + rigidAnchorDelta[0], y + rigidAnchorDelta[1], z + rigidAnchorDelta[2]);
       continue;
     }
-    const isOuterArmVertex = includeArms || (Math.abs(x) > (0.156 + Math.max(0, 1.20 - y) * 0.38) && y >= 0.70 && y <= 1.42);
-    const lookupY = (includeArms && y < 0.91 && Math.abs(x) < 0.25) ? 0.91 : y;
+    const isOuterArmVertex = Boolean(
+      includeArms &&
+      y >= 0.82 &&
+      y <= 1.42 &&
+      Math.abs(x) > (0.156 + Math.max(0, 1.20 - y) * 0.38)
+    );
+    const yHipLine = 0.90;
+    const lookupY = isOuterArmVertex ? y : (y < yHipLine ? yHipLine : y);
     const nn = findNearest(field, x, lookupY, z, isOuterArmVertex);
     if (nn.length === 0) continue;
 

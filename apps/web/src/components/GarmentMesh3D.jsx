@@ -3215,9 +3215,12 @@ function GarmentTemplateMeshInner({
     }
     if (morphField && morphInfluences && Object.keys(morphInfluences).length > 0) {
       try {
+        const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot });
+        const hasSleeves = sleeveStyle.type !== 'sleeveless';
+        const includeArmsForSlot = ['top', 'outerwear', 'dress'].includes(rawSlot) ? hasSleeves : rawSlot === 'watch';
         geo = applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
           minClearance: layerOffset,
-          includeArms: ['top', 'outerwear', 'dress', 'watch'].includes(rawSlot),
+          includeArms: includeArmsForSlot,
         });
       } catch (e) {
         // proceed with base geo
