@@ -911,7 +911,8 @@
       "upgradePlanCta": "Get AI Credits or Upgrade",
       "massClusterCreditsRequiredLabel": "Minimum AI Reconstruction Credits: 15",
       "massClusterCurrentCreditsLabel": "Your Balance: {{available}}"
-    }
+    },
+    "fitPlaceholder": "Select fit"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1078,7 +1079,8 @@
       "culturalTags": "Cultural tags",
       "culturalTagPlaceholder": "add cultural tag",
       "notes": "Notes",
-      "priceWithCurrency": "Price ({{currency}})"
+      "priceWithCurrency": "Price ({{currency}})",
+      "fit": "Fit"
     },
     "groupViewsTitle": "Grouped Garments & Views",
     "cover": "Cover",
@@ -2322,64 +2324,161 @@
     "tomorrow": "Tomorrow"
   },
   "seo": {
-    "defaultTitle": "DressApp — Your closet, elevated",
-    "defaultDescription": "Catalog your wardrobe, ask an AI stylist, and swap or sell with a fair 7% fee.",
+    "defaultTitle": "DressApp — Digital Closet, AI Stylist & Fashion Marketplace",
+    "defaultDescription": "Digitize your wardrobe with DressApp—your smart digital closet, AI outfit planner, and circular fashion marketplace with a 7% fee. Start organizing free today.",
+    "defaultOgTitle": "DressApp — Your Smart Digital Closet, AI Stylist & Marketplace",
+    "defaultOgDescription": "Snap and organize your physical closet in seconds, get daily weather-aware AI outfit advice, and buy, sell, or swap pre-loved clothes with a 7% community fee.",
+    "schemaDescription": "Smart digital closet, AI personal stylist, outfit planner, and circular fashion marketplace with a 7% community fee.",
     "routes": {
+      "home": {
+        "title": "DressApp — Digital Closet, AI Stylist & Fashion Marketplace",
+        "description": "Digitize your wardrobe with DressApp—your smart digital closet, AI outfit planner, and circular fashion marketplace with a 7% fee. Start organizing free today.",
+        "ogTitle": "DressApp — Your Smart Digital Closet, AI Stylist & Marketplace",
+        "ogDescription": "Snap and organize your physical closet in seconds, get daily weather-aware AI outfit advice, and buy, sell, or swap pre-loved clothes with a 7% community fee."
+      },
       "login": {
-        "title": "Sign in",
-        "description": "Sign in to DressApp to manage your closet, browse the marketplace, and chat with the AI stylist."
+        "title": "Sign In — Digital Closet & AI Personal Stylist | DressApp",
+        "description": "Sign in to DressApp to access your digital closet, plan daily outfits with your AI personal stylist, and buy, sell, or swap clothes on the marketplace.",
+        "ogTitle": "Sign In to DressApp — Your Smart Digital Closet & AI Stylist",
+        "ogDescription": "Access your digitized wardrobe, weather-aware AI outfit planner, and circular fashion marketplace with a 7% community fee."
       },
       "register": {
-        "title": "Create account",
-        "description": "Join DressApp — your closet, community marketplace, and AI stylist in one place."
+        "title": "Create Account — Free Digital Closet & AI Stylist | DressApp",
+        "description": "Join DressApp free today to digitize your wardrobe, get daily AI outfit recommendations, and sell or swap clothes with a transparent 7% community fee.",
+        "ogTitle": "Join DressApp — Free Digital Closet, AI Stylist & Marketplace",
+        "ogDescription": "Create your free DressApp account to organize your closet in seconds, plan outfits with AI, and join the circular fashion marketplace."
       },
-      "home": {
-        "title": "Today",
-        "description": "Your daily DressApp brief: trends, closet stats, and the latest stylist reads."
+      "onboarding": {
+        "title": "Get Started — Build Your Smart Digital Closet | DressApp",
+        "description": "Set up your DressApp digital wardrobe, customize your 3D avatar and style profile, and start receiving personalized AI outfit recommendations today.",
+        "ogTitle": "Get Started with DressApp — Smart Digital Closet & AI Stylist",
+        "ogDescription": "Build your digital closet, personalize your 3D avatar, and unlock daily weather-aware outfit planning in minutes."
+      },
+      "about": {
+        "title": "About Us — The Smart Digital Closet & Circular Fashion Story | DressApp",
+        "description": "Discover the story behind DressApp: how a wardrobe crisis inspired a smart digital closet, AI personal stylist, and circular fashion marketplace.",
+        "ogTitle": "About DressApp — Our Vision for Smart & Circular Fashion",
+        "ogDescription": "Learn how DressApp combines a smart digital closet, AI personal stylist, and 7% fee community marketplace in 13 languages."
+      },
+      "pricing": {
+        "title": "Pricing & Plans — Free Digital Closet & Pro AI Stylist | DressApp",
+        "description": "Compare DressApp Free, Manager, and Professional plans. Start digitizing up to 100 closet items free and upgrade for unlimited AI styling and analytics.",
+        "ogTitle": "DressApp Pricing & Plans — Start Your Digital Closet Free",
+        "ogDescription": "Explore transparent DressApp tiers: free digital wardrobe management, AI outfit planning, and circular marketplace access with a 7% fee."
       },
       "closet": {
-        "title": "My closet",
-        "description": "Every piece you own — with smart segmentation, source tags, and one-tap edit-with-AI."
+        "title": "My Digital Closet — Virtual Wardrobe & Garment Organizer | DressApp",
+        "description": "Manage every piece you own in your smart digital closet with automatic AI background removal, garment tagging, cost-per-wear tracking, and outfit sets.",
+        "ogTitle": "My Smart Digital Closet & Virtual Wardrobe — DressApp",
+        "ogDescription": "Organize your entire wardrobe with automatic AI cutout, smart category tags, seasonal filters, and one-tap outfit building."
       },
       "closet_add": {
-        "title": "Add to closet",
-        "description": "Add a new item to your DressApp closet from a photo or URL."
+        "title": "Add Clothes — AI Wardrobe Scanner & Photo Cutout | DressApp",
+        "description": "Snap a photo or paste a store URL to add clothes to your DressApp digital closet with automatic AI background removal, color detection, and tag OCR.",
+        "ogTitle": "Add Clothes to Your Digital Closet in Seconds — DressApp",
+        "ogDescription": "Digitize garments effortlessly using DressApp's AI multi-item scanner, automatic background cutout, and care-label OCR."
       },
       "stylist": {
-        "title": "Stylist",
-        "description": "Multimodal AI stylist that understands your closet, calendar, and the weather."
+        "title": "AI Personal Stylist & Daily Outfit Planner | DressApp",
+        "description": "Chat with your multimodal AI personal stylist for daily outfit ideas grounded in your real closet, local weather forecast, and upcoming calendar events.",
+        "ogTitle": "DressApp AI Personal Stylist — Weather & Schedule Outfit Planner",
+        "ogDescription": "Get instant, personalized outfit combinations from your own closet tailored to today's weather, occasion, and color palette."
       },
       "market": {
-        "title": "Marketplace",
-        "description": "Buy, sell, swap, or donate community pieces with full fee transparency."
+        "title": "Circular Fashion Marketplace — Buy, Sell & Swap Clothes | DressApp",
+        "description": "Buy, sell, swap, or donate pre-loved fashion on the DressApp community marketplace with virtual try-on previews and a fair 7% community fee.",
+        "ogTitle": "DressApp Fashion Marketplace — Buy, Sell & Swap with a 7% Fee",
+        "ogDescription": "Shop pre-loved wardrobe pieces, test how items match your closet before buying, and list your own clothes in one tap."
       },
       "market_create": {
-        "title": "List a piece",
-        "description": "List one of your closet items on the DressApp marketplace."
+        "title": "Sell or Swap a Piece — List on the Fashion Marketplace | DressApp",
+        "description": "Turn unworn closet items into cash or swaps in one tap. List directly from your DressApp digital closet with a low 7% community marketplace fee.",
+        "ogTitle": "List a Piece on the DressApp Circular Fashion Marketplace",
+        "ogDescription": "Select any item from your digital closet to sell, swap, or donate with pre-filled details and transparent 7% fees."
       },
       "transactions": {
-        "title": "Transactions",
-        "description": "Your DressApp purchases and sales, with full 7% fee transparency."
+        "title": "Marketplace Transactions — Orders, Sales & Swaps | DressApp",
+        "description": "Track your DressApp marketplace purchases, sales, and swaps with transparent 7% community fee breakdowns and order status updates.",
+        "ogTitle": "Your Marketplace Transactions & Orders — DressApp",
+        "ogDescription": "Manage your DressApp community marketplace purchases, payouts, and swap deliveries in one place."
       },
       "admin": {
-        "title": "Admin dashboard",
-        "description": "DressApp operations console for users, marketplace, AI providers, and the Trend-Scout agent."
+        "title": "Admin Dashboard — Platform Operations Console | DressApp",
+        "description": "DressApp operations console for managing users, marketplace listings, AI vision and stylist providers, and Trend Scout feeds.",
+        "ogTitle": "DressApp Admin Operations Console",
+        "ogDescription": "Internal administration dashboard for DressApp platform operations."
       },
       "me": {
-        "title": "Profile & settings",
-        "description": "Manage your DressApp profile, voice, and Google Calendar connection."
+        "title": "Profile & Settings — Style Preferences & Account | DressApp",
+        "description": "Manage your DressApp style profile, body measurements, language preferences, calendar sync, and notification settings.",
+        "ogTitle": "Your Profile & Style Settings — DressApp",
+        "ogDescription": "Customize your DressApp wardrobe preferences, language, and connected services."
+      },
+      "stats": {
+        "title": "Wardrobe Insights — Cost-Per-Wear & Color Analytics | DressApp",
+        "description": "Analyze your wardrobe value, cost-per-wear metrics, color palette distribution, and most-worn garments with DressApp Wardrobe Insights.",
+        "ogTitle": "DressApp Wardrobe Insights — Cost-Per-Wear & Style Analytics",
+        "ogDescription": "Unlock deep analytics on your closet usage, color balance, seasonal readiness, and sustainability impact."
+      },
+      "experts": {
+        "title": "Certified Personal Stylists & Fashion Experts Directory | DressApp",
+        "description": "Connect with certified personal stylists and wardrobe consultants on DressApp for live closet audits, color analysis, and personal shopping.",
+        "ogTitle": "DressApp Fashion Experts Directory — Book a Personal Stylist",
+        "ogDescription": "Browse certified human stylists who can review your DressApp digital closet and craft bespoke lookbooks for you."
       },
       "trends": {
-        "title": "Trend Scout",
-        "description": "Your personalized DressApp fashion trends and styling recommendations since you signed in."
+        "title": "Trend Scout — Daily Curated Fashion Trends & Runway Reads | DressApp",
+        "description": "Explore daily curated fashion trends, street style movements, and sustainable wardrobe inspiration matched to items you already own in DressApp.",
+        "ogTitle": "DressApp Trend Scout — Curated Fashion Trends Matched to Your Closet",
+        "ogDescription": "See how global runway and street-style trends connect directly to pieces in your personal digital wardrobe."
+      },
+      "suitcase": {
+        "title": "Smart Suitcase & Travel Packing List Planner | DressApp",
+        "description": "Plan stress-free travel capsules with DressApp's AI suitcase planner. Pack weather-ready outfits from your digital closet for any destination.",
+        "ogTitle": "DressApp Smart Suitcase — AI Travel Capsule & Packing Planner",
+        "ogDescription": "Build destination-ready packing lists and daily travel outfits directly from your digital wardrobe."
+      },
+      "avatar": {
+        "title": "3D Virtual Dressing Room & Custom Body Avatar | DressApp",
+        "description": "Try on clothes and mix-and-match outfits in 3D on a customizable body avatar tailored to your real proportions in the DressApp Virtual Dressing Room.",
+        "ogTitle": "DressApp 3D Virtual Dressing Room — Custom Avatar Try-On",
+        "ogDescription": "Visualize garments and full outfits from every angle on your personalized 3D avatar before you dress or shop."
+      },
+      "shopping": {
+        "title": "Shopping Assistant — Virtual Try-On & Closet Match | DressApp",
+        "description": "Test online store items against your existing digital closet before you buy. See outfit matches, style scores, and 3D try-on with DressApp Shopping Assistant.",
+        "ogTitle": "DressApp Shopping Assistant — Check Closet Compatibility Before Buying",
+        "ogDescription": "Avoid impulse buys by testing how new pieces from any online store pair with clothes you already own."
+      },
+      "migration": {
+        "title": "Wardrobe Migration — Import Your Closet in One Click | DressApp",
+        "description": "Migrate your existing digital wardrobe from other closet apps into DressApp in minutes with automated garment import and tag preservation.",
+        "ogTitle": "DressApp Wardrobe Migration — Move Your Digital Closet Seamlessly",
+        "ogDescription": "Bring your entire wardrobe catalog into DressApp without re-photographing a single garment."
+      },
+      "privacy": {
+        "title": "Privacy Policy — Data Protection & Sovereign Wardrobe Security | DressApp",
+        "description": "Read the DressApp Privacy Policy to learn how we protect your personal wardrobe photos, style profile, and account data with strict privacy controls.",
+        "ogTitle": "DressApp Privacy Policy — How We Protect Your Wardrobe Data",
+        "ogDescription": "Transparent privacy practices covering your digital closet photos, AI styling sessions, and marketplace transactions."
+      },
+      "terms": {
+        "title": "Terms of Service — Platform & Marketplace Rules | DressApp",
+        "description": "Review the DressApp Terms of Service governing digital closet usage, AI personal styling, subscriptions, and our 7% fee community marketplace.",
+        "ogTitle": "DressApp Terms of Service — User & Marketplace Guidelines",
+        "ogDescription": "Read the official terms and community guidelines for using DressApp's wardrobe, AI stylist, and marketplace services."
       },
       "closet_item": {
-        "title": "Closet item",
-        "description": "A piece in your DressApp closet."
+        "title": "Closet Garment Details & Outfit Matches | DressApp",
+        "description": "View garment attributes, wear history, cost-per-wear stats, and AI-suggested outfit combinations in your DressApp digital closet.",
+        "ogTitle": "Garment Details & Outfit Ideas — DressApp Digital Closet",
+        "ogDescription": "Inspect garment tags, styling notes, and matching pieces in your smart digital wardrobe."
       },
       "market_listing": {
-        "title": "Marketplace listing",
-        "description": "A piece for sale on DressApp."
+        "title": "Pre-Loved Fashion Listing — Circular Marketplace | DressApp",
+        "description": "Explore this pre-loved piece on the DressApp marketplace. Preview how it pairs with your closet and buy or swap with a 7% community fee.",
+        "ogTitle": "Pre-Loved Fashion Piece on the DressApp Marketplace",
+        "ogDescription": "Shop or swap this community wardrobe listing on DressApp with virtual closet matching and a 7% fee."
       }
     }
   },
@@ -2878,6 +2977,13 @@
       "orange": "Orange",
       "gold": "Gold",
       "silver": "Silver"
+    },
+    "fit": {
+      "slim": "Slim Fit",
+      "regular": "Regular Fit",
+      "loose": "Loose / Relaxed Fit",
+      "oversized": "Oversized Fit",
+      "flared": "Flared / A-Line"
     }
   },
   "location": {
@@ -5864,7 +5970,8 @@
   "dressingRoom": {
     "title": "3D Dressing Room",
     "tryOn3D": "Try on in 3D",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "3D View"
   },
   "shareTarget": {
     "badge": "Mobile Size Assistant",

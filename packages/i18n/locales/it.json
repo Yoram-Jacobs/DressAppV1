@@ -911,7 +911,8 @@
       "upgradePlanCta": "Ottieni crediti IA o fai upgrade",
       "massClusterCreditsRequiredLabel": "Crediti minimi di ricostruzione IA: 15",
       "massClusterCurrentCreditsLabel": "Il tuo saldo: {{available}}"
-    }
+    },
+    "fitPlaceholder": "Seleziona vestibilità"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1077,7 +1078,8 @@
       "sectionOrganizationDesc": "Livello di formalità dell'outfit, etichette e note di stile culturale",
       "sectionCleanBgDesc": "Rimuovi lo sfondo utilizzando modelli di stuoia non generativi",
       "sectionReanalyseDesc": "Eseguire nuovamente l'analisi per estrarre i dettagli dall'immagine",
-      "priceWithCurrency": "Prezzo ({{currency}})"
+      "priceWithCurrency": "Prezzo ({{currency}})",
+      "fit": "Vestibilità"
     },
     "group": {
       "front": "Fronte",
@@ -2322,64 +2324,161 @@
     "tomorrow": "Domani"
   },
   "seo": {
-    "defaultTitle": "DressApp — Il tuo armadio, elevato",
-    "defaultDescription": "Cataloga il guardaroba, chiedi a una stylist AI e scambia o vendi con una commissione equa del 7%.",
+    "defaultTitle": "DressApp — Armadio Digitale, Stylist IA e Marketplace di Moda",
+    "defaultDescription": "Digitalizza il tuo guardaroba con DressApp: il tuo armadio digitale smart, pianificatore di outfit con IA e marketplace di moda circolare con commissione del 7%. Inizia gratis oggi.",
+    "defaultOgTitle": "DressApp — Il Tuo Armadio Digitale Smart, Stylist IA e Marketplace",
+    "defaultOgDescription": "Fotografa e organizza il tuo armadio in pochi secondi, ricevi consigli giornalieri di outfit con IA in base al meteo e compra, vendi o scambia abiti con il 7% di commissione.",
+    "schemaDescription": "Armadio digitale smart, personal stylist con IA, pianificatore di outfit e marketplace di moda circolare con commissione della community del 7%.",
     "routes": {
+      "home": {
+        "title": "DressApp — Armadio Digitale, Stylist IA e Marketplace di Moda",
+        "description": "Digitalizza il tuo guardaroba con DressApp: il tuo armadio digitale smart, pianificatore di outfit con IA e marketplace di moda circolare con commissione del 7%. Inizia gratis oggi.",
+        "ogTitle": "DressApp — Il Tuo Armadio Digitale Smart, Stylist IA e Marketplace",
+        "ogDescription": "Fotografa e organizza il tuo armadio in pochi secondi, ricevi consigli giornalieri di outfit con IA in base al meteo e compra, vendi o scambia abiti con il 7% di commissione."
+      },
       "login": {
-        "title": "Accedi",
-        "description": "Accedi a DressApp per gestire il tuo guardaroba, esplorare il marketplace e chattare con la stylist AI."
+        "title": "Accedi — Armadio Digitale e Personal Stylist IA | DressApp",
+        "description": "Accedi a DressApp per entrare nel tuo armadio digitale, pianificare gli outfit quotidiani con il tuo personal stylist IA e comprare, vendere o scambiare vestiti sul marketplace.",
+        "ogTitle": "Accedi a DressApp — Il Tuo Armadio Digitale Smart e Stylist IA",
+        "ogDescription": "Accedi al tuo guardaroba digitalizzato, al pianificatore di outfit IA basato sul meteo e al marketplace di moda circolare con commissione del 7%."
       },
       "register": {
-        "title": "Crea account",
-        "description": "Unisciti a DressApp — il tuo guardaroba, marketplace della community e stylist AI in un unico posto."
+        "title": "Crea Account — Armadio Digitale Gratuito e Stylist IA | DressApp",
+        "description": "Unisciti gratis a DressApp oggi stesso per digitalizzare il tuo guardaroba, ricevere consigli di outfit giornalieri con IA e vendere o scambiare abiti con una commissione del 7%.",
+        "ogTitle": "Unisciti a DressApp — Armadio Digitale Gratuito, Stylist IA e Marketplace",
+        "ogDescription": "Crea il tuo account gratuito su DressApp per organizzare l'armadio in pochi secondi, pianificare i look con l'IA ed entrare nella moda circolare."
       },
-      "home": {
-        "title": "Oggi",
-        "description": "Il tuo brief quotidiano DressApp: tendenze, statistiche del guardaroba e le ultime letture della stylist."
+      "onboarding": {
+        "title": "Inizia Ora — Crea il Tuo Armadio Digitale Smart | DressApp",
+        "description": "Configura il tuo guardaroba digitale su DressApp, personalizza il tuo avatar 3D e il profilo di stile, e inizia a ricevere consigli di outfit personalizzati con l'IA oggi stesso.",
+        "ogTitle": "Inizia con DressApp — Armadio Digitale Smart e Stylist IA",
+        "ogDescription": "Costruisci il tuo armadio digitale, personalizza il tuo avatar 3D e sblocca in pochi minuti la pianificazione quotidiana degli outfit in base al meteo."
+      },
+      "about": {
+        "title": "Chi Siamo — La Storia dell'Armadio Digitale e della Moda Circolare | DressApp",
+        "description": "Scopri la storia dietro DressApp: come una crisi davanti all'armadio ha ispirato un guardaroba digitale smart, un personal stylist IA e un marketplace di moda circolare.",
+        "ogTitle": "Chi è DressApp — La Nostra Visione per la Moda Smart e Circolare",
+        "ogDescription": "Scopri come DressApp unisce un armadio digitale smart, un personal stylist IA e un marketplace comunitario con commissione del 7% in 13 lingue."
+      },
+      "pricing": {
+        "title": "Prezzi e Piani — Armadio Digitale Gratuito e Stylist IA Pro | DressApp",
+        "description": "Confronta i piani Free, Manager e Professional di DressApp. Inizia digitalizzando gratis fino a 100 capi e passa ai piani superiori per styling IA e statistiche illimitate.",
+        "ogTitle": "Prezzi e Piani DressApp — Inizia Gratis il Tuo Armadio Digitale",
+        "ogDescription": "Esplora i piani trasparenti di DressApp: gestione gratuita del guardaroba digitale, pianificazione outfit con IA e accesso al marketplace con commissione del 7%."
       },
       "closet": {
-        "title": "Il mio guardaroba",
-        "description": "Ogni capo che possiedi — con segmentazione intelligente, tag di origine ed edit-with-AI con un tap."
+        "title": "Il Mio Armadio Digitale — Guardaroba Virtuale e Organizer Capi | DressApp",
+        "description": "Gestisci ogni capo nel tuo armadio digitale smart con rimozione automatica dello sfondo tramite IA, tag dei capi, calcolo del costo per utilizzo e creazione di completi.",
+        "ogTitle": "Il Mio Armadio Digitale Smart e Guardaroba Virtuale — DressApp",
+        "ogDescription": "Organizza l'intero guardaroba con scontorno automatico IA, tag di categoria intelligenti, filtri stagionali e creazione di outfit con un tocco."
       },
       "closet_add": {
-        "title": "Aggiungi al guardaroba",
-        "description": "Aggiungi un nuovo capo al tuo guardaroba DressApp da una foto o da un URL."
+        "title": "Aggiungi Vestiti — Scanner Guardaroba IA e Scontorno Foto | DressApp",
+        "description": "Scatta una foto o incolla il link di uno store per aggiungere capi al tuo armadio digitale DressApp con rimozione sfondo IA, rilevamento colori e OCR delle etichette.",
+        "ogTitle": "Aggiungi Vestiti al Tuo Armadio Digitale in Pochi Secondi — DressApp",
+        "ogDescription": "Digitalizza i tuoi capi senza sforzo usando lo scanner multi-capo IA di DressApp, lo scontorno automatico dello sfondo e la lettura OCR delle etichette."
       },
       "stylist": {
-        "title": "Stilista",
-        "description": "Stylist AI multimodale che comprende il tuo guardaroba, il calendario e il meteo."
+        "title": "Personal Stylist IA e Pianificatore Giornaliero di Outfit | DressApp",
+        "description": "Chatta con il tuo personal stylist IA multimodale per idee di outfit quotidiane basate sul tuo vero armadio, sulle previsioni meteo locali e sugli impegni in calendario.",
+        "ogTitle": "Personal Stylist IA DressApp — Pianificatore Outfit per Meteo e Agenda",
+        "ogDescription": "Ottieni combinazioni di outfit istantanee e personalizzate dal tuo armadio, calibrate sul meteo di oggi, sull'occasione e sulla tua palette di colori."
       },
       "market": {
-        "title": "Mercato",
-        "description": "Compra, vendi, scambia o dona capi della community con piena trasparenza sulle commissioni."
+        "title": "Marketplace di Moda Circolare — Compra, Vendi e Scambia Abiti | DressApp",
+        "description": "Compra, vendi, scambia o dona moda second-hand sul marketplace comunitario di DressApp con anteprima di prova virtuale e una commissione equa del 7%.",
+        "ogTitle": "Marketplace Moda DressApp — Compra, Vendi e Scambia con il 7% di Commissione",
+        "ogDescription": "Acquista capi pre-loved, verifica come si abbinano al tuo armadio prima di comprare e metti in vendita i tuoi vestiti con un tocco."
       },
       "market_create": {
-        "title": "Metti in vendita",
-        "description": "Metti in vendita uno dei capi del tuo guardaroba sul marketplace DressApp."
+        "title": "Vendi o Scambia un Capo — Pubblica sul Marketplace di Moda | DressApp",
+        "description": "Trasforma i capi inutilizzati in guadagno o scambi con un tocco. Pubblica direttamente dal tuo armadio digitale DressApp con una commissione ridotta del 7%.",
+        "ogTitle": "Pubblica un Capo sul Marketplace di Moda Circolare DressApp",
+        "ogDescription": "Seleziona qualsiasi articolo dal tuo armadio digitale per venderlo, scambiarlo o donarlo con dettagli precompilati e commissione trasparente del 7%."
       },
       "transactions": {
-        "title": "Transazioni",
-        "description": "I tuoi acquisti e le tue vendite su DressApp, con piena trasparenza sulla commissione del 7%."
+        "title": "Transazioni Marketplace — Ordini, Vendite e Scambi | DressApp",
+        "description": "Monitora acquisti, vendite e scambi sul marketplace di DressApp con il dettaglio trasparente della commissione del 7% e gli aggiornamenti sullo stato degli ordini.",
+        "ogTitle": "Le Tue Transazioni e i Tuoi Ordini sul Marketplace — DressApp",
+        "ogDescription": "Gestisci in un unico posto i tuoi acquisti, i pagamenti ricevuti e le spedizioni di scambio sul marketplace della community DressApp."
       },
       "admin": {
-        "title": "Dashboard admin",
-        "description": "Console operativa DressApp per utenti, marketplace, provider AI e l'agente Trend-Scout."
+        "title": "Dashboard Admin — Console Operativa della Piattaforma | DressApp",
+        "description": "Console operativa di DressApp per gestire utenti, annunci del marketplace, provider di visione artificiale e stylist IA e feed di Trend Scout.",
+        "ogTitle": "Console Operativa di Amministrazione DressApp",
+        "ogDescription": "Dashboard di amministrazione interna per le operazioni della piattaforma DressApp."
       },
       "me": {
-        "title": "Profilo e impostazioni",
-        "description": "Gestisci il tuo profilo DressApp, la voce e la connessione a Google Calendar."
+        "title": "Profilo e Impostazioni — Preferenze di Stile e Account | DressApp",
+        "description": "Gestisci il tuo profilo di stile su DressApp, le misure corporee, le preferenze di lingua, la sincronizzazione del calendario e le impostazioni di notifica.",
+        "ogTitle": "Il Tuo Profilo e le Impostazioni di Stile — DressApp",
+        "ogDescription": "Personalizza le preferenze del tuo guardaroba, la lingua e i servizi collegati su DressApp."
       },
-      "closet_item": {
-        "title": "Capo del guardaroba",
-        "description": "Un capo nel tuo guardaroba DressApp."
+      "stats": {
+        "title": "Statistiche Guardaroba — Costo per Utilizzo e Analisi Colori | DressApp",
+        "description": "Analizza il valore del tuo guardaroba, le metriche di costo per utilizzo, la distribuzione della palette colori e i capi più indossati con le Statistiche DressApp.",
+        "ogTitle": "Statistiche Guardaroba DressApp — Costo per Utilizzo e Analisi di Stile",
+        "ogDescription": "Sblocca analisi approfondite sull'utilizzo del tuo armadio, sull'equilibrio cromatico, sulla copertura stagionale e sull'impatto di sostenibilità."
       },
-      "market_listing": {
-        "title": "Annuncio marketplace",
-        "description": "Un capo in vendita su DressApp."
+      "experts": {
+        "title": "Directory di Personal Stylist Certificati ed Esperti di Moda | DressApp",
+        "description": "Entra in contatto con personal stylist certificati e consulenti d'immagine su DressApp per revisioni dell'armadio dal vivo, armocromia e personal shopping.",
+        "ogTitle": "Directory Esperti di Moda DressApp — Prenota un Personal Stylist",
+        "ogDescription": "Sfoglia i profili di stylist professionisti certificati che possono analizzare il tuo armadio digitale DressApp e creare lookbook su misura per te."
       },
       "trends": {
-        "description": "Le tue tendenze di moda e consigli di stile personalizzati su DressApp da quando hai effettuato l'accesso.",
-        "title": "Esploratore di tendenze"
+        "title": "Trend Scout — Tendenze Moda Giornaliere e Ispirazioni da Passerella | DressApp",
+        "description": "Esplora ogni giorno tendenze moda selezionate, movimenti street style e ispirazioni per un guardaroba sostenibile abbinate ai capi che possiedi già su DressApp.",
+        "ogTitle": "DressApp Trend Scout — Tendenze Moda Abbinate al Tuo Armadio",
+        "ogDescription": "Scopri come le tendenze globali delle passerelle e dello street style si collegano direttamente ai capi del tuo guardaroba digitale personale."
+      },
+      "suitcase": {
+        "title": "Valigia Smart e Pianificatore di Liste Bagaglio da Viaggio | DressApp",
+        "description": "Pianifica guardaroba capsula da viaggio senza stress con il pianificatore di valigia IA di DressApp. Prepara outfit adatti al meteo dal tuo armadio digitale per ogni meta.",
+        "ogTitle": "Valigia Smart DressApp — Pianificatore IA di Capsule da Viaggio e Bagagli",
+        "ogDescription": "Crea liste bagaglio pronte per la tua destinazione e outfit giornalieri da viaggio direttamente dal tuo guardaroba digitale."
+      },
+      "avatar": {
+        "title": "Camerino Virtuale 3D e Avatar Corporeo Personalizzato | DressApp",
+        "description": "Prova i vestiti e abbina gli outfit in 3D su un avatar corporeo personalizzabile modellato sulle tue reali proporzioni nel Camerino Virtuale di DressApp.",
+        "ogTitle": "Camerino Virtuale 3D DressApp — Prova Abiti su Avatar Personalizzato",
+        "ogDescription": "Visualizza singoli capi e outfit completi da ogni angolazione sul tuo avatar 3D personalizzato prima di vestirti o fare acquisti."
+      },
+      "shopping": {
+        "title": "Assistente allo Shopping — Prova Virtuale e Compatibilità Armadio | DressApp",
+        "description": "Testa gli articoli dei negozi online con il tuo armadio digitale prima di acquistare. Scopri gli abbinamenti, il punteggio di stile e la prova 3D con DressApp.",
+        "ogTitle": "Assistente allo Shopping DressApp — Verifica la Compatibilità con il Tuo Armadio",
+        "ogDescription": "Evita gli acquisti d'impulso verificando come i nuovi capi di qualsiasi negozio online si abbinano ai vestiti che possiedi già."
+      },
+      "migration": {
+        "title": "Migrazione Guardaroba — Importa il Tuo Armadio in Un Clic | DressApp",
+        "description": "Trasferisci il tuo guardaroba digitale esistente da altre app per l'armadio a DressApp in pochi minuti con importazione automatica dei capi e conservazione dei tag.",
+        "ogTitle": "Migrazione Guardaroba DressApp — Sposta il Tuo Armadio Digitale Senza Sforzo",
+        "ogDescription": "Porta l'intero catalogo del tuo guardaroba su DressApp senza dover rifotografare nemmeno un capo."
+      },
+      "privacy": {
+        "title": "Informativa sulla Privacy — Protezione Dati e Sicurezza Guardaroba | DressApp",
+        "description": "Leggi l'Informativa sulla Privacy di DressApp per scoprire come proteggiamo le foto del tuo guardaroba, il profilo di stile e i dati dell'account con controlli rigorosi.",
+        "ogTitle": "Informativa sulla Privacy DressApp — Come Proteggiamo i Dati del Tuo Armadio",
+        "ogDescription": "Pratiche di riservatezza trasparenti a tutela delle foto del tuo armadio digitale, delle sessioni di styling IA e delle transazioni sul marketplace."
+      },
+      "terms": {
+        "title": "Termini di Servizio — Regole della Piattaforma e del Marketplace | DressApp",
+        "description": "Consulta i Termini di Servizio di DressApp che regolano l'uso dell'armadio digitale, il personal styling con IA, gli abbonamenti e il marketplace con commissione del 7%.",
+        "ogTitle": "Termini di Servizio DressApp — Linee Guida per Utenti e Marketplace",
+        "ogDescription": "Leggi i termini ufficiali e le linee guida della community per l'utilizzo di guardaroba, stylist IA e marketplace su DressApp."
+      },
+      "closet_item": {
+        "title": "Dettagli del Capo e Abbinamenti Outfit | DressApp",
+        "description": "Visualizza attributi del capo, cronologia di utilizzo, statistiche di costo per indosso e combinazioni di outfit suggerite dall'IA nel tuo armadio digitale DressApp.",
+        "ogTitle": "Dettagli del Capo e Idee di Outfit — Armadio Digitale DressApp",
+        "ogDescription": "Controlla etichette del capo, note di styling e articoli abbinabili all'interno del tuo guardaroba digitale smart."
+      },
+      "market_listing": {
+        "title": "Annuncio Moda Pre-Loved — Marketplace Circolare | DressApp",
+        "description": "Esplora questo capo pre-loved sul marketplace di DressApp. Guarda in anteprima come si abbina al tuo armadio e acquistalo o scambialo con una commissione del 7%.",
+        "ogTitle": "Capo di Moda Pre-Loved sul Marketplace di DressApp",
+        "ogDescription": "Acquista o scambia questo articolo della community su DressApp con verifica di compatibilità con il tuo armadio e commissione del 7%."
       }
     }
   },
@@ -2883,6 +2982,13 @@
       "orange": "Arancione",
       "gold": "Oro",
       "silver": "Argento"
+    },
+    "fit": {
+      "slim": "Vestibilità aderente (Slim)",
+      "regular": "Vestibilità regolare (Regular)",
+      "loose": "Vestibilità morbida (Loose)",
+      "oversized": "Vestibilità oversize (Oversized)",
+      "flared": "Svasata / Linea ad A (Flared)"
     }
   },
   "location": {
@@ -5824,7 +5930,8 @@
   "dressingRoom": {
     "title": "Camerino 3D",
     "tryOn3D": "Prova in 3D",
-    "badge3D": "3D"
+    "badge3D": "3D",
+    "view3D": "Vista 3D"
   },
   "shareTarget": {
     "badge": "Assistente taglie mobile",
