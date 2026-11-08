@@ -2653,7 +2653,9 @@
       "tarboush": "塔尔布什 / 费兹帽",
       "rumal": "鲁马尔头巾",
       "suit": "西装套装",
-      "polo_shirt": "Polo衫"
+      "polo_shirt": "Polo衫",
+      "dresses": "连衣裙",
+      "dress": "连衣裙"
     },
     "item_type": {
       "oxford_shirt": "牛津衬衫",
@@ -2898,7 +2900,8 @@
       "mitpachat": "米特帕哈特 / 蒂切尔头巾",
       "shtreimel": "毛皮圆帽（什特雷梅尔）",
       "tarboush": "塔尔布什 / 费兹帽",
-      "rumal": "鲁马尔头巾"
+      "rumal": "鲁马尔头巾",
+      "dresses": "连衣裙"
     },
     "colors": {
       "black": "黑色",

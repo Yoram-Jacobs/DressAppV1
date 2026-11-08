@@ -2709,7 +2709,9 @@
       "tarboush": "طربوش / فاس",
       "rumal": "رومال (غطاء رأس)",
       "suit": "بدلة",
-      "polo_shirt": "قميص بولو"
+      "polo_shirt": "قميص بولو",
+      "dresses": "فساتين",
+      "dress": "فستان"
     },
     "item_type": {
       "oxford_shirt": "قميص أكسفورد",
@@ -2954,7 +2956,8 @@
       "mitpachat": "مطبخت / تيشيل",
       "shtreimel": "شتريمل",
       "tarboush": "طربوش / فاس",
-      "rumal": "رومال (غطاء رأس)"
+      "rumal": "رومال (غطاء رأس)",
+      "dresses": "فساتين"
     },
     "colors": {
       "black": "أسود",

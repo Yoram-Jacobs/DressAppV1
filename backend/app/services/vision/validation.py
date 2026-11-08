@@ -914,6 +914,54 @@ def _sanitize_foreign_token_bleed(res: dict[str, Any], language: str | None = No
                 clean_tags.append(t)
         res["tags"] = clean_tags
 
+    if lang in ("he", "iw"):
+        arabic_fashion_replacements = [
+            (re.compile(r"\bدرابيه(?:ات)?\b", re.IGNORECASE), "כיווצים"),
+            (re.compile(r"\bدرابية\b", re.IGNORECASE), "כיווצים"),
+            (re.compile(r"\bكشكש(?:ة|ات)?\b|\bكشكش(?:ة|ات)?\b", re.IGNORECASE), "כיווצים"),
+            (re.compile(r"\bمكشكש\b|\bمكشكش\b", re.IGNORECASE), "מכווץ"),
+            (re.compile(r"\bكورسيه\b", re.IGNORECASE), "מחוך"),
+            (re.compile(r"\bشيفون\b", re.IGNORECASE), "שיפון"),
+            (re.compile(r"\bساتان\b", re.IGNORECASE), "סאטן"),
+            (re.compile(r"\bدانتيل\b", re.IGNORECASE), "תחרה"),
+            (re.compile(r"\bبليسيه\b", re.IGNORECASE), "פליסה"),
+            (re.compile(r"\bبليزر\b|\bبليزار\b", re.IGNORECASE), "בלייזר"),
+            (re.compile(r"\bسحاب\b", re.IGNORECASE), "רוכסן"),
+            (re.compile(r"\bأزرار\b", re.IGNORECASE), "כפתורים"),
+            (re.compile(r"\bتطريز\b|\bتطريז\b", re.IGNORECASE), "רקמה"),
+            (re.compile(r"\bمطرز(?:ة)?\b", re.IGNORECASE), "רקום"),
+            (re.compile(r"\bياقة\b", re.IGNORECASE), "צווארון"),
+        ]
+        arabic_script_pattern = re.compile(r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+")
+
+        for field in ("caption", "name", "title", "item_type", "sub_category", "brand", "cut"):
+            val = res.get(field)
+            if isinstance(val, str) and arabic_script_pattern.search(val):
+                cleaned = val
+                for pat, repl in arabic_fashion_replacements:
+                    cleaned = pat.sub(repl, cleaned)
+                # Strip any leftover rogue Arabic characters
+                cleaned = arabic_script_pattern.sub(" ", cleaned)
+                cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+                cleaned = re.sub(r"\s+([.,;:!?])", r"\1", cleaned)
+                res[field] = cleaned
+
+        tags = res.get("tags")
+        if isinstance(tags, list):
+            clean_tags = []
+            for t in tags:
+                if isinstance(t, str) and arabic_script_pattern.search(t):
+                    t_cleaned = t
+                    for pat, repl in arabic_fashion_replacements:
+                        t_cleaned = pat.sub(repl, t_cleaned)
+                    t_cleaned = arabic_script_pattern.sub(" ", t_cleaned)
+                    t_cleaned = re.sub(r"\s{2,}", " ", t_cleaned).strip()
+                    if t_cleaned:
+                        clean_tags.append(t_cleaned)
+                else:
+                    clean_tags.append(t)
+            res["tags"] = clean_tags
+
     if lang in ("en", "eng"):
         spanish_leak_pattern = re.compile(
             r"\b(zapatos?|tacón|tacon|de tacón|en ante|con tira|al tobillo|tiras finas|vestido|camisa|pantalón|pantalones|falda|chaqueta|abrigo|sandalias?|botas?|elegantes?|para mujer|para hombre|de cuero|de ante)\b",

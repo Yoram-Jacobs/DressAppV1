@@ -2646,7 +2646,9 @@
       "tarboush": "Tarbush / Fez",
       "rumal": "Rumal (cubrecabeza)",
       "suit": "Traje",
-      "polo_shirt": "Polo"
+      "polo_shirt": "Polo",
+      "dresses": "Vestidos",
+      "dress": "Vestido"
     },
     "item_type": {
       "oxford_shirt": "Camisa Oxford",
@@ -2891,7 +2893,8 @@
       "mitpachat": "Mitpajat / Tichel",
       "shtreimel": "Shtreimel",
       "tarboush": "Tarbush / Fez",
-      "rumal": "Rumal (cubrecabeza)"
+      "rumal": "Rumal (cubrecabeza)",
+      "dresses": "Vestidos"
     },
     "colors": {
       "black": "Negro",

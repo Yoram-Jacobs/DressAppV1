@@ -2653,7 +2653,9 @@
       "tarboush": "ターブーシュ / フェズ",
       "rumal": "ルマール（頭巾）",
       "suit": "スーツ",
-      "polo_shirt": "ポロシャツ"
+      "polo_shirt": "ポロシャツ",
+      "dresses": "ドレス",
+      "dress": "ドレス"
     },
     "item_type": {
       "oxford_shirt": "オックスフォードシャツ",
@@ -2844,7 +2846,7 @@
       "leggings": "レギンス",
       "sweatpants": "スウェットパンツ",
       "cargo_pants": "カーゴパンツ",
-      "dress": "ワンピース",
+      "dress": "ドレス",
       "jumpsuit": "ジャンプスーツ",
       "romper": "ロンパース",
       "suit": "スーツ",
@@ -2898,7 +2900,8 @@
       "mitpachat": "ミトパハット / ティチェル",
       "shtreimel": "シュトライメル",
       "tarboush": "ターブーシュ / フェズ",
-      "rumal": "ルマール（頭巾）"
+      "rumal": "ルマール（頭巾）",
+      "dresses": "ドレス"
     },
     "colors": {
       "black": "ブラック",

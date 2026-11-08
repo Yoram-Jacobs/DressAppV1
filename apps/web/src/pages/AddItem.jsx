@@ -343,6 +343,75 @@ const blankFields = () => ({
   image_quality_reason: "",
   reconstruction_prompt: "",
 });
+const sanitizeArabicBleedInHebrew = (text) => {
+  if (!text || typeof text !== "string") return text;
+  let s = text;
+  s = s.replace(/\bدرابيه(?:ات)?\b/gi, "כיווצים");
+  s = s.replace(/\bدرابية\b/gi, "כיווצים");
+  s = s.replace(/\bكشكש(?:ة|ات)?\b|\bكشكش(?:ة|ات)?\b/gi, "כיווצים");
+  s = s.replace(/\bمكشكש\b|\bمكشكش\b/gi, "מכווץ");
+  s = s.replace(/\bكورسيه\b/gi, "מחוך");
+  s = s.replace(/\bشيفון\b|\bشيفون\b/gi, "שיפון");
+  s = s.replace(/\bساتان\b/gi, "סאטן");
+  s = s.replace(/\bدانتيل\b/gi, "תחרה");
+  s = s.replace(/\bبليسيه\b/gi, "פליסה");
+  s = s.replace(/\bبليزر\b|\bبليزار\b/gi, "בלייזר");
+  s = s.replace(/\bسحاب\b/gi, "רוכסן");
+  s = s.replace(/\bأزرار\b/gi, "כפתורים");
+  s = s.replace(/\bتطريز\b|\bتطريז\b/gi, "רקמה");
+  s = s.replace(/\bمطرز(?:ة)?\b/gi, "רקום");
+  s = s.replace(/\bياقة\b/gi, "צווארון");
+  // Clean up any remaining rogue Arabic letters
+  s = s.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+/g, " ").replace(/\s{2,}/g, " ").trim();
+  return s;
+};
+
+const formatDetectedGarmentLabel = (raw, t) => {
+  if (!raw) return "";
+  const str = String(raw).trim();
+  const slug = str.toLowerCase().replace(/[\s\-]+/g, "_");
+
+  // 1. Direct item_type / sub_category check via labelForItemType
+  const direct = labelForItemType(str, t);
+  if (direct && direct.toLowerCase() !== str.toLowerCase() && direct.toLowerCase() !== slug) {
+    return direct;
+  }
+
+  // 2. Direct sub_category / subcategories lookup
+  const sub = t(`taxonomy.sub_category.${slug}`, { defaultValue: "" });
+  if (sub && sub !== `taxonomy.sub_category.${slug}`) return sub;
+  const subcats = t(`taxonomy.subcategories.${slug}`, { defaultValue: "" });
+  if (subcats && subcats !== `taxonomy.subcategories.${slug}`) return subcats;
+
+  // 3. Plural-to-singular fallback (e.g. 'dresses' -> 'dress', 'heels' -> 'heel')
+  if (slug.endsWith("es")) {
+    const sing = slug.slice(0, -2);
+    const s1 = t(`taxonomy.sub_category.${sing}`, { defaultValue: "" });
+    if (s1 && s1 !== `taxonomy.sub_category.${sing}`) return s1;
+    const s2 = t(`taxonomy.subcategories.${sing}`, { defaultValue: "" });
+    if (s2 && s2 !== `taxonomy.subcategories.${sing}`) return s2;
+    const s3 = t(`taxonomy.categories.${sing}`, { defaultValue: "" });
+    if (s3 && s3 !== `taxonomy.categories.${sing}`) return s3;
+  }
+  if (slug.endsWith("s")) {
+    const sing = slug.slice(0, -1);
+    const s1 = t(`taxonomy.sub_category.${sing}`, { defaultValue: "" });
+    if (s1 && s1 !== `taxonomy.sub_category.${sing}`) return s1;
+    const s2 = t(`taxonomy.subcategories.${sing}`, { defaultValue: "" });
+    if (s2 && s2 !== `taxonomy.subcategories.${sing}`) return s2;
+    const s3 = t(`taxonomy.categories.${sing}`, { defaultValue: "" });
+    if (s3 && s3 !== `taxonomy.categories.${sing}`) return s3;
+  }
+
+  // 4. Category lookup
+  const cat = labelForCategory(slug, t);
+  if (cat && cat.toLowerCase() !== str.toLowerCase() && cat.toLowerCase() !== slug) {
+    return cat;
+  }
+
+  return direct || str;
+};
+
 
 /** Coerce analyze payload into a plain, editable form dict.
  *
@@ -1075,6 +1144,14 @@ const hydrate = (a, user, t, i18n) => {
             }
           } else {
             out.caption = `${title || 'Classic wardrobe item'}.`;
+          }
+        }
+        if (lang === 'he' || lang === 'iw') {
+          if (out.caption) out.caption = sanitizeArabicBleedInHebrew(out.caption);
+          if (out.name) out.name = sanitizeArabicBleedInHebrew(out.name);
+          if (out.title) out.title = sanitizeArabicBleedInHebrew(out.title);
+          if (Array.isArray(out.tags)) {
+            out.tags = out.tags.map((tag) => (typeof tag === 'string' ? sanitizeArabicBleedInHebrew(tag) : tag)).filter(Boolean);
           }
         }
       }
@@ -6616,7 +6693,7 @@ function ItemCard({
                   className="bg-background/85 backdrop-blur text-[10px] capitalize border-border/60 flex items-center gap-1"
                 >
                   <Sparkles className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
-                  {labelForItemType(card.label, t)}
+                  {formatDetectedGarmentLabel(card.label, t)}
                 </Badge>
               </div>
             )}

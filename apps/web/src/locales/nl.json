@@ -2653,7 +2653,9 @@
       "tarboush": "Tarboush / Fez",
       "rumal": "Rumal (hoofdbedekking)",
       "suit": "Pak",
-      "polo_shirt": "Poloshirt"
+      "polo_shirt": "Poloshirt",
+      "dresses": "Jurken",
+      "dress": "Jurk"
     },
     "item_type": {
       "oxford_shirt": "Oxford-overhemd",
@@ -2898,7 +2900,8 @@
       "mitpachat": "Mitpachat / Tichel",
       "shtreimel": "Shtreimel",
       "tarboush": "Tarboush / Fez",
-      "rumal": "Rumal (hoofdbedekking)"
+      "rumal": "Rumal (hoofdbedekking)",
+      "dresses": "Jurken"
     },
     "colors": {
       "black": "Zwart",

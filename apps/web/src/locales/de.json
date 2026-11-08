@@ -2646,7 +2646,9 @@
       "tarboush": "Tarbusch / Fes",
       "rumal": "Rumal (Kopfbedeckung)",
       "suit": "Anzug",
-      "polo_shirt": "Poloshirt"
+      "polo_shirt": "Poloshirt",
+      "dresses": "Kleider",
+      "dress": "Kleid"
     },
     "item_type": {
       "oxford_shirt": "Oxford-Hemd",
@@ -2891,7 +2893,8 @@
       "mitpachat": "Mitpachat / Tichel",
       "shtreimel": "Schtreimel",
       "tarboush": "Tarbusch / Fes",
-      "rumal": "Rumal (Kopfbedeckung)"
+      "rumal": "Rumal (Kopfbedeckung)",
+      "dresses": "Kleider"
     },
     "colors": {
       "black": "Schwarz",

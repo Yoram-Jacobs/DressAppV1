@@ -2653,7 +2653,9 @@
       "tarboush": "Tarbush / Fez",
       "rumal": "Rumal (copricapo)",
       "suit": "Abito",
-      "polo_shirt": "Polo"
+      "polo_shirt": "Polo",
+      "dresses": "Abiti",
+      "dress": "Abito"
     },
     "item_type": {
       "oxford_shirt": "Camicia Oxford",
@@ -2844,7 +2846,7 @@
       "leggings": "Ghette",
       "sweatpants": "Pantaloni tuta",
       "cargo_pants": "Pantaloni cargo",
-      "dress": "Vestito / Abito",
+      "dress": "Abito",
       "jumpsuit": "Tuta intera",
       "romper": "Tuta corta",
       "suit": "Completo / Abito da uomo",
@@ -2898,7 +2900,8 @@
       "mitpachat": "Mitpachat / Tichel",
       "shtreimel": "Shtreimel",
       "tarboush": "Tarbush / Fez",
-      "rumal": "Rumal (copricapo)"
+      "rumal": "Rumal (copricapo)",
+      "dresses": "Abiti"
     },
     "colors": {
       "black": "Nero",

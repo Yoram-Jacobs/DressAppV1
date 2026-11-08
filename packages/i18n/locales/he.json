@@ -2746,7 +2746,9 @@
       "tarboush": "תרבוש / פז",
       "rumal": "רומאל (כיסוי ראש)",
       "suit": "חליפה",
-      "polo_shirt": "חולצת פולו"
+      "polo_shirt": "חולצת פולו",
+      "dresses": "שמלות",
+      "dress": "שמלה"
     },
     "item_type": {
       "printed_skirt": "חצאית מודפסת",
@@ -2994,7 +2996,8 @@
       "mitpachat": "מטפחת / טיכל",
       "shtreimel": "שטריימל",
       "tarboush": "תרבוש / פז",
-      "rumal": "רומאל (כיסוי ראש)"
+      "rumal": "רומאל (כיסוי ראש)",
+      "dresses": "שמלות"
     },
     "colors": {
       "black": "שחור",

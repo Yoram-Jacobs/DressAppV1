@@ -2709,7 +2709,9 @@
       "tarboush": "Tarboush / Fez",
       "rumal": "Rumal Head Cover",
       "suit": "Suit",
-      "polo_shirt": "Polo Shirt"
+      "polo_shirt": "Polo Shirt",
+      "dresses": "Dresses",
+      "dress": "Dress"
     },
     "item_type": {
       "printed_skirt": "Printed skirt",
@@ -2956,7 +2958,8 @@
       "mitpachat": "Mitpachat / Tichel",
       "shtreimel": "Shtreimel",
       "tarboush": "Tarboush / Fez",
-      "rumal": "Rumal Head Cover"
+      "rumal": "Rumal Head Cover",
+      "dresses": "Dresses"
     },
     "colors": {
       "black": "Black",

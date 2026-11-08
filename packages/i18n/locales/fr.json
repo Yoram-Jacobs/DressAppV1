@@ -2709,7 +2709,9 @@
       "tarboush": "Tarbouche / Fès",
       "rumal": "Rumal (couvre-chef)",
       "suit": "Costume",
-      "polo_shirt": "Polo"
+      "polo_shirt": "Polo",
+      "dresses": "Robes",
+      "dress": "Robe"
     },
     "item_type": {
       "oxford_shirt": "Chemise Oxford",
@@ -2954,7 +2956,8 @@
       "mitpachat": "Mitpahat / Tichel",
       "shtreimel": "Shtreimel",
       "tarboush": "Tarbouche / Fès",
-      "rumal": "Rumal (couvre-chef)"
+      "rumal": "Rumal (couvre-chef)",
+      "dresses": "Robes"
     },
     "colors": {
       "black": "Noir",
