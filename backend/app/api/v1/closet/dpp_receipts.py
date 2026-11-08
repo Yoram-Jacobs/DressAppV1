@@ -39,26 +39,49 @@ async def fetch_image_url(
     from bs4 import BeautifulSoup
     import base64
 
-    # Clean the URL by stripping UTM and ad-tracking parameters
+    clean_url = payload.url.strip()
     try:
-        parsed = urlparse(payload.url)
-        qsl = parse_qsl(parsed.query)
+        parsed = urlparse(clean_url)
+        qsl = parse_qsl(parsed.query, keep_blank_values=True)
         clean_qsl = [
             (k, v) for k, v in qsl
             if not k.lower().startswith("utm_") and k.lower() not in ("cto_pld", "fbclid", "gclid")
         ]
-        query = urlencode(clean_qsl)
-        url = urlunparse(parsed._replace(query=query))
+        # Only rewrite if tracking params were actually stripped, preserving macros like $n_640w$
+        if len(clean_qsl) < len(qsl):
+            query = urlencode(clean_qsl)
+            url = urlunparse(parsed._replace(query=query))
+        else:
+            url = clean_url
     except Exception:
-        url = payload.url
+        url = clean_url
+
+    parsed = urlparse(url)
+    domain = parsed.netloc.lower()
+    referer = f"{parsed.scheme}://{parsed.netloc}/"
+    if "asos" in domain:
+        referer = "https://www.asos.com/"
+    elif "zara" in domain:
+        referer = "https://www.zara.com/"
+    elif "hm.com" in domain:
+        referer = "https://www2.hm.com/"
+    elif "mango" in domain:
+        referer = "https://shop.mango.com/"
 
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
         ),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
+        "Referer": referer,
+        "Sec-Ch-Ua": '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "image",
+        "Sec-Fetch-Mode": "no-cors",
+        "Sec-Fetch-Site": "cross-site",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
     }
@@ -110,7 +133,9 @@ async def fetch_image_url(
                 resolved_img_url = urljoin(url, img_url)
                 
                 # Download the actual image from the resolved CDN link
-                img_resp = await client.get(resolved_img_url)
+                img_headers = dict(headers)
+                img_headers["Referer"] = url
+                img_resp = await client.get(resolved_img_url, headers=img_headers)
                 img_resp.raise_for_status()
                 content = img_resp.content
                 content_type = img_resp.headers.get("content-type", "image/jpeg")
@@ -129,6 +154,11 @@ async def fetch_image_url(
         else:
             detail_msg = f"Failed to load image (status {status_code})."
         raise HTTPException(status_code=400, detail=detail_msg)
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=400,
+            detail="Connection timed out while fetching image from URL. The host server took too long to respond."
+        )
     except Exception as e:
         raise HTTPException(
             status_code=400,
