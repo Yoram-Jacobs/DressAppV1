@@ -150,7 +150,7 @@ GEMINI_VISION_SYSTEM_PROMPT = (
     "You are The Eyes — DressApp's visual garment analyst. Input is a SegFormer garment crop (or single-garment photo). Output ONLY raw JSON (object or array).\n"
     "• CROP & HANGER/BACKGROUND REJECTION: Describe ONLY target garment fabric pixels. Ignore hangers (hooks, wooden/plastic bars), mannequin parts, border bleed, and background surfaces (sheets, carpets, floors, tables). NEVER mistake a V-neck hanger for a collar/Polo. Draped sleeveless open-knit/fringed V-neck is 'Poncho'|'Cape' (`sub_category:'Capes & Ponchos'|'Poncho'`), NEVER 'Polo'.\n"
     "• NON-CLOTHING: Non-wearable objects -> `is_clothing:false, sub_category:'non-clothing', item_type:'non-clothing', title:'Unidentifiable'`.\n"
-    "• LANGUAGE & VOICE: Localize `name, title, caption, tags, repair_advice, sub_category, item_type, colors[*].name, fabric_materials[*].name` to OUTPUT LANGUAGE; keep JSON keys/enums in English. Direct editorial voice (no hedging/emojis/hashtags).\n"
+    "• LANGUAGE & VOICE: Default language is English (en). When OUTPUT LANGUAGE is specified, localize `name, title, caption, tags, repair_advice, sub_category, item_type, colors[*].name, fabric_materials[*].name` to OUTPUT LANGUAGE; otherwise emit strictly English (never output Spanish, French, or other non-English tokens unless requested). Keep JSON keys/enums in English. Direct editorial voice (no hedging/emojis/hashtags).\n"
     "• name & title: 2-5 unique words: `[Color] [Material/Cut] [Core Garment]`. Never generic. caption: 1 sentence (<=15 words).\n"
     "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'|'Underwear' (apparel is NEVER 'Accessories'; sweaters/cardigans/shirts/tees='Top'; coats/jackets/blazers/ponchos/capes='Outerwear'; dresses/jumpsuits='Full Body').\n"
     "• sub_category & item_type: ('T-Shirt','Shirt','Polo','Sweater','Cardigan','Poncho','Blouse','Kurta','Jeans','Pants','Chinos','Cargo Pants','Sweatpants','Shorts','Skirt','Dresses','Jumpsuits','Coat','Jacket','Blazer','Sherwani','Sneakers','Boots','Heels','Pumps','Loafers','Oxfords','Sandals','Handbag','Sunglasses','Belts','Headwear').\n"
@@ -628,7 +628,11 @@ def _gemini_user_prompt(
     """Build the compact SegFormer-grounded user-message prompt for Gemini analyze()."""
     parts: list[str] = []
     code_norm = (code or "en").lower()
-    if code_norm != "en":
+    if code_norm == "en":
+        parts.append(
+            "**OUTPUT LANGUAGE = English (en).** Write ALL free-text fields (`name`, `title`, `caption`, `tags`, `repair_advice`, `sub_category`, `item_type`, `colors[*].name`, `fabric_materials[*].name`) in fluent English. All color names (e.g. 'Black', NOT 'Negro') and fabric materials (e.g. 'Suede', 'Rubber', NOT 'Ante', 'Caucho') MUST be in English. Keep JSON keys and enum tokens in English."
+        )
+    else:
         lang_name = _LANG_NAMES.get(code_norm, code_norm)
         parts.append(
             f"**OUTPUT LANGUAGE = {lang_name} ({code_norm}).** Write free-text fields (`name`, `title`, `caption`, `tags`, `repair_advice`, `sub_category`, `item_type`, `colors[*].name`, `fabric_materials[*].name`) in fluent {lang_name}; keep JSON keys and enum tokens in English."
@@ -926,14 +930,15 @@ def _build_batch_prompts(
 
     user_parts = []
     code = (language or "en").lower()
-    if code != "en":
+    if code == "en":
+        user_parts.append("**OUTPUT LANGUAGE: English (en).** All strings, colors, materials, titles, captions in fluent English. Keys/enums in English.")
+    elif code in ("he", "iw"):
+        user_parts.append("**OUTPUT LANGUAGE: Hebrew (עברית).** Strings in fluent Hebrew. Keys/enums in English.")
+    elif code == "ar":
+        user_parts.append("**OUTPUT LANGUAGE: Arabic (العربية).** Strings in fluent Arabic. Keys/enums in English.")
+    else:
         lang_name = _LANG_NAMES.get(code, code)
-        if code in ("he", "iw"):
-            user_parts.append("**OUTPUT LANGUAGE: Hebrew (עברית).** Strings in fluent Hebrew. Keys/enums in English.")
-        elif code == "ar":
-            user_parts.append("**OUTPUT LANGUAGE: Arabic (العربية).** Strings in fluent Arabic. Keys/enums in English.")
-        else:
-            user_parts.append(f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.")
+        user_parts.append(f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.")
 
     user_parts.append(f"BATCH: Analyze {n} crop(s) (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.")
     user_parts.append("• Analyze each SegFormer crop independently (garment fabric pixels ONLY; ignore hangers, background surfaces, and adjacent crop bleed). Zero English leaks in non-English modes.")
@@ -972,7 +977,11 @@ def _build_mass_catalog_prompts(
 
     user_parts: list[str] = []
     code = (language or "en").lower()
-    if code != "en":
+    if code == "en":
+        user_parts.append(
+            "OUTPUT LANGUAGE: English (en). All free-text (`name`, `title`, `caption`, `tags`, `repair_advice`, `colors[*].name`, `fabric_materials[*].name`) in fluent English."
+        )
+    else:
         lang_name = _LANG_NAMES.get(code, code)
         user_parts.append(
             f"OUTPUT LANGUAGE: {lang_name} ({code}). Localize `name, title, caption, tags, repair_advice`; keep `reconstruction_prompt` and JSON keys/enums in English."

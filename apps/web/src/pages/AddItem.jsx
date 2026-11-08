@@ -1105,6 +1105,62 @@ const hydrate = (a, user, t, i18n) => {
           out.item_type = itemRaw;
         }
       }
+
+      // Check for foreign language bleed in English mode (e.g. Spanish terms from model)
+      const foreignBleedPattern = /\b(zapatos?|tacón|tacon|de tacón|en ante|con tira|al tobillo|tiras finas|vestido|camisa|pantalón|pantalones|falda|chaqueta|abrigo|sandalias?|botas?|elegantes?|para mujer|para hombre)\b/i;
+      const hasForeignBleed = foreignBleedPattern.test(out.name || '') || foreignBleedPattern.test(out.title || '') || foreignBleedPattern.test(out.caption || '');
+
+      const foreignToEnMap = {
+        'negro': 'Black', 'negra': 'Black', 'blanco': 'White', 'blanca': 'White',
+        'gris': 'Grey', 'azul': 'Blue', 'rojo': 'Red', 'roja': 'Red',
+        'verde': 'Green', 'amarillo': 'Yellow', 'amarilla': 'Yellow',
+        'marrón': 'Brown', 'marron': 'Brown', 'beige': 'Beige',
+        'rosa': 'Pink', 'morado': 'Purple', 'naranja': 'Orange',
+        'ante': 'Suede', 'gamuza': 'Suede', 'caucho': 'Rubber', 'goma': 'Rubber',
+        'cuero': 'Leather', 'charol': 'Patent Leather', 'terciopelo': 'Velvet',
+        'satén': 'Satin', 'saten': 'Satin', 'lona': 'Canvas', 'pana': 'Corduroy'
+      };
+
+      if (Array.isArray(out.colors)) {
+        out.colors = out.colors.map((c) => {
+          const rawN = typeof c === 'string' ? c : c?.name || '';
+          const normN = String(rawN).trim().toLowerCase();
+          if (foreignToEnMap[normN]) {
+            const repl = foreignToEnMap[normN];
+            return typeof c === 'string' ? repl : { ...c, name: repl };
+          }
+          return c;
+        });
+      }
+
+      if (Array.isArray(out.fabric_materials)) {
+        out.fabric_materials = out.fabric_materials.map((m) => {
+          const rawM = typeof m === 'string' ? m : m?.name || '';
+          const normM = String(rawM).trim().toLowerCase();
+          if (foreignToEnMap[normM]) {
+            const repl = foreignToEnMap[normM];
+            return typeof m === 'string' ? repl : { ...m, name: repl };
+          }
+          return m;
+        });
+      }
+
+      if (hasForeignBleed) {
+        const colStr = (Array.isArray(out.colors) && out.colors[0]?.name) || '';
+        const matStr = (Array.isArray(out.fabric_materials) && out.fabric_materials[0]?.name) || '';
+        const itypeStr = out.item_type || out.sub_category || 'Garment';
+        const parts = [colStr, matStr, itypeStr].filter(Boolean);
+        const synthTitle = parts.join(' ');
+        if (foreignBleedPattern.test(out.name || '') || !out.name) {
+          out.name = synthTitle;
+        }
+        if (foreignBleedPattern.test(out.title || '') || !out.title) {
+          out.title = synthTitle;
+        }
+        if (foreignBleedPattern.test(out.caption || '')) {
+          out.caption = `Elegant ${synthTitle.toLowerCase()} featuring a refined silhouette.`;
+        }
+      }
     }
   } else {
     out.sub_category = subRaw;
@@ -4070,10 +4126,10 @@ export default function AddItem() {
             c.id === slotId
               ? {
                 ...c,
-                fields: {
+                fields: hydrate({
                   ...c.fields,
                   ...frame.fields,
-                },
+                }, user, t, i18n),
                 label:
                   frame.fields.sub_category ||
                   frame.fields.item_type ||

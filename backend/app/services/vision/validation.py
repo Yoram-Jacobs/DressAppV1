@@ -521,24 +521,117 @@ _HE_COLOR_DICT: dict[str, str] = {
 he_color_dict = _HE_COLOR_DICT
 
 _CANONICAL_MATERIAL_MAP: dict[str, str] = {
+    # Leather & Faux Leather
     "革": "Leather", "皮革": "Leather", "皮": "Leather",
     "עור": "Leather", "جلد": "Leather", "cuir": "Leather", "leder": "Leather",
     "cuero": "Leather", "couro": "Leather", "pelle": "Leather", "кожа": "Leather", "चमड़ा": "Leather",
-    "כותנה": "Cotton", "قطن": "Cotton", "coton": "Cotton", "baumwolle": "Cotton",
+    "cuero sintético": "Faux Leather", "cuero sintetico": "Faux Leather", "polipiel": "Faux Leather",
+    "similcuero": "Faux Leather", "piel": "Leather", "עור סינתטי": "Faux Leather", "עור מלאכותי": "Faux Leather",
+    "דמוי עור": "Faux Leather", "кожзам": "Faux Leather", "искусственная кожа": "Faux Leather",
+    # Suede
+    "ante": "Suede", "gamuza": "Suede", "gamuza sintética": "Suede", "gamuza sintetica": "Suede",
+    "daim": "Suede", "veloursleder": "Suede", "wildleder": "Suede", "rauhleder": "Suede",
+    "camoscio": "Suede", "scamosciato": "Suede", "замша": "Suede", "זמש": "Suede",
+    "זמש סינתטי": "Suede", "עור הפוך": "Suede",
+    # Rubber
+    "caucho": "Rubber", "goma": "Rubber", "suela de goma": "Rubber",
+    "caoutchouc": "Rubber", "gummi": "Rubber", "gomma": "Rubber", "резина": "Rubber", "גומי": "Rubber",
+    # Patent Leather
+    "charol": "Patent Leather", "cuero acharolado": "Patent Leather", "cuir verni": "Patent Leather",
+    "lackleder": "Patent Leather", "vernice": "Patent Leather", "lucido": "Patent Leather",
+    "лакированная кожа": "Patent Leather", "עור לכה": "Patent Leather",
+    # Velvet
+    "terciopelo": "Velvet", "velours": "Velvet", "samt": "Velvet", "velluto": "Velvet",
+    "бархат": "Velvet", "קטיפה": "Velvet",
+    # Satin
+    "satén": "Satin", "saten": "Satin", "raso": "Satin", "атлас": "Satin", "סאטן": "Satin",
+    # Canvas
+    "lona": "Canvas", "toile": "Canvas", "leinwand": "Canvas", "tela": "Canvas",
+    "холст": "Canvas", "парусина": "Canvas", "קנבס": "Canvas",
+    # Corduroy
+    "pana": "Corduroy", "velours côtelé": "Corduroy", "cord": "Corduroy",
+    "velluto a coste": "Corduroy", "вельвет": "Corduroy", "קורדרוי": "Corduroy",
+    # Lace
+    "encaje": "Lace", "dentelle": "Lace", "spitze": "Lace", "merletto": "Lace",
+    "кружево": "Lace", "תחרה": "Lace",
+    # Mesh
+    "malla": "Mesh", "maille": "Mesh", "netz": "Mesh", "сетка": "Mesh", "רשת": "Mesh",
+    # Cotton
+    "כותנה": "Cotton", "قطן": "Cotton", "coton": "Cotton", "baumwolle": "Cotton",
     "algodón": "Cotton", "algodao": "Cotton", "cotone": "Cotton", "хлопок": "Cotton", "कपास": "Cotton", "綿": "Cotton", "棉": "Cotton",
+    # Wool
     "צמר": "Wool", "صوف": "Wool", "laine": "Wool", "wolle": "Wool", "lana": "Wool",
     "шерсть": "Wool", "ऊन": "Wool", "ウール": "Wool", "羊毛": "Wool",
+    # Silk
     "משי": "Silk", "حرير": "Silk", "soie": "Silk", "seide": "Silk", "seda": "Silk",
     "seta": "Silk", "шелк": "Silk", "шёлк": "Silk", "रेशम": "Silk", "シルク": "Silk", "丝": "Silk",
+    # Linen
     "פשתן": "Linen", "كتان": "Linen", "lin": "Linen", "leinen": "Linen", "lino": "Linen",
-    "лен": "Linen", "лён": "Linen", "सन": "Linen", "リネン": "Linen", "亚麻": "Linen",
+    "лен": "Linen", "лён": "Linen", "सन": "Linen", "לינן": "Linen", "リネン": "Linen", "亚麻": "Linen",
+    # Denim
     "דנים": "Denim", "ג'ינס": "Denim", "גינס": "Denim", "джинс": "Denim", "डेनिम": "Denim", "デニム": "Denim", "牛仔": "Denim",
-    "פוליאסטר": "Polyester", "بوليستر": "Polyester", "полиэстер": "Polyester", "पॉलिएस्टर": "Polyester", "ポリエステル": "Polyester", "聚酯": "Polyester",
-    "ניילון": "Nylon", "نايلון": "Nylon", "нейлон": "Nylon", "नायलॉन": "Nylon", "ナイロン": "Nylon", "锦纶": "Nylon",
+    # Polyester & Synthetic
+    "פוליאסטר": "Polyester", "בוליסטר": "Polyester", "полиэстер": "Polyester", "पॉलिएस्टर": "Polyester", "ポリエステル": "Polyester", "聚酯": "Polyester",
+    "ניילון": "Nylon", "ناילון": "Nylon", "нейлон": "Nylon", "नायलॉन": "Nylon", "ナイロン": "Nylon", "锦纶": "Nylon",
     "סינתטי": "Synthetic", "סינטטי": "Synthetic", "synthetic": "Synthetic", "synthetisch": "Synthetic",
     "synthétique": "Synthetic", "sintético": "Synthetic", "sintetico": "Synthetic", "синтетика": "Synthetic",
-    "синтетический": "Synthetic", "синтетическое": "Synthetic", "اصطناعي": "Synthetic", "合成": "Synthetic",
+    "синтетический": "Synthetic", "синтетическое": "Synthetic", "اصطनाعي": "Synthetic", "合成": "Synthetic",
 }
+
+_CANONICAL_COLOR_MAP: dict[str, str] = {
+    # Spanish
+    "negro": "Black", "negra": "Black", "blanco": "White", "blanca": "White",
+    "gris": "Grey", "azul": "Blue", "rojo": "Red", "roja": "Red",
+    "verde": "Green", "amarillo": "Yellow", "amarilla": "Yellow",
+    "marrón": "Brown", "marron": "Brown", "pardo": "Brown", "castaño": "Brown",
+    "beige": "Beige", "béis": "Beige", "crema": "Cream",
+    "rosa": "Pink", "rosado": "Pink", "rosada": "Pink",
+    "morado": "Purple", "morada": "Purple", "violeta": "Purple", "púrpura": "Purple", "purpura": "Purple",
+    "naranja": "Orange", "anaranjado": "Orange",
+    "dorado": "Gold", "dorada": "Gold", "oro": "Gold",
+    "plateado": "Silver", "plateada": "Silver", "plata": "Silver",
+    # French
+    "noir": "Black", "noire": "Black", "blanc": "White", "blanche": "White",
+    "grise": "Grey", "bleu": "Blue", "bleue": "Blue",
+    "rouge": "Red", "vert": "Green", "verte": "Green", "jaune": "Yellow",
+    "brun": "Brown", "violet": "Purple",
+    # German
+    "schwarz": "Black", "weiß": "White", "weiss": "White", "grau": "Grey",
+    "blau": "Blue", "rot": "Red", "grün": "Green", "gruen": "Green",
+    "gelb": "Yellow", "braun": "Brown", "lila": "Purple", "silber": "Silver",
+    # Italian
+    "nero": "Black", "nera": "Black", "bianco": "White", "bianca": "White",
+    "grigio": "Grey", "grigia": "Grey", "blu": "Blue", "azzurro": "Blue",
+    "rosso": "Red", "rossa": "Red", "giallo": "Yellow", "gialla": "Yellow",
+    "marrone": "Brown", "viola": "Purple",
+    # Russian
+    "черный": "Black", "чёрный": "Black", "черная": "Black", "чёрная": "Black",
+    "белый": "White", "белая": "White", "серый": "Grey", "серая": "Grey",
+    "синий": "Blue", "синяя": "Blue", "голубой": "Light Blue",
+    "красный": "Red", "красная": "Red", "зеленый": "Green", "зелёный": "Green",
+    "желтый": "Yellow", "жёлтый": "Yellow", "коричневый": "Brown",
+    "розовый": "Pink", "фиолетовый": "Purple", "оранжевый": "Orange",
+    # Hebrew
+    "שחור": "Black", "שחורה": "Black", "לבן": "White", "לבנה": "White",
+    "אפור": "Grey", "אפורה": "Grey", "כחול": "Blue", "כחולה": "Blue", "תכלת": "Light Blue",
+    "אדום": "Red", "אדומה": "Red", "ירוק": "Green", "ירוקה": "Green",
+    "צהוב": "Yellow", "צהובה": "Yellow", "חום": "Brown", "חומה": "Brown",
+    "ורוד": "Pink", "ורודה": "Pink", "סגול": "Purple", "סגולה": "Purple",
+    "כתום": "Orange", "כתומה": "Orange", "זהב": "Gold", "כסף": "Silver",
+}
+
+
+def _clean_color_name(raw_name: str, language: str | None = None) -> str:
+    if not raw_name:
+        return ""
+    name_clean = str(raw_name).strip()
+    norm = name_clean.lower()
+    lang = (language or "en").lower().strip()
+    if lang in ("en", "eng") or lang not in ("he", "iw", "ar", "es", "fr", "de", "it", "ru", "ja", "zh", "hi", "nl", "pt"):
+        mapped = _CANONICAL_COLOR_MAP.get(norm)
+        if mapped:
+            return mapped
+    return _CANONICAL_COLOR_MAP.get(norm, name_clean.title())
 
 
 def _clean_material_name(raw_name: str) -> str:
@@ -548,7 +641,7 @@ def _clean_material_name(raw_name: str) -> str:
     return _CANONICAL_MATERIAL_MAP.get(name_clean.lower(), _CANONICAL_MATERIAL_MAP.get(name_clean, name_clean.title()))
 
 
-def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
+def normalize_weighted_tags(tags: Any, is_color: bool = False, language: str | None = None) -> list[dict[str, Any]]:
     """Normalize a list of tags (strings or {name, pct} dicts) so that:
     1. Every entry is a dict {"name": str, "pct": int}.
     2. Missing, None, or 0 percentages are inferred.
@@ -562,10 +655,11 @@ def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
     if not isinstance(tags, list):
         return []
 
+    clean_fn = (lambda s: _clean_color_name(s, language=language)) if is_color else _clean_material_name
     clean: list[dict[str, Any]] = []
     for item in tags:
         if isinstance(item, str) and item.strip():
-            clean.append({"name": _clean_material_name(item), "pct": None})
+            clean.append({"name": clean_fn(item), "pct": None})
         elif isinstance(item, dict) and item.get("name"):
             pct_val = item.get("pct")
             try:
@@ -573,7 +667,7 @@ def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
             except (ValueError, TypeError):
                 pct_int = None
             entry = dict(item)
-            entry["name"] = _clean_material_name(str(item.get("name", "")))
+            entry["name"] = clean_fn(str(item.get("name", "")))
             entry["pct"] = pct_int
             clean.append(entry)
 
@@ -819,6 +913,18 @@ def _sanitize_foreign_token_bleed(res: dict[str, Any], language: str | None = No
             else:
                 clean_tags.append(t)
         res["tags"] = clean_tags
+
+    if lang in ("en", "eng"):
+        spanish_leak_pattern = re.compile(
+            r"\b(zapatos?|tacón|tacon|de tacón|en ante|con tira|al tobillo|tiras finas|vestido|camisa|pantalón|pantalones|falda|chaqueta|abrigo|sandalias?|botas?|elegantes?|para mujer|para hombre|de cuero|de ante)\b",
+            re.IGNORECASE,
+        )
+        has_spanish = any(
+            isinstance(res.get(f), str) and spanish_leak_pattern.search(res[f])
+            for f in ("name", "title", "caption")
+        )
+        if has_spanish:
+            res["_spanish_bleed_detected"] = True
 
 
 def _sanitize_sandals_and_footwear(res: dict[str, Any]) -> None:
@@ -2187,9 +2293,11 @@ def _coerce_single_garment(
         raw_colors = [{"name": found_c, "pct": 100}]
 
     if raw_colors:
-        res["colors"] = normalize_weighted_tags(raw_colors)
+        res["colors"] = normalize_weighted_tags(raw_colors, is_color=True, language=language)
         if res["colors"] and not res.get("color"):
             res["color"] = res["colors"][0].get("name")
+    if res.get("color"):
+        res["color"] = _clean_color_name(str(res["color"]), language=language)
 
     # Unique name guarantee: ensure name is not generic ("בגד", "בגד ירוק", "Garment") and respects grammar & localization
     name_str = (res.get("name") or "").strip()
@@ -2234,6 +2342,7 @@ def _coerce_single_garment(
         or is_bare_cat_color
         or (is_he and (not has_hebrew_chars or (has_latin_chars and has_hebrew_chars)))
         or (any(w in f"{itype_str} {sub_str}".lower() for w in ("boot", "מגפ")) and any(w in name_str for w in ("נעלי עקב", "נעליים")))
+        or res.pop("_spanish_bleed_detected", False)
     )
 
     if is_generic_name:
@@ -2583,8 +2692,10 @@ def _coerce_single_garment(
                 attr_cut = "Pointed-Toe"
             elif "pleated" in comb_lower:
                 attr_cut = "Pleated"
-            elif mat_name and mat_name.lower() in ("leather", "linen", "silk", "wool", "denim", "cotton", "cashmere"):
+            elif mat_name and mat_name.lower() in ("suede", "leather", "linen", "silk", "wool", "denim", "cotton", "cashmere"):
                 attr_cut = mat_name.title()
+            if ("ankle strap" in comb_lower or "ankle-strap" in comb_lower or "tira al tobillo" in comb_lower or "tiras finas" in comb_lower) and "strap" not in attr_cut.lower():
+                attr_cut = f"{attr_cut} Ankle Strap".strip() if attr_cut else "Ankle Strap"
             
             noun_en = itype
             if "cargo" in comb_lower or "דגמח" in comb_lower:
@@ -2740,6 +2851,14 @@ def _coerce_single_garment(
                 res["caption"] = f"{title_val}{cue_suffix} בעיצוב יומיומי מחמיא ונוח."
             else:
                 res["caption"] = f"{title_val}{cue_suffix} בעיצוב איכותי להשלמת המראה."
+
+    # Descriptive caption synthesis for English if foreign text leaked into caption
+    if (language or "en").lower().strip() in ("en", "eng"):
+        curr_cap = (res.get("caption") or "").strip()
+        has_spanish_cap = bool(re.search(r"\b(zapatos?|tacón|tacon|de tacón|en ante|con tira|al tobillo|tiras finas|vestido|camisa|pantalón|pantalones|falda|chaqueta|abrigo|sandalias?|botas?|elegantes?|para mujer|para hombre)\b", curr_cap, re.IGNORECASE))
+        if has_spanish_cap:
+            title_val = res.get("title") or res.get("name") or "Wardrobe item"
+            res["caption"] = f"Elegant {title_val.lower()} featuring a refined silhouette."
 
     # Pattern fallback: if model returned solid/empty/printed, check text for camouflage, embroidery, or graphics
     pat_str = (res.get("pattern") or "").strip().lower()
@@ -3854,7 +3973,7 @@ def _coerce_enums(
     )
     _coerce_seasons(parsed)
     if parsed.get("colors"):
-        parsed["colors"] = normalize_weighted_tags(parsed["colors"])
+        parsed["colors"] = normalize_weighted_tags(parsed["colors"], is_color=True, language=language)
     if parsed.get("fabric_materials"):
         parsed["fabric_materials"] = normalize_weighted_tags(parsed["fabric_materials"])
     return parsed
