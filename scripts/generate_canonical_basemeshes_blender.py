@@ -994,96 +994,96 @@ def build_top_template(avatar_data, variant="tshirt"):
 
     if variant == "tshirt":
         offset = 0.0070
-        z_neck = 1.495 if is_male else 1.402
+        z_neck = 1.518 if is_male else 1.425
         z_hem = 0.88 if is_male else 0.84
         x_arm_max = 0.260 if is_male else 0.230
         sleeve_type = "short"
-        neck_tilt = -0.18
+        neck_tilt = -0.14
     elif variant == "singlet":
         offset = 0.0060
-        z_neck = 1.465 if is_male else 1.378
+        z_neck = 1.514 if is_male else 1.420
         z_hem = 0.88 if is_male else 0.84
         x_arm_max = 0.200 if is_male else 0.178
         sleeve_type = "sleeveless"
-        neck_tilt = -0.24
+        neck_tilt = -0.20
     elif variant == "vest":
         offset = 0.0150
-        z_neck = 1.485 if is_male else 1.395
+        z_neck = 1.516 if is_male else 1.422
         z_hem = 0.82 if is_male else 0.78
         x_arm_max = 0.205 if is_male else 0.182
         sleeve_type = "sleeveless"
         is_open_front = True
-        neck_tilt = -0.20
+        neck_tilt = -0.16
     elif variant == "longsleeve":
         offset = 0.0075
-        z_neck = 1.498 if is_male else 1.405
+        z_neck = 1.518 if is_male else 1.425
         z_hem = 0.86 if is_male else 0.82
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
-        neck_tilt = -0.15
+        neck_tilt = -0.14
     elif variant == "hoodie":
         offset = 0.0150
-        z_neck = 1.502 if is_male else 1.410
+        z_neck = 1.522 if is_male else 1.428
         z_hem = 0.82 if is_male else 0.78
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
-        neck_tilt = -0.16
+        neck_tilt = -0.12
     elif variant in ("jacket", "top_outerwear_jacket"):
         offset = 0.0160
-        z_neck = 1.502 if is_male else 1.410
+        z_neck = 1.520 if is_male else 1.426
         z_hem = 0.80 if is_male else 0.76
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.16
+        neck_tilt = -0.14
     elif variant == "jacket_blazer":
         offset = 0.0160
-        z_neck = 1.502 if is_male else 1.410
+        z_neck = 1.520 if is_male else 1.426
         z_hem = 0.78 if is_male else 0.74
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.18
+        neck_tilt = -0.14
     elif variant == "cardigan":
         offset = 0.0140
-        z_neck = 1.485 if is_male else 1.395
+        z_neck = 1.516 if is_male else 1.422
         z_hem = 0.74 if is_male else 0.70
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.20
+        neck_tilt = -0.16
     elif variant == "coat":
         offset = 0.0180
-        z_neck = 1.502 if is_male else 1.410
+        z_neck = 1.520 if is_male else 1.426
         z_hem = 0.54 if is_male else 0.50
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
-        neck_tilt = -0.16
+        neck_tilt = -0.14
     elif variant == "trench_coat":
         offset = 0.0180
-        z_neck = 1.502 if is_male else 1.410
+        z_neck = 1.520 if is_male else 1.426
         z_hem = 0.48 if is_male else 0.44
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
         is_open_front = True
         flare_hips = True
-        neck_tilt = -0.16
+        neck_tilt = -0.14
     elif variant in ("tunic", "top_tunic"):
         offset = 0.0140
-        z_neck = 1.488 if is_male else 1.398
+        z_neck = 1.516 if is_male else 1.422
         z_hem = 0.66 if is_male else 0.62
         x_arm_max = 0.260 if is_male else 0.230
         sleeve_type = "short"
         flare_hips = True
-        neck_tilt = -0.18
+        neck_tilt = -0.16
     else:
         offset = 0.0130
-        z_neck = 1.498 if is_male else 1.405
+        z_neck = 1.518 if is_male else 1.425
         z_hem = 0.84 if is_male else 0.80
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
-        neck_tilt = -0.16
+        neck_tilt = -0.14
 
     mw = avatar_obj.matrix_world
     bm = bmesh.new()
@@ -1740,13 +1740,13 @@ def build_dress_template(avatar_data, variant="dress"):
     is_male = gender == "male"
     is_kaftan = variant == "kaftan"
 
-    z_neck = (1.500 if is_male else 1.405) if is_kaftan else (1.495 if is_male else 1.402)
+    z_neck = (1.520 if is_male else 1.426) if is_kaftan else (1.518 if is_male else 1.424)
     z_hip = 0.90 if is_male else 0.88
     z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.60 if is_male else 0.56)
     sleeve_type = "long" if is_kaftan else "sleeveless"
     x_arm_max = (0.475 if is_male else 0.430) if is_kaftan else (0.195 if is_male else 0.168)
     offset = 0.014 if is_kaftan else 0.009
-    neck_tilt = -0.16 if is_kaftan else -0.18
+    neck_tilt = -0.14 if is_kaftan else -0.16
 
     mw = avatar_obj.matrix_world
     bm = bmesh.new()
