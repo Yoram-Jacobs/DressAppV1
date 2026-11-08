@@ -771,7 +771,7 @@ export default function DressingRoom3D({
               enableDamping={true}
               dampingFactor={0.08}
               autoRotate={autoRotate}
-              autoRotateSpeed={1.8}
+              autoRotateSpeed={10.0}
             />
 
             <CameraController
