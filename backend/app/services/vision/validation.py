@@ -1094,6 +1094,47 @@ def _sanitize_nude_color_hebrew(res: dict[str, Any], language: str | None = None
         res["tags"] = clean_tags
 
 
+def _sanitize_hebrew_fashion_hallucinations(res: dict[str, Any], language: str | None = None) -> None:
+    """Correct non-existent, hallucinated Hebrew fashion adjectives produced by LLMs.
+    
+    Example:
+      'מנוספת' / 'מנוסף' -> 'מכווצת' / 'מכווץ' (draped/ruched/gathered).
+    """
+    lang = (language or "en").lower().strip()
+    full_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
+    is_he = (lang in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_text)
+    if not is_he:
+        return
+
+    replacements = [
+        (re.compile(r"(^|[^\u0590-\u05ea])מנוספת(?=$|[^\u0590-\u05ea])"), r"\1מכווצת"),
+        (re.compile(r"(^|[^\u0590-\u05ea])מנוסף(?=$|[^\u0590-\u05ea])"), r"\1מכווץ"),
+        (re.compile(r"(^|[^\u0590-\u05ea])מנוספות(?=$|[^\u0590-\u05ea])"), r"\1מכווצות"),
+        (re.compile(r"(^|[^\u0590-\u05ea])מנוספים(?=$|[^\u0590-\u05ea])"), r"\1מכווצים"),
+    ]
+
+    for field in ("name", "title", "caption", "cut", "item_type", "sub_category"):
+        val = res.get(field)
+        if isinstance(val, str) and "מנוספ" in val:
+            cleaned = val
+            for pat, repl in replacements:
+                cleaned = pat.sub(repl, cleaned)
+            cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+            res[field] = cleaned
+
+    tags = res.get("tags")
+    if isinstance(tags, list):
+        clean_tags = []
+        for t in tags:
+            if isinstance(t, str) and "מנוספ" in t:
+                cleaned_t = t
+                for pat, repl in replacements:
+                    cleaned_t = pat.sub(repl, cleaned_t)
+                clean_tags.append(cleaned_t.strip())
+            else:
+                clean_tags.append(t)
+        res["tags"] = clean_tags
+
 def _sanitize_hoodie_and_sweatshirts(res: dict[str, Any], language: str | None = None) -> None:
     """Ensure hoodies, sweatshirts, and hooded tops are classified under Hoodie, never T-Shirt or Sweater."""
     cat_l = str(res.get("category") or "").strip().lower()
@@ -3259,6 +3300,7 @@ def _coerce_single_garment(
 
     _sanitize_cross_category_contamination(res, language=language)
     _sanitize_nude_color_hebrew(res, language=language)
+    _sanitize_hebrew_fashion_hallucinations(res, language=language)
     return res
 
 
@@ -5314,5 +5356,6 @@ def _enforce_segformer_category(
     _sanitize_cross_category_contamination(analysis, language=language)
     _sanitize_hoodie_and_sweatshirts(analysis, language=language)
     _sanitize_nude_color_hebrew(analysis, language=language)
+    _sanitize_hebrew_fashion_hallucinations(analysis, language=language)
     return analysis
 

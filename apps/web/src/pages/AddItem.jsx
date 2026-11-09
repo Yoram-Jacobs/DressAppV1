@@ -360,6 +360,10 @@ const sanitizeArabicBleedInHebrew = (text) => {
   s = s.replace(/\bتطريز\b|\bتطريז\b/gi, "רקמה");
   s = s.replace(/\bمطرز(?:ة)?\b/gi, "רקום");
   s = s.replace(/\bياقة\b/gi, "צווארון");
+  s = s.replace(/(^|[^\u0590-\u05ea])מנוספת(?=$|[^\u0590-\u05ea])/gu, '$1מכווצת');
+  s = s.replace(/(^|[^\u0590-\u05ea])מנוסף(?=$|[^\u0590-\u05ea])/gu, '$1מכווץ');
+  s = s.replace(/(^|[^\u0590-\u05ea])מנוספות(?=$|[^\u0590-\u05ea])/gu, '$1מכווצות');
+  s = s.replace(/(^|[^\u0590-\u05ea])מנוספים(?=$|[^\u0590-\u05ea])/gu, '$1מכווצים');
   // Clean up any remaining rogue Arabic letters
   s = s.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+/g, " ").replace(/\s{2,}/g, " ").trim();
   return s;
@@ -1268,6 +1272,18 @@ const hydrate = (a, user, t, i18n) => {
   const isHeContext = (lang === 'he' || lang === 'iw') || /[\u0590-\u05FF]/.test(`${out.name || ''} ${out.title || ''} ${out.caption || ''} ${out.color || ''}`);
 
   if (isHeContext) {
+    const sanitizeHebrewHallucinations = (str) => {
+      if (!str || typeof str !== 'string') return str;
+      return str
+        .replace(/(^|[^\u0590-\u05ea])מנוספת(?=$|[^\u0590-\u05ea])/gu, '$1מכווצת')
+        .replace(/(^|[^\u0590-\u05ea])מנוסף(?=$|[^\u0590-\u05ea])/gu, '$1מכווץ')
+        .replace(/(^|[^\u0590-\u05ea])מנוספות(?=$|[^\u0590-\u05ea])/gu, '$1מכווצות')
+        .replace(/(^|[^\u0590-\u05ea])מנוספים(?=$|[^\u0590-\u05ea])/gu, '$1מכווצים');
+    };
+
+    if (out.name) out.name = sanitizeHebrewHallucinations(out.name);
+    if (out.title) out.title = sanitizeHebrewHallucinations(out.title);
+    if (out.caption) out.caption = sanitizeHebrewHallucinations(out.caption);
     if (out.name) out.name = replaceNude(out.name);
     if (out.title) out.title = replaceNude(out.title);
     if (out.caption) out.caption = replaceNude(out.caption);
