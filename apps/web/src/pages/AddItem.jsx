@@ -422,6 +422,7 @@ const formatDetectedGarmentLabel = (raw, t) => {
  * want; this only fills the field instead of leaving it empty.
  */
 const hydrate = (a, user, t, i18n) => {
+  const lang = (i18n?.language || (typeof window !== 'undefined' ? (window.__currentLang || localStorage.getItem('i18nextLng')) : 'en') || 'en').split('-')[0].toLowerCase();
   const out = {
     ...blankFields(),
     ...Object.fromEntries(
@@ -1254,16 +1255,19 @@ const hydrate = (a, user, t, i18n) => {
     out.fabric_materials = normalizeWeightedTags(out.fabric_materials);
   }
 
-  if (lang === 'he' || lang === 'iw') {
-    const replaceNude = (str) => {
-      if (!str || typeof str !== 'string') return str;
-      return str
-        .replace(/\bבגוון ניוד\b/gi, "בגוון בז' בהיר")
-        .replace(/\bבצבע ניוד\b/gi, "בצבע בז' בהיר")
-        .replace(/\bניוד\b/gi, "בז' בהיר")
-        .replace(/\bnude\b/gi, "בז' בהיר");
-    };
+  const replaceNude = (str) => {
+    if (!str || typeof str !== 'string') return str;
+    return str
+      .replace(/(^|[^\u0590-\u05ea])(בצבע|בגוון)\s*ניוד(?=$|[^\u0590-\u05ea])/gu, "$1$2 בז' בהיר")
+      .replace(/(^|[^\u0590-\u05ea])ניוד(?=$|[^\u0590-\u05ea])/gu, "$1בז' בהיר")
+      .replace(/\bnude\b/gi, (lang === 'he' || lang === 'iw') ? "בז' בהיר" : "Light Beige")
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  };
 
+  const isHeContext = (lang === 'he' || lang === 'iw') || /[\u0590-\u05FF]/.test(`${out.name || ''} ${out.title || ''} ${out.caption || ''} ${out.color || ''}`);
+
+  if (isHeContext) {
     if (out.name) out.name = replaceNude(out.name);
     if (out.title) out.title = replaceNude(out.title);
     if (out.caption) out.caption = replaceNude(out.caption);
@@ -1271,7 +1275,7 @@ const hydrate = (a, user, t, i18n) => {
     if (Array.isArray(out.colors)) {
       out.colors = out.colors.map((c) => {
         if (!c) return c;
-        if (typeof c === 'string') return replaceNude(c);
+        if (typeof c === 'string') return { name: replaceNude(c), pct: 100 };
         return { ...c, name: replaceNude(c.name) };
       });
     }

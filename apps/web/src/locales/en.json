@@ -2776,7 +2776,10 @@
       "peach": "Peach",
       "lavender": "Lavender",
       "charcoal": "Charcoal",
-      "light_grey": "Light Grey"
+      "light_grey": "Light Grey",
+      "nude": "Light Beige",
+      "light_beige": "Light Beige",
+      "ניוד": "Light Beige"
     },
     "material": {
       "acrylic": "Acrylic",
@@ -2901,7 +2904,10 @@
       "yellow": "Yellow",
       "orange": "Orange",
       "gold": "Gold",
-      "silver": "Silver"
+      "silver": "Silver",
+      "nude": "Light Beige",
+      "light_beige": "Light Beige",
+      "ניוד": "Light Beige"
     }
   },
   "location": {
@@ -5278,7 +5284,10 @@
     "relaxed": "Relaxed",
     "boho": "Boho",
     "smart_casual": "Smart Casual",
-    "dresses_skirts": "Dresses & Skirts"
+    "dresses_skirts": "Dresses & Skirts",
+    "nude": "Light Beige",
+    "light_beige": "Light Beige",
+    "ניוד": "Light Beige"
   },
   "wardrobeStats": {
     "tabOverview": "Overview",

@@ -516,7 +516,7 @@ _HE_COLOR_DICT: dict[str, str] = {
     "copper": "נחושת", "terracotta": "טרקוטה", "peach": "אפרסק", "purple": "סגול", "violet": "סגול כהה",
     "lavender": "לבנדר", "lilac": "לילך", "plum": "שזיף", "mauve": "מוב", "beige": "בז'", "cream": "שמנת",
     "ivory": "שנהב", "off_white": "אוף-ווייט", "ecru": "שמנת", "taupe": "טופ", "silver": "כסף",
-    "multicolor": "צבעוני", "multicolored": "צבעוני",
+    "multicolor": "צבעוני", "multicolored": "צבעוני", "nude": "בז' בהיר", "ניוד": "בז' בהיר", "light_beige": "בז' בהיר",
 }
 he_color_dict = _HE_COLOR_DICT
 
@@ -617,7 +617,7 @@ _CANONICAL_COLOR_MAP: dict[str, str] = {
     "אדום": "Red", "אדומה": "Red", "ירוק": "Green", "ירוקה": "Green",
     "צהוב": "Yellow", "צהובה": "Yellow", "חום": "Brown", "חומה": "Brown",
     "ורוד": "Pink", "ורודה": "Pink", "סגול": "Purple", "סגולה": "Purple",
-    "כתום": "Orange", "כתומה": "Orange", "זהב": "Gold", "כסף": "Silver",
+    "כתום": "Orange", "כתומה": "Orange", "זהב": "Gold", "כסף": "Silver", "nude": "Beige", "ניוד": "Beige",
 }
 
 
@@ -627,6 +627,13 @@ def _clean_color_name(raw_name: str, language: str | None = None) -> str:
     name_clean = str(raw_name).strip()
     norm = name_clean.lower()
     lang = (language or "en").lower().strip()
+    if "ניוד" in norm:
+        return "בז' בהיר"
+    if lang in ("he", "iw"):
+        if norm in ("nude", "בצבע ניוד", "בגוון ניוד", "ניוד בהיר", "nude light"):
+            return "בז' בהיר"
+        if norm in ("בז", "בז'", "beige"):
+            return "בז'"
     if lang in ("en", "eng") or lang not in ("he", "iw", "ar", "es", "fr", "de", "it", "ru", "ja", "zh", "hi", "nl", "pt"):
         mapped = _CANONICAL_COLOR_MAP.get(norm)
         if mapped:
@@ -1029,6 +1036,62 @@ def _sanitize_sandals_and_footwear(res: dict[str, Any]) -> None:
                 cleaned = re.sub(r"(?i)\bloafers?\b", "Boots", val)
                 cleaned = re.sub(r"לופרים", "מגפיים", cleaned)
                 res[field] = cleaned.strip()
+
+
+def _sanitize_nude_color_hebrew(res: dict[str, Any], language: str | None = None) -> None:
+    """Ensure 'ניוד' (nude) is never used in Hebrew vocabulary.
+    
+    Replaces all occurrences of 'ניוד' with 'בז' בהיר' (light beige) across
+    name, title, caption, color, colors, and tags.
+    """
+    lang = (language or "en").lower().strip()
+    full_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {res.get('color', '')}".lower()
+    is_he = (lang in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_text)
+    if not is_he:
+        return
+
+    nude_pattern_phrase = re.compile(r"(^|[^\u0590-\u05ea])(בצבע|בגוון)\s*ניוד(?=$|[^\u0590-\u05ea])", re.IGNORECASE)
+    nude_pattern_single = re.compile(r"(^|[^\u0590-\u05ea])ניוד(?=$|[^\u0590-\u05ea])", re.IGNORECASE)
+    nude_pattern_en = re.compile(r"(?i)\bnude\b")
+
+    for field in ("name", "title", "caption", "cut", "item_type", "sub_category", "color"):
+        val = res.get(field)
+        if isinstance(val, str) and ("ניוד" in val or "nude" in val.lower()):
+            cleaned = nude_pattern_phrase.sub(r"\1\2 בז' בהיר", val)
+            cleaned = nude_pattern_single.sub(r"\1בז' בהיר", cleaned)
+            cleaned = nude_pattern_en.sub("בז' בהיר", cleaned)
+            cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+            res[field] = cleaned
+
+    colors = res.get("colors")
+    if isinstance(colors, list):
+        clean_colors = []
+        for c in colors:
+            if isinstance(c, dict):
+                n = str(c.get("name") or "").strip()
+                if "ניוד" in n or n.lower() == "nude":
+                    c = {**c, "name": "בז' בהיר"}
+                clean_colors.append(c)
+            elif isinstance(c, str):
+                if "ניוד" in c or c.lower() == "nude":
+                    clean_colors.append("בז' בהיר")
+                else:
+                    clean_colors.append(c)
+        res["colors"] = clean_colors
+
+    tags = res.get("tags")
+    if isinstance(tags, list):
+        clean_tags = []
+        for t in tags:
+            if isinstance(t, str):
+                t_str = nude_pattern_phrase.sub(r"\1\2 בז' בהיר", t)
+                t_str = nude_pattern_single.sub(r"\1בז' בהיר", t_str)
+                t_str = nude_pattern_en.sub("בז' בהיר", t_str)
+                t_str = re.sub(r"\s{2,}", " ", t_str).strip()
+                clean_tags.append(t_str)
+            else:
+                clean_tags.append(t)
+        res["tags"] = clean_tags
 
 
 def _sanitize_hoodie_and_sweatshirts(res: dict[str, Any], language: str | None = None) -> None:
@@ -2317,6 +2380,8 @@ def _coerce_single_garment(
             ("pink", "Pink", "ורוד"),
             ("purple", "Purple", "סגול"),
             ("brown", "Brown", "חום"),
+            ("nude", "Light Beige", "בז' בהיר"),
+            ("ניוד", "Light Beige", "בז' בהיר"),
             ("beige", "Beige", "בז'"),
             ("tan", "Tan", "בז'"),
             ("cream", "Cream", "קרם"),
@@ -3193,6 +3258,7 @@ def _coerce_single_garment(
             res["tradition"] = inferred_trad
 
     _sanitize_cross_category_contamination(res, language=language)
+    _sanitize_nude_color_hebrew(res, language=language)
     return res
 
 
@@ -5247,5 +5313,6 @@ def _enforce_segformer_category(
 
     _sanitize_cross_category_contamination(analysis, language=language)
     _sanitize_hoodie_and_sweatshirts(analysis, language=language)
+    _sanitize_nude_color_hebrew(analysis, language=language)
     return analysis
 

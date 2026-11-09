@@ -2891,7 +2891,10 @@
       "peach": "אפרסק",
       "lavender": "לבנדר",
       "charcoal": "אפור פחם",
-      "light_grey": "אפור בהיר"
+      "light_grey": "אפור בהיר",
+      "nude": "בז' בהיר",
+      "light_beige": "בז' בהיר",
+      "ניוד": "בז' בהיר"
     },
     "material": {
       "acrylic": "אקריליק",
@@ -3017,7 +3020,10 @@
       "yellow": "צהוב",
       "orange": "כתום",
       "gold": "זהב",
-      "silver": "כסף"
+      "silver": "כסף",
+      "nude": "בז' בהיר",
+      "light_beige": "בז' בהיר",
+      "ניוד": "בז' בהיר"
     },
     "fit": {
       "slim": "גזרה צמודה (Slim)",
@@ -5469,7 +5475,10 @@
     "relaxed": "נינוח",
     "boho": "בוהו",
     "smart_casual": "אלגנטי יומיומי",
-    "dresses_skirts": "שמלות וחצאיות"
+    "dresses_skirts": "שמלות וחצאיות",
+    "nude": "בז' בהיר",
+    "light_beige": "בז' בהיר",
+    "ניוד": "בז' בהיר"
   },
   "onboarding": {
     "stepOf": "שלב {{step}} מתוך 4",
