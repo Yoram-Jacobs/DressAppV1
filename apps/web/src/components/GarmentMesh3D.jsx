@@ -336,7 +336,7 @@ function mirrorPadEdges(canvas, padDistance = 24) {
           const targetX = a - k;
           const targetO = (row + targetX) * 4;
           if (d[targetO + 3] >= 200) continue;
-          const srcX = Math.min(b, a + ((k - 1) % spanLen));
+          const srcX = Math.min(a + 2, a + (k - 1));
           const srcO = (row + srcX) * 4;
           d[targetO] = d[srcO];
           d[targetO + 1] = d[srcO + 1];
@@ -351,7 +351,7 @@ function mirrorPadEdges(canvas, padDistance = 24) {
           const targetX = b + k;
           const targetO = (row + targetX) * 4;
           if (d[targetO + 3] >= 200) continue;
-          const srcX = Math.max(a, b - ((k - 1) % spanLen));
+          const srcX = Math.max(b - 2, b - (k - 1));
           const srcO = (row + srcX) * 4;
           d[targetO] = d[srcO];
           d[targetO + 1] = d[srcO + 1];
@@ -509,7 +509,128 @@ export function synthesizeBackFabricCanvas(frontCanvas) {
  *   2. When a consistent back photo exists in the item group, lays the mirrored back
  *      photo on top of the silhouette.
  */
-export function buildBackTexture({ frontCanvas, backCanvas }) {
+/**
+ * Fills transparent canvas margins with clean edge fabric (sampling 2px inside seam)
+ * and smoothly bridges interior underarm gaps. NEVER mirrors interior graphics!
+ */
+export function fillTransparentCanvasMargins(canvas, dominantColor = '#FFFFFF') {
+  if (!canvas || typeof document === 'undefined') return;
+  try {
+    const W = canvas.width;
+    const H = canvas.height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const imgData = ctx.getImageData(0, 0, W, H);
+    const px = imgData.data;
+
+    const hexColor = (dominantColor || '#CBD5E1').replace('#', '');
+    const domR = parseInt(hexColor.substring(0, 2), 16) || 200;
+    const domG = parseInt(hexColor.substring(2, 4), 16) || 200;
+    const domB = parseInt(hexColor.substring(4, 6), 16) || 200;
+
+    const ALPHA_ON = 120;
+    for (let cy = 0; cy < H; cy++) {
+      const row = cy * W * 4;
+      let left = -1;
+      let right = -1;
+      for (let cx = 0; cx < W; cx++) {
+        if (px[row + cx * 4 + 3] >= ALPHA_ON) {
+          if (left < 0) left = cx;
+          right = cx;
+        }
+      }
+      if (left >= 0 && right >= left) {
+        const leftSample = Math.min(right, left + 2);
+        const rightSample = Math.max(left, right - 2);
+        const lOff = row + leftSample * 4;
+        const rOff = row + rightSample * 4;
+        const lR = px[lOff + 3] >= ALPHA_ON ? px[lOff] : domR;
+        const lG = px[lOff + 3] >= ALPHA_ON ? px[lOff + 1] : domG;
+        const lB = px[lOff + 3] >= ALPHA_ON ? px[lOff + 2] : domB;
+        const rR = px[rOff + 3] >= ALPHA_ON ? px[rOff] : domR;
+        const rG = px[rOff + 3] >= ALPHA_ON ? px[rOff + 1] : domG;
+        const rB = px[rOff + 3] >= ALPHA_ON ? px[rOff + 2] : domB;
+
+        for (let cx = 0; cx < W; cx++) {
+          const o = row + cx * 4;
+          if (px[o + 3] < ALPHA_ON) {
+            if (cx < left) {
+              const noise = ((cx * 13 + cy * 7) % 3) - 1;
+              px[o] = Math.max(0, Math.min(255, lR + noise));
+              px[o + 1] = Math.max(0, Math.min(255, lG + noise));
+              px[o + 2] = Math.max(0, Math.min(255, lB + noise));
+              px[o + 3] = 255;
+            } else if (cx > right) {
+              const noise = ((cx * 13 + cy * 7) % 3) - 1;
+              px[o] = Math.max(0, Math.min(255, rR + noise));
+              px[o + 1] = Math.max(0, Math.min(255, rG + noise));
+              px[o + 2] = Math.max(0, Math.min(255, rB + noise));
+              px[o + 3] = 255;
+            } else {
+              let gL = cx - 1;
+              while (gL > left && px[row + gL * 4 + 3] < ALPHA_ON) gL--;
+              let gR = cx + 1;
+              while (gR < right && px[row + gR * 4 + 3] < ALPHA_ON) gR++;
+              const gapWidth = gR - gL - 1;
+              const isNeckKeyhole =
+                cy < H * 0.28 &&
+                gapWidth >= Math.max(6, Math.floor(W * 0.06)) &&
+                gL >= W * 0.25 &&
+                gR <= W * 0.75;
+              if (isNeckKeyhole) {
+                px[o + 3] = 0;
+              } else {
+                const sampleInset = Math.min(8, Math.max(3, Math.floor(gapWidth * 0.12)));
+                const sL = Math.max(left, gL - sampleInset);
+                const sR = Math.min(right, gR + sampleInset);
+                const oGL = row + sL * 4;
+                const oGR = row + sR * 4;
+                const tGap = (cx - gL) / Math.max(1, gR - gL);
+
+                const colLR = px[oGL + 3] >= ALPHA_ON ? px[oGL] : domR;
+                const colLG = px[oGL + 3] >= ALPHA_ON ? px[oGL + 1] : domG;
+                const colLB = px[oGL + 3] >= ALPHA_ON ? px[oGL + 2] : domB;
+                const colRR = px[oGR + 3] >= ALPHA_ON ? px[oGR] : domR;
+                const colRG = px[oGR + 3] >= ALPHA_ON ? px[oGR + 1] : domG;
+                const colRB = px[oGR + 3] >= ALPHA_ON ? px[oGR + 2] : domB;
+
+                const baseR = colLR * (1 - tGap) + colRR * tGap;
+                const baseG = colLG * (1 - tGap) + colRG * tGap;
+                const baseB = colLB * (1 - tGap) + colRB * tGap;
+
+                const grainSampleX = (cx % 2 === 0) ? sL : sR;
+                const oGrain = row + grainSampleX * 4;
+                const midRefR = (colLR + colRR) * 0.5;
+                const midRefG = (colLG + colRG) * 0.5;
+                const midRefB = (colLB + colRB) * 0.5;
+                const grainDeltaR = ((px[oGrain + 3] >= ALPHA_ON ? px[oGrain] : midRefR) - midRefR) * 0.45;
+                const grainDeltaG = ((px[oGrain + 3] >= ALPHA_ON ? px[oGrain + 1] : midRefG) - midRefG) * 0.45;
+                const grainDeltaB = ((px[oGrain + 3] >= ALPHA_ON ? px[oGrain + 2] : midRefB) - midRefB) * 0.45;
+
+                px[o] = Math.max(0, Math.min(255, Math.round(baseR + grainDeltaR)));
+                px[o + 1] = Math.max(0, Math.min(255, Math.round(baseG + grainDeltaG)));
+                px[o + 2] = Math.max(0, Math.min(255, Math.round(baseB + grainDeltaB)));
+                px[o + 3] = 255;
+              }
+            }
+          }
+        }
+      } else {
+        for (let cx = 0; cx < W; cx++) {
+          const o = row + cx * 4;
+          px[o] = domR;
+          px[o + 1] = domG;
+          px[o + 2] = domB;
+          px[o + 3] = 255;
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+  } catch (err) {
+    console.warn('fillTransparentCanvasMargins failed:', err);
+  }
+}
+
+export function buildBackTexture({ frontCanvas, backCanvas, dominantColor = '#FFFFFF' }) {
   if (!frontCanvas || typeof document === 'undefined') return null;
   const W = frontCanvas.width;
   const H = frontCanvas.height;
@@ -528,6 +649,9 @@ export function buildBackTexture({ frontCanvas, backCanvas }) {
     const cleanBackCanvas = synthesizeBackFabricCanvas(frontCanvas);
     ctx.drawImage(cleanBackCanvas, 0, 0);
   }
+  // Fill transparent margins of the back canvas with clean edge fabric so UV boundaries never sample transparency
+  fillTransparentCanvasMargins(out, dominantColor);
+
   const tex = new THREE.CanvasTexture(out);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.ClampToEdgeWrapping;
@@ -1207,145 +1331,18 @@ async function fetchAndCropTexture(url) {
   }
 
   // Gap-free variant for clothing shells:
-  // Fills interior holes (armhole cutouts, inner wedges) with smooth dominant fabric color.
-  // NO horizontal row-smear to eliminate barcode / zebra stripe distortion!
+  // Fills interior holes (armhole cutouts, inner wedges) and transparent margins
+  // with clean edge fabric color and weave noise. NEVER mirrors interior graphics into margins!
   let filledTexture = null;
   let fillCanvas = null;
   try {
-    const srcPixels = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, cropW, cropH).data;
-    const fillData = new ImageData(new Uint8ClampedArray(srcPixels), cropW, cropH);
-    const px = fillData.data;
-    const hexColor = dominantColor.replace('#', '');
-    const domR = parseInt(hexColor.substring(0, 2), 16) || 35;
-    const domG = parseInt(hexColor.substring(2, 4), 16) || 35;
-    const domB = parseInt(hexColor.substring(4, 6), 16) || 38;
-
-    const ALPHA_ON = 120;
-    for (let cy = 0; cy < cropH; cy++) {
-      const row = cy * cropW * 4;
-      let left = -1;
-      let right = -1;
-      for (let cx = 0; cx < cropW; cx++) {
-        if (px[row + cx * 4 + 3] >= ALPHA_ON) {
-          if (left < 0) left = cx;
-          right = cx;
-        }
-      }
-      if (left >= 0 && right >= left) {
-        const leftSample = Math.min(right, left + 2);
-        const rightSample = Math.max(left, right - 2);
-        const spanLen = Math.max(1, rightSample - leftSample + 1);
-        const lOff = row + leftSample * 4;
-        const rOff = row + rightSample * 4;
-        const lR = srcPixels[lOff + 3] >= ALPHA_ON ? srcPixels[lOff] : domR;
-        const lG = srcPixels[lOff + 3] >= ALPHA_ON ? srcPixels[lOff + 1] : domG;
-        const lB = srcPixels[lOff + 3] >= ALPHA_ON ? srcPixels[lOff + 2] : domB;
-        const rR = srcPixels[rOff + 3] >= ALPHA_ON ? srcPixels[rOff] : domR;
-        const rG = srcPixels[rOff + 3] >= ALPHA_ON ? srcPixels[rOff + 1] : domG;
-        const rB = srcPixels[rOff + 3] >= ALPHA_ON ? srcPixels[rOff + 2] : domB;
-
-        for (let cx = 0; cx < cropW; cx++) {
-          const o = row + cx * 4;
-          if (srcPixels[o + 3] < ALPHA_ON) {
-            if (cx < left) {
-              // Mirror-reflect interior span rather than smearing a single pixel horizontally
-              const dist = leftSample - cx;
-              const mirrorX = Math.min(rightSample, leftSample + (dist % spanLen));
-              const mOff = row + mirrorX * 4;
-              if (srcPixels[mOff + 3] >= ALPHA_ON) {
-                px[o] = srcPixels[mOff];
-                px[o + 1] = srcPixels[mOff + 1];
-                px[o + 2] = srcPixels[mOff + 2];
-              } else {
-                px[o] = lR;
-                px[o + 1] = lG;
-                px[o + 2] = lB;
-              }
-              px[o + 3] = 255;
-            } else if (cx > right) {
-              const dist = cx - rightSample;
-              const mirrorX = Math.max(leftSample, rightSample - (dist % spanLen));
-              const mOff = row + mirrorX * 4;
-              if (srcPixels[mOff + 3] >= ALPHA_ON) {
-                px[o] = srcPixels[mOff];
-                px[o + 1] = srcPixels[mOff + 1];
-                px[o + 2] = srcPixels[mOff + 2];
-              } else {
-                px[o] = rR;
-                px[o + 1] = rG;
-                px[o + 2] = rB;
-              }
-              px[o + 3] = 255;
-            } else {
-              let gL = cx - 1;
-              while (gL > left && srcPixels[row + gL * 4 + 3] < ALPHA_ON) gL--;
-              let gR = cx + 1;
-              while (gR < right && srcPixels[row + gR * 4 + 3] < ALPHA_ON) gR++;
-              const gapWidth = gR - gL - 1;
-              const isNeckKeyhole =
-                cy < cropH * 0.28 &&
-                gapWidth >= Math.max(6, Math.floor(cropW * 0.06)) &&
-                gL >= cropW * 0.25 &&
-                gR <= cropW * 0.75;
-              if (isNeckKeyhole) {
-                // Preserve intentional V-neck / open-back keyhole cutout transparency
-                px[o + 3] = 0;
-              } else {
-                // Synthesize continuous fabric across underarms and interior seams following
-                // the garment's authentic colors, weave texture, and micro-patterns.
-                // Step 4-6px inward from the cutout fringe into solid fabric to prevent white studio halo contamination:
-                const sampleInset = Math.min(8, Math.max(3, Math.floor(gapWidth * 0.12)));
-                const sL = Math.max(left, gL - sampleInset);
-                const sR = Math.min(right, gR + sampleInset);
-                const oGL = row + sL * 4;
-                const oGR = row + sR * 4;
-                const tGap = (cx - gL) / Math.max(1, gR - gL);
-
-                const colLR = srcPixels[oGL + 3] >= ALPHA_ON ? srcPixels[oGL] : domR;
-                const colLG = srcPixels[oGL + 3] >= ALPHA_ON ? srcPixels[oGL + 1] : domG;
-                const colLB = srcPixels[oGL + 3] >= ALPHA_ON ? srcPixels[oGL + 2] : domB;
-                const colRR = srcPixels[oGR + 3] >= ALPHA_ON ? srcPixels[oGR] : domR;
-                const colRG = srcPixels[oGR + 3] >= ALPHA_ON ? srcPixels[oGR + 1] : domG;
-                const colRB = srcPixels[oGR + 3] >= ALPHA_ON ? srcPixels[oGR + 2] : domB;
-
-                const baseR = colLR * (1 - tGap) + colRR * tGap;
-                const baseG = colLG * (1 - tGap) + colRG * tGap;
-                const baseB = colLB * (1 - tGap) + colRB * tGap;
-
-                // Micro-texture & weave noise synthesis from nearby fabric grain:
-                const grainSampleX = (cx % 2 === 0) ? sL : sR;
-                const oGrain = row + grainSampleX * 4;
-                const midRefR = (colLR + colRR) * 0.5;
-                const midRefG = (colLG + colRG) * 0.5;
-                const midRefB = (colLB + colRB) * 0.5;
-                const grainDeltaR = ((srcPixels[oGrain + 3] >= ALPHA_ON ? srcPixels[oGrain] : midRefR) - midRefR) * 0.45;
-                const grainDeltaG = ((srcPixels[oGrain + 3] >= ALPHA_ON ? srcPixels[oGrain + 1] : midRefG) - midRefG) * 0.45;
-                const grainDeltaB = ((srcPixels[oGrain + 3] >= ALPHA_ON ? srcPixels[oGrain + 2] : midRefB) - midRefB) * 0.45;
-
-                px[o] = Math.max(0, Math.min(255, Math.round(baseR + grainDeltaR)));
-                px[o + 1] = Math.max(0, Math.min(255, Math.round(baseG + grainDeltaG)));
-                px[o + 2] = Math.max(0, Math.min(255, Math.round(baseB + grainDeltaB)));
-                px[o + 3] = 255;
-              }
-            }
-          } else {
-            px[o + 3] = 255;
-          }
-        }
-      } else {
-        for (let cx = 0; cx < cropW; cx++) {
-          const o = row + cx * 4;
-          px[o] = domR;
-          px[o + 1] = domG;
-          px[o + 2] = domB;
-          px[o + 3] = 255;
-        }
-      }
-    }
     fillCanvas = document.createElement('canvas');
     fillCanvas.width = cropW;
     fillCanvas.height = cropH;
-    fillCanvas.getContext('2d', { willReadFrequently: true }).putImageData(fillData, 0, 0);
+    const fctx = fillCanvas.getContext('2d', { willReadFrequently: true });
+    fctx.drawImage(cropCanvas, 0, 0);
+    fillTransparentCanvasMargins(fillCanvas, dominantColor);
+
     filledTexture = new THREE.CanvasTexture(fillCanvas);
     filledTexture.colorSpace = THREE.SRGBColorSpace;
     filledTexture.wrapS = THREE.ClampToEdgeWrapping;
@@ -1404,9 +1401,11 @@ async function fetchAndCropTexture(url) {
 
   // Back sheet texture: front garment canvas synthesized to exclude graphics, prints,
   // pockets, zippers, while preserving base fabric colors, lighting, and repeating patterns.
+  // CRITICAL: Always synthesize from pristine cropCanvas so margins are transparent and
+  // flank analysis is 100% accurate without contamination from filled margins!
   let backTexture = null;
   try {
-    backTexture = buildBackTexture({ frontCanvas: fillCanvas || cropCanvas, backCanvas: null });
+    backTexture = buildBackTexture({ frontCanvas: cropCanvas, backCanvas: null, dominantColor });
   } catch {
     backTexture = null;
   }

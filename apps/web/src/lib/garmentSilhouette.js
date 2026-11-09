@@ -2220,20 +2220,7 @@ export function synthesizeBackFabricData(data, w, h) {
         diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
       }
 
-      // 1. Bilateral symmetry check for pockets / asymmetric details (coin pockets, breast pockets, logos)
-      // Only replace with opposite side if opposite side is confirmed clean base fabric (diffBase[mi] <= 6);
-      // NEVER cross-mirror front graphics or prints onto the back!
-      for (let i = 0; i < span; i++) {
-        const mi = span - 1 - i;
-        if (diffBase[i] > 8 && diffBase[mi] <= 6) {
-          curR[i] = curR[mi];
-          curG[i] = curG[mi];
-          curB[i] = curB[mi];
-          diffBase[i] = diffBase[mi];
-        }
-      }
-
-      // 2. Dump center closures: zipper tracks, zipper pulls, button plackets, buttonflies, J-stitch fly seams, waistband button/fly
+      // 1. Center closures: zipper tracks, zipper pulls, button plackets, buttonflies, J-stitch fly seams, waistband button/fly
       const cMidL = Math.floor(0.35 * span);
       const cMidR = Math.min(span - 1, Math.ceil(0.65 * span));
       if (!isAllOverPatternRow && cMidR > cMidL + 2) {
@@ -2258,28 +2245,50 @@ export function synthesizeBackFabricData(data, w, h) {
         }
       }
 
-      // 2b. Eliminate all front-view details: double-breasted buttons, zippers,
+      // 2. Eliminate all front-view details: double-breasted buttons, zippers,
       // zipper pulls, breast pockets, kangaroo/patch pockets, chest graphics, lettering, and plackets
-      // across the entire interior torso (u_rel in [0.08, 0.92]).
-      // On the back sheet of any top or outerwear, central chest graphics (u in [0.15, 0.85] and v in [0.12, 0.75])
-      // MUST ALWAYS be removed even if there is flank grain!
-      const isChestTorsoZone = vRel >= 0.12 && vRel <= 0.75;
-      const pStart = Math.floor(0.08 * span);
-      const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
+      // across the entire interior torso.
+      // On the back sheet of any top or outerwear, front graphics and lettering
+      // MUST ALWAYS be completely removed and replaced with clean base fabric.
+      const isChestTorsoZone = vRel >= 0.10 && vRel <= 0.85;
+      const pStart = Math.floor(0.06 * span);
+      const pEnd = Math.min(span - 1, Math.ceil(0.94 * span));
       if (pEnd > pStart + 2) {
-        const fineThreshold = isAllOverPatternRow ? Math.max(12.0, sigma * 1.5) : Math.max(4.0, Math.min(10.0, sigma * 0.85));
+        const isGraphic = new Uint8Array(span);
+        const fineThreshold = isAllOverPatternRow ? Math.max(12.0, sigma * 1.5) : Math.max(3.5, Math.min(7.0, sigma * 0.70));
         for (let i = pStart + 1; i < pEnd; i++) {
           const u_rel = i / (span - 1);
-          const inChestBox = isChestTorsoZone && u_rel >= 0.16 && u_rel <= 0.84;
+          const inChestBox = isChestTorsoZone && u_rel >= 0.10 && u_rel <= 0.90;
           const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
-          if (diffBase[i] > fineThreshold || (!isAllOverPatternRow && prevDiff > Math.max(6.0, sigma * 0.95)) || (inChestBox && diffBase[i] > Math.max(4.5, sigma * 0.85))) {
+          if (diffBase[i] > fineThreshold || (!isAllOverPatternRow && prevDiff > Math.max(5.0, sigma * 0.80)) || (inChestBox && diffBase[i] > (isAllOverPatternRow ? 8.0 : 3.0))) {
+            isGraphic[i] = 1;
+          }
+        }
+
+        if (!isAllOverPatternRow) {
+          // Dilate graphic mask by 3px on both sides to eradicate anti-aliased edge halos, pencil lines, and soft ink shading
+          const isGraphicDilated = new Uint8Array(isGraphic);
+          for (let i = 0; i < span; i++) {
+            if (isGraphic[i]) {
+              const start = Math.max(0, i - 3);
+              const end = Math.min(span - 1, i + 3);
+              for (let k = start; k <= end; k++) isGraphicDilated[k] = 1;
+            }
+          }
+          for (let i = 0; i < span; i++) {
+            isGraphic[i] = isGraphicDilated[i];
+          }
+        }
+
+        for (let i = 0; i < span; i++) {
+          if (isGraphic[i]) {
             let synR = baseR[i];
             let synG = baseG[i];
             let synB = baseB[i];
             // Subtle high-frequency micro weave grain only; never repeat macro flank chunks
             // that cause hallucinated periodic checkerboards!
             const symI = Math.min(i, span - 1 - i);
-            const microNoise = Math.round(((symI * 37 + y * 17) % 5) - 2);
+            const microNoise = Math.round(((symI * 37 + y * 17) % 5) - 2) * 0.5;
             curR[i] = Math.max(0, Math.min(255, synR + microNoise));
             curG[i] = Math.max(0, Math.min(255, synG + microNoise));
             curB[i] = Math.max(0, Math.min(255, synB + microNoise));
