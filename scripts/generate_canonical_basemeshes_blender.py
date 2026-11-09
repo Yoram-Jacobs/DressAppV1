@@ -1010,7 +1010,7 @@ def build_top_template(avatar_data, variant="tshirt"):
         offset = 0.0060
         z_neck = 1.330 if is_male else 1.275
         z_hem = 0.94 if is_male else 0.90
-        x_arm_max = 0.175 if is_male else 0.150
+        x_arm_max = 0.195 if is_male else 0.168
         sleeve_type = "strapless"
         neck_tilt = 0.0
     elif variant == "vest":
@@ -1169,17 +1169,28 @@ def build_top_template(avatar_data, variant="tshirt"):
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=cuff_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "strapless":
         # Strapless tops / corsets have NO arm sleeves at all;
-        # Completely remove all arm/hand vertices (X > x_arm_max or X < -x_arm_max)
-        x_cut = 0.178 if is_male else 0.154
-        # 1. Bisect armpit laterally so torso lateral wall is clean and planar
-        r_geom = [v for v in bm.verts if v.co.x > (x_cut - 0.02) and v.co.z > 0.95]
+        # Cut arms strictly above the underarm crease (z > z_arm_cut_min) so the lateral ribcage and waist (Z < 1.15) remain 100% closed without side holes!
+        z_arm_cut_min = 1.24 if is_male else 1.18
+        x_arm_max_cut = 0.195 if is_male else 0.168
+
+        r_geom = (
+            [v for v in bm.verts if v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         if r_geom:
-            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_cut, 0.0, 1.20)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
-        l_geom = [v for v in bm.verts if v.co.x < (-x_cut + 0.02) and v.co.z > 0.95]
+            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
+
+        l_geom = (
+            [v for v in bm.verts if v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         if l_geom:
-            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_cut, 0.0, 1.20)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
-        # 2. Delete any remaining disconnected arm, elbow, forearm or hand vertices
-        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > x_cut or (abs(v.co.x) > 0.18 and v.co.z < 1.15)]
+            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
+
+        # Delete any remaining disconnected arm/hand vertices (arms in A-pose are at |X| > 0.21 at all heights)
+        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.21 and v.co.z >= z_hem]
         if stray_arm_verts:
             bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:
@@ -1774,7 +1785,7 @@ def build_dress_template(avatar_data, variant="dress"):
     z_hip = 0.90 if is_male else 0.88
     z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.60 if is_male else 0.56)
     sleeve_type = "strapless" if is_strapless else ("long" if is_kaftan else "sleeveless")
-    x_arm_max = (0.175 if is_male else 0.150) if is_strapless else ((0.475 if is_male else 0.430) if is_kaftan else (0.195 if is_male else 0.168))
+    x_arm_max = (0.195 if is_male else 0.168) if is_strapless else ((0.475 if is_male else 0.430) if is_kaftan else (0.195 if is_male else 0.168))
     offset = 0.008 if is_strapless else (0.014 if is_kaftan else 0.009)
     neck_tilt = 0.0 if is_strapless else (-0.16 if is_kaftan else -0.18)
 
@@ -1815,16 +1826,29 @@ def build_dress_template(avatar_data, variant="dress"):
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "strapless":
-        x_cut = 0.178 if is_male else 0.154
-        # 1. Bisect armpit laterally so torso lateral wall is clean and planar
-        r_geom = [v for v in bm.verts if v.co.x > (x_cut - 0.02) and v.co.z > 0.95]
+        # Strapless dresses have NO arm sleeves at all;
+        # Cut arms strictly above the underarm crease (z > z_arm_cut_min) so the lateral ribcage and waist (Z < 1.15) remain 100% closed without side holes!
+        z_arm_cut_min = 1.24 if is_male else 1.18
+        x_arm_max_cut = 0.195 if is_male else 0.168
+
+        r_geom = (
+            [v for v in bm.verts if v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         if r_geom:
-            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_cut, 0.0, 1.20)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
-        l_geom = [v for v in bm.verts if v.co.x < (-x_cut + 0.02) and v.co.z > 0.95]
+            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
+
+        l_geom = (
+            [v for v in bm.verts if v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min]
+            + [e for e in bm.edges if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
+        )
         if l_geom:
-            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_cut, 0.0, 1.20)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
-        # 2. Delete any remaining disconnected arm, elbow, forearm or hand vertices
-        stray_arm_verts = [v for v in bm.verts if (abs(v.co.x) > x_cut and v.co.z > 1.05) or (abs(v.co.x) > 0.20 and v.co.z >= 0.88)]
+            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
+
+        # Delete any remaining disconnected arm/hand vertices (arms in A-pose are at |X| > 0.21 at all heights)
+        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.21 and v.co.z >= z_hip]
         if stray_arm_verts:
             bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:
