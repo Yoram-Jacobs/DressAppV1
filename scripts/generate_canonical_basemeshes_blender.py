@@ -1168,29 +1168,25 @@ def build_top_template(avatar_data, variant="tshirt"):
         )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=cuff_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "strapless":
-        # Strapless tops / corsets have NO arm sleeves at all;
-        # Cut arms strictly above the underarm crease (z > z_arm_cut_min) so the lateral ribcage and waist (Z < 1.15) remain 100% closed without side holes!
-        z_arm_cut_min = 1.24 if is_male else 1.18
-        x_arm_max_cut = 0.195 if is_male else 0.168
+        # Anatomical sweetheart strapless neckline:
+        # Curves over bust in front (Z=1.330 M / 1.275 F), dips smoothly below axilla on flanks (Z=1.230 M / 1.182 F),
+        # and passes horizontally across mid-back (Z=1.235 M / 1.188 F).
+        # This completely eliminates arm cuts, side holes, and armhole voids on strapless tops!
+        z_bust = 1.330 if is_male else 1.275
+        z_flank = 1.230 if is_male else 1.182
+        z_back = 1.235 if is_male else 1.188
 
-        r_geom = (
-            [v for v in bm.verts if v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min]
-            + [e for e in bm.edges if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
-            + [f for f in bm.faces if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
-        )
-        if r_geom:
-            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
+        def get_neck_z(x, y):
+            t = min(1.0, abs(x) / 0.125)
+            ease = 0.5 * (1.0 + math.cos(t * math.pi))
+            return z_flank + ((z_bust if y < 0 else z_back) - z_flank) * ease
 
-        l_geom = (
-            [v for v in bm.verts if v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min]
-            + [e for e in bm.edges if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
-            + [f for f in bm.faces if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
-        )
-        if l_geom:
-            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
+        to_del = [v for v in bm.verts if v.co.z > get_neck_z(v.co.x, v.co.y)]
+        if to_del:
+            bmesh.ops.delete(bm, geom=to_del, context='VERTS')
 
-        # Delete any remaining disconnected arm/hand vertices (arms in A-pose are at |X| > 0.21 at all heights)
-        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.21 and v.co.z >= z_hem]
+        # Delete any stray arm/hand vertices (|x| > 0.18 at any height)
+        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.18 and v.co.z >= z_hem]
         if stray_arm_verts:
             bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:
@@ -1212,15 +1208,7 @@ def build_top_template(avatar_data, variant="tshirt"):
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
     # 3. Precision Curved Collar / Strapless Cut (cuts only the neck opening or bustline while preserving 100% of body)
-    if variant == "strapless":
-        bmesh.ops.bisect_plane(
-            bm,
-            geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
-            plane_co=Vector((0.0, 0.0, z_neck)),
-            plane_no=Vector((0.0, 0.0, 1.0)),
-            clear_outer=True
-        )
-    else:
+    if variant != "strapless":
         nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
         neck_no = Vector((0.0, neck_tilt, nz)).normalized()
         bmesh.ops.bisect_plane(
@@ -1833,29 +1821,25 @@ def build_dress_template(avatar_data, variant="dress"):
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "strapless":
-        # Strapless dresses have NO arm sleeves at all;
-        # Cut arms strictly above the underarm crease (z > z_arm_cut_min) so the lateral ribcage and waist (Z < 1.15) remain 100% closed without side holes!
-        z_arm_cut_min = 1.24 if is_male else 1.18
-        x_arm_max_cut = 0.195 if is_male else 0.168
+        # Anatomical sweetheart strapless neckline:
+        # Curves over bust in front (Z=1.330 M / 1.275 F), dips smoothly below axilla on flanks (Z=1.230 M / 1.182 F),
+        # and passes horizontally across mid-back (Z=1.235 M / 1.188 F).
+        # This completely eliminates arm cuts, side holes, and armhole voids on strapless dresses!
+        z_bust = 1.330 if is_male else 1.275
+        z_flank = 1.230 if is_male else 1.182
+        z_back = 1.235 if is_male else 1.188
 
-        r_geom = (
-            [v for v in bm.verts if v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min]
-            + [e for e in bm.edges if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
-            + [f for f in bm.faces if all(v.co.x > (x_arm_max_cut - 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
-        )
-        if r_geom:
-            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
+        def get_neck_z(x, y):
+            t = min(1.0, abs(x) / 0.125)
+            ease = 0.5 * (1.0 + math.cos(t * math.pi))
+            return z_flank + ((z_bust if y < 0 else z_back) - z_flank) * ease
 
-        l_geom = (
-            [v for v in bm.verts if v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min]
-            + [e for e in bm.edges if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in e.verts)]
-            + [f for f in bm.faces if all(v.co.x < (-x_arm_max_cut + 0.02) and v.co.z > z_arm_cut_min for v in f.verts)]
-        )
-        if l_geom:
-            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max_cut, 0.0, 1.25)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
+        to_del = [v for v in bm.verts if v.co.z > get_neck_z(v.co.x, v.co.y)]
+        if to_del:
+            bmesh.ops.delete(bm, geom=to_del, context='VERTS')
 
-        # Delete any remaining disconnected arm/hand vertices (arms in A-pose are at |X| > 0.21 at all heights)
-        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.21 and v.co.z >= z_hip]
+        # Delete any stray arm/hand vertices (|x| > 0.18 at any height)
+        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.18 and v.co.z >= z_hip]
         if stray_arm_verts:
             bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:
@@ -1877,15 +1861,7 @@ def build_dress_template(avatar_data, variant="dress"):
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
     # 3. Precision Curved Collar / Strapless Cut (preserves 100% of body below neckline)
-    if is_strapless:
-        bmesh.ops.bisect_plane(
-            bm,
-            geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
-            plane_co=Vector((0.0, 0.0, z_neck)),
-            plane_no=Vector((0.0, 0.0, 1.0)),
-            clear_outer=True,
-        )
-    else:
+    if not is_strapless:
         nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
         neck_no = Vector((0.0, neck_tilt, nz)).normalized()
         bmesh.ops.bisect_plane(

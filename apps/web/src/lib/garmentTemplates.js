@@ -148,7 +148,17 @@ export function resolveGarmentTemplate({
   slot = '',
   category = '',
 } = {}) {
-  const fullText = `${slot} ${category} ${rawSlot} ${garmentText}`.toLowerCase();
+  const normSlot = String(rawSlot || slot || '').toLowerCase().trim();
+  const normCat = String(category || '').toLowerCase().trim();
+  const effectiveSlot = normSlot ||
+    (normCat === 'dresses' || normCat === 'dress' || normCat === 'שמלות' || normCat === 'שמלה' ? 'dress' : '') ||
+    (normCat === 'tops' || normCat === 'top' || normCat === 'חולצות' || normCat === 'חולצה' ? 'top' : '') ||
+    (normCat === 'bottoms' || normCat === 'bottom' || normCat === 'מכנסיים' || normCat === 'מכנס' ? 'bottom' : '') ||
+    (normCat === 'outerwear' || normCat === 'מעילים' || normCat === 'מעיל' ? 'outerwear' : '') ||
+    (normCat === 'shoes' || normCat === 'footwear' || normCat === 'נעליים' ? 'shoes' : '') ||
+    '';
+
+  const fullText = `${slot} ${category} ${rawSlot} ${effectiveSlot} ${garmentText}`.toLowerCase();
   const has = (...words) => words.some((w) => {
     if (/^[a-z0-9_ -]+$/i.test(w)) {
       const escaped = w.trim().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -159,34 +169,34 @@ export function resolveGarmentTemplate({
   });
 
   // 1. STANDALONE ACCESSORIES (Only when slot is accessory or explicit accessory slot)
-  const isAccessoryRole = ['belt', 'headwear', 'bag', 'accessory', 'scarf', 'jewelry', 'glasses'].includes(rawSlot);
-  if (rawSlot === 'belt' || (isAccessoryRole && has('belt', 'חגורה'))) {
+  const isAccessoryRole = ['belt', 'headwear', 'bag', 'accessory', 'scarf', 'jewelry', 'glasses'].includes(effectiveSlot);
+  if (effectiveSlot === 'belt' || (isAccessoryRole && has('belt', 'חגורה'))) {
     return 'belt';
   }
-  if (rawSlot === 'headwear' || (isAccessoryRole && has('hat', 'cap', 'beanie', 'fedora', 'beret', 'כובע', 'קסקט', 'מצחיה', 'מצחייה'))) {
+  if (effectiveSlot === 'headwear' || (isAccessoryRole && has('hat', 'cap', 'beanie', 'fedora', 'beret', 'כובע', 'קסקט', 'מצחיה', 'מצחייה'))) {
     if (has('cap', 'baseball', 'קסקט', 'מצחיה', 'מצחייה')) return 'hat_cap';
     return 'hat_fedora';
   }
-  if (rawSlot === 'bag' || (isAccessoryRole && has('bag', 'handbag', 'tote', 'crossbody', 'purse', 'clutch', 'תיק', 'ארנק'))) {
+  if (effectiveSlot === 'bag' || (isAccessoryRole && has('bag', 'handbag', 'tote', 'crossbody', 'purse', 'clutch', 'תיק', 'ארנק'))) {
     if (has('crossbody', 'shoulder', 'side', 'אלכסון', 'צד')) return 'bag_crossbody';
     return 'bag_handbag';
   }
-  if (rawSlot === 'glasses' || (isAccessoryRole && has('glasses', 'sunglasses', 'משקפיים', 'משקפי'))) {
+  if (effectiveSlot === 'glasses' || (isAccessoryRole && has('glasses', 'sunglasses', 'משקפיים', 'משקפי'))) {
     return 'accessory_glasses';
   }
 
   // 2. FULL-BODY / ROBES / KAFTAN / GALABIYE (Only for dresses / outerwear / robes, never for tops/bottoms)
-  const isFullBodyRole = ['dress', 'fullbody', 'robe', 'one-piece', 'kaftan', 'outerwear'].includes(rawSlot);
+  const isFullBodyRole = ['dress', 'fullbody', 'robe', 'one-piece', 'kaftan', 'outerwear'].includes(effectiveSlot);
   if (
-    (isFullBodyRole || !rawSlot) &&
-    !['top', 'bottom', 'shoes'].includes(rawSlot) &&
+    (isFullBodyRole || !effectiveSlot) &&
+    !['top', 'bottom', 'shoes'].includes(effectiveSlot) &&
     has('kaftan', 'caftan', 'galabiye', 'galabeya', 'jalabiya', 'abaya', 'djellaba', 'thobe', 'robe', 'robes', 'כפתן', 'גלבייה', 'גלביה', 'עבאיה', 'חלוק')
   ) {
     return 'kaftan';
   }
 
   // 3. OUTERWEAR
-  if (rawSlot === 'outerwear') {
+  if (effectiveSlot === 'outerwear') {
     if (has('trench', 'טרנץ', "טרנץ'")) return 'trench_coat';
     if (has('cardigan', 'קרדיגן')) return 'cardigan';
     if (has('vest', 'וסט', 'אפודה')) return 'vest';
@@ -199,7 +209,13 @@ export function resolveGarmentTemplate({
   }
 
   // 4. DRESS
-  if (rawSlot === 'dress') {
+  const isDressRole = ['dress', 'fullbody', 'one-piece'].includes(effectiveSlot);
+  if (
+    isDressRole ||
+    (!['top', 'bottom', 'shoes', 'outerwear', 'belt', 'headwear', 'bag', 'glasses'].includes(effectiveSlot) &&
+     !has('dress shirt') &&
+     has('שמלה', 'שמלת', 'dress', 'gown'))
+  ) {
     if (has('strapless', 'tube', 'corset', 'bustier', 'bandeau', 'sweetheart', 'סטרפלס', 'קורסט', 'מחוך', 'בוסטייה', 'בנדו', 'טיוב')) {
       return 'dress_strapless';
     }
@@ -207,19 +223,19 @@ export function resolveGarmentTemplate({
   }
 
   // 4b. FOOTWEAR / SHOES
-  if (rawSlot === 'shoes') {
+  if (effectiveSlot === 'shoes') {
     if (has('boot', 'boots', 'chelsea', 'מגף', 'מגפיים', 'מגפי')) return 'shoes_boots';
     return 'shoes_sneakers';
   }
 
   // 5. BOTTOMS
-  if (rawSlot === 'bottom') {
+  if (effectiveSlot === 'bottom') {
     if (has('skirt', 'חצאית')) {
       if (has('pencil', 'tight', 'straight', 'עיפרון', 'צמודה', 'ישרה')) return 'skirt_pencil';
       return 'skirt_aline';
     }
     if (has('short', 'shorts', 'שורט', 'שורטס', 'קצרים', 'מכנס קצר')) {
-      if (has('bermuda', 'knee', 'ברמודה', 'עד הברך')) return 'bermuda';
+      if (has('bermuda', 'ברמודה', 'עד הברך')) return 'bermuda';
       return 'shorts';
     }
     if (has('bermuda', 'ברמודה')) {
@@ -229,11 +245,11 @@ export function resolveGarmentTemplate({
   }
 
   // 6. TOPS
-  if (rawSlot === 'top' && has('strapless', 'tube', 'corset', 'bustier', 'bandeau', 'sweetheart', 'סטרפלס', 'קורסט', 'מחוך', 'בוסטייה', 'בנדו', 'טיוב')) {
+  if (effectiveSlot === 'top' && has('strapless', 'tube', 'corset', 'bustier', 'bandeau', 'sweetheart', 'סטרפלס', 'קורסט', 'מחוך', 'בוסטייה', 'בנדו', 'טיוב')) {
     return 'top_strapless';
   }
-  if (rawSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'top_tunic';
-  if (rawSlot === 'top') {
+  if (effectiveSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'top_tunic';
+  if (effectiveSlot === 'top') {
     if (has('tank', 'singlet', 'sleeveless', 'vest', 'camisole', 'גופיה', 'גופייה', 'גופית', 'גופיית', 'בלי שרוולים')) return 'singlet';
     if (has('hoodie', 'sweatshirt', 'sweater', 'knit', 'pullover', 'fleece', 'סוודר', 'סווטשירט', "קפוצ'ון", 'סריג')) return 'hoodie';
     if (has('long sleeve', 'long-sleeve', 'longsleeve', 'long-sleeved', 'long sleeved', 'long_sleeve', 'שרוול ארוך', 'שרוולים ארוכים')) return 'top_longsleeve';
