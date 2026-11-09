@@ -3610,6 +3610,22 @@ export function GarmentMeshCore({
     [rawSlot, garment]
   );
 
+  // ── Silhouette shell fit: resolve early so base geometry and templates can safely use shellFit parameters ──
+  const shellFit = useMemo(
+    () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear, garment, aspect }),
+    [rawSlot, garmentText, isMale, hasOuterwear, garment, aspect]
+  );
+  const fitProfile = useMemo(
+    () => analyzeGarmentFit({
+      garment,
+      rawSlot,
+      garmentText,
+      shellMask,
+      isSkirt: Boolean(shellFit?.isSkirt),
+    }),
+    [garment, rawSlot, garmentText, shellMask, shellFit]
+  );
+
   // Build the appropriate 3D geometry matching this slot and garment type
   // (authored in the avatar's base, un-morphed coordinate space)
   const baseGeometry = useMemo(() => {
@@ -3768,7 +3784,7 @@ export function GarmentMeshCore({
       hasOuterwear,
       garmentText,
     });
-  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, hasBottom, autoHasSleeves, aspect, solidU, solidV, footwearSpec, shoeLayout, isStandalone]);
+  }, [visible, rawSlot, garmentText, isMale, hasOuterwear, hasBottom, autoHasSleeves, aspect, solidU, solidV, footwearSpec, shoeLayout, isStandalone, shellFit, garment]);
 
   const geometry = useMemo(() => {
     const isRigidAccessory = rawSlot === 'headwear' || rawSlot === 'glasses';
@@ -3783,20 +3799,6 @@ export function GarmentMeshCore({
   }, [baseGeometry, morphField, morphInfluences, rawSlot, footPose, isStandalone]);
 
   // ── Silhouette shell: the garment keeps its own photographed outline ──
-  const shellFit = useMemo(
-    () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear, garment, aspect }),
-    [rawSlot, garmentText, isMale, hasOuterwear, garment, aspect]
-  );
-  const fitProfile = useMemo(
-    () => analyzeGarmentFit({
-      garment,
-      rawSlot,
-      garmentText,
-      shellMask,
-      isSkirt: Boolean(shellFit?.isSkirt),
-    }),
-    [garment, rawSlot, garmentText, shellMask, shellFit]
-  );
   const shell = useMemo(() => {
     if (!visible || !shellFit || !shellMask || bypassSilhouette) return null;
     try {
