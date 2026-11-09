@@ -3012,7 +3012,7 @@ class GarmentTemplateErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback || null;
+      return null;
     }
     return this.props.children;
   }
@@ -3470,8 +3470,8 @@ function GarmentTemplateMeshInner({
     });
     const backMat = new THREE.MeshStandardMaterial({
       ...baseProps,
-      color: hasBackTex ? '#FFFFFF' : fallbackCol,
-      map: backTexture || null,
+      color: (hasBackTex || hasFrontTex) ? '#FFFFFF' : fallbackCol,
+      map: backTexture || texture || null,
     });
     return [frontMat, backMat];
   }, [texture, backTexture, dominantColor, pbrProps, rawSlot]);
@@ -3505,57 +3505,14 @@ export function GarmentTemplateMesh(props) {
   const {
     templateId,
     isMale = false,
-    fallbackGeometry = null,
-    heelGeometry = null,
-    dominantColor,
-    pbrProps,
-    renderOrder,
-    rawSlot,
-    texture,
   } = props;
   const url = getTemplateGlbUrl(templateId, isMale);
 
-  const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
-  const fallbackNode = (
-    <>
-      {heelGeometry && (
-        <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
-          <meshStandardMaterial
-            color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
-            roughness={0.35}
-            metalness={0.12}
-          />
-        </mesh>
-      )}
-      {fallbackGeometry && (
-        <mesh
-          geometry={fallbackGeometry}
-          castShadow
-          receiveShadow
-          renderOrder={renderOrder}
-        >
-          <meshStandardMaterial
-            map={texture || null}
-            color={rawSlot === 'shoes'
-              ? (texture ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#94A3B8'))
-              : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
-            side={THREE.DoubleSide}
-            depthWrite={true}
-            transparent={!isOpaqueSlot}
-            alphaTest={isOpaqueSlot ? 0 : 0.02}
-            roughness={pbrProps?.roughness ?? 0.70}
-            metalness={pbrProps?.metalness ?? 0.05}
-          />
-        </mesh>
-      )}
-    </>
-  );
-
-  if (!url) return fallbackNode;
+  if (!url) return null;
 
   return (
-    <GarmentTemplateErrorBoundary key={url} url={url} fallback={fallbackNode}>
-      <Suspense fallback={fallbackNode}>
+    <GarmentTemplateErrorBoundary key={url} url={url}>
+      <Suspense fallback={null}>
         <GarmentTemplateMeshInner {...props} url={url} />
       </Suspense>
     </GarmentTemplateErrorBoundary>

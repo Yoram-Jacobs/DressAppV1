@@ -8,12 +8,26 @@ import { isMaleGender } from '@/lib/gender';
 const MALE_GLB_URL = '/models/avatar_male_1.glb?v=mblab4';
 const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=mblab4';
 
-export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png?v=spread1';
-export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png?v=spread1';
+export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png?v=canon_spread_v3';
+export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png?v=canon_spread_v3';
 
 // Cache rendered 3D WebGL snapshots (`data:image/png;base64,...`) keyed by avatar signature
 // so grids with 40+ Saved Outfit cards can render the 3D avatar instantaneously without
 // exceeding the browser's 8-16 active WebGL context limit.
+const SNAPSHOT_STORAGE_PREFIX = 'avatar_snap_v5_';
+
+// Purge any stale pre-spread avatar snapshots from previous versions
+if (typeof window !== 'undefined') {
+  try {
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const k = sessionStorage.key(i);
+      if (k && k.startsWith('avatar_snap_') && !k.startsWith(SNAPSHOT_STORAGE_PREFIX)) {
+        sessionStorage.removeItem(k);
+      }
+    }
+  } catch {}
+}
+
 const rendered3DAvatarSnapshotCache = new Map();
 export const snapshotSubscribers = new Set();
 const slotReleaseSubscribers = new Set();
@@ -80,7 +94,7 @@ export function getCachedSnapshot(sig, isMale = false) {
   }
   if (typeof window !== 'undefined' && sig) {
     try {
-      const stored = sessionStorage.getItem('avatar_snap_v4_' + sig);
+      const stored = sessionStorage.getItem(SNAPSHOT_STORAGE_PREFIX + sig);
       if (stored && stored.length > 8000) {
         rendered3DAvatarSnapshotCache.set(sig, stored);
         return stored;
@@ -95,7 +109,7 @@ function notifySnapshotSubscribers(sig, dataUrl) {
   rendered3DAvatarSnapshotCache.set(sig, dataUrl);
   if (typeof window !== 'undefined') {
     try {
-      sessionStorage.setItem('avatar_snap_v4_' + sig, dataUrl);
+      sessionStorage.setItem(SNAPSHOT_STORAGE_PREFIX + sig, dataUrl);
     } catch {}
   }
   snapshotSubscribers.forEach((cb) => {
@@ -729,7 +743,7 @@ export function applyAvatarAppearance(scene, {
         mat.needsUpdate = true;
       } else if (matName.includes('generic')) {
         // Built-in modest underwear / briefs (chic graphite charcoal with soft matte fabric finish)
-        mat.color.set('#20242C');
+        mat.color.set('#4A5568');
         mat.roughness = 0.68;
         mat.metalness = 0.04;
         mat.needsUpdate = true;
@@ -1361,7 +1375,7 @@ export default function DynamicAvatar({
         onError={() => {
           if (activeSnapshotSrc !== canonicalFallbackUrl) {
             try {
-              sessionStorage.removeItem('avatar_snap_v4_' + avatarSignature);
+              sessionStorage.removeItem(SNAPSHOT_STORAGE_PREFIX + avatarSignature);
             } catch {}
             rendered3DAvatarSnapshotCache.delete(avatarSignature);
             setSnapshotUrl(canonicalFallbackUrl);
