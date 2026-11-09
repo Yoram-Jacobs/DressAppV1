@@ -2221,14 +2221,11 @@ export function synthesizeBackFabricData(data, w, h) {
       }
 
       // 1. Bilateral symmetry check for pockets / asymmetric details (coin pockets, breast pockets, logos)
+      // Only replace with opposite side if opposite side is confirmed clean base fabric (diffBase[mi] <= 6);
+      // NEVER cross-mirror front graphics or prints onto the back!
       for (let i = 0; i < span; i++) {
         const mi = span - 1 - i;
-        const dAsym = Math.sqrt(
-          (curR[i] - curR[mi]) ** 2 +
-          (curG[i] - curG[mi]) ** 2 +
-          (curB[i] - curB[mi]) ** 2
-        );
-        if ((diffBase[i] - diffBase[mi] >= 10) || (dAsym >= 12 && diffBase[i] > diffBase[mi] + 6)) {
+        if (diffBase[i] > 8 && diffBase[mi] <= 6) {
           curR[i] = curR[mi];
           curG[i] = curG[mi];
           curB[i] = curB[mi];
@@ -2269,13 +2266,13 @@ export function synthesizeBackFabricData(data, w, h) {
       const isChestTorsoZone = vRel >= 0.12 && vRel <= 0.75;
       const pStart = Math.floor(0.08 * span);
       const pEnd = Math.min(span - 1, Math.ceil(0.92 * span));
-      if (!isAllOverPatternRow && pEnd > pStart + 2) {
-        const fineThreshold = isAllOverPatternRow ? Math.max(8.0, sigma * 1.2) : Math.max(4.0, Math.min(10.0, sigma * 0.85));
+      if (pEnd > pStart + 2) {
+        const fineThreshold = isAllOverPatternRow ? Math.max(12.0, sigma * 1.5) : Math.max(4.0, Math.min(10.0, sigma * 0.85));
         for (let i = pStart + 1; i < pEnd; i++) {
           const u_rel = i / (span - 1);
           const inChestBox = isChestTorsoZone && u_rel >= 0.16 && u_rel <= 0.84;
           const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
-          if (diffBase[i] > fineThreshold || prevDiff > Math.max(6.0, sigma * 0.95) || (inChestBox && diffBase[i] > Math.max(4.5, sigma * 0.85))) {
+          if (diffBase[i] > fineThreshold || (!isAllOverPatternRow && prevDiff > Math.max(6.0, sigma * 0.95)) || (inChestBox && diffBase[i] > Math.max(4.5, sigma * 0.85))) {
             let synR = baseR[i];
             let synG = baseG[i];
             let synB = baseB[i];
