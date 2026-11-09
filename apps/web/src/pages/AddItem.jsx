@@ -81,7 +81,6 @@ import DuplicatePreflightDialog from "@/components/DuplicatePreflightDialog";
 import { DppScanner } from "@/components/DppScanner";
 import { WeightedList, normalizeWeightedTags } from "@/components/WeightedList";
 import { ScanningPipeline } from "@/components/ScanningPipeline";
-import { TurboStatusCard } from "@/components/TurboStatusCard";
 import { useAuth } from "@/lib/auth";
 import { deriveSizeFromPreferences } from "@/lib/size_preferences";
 import {
@@ -1253,6 +1252,32 @@ const hydrate = (a, user, t, i18n) => {
   }
   if (Array.isArray(out.fabric_materials) && out.fabric_materials.length > 0) {
     out.fabric_materials = normalizeWeightedTags(out.fabric_materials);
+  }
+
+  if (lang === 'he' || lang === 'iw') {
+    const replaceNude = (str) => {
+      if (!str || typeof str !== 'string') return str;
+      return str
+        .replace(/\bבגוון ניוד\b/gi, "בגוון בז' בהיר")
+        .replace(/\bבצבע ניוד\b/gi, "בצבע בז' בהיר")
+        .replace(/\bניוד\b/gi, "בז' בהיר")
+        .replace(/\bnude\b/gi, "בז' בהיר");
+    };
+
+    if (out.name) out.name = replaceNude(out.name);
+    if (out.title) out.title = replaceNude(out.title);
+    if (out.caption) out.caption = replaceNude(out.caption);
+    if (out.color) out.color = replaceNude(out.color);
+    if (Array.isArray(out.colors)) {
+      out.colors = out.colors.map((c) => {
+        if (!c) return c;
+        if (typeof c === 'string') return replaceNude(c);
+        return { ...c, name: replaceNude(c.name) };
+      });
+    }
+    if (Array.isArray(out.tags)) {
+      out.tags = out.tags.map((t) => (typeof t === 'string' ? replaceNude(t) : t)).filter(Boolean);
+    }
   }
 
   return out;
@@ -5266,9 +5291,6 @@ export default function AddItem() {
                   className="h-2"
                   data-testid="bg-batch-progress"
                 />
-                {isFree && (
-                  <TurboStatusCard variant="card" context="upload" className="mt-3.5 w-full text-start" />
-                )}
                 {bgBatch.pendingDuplicates ? (
                   // Surfaced inline so the user knows the modal popping
                   // up over the progress card is intentional — these
@@ -6608,9 +6630,6 @@ function ItemCard({
                   <ScanningPipeline variant="inline" />
                 )}
                 <Progress value={progress} className="h-1.5 mt-2" />
-                {isFree && (
-                  <TurboStatusCard variant="inline" context="upload" className="mt-2" />
-                )}
               </div>
             )}
             {status === "error" && !isBusy && (

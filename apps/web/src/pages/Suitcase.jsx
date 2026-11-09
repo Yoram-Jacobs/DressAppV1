@@ -52,7 +52,6 @@ import { toast } from "sonner";
 import { labelForCategory, labelForRole } from "@/lib/taxonomy";
 import { useAuth } from "@/lib/auth";
 import { useTierLimits } from "@/hooks/useTierLimits";
-import { TurboStatusCard } from "@/components/TurboStatusCard";
 import { useModalBack } from "@/lib/useModalBack";
 import AvatarViewer from "@/components/AvatarViewer";
 import {
@@ -1759,9 +1758,6 @@ function Suitcase() {
                             </>
                           )}
                         </Button>
-                        {isFree && packingLoading && (
-                          <TurboStatusCard variant="card" context="suitcase" className="mt-4" />
-                        )}
                       </CardContent>
                     </Card>
                   </div>
