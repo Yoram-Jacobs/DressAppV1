@@ -5893,7 +5893,8 @@
     "avatar_studio_badge": "Avatar Studio • 3D",
     "loading": "Loading 3D dressing room...",
     "side_view": "Side view",
-    "back_view": "Back view"
+    "back_view": "Back view",
+    "restoring_context": "Restoring 3D Studio…"
   },
   "dressingRoom": {
     "title": "3D Dressing Room",

@@ -39,6 +39,7 @@ import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFit';
+import { useModalBack } from '@/lib/useModalBack';
 
 class SafeGarmentWrapper extends React.Component {
   constructor(props) {
@@ -218,9 +219,24 @@ function CameraController({
   }, [cameraPreset, activeGarmentSlot, showAvatar, controlsRef, camera]);
 
   useFrame((_, delta) => {
+    // Safety check: if camera position exploded to NaN or infinity (e.g. from background tab resume)
+    if (
+      !Number.isFinite(camera.position.x) ||
+      !Number.isFinite(camera.position.y) ||
+      !Number.isFinite(camera.position.z)
+    ) {
+      camera.position.set(0, 1.05, 2.5);
+      if (controlsRef?.current) {
+        controlsRef.current.target.set(0, 0.95, 0);
+        controlsRef.current.update();
+      }
+      return;
+    }
     if (!cameraPreset) return;
     frameCount.current += 1;
-    const lerpSpeed = Math.min(1, delta * 6);
+    // Clamp delta so resumption from inactive background tab (delta > 1s) does not cause math divergence
+    const safeDelta = Math.min(Math.max(0, delta), 0.1);
+    const lerpSpeed = Math.min(1, safeDelta * 6);
     // Orbit around the look-at point (azimuth + radius + height) instead of cutting
     // straight through the model when moving between front / side / back views.
     const look = targetLookAt.current;
@@ -237,13 +253,15 @@ function CameraController({
     const r1 = Math.hypot(dxT, dzT);
     const a = a0 + da * lerpSpeed;
     const r = r0 + (r1 - r0) * lerpSpeed;
-    camera.position.set(
-      look.x + Math.sin(a) * r,
-      camera.position.y + (targetCamPos.current.y - camera.position.y) * lerpSpeed,
-      look.z + Math.cos(a) * r
-    );
+    const nextX = look.x + Math.sin(a) * r;
+    const nextY = camera.position.y + (targetCamPos.current.y - camera.position.y) * lerpSpeed;
+    const nextZ = look.z + Math.cos(a) * r;
 
-    if (controlsRef?.current) {
+    if (Number.isFinite(nextX) && Number.isFinite(nextY) && Number.isFinite(nextZ)) {
+      camera.position.set(nextX, nextY, nextZ);
+    }
+
+    if (controlsRef?.current && Number.isFinite(look.x) && Number.isFinite(look.y) && Number.isFinite(look.z)) {
       controlsRef.current.target.lerp(targetLookAt.current, lerpSpeed);
       controlsRef.current.update();
     }
@@ -318,6 +336,64 @@ export default function DressingRoom3D({
       }
     };
   }, []);
+
+  // Hook mobile back button / hardware Back navigation to close the 3D modal cleanly
+  useModalBack(isDialogOpen, () => handleOpenChange(false));
+
+  const [canvasKey, setCanvasKey] = useState(0);
+  const [isContextLost, setIsContextLost] = useState(false);
+  const glRef = useRef(null);
+
+  const handleCanvasCreated = useCallback(({ gl }) => {
+    glRef.current = gl;
+    const canvas = gl?.domElement;
+    if (!canvas) return;
+
+    const onLost = (e) => {
+      // Calling preventDefault tells the browser that our application can recover from context loss.
+      // Without preventDefault(), the browser will permanently dispose of the WebGL context!
+      e.preventDefault();
+      console.warn('[DressingRoom3D] WebGL context lost (tab backgrounded/reclaimed). Awaiting restoration...');
+      setIsContextLost(true);
+    };
+
+    const onRestored = () => {
+      console.info('[DressingRoom3D] WebGL context restored. Rebuilding 3D studio pipeline...');
+      setIsContextLost(false);
+      setCanvasKey((k) => k + 1);
+    };
+
+    canvas.addEventListener('webglcontextlost', onLost, false);
+    canvas.addEventListener('webglcontextrestored', onRestored, false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isDialogOpen) {
+        // Tab became visible again. Check if WebGL context was lost or needs remount
+        const gl = glRef.current;
+        const isLost = gl?.isContextLost ? gl.isContextLost() : gl?.getContext?.()?.isContextLost?.();
+        if (isLost || isContextLost) {
+          console.warn('[DressingRoom3D] Tab resumed with lost WebGL context; remounting Canvas...');
+          setIsContextLost(false);
+          setCanvasKey((k) => k + 1);
+        } else if (controlsRef?.current) {
+          try {
+            controlsRef.current.update();
+          } catch (_) {}
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, [isDialogOpen, isContextLost]);
 
   const { user } = useAuth?.() || {};
   const storedUser = user || userStore?.get?.() || EMPTY_OBJ;
@@ -728,12 +804,14 @@ export default function DressingRoom3D({
             )}
           >
           <Canvas
+            key={`dressing-room-canvas-${canvasKey}`}
             shadows={{ type: THREE.PCFShadowMap }}
             dpr={[1, typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1]}
             camera={cameraProps}
             gl={glProps}
             className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
             onPointerDown={handlePointerDown}
+            onCreated={handleCanvasCreated}
           >
             {/* Creamy boutique background */}
             <color attach="background" args={['#FAF7F2']} />
@@ -788,26 +866,28 @@ export default function DressingRoom3D({
               onUserInteraction={() => setAutoRotate(false)}
             />
 
-            <Suspense fallback={null}>
-              <StudioPedestal />
+            {/* Studio pedestal & contact shadow remain stable regardless of garment loading */}
+            <StudioPedestal />
 
-              {/* Shared Metric Space: avatar and garments are wrapped in the exact same metric transform */}
-              <group position={avatarMetricTransform.position} scale={avatarMetricTransform.scale}>
-                <group position={[0, footPose?.groupLift || 0, 0]}>
+            {/* Shared Metric Space: avatar and garments are wrapped in the exact same metric transform */}
+            <group position={avatarMetricTransform.position} scale={avatarMetricTransform.scale}>
+              <group position={[0, footPose?.groupLift || 0, 0]}>
                 {/* 3D Realistic Human Avatar (meterScale=false to inherit parent group scale) */}
                 {showAvatar && (
-                  <AvatarMesh3D
-                    isMale={isMale}
-                    skinColor={activeSkinColor}
-                    hairProps={hairProps}
-                    morphInfluences={morphInfluences}
-                    footPose={footPose}
-                    coveredZones={coveredZones}
-                    height={activeMeasurements?.height || (isMale ? 178 : 168)}
-                    meterScale={false}
-                    castShadow={true}
-                    receiveShadow={true}
-                  />
+                  <Suspense fallback={null}>
+                    <AvatarMesh3D
+                      isMale={isMale}
+                      skinColor={activeSkinColor}
+                      hairProps={hairProps}
+                      morphInfluences={morphInfluences}
+                      footPose={footPose}
+                      coveredZones={coveredZones}
+                      height={activeMeasurements?.height || (isMale ? 178 : 168)}
+                      meterScale={false}
+                      castShadow={true}
+                      receiveShadow={true}
+                    />
+                  </Suspense>
                 )}
 
                 {/* Active Outfit Garments Worn in 3D Anatomical Fit */}
@@ -838,12 +918,21 @@ export default function DressingRoom3D({
                     </SafeGarmentWrapper>
                   );
                 })}
-                </group>
               </group>
-            </Suspense>
+            </group>
           </Canvas>
           </Suspense>
           </ErrorBoundary>
+
+          {/* ─── WebGL Context Restoring Banner ─── */}
+          {isContextLost && (
+            <div className="absolute top-16 inset-x-0 z-30 flex justify-center pointer-events-none px-4">
+              <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-900/90 text-white text-xs font-medium shadow-lg backdrop-blur-md">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary-brand" />
+                <span>{t('dressing_room_3d.restoring_context', { defaultValue: 'Restoring 3D Studio…' })}</span>
+              </div>
+            </div>
+          )}
 
           {/* ─── Floating Interaction & Drag Hint ─── */}
           <div className="absolute top-4 start-4 z-10 pointer-events-none">

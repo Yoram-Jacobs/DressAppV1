@@ -240,6 +240,22 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/closet/bottom-202');
   });
 
+  test('DressingRoom3D hooks mobile back button to close dialog gracefully without route divergence', () => {
+    const onOpenChangeMock = jest.fn();
+    render(
+      <DressingRoom3D
+        open={true}
+        onOpenChange={onOpenChangeMock}
+        outfitItems={sampleOutfitItems}
+        measurements={sampleMeasurements}
+      />
+    );
+
+    // Simulate mobile hardware Back button press (popstate event)
+    fireEvent(window, new PopStateEvent('popstate'));
+    expect(onOpenChangeMock).toHaveBeenCalledWith(false);
+  });
+
   test('GarmentMesh3D anatomical geometry builders generate valid non-empty geometry', () => {
     const {
       getTorsoSlice,
