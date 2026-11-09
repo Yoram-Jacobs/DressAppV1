@@ -601,7 +601,7 @@ async function fetchAndCropTexture(url) {
   }
 
   let minX = 0, maxX = w - 1, minY = 0, maxY = h - 1;
-  let dominantColor = '#222226';
+  let dominantColor = '#CBD5E1';
   let isLightBg = false;
   let bgR = 255, bgG = 255, bgB = 255;
   let bgMask = null;
@@ -1444,7 +1444,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
     texture: null,
     opaqueTexture: null,
     filledTexture: null,
-    dominantColor: '#222226',
+    dominantColor: '#CBD5E1',
     hasSleeves: true,
     aspect: 1.0,
     solidU: 0.5,
@@ -1464,7 +1464,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
         texture: null,
         opaqueTexture: null,
         filledTexture: null,
-        dominantColor: '#222226',
+        dominantColor: '#CBD5E1',
         hasSleeves: true,
         aspect: 1.0,
         solidU: 0.5,
@@ -1536,7 +1536,7 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
               texture: tex,
               opaqueTexture: tex,
               filledTexture: tex,
-              dominantColor: '#222226',
+              dominantColor: '#CBD5E1',
               hasSleeves: true,
               aspect: 1.0,
               solidU: 0.5,
@@ -3452,7 +3452,7 @@ function GarmentTemplateMeshInner({
   const materials = useMemo(() => {
     const hasFrontTex = Boolean(texture);
     const hasBackTex = Boolean(backTexture);
-    const fallbackCol = dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#CBD5E1';
+    const fallbackCol = dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#CBD5E1';
     const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
     const baseProps = {
       roughness: pbrProps?.roughness ?? 0.70,
@@ -3484,7 +3484,7 @@ function GarmentTemplateMeshInner({
       {heelGeometry && (
         <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B'}
+            color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
             roughness={0.35}
             metalness={0.12}
           />
@@ -3522,7 +3522,7 @@ export function GarmentTemplateMesh(props) {
       {heelGeometry && (
         <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B'}
+            color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
             roughness={0.35}
             metalness={0.12}
           />
@@ -3885,9 +3885,12 @@ export function GarmentMeshCore({
 
   if (!visible || !garment) return null;
 
-  const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
-  // Allow canonical template meshes to render with dominantColor immediately while texture loads
-  if (isCoreClothing && !textureReady && !matchedTemplateId) return null;
+  const isAccessory = ['belt', 'glasses', 'watch', 'headwear', 'bag', 'jewelry'].includes(rawSlot);
+  // Never render untextured solid black/opaque meshes before the garment texture is loaded.
+  // Garments only appear once their actual texture is ready, eliminating the jarring
+  // 'avatar dressing in black garments then undressed' flash.
+  if (!textureReady) return null;
+  if (!isAccessory && !texture && !filledTexture && !opaqueTexture) return null;
 
   const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText);
 
@@ -4005,7 +4008,7 @@ export function GarmentMeshCore({
     {heelGeometry && (
       <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
         <meshStandardMaterial
-          color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#18181B'}
+          color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
           roughness={0.35}
           metalness={0.12}
         />

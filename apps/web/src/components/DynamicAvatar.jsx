@@ -8,8 +8,8 @@ import { isMaleGender } from '@/lib/gender';
 const MALE_GLB_URL = '/models/avatar_male_1.glb?v=mblab4';
 const FEMALE_GLB_URL = '/models/avatar_female_1.glb?v=mblab4';
 
-export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png?v=male2';
-export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png';
+export const CANONICAL_MALE_SNAPSHOT_URL = '/models/avatar_male_canonical.png?v=spread1';
+export const CANONICAL_FEMALE_SNAPSHOT_URL = '/models/avatar_female_canonical.png?v=spread1';
 
 // Cache rendered 3D WebGL snapshots (`data:image/png;base64,...`) keyed by avatar signature
 // so grids with 40+ Saved Outfit cards can render the 3D avatar instantaneously without
@@ -80,7 +80,7 @@ export function getCachedSnapshot(sig, isMale = false) {
   }
   if (typeof window !== 'undefined' && sig) {
     try {
-      const stored = sessionStorage.getItem('avatar_snap_v3_' + sig);
+      const stored = sessionStorage.getItem('avatar_snap_v4_' + sig);
       if (stored && stored.length > 8000) {
         rendered3DAvatarSnapshotCache.set(sig, stored);
         return stored;
@@ -95,7 +95,7 @@ function notifySnapshotSubscribers(sig, dataUrl) {
   rendered3DAvatarSnapshotCache.set(sig, dataUrl);
   if (typeof window !== 'undefined') {
     try {
-      sessionStorage.setItem('avatar_snap_v3_' + sig, dataUrl);
+      sessionStorage.setItem('avatar_snap_v4_' + sig, dataUrl);
     } catch {}
   }
   snapshotSubscribers.forEach((cb) => {
@@ -1361,7 +1361,7 @@ export default function DynamicAvatar({
         onError={() => {
           if (activeSnapshotSrc !== canonicalFallbackUrl) {
             try {
-              sessionStorage.removeItem('avatar_snap_v3_' + avatarSignature);
+              sessionStorage.removeItem('avatar_snap_v4_' + avatarSignature);
             } catch {}
             rendered3DAvatarSnapshotCache.delete(avatarSignature);
             setSnapshotUrl(canonicalFallbackUrl);

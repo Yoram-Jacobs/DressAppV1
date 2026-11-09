@@ -219,10 +219,10 @@ export function resolveGarmentTemplate({
       return 'skirt_aline';
     }
     if (has('short', 'shorts', 'שורט', 'שורטס', 'קצרים', 'מכנס קצר')) {
-      if (has('bermuda', 'cargo', 'knee', 'ברמודה', 'דגמ"ח', 'דגמח', 'עד הברך')) return 'bermuda';
+      if (has('bermuda', 'knee', 'ברמודה', 'עד הברך')) return 'bermuda';
       return 'shorts';
     }
-    if (has('bermuda', 'cargo', 'ברמודה', 'דגמ"ח', 'דגמח')) {
+    if (has('bermuda', 'ברמודה')) {
       return 'bermuda';
     }
     return 'pants';
