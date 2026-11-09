@@ -39,6 +39,7 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
     expect(CANONICAL_TEMPLATES).toContain('bottom_shorts');
     expect(CANONICAL_TEMPLATES).toContain('bottom_skirt');
     expect(CANONICAL_TEMPLATES).toContain('dress');
+    expect(CANONICAL_TEMPLATES).toContain('dress_strapless');
     expect(CANONICAL_TEMPLATES).toContain('shoes_sneakers');
     expect(CANONICAL_TEMPLATES).toContain('shoes_boots');
     expect(CANONICAL_TEMPLATES).toContain('accessory_belt');
@@ -64,6 +65,13 @@ describe('Canonical 3D Garment & Accessory Templates Catalog', () => {
     expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Tailored Blazer Suit' })).toBe('jacket_blazer');
     expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Silk Kaftan Dress' })).toBe('kaftan');
     expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Puffer Jacket', aspect: 0.95 })).toBe('top_outerwear_jacket');
+  });
+
+  it('resolves dress archetypes: standard dress vs strapless dress', () => {
+    expect(resolveGarmentTemplate({ rawSlot: 'dress', garmentText: 'שמלת מידי סטרפלס מכווצת בגוון בז בהיר' })).toBe('dress_strapless');
+    expect(resolveGarmentTemplate({ rawSlot: 'dress', garmentText: 'Strapless Evening Gown' })).toBe('dress_strapless');
+    expect(resolveGarmentTemplate({ rawSlot: 'dress', garmentText: 'Tube Midi Dress' })).toBe('dress_strapless');
+    expect(resolveGarmentTemplate({ rawSlot: 'dress', garmentText: 'Floral Summer Dress' })).toBe('dress');
   });
 
   it('resolves top archetypes: strapless/corset, singlet, t-shirt, shirt, hoodie', () => {

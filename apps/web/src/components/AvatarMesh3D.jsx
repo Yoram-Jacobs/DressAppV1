@@ -90,7 +90,8 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     }
 
     // 2. Upper torso, deltoid shoulders & underarm under top / outerwear / dress (exclude neck column and head)
-    const maxShoulderY = isMale ? 1.52 : 1.435;
+    const isStrapless = Boolean(coveredZones?.isStrapless);
+    const maxShoulderY = isStrapless ? (isMale ? 1.34 : 1.28) : (isMale ? 1.52 : 1.435);
     const minNeckAbsX = isMale ? 0.060 : 0.052;
     const minTorsoY = hasBottom || hasDress ? 0.76 : 0.65;
     if (
@@ -157,7 +158,7 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
 
     // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress / top:
     // Smooth lateral cosine falloff eliminates thigh/hip skin poking through tunics, dresses or bottoms.
-    const minBottomY = hasBottom ? 0.12 : (hasDress || hasTop ? 0.60 : 0.74);
+    const minBottomY = hasBottom ? 0.12 : (hasDress ? 0.32 : (hasTop ? 0.74 : 0.74));
     const maxBottomY = isMale ? 1.10 : 1.07;
     if ((hasBottom || hasDress || hasTop) && y >= minBottomY && y <= maxBottomY) {
       const hipCutInner = isMale ? 0.19 : 0.18;

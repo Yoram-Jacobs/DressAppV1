@@ -27,6 +27,7 @@ export const AVAILABLE_TEMPLATES = [
   'trench_coat',
   'kaftan',
   'dress',
+  'dress_strapless',
   'pants',
   'bottom_trousers',
   'shorts',
@@ -58,6 +59,7 @@ export const CANONICAL_TEMPLATES = [
   'bottom_shorts',
   'bottom_skirt',
   'dress',
+  'dress_strapless',
   'shoes_sneakers',
   'shoes_boots',
   'accessory_belt',
@@ -93,6 +95,7 @@ export const CANONICAL_TEMPLATE_MAP = {
   trench_coat: 'trench_coat',
   kaftan: 'kaftan',
   dress: 'dress',
+  dress_strapless: 'dress_strapless',
   pants: 'bottom_trousers',
   bottom_trousers: 'bottom_trousers',
   shorts: 'bottom_shorts',
@@ -197,6 +200,9 @@ export function resolveGarmentTemplate({
 
   // 4. DRESS
   if (rawSlot === 'dress') {
+    if (has('strapless', 'tube', 'corset', 'bustier', 'bandeau', 'sweetheart', 'סטרפלס', 'קורסט', 'מחוך', 'בוסטייה', 'בנדו', 'טיוב')) {
+      return 'dress_strapless';
+    }
     return 'dress';
   }
 

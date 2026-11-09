@@ -3276,22 +3276,30 @@ function GarmentTemplateMeshInner({
           const isCoreTop = ['top', 'outerwear', 'dress'].includes(rawSlot);
           if (isCoreTop && pos) {
             const necklineType = detectNecklineStyle({ garmentText });
-            const isStraplessTop = shellFit?.isStrapless || necklineType === 'strapless' || templateId === 'top_strapless';
+            const isDedicatedStrapless = templateId === 'top_strapless' || templateId === 'dress_strapless';
+            const isStraplessTop = !isDedicatedStrapless && (shellFit?.isStrapless || necklineType === 'strapless');
 
             if (isStraplessTop) {
-              // Enforce 100% strapless & sleeveless profile: zero sleeve volume, zero neck/shoulder coverage
+              // Smooth anatomical strapless contouring for fallback templates without dedicated strapless basemesh.
+              // Strictly preserves waist, hips, and skirt volume below yTorsoMin (y < 1.05),
+              // eliminating cubic box outlines and skirt squashing.
               const yBustMax = isMale ? 1.34 : 1.28;
+              const yTorsoMin = 1.05;
               const xArmMax = isMale ? 0.180 : 0.155;
               let straplessModified = false;
               for (let i = 0; i < pos.count; i++) {
-                let x = pos.getX(i);
-                let y = pos.getY(i);
+                const x = pos.getX(i);
+                const y = pos.getY(i);
+                const z = pos.getZ(i);
 
+                // Smooth sweetheart bustline contouring: clavicle/neck vertices conform to curved bust profile
                 if (y > yBustMax) {
-                  pos.setY(i, yBustMax);
+                  const dip = (z > 0.02 && Math.abs(x) < 0.06) ? 0.015 * (1 - Math.abs(x) / 0.06) : 0;
+                  pos.setY(i, yBustMax - dip);
                   straplessModified = true;
                 }
-                if (Math.abs(x) > xArmMax) {
+                // Upper arm & shoulder trimming: ONLY above waist/hip level (y >= yTorsoMin), NEVER on skirts or pants!
+                if (y >= yTorsoMin && Math.abs(x) > xArmMax) {
                   pos.setX(i, Math.sign(x) * xArmMax);
                   straplessModified = true;
                 }

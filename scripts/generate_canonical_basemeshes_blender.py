@@ -1768,14 +1768,15 @@ def build_dress_template(avatar_data, variant="dress"):
     avatar_obj = avatar_data["avatar_obj"]
     is_male = gender == "male"
     is_kaftan = variant == "kaftan"
+    is_strapless = variant in ("strapless", "dress_strapless")
 
-    z_neck = (1.510 if is_male else 1.418) if is_kaftan else (1.495 if is_male else 1.402)
+    z_neck = (1.330 if is_male else 1.275) if is_strapless else ((1.510 if is_male else 1.418) if is_kaftan else (1.495 if is_male else 1.402))
     z_hip = 0.90 if is_male else 0.88
     z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.60 if is_male else 0.56)
-    sleeve_type = "long" if is_kaftan else "sleeveless"
-    x_arm_max = (0.475 if is_male else 0.430) if is_kaftan else (0.195 if is_male else 0.168)
-    offset = 0.014 if is_kaftan else 0.009
-    neck_tilt = -0.16 if is_kaftan else -0.18
+    sleeve_type = "strapless" if is_strapless else ("long" if is_kaftan else "sleeveless")
+    x_arm_max = (0.175 if is_male else 0.150) if is_strapless else ((0.475 if is_male else 0.430) if is_kaftan else (0.195 if is_male else 0.168))
+    offset = 0.008 if is_strapless else (0.014 if is_kaftan else 0.009)
+    neck_tilt = 0.0 if is_strapless else (-0.16 if is_kaftan else -0.18)
 
     mw = avatar_obj.matrix_world
     bm = bmesh.new()
@@ -1813,6 +1814,19 @@ def build_dress_template(avatar_data, variant="dress"):
         arm_dir_l = Vector((-arm_dir_r.x, arm_dir_r.y, arm_dir_r.z))
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
+    elif sleeve_type == "strapless":
+        x_cut = 0.178 if is_male else 0.154
+        # 1. Bisect armpit laterally so torso lateral wall is clean and planar
+        r_geom = [v for v in bm.verts if v.co.x > (x_cut - 0.02) and v.co.z > 0.95]
+        if r_geom:
+            bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=Vector((x_cut, 0.0, 1.20)), plane_no=Vector((1.0, 0.0, 0.0)), clear_outer=True)
+        l_geom = [v for v in bm.verts if v.co.x < (-x_cut + 0.02) and v.co.z > 0.95]
+        if l_geom:
+            bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_cut, 0.0, 1.20)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
+        # 2. Delete any remaining disconnected arm, elbow, forearm or hand vertices
+        stray_arm_verts = [v for v in bm.verts if (abs(v.co.x) > x_cut and v.co.z > 1.05) or (abs(v.co.x) > 0.20 and v.co.z >= 0.88)]
+        if stray_arm_verts:
+            bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:
         # Sleeveless dress armholes cut strictly in the shoulder/armpit zone (z > z_arm_cut_min)
         # so the ribcage, waist, and hip ring at z_hip remain 100% closed on both sides!
@@ -1831,16 +1845,25 @@ def build_dress_template(avatar_data, variant="dress"):
         )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
-    # 3. Precision Curved Collar Cut (preserves 100% of shoulders & clavicles)
-    nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
-    neck_no = Vector((0.0, neck_tilt, nz)).normalized()
-    bmesh.ops.bisect_plane(
-        bm,
-        geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
-        plane_co=Vector((0.0, 0.0, z_neck)),
-        plane_no=neck_no,
-        clear_outer=True,
-    )
+    # 3. Precision Curved Collar / Strapless Cut (preserves 100% of body below neckline)
+    if is_strapless:
+        bmesh.ops.bisect_plane(
+            bm,
+            geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+            plane_co=Vector((0.0, 0.0, z_neck)),
+            plane_no=Vector((0.0, 0.0, 1.0)),
+            clear_outer=True,
+        )
+    else:
+        nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
+        neck_no = Vector((0.0, neck_tilt, nz)).normalized()
+        bmesh.ops.bisect_plane(
+            bm,
+            geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+            plane_co=Vector((0.0, 0.0, z_neck)),
+            plane_no=neck_no,
+            clear_outer=True,
+        )
 
     # Keep main bodice island
     islands = []
@@ -1995,9 +2018,8 @@ def build_dress_template(avatar_data, variant="dress"):
                     u = u_torso * (1.0 - s_blend) + u_sl * s_blend
                     v_norm = v_torso * (1.0 - s_blend) + v_sl * s_blend
             else:
-                # Continuous cylindrical wraparound UV across front, sides, and back (seam-free across y = cy_center)
-                theta = math.atan2(v.x, abs(v.y - cy_center) + 0.015)
-                u = 0.5 + (theta / (math.pi * 0.5)) * 0.46
+                # Sleeveless & strapless dresses: map u across [min_x, max_x] so front and back sheets receive full texture coverage!
+                u = (v.x - min_x) / dx
                 v_norm = v_torso
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
@@ -2228,6 +2250,7 @@ CANONICAL_SPECS = [
     ("skirt_pencil", "bottom", "skirt_pencil", ["skirt_pencil.glb"]),
     # Full Body
     ("dress", "dress", "dress", ["dress.glb"]),
+    ("dress_strapless", "dress", "strapless", ["dress_strapless.glb"]),
     ("kaftan", "dress", "kaftan", ["kaftan.glb"]),
     # Footwear
     ("shoes_sneakers", "footwear", "sneakers", ["sneakers.glb", "sandals.glb"]),

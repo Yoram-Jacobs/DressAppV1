@@ -530,9 +530,12 @@ export default function DressingRoom3D({
     const upperGarmentTexts = visibleGarments
       .filter((g) => ['top', 'outerwear', 'dress'].includes(g.slot))
       .map((g) => (g.name || g.title || g.category || g.item_type || '').toLowerCase());
-    const isSleeveless = upperGarmentTexts.length > 0 && upperGarmentTexts.every((t) =>
-      /(?:singlet|tank|vest|sleeveless|גופיי|סרבל)/i.test(t)
+    const isStrapless = upperGarmentTexts.length > 0 && upperGarmentTexts.some((t) =>
+      /(?:strapless|tube|bandeau|corset|bustier|sweetheart|סטרפלס|בנדו|קורסט|מחוך|בוסטייה|טיוב)/i.test(t)
     );
+    const isSleeveless = isStrapless || (upperGarmentTexts.length > 0 && upperGarmentTexts.every((t) =>
+      /(?:singlet|tank|vest|sleeveless|גופיי|סרבל)/i.test(t)
+    ));
     return {
       hasTop: visibleSlots.has('top'),
       hasOuterwear: visibleSlots.has('outerwear'),
@@ -541,6 +544,7 @@ export default function DressingRoom3D({
       hasShoes: visibleSlots.has('shoes'),
       hasHeadwear: visibleSlots.has('headwear'),
       isSleeveless,
+      isStrapless,
     };
   }, [activeGarments, layerVisibility]);
 
