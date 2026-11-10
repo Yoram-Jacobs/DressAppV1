@@ -1165,6 +1165,13 @@ export default function DynamicAvatar({
     }
   }, []);
 
+  const handleContextRestored = useCallback(() => {
+    if (interactive) {
+      setIsWebGLFrameReady(false);
+      setCanMountWebGL(true);
+    }
+  }, [interactive]);
+
   const acquireSlot = useCallback(() => {
     if (
       !acquiredSlotRef.current &&
@@ -1252,9 +1259,35 @@ export default function DynamicAvatar({
     };
   }, [avatarSignature, isMale, interactive, canUseWebGL, acquireSlot, releaseSlot]);
 
+  // Handle external redraw triggers (e.g. closing 3D Dressing Room modal, returning from background)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleRedraw = () => {
+      const cached = getCachedSnapshot(avatarSignature, isMale);
+      if (cached) {
+        setSnapshotUrl(cached);
+      }
+      if (!interactive) {
+        if (acquiredSlotRef.current) {
+          releaseSlot();
+        }
+      }
+    };
+
+    window.addEventListener('dressapp:redraw2d', handleRedraw);
+    window.addEventListener('visibilitychange', handleRedraw);
+    window.addEventListener('focus', handleRedraw);
+    return () => {
+      window.removeEventListener('dressapp:redraw2d', handleRedraw);
+      window.removeEventListener('visibilitychange', handleRedraw);
+      window.removeEventListener('focus', handleRedraw);
+    };
+  }, [avatarSignature, isMale, interactive, releaseSlot]);
+
   const canonicalFallbackUrl = isMale ? CANONICAL_MALE_SNAPSHOT_URL : CANONICAL_FEMALE_SNAPSHOT_URL;
   const activeSnapshotSrc = snapshotUrl || canonicalFallbackUrl;
-  const hideStaticImgBecauseWebGLReady = canUseWebGL && canMountWebGL && isWebGLFrameReady;
+  const hideStaticImgBecauseWebGLReady = interactive && canUseWebGL && canMountWebGL && isWebGLFrameReady;
 
   return (
     <div
@@ -1305,7 +1338,7 @@ export default function DynamicAvatar({
               zoom: 1,
             }}
             gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
-            onCreated={({ camera: createdCam }) => {
+            onCreated={({ gl, camera: createdCam }) => {
               if (createdCam?.isOrthographicCamera) {
                 createdCam.left = -100;
                 createdCam.right = 100;
@@ -1315,8 +1348,12 @@ export default function DynamicAvatar({
                   createdCam.updateProjectionMatrix();
                 }
               }
+              const canvas = gl?.domElement;
+              if (canvas) {
+                canvas.addEventListener('webglcontextlost', handleContextLost, false);
+                canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
+              }
             }}
-            onContextLost={handleContextLost}
           >
             <ResponsiveOrthoCamera />
             <ambientLight intensity={1.15} />

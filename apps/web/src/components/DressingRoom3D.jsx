@@ -63,20 +63,39 @@ class SafeGarmentWrapper extends React.Component {
   }
 }
 
+class SafeShadowWrapper extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err) {
+    console.warn('[3D Dressing Room] ContactShadows error caught gracefully:', err);
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
 // ─── Creamy Boutique Studio Pedestal & Room ───
 function StudioPedestal() {
   return (
     <group position={[0, 0, 0]}>
       {/* Soft warm contact shadow on floor */}
-      <ContactShadows
-        opacity={0.42}
-        scale={2.6}
-        blur={1.8}
-        far={1.4}
-        resolution={512}
-        color="#3A3226"
-        position={[0, 0.001, 0]}
-      />
+      <SafeShadowWrapper>
+        <ContactShadows
+          opacity={0.42}
+          scale={2.6}
+          blur={1.8}
+          far={1.4}
+          resolution={512}
+          color="#3A3226"
+          position={[0, 0.001, 0]}
+        />
+      </SafeShadowWrapper>
 
       {/* Main Alabaster / Warm Ivory Dais */}
       <mesh position={[0, -0.026, 0]} receiveShadow>
@@ -355,10 +374,16 @@ export default function DressingRoom3D({
       e.preventDefault();
       console.warn('[DressingRoom3D] WebGL context lost (tab backgrounded/reclaimed). Awaiting restoration...');
       setIsContextLost(true);
+      try {
+        useGLTF.clear?.();
+      } catch (_) {}
     };
 
     const onRestored = () => {
       console.info('[DressingRoom3D] WebGL context restored. Rebuilding 3D studio pipeline...');
+      try {
+        useGLTF.clear?.();
+      } catch (_) {}
       setIsContextLost(false);
       setCanvasKey((k) => k + 1);
     };
@@ -370,6 +395,7 @@ export default function DressingRoom3D({
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
+    let timer = null;
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && isDialogOpen) {
         // Tab became visible again. Check if WebGL context was lost or needs remount
@@ -377,8 +403,14 @@ export default function DressingRoom3D({
         const isLost = gl?.isContextLost ? gl.isContextLost() : gl?.getContext?.()?.isContextLost?.();
         if (isLost || isContextLost) {
           console.warn('[DressingRoom3D] Tab resumed with lost WebGL context; remounting Canvas...');
+          try {
+            useGLTF.clear?.();
+          } catch (_) {}
           setIsContextLost(false);
-          setCanvasKey((k) => k + 1);
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => {
+            setCanvasKey((k) => k + 1);
+          }, 60);
         } else if (controlsRef?.current) {
           try {
             controlsRef.current.update();
@@ -390,6 +422,7 @@ export default function DressingRoom3D({
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleVisibilityChange);
     return () => {
+      if (timer) clearTimeout(timer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleVisibilityChange);
     };
@@ -720,6 +753,8 @@ export default function DressingRoom3D({
     antialias: true,
     alpha: true,
     powerPreference: 'high-performance',
+    preserveDrawingBuffer: true,
+    failIfMajorPerformanceCaveat: false,
   }), []);
 
   const handlePointerDown = useCallback(() => {
