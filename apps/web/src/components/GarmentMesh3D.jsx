@@ -3795,17 +3795,22 @@ export function GarmentMeshCore({
     const minClearance = Number.isFinite(shellFit?.fabricThickness)
       ? shellFit.fabricThickness
       : (rawSlot === 'bottom' ? 0.0018 : 0.0020);
+    const isTopOrOuter = ['top', 'outerwear'].includes(rawSlot);
+    const isDressWithSleeves = rawSlot === 'dress' && autoHasSleeves;
+    const includeArmsInShell = (isTopOrOuter && autoHasSleeves) || isDressWithSleeves;
     return {
       front: applyAvatarMorphsToGeometry(shell.front, morphField, morphInfluences, {
         sheetSide: 'front',
         minClearance,
+        includeArms: includeArmsInShell,
       }),
       back: applyAvatarMorphsToGeometry(shell.back, morphField, morphInfluences, {
         sheetSide: 'back',
         minClearance,
+        includeArms: includeArmsInShell,
       }),
     };
-  }, [shell, shellFit, morphField, morphInfluences, isStandalone]);
+  }, [shell, shellFit, morphField, morphInfluences, isStandalone, rawSlot, autoHasSleeves]);
 
   const heelGeometry = useMemo(
     () => (rawSlot === 'shoes' && visible ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose }) : null),

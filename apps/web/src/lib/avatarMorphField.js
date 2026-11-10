@@ -118,10 +118,14 @@ function buildField(scene) {
     }
     fullBucket.push(i);
 
-    // Exclude hanging forearms, wrists, hands, and fingers (|x| > 0.188m at y in 0.70..1.28m)
-    // from the primary torso/hip grid so waist, pelvis, hip, and thigh garment vertices
-    // never inherit stationary hand morph weights.
-    if (Math.abs(bx) > (0.156 + Math.max(0, 1.20 - by) * 0.38) && by >= 0.70 && by <= 1.26) {
+    // Exclude hanging upper arms, forearms, wrists, hands, and fingers
+    // from the primary torso/hip/leg grid so waist, pelvis, hip, thigh,
+    // skirt, dress hem, and pants garment vertices never inherit arm/hand morph weights.
+    const isArmVertex = (
+      (by >= 0.55 && by <= 1.05 && Math.abs(bx) > 0.198) ||
+      (by > 1.05 && by <= 1.38 && Math.abs(bx) > (0.165 + Math.max(0, 1.35 - by) * 0.28))
+    );
+    if (isArmVertex) {
       continue;
     }
     let bucket = grid.get(key);
@@ -287,7 +291,14 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
     );
     const yHipLine = 0.90;
     const lookupY = isOuterArmVertex ? y : (y < yHipLine ? yHipLine : y);
-    const nn = findNearest(field, x, lookupY, z, isOuterArmVertex);
+    // For non-arm or lower-body vertices below the hip line (e.g. A-line skirts, dresses, flared pants),
+    // clamp lateral lookupX to the anatomical pelvis envelope (|x| <= 0.185m) so flared hems in open air
+    // follow the smooth pelvis/hip deformation rather than stray arm/hand coordinates.
+    const maxBodyXAtHip = 0.185;
+    const lookupX = (!includeArms || !isOuterArmVertex) && y < yHipLine
+      ? Math.max(-maxBodyXAtHip, Math.min(maxBodyXAtHip, x))
+      : x;
+    const nn = findNearest(field, lookupX, lookupY, z, isOuterArmVertex);
     if (nn.length === 0) continue;
 
     let wSum = 0;
