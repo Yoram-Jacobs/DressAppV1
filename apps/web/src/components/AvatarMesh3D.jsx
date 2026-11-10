@@ -49,7 +49,7 @@ export function getAvatarMetricTransform({ isMale = false, height = 170, morphIn
  * pelvis/hips under bottoms/dresses, feet inside shoes) so avatar skin can never
  * poke or bleed through garments at any camera angle or morph setting.
  */
-export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale = false) {
+export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale = false, meshName = '', materialName = '') {
   if (!geometry || !coveredZones) return geometry;
   const { hasTop, hasOuterwear, hasDress, hasBottom, hasShoes, hasHeadwear } = coveredZones;
   if (!hasTop && !hasOuterwear && !hasDress && !hasBottom && !hasShoes && !hasHeadwear) return geometry;
@@ -61,6 +61,10 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
   const footCx = isMale ? 0.148 : 0.170;
   const footCz = isMale ? 0.055 : 0.095;
   const hatBrimY = isMale ? 1.66 : 1.58;
+  const isUnderwearMesh = Boolean(
+    (materialName && materialName.includes('generic')) ||
+    (meshName && (meshName.endsWith('_1') || meshName.includes('generic')))
+  );
 
   for (let i = 0; i < n; i++) {
     const idx = i * 3;
@@ -68,6 +72,23 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     const y = arr[idx + 1];
     const z = arr[idx + 2];
     const absX = Math.abs(x);
+
+    // 00. Modest underwear mesh handling:
+    // When wearing pants, shorts, skirt, or dress, retract panties deep into the pelvis core
+    // so underwear NEVER bleeds through the bottom garment or waistband!
+    // When wearing a top or dress, retract bra deep into chest core so it never bleeds through.
+    if (isUnderwearMesh) {
+      if ((hasBottom || hasDress) && y < 1.12) {
+        arr[idx] = x * 0.40;
+        arr[idx + 2] = 0.020 + (z - 0.020) * 0.40;
+        continue;
+      }
+      if ((hasTop || hasDress || hasOuterwear) && y >= 1.12) {
+        arr[idx] = x * 0.40;
+        arr[idx + 2] = 0.020 + (z - 0.020) * 0.40;
+        continue;
+      }
+    }
 
     // 0. Headwear hair/crown collision mask: subtly depress hair/crown geometry above hat brim
     // so hair never punches through the crown of a hat or cap.
@@ -110,11 +131,11 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const cz = 0.020;
         const wVertical = hasBottom || hasDress ? 1.0 : Math.max(0, Math.min(1, (y - minTorsoY) / 0.08));
         const wTorso = wVertical * armBlend;
-        arr[idx] = x * (1 - 0.030 * wTorso);
+        arr[idx] = x * (1 - 0.040 * wTorso);
         if (y > 1.34 && absX >= minNeckAbsX) {
           arr[idx + 1] = y - 0.005 * wTorso;
         }
-        arr[idx + 2] = cz + (z - cz) * (1 - 0.035 * wTorso);
+        arr[idx + 2] = cz + (z - cz) * (1 - 0.045 * wTorso);
       }
     }
 
@@ -159,7 +180,7 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress / top:
     // Smooth lateral cosine falloff eliminates thigh/hip skin poking through tunics, dresses or bottoms.
     const minBottomY = hasBottom ? 0.12 : (hasDress ? 0.32 : (hasTop ? 0.74 : 0.74));
-    const maxBottomY = isMale ? 1.10 : 1.07;
+    const maxBottomY = isMale ? 1.06 : 1.02;
     if ((hasBottom || hasDress || hasTop) && y >= minBottomY && y <= maxBottomY) {
       const hipCutInner = isMale ? 0.19 : 0.18;
       const hipCutOuter = isMale ? 0.29 : 0.27;
@@ -169,7 +190,8 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
 
       if (hipBlend > 1e-4) {
         const sign = x < 0 ? -1 : 1;
-        const wTop = (hasTop || hasOuterwear || hasDress)
+        // When bottom or dress is worn, full retraction applies up to maxBottomY (waistband)
+        const wTop = (hasBottom || hasDress || hasTop || hasOuterwear)
           ? 1.0
           : Math.max(0, Math.min(1, (maxBottomY - y) / 0.04));
         const wBot = Math.max(0, Math.min(1, (y - minBottomY) / 0.05));
@@ -187,8 +209,9 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
           : (y >= 0.50 ? 0.035 : 0.010);
         const cx = sign * legCx * legBlend;
         const cz = 0.020 * (1 - legBlend) + legCz * legBlend;
-        const scale = 1 - 0.030 * w;
-        arr[idx] = cx + (x - cx) * scale;
+        const isBack = z < cz;
+        const scale = (isBack && (hasBottom || hasDress)) ? (1 - 0.080 * w) : (1 - 0.035 * w);
+        arr[idx] = cx + (x - cx) * (1 - 0.035 * w);
         arr[idx + 2] = cz + (z - cz) * scale;
       }
     }
@@ -283,7 +306,10 @@ export default function AvatarMesh3D({
       if (original.boundingBox && original.boundingBox.min.y > 1.42 && !coveredZones?.hasHeadwear) return;
       let nextGeo = original.clone();
       if (hasCoverage) {
-        nextGeo = retractCoveredAvatarSkin(nextGeo, coveredZones, isMale);
+        const matName = Array.isArray(node.material)
+          ? node.material.map((m) => m?.name).join(' ')
+          : (node.material?.name || '');
+        nextGeo = retractCoveredAvatarSkin(nextGeo, coveredZones, isMale, node.name, matName);
       }
       if (footPose?.active && (!original.boundingBox || original.boundingBox.min.y <= 0.2)) {
         nextGeo = poseAvatarGeometry(nextGeo, footPose);

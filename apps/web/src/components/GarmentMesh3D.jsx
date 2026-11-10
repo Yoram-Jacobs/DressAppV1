@@ -1793,7 +1793,7 @@ export function createAnatomicalTopGeometry({
   const ny = 20;
   const nx = 28;
   const yShoulder = isMale ? 1.48 : 1.42;
-  const yWaistTop = isMale ? 1.08 : 1.04;
+  const yWaistTop = isMale ? 1.06 : 1.02;
   const hasAnySleeve = hasSleeves && sleeveFactor > 0.05;
 
   for (let i = 0; i <= ny; i++) {
@@ -1801,7 +1801,7 @@ export function createAnatomicalTopGeometry({
     const y = yTop - vNorm * (yTop - yBottom);
     const slice = getTorsoSlice(y, isMale);
 
-    const effOffset = isTucked && y <= yWaistTop ? 0.0025 : layerOffset;
+    const effOffset = isTucked && y <= yWaistTop ? 0.0035 : layerOffset;
     const rx = slice.rx + effOffset;
     const rz = slice.rz + effOffset;
     const cz = slice.cz;
@@ -1832,8 +1832,8 @@ export function createAnatomicalTopGeometry({
       const bustFactor = Math.max(0, Math.cos(theta * 1.3));
       const bustBulge = (y >= 1.12 && y <= 1.34 && !isMale) ? 0.026 * bustFactor : 0.0;
       const frontCos = Math.pow(Math.max(0, Math.cos(theta)), 0.65);
-      const rzFrontEff = (slice.rzFront || rz) + layerOffset;
-      const rzBackEff = (slice.rzBack || rz) + layerOffset;
+      const rzFrontEff = (slice.rzFront || rz) + effOffset;
+      const rzBackEff = (slice.rzBack || rz) + effOffset;
       const z = isFront
         ? cz + (rzFrontEff + bustBulge) * frontCos
         : cz - (rzBackEff + 0.012) * Math.abs(Math.cos(theta));
@@ -3390,25 +3390,28 @@ function GarmentTemplateMeshInner({
             !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
           const shouldTuck = isTuckableTop && hasBottom;
           if (shouldTuck && pos) {
-            const yWaistTop = isMale ? 1.08 : 1.04;
-            const yWaistTuckFull = isMale ? 1.04 : 1.00;
+            const yWaistTop = isMale ? 1.060 : 1.020;
+            const yWaistTuckFull = yWaistTop - 0.030;
             let tuckModified = false;
             for (let i = 0; i < pos.count; i++) {
               const x = pos.getX(i);
               const y = pos.getY(i);
               const z = pos.getZ(i);
 
-              if (y <= yWaistTop + 0.04) {
-                const u = Math.max(0, Math.min(1, (yWaistTop + 0.04 - y) / (yWaistTop + 0.04 - yWaistTuckFull)));
+              // Tucking envelope: strictly tuck fabric inside bottom waistband (y <= yWaistTop).
+              // Above yWaistTop, leave 100% untucked so the top retains its natural positive clearance
+              // outside the avatar stomach and torso skin!
+              if (y <= yWaistTop) {
+                const u = Math.min(1.0, Math.max(0.0, (yWaistTop - y) / (yWaistTop - yWaistTuckFull)));
                 const tTuck = u * u * (3 - 2 * u);
-                const slice = getTorsoSlice(Math.max(0.65, y), isMale);
-                const cz = slice.cz || 0;
+                const cz = isMale ? 0.025 : 0.035;
 
-                // Scale inward by 14% in X and 22% in Z relative to torso center (0, cz),
-                // ensuring the tucked top sits snug against the avatar body (skin + 2.5mm),
-                // strictly inside the bottom waistband and pelvis volume (skin + 7.5mm to +15mm)
-                const scaleX = 0.86;
-                const scaleZ = 0.78;
+                // Asymmetric front/back tucking:
+                // Front keeps snug positive clearance (+3mm outside avatar skin, safely inside skirt/pants);
+                // Back compresses deeper towards lumbar curve, staying strictly inside bottom garment.
+                const scaleX = 0.94;
+                const isFront = z >= cz;
+                const scaleZ = isFront ? 0.94 : 0.78;
                 const targetX = x * scaleX;
                 const targetZ = cz + (z - cz) * scaleZ;
 
