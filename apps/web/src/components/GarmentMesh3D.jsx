@@ -1136,54 +1136,9 @@ async function fetchAndCropTexture(url) {
       }
     }
 
-    // 4. Underarm Studio White Gap Filter (defense-in-depth for legacy / cached cutouts):
-    // If dominant fabric is non-white, identify bright studio-white pixels in the
-    // left and right flank underarm regions and carve them to transparent (alpha = 0).
-    if (dominantColor && !isMultiTonePattern) {
-      const isDomWhite = (() => {
-        try {
-          const c = new THREE.Color(dominantColor);
-          const r = c.r * 255, g = c.g * 255, b = c.b * 255;
-          const maxC = Math.max(r, g, b);
-          const minC = Math.min(r, g, b);
-          const sat = (maxC - minC) / Math.max(maxC, 1);
-          return maxC > 210 && sat < 0.15;
-        } catch { return false; }
-      })();
-
-      if (!isDomWhite) {
-        const xFlankL1 = Math.round(cropW * 0.05);
-        const xFlankL2 = Math.round(cropW * 0.44);
-        const xFlankR1 = Math.round(cropW * 0.56);
-        const xFlankR2 = Math.round(cropW * 0.95);
-        const yFlank1 = Math.round(cropH * 0.20);
-        const yFlank2 = Math.round(cropH * 0.90);
-
-        for (let y = yFlank1; y < yFlank2; y++) {
-          const rowOff = y * cropW;
-          for (let x = 0; x < cropW; x++) {
-            if ((x >= xFlankL1 && x <= xFlankL2) || (x >= xFlankR1 && x <= xFlankR2)) {
-              const p = rowOff + x;
-              const o = p * 4;
-              if (eData[o + 3] >= 32) {
-                const r = eData[o];
-                const g = eData[o + 1];
-                const b = eData[o + 2];
-                const maxC = Math.max(r, g, b);
-                const minC = Math.min(r, g, b);
-                const sat = (maxC - minC) / Math.max(maxC, 1);
-                if (maxC >= 195 && sat <= 0.18) {
-                  const distWhite = Math.hypot(r - 250, g - 250, b - 250);
-                  if (distWhite < 85) {
-                    eData[o + 3] = 0;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    // 4. Fabric Integrity Protection:
+    // Segmentation cutouts are preserved with 100% fabric edge fidelity.
+    // Flank and underarm regions maintain their authentic fabric pixels without artificial carving.
 
     cropCtx.putImageData(cleanCropImgData, 0, 0);
   } catch {}
@@ -1479,7 +1434,8 @@ function useGarmentTexture(url, extraUrls = [], patterned = false) {
 
     fetchAndCropTexture(url)
       .then(async (res) => {
-        if (!mounted || !res) return;
+        if (!mounted) return;
+        if (!res) throw new Error('fetchAndCropTexture returned null');
         setData({
           ...res,
           backTexture: res.backTexture || null,
@@ -1759,10 +1715,10 @@ export function detectNecklineStyle({ garmentText = '', garment = null } = {}) {
     return 'collared';
   }
   // 9. Crew Neck / Round Neck
-  if (/(?:crew[-_\s]?neck|crewneck|round neck|tee|t-shirt|טי שירט|חולצת טי|צווארון עגול)/i.test(text)) {
+  if (/(?:crew[-_\s]?neck|crewneck|round[-_\s]?neck|tee|t-?shirt|טי שירט|חולצת טי|צווארון עגול|טריקו)/i.test(text)) {
     return 'crew_neck';
   }
-  return 'standard';
+  return 'crew_neck';
 }
 
 
@@ -1794,16 +1750,19 @@ export function createAnatomicalTopGeometry({
   const nx = 28;
   const yShoulder = isMale ? 1.48 : 1.42;
   const yWaistTop = isMale ? 1.06 : 1.02;
+  const effBottom = isTucked ? (isMale ? 1.010 : 0.980) : yBottom;
   const hasAnySleeve = hasSleeves && sleeveFactor > 0.05;
 
   for (let i = 0; i <= ny; i++) {
     const vNorm = i / ny;
-    const y = yTop - vNorm * (yTop - yBottom);
+    const y = yTop - vNorm * (yTop - effBottom);
     const slice = getTorsoSlice(y, isMale);
 
     const effOffset = isTucked && y <= yWaistTop ? 0.0035 : layerOffset;
-    const rx = slice.rx + effOffset;
-    const rz = slice.rz + effOffset;
+    const uTuck = (isTucked && y <= yWaistTop) ? Math.min(1.0, Math.max(0.0, (yWaistTop - y) / Math.max(0.01, yWaistTop - effBottom))) : 0;
+    const scaleRad = 1.0 - 0.12 * uTuck;
+    const rx = (slice.rx + effOffset) * scaleRad;
+    const rz = (slice.rz + effOffset) * scaleRad;
     const cz = slice.cz;
 
     // vTex runs from 0.98 (collar) to 0.02 (bottom hem)
@@ -1832,8 +1791,8 @@ export function createAnatomicalTopGeometry({
       const bustFactor = Math.max(0, Math.cos(theta * 1.3));
       const bustBulge = (y >= 1.12 && y <= 1.34 && !isMale) ? 0.026 * bustFactor : 0.0;
       const frontCos = Math.pow(Math.max(0, Math.cos(theta)), 0.65);
-      const rzFrontEff = (slice.rzFront || rz) + effOffset;
-      const rzBackEff = (slice.rzBack || rz) + effOffset;
+      const rzFrontEff = ((slice.rzFront || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.15 * uTuck) : 1.0);
+      const rzBackEff = ((slice.rzBack || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.25 * uTuck) : 1.0);
       const z = isFront
         ? cz + (rzFrontEff + bustBulge) * frontCos
         : cz - (rzBackEff + 0.012) * Math.abs(Math.cos(theta));
@@ -3019,7 +2978,7 @@ class GarmentTemplateErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return null;
+      return this.props.fallback || null;
     }
     return this.props.children;
   }
@@ -3223,57 +3182,32 @@ function GarmentTemplateMeshInner({
             }
           }
 
-          // Planar Sleeve Hem & Cuff Alignment:
-          // Strictly lock sleeve cuffs to the planar cutting plane perpendicular to the forearm axis,
-          // ensuring sleeve hems end cleanly at the anatomical wrists with zero overshoot into palms or sawtooth spikes.
+          // Sleeve Hem & Cuff Boundary Protection:
+          // Preserve authentic 3D rounded cuffs authored in canonical GLB basemeshes.
+          // Clamp sleeve UVs away from outer texture margins to eliminate hallucinated white border stripes.
           const longSleeveTemplates = ['hoodie', 'top_outerwear_jacket', 'jacket', 'jacket_blazer', 'cardigan', 'coat', 'trench_coat', 'top_longsleeve', 'shirt', 'longsleeve', 'kaftan'];
           const isLongSleeveGarment = longSleeveTemplates.includes(templateId) || (['top', 'outerwear', 'dress'].includes(rawSlot) && detectSleeveStyle({ garmentText }).type === 'long');
-          if (isLongSleeveGarment && pos) {
-            const wristX = isMale ? 0.465 : 0.410;
-            const wristY = isMale ? 0.975 : 0.895;
-            const wristZ = isMale ? 0.028 : 0.018;
-            const armNx = isMale ? 0.4361 : 0.3830;
-            const armNy = isMale ? -0.8989 : -0.9223;
-            const armNz = isMale ? 0.0427 : 0.0527;
+          if (isLongSleeveGarment && pos && uv) {
             const xCuffThresh = isMale ? 0.28 : 0.24;
             const yCuffMax = isMale ? 1.08 : 1.00;
-            let cuffModified = false;
-
+            let uvsModified = false;
             for (let i = 0; i < pos.count; i++) {
-              let x = pos.getX(i);
-              let y = pos.getY(i);
-              let z = pos.getZ(i);
-
-              if (x > xCuffThresh && y < yCuffMax) {
-                const dx = x - wristX;
-                const dy = y - wristY;
-                const dz = z - wristZ;
-                const dot = dx * armNx + dy * armNy + dz * armNz;
-                if (dot > 0.0) {
-                  x -= dot * armNx;
-                  y -= dot * armNy;
-                  z -= dot * armNz;
-                  pos.setXYZ(i, x, y, z);
-                  cuffModified = true;
-                }
-              } else if (x < -xCuffThresh && y < yCuffMax) {
-                const dx = x - (-wristX);
-                const dy = y - wristY;
-                const dz = z - wristZ;
-                const dot = dx * (-armNx) + dy * armNy + dz * armNz;
-                if (dot > 0.0) {
-                  x -= dot * (-armNx);
-                  y -= dot * armNy;
-                  z -= dot * armNz;
-                  pos.setXYZ(i, x, y, z);
-                  cuffModified = true;
+              const x = pos.getX(i);
+              const y = pos.getY(i);
+              if (y < yCuffMax && Math.abs(x) > xCuffThresh) {
+                const u = uv.getX(i);
+                // Clamp away from outer margin where white canvas padding or fringe resides
+                if (u > 0.92) {
+                  uv.setX(i, 0.915);
+                  uvsModified = true;
+                } else if (u < 0.08) {
+                  uv.setX(i, 0.085);
+                  uvsModified = true;
                 }
               }
             }
-            if (cuffModified) {
-              pos.needsUpdate = true;
-              geo.computeVertexNormals();
-              geo.computeBoundingBox();
+            if (uvsModified) {
+              uv.needsUpdate = true;
             }
           }
 
@@ -3291,7 +3225,7 @@ function GarmentTemplateMeshInner({
               // Strictly preserves waist, hips, and skirt volume below yTorsoMin (y < 1.05),
               // eliminating cubic box outlines and skirt squashing.
               const yBustMax = isMale ? 1.34 : 1.28;
-              const yTorsoMin = 1.05;
+              const yTorsoMin = isMale ? 1.30 : 1.24;
               const xArmMax = isMale ? 0.180 : 0.155;
               let straplessModified = false;
               for (let i = 0; i < pos.count; i++) {
@@ -3390,34 +3324,39 @@ function GarmentTemplateMeshInner({
             !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
           const shouldTuck = isTuckableTop && hasBottom;
           if (shouldTuck && pos) {
-            const yWaistTop = isMale ? 1.060 : 1.020;
-            const yWaistTuckFull = yWaistTop - 0.030;
+            const yTuckStart = isMale ? 1.085 : 1.045;
+            const yTuckFull = isMale ? 1.050 : 1.015;
+            const yTuckTerm = isMale ? 1.010 : 0.980;
+            const cz = isMale ? 0.025 : 0.035;
             let tuckModified = false;
+
             for (let i = 0; i < pos.count; i++) {
               const x = pos.getX(i);
               const y = pos.getY(i);
               const z = pos.getZ(i);
 
-              // Tucking envelope: strictly tuck fabric inside bottom waistband (y <= yWaistTop).
-              // Above yWaistTop, leave 100% untucked so the top retains its natural positive clearance
+              // Tucking envelope: smoothly compress fabric inward starting at yTuckStart.
+              // Above yTuckStart, leaves 100% untucked so the top retains its natural positive clearance
               // outside the avatar stomach and torso skin!
-              if (y <= yWaistTop) {
-                const u = Math.min(1.0, Math.max(0.0, (yWaistTop - y) / (yWaistTop - yWaistTuckFull)));
+              // Below yTuckStart, pulls fabric strictly inside bottom waistband and stops at yTuckTerm.
+              if (y <= yTuckStart) {
+                const u = Math.min(1.0, Math.max(0.0, (yTuckStart - y) / Math.max(0.01, yTuckStart - yTuckFull)));
                 const tTuck = u * u * (3 - 2 * u);
-                const cz = isMale ? 0.025 : 0.035;
 
                 // Asymmetric front/back tucking:
                 // Front keeps snug positive clearance (+3mm outside avatar skin, safely inside skirt/pants);
                 // Back compresses deeper towards lumbar curve, staying strictly inside bottom garment.
-                const scaleX = 0.94;
                 const isFront = z >= cz;
-                const scaleZ = isFront ? 0.94 : 0.78;
+                const scaleX = 1.0 - 0.12 * tTuck;
+                const scaleZ = 1.0 - (isFront ? 0.18 : 0.30) * tTuck;
                 const targetX = x * scaleX;
                 const targetZ = cz + (z - cz) * scaleZ;
+                const targetY = Math.max(y, yTuckTerm);
 
                 const newX = (1 - tTuck) * x + tTuck * targetX;
+                const newY = (1 - tTuck) * y + tTuck * targetY;
                 const newZ = (1 - tTuck) * z + tTuck * targetZ;
-                pos.setXYZ(i, newX, y, newZ);
+                pos.setXYZ(i, newX, newY, newZ);
                 tuckModified = true;
               }
             }
@@ -3559,14 +3498,15 @@ export function GarmentTemplateMesh(props) {
   const {
     templateId,
     isMale = false,
+    fallbackNode = null,
   } = props;
   const url = getTemplateGlbUrl(templateId, isMale);
 
-  if (!url) return null;
+  if (!url) return fallbackNode;
 
   return (
-    <GarmentTemplateErrorBoundary key={url} url={url}>
-      <Suspense fallback={null}>
+    <GarmentTemplateErrorBoundary key={url} url={url} fallback={fallbackNode}>
+      <Suspense fallback={fallbackNode}>
         <GarmentTemplateMeshInner {...props} url={url} />
       </Suspense>
     </GarmentTemplateErrorBoundary>
@@ -3653,15 +3593,15 @@ export function GarmentMeshCore({
       const necklineStyle = detectNecklineStyle({ garmentText, garment });
       const isStraplessTop = shellFit?.isStrapless || necklineStyle === 'strapless';
 
-      let yTopBase = isMale ? 1.49 : 1.43;
+      let yTopBase = isMale ? 1.52 : 1.46;
       if (isStraplessTop) {
         yTopBase = isMale ? 1.34 : 1.28;
       } else if (necklineStyle === 'v_neck' || necklineStyle === 'scoop') {
         yTopBase = isMale ? 1.44 : 1.38;
       } else if (necklineStyle === 'high_neck') {
-        yTopBase = isMale ? 1.53 : 1.47;
-      } else if (necklineStyle === 'crew_neck') {
-        yTopBase = isMale ? 1.50 : 1.44;
+        yTopBase = isMale ? 1.54 : 1.48;
+      } else if (necklineStyle === 'crew_neck' || necklineStyle === 'collared' || necklineStyle === 'standard') {
+        yTopBase = isMale ? 1.52 : 1.46;
       }
       const yTop = yTopBase + yShift;
       let yBottom = (isMale ? 0.90 : 0.86) + yShift;
@@ -3905,13 +3845,55 @@ export function GarmentMeshCore({
   if (!visible || !garment) return null;
 
   const isAccessory = ['belt', 'glasses', 'watch', 'headwear', 'bag', 'jewelry'].includes(rawSlot);
-  // Never render untextured solid black/opaque meshes before the garment texture is loaded.
-  // Garments only appear once their actual texture is ready, eliminating the jarring
-  // 'avatar dressing in black garments then undressed' flash.
-  if (!textureReady) return null;
-  if (!isAccessory && !texture && !filledTexture && !opaqueTexture) return null;
+  const isClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
+  // Never render untextured solid black/opaque meshes before the garment texture is loaded,
+  // unless a matched 3D template exists (which renders safely with dominantColor fallback).
+  if (!textureReady && !matchedTemplateId) return null;
+  if (!isAccessory && !isClothing && !texture && !filledTexture && !opaqueTexture) return null;
 
   const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText);
+  const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
+
+  const fallbackProceduralMesh = geometry ? (
+    <>
+      {heelGeometry && (
+        <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial
+            color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
+            roughness={0.35}
+            metalness={0.12}
+          />
+        </mesh>
+      )}
+      <mesh
+        geometry={geometry}
+        castShadow
+        receiveShadow
+        renderOrder={renderOrder}
+      >
+        <meshStandardMaterial
+          map={(rawSlot === 'shoes'
+            ? (opaqueTexture || texture)
+            : ['top', 'outerwear', 'dress', 'bottom', 'belt', 'necktie', 'watch'].includes(rawSlot)
+              ? (filledTexture || opaqueTexture || texture)
+              : texture) || null}
+          color={rawSlot === 'shoes'
+            ? ((opaqueTexture || texture) ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#94A3B8'))
+            : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
+          transparent={!isOpaqueSlot}
+          alphaTest={isOpaqueSlot ? 0 : 0.02}
+          depthWrite={true}
+          side={THREE.DoubleSide}
+          roughness={pbrProps.roughness}
+          metalness={pbrProps.metalness}
+          envMapIntensity={pbrProps.envMapIntensity}
+          polygonOffset={true}
+          polygonOffsetFactor={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1))}
+          polygonOffsetUnits={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1))}
+        />
+      </mesh>
+    </>
+  ) : null;
 
   // 1. Dedicated Canonical 3D Templates (Reproduced from Avatar Body via Blender):
   //    Rendered in 3D Tailored mode (default) and whenever a canonical 3D template matches,
@@ -3936,6 +3918,7 @@ export function GarmentMeshCore({
         fitProfile={fitProfile}
         fallbackGeometry={geometry}
         heelGeometry={heelGeometry}
+        fallbackNode={fallbackProceduralMesh}
       />
     );
   }
@@ -3988,6 +3971,7 @@ export function GarmentMeshCore({
         fitProfile={fitProfile}
         fallbackGeometry={geometry}
         heelGeometry={heelGeometry}
+        fallbackNode={fallbackProceduralMesh}
       />
     );
   }
@@ -4020,50 +4004,7 @@ export function GarmentMeshCore({
     );
   }
 
-  if (!geometry) return null;
-
-  const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
-
-  return (
-    <>
-    {heelGeometry && (
-      <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
-        <meshStandardMaterial
-          color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
-          roughness={0.35}
-          metalness={0.12}
-        />
-      </mesh>
-    )}
-    <mesh
-      geometry={geometry}
-      castShadow
-      receiveShadow
-      renderOrder={renderOrder}
-    >
-      <meshStandardMaterial
-        map={(rawSlot === 'shoes'
-          ? (opaqueTexture || texture)
-          : ['top', 'outerwear', 'dress', 'bottom', 'belt', 'necktie', 'watch'].includes(rawSlot)
-            ? (filledTexture || opaqueTexture || texture)
-            : texture) || null}
-        color={rawSlot === 'shoes'
-          ? ((opaqueTexture || texture) ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#94A3B8'))
-          : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
-        transparent={!isOpaqueSlot}
-        alphaTest={isOpaqueSlot ? 0 : 0.02}
-        depthWrite={true}
-        side={THREE.DoubleSide}
-        roughness={pbrProps.roughness}
-        metalness={pbrProps.metalness}
-        envMapIntensity={pbrProps.envMapIntensity}
-        polygonOffset={true}
-        polygonOffsetFactor={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1))}
-        polygonOffsetUnits={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1))}
-      />
-    </mesh>
-    </>
-  );
+  return fallbackProceduralMesh;
 }
 
 

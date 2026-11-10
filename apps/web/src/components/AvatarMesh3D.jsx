@@ -177,10 +177,29 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       }
     }
 
+    // 2c. Dedicated axilla / armpit crease retraction under sleeved garments:
+    // Retracts underarm skin fold deep into the torso core so armpit skin NEVER pokes
+    // through sleeve seams or the underarm fabric fold!
+    if ((hasTop || hasOuterwear || hasDress) && !isSleeveless) {
+      const yAxillaMin = isMale ? 1.16 : 1.12;
+      const yAxillaMax = isMale ? 1.36 : 1.32;
+      const xAxillaMin = isMale ? 0.16 : 0.14;
+      const xAxillaMax = isMale ? 0.28 : 0.25;
+      if (y >= yAxillaMin && y <= yAxillaMax && absX >= xAxillaMin && absX <= xAxillaMax) {
+        const tY = Math.sin(Math.PI * (y - yAxillaMin) / (yAxillaMax - yAxillaMin));
+        const tX = Math.sin(Math.PI * (absX - xAxillaMin) / (xAxillaMax - xAxillaMin));
+        const wAxilla = tY * tX;
+        const cz = 0.020;
+        // Pull inward in X toward centerline and slightly toward torso core in Z
+        arr[idx] = x * (1 - 0.055 * wAxilla);
+        arr[idx + 2] = cz + (z - cz) * (1 - 0.050 * wAxilla);
+      }
+    }
+
     // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress / top:
     // Smooth lateral cosine falloff eliminates thigh/hip skin poking through tunics, dresses or bottoms.
     const minBottomY = hasBottom ? 0.12 : (hasDress ? 0.32 : (hasTop ? 0.74 : 0.74));
-    const maxBottomY = isMale ? 1.06 : 1.02;
+    const maxBottomY = isMale ? 1.08 : 1.05;
     if ((hasBottom || hasDress || hasTop) && y >= minBottomY && y <= maxBottomY) {
       const hipCutInner = isMale ? 0.19 : 0.18;
       const hipCutOuter = isMale ? 0.29 : 0.27;
@@ -210,8 +229,8 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const cx = sign * legCx * legBlend;
         const cz = 0.020 * (1 - legBlend) + legCz * legBlend;
         const isBack = z < cz;
-        const scale = (isBack && (hasBottom || hasDress)) ? (1 - 0.080 * w) : (1 - 0.035 * w);
-        arr[idx] = cx + (x - cx) * (1 - 0.035 * w);
+        const scale = (isBack && (hasBottom || hasDress)) ? (1 - 0.110 * w) : (1 - 0.038 * w);
+        arr[idx] = cx + (x - cx) * (1 - 0.038 * w);
         arr[idx + 2] = cz + (z - cz) * scale;
       }
     }
