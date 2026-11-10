@@ -1782,6 +1782,7 @@ export function createAnatomicalTopGeometry({
   uSwatch = 0.50,
   vSwatch = 0.50,
   standalone = false,
+  isTucked = false,
 } = {}) {
   const geo = new THREE.BufferGeometry();
   const verts = [];
@@ -1792,6 +1793,7 @@ export function createAnatomicalTopGeometry({
   const ny = 20;
   const nx = 28;
   const yShoulder = isMale ? 1.48 : 1.42;
+  const yWaistTop = isMale ? 1.08 : 1.04;
   const hasAnySleeve = hasSleeves && sleeveFactor > 0.05;
 
   for (let i = 0; i <= ny; i++) {
@@ -1799,8 +1801,9 @@ export function createAnatomicalTopGeometry({
     const y = yTop - vNorm * (yTop - yBottom);
     const slice = getTorsoSlice(y, isMale);
 
-    const rx = slice.rx + layerOffset;
-    const rz = slice.rz + layerOffset;
+    const effOffset = isTucked && y <= yWaistTop ? 0.0025 : layerOffset;
+    const rx = slice.rx + effOffset;
+    const rz = slice.rz + effOffset;
     const cz = slice.cz;
 
     // vTex runs from 0.98 (collar) to 0.02 (bottom hem)
@@ -2669,11 +2672,11 @@ export function createAnatomicalAccessoryGeometry(
     // Dynamic Parent Target: if an active bottom exists, wraps bottom_garment_obj (+0.007m + 0.002m = +0.009m);
     // if worn over bare avatar/dress, wraps avatar_body at +0.011m.
     // Buckle Protection Group: Belt_Strap (deformWeight = 1.0) vs Belt_Buckle (deformWeight = 0.0, flat Z plane).
-    const yBelt = isMale ? 1.08 : 1.05;
+    const yBelt = isMale ? 1.065 : 1.025;
     const beltHalfH = 0.022;
     const slice = getTorsoSlice(yBelt, isMale);
     const beltOffset = hasBottom
-      ? LAYER_COLLISION_OFFSETS.bottom + LAYER_COLLISION_OFFSETS.belt_over_bottom
+      ? LAYER_COLLISION_OFFSETS.bottom + LAYER_COLLISION_OFFSETS.belt_over_bottom + 0.0015
       : Math.max(LAYER_COLLISION_OFFSETS.belt, layerOffset);
     const rx = slice.rx + beltOffset;
     const rzFront = (slice.rzFront || slice.rz) + beltOffset;
@@ -2797,9 +2800,9 @@ export function resolveMaterialPBRProps(garmentText = '', rawSlot = 'top') {
 /**
  * Returns the physical layering renderOrder for each garment slot according to the
  * 9-Layer Collision Protocol:
+ *  - Layer 1 (Undergarments / Base Tops tucked into bottoms): 6
  *  - Layer 2 (Low Shoes / Sneakers): 5
- *  - Layer 3 (Bottoms - Trousers / Jeans / Skirts): 6
- *  - Layer 1 / 4 (Base Tops / Mid-Layers): 8
+ *  - Layer 3 (Bottoms - Trousers / Jeans / Skirts): 8
  *  - Layer 4 (Dresses): 9
  *  - Layer 5 (Waist Accessories - Belts / Sashes): 10
  *  - Necktie (under outerwear): 11
@@ -2811,9 +2814,9 @@ export function resolveGarmentRenderOrder(rawSlot, garmentText = '') {
   switch (rawSlot) {
     case 'shoes':
       return /(?:boot|chelsea|מגפיים|מגפי)/i.test(garmentText) ? 12 : 5;
-    case 'bottom':
-      return 6;
     case 'top':
+      return 6;
+    case 'bottom':
       return 8;
     case 'dress':
       return 9;
@@ -2881,6 +2884,7 @@ export function resolveShellFit({
   garmentText = '',
   isMale = false,
   hasOuterwear = false,
+  hasBottom = false,
   garment = null,
   aspect = 0.55,
 } = {}) {
@@ -2896,16 +2900,19 @@ export function resolveShellFit({
   if (rawSlot === 'top') {
     const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
     const isLongline = has('kurta', 'tunic', 'longline', 'thobe', 'טוניקה');
+    const isExplicitOuterwear = has('coat', 'overcoat', 'trench', 'jacket', 'blazer', 'parka', 'puffer', 'מעיל', "ז'קט", 'בלייזר');
+    const isTuckable = !isExplicitOuterwear;
+    const isTucked = hasBottom && isTuckable;
     let yBottom = isMale ? 0.90 : 0.86;
     if (isCrop) yBottom = isMale ? 1.18 : 1.12;
     if (isLongline) yBottom = isMale ? 0.75 : 0.70;
     const yTop = isStrapless ? (isMale ? 1.34 : 1.30) : (isMale ? 1.52 : 1.44);
     const fabricThickness = resolveFabricThickness(fullText, 'top', false);
-    // Layer 1 (+0.003m) when worn under outerwear; Layer 4 (+0.010m) when worn as outer mid-layer
-    const layerOffset = hasOuterwear
+    // Layer 1 (+0.003m) when tucked into bottom or worn under outerwear; Layer 4 (+0.010m) when worn as outer mid-layer
+    const layerOffset = (hasOuterwear || isTucked)
       ? LAYER_COLLISION_OFFSETS.base_top
       : LAYER_COLLISION_OFFSETS.mid_layer;
-    return { yTop, yBottom, layerOffset, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose };
+    return { yTop, yBottom, layerOffset, fabricThickness, isSkirt: false, isStrapless, isWideOrLoose, isTucked };
   }
   if (rawSlot === 'outerwear') {
     const isMaxi = has('maxi', 'מקסי', 'ankle', 'קרסול', 'floor', 'עד הרצפה', 'דאסטר', 'duster');
@@ -3031,6 +3038,7 @@ function GarmentTemplateMeshInner({
   rawSlot,
   garmentText = '',
   isMale = false,
+  hasBottom = false,
   layerOffset = 0,
   shellFit = null,
   fitProfile = null,
@@ -3374,6 +3382,49 @@ function GarmentTemplateMeshInner({
             }
           }
 
+          // Dynamic Waistband & Pelvis Tucking:
+          // When worn with a bottom garment, always tuck base tops (shirts, t-shirts, blouses, singlets, tanks)
+          // into the bottom garment's waistband and pelvis, eliminating merging and z-fighting.
+          const isTuckableTop = rawSlot === 'top' &&
+            !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(templateId) &&
+            !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
+          const shouldTuck = isTuckableTop && hasBottom;
+          if (shouldTuck && pos) {
+            const yWaistTop = isMale ? 1.08 : 1.04;
+            const yWaistTuckFull = isMale ? 1.04 : 1.00;
+            let tuckModified = false;
+            for (let i = 0; i < pos.count; i++) {
+              const x = pos.getX(i);
+              const y = pos.getY(i);
+              const z = pos.getZ(i);
+
+              if (y <= yWaistTop + 0.04) {
+                const u = Math.max(0, Math.min(1, (yWaistTop + 0.04 - y) / (yWaistTop + 0.04 - yWaistTuckFull)));
+                const tTuck = u * u * (3 - 2 * u);
+                const slice = getTorsoSlice(Math.max(0.65, y), isMale);
+                const cz = slice.cz || 0;
+
+                // Scale inward by 14% in X and 22% in Z relative to torso center (0, cz),
+                // ensuring the tucked top sits snug against the avatar body (skin + 2.5mm),
+                // strictly inside the bottom waistband and pelvis volume (skin + 7.5mm to +15mm)
+                const scaleX = 0.86;
+                const scaleZ = 0.78;
+                const targetX = x * scaleX;
+                const targetZ = cz + (z - cz) * scaleZ;
+
+                const newX = (1 - tTuck) * x + tTuck * targetX;
+                const newZ = (1 - tTuck) * z + tTuck * targetZ;
+                pos.setXYZ(i, newX, y, newZ);
+                tuckModified = true;
+              }
+            }
+            if (tuckModified) {
+              pos.needsUpdate = true;
+              geo.computeVertexNormals();
+              geo.computeBoundingBox();
+            }
+          }
+
           // Preserve authored GLB UVs; generate bounding-box fallback only if template geometry lacks UVs
           if (texture && !uv) {
             const bbUpdated = geo.boundingBox;
@@ -3446,7 +3497,7 @@ function GarmentTemplateMeshInner({
     }
 
     return geo;
-  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, shellFit, fitProfile, templateId, texture]);
+  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, rawSlot, isMale, hasBottom, shellFit, fitProfile, templateId, texture]);
 
   const materials = useMemo(() => {
     const hasFrontTex = Boolean(texture);
@@ -3460,8 +3511,8 @@ function GarmentTemplateMeshInner({
       alphaTest: isCoreClothing ? 0 : 0.15,
       depthWrite: true,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1)),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1)),
     };
     const frontMat = new THREE.MeshStandardMaterial({
       ...baseProps,
@@ -3568,8 +3619,8 @@ export function GarmentMeshCore({
 
   // ── Silhouette shell fit: resolve early so base geometry and templates can safely use shellFit parameters ──
   const shellFit = useMemo(
-    () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear, garment, aspect }),
-    [rawSlot, garmentText, isMale, hasOuterwear, garment, aspect]
+    () => resolveShellFit({ rawSlot, garmentText, isMale, hasOuterwear, hasBottom, garment, aspect }),
+    [rawSlot, garmentText, isMale, hasOuterwear, hasBottom, garment, aspect]
   );
   const fitProfile = useMemo(
     () => analyzeGarmentFit({
@@ -3614,7 +3665,10 @@ export function GarmentMeshCore({
       if (isCrop) yBottom = (isMale ? 1.18 : 1.12) + yShift;
       if (isLongline) yBottom = (isMale ? 0.75 : 0.70) + yShift;
 
-      const layerOffset = (hasOuterwear ? LAYER_COLLISION_OFFSETS.base_top : LAYER_COLLISION_OFFSETS.mid_layer) + rxShift;
+      const isExplicitOuterwear = /(?:coat|overcoat|trench|jacket|blazer|parka|puffer|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
+      const isTuckable = !isExplicitOuterwear;
+      const isTucked = hasBottom && isTuckable;
+      const layerOffset = ((hasOuterwear || isTucked) ? LAYER_COLLISION_OFFSETS.base_top : LAYER_COLLISION_OFFSETS.mid_layer) + rxShift;
 
       return createAnatomicalTopGeometry({
         isMale,
@@ -3626,6 +3680,7 @@ export function GarmentMeshCore({
         uSwatch: solidU,
         vSwatch: solidV,
         standalone: isStandalone,
+        isTucked,
       });
     }
 
@@ -3872,6 +3927,7 @@ export function GarmentMeshCore({
         rawSlot={rawSlot}
         garmentText={garmentText}
         isMale={isMale}
+        hasBottom={hasBottom}
         layerOffset={shellFit?.layerOffset || 0}
         shellFit={shellFit}
         fitProfile={fitProfile}
@@ -3894,8 +3950,8 @@ export function GarmentMeshCore({
       envMapIntensity: pbrProps.envMapIntensity,
       alphaToCoverage: false,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1)),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1)),
     };
     return (
       <>
@@ -3923,6 +3979,7 @@ export function GarmentMeshCore({
         rawSlot={rawSlot}
         garmentText={garmentText}
         isMale={isMale}
+        hasBottom={hasBottom}
         layerOffset={shellFit?.layerOffset || 0}
         shellFit={shellFit}
         fitProfile={fitProfile}
@@ -3945,8 +4002,8 @@ export function GarmentMeshCore({
       envMapIntensity: pbrProps.envMapIntensity,
       alphaToCoverage: false,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -5 : (rawSlot === 'bottom' ? -2 : -3),
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1)),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1)),
     };
     return (
       <>
@@ -3998,8 +4055,8 @@ export function GarmentMeshCore({
         metalness={pbrProps.metalness}
         envMapIntensity={pbrProps.envMapIntensity}
         polygonOffset={true}
-        polygonOffsetFactor={-1}
-        polygonOffsetUnits={-1}
+        polygonOffsetFactor={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1))}
+        polygonOffsetUnits={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -3 : -1))}
       />
     </mesh>
     </>

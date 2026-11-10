@@ -890,8 +890,10 @@ export default function DressingRoom3D({
                   </Suspense>
                 )}
 
-                {/* Active Outfit Garments Worn in 3D Anatomical Fit */}
-                {activeGarments.map((garment) => {
+                {/* Active Outfit Garments Worn in 3D Anatomical Fit (ordered strictly innermost to outermost) */}
+                {[...activeGarments]
+                  .sort((a, b) => resolveGarmentRenderOrder(a.slot, a.name || a.title) - resolveGarmentRenderOrder(b.slot, b.name || b.title))
+                  .map((garment) => {
                   const isVisible = layerVisibility[garment.slot] ?? true;
                   return (
                     <SafeGarmentWrapper
