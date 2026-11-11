@@ -20,7 +20,9 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'tank',
   'vest',
   'top_strapless',
+  'strapless_torso',
   'bandeau',
+  'bandeau_torso',
   'bustier',
   'corset',
   // Outerwear
@@ -40,6 +42,11 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'bermuda',
   'bottom_skirt',
   'skirt_pencil',
+  // Footwear
+  'shoes_boots',
+  'shoes_sneakers',
+  'boots',
+  'sneakers',
 ]);
 
 export const CANONICAL_TEMPLATE_MAP = Object.freeze({
@@ -54,12 +61,14 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   singlet: 'singlet',
   tank: 'tank',
   vest: 'vest',
-  strapless: 'top_strapless',
-  tube: 'top_strapless',
-  top_strapless: 'top_strapless',
-  bandeau: 'bandeau',
-  bustier: 'bustier',
-  corset: 'corset',
+  strapless: 'strapless_torso',
+  tube: 'strapless_torso',
+  top_strapless: 'strapless_torso',
+  strapless_torso: 'strapless_torso',
+  bandeau: 'bandeau_torso',
+  bandeau_torso: 'bandeau_torso',
+  bustier: 'strapless_torso',
+  corset: 'strapless_torso',
 
   // Outerwear
   hoodie: 'hoodie',
@@ -88,6 +97,12 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   skirt_aline: 'bottom_skirt',
   bottom_skirt: 'bottom_skirt',
   skirt_pencil: 'skirt_pencil',
+
+  // Footwear
+  shoes_boots: 'shoes_boots',
+  boots: 'shoes_boots',
+  shoes_sneakers: 'shoes_sneakers',
+  sneakers: 'shoes_sneakers',
 });
 
 const PARAMETRIC_ONLY_SLOTS = new Set([
@@ -256,6 +271,15 @@ export function resolveGarmentTemplate({
       return 'top_longsleeve';
     }
     return 'top_tshirt';
+  }
+
+  // 4. FOOTWEAR / SHOES
+  if (effectiveSlot === 'shoes' || effectiveSlot === 'footwear') {
+    if (has('sneaker', 'trainer', 'running', 'tennis', 'athletic', 'סניקרס', 'נעלי ספורט', 'basket', 'zapatilla', 'кроссовк', 'turnschuhe')) {
+      return 'shoes_sneakers';
+    }
+    // Default boots, knee-high boots, ankle boots, and leather shoes to authentic 3D boots template
+    return 'shoes_boots';
   }
 
   return null;

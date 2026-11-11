@@ -1021,11 +1021,11 @@ def build_top_template(avatar_data, variant="tshirt"):
         sleeve_type = "sleeveless"
         is_open_front = True
         neck_tilt = -0.34 if is_male else -0.32
-    elif variant == "longsleeve":
+    elif variant in ("longsleeve", "shirt"):
         offset = 0.0075
         z_neck = 1.534 if is_male else 1.436
         z_hem = 0.86 if is_male else 0.82
-        x_arm_max = 0.475 if is_male else 0.430
+        x_arm_max = 0.490 if is_male else 0.445
         sleeve_type = "long"
         neck_tilt = -0.32 if is_male else -0.30
     elif variant == "hoodie":
@@ -1185,8 +1185,9 @@ def build_top_template(avatar_data, variant="tshirt"):
         if to_del:
             bmesh.ops.delete(bm, geom=to_del, context='VERTS')
 
-        # Delete any stray arm/hand vertices (|x| > 0.18 at any height)
-        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.18 and v.co.z >= z_hem]
+        # Delete any stray arm/hand vertices strictly lateral to the torso (|x| > 0.265)
+        # Never delete flank or ribcage vertices (|x| <= 0.25) so torso stays 100% closed without side holes!
+        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.265 and v.co.z >= z_hem]
         if stray_arm_verts:
             bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:
@@ -1840,12 +1841,12 @@ def build_dress_template(avatar_data, variant="dress"):
         if to_del:
             bmesh.ops.delete(bm, geom=to_del, context='VERTS')
 
-        # Delete any stray arm/hand vertices (strictly above underarm fold or wide lateral arms)
-        # Never delete flank or hip vertices (|x| <= 0.24, z < 1.18) so torso stays 100% closed!
+        # Delete any stray arm/hand vertices strictly lateral to the torso (|x| > 0.265)
+        # Never delete flank, bust, or ribcage vertices (|x| <= 0.25) so dress stays 100% closed without side holes!
         z_axilla_fold = 1.18 if is_male else 1.14
         stray_arm_verts = [
             v for v in bm.verts
-            if (abs(v.co.x) > 0.185 and v.co.z >= z_axilla_fold)
+            if (abs(v.co.x) > 0.265 and v.co.z >= z_axilla_fold)
             or (abs(v.co.x) > 0.280 and v.co.z >= z_hip)
         ]
         if stray_arm_verts:

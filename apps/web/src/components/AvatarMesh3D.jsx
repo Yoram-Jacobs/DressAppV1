@@ -105,17 +105,21 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     const shoeCollarY = Math.max(0.128, Number(coveredZones?.shoeCollar) || 0.128);
     if (hasShoes && y < shoeCollarY) {
       const sign = x < 0 ? -1 : 1;
-      if (y < 0.128) {
+      if (y < 0.088) {
+        // Complete collapse of all foot, heel, and toe vertices into ankle core inside footwear sole/upper
         const cx = sign * footCx;
-        arr[idx] = cx + (x - cx) * 0.50;
-        arr[idx + 1] = Math.max(0.003, y * 0.65);
-        arr[idx + 2] = footCz + (z - footCz) * 0.50;
-      } else {
-        const legCx = sign * (isMale ? 0.145 : 0.160);
-        const legCz = 0.025;
-        arr[idx] = legCx + (x - legCx) * 0.88;
-        arr[idx + 2] = legCz + (z - legCz) * 0.88;
+        arr[idx] = cx;
+        arr[idx + 1] = 0.085;
+        arr[idx + 2] = footCz;
+        continue;
       }
+      // For ankle boots & tall boots: retract calf / lower leg skin within the boot shaft
+      const tShaft = Math.max(0, Math.min(1, (y - 0.088) / Math.max(0.04, shoeCollarY - 0.088)));
+      const shaftShrink = 0.28 * (1 - 0.5 * tShaft); // 28% at ankle, 14% at collar
+      const legCx = sign * (isMale ? 0.145 : 0.160);
+      const legCz = isMale ? 0.025 : 0.035;
+      arr[idx] = legCx + (x - legCx) * (1 - shaftShrink);
+      arr[idx + 2] = legCz + (z - legCz) * (1 - shaftShrink);
       continue;
     }
 
@@ -258,9 +262,28 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const cx = sign * legCx * legBlend;
         const cz = 0.020 * (1 - legBlend) + legCz * legBlend;
         const isLegOrBottom = hasBottom || hasDress;
-        const isKneeZone = y >= 0.44 && y <= 0.58;
-        const shrinkX = isLegOrBottom ? (isKneeZone ? 0.18 : 0.145) : 0.055;
-        const shrinkZ = isLegOrBottom ? (isKneeZone ? 0.24 : 0.155) : 0.055;
+        const isKneeZone = y >= 0.40 && y <= 0.60;
+        const isInnerThighZone = y >= 0.68 && y <= 0.84;
+        const isFrontKnee = isKneeZone && z > cz;
+        const isMedialThigh = isInnerThighZone && absX < (legCx * 1.05);
+
+        let shrinkX = isLegOrBottom ? 0.15 : 0.055;
+        let shrinkZ = isLegOrBottom ? 0.16 : 0.055;
+
+        if (isLegOrBottom) {
+          if (isFrontKnee) {
+            // Front patella sticks out most in front of pants/trousers: retract deeply in Z and snugly in X!
+            shrinkZ = 0.42;
+            shrinkX = 0.28;
+          } else if (isKneeZone) {
+            shrinkZ = 0.28;
+            shrinkX = 0.22;
+          } else if (isMedialThigh) {
+            // Inner thigh skin between the legs: retract toward leg bone axis
+            shrinkX = 0.32;
+            shrinkZ = 0.24;
+          }
+        }
         arr[idx] = cx + (x - cx) * (1 - shrinkX * w);
         arr[idx + 2] = cz + (z - cz) * (1 - shrinkZ * w);
       }
@@ -295,7 +318,7 @@ export default function AvatarMesh3D({
   coveredZones = null,
 }) {
   const modelUrl = isMale ? MALE_GLB_URL : FEMALE_GLB_URL;
-  const { scene } = useGLTF(modelUrl);
+  const { scene } = useGLTF(modelUrl, '/draco/');
   const internalRef = useRef(null);
   const groupRef = externalGroupRef || internalRef;
 
@@ -460,5 +483,5 @@ export default function AvatarMesh3D({
   );
 }
 
-useGLTF.preload(MALE_GLB_URL);
-useGLTF.preload(FEMALE_GLB_URL);
+useGLTF.preload(MALE_GLB_URL, '/draco/');
+useGLTF.preload(FEMALE_GLB_URL, '/draco/');

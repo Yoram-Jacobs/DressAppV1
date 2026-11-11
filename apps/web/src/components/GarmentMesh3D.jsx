@@ -1819,6 +1819,18 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('jacket') ||
     text.includes('hoodie') ||
     text.includes('sweatshirt') ||
+    (!text.includes('short') && !text.includes('קצר') && !text.includes('cort') && !text.includes('kurz') && (
+      text.includes('button-down') ||
+      text.includes('button down') ||
+      text.includes('button-up') ||
+      text.includes('button up') ||
+      text.includes('oxford') ||
+      text.includes('blouse') ||
+      text.includes('מכופתרת') ||
+      text.includes('חולצה מכופתרת') ||
+      text.includes('חולצה אלגנטית') ||
+      /(?<!t-?)shirt\b/i.test(text)
+    )) ||
     text.includes('סוודר') ||
     text.includes('בלייזר') ||
     text.includes("ג'קט") ||
@@ -3302,7 +3314,7 @@ function GarmentTemplateMeshInner({
   fallbackGeometry = null,
   heelGeometry = null,
 }) {
-  const gltf = useGLTF(url);
+  const gltf = useGLTF(url, '/draco/');
 
   const geometry = useMemo(() => {
     let geo = null;
@@ -3358,6 +3370,11 @@ function GarmentTemplateMeshInner({
           // and apply anchor-locked radial & lateral ease below the anatomical anchor based on fitProfile:
           //   • Tops / Outerwear / Dresses: anchored strictly at the shoulders & neckline (tDrop = 0 at shoulders).
           //   • Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
+          const isTuckableTop = rawSlot === 'top' &&
+            !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(templateId) &&
+            !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
+          const shouldTuck = isTuckableTop && hasBottom;
+
           const fitMode = fitProfile?.fit || 'regular';
           const preDrapedLooseTemplates = ['hoodie', 'cardigan', 'coat', 'trench_coat', 'kaftan', 'top_tunic', 'bermuda'];
           const isPreDrapedLoose = preDrapedLooseTemplates.includes(templateId);
@@ -3438,7 +3455,7 @@ function GarmentTemplateMeshInner({
                     }
                   } else {
                     const isAlreadyFlaredTemplate = templateId === 'trench_coat' || templateId === 'kaftan';
-                    const flareAdd = (fitMode === 'flared' && !isAlreadyFlaredTemplate)
+                    const flareAdd = (!shouldTuck && fitMode === 'flared' && !isAlreadyFlaredTemplate)
                       ? Math.max(0, yWaistAnchor - y) * (fitProfile?.flareRate || 0.28)
                       : 0;
                     // Smoothly taper lateral torso X-scaling near the armpit boundary so torso wall never crowds inner sleeve
@@ -3450,8 +3467,10 @@ function GarmentTemplateMeshInner({
                     const sArmpitY = tArmpitY * tArmpitY * (3 - 2 * tArmpitY);
                     const sLat = sDrop * sTorsoX * sArmpitY;
                     const sDep = sDrop * sTorsoX;
-                    x = x * (1 + (wScale - 1) * sLat) + Math.sign(x) * flareAdd * sLat;
-                    z = cz + (z - cz) * (1 + (dScale - 1) * sDep) + Math.sign(z - cz) * flareAdd * 0.45 * sDep;
+                    const effW = shouldTuck && y < yWaistAnchor ? 1.0 : wScale;
+                    const effD = shouldTuck && y < yWaistAnchor ? 1.0 : dScale;
+                    x = x * (1 + (effW - 1) * sLat) + Math.sign(x) * flareAdd * sLat;
+                    z = cz + (z - cz) * (1 + (effD - 1) * sDep) + Math.sign(z - cz) * flareAdd * 0.45 * sDep;
                   }
                   pos.setXYZ(i, x, y, z);
                 }
@@ -3462,10 +3481,7 @@ function GarmentTemplateMeshInner({
             geo.computeBoundingBox();
           }
 
-          const isTuckableTop = rawSlot === 'top' &&
-            !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(templateId) &&
-            !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
-          const shouldTuck = isTuckableTop && hasBottom;
+// (shouldTuck already defined above for ease and tucking)
 
           // Dynamic vertical hem scaling across dress, bottom, untucked top, and outerwear:
           // Keeps shoulders, necklines, sleeves, waistbands, and bifurcated pelvis 100% locked while matching shellFit.yBottom.
@@ -3578,11 +3594,11 @@ function GarmentTemplateMeshInner({
               if (y < yCuffMax && Math.abs(x) > xCuffThresh) {
                 const u = uv.getX(i);
                 // Clamp away from outer margin where white canvas padding or fringe resides
-                if (u > 0.92) {
-                  uv.setX(i, 0.915);
+                if (u > 0.88) {
+                  uv.setX(i, 0.86);
                   uvsModified = true;
-                } else if (u < 0.08) {
-                  uv.setX(i, 0.085);
+                } else if (u < 0.12) {
+                  uv.setX(i, 0.14);
                   uvsModified = true;
                 }
               }
@@ -3703,35 +3719,54 @@ function GarmentTemplateMeshInner({
           if (shouldTuck && pos) {
             const yTuckStart = isMale ? 1.085 : 1.045;
             const yTuckFull = isMale ? 1.050 : 1.015;
-            const yTuckTerm = isMale ? 1.010 : 0.980;
-            const cz = isMale ? 0.025 : 0.035;
+            const yHemMin = isMale ? 0.960 : 0.935;
+            const czDefault = isMale ? 0.025 : 0.035;
             let tuckModified = false;
 
             for (let i = 0; i < pos.count; i++) {
-              const x = pos.getX(i);
-              const y = pos.getY(i);
-              const z = pos.getZ(i);
+              let x = pos.getX(i);
+              let y = pos.getY(i);
+              let z = pos.getZ(i);
 
               // Tucking envelope: smoothly compress fabric inward starting at yTuckStart.
               // Above yTuckStart, leaves 100% untucked so the top retains its natural positive clearance
               // outside the avatar stomach and torso skin!
-              // Below yTuckStart, pulls fabric strictly inside bottom waistband and stops at yTuckTerm.
+              // Below yTuckStart, pulls fabric strictly inside bottom waistband and clamps hem above pelvis/crotch.
               if (y <= yTuckStart) {
                 const u = Math.min(1.0, Math.max(0.0, (yTuckStart - y) / Math.max(0.01, yTuckStart - yTuckFull)));
                 const tTuck = u * u * (3 - 2 * u);
 
-                // Asymmetric front/back tucking:
-                // Front keeps snug positive clearance (+3mm outside avatar skin, safely inside skirt/pants);
-                // Back compresses deeper towards lumbar curve, staying strictly inside bottom garment.
-                const isFront = z >= cz;
-                const scaleX = 1.0 - 0.12 * tTuck;
-                const scaleZ = 1.0 - (isFront ? 0.16 : 0.26) * tTuck;
-                const targetX = x * scaleX;
-                const targetZ = cz + (z - cz) * scaleZ;
+                // Terminate tucked top cleanly inside waistband/pelvis, never bleeding into thighs or skirt bottom
+                if (y < yHemMin) {
+                  y = yHemMin + (y - yHemMin) * 0.08;
+                }
 
-                const newX = (1 - tTuck) * x + tTuck * targetX;
-                const newZ = (1 - tTuck) * z + tTuck * targetZ;
-                pos.setXYZ(i, newX, y, newZ);
+                const slice = getTorsoSlice(Math.max(0.85, y), isMale);
+                const cz = slice.cz || czDefault;
+                const rxLimit = (slice.rx || 0.145) + 0.0035;
+                const rzFrontLimit = (slice.rzFront || slice.rz || 0.105) + 0.0035;
+                const rzBackLimit = (slice.rzBack || slice.rz || 0.105) + 0.0035;
+
+                // Radial compression inside bottom garment
+                const currentRx = Math.abs(x);
+                if (currentRx > rxLimit) {
+                  const targetX = Math.sign(x) * (rxLimit + (currentRx - rxLimit) * 0.15);
+                  x = (1 - tTuck) * x + tTuck * targetX;
+                } else {
+                  x = x * (1 - 0.10 * tTuck);
+                }
+
+                const isFront = z >= cz;
+                const currentRz = Math.abs(z - cz);
+                const rzLimit = isFront ? rzFrontLimit : rzBackLimit;
+                if (currentRz > rzLimit) {
+                  const targetZ = cz + Math.sign(z - cz) * (rzLimit + (currentRz - rzLimit) * 0.15);
+                  z = (1 - tTuck) * z + tTuck * targetZ;
+                } else {
+                  z = cz + (z - cz) * (1 - (isFront ? 0.16 : 0.24) * tTuck);
+                }
+
+                pos.setXYZ(i, x, y, z);
                 tuckModified = true;
               }
             }
@@ -3962,7 +3997,7 @@ function GarmentTemplateMeshInner({
 
   return (
     <>
-      {heelGeometry && (
+      {!['shoes_boots', 'shoes_sneakers', 'boots', 'sneakers'].includes(templateId) && heelGeometry && (
         <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
             color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
@@ -4527,7 +4562,7 @@ function StandaloneGarmentMesh(props) {
 
 function AvatarFittedGarmentMesh(props) {
   // Only download & build the 18 MB avatar morph field when the avatar is actually shown
-  const { scene: avatarScene } = useGLTF(props.isMale ? MALE_GLB_URL : FEMALE_GLB_URL);
+  const { scene: avatarScene } = useGLTF(props.isMale ? MALE_GLB_URL : FEMALE_GLB_URL, '/draco/');
   const morphField = useMemo(() => buildAvatarMorphField(avatarScene), [avatarScene]);
   return <GarmentMeshCore {...props} morphField={morphField} />;
 }
