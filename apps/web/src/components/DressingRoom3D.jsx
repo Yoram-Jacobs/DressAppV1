@@ -53,7 +53,12 @@ class SafeGarmentWrapper extends React.Component {
     console.warn(`[3D Dressing Room] Error rendering garment in slot ${this.props.slot}:`, err);
   }
   componentDidUpdate(prevProps) {
-    if (this.state.hasError && (prevProps.garmentId !== this.props.garmentId || prevProps.slot !== this.props.slot)) {
+    if (
+      this.state.hasError &&
+      (prevProps.garmentId !== this.props.garmentId ||
+        prevProps.slot !== this.props.slot ||
+        prevProps.resetKey !== this.props.resetKey)
+    ) {
       this.setState({ hasError: false });
     }
   }
@@ -142,12 +147,12 @@ export const GARMENT_CAMERA_TARGETS = {
   dress: { target: [0, 0.98, 0], pos: [0, 1.02, 2.10] },
   necktie: { target: [0, 1.25, 0], pos: [0, 1.28, 1.15] },
   belt: { target: [0, 1.05, 0], pos: [0, 1.08, 1.15] },
-  watch: { target: [0.24, 0.90, 0.05], pos: [0.35, 0.96, 0.85] },
+  watch: { target: [0.39, 1.00, 0.02], pos: [0.48, 1.06, 0.62] },
   headwear: { target: [0, 1.66, 0], pos: [0, 1.70, 0.95] },
   glasses: { target: [0, 1.58, 0], pos: [0, 1.60, 0.85] },
   bag: { target: [-0.24, 0.82, 0.04], pos: [-0.30, 0.88, 1.20] },
   accessory: { target: [0, 1.15, 0], pos: [0, 1.20, 1.25] },
-  full: { target: [0, 0.95, 0], pos: [0, 1.05, 2.5] },
+  full: { target: [0, 0.85, 0], pos: [0, 0.96, 2.82] },
 };
 
 function CameraController({
@@ -194,8 +199,8 @@ function CameraController({
     const currentTarget = controlsRef?.current ? controlsRef.current.target : targetLookAt.current;
 
     if (cameraPreset === 'full') {
-      targetCamPos.current.set(0, 1.0, 2.5);
-      targetLookAt.current.set(0, 0.95, 0);
+      targetCamPos.current.set(...GARMENT_CAMERA_TARGETS.full.pos);
+      targetLookAt.current.set(...GARMENT_CAMERA_TARGETS.full.target);
     } else if (cameraPreset === 'upper' || cameraPreset === 'torso') {
       targetCamPos.current.set(0, 1.3, 1.2);
       targetLookAt.current.set(0, 1.25, 0);
@@ -208,17 +213,17 @@ function CameraController({
       targetLookAt.current.set(...slotConfig.target);
     } else if (cameraPreset === 'back' || cameraPreset === 'side') {
       // Orbit around the current target or the model center
-      const cy = currentTarget.y || 0.95;
+      const cy = currentTarget.y || 0.85;
       const base = (!showAvatar && GARMENT_CAMERA_TARGETS[activeGarmentSlot])
         ? GARMENT_CAMERA_TARGETS[activeGarmentSlot]
-        : { target: [0, cy, 0], pos: [0, camera.position.y || 1.05, 2.5] };
+        : { target: [0, cy, 0], pos: [0, camera.position.y || 0.96, 2.82] };
       const px = camera.position.x || base.pos[0];
       const py = camera.position.y || base.pos[1];
       const pz = camera.position.z || base.pos[2];
       const tx = currentTarget.x ?? base.target[0];
       const ty = cy;
       const tz = currentTarget.z ?? base.target[2];
-      const dist = Math.max(1.2, Math.hypot(px - tx, pz - tz) || 2.5);
+      const dist = Math.max(1.2, Math.hypot(px - tx, pz - tz) || 2.82);
       if (cameraPreset === 'back') {
         targetCamPos.current.set(tx, py, tz - dist);
       } else {
@@ -231,8 +236,8 @@ function CameraController({
         targetCamPos.current.set(...slotConfig.pos);
         targetLookAt.current.set(...slotConfig.target);
       } else {
-        targetCamPos.current.set(0, 1.05, 2.5);
-        targetLookAt.current.set(0, 0.95, 0);
+        targetCamPos.current.set(...GARMENT_CAMERA_TARGETS.full.pos);
+        targetLookAt.current.set(...GARMENT_CAMERA_TARGETS.full.target);
       }
     }
   }, [cameraPreset, activeGarmentSlot, showAvatar, controlsRef, camera]);
@@ -362,8 +367,18 @@ export default function DressingRoom3D({
   const [canvasKey, setCanvasKey] = useState(0);
   const [isContextLost, setIsContextLost] = useState(false);
   const glRef = useRef(null);
+  const contextCleanupRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      contextCleanupRef.current?.();
+      contextCleanupRef.current = null;
+    };
+  }, []);
 
   const handleCanvasCreated = useCallback(({ gl }) => {
+    contextCleanupRef.current?.();
+    contextCleanupRef.current = null;
     glRef.current = gl;
     const canvas = gl?.domElement;
     if (!canvas) return;
@@ -390,6 +405,10 @@ export default function DressingRoom3D({
 
     canvas.addEventListener('webglcontextlost', onLost, false);
     canvas.addEventListener('webglcontextrestored', onRestored, false);
+    contextCleanupRef.current = () => {
+      canvas.removeEventListener('webglcontextlost', onLost, false);
+      canvas.removeEventListener('webglcontextrestored', onRestored, false);
+    };
   }, []);
 
   useEffect(() => {
@@ -524,7 +543,13 @@ export default function DressingRoom3D({
         g.category,
         metaText || g.name || g.title || g.sub_category || g.subcategory || g.item_type
       );
-      const frontUrl = resolveEffectiveGarmentUrl(g) || g.url || g.image_url;
+      let frontUrl = resolveEffectiveGarmentUrl(g) || g.url || g.image_url;
+      if (normSlot === 'shoes' && typeof frontUrl === 'string') {
+        const onboardingShoeMatch = frontUrl.match(/^\/assets\/onboarding\/([wm]_[a-z0-9_]+)\.png(\?.*)?$/i);
+        if (onboardingShoeMatch && !/_cutout$/i.test(onboardingShoeMatch[1])) {
+          frontUrl = `/assets/onboarding/${onboardingShoeMatch[1]}_cutout.png${onboardingShoeMatch[2] || ''}`;
+        }
+      }
 
       // Item group: every other photo of the same garment (back / side views) removes the guesswork
       const extraViews = [];
@@ -620,31 +645,73 @@ export default function DressingRoom3D({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemsSignature]);
 
+  const isGarmentVisible = useCallback(
+    (g) => {
+      if (!g) return false;
+      if (Object.prototype.hasOwnProperty.call(layerVisibility, g.id)) {
+        return Boolean(layerVisibility[g.id]);
+      }
+      if (Object.prototype.hasOwnProperty.call(layerVisibility, g.slot)) {
+        return Boolean(layerVisibility[g.slot]);
+      }
+      return true;
+    },
+    [layerVisibility]
+  );
+
   // Worn footwear drives the foot pose (heels) and lifts the whole figure off the floor
   const footPose = useMemo(() => {
-    const shoe = activeGarments.find((g) => g.slot === 'shoes' && (layerVisibility[g.slot] ?? true));
+    const shoe = activeGarments.find((g) => g.slot === 'shoes' && isGarmentVisible(g));
     if (!shoe) return null;
     const spec = resolveFootwearSpec(shoe);
     return computeFootPose(isMale, spec.heelHeight, spec.soleThickness);
-  }, [activeGarments, layerVisibility, isMale]);
+  }, [activeGarments, isGarmentVisible, isMale]);
 
   const hasOuterwear = useMemo(() => {
-    return activeGarments.some((g) => g.slot === 'outerwear' && (layerVisibility[g.slot] ?? true));
-  }, [activeGarments, layerVisibility]);
+    return activeGarments.some((g) => g.slot === 'outerwear' && isGarmentVisible(g));
+  }, [activeGarments, isGarmentVisible]);
 
   // Compute covered body zones from visible garments so AvatarMesh3D retracts covered skin
   const coveredZones = useMemo(() => {
-    const visibleGarments = activeGarments.filter((g) => layerVisibility[g.slot] ?? true);
+    const visibleGarments = activeGarments.filter(isGarmentVisible);
     const visibleSlots = new Set(visibleGarments.map((g) => g.slot));
     const upperGarmentTexts = visibleGarments
       .filter((g) => ['top', 'outerwear', 'dress'].includes(g.slot))
-      .map((g) => (g.name || g.title || g.category || g.item_type || '').toLowerCase());
-    const isStrapless = upperGarmentTexts.length > 0 && upperGarmentTexts.some((t) =>
-      /(?:strapless|tube|bandeau|corset|bustier|sweetheart|סטרפלס|בנדו|קורסט|מחוך|בוסטייה|טיוב)/i.test(t)
+      .map((g) => resolveGarmentMetadataText(g));
+    const isStrapless = upperGarmentTexts.length > 0 && upperGarmentTexts.every((txt) =>
+      /(?:strapless|tube|bandeau|corset|bustier|sweetheart|סטרפלס|בנדו|קורסט|מחוך|בוסטייה|טיוב)/i.test(txt)
     );
-    const isSleeveless = isStrapless || (upperGarmentTexts.length > 0 && upperGarmentTexts.every((t) =>
-      /(?:singlet|tank|vest|sleeveless|גופיי|סרבל)/i.test(t)
+    const isSleeveless = isStrapless || (upperGarmentTexts.length > 0 && upperGarmentTexts.every((txt) =>
+      /(?:singlet|tank|vest|sleeveless|cami|camisole|halter|גופי|אפודה|וסט)/i.test(txt)
     ));
+
+    let bottomMinY = Infinity;
+    visibleGarments
+      .filter((g) => g.slot === 'bottom' || g.slot === 'dress')
+      .forEach((g) => {
+        const txt = resolveGarmentMetadataText(g);
+        let minY = 0.10;
+        if (g.slot === 'dress') {
+          if (/(?:maxi|gown|evening|ארוכה|מקסי)/i.test(txt)) minY = 0.12;
+          else if (/(?:mini|קצרה|מיני)/i.test(txt)) minY = 0.72;
+          else minY = 0.48;
+        } else if (/(?:skirt|חצאית)/i.test(txt)) {
+          if (/(?:maxi|ארוכה|מקסי)/i.test(txt)) minY = 0.12;
+          else if (/(?:mini|קצרה|מיני)/i.test(txt)) minY = 0.72;
+          else minY = 0.45;
+        } else if (/(?:bermuda|ברמודה|capri|קפרי)/i.test(txt)) {
+          minY = 0.45;
+        } else if (/(?:short|שורט|קצרים)/i.test(txt)) {
+          minY = 0.60;
+        } else {
+          minY = 0.10;
+        }
+        if (minY < bottomMinY) bottomMinY = minY;
+      });
+
+    const activeShoe = activeGarments.find((g) => g.slot === 'shoes' && isGarmentVisible(g));
+    const shoeSpec = activeShoe ? resolveFootwearSpec(activeShoe) : null;
+
     return {
       hasTop: visibleSlots.has('top'),
       hasOuterwear: visibleSlots.has('outerwear'),
@@ -654,8 +721,10 @@ export default function DressingRoom3D({
       hasHeadwear: visibleSlots.has('headwear'),
       isSleeveless,
       isStrapless,
+      bottomMinY: Number.isFinite(bottomMinY) ? bottomMinY : undefined,
+      shoeCollar: shoeSpec?.collar || 0.128,
     };
-  }, [activeGarments, layerVisibility]);
+  }, [activeGarments, isGarmentVisible]);
 
   const hairProps = useMemo(() => {
     return resolveHairProperties(activeHair, isMale);
@@ -685,11 +754,19 @@ export default function DressingRoom3D({
     });
   }, [isMale, activeMeasurements?.height, morphInfluences]);
 
-  const toggleLayer = useCallback((slotKey) => {
-    setLayerVisibility((prev) => ({
-      ...prev,
-      [slotKey]: !(prev[slotKey] ?? true),
-    }));
+  const toggleLayer = useCallback((garmentOrId) => {
+    const targetId = typeof garmentOrId === 'object' ? garmentOrId.id : garmentOrId;
+    const targetSlot = typeof garmentOrId === 'object' ? garmentOrId.slot : null;
+    setLayerVisibility((prev) => {
+      const current = Object.prototype.hasOwnProperty.call(prev, targetId)
+        ? Boolean(prev[targetId])
+        : (targetSlot && Object.prototype.hasOwnProperty.call(prev, targetSlot) ? Boolean(prev[targetSlot]) : true);
+      const next = { ...prev, [targetId]: !current };
+      if (targetSlot && Object.prototype.hasOwnProperty.call(next, targetSlot)) {
+        delete next[targetSlot];
+      }
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -731,10 +808,15 @@ export default function DressingRoom3D({
 
   const primarySlot = useMemo(() => {
     const normFocused = focusedSlot ? (normalizeGarmentRole(focusedSlot, focusedSlot, focusedSlot) || focusedSlot) : null;
-    return (normFocused && GARMENT_CAMERA_TARGETS[normFocused])
-      ? normFocused
-      : (activeGarments[0]?.slot || 'top');
-  }, [focusedSlot, activeGarments]);
+    if (normFocused && GARMENT_CAMERA_TARGETS[normFocused]) {
+      return normFocused;
+    }
+    const visibleGarments = activeGarments.filter(isGarmentVisible);
+    if (visibleGarments.length > 1) {
+      return 'full';
+    }
+    return visibleGarments[0]?.slot || activeGarments[0]?.slot || 'full';
+  }, [focusedSlot, activeGarments, isGarmentVisible]);
 
   const initialCamConfig = useMemo(() => {
     return (!showAvatar && GARMENT_CAMERA_TARGETS[primarySlot])
@@ -906,7 +988,7 @@ export default function DressingRoom3D({
 
             {/* Shared Metric Space: avatar and garments are wrapped in the exact same metric transform */}
             <group position={avatarMetricTransform.position} scale={avatarMetricTransform.scale}>
-              <group position={[0, footPose?.groupLift || 0, 0]}>
+              <group position={[0, (!showAvatar && !coveredZones.hasShoes) ? 0 : (footPose?.groupLift || 0), 0]}>
                 {/* 3D Realistic Human Avatar (meterScale=false to inherit parent group scale) */}
                 {showAvatar && (
                   <Suspense fallback={null}>
@@ -926,35 +1008,45 @@ export default function DressingRoom3D({
                 )}
 
                 {/* Active Outfit Garments Worn in 3D Anatomical Fit (ordered strictly innermost to outermost) */}
-                {[...activeGarments]
-                  .sort((a, b) => resolveGarmentRenderOrder(a.slot, a.name || a.title) - resolveGarmentRenderOrder(b.slot, b.name || b.title))
-                  .map((garment) => {
-                  const isVisible = layerVisibility[garment.slot] ?? true;
-                  return (
-                    <SafeGarmentWrapper
-                      key={`${garment.slot}-${garment.id}`}
-                      slot={garment.slot}
-                      garmentId={garment.id}
-                    >
-                      <Suspense fallback={null}>
-                        <GarmentMesh3D
-                          garment={garment}
+                {(() => {
+                  const slotCounts = {};
+                  return [...activeGarments]
+                    .sort((a, b) => resolveGarmentRenderOrder(a.slot, a.name || a.title) - resolveGarmentRenderOrder(b.slot, b.name || b.title))
+                    .map((garment) => {
+                      const isVisible = isGarmentVisible(garment);
+                      const intraSlotIndex = isVisible ? (slotCounts[garment.slot] || 0) : 0;
+                      if (isVisible) {
+                        slotCounts[garment.slot] = intraSlotIndex + 1;
+                      }
+                      return (
+                        <SafeGarmentWrapper
+                          key={`${garment.slot}-${garment.id}`}
                           slot={garment.slot}
-                          isMale={isMale}
-                          visible={isVisible}
-                          hasOuterwear={hasOuterwear}
-                          hasBottom={coveredZones.hasBottom}
-                          hasTop={coveredZones.hasTop}
-                          morphInfluences={morphInfluences}
-                          footPose={footPose}
-                          showAvatar={showAvatar}
-                          standaloneMode={!showAvatar}
-                          bypassSilhouette={meshMode === 'tailored'}
-                        />
-                      </Suspense>
-                    </SafeGarmentWrapper>
-                  );
-                })}
+                          garmentId={garment.id}
+                          resetKey={`${garment.id}-${meshMode}-${showAvatar}`}
+                        >
+                          <Suspense fallback={null}>
+                            <GarmentMesh3D
+                              garment={garment}
+                              slot={garment.slot}
+                              isMale={isMale}
+                              visible={isVisible}
+                              hasOuterwear={hasOuterwear}
+                              hasBottom={coveredZones.hasBottom}
+                              hasTop={coveredZones.hasTop}
+                              morphInfluences={morphInfluences}
+                              footPose={footPose}
+                              showAvatar={showAvatar}
+                              standaloneMode={!showAvatar}
+                              bypassSilhouette={meshMode === 'tailored'}
+                              extraLayerOffset={intraSlotIndex * 0.0035}
+                              renderOrderOffset={intraSlotIndex}
+                            />
+                          </Suspense>
+                        </SafeGarmentWrapper>
+                      );
+                    });
+                })()}
               </group>
             </group>
           </Canvas>
@@ -981,7 +1073,7 @@ export default function DressingRoom3D({
 
           {/* ─── Bottom Floating Camera Toolbar (Creamy Design) ─── */}
           <div className="absolute bottom-3 sm:bottom-5 inset-x-0 z-10 flex justify-center pointer-events-none px-2 sm:px-4">
-            <div className="pointer-events-auto flex items-center gap-1 sm:gap-2 p-1.5 bg-white/92 backdrop-blur-md rounded-2xl border border-[#E5DFD5] shadow-xl max-w-[calc(100vw-1rem)] sm:max-w-none overflow-x-auto scrollbar-none">
+            <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 p-1.5 px-2 bg-white/92 backdrop-blur-md rounded-2xl border border-[#E5DFD5] shadow-xl max-w-[calc(100vw-1rem)] sm:max-w-none overflow-x-auto scrollbar-none">
               <Button
                 variant={cameraPreset === 'full' ? 'default' : 'ghost'}
                 size="sm"
@@ -1079,13 +1171,13 @@ export default function DressingRoom3D({
               {/* Toggle Photo Cutout vs 3D Tailored Mesh (Bypass photo cutout slicing/defects) */}
               <Button
                 type="button"
-                variant={meshMode === 'tailored' ? 'default' : 'ghost'}
+                variant="default"
                 size="sm"
                 onClick={() => setMeshMode((prev) => (prev === 'photo' ? 'tailored' : 'photo'))}
                 className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
                   meshMode === 'tailored'
                     ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'
-                    : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md'
                 }`}
                 data-testid="toggle-mesh-mode-btn"
                 title={
@@ -1093,9 +1185,13 @@ export default function DressingRoom3D({
                     ? t('dressing_room_3d.mesh_mode_tailored_active', { defaultValue: '3D Tailored Active (Bypassing photo cutout). Click for Photo Cutout.' })
                     : t('dressing_room_3d.mesh_mode_photo_active', { defaultValue: 'Photo Cutout Active. Click to switch to 3D Tailored Fit (Bypass cutout slicing).' })
                 }
-                aria-label={meshMode === 'tailored' ? '3D Tailored Fit Active' : 'Switch to 3D Tailored Fit'}
+                aria-label={
+                  meshMode === 'tailored'
+                    ? t('dressing_room_3d.mesh_mode_tailored_active', { defaultValue: '3D Tailored Fit Active' })
+                    : t('dressing_room_3d.mesh_mode_photo_active', { defaultValue: 'Photo Fit Active' })
+                }
               >
-                <Sparkles className={`w-3.5 h-3.5 shrink-0 ${meshMode === 'tailored' ? 'text-amber-200' : 'text-amber-600'}`} />
+                <Sparkles className={`w-3.5 h-3.5 shrink-0 ${meshMode === 'tailored' ? 'text-amber-200' : 'text-indigo-200'}`} />
                 <span className="hidden sm:inline">
                   {meshMode === 'tailored'
                     ? t('dressing_room_3d.mesh_tailored', { defaultValue: '3D Tailored' })
@@ -1186,7 +1282,7 @@ export default function DressingRoom3D({
                     type="button"
                     onClick={() => setShowRack((prev) => !prev)}
                     className="p-1 rounded-lg text-[#6B7280] hover:text-[#111827] hover:bg-[#F5F2EB] transition-colors"
-                    aria-label="Toggle rack"
+                    aria-label={t('dressing_room_3d.garments', { defaultValue: 'Outfit Layers' })}
                   >
                     {showRack ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                   </button>
@@ -1195,7 +1291,7 @@ export default function DressingRoom3D({
                 {showRack && (
                   <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[46vh] pe-1 scrollbar-thin scrollbar-thumb-[#D8D0C5]">
                     {activeGarments.map((g) => {
-                      const isVisible = layerVisibility[g.slot] ?? true;
+                      const isVisible = isGarmentVisible(g);
                       return (
                         <div
                           key={`rack-${g.slot}-${g.id}`}
@@ -1246,7 +1342,7 @@ export default function DressingRoom3D({
                             size="icon"
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleLayer(g.slot);
+                              toggleLayer(g);
                             }}
                             className="h-7 w-7 rounded-lg text-[#6B7280] hover:text-[#111827] hover:bg-[#EFEAE0] shrink-0 ms-1"
                             title={isVisible ? t('dressing_room_3d.hide_item', { defaultValue: 'Hide item' }) : t('dressing_room_3d.show_item', { defaultValue: 'Show item' })}

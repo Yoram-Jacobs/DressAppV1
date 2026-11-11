@@ -1,261 +1,261 @@
 /**
- * Canonical 3D Garment & Accessory Templates Catalog & Resolver
+ * Canonical 3D Garment Template Catalog & Category-Smart Router.
  *
- * Maps wardrobe catalog items, categories, and Hebrew/English keywords
- * directly to their production-grade 3D GLB archetype models.
+ * Maps clothing items (top, outerwear, dress, bottom) to their repaired,
+ * gender-specific canonical GLB templates in `/models/templates/{female,male}/`,
+ * while routing footwear (`shoes`) and accessories (`watch`, `belt`, `glasses`,
+ * `headwear`, `bag`, `necktie`, `scarf`, `jewelry`) to parametric anatomical
+ * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const AVAILABLE_TEMPLATES = [
+export const TEMPLATE_CACHE_VERSION = 'clean3';
+
+export const AVAILABLE_TEMPLATES = Object.freeze([
+  // Tops
+  'top_tshirt',
+  'top_longsleeve',
+  'shirt',
+  'top_tunic',
   'singlet',
+  'tank',
+  'vest',
   'top_strapless',
-  'strapless',
-  'corset',
-  'tube',
   'bandeau',
   'bustier',
-  'tshirt',
-  'tunic',
-  'top_tunic',
-  'shirt',
+  'corset',
+  // Outerwear
   'hoodie',
-  'top_outerwear_jacket',
-  'jacket',
-  'jacket_blazer',
   'cardigan',
-  'vest',
+  'jacket_blazer',
+  'top_outerwear_jacket',
   'coat',
   'trench_coat',
   'kaftan',
+  // Dresses
   'dress',
   'dress_strapless',
-  'pants',
+  // Bottoms
   'bottom_trousers',
-  'shorts',
   'bottom_shorts',
   'bermuda',
-  'skirt',
   'bottom_skirt',
-  'skirt_aline',
   'skirt_pencil',
-  'hat',
-  'hat_cap',
-  'hat_fedora',
-  'bag',
-  'bag_handbag',
-  'bag_crossbody',
-  'belt',
-  'shoes_sneakers',
-  'shoes_boots',
-  'accessory_glasses',
-];
+]);
 
-export const CANONICAL_TEMPLATES = [
-  'top_tshirt',
-  'top_strapless',
-  'top_tunic',
-  'top_longsleeve',
-  'top_outerwear_jacket',
-  'bottom_trousers',
-  'bottom_shorts',
-  'bottom_skirt',
-  'dress',
-  'dress_strapless',
-  'shoes_sneakers',
-  'shoes_boots',
-  'accessory_belt',
-  'accessory_hat',
-  'accessory_glasses',
-  'accessory_crossbody_bag',
-];
-
-export const CANONICAL_TEMPLATE_MAP = {
-  top_strapless: 'top_strapless',
-  strapless: 'top_strapless',
-  corset: 'top_strapless',
-  tube: 'top_strapless',
-  bandeau: 'top_strapless',
-  bustier: 'top_strapless',
-  singlet: 'singlet',
-  tank: 'singlet',
+export const CANONICAL_TEMPLATE_MAP = Object.freeze({
+  // Tops
   tshirt: 'top_tshirt',
-  tunic: 'top_tunic',
-  top_tunic: 'top_tunic',
-  tunic: 'top_tunic',
-  top_tunic: 'top_tunic',
   top_tshirt: 'top_tshirt',
-  shirt: 'top_longsleeve',
-  hoodie: 'hoodie',
+  longsleeve: 'top_longsleeve',
   top_longsleeve: 'top_longsleeve',
-  top_outerwear_jacket: 'top_outerwear_jacket',
-  jacket: 'top_outerwear_jacket',
-  jacket_blazer: 'jacket_blazer',
-  cardigan: 'cardigan',
+  shirt: 'shirt',
+  tunic: 'top_tunic',
+  top_tunic: 'top_tunic',
+  singlet: 'singlet',
+  tank: 'tank',
   vest: 'vest',
+  strapless: 'top_strapless',
+  tube: 'top_strapless',
+  top_strapless: 'top_strapless',
+  bandeau: 'bandeau',
+  bustier: 'bustier',
+  corset: 'corset',
+
+  // Outerwear
+  hoodie: 'hoodie',
+  cardigan: 'cardigan',
+  blazer: 'jacket_blazer',
+  jacket_blazer: 'jacket_blazer',
+  jacket: 'top_outerwear_jacket',
+  top_outerwear_jacket: 'top_outerwear_jacket',
   coat: 'coat',
   trench_coat: 'trench_coat',
   kaftan: 'kaftan',
+
+  // Dresses
   dress: 'dress',
+  dress_midi: 'dress',
   dress_strapless: 'dress_strapless',
+
+  // Bottoms
   pants: 'bottom_trousers',
+  trousers: 'bottom_trousers',
   bottom_trousers: 'bottom_trousers',
   shorts: 'bottom_shorts',
   bottom_shorts: 'bottom_shorts',
   bermuda: 'bermuda',
   skirt: 'bottom_skirt',
-  bottom_skirt: 'bottom_skirt',
   skirt_aline: 'bottom_skirt',
+  bottom_skirt: 'bottom_skirt',
   skirt_pencil: 'skirt_pencil',
-  sneakers: 'shoes_sneakers',
-  shoes_sneakers: 'shoes_sneakers',
-  boots: 'shoes_boots',
-  shoes_boots: 'shoes_boots',
-  hat: 'accessory_hat',
-  hat_cap: 'accessory_hat',
-  hat_fedora: 'accessory_hat',
-  accessory_hat: 'accessory_hat',
-  glasses: 'accessory_glasses',
-  accessory_glasses: 'accessory_glasses',
-  bag: 'accessory_crossbody_bag',
-  bag_handbag: 'accessory_crossbody_bag',
-  bag_crossbody: 'accessory_crossbody_bag',
-  accessory_crossbody_bag: 'accessory_crossbody_bag',
-  belt: 'accessory_belt',
-  accessory_belt: 'accessory_belt',
-};
+});
 
-export function getTemplateGlbUrl(templateId, isMale) {
+const PARAMETRIC_ONLY_SLOTS = new Set([
+  'shoes',
+  'footwear',
+  'watch',
+  'belt',
+  'glasses',
+  'headwear',
+  'hat',
+  'bag',
+  'necktie',
+  'scarf',
+  'jewelry',
+  'accessory',
+]);
+
+/**
+ * Resolves the gender-specific GLB URL for a canonical template ID, or null if invalid.
+ */
+export function getTemplateGlbUrl(templateId, isMale = false) {
   if (!templateId) return null;
-  const isValid =
-    AVAILABLE_TEMPLATES.includes(templateId) ||
-    CANONICAL_TEMPLATES.includes(templateId) ||
-    Boolean(CANONICAL_TEMPLATE_MAP[templateId]);
-  if (!isValid) return null;
-  if (typeof isMale === 'boolean') {
-    const genderDir = isMale ? 'male' : 'female';
-    const canonicalName = CANONICAL_TEMPLATE_MAP[templateId] || templateId;
-    return `/models/templates/${genderDir}/${canonicalName}.glb?v=canon20`;
-  }
-  return `/models/templates/${templateId}.glb?v=canon20`;
+  const canonical = CANONICAL_TEMPLATE_MAP[templateId] || templateId;
+  if (!AVAILABLE_TEMPLATES.includes(canonical)) return null;
+  const sexFolder = isMale ? 'male' : 'female';
+  return `/models/templates/${sexFolder}/${canonical}.glb?v=${TEMPLATE_CACHE_VERSION}`;
 }
 
 /**
- * Resolves the optimal 3D GLB template for a given wardrobe item.
+ * Resolves the best-matching canonical 3D template ID for core clothing slots,
+ * returning `null` for footwear and accessories so they always use fitted anatomical builders.
  */
 export function resolveGarmentTemplate({
   rawSlot = '',
   garmentText = '',
-  aspect = 0.55,
+  aspect = 0.75,
   slot = '',
   category = '',
 } = {}) {
-  const normSlot = String(rawSlot || slot || '').toLowerCase().trim();
-  const normCat = String(category || '').toLowerCase().trim();
-  const effectiveSlot = normSlot ||
-    (normCat === 'dresses' || normCat === 'dress' || normCat === 'שמלות' || normCat === 'שמלה' ? 'dress' : '') ||
-    (normCat === 'tops' || normCat === 'top' || normCat === 'חולצות' || normCat === 'חולצה' ? 'top' : '') ||
-    (normCat === 'bottoms' || normCat === 'bottom' || normCat === 'מכנסיים' || normCat === 'מכנס' ? 'bottom' : '') ||
-    (normCat === 'outerwear' || normCat === 'מעילים' || normCat === 'מעיל' ? 'outerwear' : '') ||
-    (normCat === 'shoes' || normCat === 'footwear' || normCat === 'נעליים' ? 'shoes' : '') ||
-    '';
+  const effectiveSlot = String(rawSlot || slot || '').toLowerCase().trim();
+  if (!effectiveSlot || PARAMETRIC_ONLY_SLOTS.has(effectiveSlot)) {
+    return null;
+  }
 
-  const fullText = `${slot} ${category} ${rawSlot} ${effectiveSlot} ${garmentText}`.toLowerCase();
-  const has = (...words) => words.some((w) => {
-    if (/^[a-z0-9_ -]+$/i.test(w)) {
-      const escaped = w.trim().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const reg = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
-      return reg.test(fullText);
+  const text = `${garmentText} ${category} ${slot}`.toLowerCase();
+  const has = (...words) => words.some((w) => text.includes(w));
+
+  // 1. DRESSES / FULL-BODY
+  if (effectiveSlot === 'dress') {
+    if (has('kaftan', 'caftan', 'abaya', 'קפטן', 'גלבי')) {
+      return 'kaftan';
     }
-    return fullText.includes(w.toLowerCase());
-  });
-
-  // 1. STANDALONE ACCESSORIES (Only when slot is accessory or explicit accessory slot)
-  const isAccessoryRole = ['belt', 'headwear', 'bag', 'accessory', 'scarf', 'jewelry', 'glasses'].includes(effectiveSlot);
-  if (effectiveSlot === 'belt' || (isAccessoryRole && has('belt', 'חגורה'))) {
-    return 'belt';
-  }
-  if (effectiveSlot === 'headwear' || (isAccessoryRole && has('hat', 'cap', 'beanie', 'fedora', 'beret', 'כובע', 'קסקט', 'מצחיה', 'מצחייה'))) {
-    if (has('cap', 'baseball', 'קסקט', 'מצחיה', 'מצחייה')) return 'hat_cap';
-    return 'hat_fedora';
-  }
-  if (effectiveSlot === 'bag' || (isAccessoryRole && has('bag', 'handbag', 'tote', 'crossbody', 'purse', 'clutch', 'תיק', 'ארנק'))) {
-    if (has('crossbody', 'shoulder', 'side', 'אלכסון', 'צד')) return 'bag_crossbody';
-    return 'bag_handbag';
-  }
-  if (effectiveSlot === 'glasses' || (isAccessoryRole && has('glasses', 'sunglasses', 'משקפיים', 'משקפי'))) {
-    return 'accessory_glasses';
-  }
-
-  // 2. FULL-BODY / ROBES / KAFTAN / GALABIYE (Only for dresses / outerwear / robes, never for tops/bottoms)
-  const isFullBodyRole = ['dress', 'fullbody', 'robe', 'one-piece', 'kaftan', 'outerwear'].includes(effectiveSlot);
-  if (
-    (isFullBodyRole || !effectiveSlot) &&
-    !['top', 'bottom', 'shoes'].includes(effectiveSlot) &&
-    has('kaftan', 'caftan', 'galabiye', 'galabeya', 'jalabiya', 'abaya', 'djellaba', 'thobe', 'robe', 'robes', 'כפתן', 'גלבייה', 'גלביה', 'עבאיה', 'חלוק')
-  ) {
-    return 'kaftan';
-  }
-
-  // 3. OUTERWEAR
-  if (effectiveSlot === 'outerwear') {
-    if (has('trench', 'טרנץ', "טרנץ'")) return 'trench_coat';
-    if (has('cardigan', 'קרדיגן')) return 'cardigan';
-    if (has('vest', 'וסט', 'אפודה')) return 'vest';
-    if (has('blazer', 'suit', 'בלייזר', 'מקטורן')) return 'jacket_blazer';
-    if (has('overcoat', 'coat', 'מעיל', 'מנטו', 'cappotto', 'abrigo', 'mantel', 'пальто', 'duster', 'parka')) {
-      return aspect <= 0.78 ? 'trench_coat' : 'coat';
-    }
-    if (has('jacket', 'זקט', 'גקט')) return 'top_outerwear_jacket';
-    return aspect <= 0.82 ? 'trench_coat' : 'top_outerwear_jacket';
-  }
-
-  // 4. DRESS
-  const isDressRole = ['dress', 'fullbody', 'one-piece'].includes(effectiveSlot);
-  if (
-    isDressRole ||
-    (!['top', 'bottom', 'shoes', 'outerwear', 'belt', 'headwear', 'bag', 'glasses'].includes(effectiveSlot) &&
-     !has('dress shirt') &&
-     has('שמלה', 'שמלת', 'dress', 'gown'))
-  ) {
-    if (has('strapless', 'tube', 'corset', 'bustier', 'bandeau', 'sweetheart', 'סטרפלס', 'קורסט', 'מחוך', 'בוסטייה', 'בנדו', 'טיוב')) {
+    if (has(
+      'strapless', 'tube', 'bandeau', 'bustier', 'corset', 'sweetheart',
+      'סטרפלס', 'בנדו', 'בוסטייה', 'קורסט', 'מחוך', 'sans bretelles', 'trägerlos'
+    )) {
       return 'dress_strapless';
     }
     return 'dress';
   }
 
-  // 4b. FOOTWEAR / SHOES
-  if (effectiveSlot === 'shoes') {
-    if (has('boot', 'boots', 'chelsea', 'מגף', 'מגפיים', 'מגפי')) return 'shoes_boots';
-    return 'shoes_sneakers';
-  }
-
-  // 5. BOTTOMS
+  // 2. BOTTOMS
   if (effectiveSlot === 'bottom') {
-    if (has('skirt', 'חצאית')) {
-      if (has('pencil', 'tight', 'straight', 'עיפרון', 'צמודה', 'ישרה')) return 'skirt_pencil';
-      return 'skirt_aline';
+    if (has('skirt', 'חצאית', 'jupe', 'falda', 'rock', 'gonna')) {
+      const isPencilOrStraight =
+        has(
+          'pencil', 'straight', 'bodycon', 'fitted', 'slim', 'mini', 'narrow', 'tube',
+          'עיפרון', 'ישרה', 'צמודה', 'מיני', 'קצרה'
+        ) &&
+        !has('pleated', 'plisse', 'a-line', 'aline', 'flared', 'skater', 'פליסה', 'מתרחבת', 'קפלים', 'פעמון');
+      if (isPencilOrStraight || aspect < 0.68) {
+        return 'skirt_pencil';
+      }
+      return 'bottom_skirt';
     }
-    if (has('short', 'shorts', 'שורט', 'שורטס', 'קצרים', 'מכנס קצר')) {
-      if (has('bermuda', 'ברמודה', 'עד הברך')) return 'bermuda';
-      return 'shorts';
-    }
-    if (has('bermuda', 'ברמודה')) {
+
+    if (has('bermuda', 'capri', 'pedal pusher', 'knee-length short', 'ברמודה', 'קפרי', 'שלושת רבעי')) {
       return 'bermuda';
     }
-    return 'pants';
+
+    if (has('shorts', 'short ', 'hotpants', 'booty short', 'שורטס', 'מכנסיים קצרים', 'מכנס קצר')) {
+      return 'bottom_shorts';
+    }
+
+    return 'bottom_trousers';
   }
 
-  // 6. TOPS
-  if (effectiveSlot === 'top' && has('strapless', 'tube', 'corset', 'bustier', 'bandeau', 'sweetheart', 'סטרפלס', 'קורסט', 'מחוך', 'בוסטייה', 'בנדו', 'טיוב')) {
-    return 'top_strapless';
+  // 3. OUTERWEAR
+  if (effectiveSlot === 'outerwear') {
+    // Sleeveless vest / waistcoat / gilet classified under outerwear
+    if (
+      has('vest', 'waistcoat', 'gilet', 'sleeveless jacket', 'ווסט', 'אפודה', 'שכמייה ללא שרוולים') &&
+      !has('long sleeve', 'שרוול ארוך')
+    ) {
+      return 'vest';
+    }
+    if (has('trench', 'טרנץ', 'gabardine', 'raincoat', 'מעיל גשם')) {
+      return 'trench_coat';
+    }
+    if (has('kaftan', 'kimono', 'robe', 'קפטן', 'קימונו', 'חלוק')) {
+      return 'kaftan';
+    }
+    if (has('overcoat', 'peacoat', 'parka', 'duster', 'coat', 'מעיל', 'manteau', 'mantel', 'abrigo')) {
+      return 'coat';
+    }
+    if (has('cardigan', 'קרדיגן', 'עליונית סרוגה')) {
+      return 'cardigan';
+    }
+    if (has('hoodie', 'קפוצ׳ון', "קפוצ'ון", 'סווטשירט קפוצ')) {
+      return 'hoodie';
+    }
+    if (has('blazer', 'suit jacket', 'sport coat', 'tuxedo', 'בלייזר', 'מקטורן', 'חליפה')) {
+      return 'jacket_blazer';
+    }
+    return 'top_outerwear_jacket';
   }
-  if (effectiveSlot === 'top' && has('tunic', 'טוניקה', 'kurta', 'קורטה')) return 'top_tunic';
+
+  // 4. TOPS
   if (effectiveSlot === 'top') {
-    if (has('tank', 'singlet', 'sleeveless', 'vest', 'camisole', 'גופיה', 'גופייה', 'גופית', 'גופיית', 'בלי שרוולים')) return 'singlet';
-    if (has('hoodie', 'sweatshirt', 'sweater', 'knit', 'pullover', 'fleece', 'סוודר', 'סווטשירט', "קפוצ'ון", 'סריג')) return 'hoodie';
-    if (has('long sleeve', 'long-sleeve', 'longsleeve', 'long-sleeved', 'long sleeved', 'long_sleeve', 'שרוול ארוך', 'שרוולים ארוכים')) return 'top_longsleeve';
-    if (has('button', 'collared', 'dress shirt', 'blouse', 'חולצה מכופתרת', 'מכופתרת', 'חולצה אלגנטית')) return 'shirt';
-    if (has('t-shirt', 'tshirt', 'tee', 'טי שירט', 'חולצת טי', 'חולצה קצרה', 'טריקו')) return 'tshirt';
-    return aspect < 0.70 ? 'shirt' : 'tshirt';
+    if (has('bandeau', 'בנדו')) {
+      return 'bandeau';
+    }
+    if (has('bustier', 'בוסטייה')) {
+      return 'bustier';
+    }
+    if (has('corset', 'קורסט', 'מחוך')) {
+      return 'corset';
+    }
+    if (has('strapless', 'tube top', 'tube ', 'סטרפלס', 'טיוב', 'sans bretelles', 'trägerlos')) {
+      return 'top_strapless';
+    }
+    if (has('vest', 'waistcoat', 'gilet', 'ווסט', 'אפודה')) {
+      return 'vest';
+    }
+    if (has('singlet', 'camisole', 'cami', 'spaghetti', 'halter', 'גופיית ספגטי', 'קמיסול', 'קולר')) {
+      return 'singlet';
+    }
+    if (has('tank', 'sleeveless', 'muscle tee', 'גופיה', 'גופייה', 'ללא שרוולים')) {
+      return 'tank';
+    }
+    if (has('hoodie', 'sweatshirt', 'קפוצ׳ון', "קפוצ'ון", 'סווטשירט')) {
+      return 'hoodie';
+    }
+    if (has('cardigan', 'קרדיגן')) {
+      return 'cardigan';
+    }
+    if (has('tunic', 'kurta', 'longline', 'טוניקה')) {
+      return 'top_tunic';
+    }
+    if (
+      has(
+        'dress shirt', 'button-down', 'button down', 'button-up', 'oxford', 'chambray',
+        'מכופתרת', 'חולצה מכופתרת', 'אוקספורד'
+      ) &&
+      !has('short sleeve', 'שרוול קצר', 'קצרה')
+    ) {
+      return 'shirt';
+    }
+    if (
+      has(
+        'long sleeve', 'long-sleeve', 'sweater', 'pullover', 'jumper', 'turtleneck', 'knit', 'blouse',
+        'שרוול ארוך', 'סוודר', 'סריג', 'גולף', 'חולצה ארוכה'
+      ) &&
+      !has('short sleeve', 'שרוול קצר')
+    ) {
+      return 'top_longsleeve';
+    }
+    return 'top_tshirt';
   }
 
   return null;

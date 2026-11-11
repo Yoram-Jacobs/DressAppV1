@@ -152,7 +152,7 @@ export function resolveFootwearSpec(garment) {
   const explicitHeel = Number(garment?.rawItem?.heel_height_cm || garment?.heel_height_cm);
   const explicitPlatform = Number(garment?.rawItem?.platform_height_cm || garment?.platform_height_cm);
 
-  const isAnkleBoot = has(/ankle\s*boot|bootie|chelsea|combat\s*boot|מגפונ|bottines?|stiefelette|botin|ботильон|短靴|ショートブーツ/);
+  const isAnkleBoot = has(/ankle\s*boot|bootie|chelsea|chukka|desert\s*boot|combat\s*boot|dr\.?\s*martens|מגפונ|צ['’׳]?לסי|צ['’׳]?אקה|קרסול|bottines?|stiefelette|botin|ботильон|челси|短靴|切尔西|ショートブーツ|サイドゴア/);
   const isBoot = !isAnkleBoot && has(/boots?\b|מגפ|bottes|stiefel|botas|stivali|сапог|靴子|ブーツ|جزمة/);
   const isSneaker = has(/sneaker|trainer|running|tennis\s*shoe|athletic|סניקרס|נעלי ספורט|basket|zapatilla|кроссовк|运动鞋|スニーカー/);
   const isSandal = has(/sandal|flip.?flop|slide|mule|סנדל|כפכפ|sandale|sandalia|сандал|凉鞋|サンダル|صندل/);
@@ -184,11 +184,12 @@ export function resolveFootwearSpec(garment) {
   let soleThickness = 0.016;
   if (isBoot) {
     kind = 'boot';
-    collar = 0.40;
-    soleThickness = isPlatform ? 0.038 : 0.020;
+    const isKneeHigh = has(/knee[-_\s]?high|over[-_\s]?the[-_\s]?knee|tall\s*boot|עד הברך|מעל הברך|מגפי עור|מגפיים גבוהים|גבוהים|bottes hautes|hohe stiefel|cuissardes|botas altas/);
+    collar = isKneeHigh ? 0.48 : 0.40;
+    soleThickness = isPlatform ? 0.038 : 0.022;
   } else if (isAnkleBoot) {
     kind = 'ankle_boot';
-    collar = 0.18;
+    collar = 0.135;
     soleThickness = isPlatform ? 0.038 : 0.020;
   } else if (isSneaker) {
     kind = 'sneaker';
@@ -565,28 +566,46 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
       }
     });
 
-    // Boot / Ankle-Boot / High-Top Shaft: tube following the lower leg up to the collar height
+    // Boot / Ankle-Boot / High-Top Shaft: sleek sculpted cuff following the lower leg up to the collar height
     if (s.kind === 'boot' || s.kind === 'ankle_boot') {
       const shaftStart = verts.length / 3;
       const ny = 14;
       const nTheta = 22;
-      const yStart = 0.055;
+      const yStart = 0.058;
       const yEnd = s.collar;
+      // Sleek ankle-hugging elastic gusset for ankle/Chelsea boots so trousers drape cleanly over the shaft without z-fighting
+      const shaftOff = s.kind === 'ankle_boot' ? 0.0015 : off * 1.15;
+      const fullBox = { u0: 0, u1: 1, v0: 0, v1: 1 };
+      const rawShaftBox = layout?.mode === 'pair' && layout?.boxes?.length === 2
+        ? (side < 0 ? layout.boxes[0] : layout.boxes[1])
+        : (layout?.mode === 'pair'
+          ? (side < 0 ? { u0: 0, u1: 0.5, v0: 0, v1: 1 } : { u0: 0.5, u1: 1, v0: 0, v1: 1 })
+          : (layout?.box || fullBox));
+      const uMid = (rawShaftBox.u0 + rawShaftBox.u1) * 0.5;
+      const uSpan = (rawShaftBox.u1 - rawShaftBox.u0) * 0.22;
+      const vLo = rawShaftBox.v0 + (rawShaftBox.v1 - rawShaftBox.v0) * 0.28;
+      const vHi = rawShaftBox.v0 + (rawShaftBox.v1 - rawShaftBox.v0) * 0.62;
       for (let i = 0; i <= ny; i++) {
         const vShaft = i / ny;
         const y = lerp(yStart, yEnd, vShaft);
         const sp = sampleProfile(a.shaft, 'y', y);
         // Padded top collar lip on the final 2 rings
-        const collarLip = vShaft > 0.85 ? 0.004 * ((vShaft - 0.85) / 0.15) : 0;
+        const collarLip = vShaft > 0.85 ? 0.0025 * ((vShaft - 0.85) / 0.15) : 0;
         for (let j = 0; j <= nTheta; j++) {
           const th = -Math.PI + (j / nTheta) * Math.PI * 2;
-          const x = side * sp.cx + (sp.rx + off + collarLip) * Math.sin(th);
-          const z = sp.cz + (sp.rz + off + collarLip) * Math.cos(th);
+          const x = side * sp.cx + (sp.rx + shaftOff + collarLip) * Math.sin(th);
+          const z = sp.cz + (sp.rz + shaftOff + collarLip) * Math.cos(th);
           verts.push(x, y, z);
           if (layout?.mode === 'side') {
-            uvs.push(0.5 + Math.sin(th) * 0.2, Math.min(0.98, 0.3 + (y / yEnd) * 0.66));
+            uvs.push(
+              Math.max(0.05, Math.min(0.95, uMid + Math.sin(th) * uSpan)),
+              Math.min(0.95, Math.max(0.08, vLo + vShaft * (vHi - vLo)))
+            );
           } else {
-            uvs.push(layout?.solidU ?? 0.5, layout?.solidV ?? 0.5);
+            uvs.push(
+              Math.max(0.05, Math.min(0.95, uMid + Math.sin(th) * uSpan)),
+              Math.min(0.95, Math.max(0.08, lerp(vLo, vHi, vShaft)))
+            );
           }
         }
       }

@@ -1691,7 +1691,7 @@ def build_footwear_template(avatar_data, variant="sneakers"):
 
     z_sole_bottom = 0.0
     z_sole_top = 0.024
-    z_top = (0.095 if variant == "sneakers" else 0.280)
+    z_top = (0.095 if variant == "sneakers" else 0.480)
     n_seg = 20
 
     # Ring profile from Z=0 (sole bottom) up to z_top
@@ -1706,16 +1706,18 @@ def build_footwear_template(avatar_data, variant="sneakers"):
             (0.095, 0.72, 0.52, False),  # Low-top sneaker collar (nests inside trousers cuff)
         ]
     else:
-        # Boots: shaft extends to Z=0.28m with +0.015m radial offset so boot shaft envelopes trousers hem!
+        # Boots: shaft extends to Z=0.48m (knee-high) with radial offset so boot shaft envelopes trousers/calf!
         z_levels = [
             (0.000, 1.08, 1.08, True),   # Sole bottom (Rigid)
             (0.014, 1.08, 1.08, True),   # Sole mid (Rigid)
             (0.028, 1.05, 1.05, True),   # Sole top welt (Rigid)
             (0.055, 0.98, 0.96, False),  # Vamp / instep
             (0.095, 0.96, 0.72, False),  # Ankle
-            (0.150, 0.98, 0.74, False),  # Lower shin (envelopes trousers)
-            (0.215, 0.96, 0.72, False),  # Mid shin
-            (0.280, 1.00, 0.74, False),  # High boot collar
+            (0.150, 0.98, 0.74, False),  # Lower shin
+            (0.240, 0.96, 0.72, False),  # Mid calf
+            (0.340, 0.98, 0.76, False),  # Upper calf
+            (0.420, 1.00, 0.78, False),  # Lower knee
+            (0.480, 1.02, 0.80, False),  # Knee-high boot collar
         ]
 
     for side_idx, side in enumerate((-1.0, 1.0)):
@@ -1838,8 +1840,14 @@ def build_dress_template(avatar_data, variant="dress"):
         if to_del:
             bmesh.ops.delete(bm, geom=to_del, context='VERTS')
 
-        # Delete any stray arm/hand vertices (|x| > 0.18 at any height)
-        stray_arm_verts = [v for v in bm.verts if abs(v.co.x) > 0.18 and v.co.z >= z_hip]
+        # Delete any stray arm/hand vertices (strictly above underarm fold or wide lateral arms)
+        # Never delete flank or hip vertices (|x| <= 0.24, z < 1.18) so torso stays 100% closed!
+        z_axilla_fold = 1.18 if is_male else 1.14
+        stray_arm_verts = [
+            v for v in bm.verts
+            if (abs(v.co.x) > 0.185 and v.co.z >= z_axilla_fold)
+            or (abs(v.co.x) > 0.280 and v.co.z >= z_hip)
+        ]
         if stray_arm_verts:
             bmesh.ops.delete(bm, geom=stray_arm_verts, context='VERTS')
     else:

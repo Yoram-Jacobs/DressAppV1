@@ -100,13 +100,22 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       continue;
     }
 
-    // 1. Foot enclosure under shoes: retract foot & sole surface inward toward foot core
-    if (hasShoes && y < 0.088) {
+    // 1. Foot, toe, and boot-shaft enclosure under shoes: strongly retract covered foot & toes inward into shoe core,
+    // and for boots, retract calf skin within the shaft so skin never pokes through footwear!
+    const shoeCollarY = Math.max(0.128, Number(coveredZones?.shoeCollar) || 0.128);
+    if (hasShoes && y < shoeCollarY) {
       const sign = x < 0 ? -1 : 1;
-      const cx = sign * footCx;
-      arr[idx] = cx + (x - cx) * 0.82;
-      arr[idx + 1] = Math.max(-0.002, y * 0.94);
-      arr[idx + 2] = footCz + (z - footCz) * 0.84;
+      if (y < 0.128) {
+        const cx = sign * footCx;
+        arr[idx] = cx + (x - cx) * 0.50;
+        arr[idx + 1] = Math.max(0.003, y * 0.65);
+        arr[idx + 2] = footCz + (z - footCz) * 0.50;
+      } else {
+        const legCx = sign * (isMale ? 0.145 : 0.160);
+        const legCz = 0.025;
+        arr[idx] = legCx + (x - legCx) * 0.88;
+        arr[idx + 2] = legCz + (z - legCz) * 0.88;
+      }
       continue;
     }
 
@@ -131,11 +140,11 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const cz = 0.020;
         const wVertical = hasBottom || hasDress ? 1.0 : Math.max(0, Math.min(1, (y - minTorsoY) / 0.08));
         const wTorso = wVertical * armBlend;
-        arr[idx] = x * (1 - 0.040 * wTorso);
+        arr[idx] = x * (1 - 0.075 * wTorso);
         if (y > 1.34 && absX >= minNeckAbsX) {
-          arr[idx + 1] = y - 0.005 * wTorso;
+          arr[idx + 1] = y - 0.008 * wTorso;
         }
-        arr[idx + 2] = cz + (z - cz) * (1 - 0.045 * wTorso);
+        arr[idx + 2] = cz + (z - cz) * (1 - 0.080 * wTorso);
       }
     }
 
@@ -144,33 +153,37 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     // and underarm skin never poke through sleeve seams or armpit cloth!
     const isSleeveless = Boolean(coveredZones?.isSleeveless);
     if ((hasTop || hasOuterwear || hasDress) && !isSleeveless) {
-      const yArmMin = isMale ? 0.975 : 0.895;
+      const yArmMin = isMale ? 0.995 : 0.925;
       const yArmMax = isMale ? 1.48 : 1.42;
-      const armCutInner = isMale ? 0.22 : 0.19;
-      const armCutOuter = isMale ? 0.32 : 0.29;
+      const armCutInner = isMale ? 0.20 : 0.175;
+      const armCutOuter = isMale ? 0.30 : 0.27;
       if (y >= yArmMin && y <= yArmMax && absX >= armCutInner) {
         const sign = x < 0 ? -1 : 1;
-        const xSh = isMale ? 0.220 : 0.192;
-        const ySh = isMale ? 1.480 : 1.420;
-        const zSh = isMale ? -0.004 : 0.012;
-        const xWr = isMale ? 0.465 : 0.410;
-        const yWr = isMale ? 0.975 : 0.895;
-        const zWr = isMale ? 0.028 : 0.018;
+        const xSh = isMale ? 0.215 : 0.188;
+        const ySh = isMale ? 1.460 : 1.400;
+        const zSh = isMale ? -0.004 : 0.010;
+        const xWr = isMale ? 0.425 : 0.372;
+        const yWr = isMale ? 1.035 : 0.960;
+        const zWr = isMale ? 0.018 : 0.010;
 
         const tArm = Math.max(0, Math.min(1, (ySh - y) / Math.max(0.01, ySh - yWr)));
         const armBoneX = sign * (xSh + tArm * (xWr - xSh));
         const armBoneZ = zSh + tArm * (zWr - zSh);
 
-        // Smooth cosine falloff near the wrist hem so bare hands/wrists transition seamlessly
-        const tWristFalloff = Math.max(0, Math.min(1, (y - yArmMin) / 0.04));
+        // Smooth cosine falloff near the sleeve cuff / wrist hem so bare hands/wrists transition seamlessly
+        const sleeveMaxAbsX = Number.isFinite(coveredZones?.sleeveMaxX)
+          ? coveredZones.sleeveMaxX
+          : (isMale ? 0.43 : 0.38);
+        const tXFalloff = Math.max(0, Math.min(1, (sleeveMaxAbsX - absX) / 0.045));
+        const tWristFalloff = Math.max(0, Math.min(1, (y - yArmMin) / 0.04)) * tXFalloff;
         const sWrist = tWristFalloff * tWristFalloff * (3 - 2 * tWristFalloff);
 
         const dxBone = x - armBoneX;
         const dzBone = z - armBoneZ;
         const rBone = Math.hypot(dxBone, dzBone);
-        if (rBone > 0.002) {
+        if (rBone > 0.002 && sWrist > 0) {
           const tArmBlend = Math.min(1.0, Math.max(0.0, (absX - armCutInner) / (armCutOuter - armCutInner)));
-          const shrink = 0.045 * sWrist * tArmBlend;
+          const shrink = 0.095 * sWrist * tArmBlend;
           arr[idx] = armBoneX + dxBone * (1 - shrink);
           arr[idx + 2] = armBoneZ + dzBone * (1 - shrink);
         }
@@ -181,57 +194,75 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     // Retracts underarm skin fold deep into the torso core so armpit skin NEVER pokes
     // through sleeve seams or the underarm fabric fold!
     if ((hasTop || hasOuterwear || hasDress) && !isSleeveless) {
-      const yAxillaMin = isMale ? 1.16 : 1.12;
-      const yAxillaMax = isMale ? 1.36 : 1.32;
-      const xAxillaMin = isMale ? 0.16 : 0.14;
-      const xAxillaMax = isMale ? 0.28 : 0.25;
+      const yAxillaMin = isMale ? 1.13 : 1.09;
+      const yAxillaMax = isMale ? 1.40 : 1.35;
+      const xAxillaMin = isMale ? 0.09 : 0.07;
+      const xAxillaMax = isMale ? 0.30 : 0.26;
       if (y >= yAxillaMin && y <= yAxillaMax && absX >= xAxillaMin && absX <= xAxillaMax) {
         const tY = Math.sin(Math.PI * (y - yAxillaMin) / (yAxillaMax - yAxillaMin));
         const tX = Math.sin(Math.PI * (absX - xAxillaMin) / (xAxillaMax - xAxillaMin));
-        const wAxilla = tY * tX;
-        const cz = 0.020;
-        // Pull inward in X toward centerline and slightly toward torso core in Z
-        arr[idx] = x * (1 - 0.055 * wAxilla);
-        arr[idx + 2] = cz + (z - cz) * (1 - 0.050 * wAxilla);
+        const wAxilla = Math.sqrt(Math.max(0, tY * tX));
+        const cz = 0.015;
+        // Pull inward in X toward centerline, slightly up into shoulder socket, and toward torso core in Z
+        arr[idx] = arr[idx] * (1 - 0.22 * wAxilla);
+        arr[idx + 1] = arr[idx + 1] + 0.018 * wAxilla;
+        arr[idx + 2] = cz + (arr[idx + 2] - cz) * (1 - 0.20 * wAxilla);
+      }
+    }
+
+    // 2d. Upper back / cervical spine skin under crew neck / collar:
+    if ((hasTop || hasOuterwear || hasDress) && !isStrapless) {
+      const yNeckMin = isMale ? 1.38 : 1.34;
+      const yNeckMax = isMale ? 1.52 : 1.46;
+      if (y >= yNeckMin && y <= yNeckMax && absX <= 0.085 && z < 0.030) {
+        const wNeck = Math.sin(Math.PI * (y - yNeckMin) / (yNeckMax - yNeckMin));
+        arr[idx + 2] = arr[idx + 2] + 0.010 * wNeck;
+        arr[idx] = arr[idx] * (1 - 0.08 * wNeck);
       }
     }
 
     // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress / top:
-    // Smooth lateral cosine falloff eliminates thigh/hip skin poking through tunics, dresses or bottoms.
-    const minBottomY = hasBottom ? 0.12 : (hasDress ? 0.32 : (hasTop ? 0.74 : 0.74));
+    // Length-aware vertical cutoff (bottomMinY) keeps bare knees/shins untouched under mini skirts & shorts,
+    // while retracting full legs under trousers/jeans so outer thigh & calf skin never pokes through!
+    const resolvedBottomMinY = Number.isFinite(coveredZones?.bottomMinY)
+      ? coveredZones.bottomMinY
+      : (hasBottom ? 0.11 : (hasDress ? 0.46 : 0.86));
+    const minBottomY = (hasBottom || hasDress) ? resolvedBottomMinY : 0.86;
     const maxBottomY = isMale ? 1.08 : 1.05;
     if ((hasBottom || hasDress || hasTop) && y >= minBottomY && y <= maxBottomY) {
-      const hipCutInner = isMale ? 0.19 : 0.18;
-      const hipCutOuter = isMale ? 0.29 : 0.27;
+      // Below y = 0.80, hands are out at absX >= 0.36, so ALL vertices with absX <= 0.26 are 100% leg skin!
+      const hipCutInner = y < 0.80 ? 0.25 : (isMale ? 0.22 : 0.205);
+      const hipCutOuter = y < 0.80 ? 0.31 : (isMale ? 0.29 : 0.27);
       const hipBlend = absX <= hipCutInner
         ? 1.0
         : (absX >= hipCutOuter ? 0.0 : 0.5 * (1 + Math.cos(Math.PI * (absX - hipCutInner) / (hipCutOuter - hipCutInner))));
 
       if (hipBlend > 1e-4) {
         const sign = x < 0 ? -1 : 1;
-        // When bottom or dress is worn, full retraction applies up to maxBottomY (waistband)
         const wTop = (hasBottom || hasDress || hasTop || hasOuterwear)
           ? 1.0
           : Math.max(0, Math.min(1, (maxBottomY - y) / 0.04));
-        const wBot = Math.max(0, Math.min(1, (y - minBottomY) / 0.05));
+        const wBot = Math.max(0, Math.min(1, (y - minBottomY) / 0.045));
         const w = wTop * wBot * hipBlend;
 
         // Above crotch (y >= 0.82), retract toward pelvis center (0, 0.020).
-        // Below crotch (y < 0.82), retract each leg toward its own bone axis (sign * legCx, legCz).
-        const legBlend = Math.max(0, Math.min(1, (0.82 - y) / 0.08));
+        // Below crotch (y < 0.82), retract each leg radially toward its anatomical bone axis (sign * legCx, legCz).
+        const legBlend = Math.max(0, Math.min(1, (0.82 - y) / 0.07));
         const tLeg = Math.max(0, Math.min(1, (0.80 - y) / 0.66));
         const legCx = isMale
-          ? 0.095 + tLeg * (0.145 - 0.095)
-          : 0.095 + tLeg * (0.166 - 0.095);
+          ? 0.098 + tLeg * (0.148 - 0.098)
+          : 0.096 + tLeg * (0.166 - 0.096);
         const legCz = isMale
-          ? (y >= 0.52 ? 0.035 : -0.020)
-          : (y >= 0.50 ? 0.035 : 0.010);
+          ? (y >= 0.52 ? 0.032 : -0.022)
+          : (y >= 0.50 ? 0.034 : 0.010);
         const cx = sign * legCx * legBlend;
         const cz = 0.020 * (1 - legBlend) + legCz * legBlend;
-        const isBack = z < cz;
-        const scale = (isBack && (hasBottom || hasDress)) ? (1 - 0.110 * w) : (1 - 0.038 * w);
-        arr[idx] = cx + (x - cx) * (1 - 0.038 * w);
-        arr[idx + 2] = cz + (z - cz) * scale;
+        const isLegOrBottom = hasBottom || hasDress;
+        const isKneeZone = y >= 0.44 && y <= 0.58;
+        const shrinkX = isLegOrBottom ? (isKneeZone ? 0.18 : 0.145) : 0.055;
+        const shrinkZ = isLegOrBottom ? (isKneeZone ? 0.24 : 0.155) : 0.055;
+        arr[idx] = cx + (x - cx) * (1 - shrinkX * w);
+        arr[idx + 2] = cz + (z - cz) * (1 - shrinkZ * w);
       }
     }
   }
@@ -319,15 +350,40 @@ export default function AvatarMesh3D({
         node.geometry.dispose?.();
         node.geometry = original;
       }
+      const matName = Array.isArray(node.material)
+        ? node.material.map((m) => m?.name).join(' ')
+        : (node.material?.name || '');
+      const isUnderwearNode = Boolean(
+        (matName && matName.includes('generic')) ||
+        (node.name && (node.name.endsWith('_1') || node.name.includes('generic')))
+      );
+      if (isUnderwearNode) {
+        const hideUnderwearCompletely = isMale
+          ? Boolean(coveredZones?.hasBottom || coveredZones?.hasDress)
+          : Boolean(
+              coveredZones?.hasDress ||
+              (coveredZones?.hasBottom && (coveredZones?.hasTop || coveredZones?.hasOuterwear))
+            );
+        node.visible = !hideUnderwearCompletely;
+        if (hideUnderwearCompletely) return;
+      }
+      const isNailsNode = Boolean(
+        (matName && matName.includes('nails')) ||
+        (node.name && node.name.includes('nails'))
+      );
+      if (isNailsNode && coveredZones?.hasShoes) {
+        if (!original.boundingBox) original.computeBoundingBox?.();
+        if (original.boundingBox && original.boundingBox.max.y < 0.25) {
+          node.visible = false;
+          return;
+        }
+      }
       if (!footPose?.active && !hasCoverage) return;
       if (!original.boundingBox) original.computeBoundingBox?.();
       // Skip hair/head-only meshes located high above the shoulders unless a hat is worn (crown collision mask)
       if (original.boundingBox && original.boundingBox.min.y > 1.42 && !coveredZones?.hasHeadwear) return;
       let nextGeo = original.clone();
       if (hasCoverage) {
-        const matName = Array.isArray(node.material)
-          ? node.material.map((m) => m?.name).join(' ')
-          : (node.material?.name || '');
         nextGeo = retractCoveredAvatarSkin(nextGeo, coveredZones, isMale, node.name, matName);
       }
       if (footPose?.active && (!original.boundingBox || original.boundingBox.min.y <= 0.2)) {
