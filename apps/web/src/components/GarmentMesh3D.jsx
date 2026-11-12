@@ -3973,7 +3973,7 @@ function GarmentTemplateMeshInner({
     const isUntuckedTopOverBottom = rawSlot === 'top' && hasBottom && !hasOuterwear && !shouldTuck && !/(?:\btuck|bodysuit|בגד גוף\b)/i.test(garmentText);
     const baseSlotBoost = rawSlot === 'outerwear'
       ? (hasBottom ? 0.0175 : 0.0085)
-      : (isInnerTopUnderOuterwear || shouldTuck ? -0.0035 : (isUntuckedTopOverBottom ? 0.0085 : 0));
+      : (isUntuckedTopOverBottom ? 0.0085 : (rawSlot === 'top' ? 0.0020 : 0));
     const radialBoost = baseSlotBoost + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
     if (geo && geo.attributes?.position && Math.abs(radialBoost) > 1e-5) {
       const pos = geo.attributes.position;
@@ -4006,18 +4006,24 @@ function GarmentTemplateMeshInner({
             ? (y >= 1.26 ? Math.max(0.215, 0.284 - (y - 1.26) * 0.95) : 0.284 + (1.26 - y) * 0.580)
             : (y >= 1.22 ? Math.max(0.165, 0.211 - (y - 1.22) * 1.10) : 0.211 + (1.22 - y) * 0.628);
           const armCz = isMale ? 0.004 : 0.008;
-          const sleeveBoost = (rawSlot === 'outerwear' ? 0.0080 : (isInnerTopUnderOuterwear || shouldTuck ? -0.0040 : 0.0020)) +
+          const sleeveBoost = (rawSlot === 'outerwear' ? 0.0080 : 0.0025) +
             (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
 
           const torsoCz = getTorsoSlice(Math.max(0.5, y), isMale).cz || 0;
+          const yTuckThresh = isMale ? 1.085 : 1.045;
           let torsoBoost;
-          if (isInnerTopUnderOuterwear || shouldTuck) {
-            const isFrontPlacket = Math.abs(x) <= 0.10 && y >= 1.12 && z > torsoCz;
-            torsoBoost = (isFrontPlacket ? 0.0010 : -0.0035) + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
-          } else {
+          if (rawSlot === 'outerwear') {
             const hipWeight = Math.max(0, Math.min(1, (1.24 - y) / 0.16));
-            const upperTorsoBoost = (rawSlot === 'outerwear' ? 0.0075 : 0.0025) + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
-            torsoBoost = upperTorsoBoost + (radialBoost - upperTorsoBoost) * hipWeight;
+            torsoBoost = 0.0075 + (radialBoost - 0.0075) * hipWeight;
+          } else if (shouldTuck && y <= yTuckThresh) {
+            // Tucked waist/hem gently compresses to stay inside trousers waistband without penetrating skin
+            const tTuck = Math.min(1.0, Math.max(0.0, (yTuckThresh - y) / 0.07));
+            torsoBoost = (0.0025 * (1.0 - tTuck) + 0.0008 * tTuck) + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
+          } else if (isUntuckedTopOverBottom) {
+            const hipWeight = Math.max(0, Math.min(1, (1.24 - y) / 0.16));
+            torsoBoost = 0.0025 + (radialBoost - 0.0025) * hipWeight;
+          } else {
+            torsoBoost = 0.0025 + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
           }
 
           cx = (1 - wArm) * 0 + wArm * (side * armCx);
@@ -4544,8 +4550,8 @@ export function GarmentMeshCore({
       alphaTest: isOpaqueSlot ? 0 : 0.02,
       depthWrite: true,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? 1 : -1))),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? 1 : -1))),
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? -1 : -2))),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? -1 : -2))),
     };
     const frontMap = (rawSlot === 'shoes'
       ? (filledTexture || opaqueTexture || texture)

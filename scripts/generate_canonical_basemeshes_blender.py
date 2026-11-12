@@ -367,32 +367,44 @@ def drape_garment_shell(
                     w_glute = 0.88 * t_x_glute
                     v.co.y = v.co.y * (1.0 - w_glute) + y_cleft_bridge * w_glute
 
-        # 5. Tailored Cylindrical Trouser / Short Legs (eliminates kneecap bumps, calf bulges, and thigh hollows)
-        if style == "bottom" and z < (z_crotch - 0.015):
-            side = 1.0 if x >= 0.0 else -1.0
-            leg_sl = measure_leg_slice(av_verts, z)
-            t_leg = min(1.0, max(0.0, ((z_crotch - 0.015) - z) / max(0.10, (z_crotch - 0.015) - z_hem)))
-            rx_col_top = thigh_sl["rx"] + offset + 0.005
-            ry_col_top = thigh_sl["ry"] + offset + 0.006
-            rx_col_bot = max(ankle_sl["rx"], knee_sl["rx"] * 0.88) + offset + 0.012
-            ry_col_bot = max(ankle_sl["ry"], knee_sl["ry"] * 0.90) + offset + 0.012
-            rx_col = rx_col_top * (1.0 - t_leg) + rx_col_bot * t_leg
-            ry_col = ry_col_top * (1.0 - t_leg) + ry_col_bot * t_leg
+        # 5. Tailored Trouser / Short Legs: continuous drape from gluteus apex down the posterior leg,
+        # completely eliminating the abrupt 4.4cm step below the pelvis!
+        if style == "bottom":
+            z_glute_apex = 0.88 if is_male else 0.84
+            # Smooth posterior drape below glute apex:
+            # Replaces the abrupt 4.4cm inward step with a natural vertical cloth drape line down the hamstrings
+            if y > 0.01 and 0.49 <= z < z_glute_apex:
+                t_drop = (z_glute_apex - z) / (z_glute_apex - 0.49)
+                y_knee_back = knee_sl["cy"] + knee_sl["ry"] + offset + 0.008
+                y_straight_drape = y_glute_peak * (1.0 - t_drop * 0.65) + y_knee_back * (t_drop * 0.65)
+                if v.co.y < y_straight_drape:
+                    blend_drape = min(0.75, t_drop * 0.85)
+                    v.co.y = v.co.y * (1.0 - blend_drape) + y_straight_drape * blend_drape
 
-            cx_leg = side * leg_sl["cx"]
-            cy_leg = leg_sl["cy"]
-            dx_l = v.co.x - cx_leg
-            dy_l = v.co.y - cy_leg
-            is_inner_seam = (side * dx_l < 0.0) and (z > z_crotch - 0.14)
-            theta_l = math.atan2(dy_l, dx_l)
-            target_dx = (abs(dx_l) * (-side) if is_inner_seam else rx_col * math.cos(theta_l))
-            target_dy = ry_col * math.sin(theta_l)
-            cur_r = math.hypot(dx_l, dy_l)
-            tar_r = math.hypot(target_dx, target_dy)
-            if tar_r > cur_r:
-                blend_leg = 0.72 * min(1.0, (z_crotch - z) / 0.06)
-                v.co.x = cx_leg + dx_l * (1.0 - blend_leg) + target_dx * blend_leg
-                v.co.y = cy_leg + dy_l * (1.0 - blend_leg) + target_dy * blend_leg
+            # Below knee: clean cylindrical column down to ankles
+            if z < 0.49:
+                side = 1.0 if x >= 0.0 else -1.0
+                leg_sl = measure_leg_slice(av_verts, z)
+                t_shin = min(1.0, max(0.0, (0.49 - z) / max(0.10, 0.49 - z_hem)))
+                rx_col = knee_sl["rx"] * (1.0 - t_shin * 0.20) + offset + 0.008
+                ry_col = knee_sl["ry"] * (1.0 - t_shin * 0.20) + offset + 0.008
+                cx_leg = side * leg_sl["cx"]
+                cy_leg = leg_sl["cy"]
+                dx_l = v.co.x - cx_leg
+                dy_l = v.co.y - cy_leg
+                cur_r = math.hypot(dx_l, dy_l)
+                theta_l = math.atan2(dy_l, dx_l)
+                tar_r = math.hypot(rx_col * math.cos(theta_l), ry_col * math.sin(theta_l))
+                if tar_r > cur_r:
+                    blend_shin = 0.50 * t_shin
+                    v.co.x = cx_leg + dx_l * (1.0 - blend_shin) + rx_col * math.cos(theta_l) * blend_shin
+                    v.co.y = cy_leg + dy_l * (1.0 - blend_shin) + ry_col * math.sin(theta_l) * blend_shin
+
+            # Flare lower cuff over footwear below z = 0.22
+            if z < 0.22:
+                t_cuff = min(1.0, max(0.0, (0.22 - z) / 0.12))
+                v.co.x += (0.012 * t_cuff) * (1.0 if x > 0 else -1.0)
+                v.co.y += (0.008 * t_cuff) * (1.0 if y > 0 else -1.0)
 
     # 6. Iterative Cloth-Tension Laplacian Relaxation + Monotonic Outward Skin Clearance Floor
     # Never pushes any vertex closer to the avatar skin than its initial offset position!
@@ -448,30 +460,34 @@ def drape_garment_shell(
                 dot_l = (co - wrist_l_cuff).dot(arm_dir_l_cuff)
                 if dot_l > 0.0:
                     co = co - dot_l * arm_dir_l_cuff
-            # Enforce strict BVHTree avatar skin clearance floor outside armhole/crotch bifurcations.
-            # For tops and dresses below z=0.91, the central corridor (|x| <= 0.125) bridges across the legs
-            # and must never snap to the avatar's crotch or inner-thigh walls!
+            # Enforce strict BVHTree avatar skin clearance floor
             is_bifurcation_zone = (
                 (abs(co.x) <= 0.055 and 0.72 <= co.z <= 0.88)
                 or (style in ("top", "dress") and co.z < 0.91 and abs(co.x) <= 0.125)
             )
-            if not is_bifurcation_zone and not is_r_cuff and not is_l_cuff:
+            if not is_r_cuff and not is_l_cuff:
                 loc, norm, _idx, dist = bvh.find_nearest(co)
                 if loc is not None and norm is not None:
                     vec_from_skin = co - loc
                     signed_d = vec_from_skin.dot(norm)
-                    if signed_d < min_skin_clearance:
-                        if style in ("top", "dress") and co.z < 0.91:
-                            # Below the hip line on tops/dresses, push strictly outward in XY only (never inward toward x=0 or vertically in Z)
-                            nx_out = norm.x if (co.x * norm.x >= 0.0) else 0.0
-                            ny_out = norm.y
-                            n_len = math.hypot(nx_out, ny_out)
-                            if n_len > 1e-4:
-                                delta_d = min_skin_clearance - signed_d
-                                co.x += (nx_out / n_len) * delta_d
-                                co.y += (ny_out / n_len) * delta_d
-                        else:
+                    if style == "bottom":
+                        # Strictly enforce positive skin clearance for bottom garments on the same leg,
+                        # guaranteeing zero skin poke-through on inner/anterior thighs and groin!
+                        if (loc.x * co.x >= 0.0) and signed_d < min_skin_clearance:
                             co = loc + norm * min_skin_clearance
+                    elif not is_bifurcation_zone:
+                        if signed_d < min_skin_clearance:
+                            if style in ("top", "dress") and co.z < 0.91:
+                                # Below the hip line on tops/dresses, push strictly outward in XY only (never inward toward x=0 or vertically in Z)
+                                nx_out = norm.x if (co.x * norm.x >= 0.0) else 0.0
+                                ny_out = norm.y
+                                n_len = math.hypot(nx_out, ny_out)
+                                if n_len > 1e-4:
+                                    delta_d = min_skin_clearance - signed_d
+                                    co.x += (nx_out / n_len) * delta_d
+                                    co.y += (ny_out / n_len) * delta_d
+                            else:
+                                co = loc + norm * min_skin_clearance
             if is_hem_vert:
                 co.z = z_hem
             v.co = co
@@ -993,10 +1009,10 @@ def build_top_template(avatar_data, variant="tshirt"):
     neck_tilt = -0.22
 
     if variant == "tshirt":
-        offset = 0.0070
+        offset = 0.0080
         z_neck = 1.534 if is_male else 1.436
-        z_hem = 0.88 if is_male else 0.84
-        x_arm_max = 0.260 if is_male else 0.230
+        z_hem = 0.85 if is_male else 0.82
+        x_arm_max = 0.340 if is_male else 0.300
         sleeve_type = "short"
         neck_tilt = -0.32 if is_male else -0.30
     elif variant == "singlet":
@@ -1142,31 +1158,29 @@ def build_top_template(avatar_data, variant="tshirt"):
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "short":
-        # Short sleeve ending midway (50%) between shoulder point (acromion) and elbow joint.
-        # Restrict bisect geometry strictly to the upper-arm zone (z > z_arm_cut_min) so the
-        # angled cuff plane never reaches down to slice the lateral hip ring at z_hip_cut!
-        arm_dir_r = Vector((0.581, 0.0, -0.814)).normalized() if is_male else Vector((0.526, 0.0, -0.850)).normalized()
-        cuff_r = Vector((x_arm_max, 0.0, 1.290 if is_male else 1.180))
-        x_cut_min = 0.190 if is_male else 0.172
-        z_arm_cut_min = 1.14 if is_male else 1.06
+        # Short sleeve extending along true upper arm axis down the bicep
+        arm_axis_r = Vector((0.4642, -0.0137, -0.8856)).normalized() if is_male else Vector((0.4506, 0.0464, -0.8915)).normalized()
+        cuff_z = 1.20 if is_male else 1.15
+        cuff_r = Vector((x_arm_max, 0.003, cuff_z))
+        x_cut_min = 0.20 if is_male else 0.18
 
         # Right arm
         r_geom = (
-            [v for v in bm.verts if v.co.x > x_cut_min and v.co.z > z_arm_cut_min]
-            + [e for e in bm.edges if all(v.co.x > x_cut_min and v.co.z > z_arm_cut_min for v in e.verts)]
-            + [f for f in bm.faces if all(v.co.x > x_cut_min and v.co.z > z_arm_cut_min for v in f.verts)]
+            [v for v in bm.verts if v.co.x > x_cut_min]
+            + [e for e in bm.edges if all(v.co.x > x_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x > x_cut_min for v in f.verts)]
         )
-        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=cuff_r, plane_no=arm_dir_r, clear_outer=True)
+        bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=cuff_r, plane_no=arm_axis_r, clear_outer=True)
 
         # Left arm
-        arm_dir_l = Vector((-arm_dir_r.x, arm_dir_r.y, arm_dir_r.z))
+        arm_axis_l = Vector((-arm_axis_r.x, arm_axis_r.y, arm_axis_r.z))
         cuff_l = Vector((-cuff_r.x, cuff_r.y, cuff_r.z))
         l_geom = (
-            [v for v in bm.verts if v.co.x < -x_cut_min and v.co.z > z_arm_cut_min]
-            + [e for e in bm.edges if all(v.co.x < -x_cut_min and v.co.z > z_arm_cut_min for v in e.verts)]
-            + [f for f in bm.faces if all(v.co.x < -x_cut_min and v.co.z > z_arm_cut_min for v in f.verts)]
+            [v for v in bm.verts if v.co.x < -x_cut_min]
+            + [e for e in bm.edges if all(v.co.x < -x_cut_min for v in e.verts)]
+            + [f for f in bm.faces if all(v.co.x < -x_cut_min for v in f.verts)]
         )
-        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=cuff_l, plane_no=arm_dir_l, clear_outer=True)
+        bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=cuff_l, plane_no=arm_axis_l, clear_outer=True)
     elif sleeve_type == "strapless":
         # Anatomical sweetheart strapless neckline:
         # Curves over bust in front (Z=1.330 M / 1.275 F), dips smoothly below axilla on flanks (Z=1.230 M / 1.182 F),
@@ -1209,16 +1223,53 @@ def build_top_template(avatar_data, variant="tshirt"):
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
     # 3. Precision Curved Collar / Strapless Cut (cuts only the neck opening or bustline while preserving 100% of body)
-    if variant != "strapless":
+    if variant == "tshirt":
+        # Precision Crew Neck Collar: cut only inside neck cylinder (|x| <= rx_neck), NEVER slicing shoulders!
+        rx_neck = 0.082 if is_male else 0.076
+        ry_front = 0.090 if is_male else 0.082
+        ry_back = 0.080 if is_male else 0.074
+        z_collar_front = 1.470 if is_male else 1.390
+        z_collar_back = 1.520 if is_male else 1.435
+
+        del_neck = []
+        for f in bm.faces:
+            zs = [v.co.z for v in f.verts]
+            ys = [v.co.y for v in f.verts]
+            xs = [v.co.x for v in f.verts]
+            mean_z = sum(zs) / len(zs)
+            mean_y = sum(ys) / len(ys)
+            mean_x = sum(xs) / len(xs)
+
+            ry_eff = ry_front if mean_y < 0 else ry_back
+            r_neck_norm = (mean_x / rx_neck) ** 2 + (mean_y / ry_eff) ** 2
+            t_y = max(0.0, min(1.0, (mean_y + ry_front) / (ry_front + ry_back)))
+            z_col = z_collar_front * (1.0 - t_y) + z_collar_back * t_y
+
+            if r_neck_norm < 1.0 and mean_z > z_col:
+                del_neck.append(f)
+            elif mean_z > 1.55:
+                del_neck.append(f)
+
+        if del_neck:
+            bmesh.ops.delete(bm, geom=del_neck, context='FACES')
+    elif variant != "strapless":
         nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
         neck_no = Vector((0.0, neck_tilt, nz)).normalized()
+        neck_geom = (
+            [v for v in bm.verts if abs(v.co.x) <= 0.10]
+            + [e for e in bm.edges if all(abs(v.co.x) <= 0.10 for v in e.verts)]
+            + [f for f in bm.faces if all(abs(v.co.x) <= 0.10 for v in f.verts)]
+        )
         bmesh.ops.bisect_plane(
             bm,
-            geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+            geom=neck_geom,
             plane_co=Vector((0.0, 0.0, z_neck)),
             plane_no=neck_no,
             clear_outer=True
         )
+        head_verts = [v for v in bm.verts if v.co.z > (z_neck + 0.05)]
+        if head_verts:
+            bmesh.ops.delete(bm, geom=head_verts, context='VERTS')
 
     # Keep largest island (upper torso + sleeves) before extruding unified lower hem tube
     islands = []
@@ -1533,7 +1584,7 @@ def build_bottom_template(avatar_data, variant="trousers"):
         offset = 0.0060
     else:  # trousers
         z_hem = 0.105 if is_male else 0.100
-        offset = 0.0075
+        offset = 0.0085
 
     z_waist = 1.06 if is_male else 1.02
 
@@ -1558,18 +1609,46 @@ def build_bottom_template(avatar_data, variant="trousers"):
             continue
         zs = [v.co.z for v in f.verts]
         xs = [abs(v.co.x) for v in f.verts]
-        if max(zs) > z_waist:
+        if min(zs) > z_waist:
             del_faces.append(f)
             continue
-        if max(xs) <= 0.22 and min(zs) < z_hem:
+        if max(xs) <= 0.22 and max(zs) < z_hem:
             del_faces.append(f)
             continue
         # Exclude arms/hands hanging near hips
-        if max(xs) > 0.28:
+        if max(xs) > 0.26:
             del_faces.append(f)
             continue
 
     bmesh.ops.delete(bm, geom=del_faces, context='FACES')
+
+    # Bisect waistband cleanly at z_waist
+    waist_geom = (
+        [v for v in bm.verts if v.co.z > (z_waist - 0.03)]
+        + [e for e in bm.edges if any(v.co.z > (z_waist - 0.03) for v in e.verts)]
+        + [f for f in bm.faces if any(v.co.z > (z_waist - 0.03) for v in f.verts)]
+    )
+    bmesh.ops.bisect_plane(
+        bm,
+        geom=waist_geom,
+        plane_co=Vector((0.0, 0.0, z_waist)),
+        plane_no=Vector((0.0, 0.0, 1.0)),
+        clear_outer=True
+    )
+
+    # Bisect cuffs cleanly at z_hem
+    cuff_geom = (
+        [v for v in bm.verts if v.co.z < (z_hem + 0.03)]
+        + [e for e in bm.edges if any(v.co.z < (z_hem + 0.03) for v in e.verts)]
+        + [f for f in bm.faces if any(v.co.z < (z_hem + 0.03) for v in f.verts)]
+    )
+    bmesh.ops.bisect_plane(
+        bm,
+        geom=cuff_geom,
+        plane_co=Vector((0.0, 0.0, z_hem)),
+        plane_no=Vector((0.0, 0.0, -1.0)),
+        clear_outer=True
+    )
 
     islands = []
     visited = set()
