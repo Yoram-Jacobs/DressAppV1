@@ -115,9 +115,15 @@ export function synthesizeBackFabricData(data, w, h) {
       runs.push([rStart, w - 1]);
     }
 
+    // Merge runs separated by gaps (<= 64 px across torso, <= 4 px elsewhere)
+    // so cutout transparency holes inside chest graphics never split the torso into sub-runs!
     const merged = [];
     for (const r of runs) {
-      if (merged.length > 0 && r[0] - merged[merged.length - 1][1] <= 4) {
+      const prev = merged[merged.length - 1];
+      const gap = prev ? r[0] - prev[1] : 999;
+      const isTorsoGap = prev && prev[1] >= w * 0.15 && r[0] <= w * 0.85;
+      const maxGap = isTorsoGap ? 64 : 4;
+      if (merged.length > 0 && gap <= maxGap) {
         merged[merged.length - 1][1] = r[1];
       } else {
         merged.push(r);
@@ -204,6 +210,7 @@ export function synthesizeBackFabricData(data, w, h) {
       const cMidL = Math.floor(0.35 * span);
       const cMidR = Math.min(span - 1, Math.ceil(0.65 * span));
       if (!isAllOverPatternRow && cMidR > cMidL + 2) {
+        if (diffBase[cMidL] <= 8 && diffBase[cMidR] <= 8) {
         const colLR = curR[cMidL], colLG = curG[cMidL], colLB = curB[cMidL];
         const colRR = curR[cMidR], colRG = curG[cMidR], colRB = curB[cMidR];
         for (let i = cMidL + 1; i < cMidR; i++) {
@@ -222,6 +229,7 @@ export function synthesizeBackFabricData(data, w, h) {
             const dr = brR - baseR[i], dg = brG - baseG[i], db = brB - baseB[i];
             diffBase[i] = Math.sqrt(dr * dr + dg * dg + db * db);
           }
+        }
         }
       }
 

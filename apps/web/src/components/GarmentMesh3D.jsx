@@ -1803,9 +1803,29 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     return { type: 'sleeveless', factor: 0.0 };
   }
 
-  // 2. Long sleeve keywords / Outerwear / Knitwear (higher precedence than t-shirt / short sleeve keywords!)
-  const isExplicitLong =
-    rawSlot === 'outerwear' ||
+  // 1b. Explicit short sleeve / T-shirt / polo keywords (prioritize before generic shirt)
+  const isExplicitShort =
+    text.includes('t-shirt') ||
+    text.includes('tshirt') ||
+    text.includes('t shirt') ||
+    text.includes('tee') ||
+    text.includes('polo') ||
+    text.includes('short sleeve') ||
+    text.includes('short-sleeve') ||
+    text.includes('short_sleeve') ||
+    text.includes('חולצת טריקו') ||
+    text.includes('חולצת טי') ||
+    text.includes('טישרט') ||
+    text.includes('שרוול קצר') ||
+    text.includes('שרוולים קצרים') ||
+    text.includes('חולצה קצרה') ||
+    text.includes('manga corta') ||
+    text.includes('manches courtes') ||
+    text.includes('kurzarm') ||
+    text.includes('نصف كم') ||
+    text.includes('أكمام قصيرة');
+
+  const hasExplicitLongTokens =
     text.includes('long sleeve') ||
     text.includes('long-sleeve') ||
     text.includes('long_sleeve') ||
@@ -1813,6 +1833,21 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('long sleeved') ||
     text.includes('long_sleeved') ||
     text.includes('longsleeve') ||
+    text.includes('שרוול ארוך') ||
+    text.includes('שרוולים ארוכים') ||
+    text.includes('manga larga') ||
+    text.includes('manches longues') ||
+    text.includes('langarm') ||
+    text.includes('كم طويل');
+
+  if (isExplicitShort && !hasExplicitLongTokens) {
+    return { type: 'short', factor: 0.50 };
+  }
+
+  // 2. Long sleeve keywords / Outerwear / Knitwear (higher precedence than generic category keywords)
+  const isExplicitLong =
+    rawSlot === 'outerwear' ||
+    hasExplicitLongTokens ||
     text.includes('sweater') ||
     text.includes('pullover') ||
     text.includes('cardigan') ||
@@ -1830,8 +1865,7 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
       text.includes('blouse') ||
       text.includes('מכופתרת') ||
       text.includes('חולצה מכופתרת') ||
-      text.includes('חולצה אלגנטית') ||
-      /(?<!t-?)shirt\b/i.test(text)
+      text.includes('חולצה אלגנטית')
     )) ||
     text.includes('סוודר') ||
     text.includes('בלייזר') ||
@@ -2441,7 +2475,7 @@ export function createAnatomicalBottomGeometry({
     const tPelvis = i / nyPelvis; // 0 at waist, 1 at crotch
     const y = yWaist - tPelvis * (yWaist - yCrotch);
     const sliceTorso = getTorsoSlice(y, isMale);
-    const fitOff = Math.min(layerOffset, 0.0025);
+    const fitOff = Math.max(0.0055, Math.min(layerOffset, 0.012));
     const rx = sliceTorso.rx + fitOff;
     const rzFront = (sliceTorso.rzFront || sliceTorso.rz) + fitOff;
     const rzBack = (sliceTorso.rzBack || sliceTorso.rz) + fitOff;
@@ -2455,7 +2489,7 @@ export function createAnatomicalBottomGeometry({
       const x = rx * Math.sin(theta);
       // Subtle crotch saddle indentation exclusively at the bottom crotch boundary (tPelvis -> 1)
       const centerT = Math.max(0, 1 - Math.abs(Math.sin(theta)) / 0.28);
-      const saddlePinch = Math.pow(tPelvis, 2.2) * centerT * 0.018;
+      const saddlePinch = Math.pow(tPelvis, 2.2) * centerT * 0.003;
       const z = isFront
         ? cz + Math.max(0.02, rzFront - saddlePinch) * Math.cos(theta)
         : cz - Math.max(0.02, rzBack - saddlePinch) * Math.abs(Math.cos(theta));
@@ -2502,10 +2536,12 @@ export function createAnatomicalBottomGeometry({
       const slice = getLegSlice(y, isMale);
       const cx = side * slice.cx;
       const cz = slice.cz;
-      const fitOff = Math.min(layerOffset, 0.0025);
-      const rx = slice.r + fitOff;
-      const rzFront = (slice.rzFront || slice.r) + fitOff;
-      const rzBack = (slice.rzBack || slice.r) + fitOff;
+      const fitOff = Math.max(0.0055, Math.min(layerOffset, 0.012));
+      const minAnkleRx = isShorts ? 0 : 0.048;
+      const minAnkleRz = isShorts ? 0 : 0.054;
+      const rx = Math.max(minAnkleRx, slice.r + fitOff);
+      const rzFront = Math.max(minAnkleRz, (slice.rzFront || slice.r) + fitOff);
+      const rzBack = Math.max(minAnkleRz, (slice.rzBack || slice.r) + fitOff);
 
       const vTex = (0.98 - pelvisTexSpan * 0.94) - vLeg * (1 - pelvisTexSpan) * 0.94;
 
@@ -4428,7 +4464,9 @@ export function GarmentMeshCore({
   }, [shell, shellFit, morphField, morphInfluences, isStandalone, rawSlot, autoHasSleeves]);
 
   const heelGeometry = useMemo(
-    () => (rawSlot === 'shoes' && visible ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose }) : null),
+    () => (rawSlot === 'shoes' && visible && footwearSpec?.kind === 'heel' && footwearSpec?.heelStyle === 'stiletto'
+      ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose })
+      : null),
     [rawSlot, visible, isMale, footwearSpec, footPose]
   );
 

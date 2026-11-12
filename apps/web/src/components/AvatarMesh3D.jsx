@@ -105,17 +105,18 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     const shoeCollarY = Math.max(0.128, Number(coveredZones?.shoeCollar) || 0.128);
     if (hasShoes && y < shoeCollarY) {
       const sign = x < 0 ? -1 : 1;
+      const cx = sign * footCx;
       if (y < 0.088) {
-        // Complete collapse of all foot, heel, and toe vertices into ankle core inside footwear sole/upper
-        const cx = sign * footCx;
-        arr[idx] = cx;
-        arr[idx + 1] = 0.085;
-        arr[idx + 2] = footCz;
+        // Safely compress foot, heel, and toe vertices inside the footwear upper/sole volume
+        // Shrink radially toward foot core with vertical compression so vertices never poke through sole, heel, or vamp
+        arr[idx] = cx + (x - cx) * 0.15;
+        arr[idx + 1] = 0.055 + (y - 0.010) * 0.25;
+        arr[idx + 2] = footCz + (z - footCz) * 0.15;
         continue;
       }
       // For ankle boots & tall boots: retract calf / lower leg skin within the boot shaft
       const tShaft = Math.max(0, Math.min(1, (y - 0.088) / Math.max(0.04, shoeCollarY - 0.088)));
-      const shaftShrink = 0.28 * (1 - 0.5 * tShaft); // 28% at ankle, 14% at collar
+      const shaftShrink = 0.35 * (1 - 0.4 * tShaft); // 35% at ankle, 21% at collar
       const legCx = sign * (isMale ? 0.145 : 0.160);
       const legCz = isMale ? 0.025 : 0.035;
       arr[idx] = legCx + (x - legCx) * (1 - shaftShrink);
@@ -208,9 +209,9 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const wAxilla = Math.sqrt(Math.max(0, tY * tX));
         const cz = 0.015;
         // Pull inward in X toward centerline, slightly up into shoulder socket, and toward torso core in Z
-        arr[idx] = arr[idx] * (1 - 0.22 * wAxilla);
-        arr[idx + 1] = arr[idx + 1] + 0.018 * wAxilla;
-        arr[idx + 2] = cz + (arr[idx + 2] - cz) * (1 - 0.20 * wAxilla);
+        arr[idx] = arr[idx] * (1 - 0.45 * wAxilla);
+        arr[idx + 1] = arr[idx + 1] + 0.024 * wAxilla;
+        arr[idx + 2] = cz + (arr[idx + 2] - cz) * (1 - 0.40 * wAxilla);
       }
     }
 
@@ -230,7 +231,7 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
     // while retracting full legs under trousers/jeans so outer thigh & calf skin never pokes through!
     const resolvedBottomMinY = Number.isFinite(coveredZones?.bottomMinY)
       ? coveredZones.bottomMinY
-      : (hasBottom ? 0.11 : (hasDress ? 0.46 : 0.86));
+      : (hasBottom ? 0.08 : (hasDress ? 0.46 : 0.86));
     const minBottomY = (hasBottom || hasDress) ? resolvedBottomMinY : 0.86;
     const maxBottomY = isMale ? 1.08 : 1.05;
     if ((hasBottom || hasDress || hasTop) && y >= minBottomY && y <= maxBottomY) {
@@ -246,7 +247,7 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const wTop = (hasBottom || hasDress || hasTop || hasOuterwear)
           ? 1.0
           : Math.max(0, Math.min(1, (maxBottomY - y) / 0.04));
-        const wBot = Math.max(0, Math.min(1, (y - minBottomY) / 0.045));
+        const wBot = (hasBottom && hasShoes) ? 1.0 : Math.max(0, Math.min(1, (y - minBottomY) / 0.045));
         const w = wTop * wBot * hipBlend;
 
         // Above crotch (y >= 0.82), retract toward pelvis center (0, 0.020).
@@ -256,9 +257,10 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
         const legCx = isMale
           ? 0.098 + tLeg * (0.148 - 0.098)
           : 0.096 + tLeg * (0.166 - 0.096);
+        // Continuous smooth spline for legCz from hip (0.020) through knee (0.026) down to ankle (0.005) - NO discontinuous step jumps!
         const legCz = isMale
-          ? (y >= 0.52 ? 0.032 : -0.022)
-          : (y >= 0.50 ? 0.034 : 0.010);
+          ? 0.020 + 0.008 * Math.sin(Math.PI * tLeg) - 0.015 * tLeg
+          : 0.020 + 0.012 * Math.sin(Math.PI * tLeg) - 0.008 * tLeg;
         const cx = sign * legCx * legBlend;
         const cz = 0.020 * (1 - legBlend) + legCz * legBlend;
         const isLegOrBottom = hasBottom || hasDress;

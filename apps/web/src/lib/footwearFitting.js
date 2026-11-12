@@ -635,12 +635,10 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
  */
 export function createHeelGeometry({ isMale = false, spec, pose } = {}) {
   if (!pose?.active || !spec || spec.heelHeight < 0.02) return null;
-  // Boots (except stiletto boots) and sneakers/loafers/flats already have fully sculpted, watertight outsoles in createFittedFootwearGeometry.
-  // Do NOT generate redundant floating block meshes for enclosed footwear.
-  if ((spec.kind === 'boot' || spec.kind === 'ankle_boot') && spec.heelStyle !== 'stiletto') {
-    return null;
-  }
-  if (spec.kind === 'sneaker' || spec.kind === 'flat' || spec.kind === 'loafer') {
+  // All enclosed footwear (boots, sneakers, loafers, flats, oxfords) already have fully sculpted,
+  // watertight outsoles in createFittedFootwearGeometry. Only standalone stiletto high heels
+  // require a separate thin stiletto pillar down to the ground.
+  if (spec.kind !== 'heel' || spec.heelStyle !== 'stiletto') {
     return null;
   }
   const a = pose.anatomy;
