@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Translation } from 'react-i18next';
 
+const SafeTranslation = Translation || (({ children }) => children((k, o) => o?.defaultValue || k));
+
 export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -39,7 +41,7 @@ export class ErrorBoundary extends React.Component {
       }
 
       return (
-        <Translation>
+        <SafeTranslation>
           {(t) => (
             <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-center space-y-4">
               <div className="h-14 w-14 bg-red-500/10 text-destructive rounded-2xl flex items-center justify-center">
@@ -74,7 +76,7 @@ export class ErrorBoundary extends React.Component {
               </Button>
             </div>
           )}
-        </Translation>
+        </SafeTranslation>
       );
     }
     return this.props.children;

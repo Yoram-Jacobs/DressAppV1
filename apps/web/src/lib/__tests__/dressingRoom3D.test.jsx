@@ -8,6 +8,7 @@ jest.mock('react-i18next', () => ({
     t: (key, options) => (options && options.defaultValue) || key,
     i18n: { dir: () => 'ltr', changeLanguage: () => new Promise(() => {}) },
   }),
+  Translation: ({ children }) => children((key, options) => (options && options.defaultValue) || key),
 }));
 
 // Mock react-router-dom
@@ -23,6 +24,17 @@ jest.mock('@/lib/auth', () => ({
     user: null,
     loading: false,
   }),
+}));
+
+// Mock api client store
+jest.mock('@/lib/api', () => ({
+  userStore: {
+    get: () => null,
+    subscribe: () => () => {},
+  },
+  closet: {
+    list: jest.fn().mockResolvedValue([]),
+  },
 }));
 
 // Mock framer-motion
@@ -547,7 +559,7 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
       computeFootPose,
       createFittedFootwearGeometry,
       FOOT_PROFILE_FEMALE,
-    } = require('@/lib/footwearFit');
+    } = require('@/lib/footwearFitting');
 
     // 1. Platform shoes elevate the avatar even with a flat heel drop
     const platformSpec = resolveFootwearSpec({
@@ -593,13 +605,20 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(normalizeGarmentRole('accessory', 'Accessories', 'Silk Repp Striped Necktie')).toBe('necktie');
     expect(normalizeGarmentRole('accessory', 'Accessories', 'Italian Leather Waist Belt')).toBe('belt');
 
-    // 2. Watch geometry is anchored on the avatar's LEFT wrist (+X side: x in [0.18, 0.30], y around 0.90m)
+    // 2. Watch geometry is anchored on the avatar's true A-pose LEFT wrist (+X side, perpendicular to 42° forearm axis)
     const watchGeo = createAnatomicalAccessoryGeometry('watch', { isMale: false });
     watchGeo.computeBoundingBox();
-    expect(watchGeo.boundingBox.min.x).toBeGreaterThan(0.18);
-    expect(watchGeo.boundingBox.max.x).toBeLessThan(0.31);
-    expect(watchGeo.boundingBox.min.y).toBeGreaterThan(0.86);
-    expect(watchGeo.boundingBox.max.y).toBeLessThan(0.95);
+    expect(watchGeo.boundingBox.min.x).toBeGreaterThan(0.30);
+    expect(watchGeo.boundingBox.max.x).toBeLessThan(0.42);
+    expect(watchGeo.boundingBox.min.y).toBeGreaterThan(0.91);
+    expect(watchGeo.boundingBox.max.y).toBeLessThan(1.03);
+
+    const maleWatchGeo = createAnatomicalAccessoryGeometry('watch', { isMale: true });
+    maleWatchGeo.computeBoundingBox();
+    expect(maleWatchGeo.boundingBox.min.x).toBeGreaterThan(0.35);
+    expect(maleWatchGeo.boundingBox.max.x).toBeLessThan(0.48);
+    expect(maleWatchGeo.boundingBox.min.y).toBeGreaterThan(0.99);
+    expect(maleWatchGeo.boundingBox.max.y).toBeLessThan(1.11);
 
     // 3. Necktie geometry hangs from the neckline (yTop ~ 1.44..1.50) down to the waistline (yTip ~ 1.04..1.06)
     const tieGeo = createAnatomicalAccessoryGeometry('necktie', { isMale: true, layerOffset: 0.029 });
@@ -1123,5 +1142,151 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
 
     // 7. Depth profile does not balloon into an oversized sphere
     expect(box.max.z - box.min.z).toBeLessThan(0.38);
+  });
+
+  test('Category-smart hybrid template resolver routes footwear & accessories to parametric builders and preserves distinct clothing archetypes', () => {
+    const { resolveGarmentTemplate, getTemplateGlbUrl } = require('@/lib/garmentTemplatesCatalog');
+
+    // Footwear and accessories bypass coarse GLB templates (return null -> parametric anatomical builders)
+    expect(resolveGarmentTemplate({ rawSlot: 'shoes', garmentText: 'White Block Heel Ankle Boots' })).toBeNull();
+    expect(resolveGarmentTemplate({ rawSlot: 'shoes', garmentText: 'Brown Chelsea Boots' })).toBeNull();
+    expect(resolveGarmentTemplate({ rawSlot: 'watch', garmentText: 'שעון יד עור חום' })).toBeNull();
+    expect(resolveGarmentTemplate({ rawSlot: 'belt', garmentText: 'Classic Leather Belt' })).toBeNull();
+    expect(resolveGarmentTemplate({ rawSlot: 'glasses', garmentText: 'Aviator Sunglasses' })).toBeNull();
+    expect(resolveGarmentTemplate({ rawSlot: 'bag', garmentText: 'Leather Crossbody Bag' })).toBeNull();
+    expect(resolveGarmentTemplate({ rawSlot: 'necktie', garmentText: 'Silk Necktie' })).toBeNull();
+    expect(resolveGarmentTemplate({ rawSlot: 'headwear', garmentText: 'Wool Fedora Hat' })).toBeNull();
+
+    // Distinct repaired clothing templates preserved
+    expect(resolveGarmentTemplate({ rawSlot: 'bottom', garmentText: 'Mini Skirt Straight Cut' })).toBe('skirt_pencil');
+    expect(resolveGarmentTemplate({ rawSlot: 'bottom', garmentText: 'Pleated A-Line Midi Skirt' })).toBe('bottom_skirt');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Light Grey Suit Vest Waistcoat' })).toBe('vest');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Cotton Ribbed Tank Top' })).toBe('tank');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Athletic Singlet' })).toBe('singlet');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Silk Strapless Bustier Top' })).toBe('bustier');
+    expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Charcoal Suit Blazer' })).toBe('jacket_blazer');
+    expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Belted Cream Trench Coat' })).toBe('trench_coat');
+
+    expect(getTemplateGlbUrl('vest', true)).toContain('/models/templates/male/vest.glb');
+    expect(getTemplateGlbUrl('skirt_pencil', false)).toContain('/models/templates/female/skirt_pencil.glb');
+  });
+
+  test('Suit blazers and untucked T-shirts resolve proper anatomical hem lengths, and Photo Fit mode toggles cleanly without crashing', () => {
+    const { resolveShellFit } = require('@/components/GarmentMesh3D');
+
+    // Charcoal suit blazer with portrait cutout aspect (0.83) stays at tailored hip length (~0.89m), NOT knee-length coat (0.52m)
+    const blazerFit = resolveShellFit({
+      rawSlot: 'outerwear',
+      garmentText: 'בלייזר חליפה מחויט פחם charcoal suit blazer',
+      isMale: true,
+      aspect: 0.83,
+    });
+    expect(blazerFit.yBottom).toBeCloseTo(0.89, 2);
+
+    // Untucked crew-neck T-shirt stops cleanly at hip-bone (~0.96m M / ~0.92m F), NOT mid-thigh
+    const untuckedTeeMale = resolveShellFit({
+      rawSlot: 'top',
+      garmentText: 'black crew neck cotton t-shirt',
+      isMale: true,
+      hasBottom: false,
+    });
+    expect(untuckedTeeMale.yBottom).toBeCloseTo(0.96, 2);
+
+    // Toggle between 3D Tailored and Photo Fit without throwing ReferenceError, and test multi-item per-ID layer toggling
+    const multiTopItems = {
+      inner_top: {
+        id: 'top-base-1',
+        name: 'White Crew T-Shirt',
+        url: '/assets/onboarding/m_tshirt_crew_white.png',
+        category: 'top',
+      },
+      overshirt: {
+        id: 'top-over-2',
+        name: 'Navy Oxford Overshirt',
+        url: '/assets/onboarding/m_shirt_oxford_blue.png',
+        category: 'top',
+      },
+      shoes: {
+        id: 'm_boots_chelsea_brown',
+        name: 'Brown Chelsea Boots',
+        url: '/assets/onboarding/m_boots_chelsea_brown.png',
+        category: 'shoes',
+      },
+    };
+
+    render(
+      <DressingRoom3D
+        open={true}
+        onOpenChange={jest.fn()}
+        outfitItems={multiTopItems}
+        measurements={sampleMeasurements}
+        sex="male"
+      />
+    );
+
+    const meshModeBtn = screen.getByTestId('toggle-mesh-mode-btn');
+    expect(screen.getByText('3D Tailored')).toBeInTheDocument();
+    fireEvent.click(meshModeBtn);
+    expect(screen.getByText('Photo Fit')).toBeInTheDocument();
+    fireEvent.click(meshModeBtn);
+    expect(screen.getByText('3D Tailored')).toBeInTheDocument();
+
+    // Onboarding shoe uses full _cutout.png in 3D rack/mesh
+    const bootImg = screen.getByAltText('Brown Chelsea Boots');
+    expect(bootImg.getAttribute('src')).toBe('/assets/onboarding/m_boots_chelsea_brown_cutout.png');
+
+    // Toggling one top hides only that top ID while keeping the second top visible
+    const hideBtns = screen.getAllByTitle('Hide item');
+    expect(hideBtns.length).toBe(3);
+    fireEvent.click(hideBtns[0]);
+    expect(screen.getAllByTitle('Hide item').length).toBe(2);
+    expect(screen.getAllByTitle('Show item').length).toBe(1);
+  });
+
+  test('Rebuilt GLB garment templates are bilateral, wrist-trimmed, and stripped of dead vertex attributes, and locales include mesh mode & watch keys', () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const checkGlb = (relPath) => {
+      const full = path.resolve(__dirname, '../../../public/models/templates', relPath);
+      const buf = fs.readFileSync(full);
+      const jsonLen = buf.readUInt32LE(12);
+      const gltf = JSON.parse(buf.slice(20, 20 + jsonLen).toString('utf8'));
+      const prim = gltf.meshes[0].primitives[0];
+      const attrs = Object.keys(prim.attributes);
+      // Dead TEXCOORD_1..4 and COLOR_0..1 stripped
+      expect(attrs.length).toBeLessThanOrEqual(4);
+      expect(attrs).toContain('POSITION');
+      const posAcc = gltf.accessors[prim.attributes.POSITION];
+      return { min: posAcc.min, max: posAcc.max, count: posAcc.count };
+    };
+
+    // Previously severed-arm templates are now symmetric full-torso meshes (min.x < -0.15 and max.x > +0.15)
+    const maleVest = checkGlb('male/vest.glb');
+    expect(maleVest.min[0]).toBeLessThan(-0.17);
+    expect(maleVest.max[0]).toBeGreaterThan(0.17);
+
+    const femaleSinglet = checkGlb('female/singlet.glb');
+    expect(femaleSinglet.min[0]).toBeLessThan(-0.17);
+    expect(femaleSinglet.max[0]).toBeGreaterThan(0.17);
+
+    const { getTemplateGlbUrl } = require('@/lib/garmentTemplatesCatalog');
+    const resolvedStraplessRel = getTemplateGlbUrl('top_strapless', false)
+      .replace(/^\/models\/templates\//, '')
+      .split('?')[0];
+    const femaleStrapless = checkGlb(resolvedStraplessRel);
+    expect(femaleStrapless.min[0]).toBeLessThan(-0.15);
+    expect(femaleStrapless.max[0]).toBeGreaterThan(0.15);
+
+    // Long-sleeve blazer stops at the wrist cuff (max |x| <= 0.465m, never covering hands/thumbs)
+    const maleBlazer = checkGlb('male/jacket_blazer.glb');
+    expect(maleBlazer.max[0]).toBeLessThanOrEqual(0.465);
+    expect(maleBlazer.min[0]).toBeGreaterThanOrEqual(-0.465);
+
+    // Locale files all contain mesh_tailored, mesh_photo, and taxonomy.categories.watch
+    const heLocale = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../locales/he.json'), 'utf8'));
+    expect(heLocale.dressing_room_3d.mesh_tailored).toBeTruthy();
+    expect(heLocale.dressing_room_3d.mesh_photo).toBeTruthy();
+    expect(heLocale.taxonomy.categories.watch).toBe('שעון');
   });
 });

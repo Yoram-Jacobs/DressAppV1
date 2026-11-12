@@ -298,28 +298,40 @@ export function retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset, g
     const phi = thetaTarget - thetaPhoto;
     if (thetaPhoto < -1.25 || Math.abs(phi) < 0.14 || Math.abs(phi) > 1.95) return;
 
-    // For short sleeves (T-shirts with bestR < 0.24m):
-    // Soften rotation angle so short sleeves drape naturally rather than shearing aggressively into sharp robotic angles
-    const sleeveLengthFactor = clamp((bestR - 0.10) / 0.18, 0.35, 1.0);
+    // Short sleeves (T-shirts, polos, cap sleeves with bestR <= 0.22m) already drape naturally
+    // over the deltoid and must NOT be sheared into sharp angular sticks.
+    // For mid and long sleeves (bestR > 0.22m), rotation smoothly scales with sleeve length.
+    if (bestR <= 0.22) return;
+    const sleeveLengthFactor = smoothstep01((bestR - 0.22) / 0.16);
+    if (sleeveLengthFactor <= 0.02) return;
     const effectivePhi = phi * sleeveLengthFactor;
     const cos = Math.cos(effectivePhi);
     const sin = Math.sin(effectivePhi);
+
+    const dirX = Math.cos(thetaPhoto);
+    const dirY = Math.sin(thetaPhoto);
 
     for (let idx = 0; idx < vw * vh; idx++) {
       const x = xs[idx] * side;
       const y = ys[idx];
       if (x <= 0 || y < yPelvisLimit) continue;
-      // Vertices at or above the shoulder pivot belong to the clavicle, trapezius, and deltoid cap.
-      // Rotating vertices above the pivot throws them outward and downward into sharp winged flares.
-      // Only the sleeve hanging below the shoulder joint swings with the arm.
-      if (y >= pivotY) continue;
-      const shoulderFalloff = smoothstep01((pivotY - y) / 0.04);
-      const torso = getTorsoSlice(y, isMale);
-      const r = Math.hypot(x - pivotX, y - pivotY);
-      const w = smoothstep01((x - (torso.rx + layerOffset)) / 0.05) * smoothstep01(r / 0.08) * shoulderFalloff;
-      if (w <= 0) continue;
+
       const dxp = x - pivotX;
       const dyp = y - pivotY;
+      const distAlongArm = dxp * dirX + dyp * dirY;
+      if (distAlongArm <= 0.012) continue;
+
+      const torso = getTorsoSlice(y, isMale);
+      const distFromTorso = x - (torso.rx + layerOffset);
+      if (distFromTorso <= 0.005) continue;
+
+      // Smooth C2 continuous blend along arm axis: entire tubular sleeve cross-section
+      // rotates uniformly without tearing the armscye or crushing the inner underarm.
+      const wArm = smoothstep01((distAlongArm - 0.012) / 0.055);
+      const wTorso = smoothstep01(distFromTorso / 0.040);
+      const w = wArm * wTorso;
+      if (w <= 0) continue;
+
       const nx2 = pivotX + dxp * cos - dyp * sin;
       const ny2 = pivotY + dxp * sin + dyp * cos;
       xs[idx] = side * (x + (nx2 - x) * w);
@@ -1853,9 +1865,9 @@ export function buildSilhouetteShell({
     }
   }
 
-  // Swing photographed sleeves down along the avatar's arms (skipped for inner top under outerwear or standalone studio)
+  // Swing photographed sleeves down along the avatar's arms (drape is identical with and without avatar)
   let sleevePose = null;
-  if (poseSleeves && isTopOrBody && !isInnerTopUnderOuterwear && !isStandalone) {
+  if (poseSleeves && isTopOrBody && !isInnerTopUnderOuterwear) {
     sleevePose = retargetSleeves({ xs, ys, inside, vw, vh, isMale, layerOffset: effOffset, getTorsoSlice });
   }
 
@@ -1912,6 +1924,21 @@ export function buildSilhouetteShell({
     const currRuns = runsByRow[j];
     const nextRuns = runsByRow[j + 1];
 
+    // For tops/outerwear/dresses:
+    // Do not bridge across the underarm or neck void between separated sleeve and torso runs!
+    if (isTopOrBody) {
+      if (currRuns && currRuns.length >= 2) {
+        for (let k = 0; k < currRuns.length - 1; k++) {
+          if (lo >= currRuns[k][1] && hi <= currRuns[k + 1][0]) return false;
+        }
+      }
+      if (nextRuns && nextRuns.length >= 2) {
+        for (let k = 0; k < nextRuns.length - 1; k++) {
+          if (lo >= nextRuns[k][1] && hi <= nextRuns[k + 1][0]) return false;
+        }
+      }
+    }
+
     // For pants/bottoms below crotch:
     // 1. Do not bridge across the crotch void where separated legs have empty space between them.
     // 2. Do not bridge under a terminated pant leg hem when the adjacent row has no fabric on that side
@@ -1956,6 +1983,15 @@ export function buildSilhouetteShell({
     const bx = posArr[p2 * 3] - posArr[p0 * 3];
     const by = posArr[p2 * 3 + 1] - posArr[p0 * 3 + 1];
     const bz = posArr[p2 * 3 + 2] - posArr[p0 * 3 + 2];
+    // Reject degenerate or excessively stretched triangles spanning across decoupled voids (e.g. underarm or crotch gaps)
+    const len01Sq = ax * ax + ay * ay + az * az;
+    const len02Sq = bx * bx + by * by + bz * bz;
+    const dx12 = posArr[p2 * 3] - posArr[p1 * 3];
+    const dy12 = posArr[p2 * 3 + 1] - posArr[p1 * 3 + 1];
+    const dz12 = posArr[p2 * 3 + 2] - posArr[p1 * 3 + 2];
+    const len12Sq = dx12 * dx12 + dy12 * dy12 + dz12 * dz12;
+    if (len01Sq > 0.0081 || len02Sq > 0.0081 || len12Sq > 0.0081) return;
+
     const cx = ay * bz - az * by;
     const cy = az * bx - ax * bz;
     const cz = ax * by - ay * bx;
@@ -2250,17 +2286,17 @@ export function synthesizeBackFabricData(data, w, h) {
       // across the entire interior torso.
       // On the back sheet of any top or outerwear, front graphics and lettering
       // MUST ALWAYS be completely removed and replaced with clean base fabric.
-      const isChestTorsoZone = vRel >= 0.10 && vRel <= 0.85;
-      const pStart = Math.floor(0.06 * span);
-      const pEnd = Math.min(span - 1, Math.ceil(0.94 * span));
+      const isChestTorsoZone = vRel >= 0.08 && vRel <= 0.90;
+      const pStart = Math.floor(0.05 * span);
+      const pEnd = Math.min(span - 1, Math.ceil(0.95 * span));
       if (pEnd > pStart + 2) {
         const isGraphic = new Uint8Array(span);
-        const fineThreshold = isAllOverPatternRow ? Math.max(12.0, sigma * 1.5) : Math.max(3.5, Math.min(7.0, sigma * 0.70));
+        const fineThreshold = isAllOverPatternRow ? Math.max(10.0, sigma * 1.4) : Math.max(3.0, Math.min(6.5, sigma * 0.65));
         for (let i = pStart + 1; i < pEnd; i++) {
           const u_rel = i / (span - 1);
-          const inChestBox = isChestTorsoZone && u_rel >= 0.10 && u_rel <= 0.90;
+          const inChestBox = isChestTorsoZone && u_rel >= 0.08 && u_rel <= 0.92;
           const prevDiff = i > 0 ? Math.hypot(curR[i] - curR[i - 1], curG[i] - curG[i - 1], curB[i] - curB[i - 1]) : 0;
-          if (diffBase[i] > fineThreshold || (!isAllOverPatternRow && prevDiff > Math.max(5.0, sigma * 0.80)) || (inChestBox && diffBase[i] > (isAllOverPatternRow ? 8.0 : 3.0))) {
+          if (diffBase[i] > fineThreshold || (!isAllOverPatternRow && prevDiff > Math.max(4.5, sigma * 0.75)) || (inChestBox && diffBase[i] > (isAllOverPatternRow ? 7.0 : 2.5))) {
             isGraphic[i] = 1;
           }
         }

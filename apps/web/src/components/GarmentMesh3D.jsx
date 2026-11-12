@@ -9,12 +9,12 @@ import {
   createFittedFootwearGeometry,
   createHeelGeometry,
   poseGeometry,
-} from '@/lib/footwearFit';
+} from '@/lib/footwearFitting';
 import {
   resolveGarmentTemplate,
   getTemplateGlbUrl,
   AVAILABLE_TEMPLATES,
-} from '@/lib/garmentTemplates';
+} from '@/lib/garmentTemplatesCatalog';
 import {
   analyzeGarmentFit,
   buildSilhouetteShell,
@@ -482,22 +482,24 @@ function dilateCanvasEdges(canvas, passes = 6) {
  *   - Restores authentic high-frequency fabric grain/weave so the back sheet looks
  *     like real woven cloth, not flat blur.
  */
-export function synthesizeBackFabricCanvas(frontCanvas) {
+export function synthesizeBackFabricCanvas(frontCanvas, dominantColor = '#CBD5E1') {
   if (!frontCanvas || typeof document === 'undefined') return frontCanvas;
+  const W = frontCanvas.width;
+  const H = frontCanvas.height;
+  const out = document.createElement('canvas');
+  out.width = W;
+  out.height = H;
+  const ctx = out.getContext('2d', { willReadFrequently: true });
   try {
-    const W = frontCanvas.width;
-    const H = frontCanvas.height;
-    const out = document.createElement('canvas');
-    out.width = W;
-    out.height = H;
-    const ctx = out.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(frontCanvas, 0, 0);
     const imgData = ctx.getImageData(0, 0, W, H);
     synthesizeBackFabricData(imgData.data, W, H);
     ctx.putImageData(imgData, 0, 0);
     return out;
   } catch {
-    return frontCanvas;
+    ctx.fillStyle = dominantColor;
+    ctx.fillRect(0, 0, W, H);
+    return out;
   }
 }
 
@@ -705,7 +707,7 @@ export function buildBackTexture({ frontCanvas, backCanvas, dominantColor = '#FF
     ctx.drawImage(backCanvas, 0, 0, W, H);
   } else {
     // Synthesize back fabric excluding front-only graphics, prints, pockets, zippers
-    const cleanBackCanvas = synthesizeBackFabricCanvas(frontCanvas);
+    const cleanBackCanvas = synthesizeBackFabricCanvas(frontCanvas, dominantColor);
     ctx.drawImage(cleanBackCanvas, 0, 0);
   }
   // Fill transparent margins of the back canvas with clean edge fabric so UV boundaries never sample transparency
@@ -1819,7 +1821,7 @@ export function detectSleeveStyle({ garmentText = '', rawSlot = '', aspect = 1.0
     text.includes('jacket') ||
     text.includes('hoodie') ||
     text.includes('sweatshirt') ||
-    (!text.includes('short') && !text.includes('קצר') && !text.includes('cort') && !text.includes('kurz') && (
+    (!text.includes('short') && !text.includes('polo') && !text.includes('פולו') && !text.includes('קצר') && !text.includes('cort') && !text.includes('kurz') && (
       text.includes('button-down') ||
       text.includes('button down') ||
       text.includes('button-up') ||
@@ -2051,17 +2053,26 @@ export function createAnatomicalTopGeometry({
     }
   }
 
+  const frontIndices = [];
+  const backIndices = [];
+
   for (let i = 0; i < ny; i++) {
     for (let j = 0; j < nx; j++) {
       const a = i * (nx + 1) + j;
       const b = a + 1;
       const c = a + (nx + 1);
       const d = c + 1;
-      indices.push(a, c, b, b, c, d);
+      const uFracMid = (j + 0.5) / nx;
+      const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+      if (Math.cos(thetaMid) >= 0) {
+        frontIndices.push(a, c, b, b, c, d);
+      } else {
+        backIndices.push(a, c, b, b, c, d);
+      }
     }
   }
 
-  // 2. Left & Right Sleeves (tailored elliptical contours, natural drape in standalone mode)
+  // 2. Left & Right Sleeves (tailored elliptical contours, continuous shoulder-armscye bridge)
   if (hasAnySleeve) {
     const sides = [-1, 1]; // Left (-X), Right (+X)
     const nySleeve = Math.max(4, Math.round(10 * Math.min(1.0, sleeveFactor * 1.5)));
@@ -2071,16 +2082,18 @@ export function createAnatomicalTopGeometry({
     const fullYArmEnd = isMale ? 1.069 : 0.956;
     const yArmEnd = yArmStart - sleeveFactor * (yArmStart - fullYArmEnd);
 
-    const xArmStart = isMale ? (standalone ? 0.210 : 0.225) : (standalone ? 0.185 : 0.195);
-    const fullXArmEnd = isMale ? (standalone ? 0.320 : 0.409) : (standalone ? 0.280 : 0.374);
+    // Seamless shoulder-to-armscye bridge with ZERO void or gap:
+    const shoulderRx = (isMale ? 0.195 : 0.170) + layerOffset * 0.4;
+    const xArmStart = shoulderRx + 0.015;
+    const fullXArmEnd = isMale ? 0.355 : 0.325;
     const xArmEnd = xArmStart + sleeveFactor * (fullXArmEnd - xArmStart);
 
     const fullZArmEnd = isMale ? 0.012 : 0.009;
     const zArmEnd = 0.020 + sleeveFactor * (fullZArmEnd - 0.020);
 
     // Slim, tailored sleeve radii (eliminates barrel appearance)
-    const rArmStart = (standalone ? 0.045 : 0.050) + Math.min(0.010, layerOffset * 0.3);
-    const fullRArmEnd = (standalone ? 0.034 : 0.038) + Math.min(0.008, layerOffset * 0.2);
+    const rArmStart = 0.052 + Math.min(0.010, layerOffset * 0.3);
+    const fullRArmEnd = 0.038 + Math.min(0.008, layerOffset * 0.2);
     const rArmEnd = rArmStart - sleeveFactor * (rArmStart - fullRArmEnd);
 
     // Sleeve UV runs from shoulder seam (0.85) down to cuff in the 2D photo
@@ -2123,15 +2136,25 @@ export function createAnatomicalTopGeometry({
           const b = a + 1;
           const c = a + (nxSleeve + 1);
           const d = c + 1;
-          indices.push(a, c, b, b, c, d);
+          const uFracMid = (j + 0.5) / nxSleeve;
+          const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+          if (Math.cos(thetaMid) >= 0) {
+            frontIndices.push(a, c, b, b, c, d);
+          } else {
+            backIndices.push(a, c, b, b, c, d);
+          }
         }
       }
     });
   }
 
+  const allIndices = [...frontIndices, ...backIndices];
   geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex(indices);
+  geo.setIndex(new THREE.BufferAttribute(new Uint32Array(allIndices), 1));
+  geo.clearGroups();
+  geo.addGroup(0, frontIndices.length, 0);
+  geo.addGroup(frontIndices.length, backIndices.length, 1);
   geo.computeVertexNormals();
   return geo;
 }
@@ -2213,13 +2236,22 @@ export function createAnatomicalDressGeometry({
     }
   }
 
+  const frontIndices = [];
+  const backIndices = [];
+
   for (let i = 0; i < ny; i++) {
     for (let j = 0; j < nx; j++) {
       const a = i * (nx + 1) + j;
       const b = a + 1;
       const c = a + (nx + 1);
       const d = c + 1;
-      indices.push(a, c, b, b, c, d);
+      const uFracMid = (j + 0.5) / nx;
+      const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+      if (Math.cos(thetaMid) >= 0) {
+        frontIndices.push(a, c, b, b, c, d);
+      } else {
+        backIndices.push(a, c, b, b, c, d);
+      }
     }
   }
 
@@ -2234,8 +2266,9 @@ export function createAnatomicalDressGeometry({
     const fullYArmEnd = isMale ? 0.96 : 0.90;
     const yArmEnd = yArmStart - sleeveFactor * (yArmStart - fullYArmEnd);
 
-    const xArmStart = isMale ? 0.225 : 0.195;
-    const fullXArmEnd = isMale ? 0.280 : 0.255;
+    const shoulderRx = (isMale ? 0.195 : 0.170) + layerOffset * 0.4;
+    const xArmStart = shoulderRx + 0.015;
+    const fullXArmEnd = isMale ? 0.355 : 0.325;
     const xArmEnd = xArmStart + sleeveFactor * (fullXArmEnd - xArmStart);
 
     const fullZArmEnd = 0.040;
@@ -2281,15 +2314,25 @@ export function createAnatomicalDressGeometry({
           const b = a + 1;
           const c = a + (nxSleeve + 1);
           const d = c + 1;
-          indices.push(a, c, b, b, c, d);
+          const uFracMid = (j + 0.5) / nxSleeve;
+          const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+          if (Math.cos(thetaMid) >= 0) {
+            frontIndices.push(a, c, b, b, c, d);
+          } else {
+            backIndices.push(a, c, b, b, c, d);
+          }
         }
       }
     });
   }
 
+  const allIndices = [...frontIndices, ...backIndices];
   geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex(indices);
+  geo.setIndex(new THREE.BufferAttribute(new Uint32Array(allIndices), 1));
+  geo.clearGroups();
+  geo.addGroup(0, frontIndices.length, 0);
+  geo.addGroup(frontIndices.length, backIndices.length, 1);
   geo.computeVertexNormals();
   return geo;
 }
@@ -2349,19 +2392,32 @@ export function createAnatomicalBottomGeometry({
       }
     }
 
+    const frontIndices = [];
+    const backIndices = [];
+
     for (let i = 0; i < ny; i++) {
       for (let j = 0; j < nx; j++) {
         const a = i * (nx + 1) + j;
         const b = a + 1;
         const c = a + (nx + 1);
         const d = c + 1;
-        indices.push(a, c, b, b, c, d);
+        const uFracMid = (j + 0.5) / nx;
+        const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+        if (Math.cos(thetaMid) >= 0) {
+          frontIndices.push(a, c, b, b, c, d);
+        } else {
+          backIndices.push(a, c, b, b, c, d);
+        }
       }
     }
 
+    const allIndices = [...frontIndices, ...backIndices];
     geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
     geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    geo.setIndex(indices);
+    geo.setIndex(new THREE.BufferAttribute(new Uint32Array(allIndices), 1));
+    geo.clearGroups();
+    geo.addGroup(0, frontIndices.length, 0);
+    geo.addGroup(frontIndices.length, backIndices.length, 1);
     geo.computeVertexNormals();
     return geo;
   }
@@ -2413,13 +2469,22 @@ export function createAnatomicalBottomGeometry({
     }
   }
 
+  const frontIndices = [];
+  const backIndices = [];
+
   for (let i = 0; i < nyPelvis; i++) {
     for (let j = 0; j < nxPelvis; j++) {
       const a = pelvisStartIdx + i * (nxPelvis + 1) + j;
       const b = a + 1;
       const c = a + (nxPelvis + 1);
       const d = c + 1;
-      indices.push(a, c, b, b, c, d);
+      const uFracMid = (j + 0.5) / nxPelvis;
+      const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+      if (Math.cos(thetaMid) >= 0) {
+        frontIndices.push(a, c, b, b, c, d);
+      } else {
+        backIndices.push(a, c, b, b, c, d);
+      }
     }
   }
 
@@ -2471,14 +2536,24 @@ export function createAnatomicalBottomGeometry({
         const b = a + 1;
         const c = a + (nxLeg + 1);
         const d = c + 1;
-        indices.push(a, c, b, b, c, d);
+        const uFracMid = (j + 0.5) / nxLeg;
+        const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+        if (Math.cos(thetaMid) >= 0) {
+          frontIndices.push(a, c, b, b, c, d);
+        } else {
+          backIndices.push(a, c, b, b, c, d);
+        }
       }
     }
   });
 
+  const allIndices = [...frontIndices, ...backIndices];
   geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex(indices);
+  geo.setIndex(new THREE.BufferAttribute(new Uint32Array(allIndices), 1));
+  geo.clearGroups();
+  geo.addGroup(0, frontIndices.length, 0);
+  geo.addGroup(frontIndices.length, backIndices.length, 1);
   geo.computeVertexNormals();
   return geo;
 }
@@ -3859,27 +3934,32 @@ function GarmentTemplateMeshInner({
           const xArmpitSplit = isMale
             ? (0.180 + Math.max(0, 1.28 - y) * 0.42)
             : (0.150 + Math.max(0, 1.20 - y) * 0.40);
-          if (Math.abs(x) > xArmpitSplit) {
-            const side = x < 0 ? -1 : 1;
-            const armCx = isMale
-              ? (y >= 1.26 ? Math.max(0.215, 0.284 - (y - 1.26) * 0.95) : 0.284 + (1.26 - y) * 0.580)
-              : (y >= 1.22 ? Math.max(0.165, 0.211 - (y - 1.22) * 1.10) : 0.211 + (1.22 - y) * 0.628);
-            cx = side * armCx;
-            cz = isMale ? 0.004 : 0.008;
-            if (side * (x - cx) < 0) allowInnerX = false;
-            localBoost = (rawSlot === 'outerwear' ? 0.0080 : (isInnerTopUnderOuterwear || shouldTuck ? -0.0040 : 0.0020)) +
-              (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
+          const tArm = Math.max(0, Math.min(1, (Math.abs(x) - (xArmpitSplit - 0.025)) / 0.050));
+          const wArm = tArm * tArm * (3 - 2 * tArm);
+          const side = x < 0 ? -1 : 1;
+          const armCx = isMale
+            ? (y >= 1.26 ? Math.max(0.215, 0.284 - (y - 1.26) * 0.95) : 0.284 + (1.26 - y) * 0.580)
+            : (y >= 1.22 ? Math.max(0.165, 0.211 - (y - 1.22) * 1.10) : 0.211 + (1.22 - y) * 0.628);
+          const armCz = isMale ? 0.004 : 0.008;
+          const sleeveBoost = (rawSlot === 'outerwear' ? 0.0080 : (isInnerTopUnderOuterwear || shouldTuck ? -0.0040 : 0.0020)) +
+            (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
+
+          const torsoCz = getTorsoSlice(Math.max(0.5, y), isMale).cz || 0;
+          let torsoBoost;
+          if (isInnerTopUnderOuterwear || shouldTuck) {
+            const isFrontPlacket = Math.abs(x) <= 0.10 && y >= 1.12 && z > torsoCz;
+            torsoBoost = (isFrontPlacket ? 0.0010 : -0.0035) + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
           } else {
-            cz = getTorsoSlice(Math.max(0.5, y), isMale).cz || 0;
-            if (isInnerTopUnderOuterwear || shouldTuck) {
-              // Keep front chest collar/placket visible in V-opening (|x| <= 0.10, y >= 1.12, z > cz), tuck flanks & lower hem under blazer or waistband
-              const isFrontPlacket = Math.abs(x) <= 0.10 && y >= 1.12 && z > cz;
-              localBoost = (isFrontPlacket ? 0.0010 : -0.0035) + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
-            } else {
-              const hipWeight = Math.max(0, Math.min(1, (1.24 - y) / 0.16));
-              const upperTorsoBoost = (rawSlot === 'outerwear' ? 0.0075 : 0.0025) + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
-              localBoost = upperTorsoBoost + (radialBoost - upperTorsoBoost) * hipWeight;
-            }
+            const hipWeight = Math.max(0, Math.min(1, (1.24 - y) / 0.16));
+            const upperTorsoBoost = (rawSlot === 'outerwear' ? 0.0075 : 0.0025) + (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
+            torsoBoost = upperTorsoBoost + (radialBoost - upperTorsoBoost) * hipWeight;
+          }
+
+          cx = (1 - wArm) * 0 + wArm * (side * armCx);
+          cz = (1 - wArm) * torsoCz + wArm * armCz;
+          localBoost = (1 - wArm) * torsoBoost + wArm * sleeveBoost;
+          if (wArm > 0.5 && side * (x - (side * armCx)) < 0) {
+            allowInnerX = false;
           }
         } else {
           cz = getTorsoSlice(Math.max(0.5, y), isMale).cz || 0;
@@ -3978,8 +4058,8 @@ function GarmentTemplateMeshInner({
     });
     const backMat = new THREE.MeshStandardMaterial({
       ...baseProps,
-      color: (hasBackTex || hasFrontTex) ? '#FFFFFF' : fallbackCol,
-      map: backTexture || texture || null,
+      color: hasBackTex ? '#FFFFFF' : fallbackCol,
+      map: backTexture || null,
     });
     return [frontMat, backMat];
   }, [texture, backTexture, dominantColor, pbrProps, rawSlot]);
@@ -4396,6 +4476,51 @@ export function GarmentMeshCore({
   const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText, shouldTuck) + (Number.isFinite(renderOrderOffset) ? renderOrderOffset * 0.1 : 0);
   const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
 
+  const fallbackMaterials = useMemo(() => {
+    const fallbackCol = dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#CBD5E1';
+    const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
+    const baseProps = {
+      roughness: pbrProps.roughness,
+      metalness: pbrProps.metalness,
+      envMapIntensity: pbrProps.envMapIntensity,
+      side: THREE.DoubleSide,
+      transparent: !isCoreClothing && !isOpaqueSlot,
+      alphaTest: isOpaqueSlot ? 0 : 0.02,
+      depthWrite: true,
+      polygonOffset: true,
+      polygonOffsetFactor: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? 1 : -1))),
+      polygonOffsetUnits: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? 1 : -1))),
+    };
+    const frontMap = (rawSlot === 'shoes'
+      ? (filledTexture || opaqueTexture || texture)
+      : ['top', 'outerwear', 'dress', 'bottom', 'belt', 'necktie', 'watch'].includes(rawSlot)
+        ? (filledTexture || opaqueTexture || texture)
+        : texture) || null;
+    const frontCol = rawSlot === 'shoes'
+      ? ((opaqueTexture || texture) ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#94A3B8'))
+      : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1');
+
+    const frontMat = new THREE.MeshStandardMaterial({
+      ...baseProps,
+      color: frontCol,
+      map: frontMap,
+    });
+    const backMat = new THREE.MeshStandardMaterial({
+      ...baseProps,
+      color: rawSlot === 'shoes'
+        ? frontCol
+        : (backTexture ? '#FFFFFF' : fallbackCol),
+      map: (rawSlot === 'shoes' ? frontMap : backTexture) || null,
+    });
+    return [frontMat, backMat];
+  }, [filledTexture, opaqueTexture, texture, backTexture, dominantColor, pbrProps, rawSlot, isOpaqueSlot, shouldTuck]);
+
+  useEffect(() => {
+    return () => {
+      fallbackMaterials.forEach((m) => m?.dispose?.());
+    };
+  }, [fallbackMaterials]);
+
   const fallbackProceduralMesh = geometry ? (
     <>
       {heelGeometry && (
@@ -4409,31 +4534,11 @@ export function GarmentMeshCore({
       )}
       <mesh
         geometry={geometry}
+        material={geometry?.groups?.length > 1 ? fallbackMaterials : fallbackMaterials[0]}
         castShadow
         receiveShadow
         renderOrder={renderOrder}
-      >
-        <meshStandardMaterial
-          map={(rawSlot === 'shoes'
-            ? (filledTexture || opaqueTexture || texture)
-            : ['top', 'outerwear', 'dress', 'bottom', 'belt', 'necktie', 'watch'].includes(rawSlot)
-              ? (filledTexture || opaqueTexture || texture)
-              : texture) || null}
-          color={rawSlot === 'shoes'
-            ? ((opaqueTexture || texture) ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#94A3B8'))
-            : (texture ? '#FFFFFF' : dominantColor || '#CBD5E1')}
-          transparent={!isOpaqueSlot}
-          alphaTest={isOpaqueSlot ? 0 : 0.02}
-          depthWrite={true}
-          side={THREE.DoubleSide}
-          roughness={pbrProps.roughness}
-          metalness={pbrProps.metalness}
-          envMapIntensity={pbrProps.envMapIntensity}
-          polygonOffset={true}
-          polygonOffsetFactor={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? 1 : -1)))}
-          polygonOffsetUnits={rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? 1 : -1)))}
-        />
-      </mesh>
+      />
     </>
   ) : null;
 
@@ -4489,7 +4594,7 @@ export function GarmentMeshCore({
           <meshStandardMaterial map={texture} {...shellMaterialProps} />
         </mesh>
         <mesh name="garment-back-sheet" geometry={shellGeos.back} castShadow receiveShadow renderOrder={renderOrder}>
-          <meshStandardMaterial map={backTexture || texture} {...shellMaterialProps} />
+          <meshStandardMaterial map={backTexture || null} color={backTexture ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#CBD5E1')} {...shellMaterialProps} />
         </mesh>
       </>
     );
@@ -4544,7 +4649,7 @@ export function GarmentMeshCore({
           <meshStandardMaterial map={texture} {...shellMaterialProps} />
         </mesh>
         <mesh name="garment-back-sheet" geometry={shellGeos.back} castShadow receiveShadow renderOrder={renderOrder}>
-          <meshStandardMaterial map={backTexture || texture} {...shellMaterialProps} />
+          <meshStandardMaterial map={backTexture || null} color={backTexture ? '#FFFFFF' : (dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#CBD5E1')} {...shellMaterialProps} />
         </mesh>
       </>
     );

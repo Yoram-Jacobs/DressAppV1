@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { poseAvatarGeometry } from '@/lib/footwearFit';
+import { poseAvatarGeometry } from '@/lib/footwearFitting';
 import * as THREE from 'three';
 import { resolveHairProperties, applyAvatarAppearance } from './DynamicAvatar';
 
@@ -321,6 +321,7 @@ export default function AvatarMesh3D({
   const { scene } = useGLTF(modelUrl, '/draco/');
   const internalRef = useRef(null);
   const groupRef = externalGroupRef || internalRef;
+  const originalGeomMap = useRef(new WeakMap());
 
   const hairProps = useMemo(() => {
     if (providedHairProps) return providedHairProps;
@@ -341,7 +342,8 @@ export default function AvatarMesh3D({
         }
       }
       if (node.isMesh && node.geometry) {
-        node.userData.originalGeometry = node.geometry;
+        delete node.userData.originalGeometry;
+        originalGeomMap.current.set(node, node.geometry);
       }
     });
 
@@ -367,7 +369,7 @@ export default function AvatarMesh3D({
       (coveredZones.hasTop || coveredZones.hasOuterwear || coveredZones.hasDress || coveredZones.hasBottom || coveredZones.hasShoes || coveredZones.hasHeadwear)
     );
     clonedScene.traverse((node) => {
-      const original = node.userData?.originalGeometry;
+      const original = originalGeomMap.current.get(node);
       if (!node.isMesh || !original) return;
       if (node.geometry !== original) {
         node.geometry.dispose?.();
@@ -419,8 +421,8 @@ export default function AvatarMesh3D({
       // Clean up cloned geometries when unmounting or dependencies change
       if (!clonedScene) return;
       clonedScene.traverse((node) => {
-        const original = node.userData?.originalGeometry;
-        if (node.isMesh && node.geometry && node.geometry !== original) {
+        const original = originalGeomMap.current.get(node);
+        if (node.isMesh && node.geometry && original && node.geometry !== original) {
           node.geometry.dispose?.();
           node.geometry = original;
         }
@@ -434,8 +436,8 @@ export default function AvatarMesh3D({
       if (!clonedScene) return;
       clonedScene.traverse((node) => {
         if (node.isMesh) {
-          const original = node.userData?.originalGeometry;
-          if (node.geometry && node.geometry !== original) {
+          const original = originalGeomMap.current.get(node);
+          if (node.geometry && original && node.geometry !== original) {
             node.geometry.dispose?.();
           }
           if (node.material) {

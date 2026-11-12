@@ -38,7 +38,7 @@ import GarmentMesh3D, {
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
-import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFit';
+import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFitting';
 import { useModalBack } from '@/lib/useModalBack';
 
 class SafeGarmentWrapper extends React.Component {
