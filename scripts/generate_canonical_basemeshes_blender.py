@@ -297,11 +297,15 @@ def drape_garment_shell(
                     if v.co.z > max_sh_z:
                         v.co.z = max_sh_z
             else:
-                # Short sleeve cylindrical shaping
-                sleeve_ease = offset + 0.006 * (0.5 + 0.5 * drape_looseness)
+                # Short sleeve cylindrical shaping: smoothly blend from deltoid shoulder tip down to cuff
+                # Never distort deltoid/shoulder apex into a cylinder!
+                x_shoulder_tip = 0.210 if is_male else 0.185
+                x_cuff_approx = 0.305 if is_male else 0.270
+                t_sleeve = max(0.0, min(1.0, (abs_x - x_shoulder_tip) / max(0.02, x_cuff_approx - x_shoulder_tip)))
+                sleeve_ease = offset + 0.005 * (0.5 + 0.5 * drape_looseness)
                 r_target = max(arm_sl["rz"], arm_sl["ry"]) + sleeve_ease
                 if r_cur < r_target:
-                    blend_cyl = 0.58 * drape_looseness
+                    blend_cyl = (0.12 + 0.38 * t_sleeve) * drape_looseness
                     r_new = r_cur * (1.0 - blend_cyl) + r_target * blend_cyl
                     v.co.y = cy_arm + (dy / r_cur) * r_new
                     v.co.z = cz_arm + (dz / r_cur) * r_new
@@ -1010,9 +1014,9 @@ def build_top_template(avatar_data, variant="tshirt"):
 
     if variant == "tshirt":
         offset = 0.0080
-        z_neck = 1.534 if is_male else 1.436
+        z_neck = 1.545 if is_male else 1.455
         z_hem = 0.85 if is_male else 0.82
-        x_arm_max = 0.340 if is_male else 0.300
+        x_arm_max = 0.305 if is_male else 0.270
         sleeve_type = "short"
         neck_tilt = -0.32 if is_male else -0.30
     elif variant == "singlet":
@@ -1123,6 +1127,19 @@ def build_top_template(avatar_data, variant="tshirt"):
     bm.verts.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
 
+    # Seal avatar shoulder/armpit UV-seam boundary holes before cutting so shoulders remain 100% continuous and manifold
+    sh_holes = [
+        e for e in bm.edges
+        if e.is_boundary and (0.07 <= abs(e.verts[0].co.x) <= 0.30) and (1.18 <= e.verts[0].co.z <= 1.52)
+    ]
+    if sh_holes:
+        try:
+            bmesh.ops.holes_fill(bm, edges=sh_holes, sides=32)
+        except Exception:
+            pass
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
+
     # 1. Precision Upper-Hip Torso Cut (cuts strictly above groin/crotch leg split at z_hip_cut
     # so tops/sweaters/coats never map onto the avatar's individual legs or crotch notch!)
     z_hip_cut = max(z_hem, 0.91 if is_male else 0.89)
@@ -1159,8 +1176,8 @@ def build_top_template(avatar_data, variant="tshirt"):
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "short":
         # Short sleeve extending along true upper arm axis down the bicep
-        arm_axis_r = Vector((0.4642, -0.0137, -0.8856)).normalized() if is_male else Vector((0.4506, 0.0464, -0.8915)).normalized()
-        cuff_z = 1.20 if is_male else 1.15
+        arm_axis_r = Vector((0.4361, -0.0356, -0.8992)).normalized() if is_male else Vector((0.4506, 0.0464, -0.8915)).normalized()
+        cuff_z = 1.285 if is_male else 1.220
         cuff_r = Vector((x_arm_max, 0.003, cuff_z))
         x_cut_min = 0.20 if is_male else 0.18
 
@@ -1225,11 +1242,11 @@ def build_top_template(avatar_data, variant="tshirt"):
     # 3. Precision Curved Collar / Strapless Cut (cuts only the neck opening or bustline while preserving 100% of body)
     if variant == "tshirt":
         # Precision Crew Neck Collar: cut only inside neck cylinder (|x| <= rx_neck), NEVER slicing shoulders!
-        rx_neck = 0.082 if is_male else 0.076
-        ry_front = 0.090 if is_male else 0.082
-        ry_back = 0.080 if is_male else 0.074
+        rx_neck = 0.072 if is_male else 0.068
+        ry_front = 0.075 if is_male else 0.070
+        ry_back = 0.038 if is_male else 0.034
         z_collar_front = 1.470 if is_male else 1.390
-        z_collar_back = 1.520 if is_male else 1.435
+        z_collar_back = 1.545 if is_male else 1.455
 
         del_neck = []
         for f in bm.faces:
@@ -1247,7 +1264,7 @@ def build_top_template(avatar_data, variant="tshirt"):
 
             if r_neck_norm < 1.0 and mean_z > z_col:
                 del_neck.append(f)
-            elif mean_z > 1.55:
+            elif mean_z > (1.58 if is_male else 1.49) and abs(mean_x) < (0.10 if is_male else 0.09):
                 del_neck.append(f)
 
         if del_neck:
@@ -1396,13 +1413,13 @@ def build_top_template(avatar_data, variant="tshirt"):
         e for e in bm.edges
         if e.is_boundary
         and e.verts[0].co.z > (z_hem + 0.01)
-        and abs(e.verts[0].co.x) < 0.21
+        and abs(e.verts[0].co.x) < 0.28
         and (e.verts[0].co.z < (z_neck - 0.03) or abs(e.verts[0].co.x) > 0.095)
         and not (is_open_front and abs(e.verts[0].co.x) < 0.035 and e.verts[0].co.y < -0.01)
     ]
     if small_holes:
         try:
-            bmesh.ops.holes_fill(bm, edges=small_holes, sides=8)
+            bmesh.ops.holes_fill(bm, edges=small_holes, sides=32)
         except Exception:
             pass
 
@@ -1879,6 +1896,19 @@ def build_dress_template(avatar_data, variant="dress"):
         bmesh.ops.delete(bm, geom=non_body, context='FACES')
     bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.0002)
     bmesh.ops.dissolve_degenerate(bm, dist=0.0001, edges=bm.edges[:])
+    bm.verts.ensure_lookup_table()
+    bm.faces.ensure_lookup_table()
+
+    # Seal avatar shoulder/armpit UV-seam boundary holes before cutting so shoulders remain 100% continuous and manifold
+    sh_holes = [
+        e for e in bm.edges
+        if e.is_boundary and (0.07 <= abs(e.verts[0].co.x) <= 0.30) and (1.18 <= e.verts[0].co.z <= 1.52)
+    ]
+    if sh_holes:
+        try:
+            bmesh.ops.holes_fill(bm, edges=sh_holes, sides=32)
+        except Exception:
+            pass
     bm.verts.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
 
