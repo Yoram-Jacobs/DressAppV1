@@ -4459,21 +4459,10 @@ export function GarmentMeshCore({
     };
   }, [baseGeometry, geometry, shell, shellGeos, heelGeometry]);
 
-  if (!visible || !garment) return null;
-
-  const isAccessory = ['belt', 'glasses', 'watch', 'headwear', 'bag', 'jewelry', 'necktie', 'scarf', 'accessory'].includes(rawSlot);
-  const isClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
-  const isCoreClothing = isClothing;
-  // Never render untextured solid black/opaque meshes before the garment texture is loaded,
-  // unless a matched 3D template exists (which renders safely with dominantColor fallback).
-  if (!textureReady && !matchedTemplateId && !isAccessory) return null;
-  if (!isAccessory && !isClothing && !texture && !filledTexture && !opaqueTexture) return null;
-
   const isTuckableTop = rawSlot === 'top' &&
     !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(matchedTemplateId) &&
     !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
   const shouldTuck = isTuckableTop && hasBottom;
-  const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText, shouldTuck) + (Number.isFinite(renderOrderOffset) ? renderOrderOffset * 0.1 : 0);
   const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
 
   const fallbackMaterials = useMemo(() => {
@@ -4520,6 +4509,18 @@ export function GarmentMeshCore({
       fallbackMaterials.forEach((m) => m?.dispose?.());
     };
   }, [fallbackMaterials]);
+
+  if (!visible || !garment) return null;
+
+  const isAccessory = ['belt', 'glasses', 'watch', 'headwear', 'bag', 'jewelry', 'necktie', 'scarf', 'accessory'].includes(rawSlot);
+  const isClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
+  const isCoreClothing = isClothing;
+  // Never render untextured solid black/opaque meshes before the garment texture is loaded,
+  // unless a matched 3D template exists (which renders safely with dominantColor fallback).
+  if (!textureReady && !matchedTemplateId && !isAccessory) return null;
+  if (!isAccessory && !isClothing && !texture && !filledTexture && !opaqueTexture) return null;
+
+  const renderOrder = resolveGarmentRenderOrder(rawSlot, garmentText, shouldTuck) + (Number.isFinite(renderOrderOffset) ? renderOrderOffset * 0.1 : 0);
 
   const fallbackProceduralMesh = geometry ? (
     <>
