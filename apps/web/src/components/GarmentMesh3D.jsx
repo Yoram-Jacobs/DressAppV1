@@ -31,34 +31,34 @@ import {
 // ─── Anatomical Profiles Extracted from Avatar 3D Meshes (Exact Metric Coordinates) ───
 
 export const TORSO_PROFILE_FEMALE = [
-  { y: 1.46, rx: 0.125, cz: 0.030, rz: 0.082, rzFront: 0.082, rzBack: 0.075 }, // High collar / neck base
-  { y: 1.42, rx: 0.192, cz: 0.015, rz: 0.078, rzFront: 0.082, rzBack: 0.072 }, // Shoulder line / clavicle (zMin=-0.045, zMax=+0.067)
-  { y: 1.36, rx: 0.215, cz: 0.020, rz: 0.104, rzFront: 0.112, rzBack: 0.090 }, // Upper chest / scapulae top (zMin=-0.063, zMax=+0.100)
-  { y: 1.25, rx: 0.210, cz: 0.052, rz: 0.130, rzFront: 0.136, rzBack: 0.114 }, // Bust peak & scapulae (zMin=-0.057, zMax=+0.170)
-  { y: 1.15, rx: 0.174, cz: 0.054, rz: 0.118, rzFront: 0.128, rzBack: 0.094 }, // Under-bust (zMin=-0.028, zMax=+0.165)
-  { y: 1.05, rx: 0.146, cz: 0.052, rz: 0.110, rzFront: 0.116, rzBack: 0.095 }, // Natural waist / belly (rx=0.142, zMin=-0.042, zMax=+0.155)
+  { y: 1.46, rx: 0.058, cz: 0.020, rz: 0.056, rzFront: 0.056, rzBack: 0.056 }, // Snug crew collar / neck base (prevents exposed shoulders)
+  { y: 1.42, rx: 0.190, cz: 0.015, rz: 0.078, rzFront: 0.082, rzBack: 0.072 }, // Shoulder line / clavicle (zMin=-0.045, zMax=+0.067)
+  { y: 1.36, rx: 0.212, cz: 0.020, rz: 0.104, rzFront: 0.112, rzBack: 0.090 }, // Upper chest / scapulae top (zMin=-0.063, zMax=+0.100)
+  { y: 1.25, rx: 0.202, cz: 0.052, rz: 0.126, rzFront: 0.132, rzBack: 0.112 }, // Bust peak & scapulae (zMin=-0.057, zMax=+0.170)
+  { y: 1.15, rx: 0.172, cz: 0.054, rz: 0.116, rzFront: 0.124, rzBack: 0.094 }, // Under-bust (zMin=-0.028, zMax=+0.165)
+  { y: 1.05, rx: 0.148, cz: 0.052, rz: 0.110, rzFront: 0.116, rzBack: 0.095 }, // Natural waist / belly (rx=0.148, natural proportion)
   { y: 0.95, rx: 0.172, cz: 0.024, rz: 0.128, rzFront: 0.138, rzBack: 0.120 }, // Upper hips / lower belly (zMin=-0.101, zMax=+0.151)
-  { y: 0.82, rx: 0.188, cz: 0.016, rz: 0.118, rzFront: 0.124, rzBack: 0.114 }, // Pelvis / crotch (zMin=-0.100, zMax=+0.128)
+  { y: 0.82, rx: 0.186, cz: 0.016, rz: 0.118, rzFront: 0.124, rzBack: 0.114 }, // Pelvis / crotch (exact outer alignment with leg rx=0.186)
   { y: 0.65, rx: 0.186, cz: 0.032, rz: 0.108, rzFront: 0.112, rzBack: 0.100 }, // Upper thigh flare (skirts/dresses)
 ];
 
 export const TORSO_PROFILE_MALE = [
-  { y: 1.52, rx: 0.145, cz: 0.016, rz: 0.088, rzFront: 0.085, rzBack: 0.082 }, // High collar / neck base (zMin=-0.059, zMax=+0.092)
-  { y: 1.48, rx: 0.220, cz: 0.008, rz: 0.098, rzFront: 0.096, rzBack: 0.096 }, // Shoulder line / clavicle (zMin=-0.083, zMax=+0.096)
-  { y: 1.42, rx: 0.235, cz: 0.013, rz: 0.122, rzFront: 0.124, rzBack: 0.122 }, // Shoulders / upper chest (zMin=-0.110, zMax=+0.135)
-  { y: 1.30, rx: 0.215, cz: 0.027, rz: 0.140, rzFront: 0.142, rzBack: 0.138 }, // Chest / pecs peak & scapulae (zMin=-0.113, zMax=+0.168)
-  { y: 1.18, rx: 0.178, cz: 0.036, rz: 0.116, rzFront: 0.118, rzBack: 0.112 }, // Rib cage / lumbar taper (zMin=-0.066, zMax=+0.148)
-  { y: 1.08, rx: 0.148, cz: 0.044, rz: 0.106, rzFront: 0.106, rzBack: 0.106 }, // Waist (rx=0.148, zMin=-0.062, zMax=+0.149)
-  { y: 0.96, rx: 0.172, cz: 0.025, rz: 0.128, rzFront: 0.128, rzBack: 0.128 }, // Upper hips / glutes (zMin=-0.103, zMax=+0.153)
-  { y: 0.86, rx: 0.184, cz: 0.018, rz: 0.116, rzFront: 0.116, rzBack: 0.116 }, // Pelvis / crotch (zMin=-0.088, zMax=+0.123)
+  { y: 1.52, rx: 0.068, cz: 0.016, rz: 0.065, rzFront: 0.065, rzBack: 0.065 }, // Snug crew collar / neck base (prevents exposed shoulders)
+  { y: 1.48, rx: 0.210, cz: 0.010, rz: 0.092, rzFront: 0.092, rzBack: 0.090 }, // Shoulder line / clavicle (covers clavicles completely)
+  { y: 1.42, rx: 0.232, cz: 0.013, rz: 0.115, rzFront: 0.118, rzBack: 0.112 }, // Shoulders / upper chest (aligned with avatar acromion)
+  { y: 1.30, rx: 0.214, cz: 0.027, rz: 0.130, rzFront: 0.132, rzBack: 0.128 }, // Chest / pecs peak & scapulae
+  { y: 1.18, rx: 0.176, cz: 0.036, rz: 0.116, rzFront: 0.118, rzBack: 0.112 }, // Rib cage / lumbar taper
+  { y: 1.08, rx: 0.154, cz: 0.044, rz: 0.106, rzFront: 0.106, rzBack: 0.106 }, // Natural waist (no pinched corset waist)
+  { y: 0.96, rx: 0.172, cz: 0.025, rz: 0.128, rzFront: 0.128, rzBack: 0.128 }, // Upper hips / glutes
+  { y: 0.86, rx: 0.184, cz: 0.018, rz: 0.116, rzFront: 0.116, rzBack: 0.116 }, // Pelvis / crotch (exact outer alignment with leg cx+r=0.184)
   { y: 0.70, rx: 0.188, cz: 0.028, rz: 0.110, rzFront: 0.110, rzBack: 0.106 }, // Thigh flare
 ];
 
 export const LEG_PROFILE_FEMALE = [
-  { y: 0.82, cx: 0.094, r: 0.092, cz: 0.016, rzFront: 0.102, rzBack: 0.100 }, // Crotch / upper thigh (xmin=0.002, xmax=0.186)
-  { y: 0.75, cx: 0.101, r: 0.087, cz: 0.032, rzFront: 0.086, rzBack: 0.086 }, // Upper-mid thigh (xmin=0.014, xmax=0.188)
-  { y: 0.65, cx: 0.115, r: 0.068, cz: 0.040, rzFront: 0.074, rzBack: 0.074 }, // Mid thigh (xmin=0.047, xmax=0.183)
-  { y: 0.50, cx: 0.129, r: 0.058, cz: 0.036, rzFront: 0.062, rzBack: 0.062 }, // Knee (xmin=0.071, xmax=0.187)
+  { y: 0.82, cx: 0.094, r: 0.092, cz: 0.016, rzFront: 0.102, rzBack: 0.100 }, // Crotch / upper thigh (cx+r=0.186 matches pelvis rx)
+  { y: 0.75, cx: 0.101, r: 0.087, cz: 0.024, rzFront: 0.086, rzBack: 0.086 }, // Upper-mid thigh (smooth cz gradient)
+  { y: 0.65, cx: 0.115, r: 0.068, cz: 0.032, rzFront: 0.074, rzBack: 0.074 }, // Mid thigh (xmin=0.047, xmax=0.183)
+  { y: 0.50, cx: 0.129, r: 0.058, cz: 0.028, rzFront: 0.062, rzBack: 0.062 }, // Knee (xmin=0.071, xmax=0.187)
   { y: 0.40, cx: 0.148, r: 0.060, cz: 0.003, rzFront: 0.059, rzBack: 0.059 }, // Back of knee / upper calf (xmin=0.088, xmax=0.208)
   { y: 0.30, cx: 0.155, r: 0.053, cz: 0.010, rzFront: 0.054, rzBack: 0.054 }, // Calf (xmin=0.102, xmax=0.208)
   { y: 0.20, cx: 0.166, r: 0.033, cz: 0.021, rzFront: 0.038, rzBack: 0.038 }, // Lower calf (xmin=0.133, xmax=0.199)
@@ -66,10 +66,10 @@ export const LEG_PROFILE_FEMALE = [
 ];
 
 export const LEG_PROFILE_MALE = [
-  { y: 0.86, cx: 0.094, r: 0.090, cz: 0.018, rzFront: 0.114, rzBack: 0.112 }, // Crotch (xmin=0.004, xmax=0.184)
-  { y: 0.78, cx: 0.098, r: 0.090, cz: 0.036, rzFront: 0.092, rzBack: 0.092 }, // Upper thigh (xmin=0.008, xmax=0.188)
-  { y: 0.70, cx: 0.105, r: 0.082, cz: 0.040, rzFront: 0.086, rzBack: 0.086 }, // Mid thigh (xmin=0.023, xmax=0.187)
-  { y: 0.58, cx: 0.115, r: 0.061, cz: 0.029, rzFront: 0.073, rzBack: 0.073 }, // Lower thigh (xmin=0.054, xmax=0.176)
+  { y: 0.86, cx: 0.094, r: 0.090, cz: 0.018, rzFront: 0.114, rzBack: 0.112 }, // Crotch (cx+r=0.184 matches pelvis rx)
+  { y: 0.78, cx: 0.098, r: 0.090, cz: 0.024, rzFront: 0.096, rzBack: 0.096 }, // Upper thigh (smooth cz gradient, no forward ledge)
+  { y: 0.70, cx: 0.105, r: 0.082, cz: 0.028, rzFront: 0.086, rzBack: 0.086 }, // Mid thigh (smooth lateral curve)
+  { y: 0.58, cx: 0.115, r: 0.061, cz: 0.024, rzFront: 0.073, rzBack: 0.073 }, // Lower thigh (xmin=0.054, xmax=0.176)
   { y: 0.50, cx: 0.133, r: 0.058, cz: 0.000, rzFront: 0.072, rzBack: 0.072 }, // Knee (xmin=0.075, xmax=0.191)
   { y: 0.40, cx: 0.142, r: 0.066, cz: -0.022, rzFront: 0.062, rzBack: 0.062 }, // Back of knee / upper calf (xmin=0.076, xmax=0.208)
   { y: 0.30, cx: 0.144, r: 0.059, cz: -0.025, rzFront: 0.052, rzBack: 0.052 }, // Calf (xmin=0.085, xmax=0.203)
@@ -1972,8 +1972,8 @@ export function detectNecklineStyle({ garmentText = '', garment = null } = {}) {
   if (/(?:v[-_\s]?neck|vneck|plunge|פתח וי|מחשוף וי|צווארון וי|v-ausschnitt|col en v|cuello en v)/i.test(text)) {
     return 'v_neck';
   }
-  // 3. Scoop Neck / U-Neck / Low Round
-  if (/(?:scoop|u[-_\s]?neck|low round|פתח עגול|מחשוף עגול|צווארון עגול נמוך|decollete)/i.test(text)) {
+  // 3. Scoop Neck / U-Neck / Low Plunging Round (excludes standard crew neck)
+  if (/(?:scoop|u[-_\s]?neck|low round|מחשוף עגול עמוק|מחשוף עגול נמוך|צווארון עגול נמוך|decollete|décolleté)/i.test(text)) {
     return 'scoop';
   }
   // 4. Square Neck
@@ -1996,8 +1996,8 @@ export function detectNecklineStyle({ garmentText = '', garment = null } = {}) {
   if (/(?:button|collared|shirt collar|polo|mandarin|צווארון|מכופתרת|פולו|סיני)/i.test(text)) {
     return 'collared';
   }
-  // 9. Crew Neck / Round Neck
-  if (/(?:crew[-_\s]?neck|crewneck|round[-_\s]?neck|tee|t-?shirt|טי שירט|חולצת טי|צווארון עגול|טריקו)/i.test(text)) {
+  // 9. Crew Neck / Standard Round Neck (default for t-shirts & everyday tops)
+  if (/(?:crew[-_\s]?neck|crewneck|round[-_\s]?neck|tee|t-?shirt|טי שירט|חולצת טי|צווארון עגול|פתח עגול|מחשוף עגול|טריקו)/i.test(text)) {
     return 'crew_neck';
   }
   return 'crew_neck';
@@ -2040,9 +2040,9 @@ export function createAnatomicalTopGeometry({
     const y = yTop - vNorm * (yTop - effBottom);
     const slice = getTorsoSlice(y, isMale);
 
-    const effOffset = isTucked && y <= yWaistTop ? 0.0035 : layerOffset;
+    const effOffset = isTucked && y <= yWaistTop ? 0.004 : layerOffset;
     const uTuck = (isTucked && y <= yWaistTop) ? Math.min(1.0, Math.max(0.0, (yWaistTop - y) / Math.max(0.01, yWaistTop - effBottom))) : 0;
-    const scaleRad = 1.0 - 0.12 * uTuck;
+    const scaleRad = 1.0 - (isTucked ? 0.025 * uTuck : 0);
     const rx = (slice.rx + effOffset) * scaleRad;
     const rz = (slice.rz + effOffset) * scaleRad;
     const cz = slice.cz;
@@ -2073,8 +2073,8 @@ export function createAnatomicalTopGeometry({
       const bustFactor = Math.max(0, Math.cos(theta * 1.3));
       const bustBulge = (y >= 1.12 && y <= 1.34 && !isMale) ? 0.026 * bustFactor : 0.0;
       const frontCos = Math.pow(Math.max(0, Math.cos(theta)), 0.65);
-      const rzFrontEff = ((slice.rzFront || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.15 * uTuck) : 1.0);
-      const rzBackEff = ((slice.rzBack || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.25 * uTuck) : 1.0);
+      const rzFrontEff = ((slice.rzFront || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.03 * uTuck) : 1.0);
+      const rzBackEff = ((slice.rzBack || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.03 * uTuck) : 1.0);
       const z = isFront
         ? cz + (rzFrontEff + bustBulge) * frontCos
         : cz - (rzBackEff + 0.012) * Math.abs(Math.cos(theta));
@@ -2109,16 +2109,16 @@ export function createAnatomicalTopGeometry({
   // 2. Left & Right Sleeves (tailored elliptical contours, continuous shoulder-armscye bridge)
   if (hasAnySleeve) {
     const sides = [-1, 1]; // Left (-X), Right (+X)
-    const nySleeve = Math.max(4, Math.round(10 * Math.min(1.0, sleeveFactor * 1.5)));
-    const nxSleeve = 14;
+    const nySleeve = Math.max(5, Math.round(10 * Math.min(1.0, sleeveFactor * 1.5)));
+    const nxSleeve = 16;
 
-    const yArmStart = isMale ? 1.48 : 1.42;
+    const yArmStart = isMale ? 1.45 : 1.40;
     const fullYArmEnd = isMale ? 1.069 : 0.956;
     const yArmEnd = yArmStart - sleeveFactor * (yArmStart - fullYArmEnd);
 
     // Seamless shoulder-to-armscye bridge with ZERO void or gap:
-    const shoulderRx = (isMale ? 0.195 : 0.170) + layerOffset * 0.4;
-    const xArmStart = shoulderRx + 0.015;
+    const shoulderRx = (isMale ? 0.205 : 0.185) + layerOffset * 0.4;
+    const xArmStart = shoulderRx - 0.005;
     const fullXArmEnd = isMale ? 0.355 : 0.325;
     const xArmEnd = xArmStart + sleeveFactor * (fullXArmEnd - xArmStart);
 
@@ -2126,7 +2126,7 @@ export function createAnatomicalTopGeometry({
     const zArmEnd = 0.020 + sleeveFactor * (fullZArmEnd - 0.020);
 
     // Slim, tailored sleeve radii (eliminates barrel appearance)
-    const rArmStart = 0.052 + Math.min(0.010, layerOffset * 0.3);
+    const rArmStart = 0.054 + Math.min(0.010, layerOffset * 0.3);
     const fullRArmEnd = 0.038 + Math.min(0.008, layerOffset * 0.2);
     const rArmEnd = rArmStart - sleeveFactor * (rArmStart - fullRArmEnd);
 
@@ -2143,7 +2143,7 @@ export function createAnatomicalTopGeometry({
         const xArm = side * (xArmStart + t * (xArmEnd - xArmStart));
         const zArm = 0.020 + t * (zArmEnd - 0.020);
         const rArm = rArmStart - t * (rArmStart - rArmEnd);
-        const rx = rArm * 0.84; // Elliptical tailored cross-section
+        const rx = rArm * 0.88; // Elliptical tailored cross-section
         const rz = rArm * 1.05;
 
         const vTex = 0.85 - t * (0.85 - vCuff);
@@ -2177,6 +2177,27 @@ export function createAnatomicalTopGeometry({
           } else {
             backIndices.push(a, c, b, b, c, d);
           }
+        }
+      }
+
+      // Manifold cuff end-cap (sealed cap vertex at cuff center)
+      const cuffCenterIdx = verts.length / 3;
+      const yCuffCenter = yArmEnd;
+      const xCuffCenter = side * xArmEnd;
+      const zCuffCenter = zArmEnd;
+      verts.push(xCuffCenter, yCuffCenter, zCuffCenter);
+      uvs.push(side === 1 ? 0.85 : 0.15, vCuff);
+
+      const cuffRingStart = startIdx + nySleeve * (nxSleeve + 1);
+      for (let j = 0; j < nxSleeve; j++) {
+        const v0 = cuffRingStart + j;
+        const v1 = cuffRingStart + j + 1;
+        const uFracMid = (j + 0.5) / nxSleeve;
+        const thetaMid = -Math.PI + uFracMid * 2 * Math.PI;
+        if (Math.cos(thetaMid) >= 0) {
+          frontIndices.push(v0, v1, cuffCenterIdx);
+        } else {
+          backIndices.push(v0, v1, cuffCenterIdx);
         }
       }
     });
@@ -2475,11 +2496,19 @@ export function createAnatomicalBottomGeometry({
     const tPelvis = i / nyPelvis; // 0 at waist, 1 at crotch
     const y = yWaist - tPelvis * (yWaist - yCrotch);
     const sliceTorso = getTorsoSlice(y, isMale);
+    const legTopSlice = getLegSlice(yCrotch, isMale);
     const fitOff = Math.max(0.0055, Math.min(layerOffset, 0.012));
-    const rx = sliceTorso.rx + fitOff;
-    const rzFront = (sliceTorso.rzFront || sliceTorso.rz) + fitOff;
-    const rzBack = (sliceTorso.rzBack || sliceTorso.rz) + fitOff;
-    const cz = sliceTorso.cz;
+
+    // Smooth convergence across lower pelvis (tPelvis >= 0.65) to match leg top ring
+    // Eliminates any lateral or front/back step between pelvis and legs at all viewing angles.
+    const legOuterEdge = legTopSlice.cx + legTopSlice.r + fitOff;
+    const tBlend = Math.max(0, Math.min(1, (tPelvis - 0.65) / 0.35));
+    const sBlend = tBlend * tBlend * (3 - 2 * tBlend);
+
+    const rx = (1 - sBlend) * (sliceTorso.rx + fitOff) + sBlend * legOuterEdge;
+    const cz = (1 - sBlend) * sliceTorso.cz + sBlend * legTopSlice.cz;
+    const rzFront = (1 - sBlend) * ((sliceTorso.rzFront || sliceTorso.rz) + fitOff) + sBlend * (legTopSlice.rzFront + fitOff);
+    const rzBack = (1 - sBlend) * ((sliceTorso.rzBack || sliceTorso.rz) + fitOff) + sBlend * (legTopSlice.rzBack + fitOff);
     const vTex = 0.98 - tPelvis * pelvisTexSpan * 0.94;
 
     for (let j = 0; j <= nxPelvis; j++) {
@@ -2489,7 +2518,7 @@ export function createAnatomicalBottomGeometry({
       const x = rx * Math.sin(theta);
       // Subtle crotch saddle indentation exclusively at the bottom crotch boundary (tPelvis -> 1)
       const centerT = Math.max(0, 1 - Math.abs(Math.sin(theta)) / 0.28);
-      const saddlePinch = Math.pow(tPelvis, 2.2) * centerT * 0.003;
+      const saddlePinch = Math.pow(tPelvis, 2.5) * centerT * 0.008;
       const z = isFront
         ? cz + Math.max(0.02, rzFront - saddlePinch) * Math.cos(theta)
         : cz - Math.max(0.02, rzBack - saddlePinch) * Math.abs(Math.cos(theta));
