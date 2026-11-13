@@ -254,6 +254,15 @@ export function resolveGarmentTemplate({
     }
     if (
       has(
+        't-shirt', 'tshirt', 't shirt', 'tee',
+        'טי שירט', 'טי-שירט', 'חולצת טי', 'טישירט'
+      ) &&
+      !has('long sleeve', 'long-sleeve', 'שרוול ארוך')
+    ) {
+      return 'top_tshirt';
+    }
+    if (
+      has(
         'dress shirt', 'button-down', 'button down', 'button-up', 'oxford', 'chambray',
         'מכופתרת', 'חולצה מכופתרת', 'אוקספורד'
       ) &&

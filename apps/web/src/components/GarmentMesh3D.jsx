@@ -1992,13 +1992,13 @@ export function detectNecklineStyle({ garmentText = '', garment = null } = {}) {
   if (/(?:turtleneck|mock[-_\s]?neck|high[-_\s]?neck|roll neck|funnel|גולף|צווארון גולף|צווארון גבוה)/i.test(text)) {
     return 'high_neck';
   }
-  // 8. Collared / Button-down / Polo / Shirt Collar
+  // 8. Crew Neck / Standard Round Neck (checked before generic collared so 'צווארון עגול' never matches 'collared')
+  if (/(?:crew[-_\s]?neck|crewneck|round[-_\s]?neck|tee|t-?shirt|טי שירט|טי-שירט|חולצת טי|טישירט|צווארון עגול|פתח עגול|מחשוף עגול|טריקו)/i.test(text)) {
+    return 'crew_neck';
+  }
+  // 9. Collared / Button-down / Polo / Shirt Collar
   if (/(?:button|collared|shirt collar|polo|mandarin|צווארון|מכופתרת|פולו|סיני)/i.test(text)) {
     return 'collared';
-  }
-  // 9. Crew Neck / Standard Round Neck (default for t-shirts & everyday tops)
-  if (/(?:crew[-_\s]?neck|crewneck|round[-_\s]?neck|tee|t-?shirt|טי שירט|חולצת טי|צווארון עגול|פתח עגול|מחשוף עגול|טריקו)/i.test(text)) {
-    return 'crew_neck';
   }
   return 'crew_neck';
 }

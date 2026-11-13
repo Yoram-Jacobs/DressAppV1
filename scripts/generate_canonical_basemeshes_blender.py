@@ -133,11 +133,11 @@ def measure_leg_slice(verts, z_height, band=0.018):
 def measure_arm_slice(verts, x_dist, z_min=0.70, z_max=1.55, band=0.018, is_male=True):
     """Measures arm center and radii at lateral distance x_dist using anatomical 3D arm axis."""
     x_sh = 0.220 if is_male else 0.192
-    z_sh = 1.480 if is_male else 1.420
-    y_sh = -0.008 if is_male else -0.015
+    z_sh = 1.370 if is_male else 1.275
+    y_sh = -0.008 if is_male else -0.008
     x_wr = 0.465 if is_male else 0.410
-    z_wr = 0.975 if is_male else 0.895
-    y_wr = -0.028 if is_male else -0.018
+    z_wr = 0.975 if is_male else 0.907
+    y_wr = -0.028 if is_male else -0.025
 
     t_arm = max(0.0, min(1.0, (x_dist - x_sh) / max(0.01, x_wr - x_sh)))
     z_axis = z_sh + t_arm * (z_wr - z_sh)
@@ -146,8 +146,8 @@ def measure_arm_slice(verts, x_dist, z_min=0.70, z_max=1.55, band=0.018, is_male
     pts = [
         v for v in verts
         if abs(v.x - x_dist) <= band
-        and abs(v.z - z_axis) <= 0.095
-        and abs(v.y - y_axis) <= 0.095
+        and abs(v.z - z_axis) <= 0.125
+        and abs(v.y - y_axis) <= 0.110
     ]
     if not pts:
         pts = [
@@ -309,23 +309,23 @@ def drape_garment_shell(
                         v.co.z = max_sh_z
             else:
                 # Short sleeve natural anatomical drape: follow the elliptical arm contour with subtle gravity ease
-                # (avoids rigid circular robot-tube cylinders while keeping clean bicep clearance)
+                # (avoids rigid circular robot-tube cylinders while keeping clean bicep & underarm clearance)
                 x_shoulder_tip = 0.210 if is_male else 0.185
                 x_cuff_approx = 0.305 if is_male else 0.270
                 t_sleeve = max(0.0, min(1.0, (abs_x - x_shoulder_tip) / max(0.02, x_cuff_approx - x_shoulder_tip)))
-                sleeve_ease = offset + 0.004 * (0.4 + 0.6 * drape_looseness)
+                sleeve_ease = offset + (0.0065 if dz < 0.0 else 0.0045) * (0.45 + 0.55 * drape_looseness)
                 ry_arm = arm_sl["ry"] + sleeve_ease
                 rz_arm = arm_sl["rz"] + sleeve_ease
                 theta_arm = math.atan2(dz, dy)
                 r_ell = 1.0 / max(1e-4, math.hypot(math.cos(theta_arm) / max(1e-4, ry_arm), math.sin(theta_arm) / max(1e-4, rz_arm)))
                 if r_cur < r_ell:
-                    blend_slv = (0.15 + 0.45 * t_sleeve) * drape_looseness
+                    blend_slv = (0.30 + 0.50 * t_sleeve) * drape_looseness
                     r_new = r_cur * (1.0 - blend_slv) + r_ell * blend_slv
                     v.co.y = cy_arm + (dy / r_cur) * r_new
                     v.co.z = cz_arm + (dz / r_cur) * r_new
                 # Gentle under-sleeve gravity sag toward the cuff
                 if dz < 0.0:
-                    v.co.z -= 0.003 * t_sleeve * drape_looseness
+                    v.co.z -= 0.004 * (0.3 + 0.7 * t_sleeve) * drape_looseness
 
 # Underarm crease preserved with positive skin clearance floor
             continue
@@ -350,6 +350,9 @@ def drape_garment_shell(
                 if v.co.y > y_hang_front:
                     underbust_boost = 0.22 * math.exp(-((z - (z_bust - 0.045)) / 0.055) ** 2)
                     w_front = min(0.88, drape_looseness * 0.72 + underbust_boost)
+                    # Completely bridge over the anatomical navel dimple so no belly pinhole/crease remains
+                    if abs_x < 0.028 and (z_waist - 0.04) <= z <= (z_waist + 0.09):
+                        w_front = 1.0
                     v.co.y = v.co.y * (1.0 - w_front) + y_hang_front * w_front
 
             # 2b. Back Gravity Drape below the Scapulae (fills in deep lower-back lordosis hollow)
@@ -612,6 +615,36 @@ def solidify_bmesh_manifold(bm, thickness=0.0022):
         if not nm_faces:
             break
         bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
+    # Seal any tiny interior pinholes left by degenerate-edge/ear/non-manifold pruning before solidifying
+    b_edges = [e for e in bm.edges if e.is_boundary]
+    visited_b = set()
+    for e in b_edges:
+        if e in visited_b:
+            continue
+        loop, stack = [], [e]
+        while stack:
+            ce = stack.pop()
+            if ce in visited_b:
+                continue
+            visited_b.add(ce)
+            loop.append(ce)
+            for v in ce.verts:
+                for le in v.link_edges:
+                    if le.is_boundary and le not in visited_b:
+                        stack.append(le)
+        if 3 <= len(loop) <= 40:
+            pts = [v.co for le in loop for v in le.verts]
+            span = max(
+                max(p.x for p in pts) - min(p.x for p in pts),
+                max(p.y for p in pts) - min(p.y for p in pts),
+                max(p.z for p in pts) - min(p.z for p in pts),
+            )
+            if span < 0.05:
+                try:
+                    bmesh.ops.holes_fill(bm, edges=loop, sides=64)
+                except Exception:
+                    pass
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
@@ -1240,11 +1273,12 @@ def build_top_template(avatar_data, variant="tshirt"):
         l_geom = [v for v in bm.verts if v.co.x < -0.185] + [e for e in bm.edges if all(v.co.x < -0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x < -0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=wrist_l, plane_no=arm_dir_l, clear_outer=True)
     elif sleeve_type == "short":
-        # Short sleeve extending along true upper arm axis down the bicep
-        arm_axis_r = Vector((0.4361, -0.0356, -0.8992)).normalized() if is_male else Vector((0.4506, 0.0464, -0.8915)).normalized()
-        cuff_z = 1.285 if is_male else 1.220
-        cuff_r = Vector((x_arm_max, 0.003, cuff_z))
-        x_cut_min = 0.20 if is_male else 0.18
+        # Short sleeve extending along true upper arm axis down the bicep (cut strictly perpendicular to arm centerline)
+        sl_in = measure_arm_slice(avatar_data["verts"], x_arm_max - 0.06, is_male=is_male)
+        sl_cuff = measure_arm_slice(avatar_data["verts"], x_arm_max, is_male=is_male)
+        arm_axis_r = Vector((0.06, sl_cuff["cy"] - sl_in["cy"], sl_cuff["cz"] - sl_in["cz"])).normalized()
+        cuff_r = Vector((x_arm_max, sl_cuff["cy"], sl_cuff["cz"]))
+        x_cut_min = 0.21 if is_male else 0.185
 
         # Right arm
         r_geom = (
