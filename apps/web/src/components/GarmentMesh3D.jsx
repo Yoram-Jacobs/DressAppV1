@@ -3862,6 +3862,7 @@ function GarmentTemplateMeshInner({
             const yTuckStart = isMale ? 1.085 : 1.045;
             const yTuckFull = isMale ? 1.050 : 1.015;
             const yHemMin = isMale ? 0.960 : 0.935;
+            const xSleeveGap = isMale ? 0.238 : 0.206;
             const czDefault = isMale ? 0.025 : 0.035;
             let tuckModified = false;
 
@@ -3870,11 +3871,11 @@ function GarmentTemplateMeshInner({
               let y = pos.getY(i);
               let z = pos.getZ(i);
 
-              // Tucking envelope: smoothly compress fabric inward starting at yTuckStart.
-              // Above yTuckStart, leaves 100% untucked so the top retains its natural positive clearance
-              // outside the avatar stomach and torso skin!
-              // Below yTuckStart, pulls fabric strictly inside bottom waistband and clamps hem above pelvis/crotch.
-              if (y <= yTuckStart) {
+              // Tucking envelope: smoothly compress torso fabric inward starting at yTuckStart.
+              // Above yTuckStart (or outside xSleeveGap on sleeves), leaves 100% untucked so
+              // long sleeves and the upper torso retain their natural anatomical position!
+              // Below yTuckStart on the torso, pulls fabric strictly inside bottom waistband and clamps hem above pelvis/crotch.
+              if (y <= yTuckStart && Math.abs(x) <= xSleeveGap) {
                 const u = Math.min(1.0, Math.max(0.0, (yTuckStart - y) / Math.max(0.01, yTuckStart - yTuckFull)));
                 const tTuck = u * u * (3 - 2 * u);
 
