@@ -170,6 +170,21 @@ def measure_arm_slice(verts, x_dist, z_min=0.70, z_max=1.55, band=0.018, is_male
     return {"cz": cz, "rz": rz, "cy": cy, "ry": ry}
 
 
+def get_wrist_cuff_spec(is_male):
+    """Returns exact anatomical wrist center, elbow-to-wrist forearm axis, and wrist radius."""
+    if is_male:
+        return (
+            Vector((0.4486, -0.0210, 1.0026)),
+            Vector((0.5513, -0.0796, -0.8305)).normalized(),
+            0.0365,
+        )
+    return (
+        Vector((0.4031, -0.0179, 0.9151)),
+        Vector((0.5754, -0.0750, -0.8144)).normalized(),
+        0.0315,
+    )
+
+
 def drape_garment_shell(
     bm,
     avatar_data,
@@ -204,6 +219,14 @@ def drape_garment_shell(
         if not nm_faces:
             break
         bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
+    # Seal any residual tiny boundary holes in the closed solidified shell
+    rem_b = [e for e in bm.edges if e.is_boundary]
+    if rem_b:
+        try:
+            bmesh.ops.holes_fill(bm, edges=rem_b, sides=8)
+        except Exception:
+            pass
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
@@ -261,7 +284,9 @@ def drape_garment_shell(
 
         if is_sleeve_vert:
             # 4. Tailored Cylindrical Sleeve + Relaxed Underarm Gusset + Loose Sleeves with Tight Wrist Cuff
-            arm_sl = measure_arm_slice(av_verts, abs_x, is_male=is_male)
+            # Clamp x passed to measure_arm_slice so vertical slices never include the thumb/palm past the wrist
+            x_slice_max = 0.422 if is_male else 0.382
+            arm_sl = measure_arm_slice(av_verts, min(abs_x, x_slice_max), is_male=is_male)
             cz_arm = arm_sl["cz"]
             cy_arm = arm_sl["cy"]
             dy = y - cy_arm
@@ -269,17 +294,18 @@ def drape_garment_shell(
             r_cur = max(1e-4, math.hypot(dy, dz))
 
             if sleeve_type == "long":
-                x_wrist_end = 0.465 if is_male else 0.410
+                wrist_r_spec, arm_dir_r_spec, r_wrist_anat = get_wrist_cuff_spec(is_male)
+                x_wrist_end = wrist_r_spec.x
                 t_arm = min(1.0, max(0.0, (abs_x - x_arm_split) / max(1e-4, x_wrist_end - x_arm_split)))
 
                 # Knit sweaters (hoodie), cardigans, and loose long-sleeves have relaxed, voluminous sleeves along bicep/forearm
-                # and taper down to a snug, tight wrist cuff right at the wrist
+                # and taper down to a clean, straight wrist cuff right at the anatomical wrist
                 is_sweater_or_knit = drape_looseness >= 0.80
                 max_ease = (0.016 if is_sweater_or_knit else 0.010) * drape_looseness
                 fullness = math.sin(min(1.0, t_arm / 0.78) * math.pi)
 
-                # Approaching the wrist cuff (t_arm > 0.78), cinch down to a tight wrist cuff
-                cuff_taper = 1.0 if t_arm <= 0.78 else max(0.0, 1.0 - ((t_arm - 0.78) / 0.22) ** 2)
+                # Approaching the wrist cuff (t_arm > 0.75), smoothly taper to the clean wrist circumference
+                cuff_taper = 1.0 if t_arm <= 0.75 else max(0.0, 1.0 - ((t_arm - 0.75) / 0.25) ** 2)
                 sleeve_ease = offset + 0.0025 + (max_ease * fullness * cuff_taper)
                 r_target = max(arm_sl["rz"], arm_sl["ry"]) + sleeve_ease
 
@@ -287,13 +313,23 @@ def drape_garment_shell(
                 blend_cyl = 0.65 * drape_looseness
                 r_new = max(r_cur, r_target) if is_sweater_or_knit else (r_cur * (1.0 - blend_cyl) + r_target * blend_cyl)
 
-                # Right at the wrist cuff (t_arm > 0.82), tightly clamp to the wrist circumference (snug anatomical ellipse)
-                if t_arm > 0.82:
-                    t_cuff_lock = (t_arm - 0.82) / 0.18
-                    ry_cuff = arm_sl["ry"] + offset + 0.002
-                    rz_cuff = arm_sl["rz"] + offset + 0.002
-                    v.co.y = cy_arm + (dy / r_cur) * (r_new * (1.0 - t_cuff_lock) + ry_cuff * t_cuff_lock)
-                    v.co.z = cz_arm + (dz / r_cur) * (r_new * (1.0 - t_cuff_lock) + rz_cuff * t_cuff_lock)
+                # Right at the wrist cuff (t_arm > 0.78), smoothly align to the perpendicular wrist cylinder
+                # centered on wrist_r_spec so the cuff forms a clean, straight cut with zero thumb/hand flare
+                if t_arm > 0.75:
+                    t_cuff_lock = (t_arm - 0.75) / 0.25
+                    t_cuff_lock = t_cuff_lock * t_cuff_lock * (3.0 - 2.0 * t_cuff_lock)
+                    r_cuff_clean = r_wrist_anat + 0.0065
+                    p_cur = Vector((abs_x, cy_arm + (dy / r_cur) * r_new, cz_arm + (dz / r_cur) * r_new))
+                    rel_w = p_cur - wrist_r_spec
+                    axial = rel_w.dot(arm_dir_r_spec)
+                    perp = rel_w - axial * arm_dir_r_spec
+                    perp_len = perp.length
+                    if perp_len > 1e-5:
+                        p_clean = wrist_r_spec + axial * arm_dir_r_spec + (perp / perp_len) * r_cuff_clean
+                        p_out = p_cur.lerp(p_clean, t_cuff_lock)
+                        v.co.x = p_out.x if x >= 0.0 else -p_out.x
+                        v.co.y = p_out.y
+                        v.co.z = p_out.z
                 else:
                     v.co.y = cy_arm + (dy / r_cur) * r_new
                     v.co.z = cz_arm + (dz / r_cur) * r_new
@@ -446,14 +482,14 @@ def drape_garment_shell(
     # Never pushes any vertex closer to the avatar skin than its initial offset position!
     n_iters = 5
     lam = 0.28
-    min_skin_clearance = max(0.0045, offset * 0.85)
+    min_skin_clearance = max(0.0055, offset * 0.90)
     boundary_ring0 = {v for v in bm.verts if v.is_boundary}
-    wrist_r_cuff = Vector((0.465, -0.028, 0.975)) if is_male else Vector((0.410, -0.018, 0.895))
-    arm_dir_r_cuff = Vector((0.4361, -0.0427, -0.8989)).normalized() if is_male else Vector((0.3830, -0.0527, -0.9223)).normalized()
+    wrist_r_cuff, arm_dir_r_cuff, r_wrist_anat = get_wrist_cuff_spec(is_male)
+    r_cuff_max = r_wrist_anat + max(0.0065, offset * 0.75)
     wrist_l_cuff = Vector((-wrist_r_cuff.x, wrist_r_cuff.y, wrist_r_cuff.z))
     arm_dir_l_cuff = Vector((-arm_dir_r_cuff.x, arm_dir_r_cuff.y, arm_dir_r_cuff.z))
-    x_cuff_thresh = 0.28 if is_male else 0.24
-    z_cuff_min = 0.90 if is_male else 0.82
+    x_cuff_thresh = 0.36 if is_male else 0.32
+    z_cuff_min = 0.86 if is_male else 0.80
 
     for _it in range(n_iters):
         new_coords = {}
@@ -485,9 +521,17 @@ def drape_garment_shell(
             is_r_cuff = (v in boundary_ring0) and (co.x > x_cuff_thresh) and (co.z > z_cuff_min) and (sleeve_type == "long")
             is_l_cuff = (v in boundary_ring0) and (co.x < -x_cuff_thresh) and (co.z > z_cuff_min) and (sleeve_type == "long")
             if is_r_cuff:
-                co = co - (co - wrist_r_cuff).dot(arm_dir_r_cuff) * arm_dir_r_cuff
+                perp_r = (co - wrist_r_cuff) - (co - wrist_r_cuff).dot(arm_dir_r_cuff) * arm_dir_r_cuff
+                if perp_r.length > r_cuff_max:
+                    co = wrist_r_cuff + perp_r.normalized() * r_cuff_max
+                else:
+                    co = co - (co - wrist_r_cuff).dot(arm_dir_r_cuff) * arm_dir_r_cuff
             elif is_l_cuff:
-                co = co - (co - wrist_l_cuff).dot(arm_dir_l_cuff) * arm_dir_l_cuff
+                perp_l = (co - wrist_l_cuff) - (co - wrist_l_cuff).dot(arm_dir_l_cuff) * arm_dir_l_cuff
+                if perp_l.length > r_cuff_max:
+                    co = wrist_l_cuff + perp_l.normalized() * r_cuff_max
+                else:
+                    co = co - (co - wrist_l_cuff).dot(arm_dir_l_cuff) * arm_dir_l_cuff
             elif sleeve_type == "long" and co.x > x_cuff_thresh and co.z > z_cuff_min:
                 dot_r = (co - wrist_r_cuff).dot(arm_dir_r_cuff)
                 if dot_r > 0.0:
@@ -501,29 +545,33 @@ def drape_garment_shell(
                 (abs(co.x) <= 0.055 and 0.72 <= co.z <= 0.88)
                 or (style in ("top", "dress") and co.z < 0.91 and abs(co.x) <= 0.125)
             )
-            if not is_r_cuff and not is_l_cuff:
-                loc, norm, _idx, dist = bvh.find_nearest(co)
-                if loc is not None and norm is not None:
-                    vec_from_skin = co - loc
-                    signed_d = vec_from_skin.dot(norm)
-                    if style == "bottom":
-                        # Strictly enforce positive skin clearance for bottom garments on the same leg,
-                        # guaranteeing zero skin poke-through on inner/anterior thighs and groin!
-                        if (loc.x * co.x >= 0.0) and signed_d < min_skin_clearance:
-                            co = loc + norm * min_skin_clearance
-                    elif not is_bifurcation_zone:
-                        if signed_d < min_skin_clearance:
-                            if style in ("top", "dress") and co.z < 0.91:
-                                # Below the hip line on tops/dresses, push strictly outward in XY only (never inward toward x=0 or vertically in Z)
-                                nx_out = norm.x if (co.x * norm.x >= 0.0) else 0.0
-                                ny_out = norm.y
-                                n_len = math.hypot(nx_out, ny_out)
-                                if n_len > 1e-4:
-                                    delta_d = min_skin_clearance - signed_d
-                                    co.x += (nx_out / n_len) * delta_d
-                                    co.y += (ny_out / n_len) * delta_d
-                            else:
-                                co = loc + norm * min_skin_clearance
+            loc, norm, _idx, dist = bvh.find_nearest(co)
+            if loc is not None and norm is not None:
+                vec_from_skin = co - loc
+                signed_d = vec_from_skin.dot(norm)
+                req_clearance = max(min_skin_clearance, 0.0085) if (sleeve_type == "long" and abs(co.x) > x_cuff_thresh and co.z > z_cuff_min) else min_skin_clearance
+                if style == "bottom":
+                    # Strictly enforce positive skin clearance for bottom garments on the same leg,
+                    # guaranteeing zero skin poke-through on inner/anterior thighs and groin!
+                    if (loc.x * co.x >= 0.0) and signed_d < req_clearance:
+                        co = loc + norm * req_clearance
+                elif not is_bifurcation_zone:
+                    if signed_d < req_clearance:
+                        if style in ("top", "dress") and co.z < 0.91:
+                            # Below the hip line on tops/dresses, push strictly outward in XY only (never inward toward x=0 or vertically in Z)
+                            nx_out = norm.x if (co.x * norm.x >= 0.0) else 0.0
+                            ny_out = norm.y
+                            n_len = math.hypot(nx_out, ny_out)
+                            if n_len > 1e-4:
+                                delta_d = req_clearance - signed_d
+                                co.x += (nx_out / n_len) * delta_d
+                                co.y += (ny_out / n_len) * delta_d
+                        else:
+                            co = loc + norm * req_clearance
+            if is_r_cuff:
+                co = co - (co - wrist_r_cuff).dot(arm_dir_r_cuff) * arm_dir_r_cuff
+            elif is_l_cuff:
+                co = co - (co - wrist_l_cuff).dot(arm_dir_l_cuff) * arm_dir_l_cuff
             if is_hem_vert:
                 co.z = z_hem
             v.co = co
@@ -538,6 +586,14 @@ def drape_garment_shell(
         if not nm_faces:
             break
         bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
+    # Seal any residual tiny boundary holes in the closed solidified shell
+    rem_b = [e for e in bm.edges if e.is_boundary]
+    if rem_b:
+        try:
+            bmesh.ops.holes_fill(bm, edges=rem_b, sides=8)
+        except Exception:
+            pass
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
@@ -616,6 +672,14 @@ def solidify_bmesh_manifold(bm, thickness=0.0022):
             break
         bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
 
+    # Seal any residual tiny boundary holes in the closed solidified shell
+    rem_b = [e for e in bm.edges if e.is_boundary]
+    if rem_b:
+        try:
+            bmesh.ops.holes_fill(bm, edges=rem_b, sides=8)
+        except Exception:
+            pass
+
     # Seal any tiny interior pinholes left by degenerate-edge/ear/non-manifold pruning before solidifying
     b_edges = [e for e in bm.edges if e.is_boundary]
     visited_b = set()
@@ -693,6 +757,14 @@ def solidify_bmesh_manifold(bm, thickness=0.0022):
         if not nm_faces:
             break
         bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
+    # Seal any residual tiny boundary holes in the closed solidified shell
+    rem_b = [e for e in bm.edges if e.is_boundary]
+    if rem_b:
+        try:
+            bmesh.ops.holes_fill(bm, edges=rem_b, sides=8)
+        except Exception:
+            pass
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
@@ -1052,6 +1124,23 @@ def finalize_and_export_mesh(
     # Validate geometry before export
     bm_check = bmesh.new()
     bm_check.from_mesh(obj.data)
+    for _clean_it in range(2):
+        zero_area_faces = [f for f in bm_check.faces if f.calc_area() <= 1e-9]
+        if zero_area_faces:
+            try:
+                short_edges = list({min(f.edges, key=lambda e: e.calc_length()) for f in zero_area_faces})
+                bmesh.ops.collapse(bm_check, edges=short_edges)
+            except Exception:
+                pass
+        non_manifold_edges = [e for e in bm_check.edges if not e.is_manifold]
+        if non_manifold_edges and len(non_manifold_edges) <= 16 and all(e.is_boundary for e in non_manifold_edges):
+            try:
+                bmesh.ops.holes_fill(bm_check, edges=non_manifold_edges, sides=16)
+            except Exception:
+                pass
+    bmesh.ops.recalc_face_normals(bm_check, faces=bm_check.faces[:])
+    bm_check.to_mesh(obj.data)
+    obj.data.update()
     non_manifold_edges = [e for e in bm_check.edges if not e.is_manifold]
     zero_area_faces = [f for f in bm_check.faces if f.calc_area() <= 1e-9]
     for v in obj.data.vertices:
@@ -1262,8 +1351,7 @@ def build_top_template(avatar_data, variant="tshirt"):
     # 2. Precision Sleeve / Armhole Cuts
     if sleeve_type == "long":
         # Full long sleeve extending precisely to the wrist joint along the 3D forearm axis (stopping right before palms)
-        wrist_r = Vector((0.465, -0.028, 0.975)) if is_male else Vector((0.410, -0.018, 0.895))
-        arm_dir_r = Vector((0.4361, -0.0427, -0.8989)).normalized() if is_male else Vector((0.3830, -0.0527, -0.9223)).normalized()
+        wrist_r, arm_dir_r, _ = get_wrist_cuff_spec(is_male)
 
         r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=wrist_r, plane_no=arm_dir_r, clear_outer=True)
@@ -1560,6 +1648,14 @@ def build_top_template(avatar_data, variant="tshirt"):
         if not nm_faces:
             break
         bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
+    # Seal any residual tiny boundary holes in the closed solidified shell
+    rem_b = [e for e in bm.edges if e.is_boundary]
+    if rem_b:
+        try:
+            bmesh.ops.holes_fill(bm, edges=rem_b, sides=8)
+        except Exception:
+            pass
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
@@ -2053,8 +2149,7 @@ def build_dress_template(avatar_data, variant="dress"):
 
     # 2. Precision Sleeve / Armhole Cuts
     if sleeve_type == "long":
-        wrist_r = Vector((0.465, -0.028, 0.975)) if is_male else Vector((0.410, -0.018, 0.895))
-        arm_dir_r = Vector((0.4361, -0.0427, -0.8989)).normalized() if is_male else Vector((0.3830, -0.0527, -0.9223)).normalized()
+        wrist_r, arm_dir_r, _ = get_wrist_cuff_spec(is_male)
         r_geom = [v for v in bm.verts if v.co.x > 0.185] + [e for e in bm.edges if all(v.co.x > 0.185 for v in e.verts)] + [f for f in bm.faces if all(v.co.x > 0.185 for v in f.verts)]
         bmesh.ops.bisect_plane(bm, geom=r_geom, plane_co=wrist_r, plane_no=arm_dir_r, clear_outer=True)
 
@@ -2212,6 +2307,14 @@ def build_dress_template(avatar_data, variant="dress"):
         if not nm_faces:
             break
         bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
+    # Seal any residual tiny boundary holes in the closed solidified shell
+    rem_b = [e for e in bm.edges if e.is_boundary]
+    if rem_b:
+        try:
+            bmesh.ops.holes_fill(bm, edges=rem_b, sides=8)
+        except Exception:
+            pass
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
