@@ -217,15 +217,19 @@ function findNearest(field, x, y, z, includeArms = false) {
  */
 export function applyAvatarMorphsToGeometry(geometry, field, influences, options = {}) {
   if (!geometry || !field) return geometry;
-  if (options?.rigidAnchor) return geometry;
   const infObj = influences || {};
   const active = Object.entries(infObj).filter(
     ([name, w]) => field.targets[name] && Math.abs(Number(w) || 0) > 1e-4
   );
 
   const includeArms = Boolean(options?.includeArms);
+  const exactLowerBody = Boolean(options?.exactLowerBody);
 
   if (active.length === 0) return geometry;
+
+  if (options?.rigidAnchor && !geometry.attributes?.deformWeight) {
+    return geometry;
+  }
 
   const out = geometry.clone();
   const pos = out.attributes.position;
@@ -286,15 +290,16 @@ export function applyAvatarMorphsToGeometry(geometry, field, influences, options
     const isOuterArmVertex = Boolean(
       includeArms &&
       y >= 0.82 &&
-      y <= 1.42 &&
+      y <= 1.54 &&
       Math.abs(x) > (0.156 + Math.max(0, 1.20 - y) * 0.38)
     );
     const yHipLine = 0.90;
-    const lookupY = isOuterArmVertex ? y : (y < yHipLine ? yHipLine : y);
-    // For non-arm or lower-body vertices below the hip line (e.g. A-line skirts, dresses, flared pants),
-    // clamp lateral lookupX to the anatomical pelvis envelope (|x| <= 0.185m) so flared hems in open air
-    // follow the smooth pelvis/hip deformation rather than stray arm/hand coordinates.
-    const maxBodyXAtHip = 0.185;
+    const useExactLegOrFoot = exactLowerBody || y < 0.44;
+    const lookupY = (isOuterArmVertex || useExactLegOrFoot) ? y : (y < yHipLine ? yHipLine : y);
+    // For non-arm or lower-body vertices below the hip line:
+    // - Fitted trousers and footwear (useExactLegOrFoot) query the exact leg/ankle/foot height y (clamped to |x| <= 0.22m).
+    // - Flared open-air hems (skirts, dresses, coats) query the smooth pelvis/hip envelope (|x| <= 0.185m at yHipLine).
+    const maxBodyXAtHip = useExactLegOrFoot ? 0.220 : 0.185;
     const lookupX = (!includeArms || !isOuterArmVertex) && y < yHipLine
       ? Math.max(-maxBodyXAtHip, Math.min(maxBodyXAtHip, x))
       : x;

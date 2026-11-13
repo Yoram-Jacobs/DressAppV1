@@ -194,6 +194,17 @@ def drape_garment_shell(
     av_verts = avatar_data["verts"]
     bvh = avatar_data["bvh"]
 
+    # Remove any non-manifold edges/faces before solidifying so solidify_bmesh_manifold produces 0 non-manifold edges
+    for _nm_pass in range(4):
+        nm_faces = set()
+        for e in bm.edges:
+            if len(e.link_faces) > 2:
+                for f in e.link_faces:
+                    nm_faces.add(f)
+        if not nm_faces:
+            break
+        bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
 
@@ -297,18 +308,24 @@ def drape_garment_shell(
                     if v.co.z > max_sh_z:
                         v.co.z = max_sh_z
             else:
-                # Short sleeve cylindrical shaping: smoothly blend from deltoid shoulder tip down to cuff
-                # Never distort deltoid/shoulder apex into a cylinder!
+                # Short sleeve natural anatomical drape: follow the elliptical arm contour with subtle gravity ease
+                # (avoids rigid circular robot-tube cylinders while keeping clean bicep clearance)
                 x_shoulder_tip = 0.210 if is_male else 0.185
                 x_cuff_approx = 0.305 if is_male else 0.270
                 t_sleeve = max(0.0, min(1.0, (abs_x - x_shoulder_tip) / max(0.02, x_cuff_approx - x_shoulder_tip)))
-                sleeve_ease = offset + 0.005 * (0.5 + 0.5 * drape_looseness)
-                r_target = max(arm_sl["rz"], arm_sl["ry"]) + sleeve_ease
-                if r_cur < r_target:
-                    blend_cyl = (0.12 + 0.38 * t_sleeve) * drape_looseness
-                    r_new = r_cur * (1.0 - blend_cyl) + r_target * blend_cyl
+                sleeve_ease = offset + 0.004 * (0.4 + 0.6 * drape_looseness)
+                ry_arm = arm_sl["ry"] + sleeve_ease
+                rz_arm = arm_sl["rz"] + sleeve_ease
+                theta_arm = math.atan2(dz, dy)
+                r_ell = 1.0 / max(1e-4, math.hypot(math.cos(theta_arm) / max(1e-4, ry_arm), math.sin(theta_arm) / max(1e-4, rz_arm)))
+                if r_cur < r_ell:
+                    blend_slv = (0.15 + 0.45 * t_sleeve) * drape_looseness
+                    r_new = r_cur * (1.0 - blend_slv) + r_ell * blend_slv
                     v.co.y = cy_arm + (dy / r_cur) * r_new
                     v.co.z = cz_arm + (dz / r_cur) * r_new
+                # Gentle under-sleeve gravity sag toward the cuff
+                if dz < 0.0:
+                    v.co.z -= 0.003 * t_sleeve * drape_looseness
 
 # Underarm crease preserved with positive skin clearance floor
             continue
@@ -345,11 +362,23 @@ def drape_garment_shell(
                     w_back = min(0.84, drape_looseness * 0.70)
                     v.co.y = v.co.y * (1.0 - w_back) + y_hang_back * w_back
 
-            # 2c. Lateral Waist-Hollow Drape (relaxes hourglass waist pinch on regular/loose tops & outerwear)
-            if (z_hip_peak - 0.02) <= z <= (z_bust - 0.02) and abs_x > 0.08 and abs_x < (x_arm_split - 0.008):
+            # 2c. Lateral Waist-Hollow Drape: prevents robotic wide-bust / narrow-waist hourglass pinching.
+            # Interpolate a natural side-seam drape line from chest/underarm to hip so the waist hangs smoothly.
+            if (z_hip_peak - 0.02) <= z <= (z_bust + 0.02) and abs_x > 0.08 and abs_x < (x_arm_split - 0.008):
                 t_waist = math.sin(min(1.0, max(0.0, (z - z_hip_peak) / max(0.10, z_bust - z_hip_peak))) * math.pi)
-                x_ease = (0.010 * drape_looseness * t_waist)
-                v.co.x += math.copysign(x_ease, x)
+                t_chest_hip = min(1.0, max(0.0, (z - z_hip_peak) / max(0.10, z_bust - z_hip_peak)))
+                chest_sl = measure_torso_slice(av_verts, z_bust)
+                rx_chest_drape = chest_sl["rx"] + offset
+                rx_straight_line = rx_hip_drape * (1.0 - t_chest_hip) + rx_chest_drape * t_chest_hip
+                # Gentle natural drape: fill ~65% of the inward waist hollow so it fits the body without pinching
+                x_target_side = rx_straight_line * (0.94 + 0.04 * (1.0 - t_waist))
+                if abs_x < x_target_side and abs_x > 0.10:
+                    w_side = min(0.75, 0.45 + 0.35 * drape_looseness) * t_waist
+                    new_abs_x = abs_x * (1.0 - w_side) + x_target_side * w_side
+                    v.co.x = math.copysign(new_abs_x, x)
+                else:
+                    x_ease = (0.012 * drape_looseness * t_waist)
+                    v.co.x += math.copysign(x_ease, x)
 
             if flare_hips and z < 0.98:
                 t_flare = min(1.0, max(0.0, (0.98 - z) / 0.45))
@@ -496,6 +525,17 @@ def drape_garment_shell(
                 co.z = z_hem
             v.co = co
 
+    # Remove any non-manifold edges/faces before solidifying so solidify_bmesh_manifold produces 0 non-manifold edges
+    for _nm_pass in range(4):
+        nm_faces = set()
+        for e in bm.edges:
+            if len(e.link_faces) > 2:
+                for f in e.link_faces:
+                    nm_faces.add(f)
+        if not nm_faces:
+            break
+        bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
 
@@ -562,6 +602,17 @@ def solidify_bmesh_manifold(bm, thickness=0.0022):
     if loose_v:
         bmesh.ops.delete(bm, geom=loose_v, context="VERTS")
 
+    # Remove any non-manifold edges/faces before solidifying so solidify_bmesh_manifold produces 0 non-manifold edges
+    for _nm_pass in range(4):
+        nm_faces = set()
+        for e in bm.edges:
+            if len(e.link_faces) > 2:
+                for f in e.link_faces:
+                    nm_faces.add(f)
+        if not nm_faces:
+            break
+        bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
 
@@ -598,6 +649,17 @@ def solidify_bmesh_manifold(bm, thickness=0.0022):
                 bm.faces.new((v0, vi0, vi1, v1))
             except ValueError:
                 pass
+
+    # Remove any non-manifold edges/faces before solidifying so solidify_bmesh_manifold produces 0 non-manifold edges
+    for _nm_pass in range(4):
+        nm_faces = set()
+        for e in bm.edges:
+            if len(e.link_faces) > 2:
+                for f in e.link_faces:
+                    nm_faces.add(f)
+        if not nm_faces:
+            break
+        bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
 
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
@@ -915,24 +977,27 @@ def finalize_and_export_mesh(
                 if vg_name in vgroups:
                     vgroups[vg_name].add([v_idx], float(weight), "REPLACE")
 
-    # 🔴 Blocker 1: Export custom vertex attributes _DEFORM_WEIGHT and COLOR_0
-    # Because glTF 2.0 strips vertex_groups without armatures, export point attributes!
-    deform_attr = mesh.attributes.new(name="_DEFORM_WEIGHT", type='FLOAT', domain='POINT')
-    color_attr = mesh.color_attributes.new(name="COLOR_0", type='FLOAT_COLOR', domain='POINT')
+    # Strip dead UV layers (TEXCOORD_1..4) and extra color attributes inherited from the avatar mesh
+    while len(mesh.uv_layers) > 1:
+        mesh.uv_layers.remove(mesh.uv_layers[-1])
+    for ca in list(mesh.color_attributes):
+        mesh.color_attributes.remove(ca)
 
-    for v_bm, wdict in vert_weights:
-        if v_bm.is_valid and v_bm.index < len(mesh.vertices):
-            v_idx = v_bm.index
-            w_val = 1.0
-            for vg_name, weight in wdict.items():
-                if "Sole" in vg_name or "Hardware" in vg_name or "Bag_Body" in vg_name:
-                    if weight < 0.5:
-                        w_val = 0.0
-                elif "Deform" in vg_name or "Upper" in vg_name or "Strap" in vg_name:
-                    if weight > 0.5:
-                        w_val = 1.0
-            deform_attr.data[v_idx].value = float(w_val)
-            color_attr.data[v_idx].color = (float(w_val), float(w_val), float(w_val), 1.0)
+    # Export _DEFORM_WEIGHT only when rigid/deformable vertex weights exist (accessories/footwear)
+    if vert_weights:
+        deform_attr = mesh.attributes.new(name="_DEFORM_WEIGHT", type='FLOAT', domain='POINT')
+        for v_bm, wdict in vert_weights:
+            if v_bm.is_valid and v_bm.index < len(mesh.vertices):
+                v_idx = v_bm.index
+                w_val = 1.0
+                for vg_name, weight in wdict.items():
+                    if "Sole" in vg_name or "Hardware" in vg_name or "Bag_Body" in vg_name:
+                        if weight < 0.5:
+                            w_val = 0.0
+                    elif "Deform" in vg_name or "Upper" in vg_name or "Strap" in vg_name:
+                        if weight > 0.5:
+                            w_val = 1.0
+                deform_attr.data[v_idx].value = float(w_val)
 
     if use_mirror:
         mod = obj.modifiers.new(name="MirrorX", type="MIRROR")
@@ -1239,14 +1304,23 @@ def build_top_template(avatar_data, variant="tshirt"):
         )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
+        # Remove detached hanging forearms/hands so main_isl always selects the torso, never a severed hand
+        stray_arm = [v for v in bm.verts if abs(v.co.x) > (x_arm_max + 0.03)]
+        if stray_arm:
+            bmesh.ops.delete(bm, geom=stray_arm, context='VERTS')
+
     # 3. Precision Curved Collar / Strapless Cut (cuts only the neck opening or bustline while preserving 100% of body)
     if variant == "tshirt":
-        # Precision Crew Neck Collar: cut only inside neck cylinder (|x| <= rx_neck), NEVER slicing shoulders!
+        # Precision 360° Crew Neck Collar: center around the avatar's actual neck center (y_neck_c),
+        # never slicing shoulders, and keep a complete, smooth posterior nape collar + front scoop!
+        z_neck_ref = 1.53 if is_male else 1.44
+        nk_pts = [p for p in avatar_data["verts"] if abs(p.z - z_neck_ref) < 0.03 and abs(p.x) < 0.09]
+        y_neck_c = 0.5 * (min(p.y for p in nk_pts) + max(p.y for p in nk_pts)) if nk_pts else (-0.016 if is_male else -0.035)
         rx_neck = 0.072 if is_male else 0.068
-        ry_front = 0.075 if is_male else 0.070
-        ry_back = 0.038 if is_male else 0.034
-        z_collar_front = 1.470 if is_male else 1.390
-        z_collar_back = 1.545 if is_male else 1.455
+        ry_front = 0.072 if is_male else 0.068
+        ry_back = 0.056 if is_male else 0.052
+        z_collar_front = 1.472 if is_male else 1.392
+        z_collar_back = 1.542 if is_male else 1.454
 
         del_neck = []
         for f in bm.faces:
@@ -1254,7 +1328,7 @@ def build_top_template(avatar_data, variant="tshirt"):
             ys = [v.co.y for v in f.verts]
             xs = [v.co.x for v in f.verts]
             mean_z = sum(zs) / len(zs)
-            mean_y = sum(ys) / len(ys)
+            mean_y = (sum(ys) / len(ys)) - y_neck_c
             mean_x = sum(xs) / len(xs)
 
             ry_eff = ry_front if mean_y < 0 else ry_back
@@ -1264,11 +1338,22 @@ def build_top_template(avatar_data, variant="tshirt"):
 
             if r_neck_norm < 1.0 and mean_z > z_col:
                 del_neck.append(f)
-            elif mean_z > (1.58 if is_male else 1.49) and abs(mean_x) < (0.10 if is_male else 0.09):
+            elif mean_z > (1.575 if is_male else 1.485) and abs(mean_x) < (0.105 if is_male else 0.095):
                 del_neck.append(f)
 
         if del_neck:
             bmesh.ops.delete(bm, geom=del_neck, context='FACES')
+
+        # Smooth the resulting 360° crew-neck collar boundary loop so front & posterior collar sit evenly
+        collar_verts = [
+            v for v in bm.verts
+            if v.is_boundary and v.co.z > (z_collar_front - 0.03) and abs(v.co.x) < 0.11
+        ]
+        for v in collar_verts:
+            dy_c = v.co.y - y_neck_c
+            t_y = max(0.0, min(1.0, (dy_c + ry_front) / (ry_front + ry_back)))
+            z_target = z_collar_front * (1.0 - t_y) + z_collar_back * t_y
+            v.co.z = v.co.z * 0.35 + z_target * 0.65
     elif variant != "strapless":
         nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
         neck_no = Vector((0.0, neck_tilt, nz)).normalized()
@@ -1431,6 +1516,17 @@ def build_top_template(avatar_data, variant="tshirt"):
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
     # Strictly orient all face normals radially OUTWARD from the torso centerline (never inward!)
+    # Remove any non-manifold edges/faces before solidifying so solidify_bmesh_manifold produces 0 non-manifold edges
+    for _nm_pass in range(4):
+        nm_faces = set()
+        for e in bm.edges:
+            if len(e.link_faces) > 2:
+                for f in e.link_faces:
+                    nm_faces.add(f)
+        if not nm_faces:
+            break
+        bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
     cy_center = -0.015
@@ -1978,6 +2074,11 @@ def build_dress_template(avatar_data, variant="dress"):
         )
         bmesh.ops.bisect_plane(bm, geom=l_geom, plane_co=Vector((-x_arm_max, 0.0, 1.35)), plane_no=Vector((-1.0, 0.0, 0.0)), clear_outer=True)
 
+        # Remove detached hanging forearms/hands so main_isl always selects the torso, never a severed hand
+        stray_arm = [v for v in bm.verts if abs(v.co.x) > (x_arm_max + 0.03)]
+        if stray_arm:
+            bmesh.ops.delete(bm, geom=stray_arm, context='VERTS')
+
     # 3. Precision Curved Collar / Strapless Cut (preserves 100% of body below neckline)
     if not is_strapless:
         nz = math.sqrt(max(0.01, 1.0 - neck_tilt ** 2))
@@ -2067,6 +2168,17 @@ def build_dress_template(avatar_data, variant="dress"):
         bmesh.ops.delete(bm, geom=loose_verts, context='VERTS')
 
     # Strictly orient all face normals radially OUTWARD from the torso centerline (never inward!)
+    # Remove any non-manifold edges/faces before solidifying so solidify_bmesh_manifold produces 0 non-manifold edges
+    for _nm_pass in range(4):
+        nm_faces = set()
+        for e in bm.edges:
+            if len(e.link_faces) > 2:
+                for f in e.link_faces:
+                    nm_faces.add(f)
+        if not nm_faces:
+            break
+        bmesh.ops.delete(bm, geom=list(nm_faces), context="FACES")
+
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
     bm.normal_update()
     cy_center = -0.015
