@@ -660,7 +660,7 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(resolveGarmentRenderOrder('outerwear')).toBeLessThan(resolveGarmentRenderOrder('bag', 'crossbody bag'));
   });
 
-  test('retractCoveredAvatarSkin retracts covered torso, pelvis, and foot skin vertices so skin never shows through garments', () => {
+  test('retractCoveredAvatarSkin hides pelvis and foot skin under bottoms/shoes but never reshapes the body under tops', () => {
     const THREE = require('three');
     const { retractCoveredAvatarSkin } = require('@/components/AvatarMesh3D');
 
@@ -680,13 +680,35 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     );
 
     const pos = geo.getAttribute('position');
-    // Chest and hip X/Z radii are retracted inward toward the bone axis
-    expect(pos.getX(0)).toBeLessThan(0.12);
-    expect(pos.getZ(0)).toBeLessThan(0.14);
+    // Chest skin under a top keeps its exact anatomy (garment maps to body, not the other way around)
+    expect(pos.getX(0)).toBeCloseTo(0.12, 6);
+    expect(pos.getY(0)).toBeCloseTo(1.20, 6);
+    expect(pos.getZ(0)).toBeCloseTo(0.14, 6);
+    // Hip skin under a bottom is retracted inward toward the bone axis
     expect(pos.getX(1)).toBeLessThan(0.15);
     expect(pos.getZ(1)).toBeLessThan(0.13);
     // Foot Z is retracted toward foot center (0.095)
     expect(pos.getZ(2)).toBeLessThan(0.18);
+
+    // A T-shirt alone must not shrink the neck, upper arm, pelvis or thighs (male avatar)
+    const bodyVerts = [
+      [0.062, 1.46, 0.050],  // neck column (previously stepped at |x| = 0.060)
+      [-0.050, 1.45, -0.030], // posterior neck / cervical spine
+      [0.26, 1.30, 0.010],   // upper arm under short sleeve
+      [0.34, 1.10, 0.020],   // forearm below short sleeve
+      [0.16, 1.25, 0.020],   // armpit
+      [0.14, 0.95, 0.090],   // pelvis below T-shirt hem
+      [0.11, 0.72, 0.070],   // thigh
+    ];
+    const tGeo = new THREE.BufferGeometry();
+    tGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(bodyVerts.flat()), 3));
+    retractCoveredAvatarSkin(tGeo, { hasTop: true }, true, 'MBLab_human_male', 'skin');
+    const tPos = tGeo.getAttribute('position');
+    bodyVerts.forEach(([x, y, z], i) => {
+      expect(tPos.getX(i)).toBeCloseTo(x, 6);
+      expect(tPos.getY(i)).toBeCloseTo(y, 6);
+      expect(tPos.getZ(i)).toBeCloseTo(z, 6);
+    });
   });
 
   test('Garment slicing aligns bottom top-hem with waist circumference (<= 2mm thick) and top collar/shoulders with neck/shoulder circumference', () => {

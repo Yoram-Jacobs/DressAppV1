@@ -44,10 +44,10 @@ export function getAvatarMetricTransform({ isMale = false, height = 170, morphIn
 
 
 /**
- * Gently retracts interior avatar skin vertices toward the anatomical bone axis
- * inside regions covered by active garments (torso under tops/outerwear/dresses,
- * pelvis/hips under bottoms/dresses, feet inside shoes) so avatar skin can never
- * poke or bleed through garments at any camera angle or morph setting.
+ * Hides avatar parts that sit fully inside garments WITHOUT reshaping the visible body:
+ * underwear under tops/bottoms, hair under hats, feet inside shoes, and leg/pelvis skin
+ * under bottoms/dresses. Upper-body garments (tops, outerwear, dress bodices) never deform
+ * the avatar: the garment maps to the body, not the other way around.
  */
 export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale = false, meshName = '', materialName = '') {
   if (!geometry || !coveredZones) return geometry;
@@ -124,117 +124,19 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       continue;
     }
 
-    // 2. Upper torso, deltoid shoulders & underarm under top / outerwear / dress (exclude neck column and head)
-    const isStrapless = Boolean(coveredZones?.isStrapless);
-    const maxShoulderY = isStrapless ? (isMale ? 1.34 : 1.28) : (isMale ? 1.52 : 1.435);
-    const minNeckAbsX = isMale ? 0.060 : 0.052;
-    const minTorsoY = hasBottom || hasDress ? 0.76 : 0.65;
-    if (
-      (hasTop || hasOuterwear || hasDress) &&
-      y >= minTorsoY &&
-      y <= maxShoulderY &&
-      (y <= 1.38 || absX >= minNeckAbsX)
-    ) {
-      const armCutInner = isMale ? 0.22 : 0.20;
-      const armCutOuter = isMale ? 0.32 : 0.29;
-      const armBlend = absX <= armCutInner
-        ? 1.0
-        : (absX >= armCutOuter ? 0.0 : 0.5 * (1 + Math.cos(Math.PI * (absX - armCutInner) / (armCutOuter - armCutInner))));
+    // 2. Upper-body garments (tops, outerwear, dress bodices) NEVER reshape the avatar.
+    // The garment maps to the body, not the other way around: torso, neck, shoulders, arms and
+    // armpits keep their exact morphed anatomy, and the garment templates carry their own
+    // positive skin clearance (Blender BVH clearance + avatar morph field minClearance).
 
-      if (armBlend > 1e-4) {
-        const cz = 0.020;
-        const wVertical = hasBottom || hasDress ? 1.0 : Math.max(0, Math.min(1, (y - minTorsoY) / 0.08));
-        const wTorso = wVertical * armBlend;
-        arr[idx] = x * (1 - 0.075 * wTorso);
-        if (y > 1.34 && absX >= minNeckAbsX) {
-          arr[idx + 1] = y - 0.008 * wTorso;
-        }
-        arr[idx + 2] = cz + (z - cz) * (1 - 0.080 * wTorso);
-      }
-    }
-
-    // 2b. Upper arm, bicep & underarm under top / outerwear / dress with sleeves:
-    // Retract covered arm skin radially toward the anatomical arm bone axis so inner arm
-    // and underarm skin never poke through sleeve seams or armpit cloth!
-    const isSleeveless = Boolean(coveredZones?.isSleeveless);
-    if ((hasTop || hasOuterwear || hasDress) && !isSleeveless) {
-      const yArmMin = isMale ? 0.995 : 0.925;
-      const yArmMax = isMale ? 1.48 : 1.42;
-      const armCutInner = isMale ? 0.20 : 0.175;
-      const armCutOuter = isMale ? 0.30 : 0.27;
-      if (y >= yArmMin && y <= yArmMax && absX >= armCutInner) {
-        const sign = x < 0 ? -1 : 1;
-        const xSh = isMale ? 0.215 : 0.188;
-        const ySh = isMale ? 1.460 : 1.400;
-        const zSh = isMale ? -0.004 : 0.010;
-        const xWr = isMale ? 0.425 : 0.372;
-        const yWr = isMale ? 1.035 : 0.960;
-        const zWr = isMale ? 0.018 : 0.010;
-
-        const tArm = Math.max(0, Math.min(1, (ySh - y) / Math.max(0.01, ySh - yWr)));
-        const armBoneX = sign * (xSh + tArm * (xWr - xSh));
-        const armBoneZ = zSh + tArm * (zWr - zSh);
-
-        // Smooth cosine falloff near the sleeve cuff / wrist hem so bare hands/wrists transition seamlessly
-        const sleeveMaxAbsX = Number.isFinite(coveredZones?.sleeveMaxX)
-          ? coveredZones.sleeveMaxX
-          : (isMale ? 0.43 : 0.38);
-        const tXFalloff = Math.max(0, Math.min(1, (sleeveMaxAbsX - absX) / 0.045));
-        const tWristFalloff = Math.max(0, Math.min(1, (y - yArmMin) / 0.04)) * tXFalloff;
-        const sWrist = tWristFalloff * tWristFalloff * (3 - 2 * tWristFalloff);
-
-        const dxBone = x - armBoneX;
-        const dzBone = z - armBoneZ;
-        const rBone = Math.hypot(dxBone, dzBone);
-        if (rBone > 0.002 && sWrist > 0) {
-          const tArmBlend = Math.min(1.0, Math.max(0.0, (absX - armCutInner) / (armCutOuter - armCutInner)));
-          const shrink = 0.095 * sWrist * tArmBlend;
-          arr[idx] = armBoneX + dxBone * (1 - shrink);
-          arr[idx + 2] = armBoneZ + dzBone * (1 - shrink);
-        }
-      }
-    }
-
-    // 2c. Dedicated axilla / armpit crease retraction under sleeved garments:
-    // Retracts underarm skin fold deep into the torso core so armpit skin NEVER pokes
-    // through sleeve seams or the underarm fabric fold!
-    if ((hasTop || hasOuterwear || hasDress) && !isSleeveless) {
-      const yAxillaMin = isMale ? 1.13 : 1.09;
-      const yAxillaMax = isMale ? 1.40 : 1.35;
-      const xAxillaMin = isMale ? 0.09 : 0.07;
-      const xAxillaMax = isMale ? 0.30 : 0.26;
-      if (y >= yAxillaMin && y <= yAxillaMax && absX >= xAxillaMin && absX <= xAxillaMax) {
-        const tY = Math.sin(Math.PI * (y - yAxillaMin) / (yAxillaMax - yAxillaMin));
-        const tX = Math.sin(Math.PI * (absX - xAxillaMin) / (xAxillaMax - xAxillaMin));
-        const wAxilla = Math.sqrt(Math.max(0, tY * tX));
-        const cz = 0.015;
-        // Pull inward in X toward centerline, slightly up into shoulder socket, and toward torso core in Z
-        arr[idx] = arr[idx] * (1 - 0.45 * wAxilla);
-        arr[idx + 1] = arr[idx + 1] + 0.024 * wAxilla;
-        arr[idx + 2] = cz + (arr[idx + 2] - cz) * (1 - 0.40 * wAxilla);
-      }
-    }
-
-    // 2d. Upper back / cervical spine skin under crew neck / collar:
-    if ((hasTop || hasOuterwear || hasDress) && !isStrapless) {
-      const yNeckMin = isMale ? 1.38 : 1.34;
-      const yNeckMax = isMale ? 1.52 : 1.46;
-      if (y >= yNeckMin && y <= yNeckMax && absX <= 0.085 && z < 0.030) {
-        const wNeck = Math.sin(Math.PI * (y - yNeckMin) / (yNeckMax - yNeckMin));
-        arr[idx + 2] = arr[idx + 2] + 0.010 * wNeck;
-        arr[idx] = arr[idx] * (1 - 0.08 * wNeck);
-      }
-    }
-
-    // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress / top:
+    // 3. Pelvis, hips, crotch, thighs, knees, and calves under bottom / dress:
     // Length-aware vertical cutoff (bottomMinY) keeps bare knees/shins untouched under mini skirts & shorts,
     // while retracting full legs under trousers/jeans so outer thigh & calf skin never pokes through!
     const resolvedBottomMinY = Number.isFinite(coveredZones?.bottomMinY)
       ? coveredZones.bottomMinY
-      : (hasBottom ? 0.08 : (hasDress ? 0.46 : 0.86));
-    const minBottomY = (hasBottom || hasDress) ? resolvedBottomMinY : 0.86;
+      : (hasBottom ? 0.08 : 0.46);
     const maxBottomY = isMale ? 1.08 : 1.05;
-    if ((hasBottom || hasDress || hasTop) && y >= minBottomY && y <= maxBottomY) {
+    if ((hasBottom || hasDress) && y >= resolvedBottomMinY && y <= maxBottomY) {
       // Below y = 0.80, hands are out at absX >= 0.36, so ALL vertices with absX <= 0.26 are 100% leg skin!
       const hipCutInner = y < 0.80 ? 0.25 : (isMale ? 0.22 : 0.205);
       const hipCutOuter = y < 0.80 ? 0.31 : (isMale ? 0.29 : 0.27);
@@ -244,11 +146,8 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
 
       if (hipBlend > 1e-4) {
         const sign = x < 0 ? -1 : 1;
-        const wTop = (hasBottom || hasDress || hasTop || hasOuterwear)
-          ? 1.0
-          : Math.max(0, Math.min(1, (maxBottomY - y) / 0.04));
-        const wBot = (hasBottom && hasShoes) ? 1.0 : Math.max(0, Math.min(1, (y - minBottomY) / 0.045));
-        const w = wTop * wBot * hipBlend;
+        const wBot = (hasBottom && hasShoes) ? 1.0 : Math.max(0, Math.min(1, (y - resolvedBottomMinY) / 0.045));
+        const w = wBot * hipBlend;
 
         // Above crotch (y >= 0.82), retract toward pelvis center (0, 0.020).
         // Below crotch (y < 0.82), retract each leg radially toward its anatomical bone axis (sign * legCx, legCz).
@@ -263,28 +162,25 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
           : 0.020 + 0.012 * Math.sin(Math.PI * tLeg) - 0.008 * tLeg;
         const cx = sign * legCx * legBlend;
         const cz = 0.020 * (1 - legBlend) + legCz * legBlend;
-        const isLegOrBottom = hasBottom || hasDress;
         const isKneeZone = y >= 0.40 && y <= 0.60;
         const isInnerThighZone = y >= 0.68 && y <= 0.84;
         const isFrontKnee = isKneeZone && z > cz;
         const isMedialThigh = isInnerThighZone && absX < (legCx * 1.05);
 
-        let shrinkX = isLegOrBottom ? 0.15 : 0.055;
-        let shrinkZ = isLegOrBottom ? 0.16 : 0.055;
+        let shrinkX = 0.15;
+        let shrinkZ = 0.16;
 
-        if (isLegOrBottom) {
-          if (isFrontKnee) {
-            // Front patella sticks out most in front of pants/trousers: retract deeply in Z and snugly in X!
-            shrinkZ = 0.42;
-            shrinkX = 0.28;
-          } else if (isKneeZone) {
-            shrinkZ = 0.28;
-            shrinkX = 0.22;
-          } else if (isMedialThigh) {
-            // Inner thigh skin between the legs: retract toward leg bone axis
-            shrinkX = 0.32;
-            shrinkZ = 0.24;
-          }
+        if (isFrontKnee) {
+          // Front patella sticks out most in front of pants/trousers: retract deeply in Z and snugly in X!
+          shrinkZ = 0.42;
+          shrinkX = 0.28;
+        } else if (isKneeZone) {
+          shrinkZ = 0.28;
+          shrinkX = 0.22;
+        } else if (isMedialThigh) {
+          // Inner thigh skin between the legs: retract toward leg bone axis
+          shrinkX = 0.32;
+          shrinkZ = 0.24;
         }
         arr[idx] = cx + (x - cx) * (1 - shrinkX * w);
         arr[idx + 2] = cz + (z - cz) * (1 - shrinkZ * w);

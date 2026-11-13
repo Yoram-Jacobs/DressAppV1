@@ -3457,6 +3457,13 @@ function GarmentTemplateMeshInner({
   const gltf = useGLTF(url, '/draco/');
 
   const geometry = useMemo(() => {
+    // Tuck state is needed by the ease, hem, tuck, AND radial-clearance passes below, so it must live at
+    // function scope (a block-scoped declaration here crashed every top/dress template with
+    // "ReferenceError: shouldTuck is not defined" and silently fell back to the procedural mesh).
+    const isTuckableTop = rawSlot === 'top' &&
+      !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(templateId) &&
+      !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
+    const shouldTuck = isTuckableTop && hasBottom;
     let geo = null;
     if (gltf?.scene) {
       const meshes = [];
@@ -3510,11 +3517,6 @@ function GarmentTemplateMeshInner({
           // and apply anchor-locked radial & lateral ease below the anatomical anchor based on fitProfile:
           //   • Tops / Outerwear / Dresses: anchored strictly at the shoulders & neckline (tDrop = 0 at shoulders).
           //   • Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
-          const isTuckableTop = rawSlot === 'top' &&
-            !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(templateId) &&
-            !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
-          const shouldTuck = isTuckableTop && hasBottom;
-
           const fitMode = fitProfile?.fit || 'regular';
           const preDrapedLooseTemplates = ['hoodie', 'cardigan', 'coat', 'trench_coat', 'kaftan', 'top_tunic', 'bermuda'];
           const isPreDrapedLoose = preDrapedLooseTemplates.includes(templateId);
