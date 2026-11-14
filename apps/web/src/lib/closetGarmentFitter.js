@@ -203,10 +203,10 @@ export function getDefaultAvatarFitterGeometry(sex = 'female', customAnatomy = n
 export function getBottomRiseAndCrotchMetrics(garment = {}, g) {
   const text = `${garment.name || ''} ${garment.title || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`.toLowerCase();
 
-  const isSkirt = /\b(skirt|חצאית|تنورة|falda|jupe)\b/i.test(text);
-  const isBriefOrBikini = /\b(bikini|brief|thong|swim_brief|תחתונים|ביקיני)\b/i.test(text);
-  const isShort = /\b(short|trunk|boxer|bermuda|שורט|קצרים|ברמודה)\b/i.test(text);
-  const isLoose = /\b(wide|loose|palazzo|relaxed|baggy|jogger|sweatpant|cargo|רחבים|טרנינג|דגמ)\b/i.test(text);
+  const isSkirt = /\b(skirts?|חצאית|חצאיות|تنورة|falda|jupe)\b/i.test(text);
+  const isBriefOrBikini = /\b(bikinis?|briefs?|thongs?|swim_briefs?|תחתונים|ביקיני)\b/i.test(text);
+  const isShort = /\b(shorts?|trunks?|boxers?|bermudas?|שורטס?|קצרים|ברמודה|شورت)\b/i.test(text);
+  const isLoose = /\b(wide|loose|palazzo|relaxed|baggy|joggers?|sweatpants?|cargo|רחבים|טרנינג|דגמ)\b/i.test(text);
 
   // Determine style riseRatio in [0.0 (waist upper limit) .. 1.0 (hip lower limit)]
   let riseStyle = 'mid_rise';
@@ -227,7 +227,7 @@ export function getBottomRiseAndCrotchMetrics(garment = {}, g) {
     riseStyle = 'high_rise';
     riseRatio = 0.0;
   } else if (
-    /\b(jogger|sweatpant|track|cargo|relaxed|baggy|trunk|boxer|טרנינג|שורט|מכנסי ים)\b/i.test(
+    /\b(joggers?|sweatpants?|track|cargo|relaxed|baggy|trunks?|boxers?|shorts?|טרנינג|שורטס?|מכנסי ים)\b/i.test(
       text
     )
   ) {
