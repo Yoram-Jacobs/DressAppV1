@@ -445,27 +445,44 @@ function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, 
   const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002);
   const yInsole = Math.max(yWelt + 0.003, -0.0015);
   const yOutsoleBottom = yWelt - sole;
-  const nz = 24;
-  const nRing = 12;
+  const nz = 42;
+  const nRing = 20;
   const startIdx = verts.length / 3;
+  const pBall = sampleProfile(a.profile, 'z', a.ballZ);
+  const cxBall = side * ((pBall.x0 + pBall.x1) / 2);
+  const zHeelRound = a.heelZ + 0.022;
+  const zToeRound = a.toeZ - 0.032;
 
   for (let i = 0; i <= nz; i++) {
     const t = i / nz;
     const z = lerp(z0, z1, t);
-    const { endTaper, cx, hw } = footSliceMetrics(a, side, z, z0, z1, off);
-    const hwSole = hw + 0.0025 * endTaper;
+    const p0 = sampleProfile(a.profile, 'z', z - 0.012);
+    const p1 = sampleProfile(a.profile, 'z', z);
+    const p2 = sampleProfile(a.profile, 'z', z + 0.012);
+    let cx = side * (((p0.x0 + p0.x1) + (p1.x0 + p1.x1) + (p2.x0 + p2.x1)) / 6);
+    const baseHw = ((p0.x1 - p0.x0) + (p1.x1 - p1.x0) + (p2.x1 - p2.x0)) / 6 + off;
+    let roundTaper = 1.0;
+    if (z < zHeelRound) {
+      const u = Math.max(0, Math.min(1, (zHeelRound - z) / Math.max(1e-4, zHeelRound - z0)));
+      roundTaper = Math.sqrt(Math.max(0.06, 1 - u * u * 0.94));
+    } else if (z > zToeRound) {
+      const u = Math.max(0, Math.min(1, (z - zToeRound) / Math.max(1e-4, z1 - zToeRound)));
+      roundTaper = Math.sqrt(Math.max(0.06, 1 - u * u * 0.94));
+      cx = lerp(cx, cxBall, u * u * 0.35);
+    }
+    const hwSole = (baseHw + 0.0025) * roundTaper;
     for (let j = 0; j < nRing; j++) {
       const ang = (j / nRing) * Math.PI * 2;
       const ca = Math.cos(ang);
       const sa = Math.sin(ang);
-      const x = cx + side * hwSole * Math.sign(ca) * Math.pow(Math.abs(ca), 0.65);
+      const x = cx + side * hwSole * Math.sign(ca) * Math.pow(Math.abs(ca), 0.78);
       const yMid = 0.5 * (yInsole + yOutsoleBottom);
       const yHalf = 0.5 * (yInsole - yOutsoleBottom);
-      const y = yMid + yHalf * Math.sign(sa) * Math.pow(Math.abs(sa), 0.65);
+      const y = yMid + yHalf * Math.sign(sa) * Math.pow(Math.abs(sa), 0.72);
       verts.push(x, y, z);
       let uvX = x;
       let uvZ = z;
-      if (suppressCenterInsole && sa > 0.15 && Math.abs(ca) < 0.92) {
+      if (suppressCenterInsole && sa > -0.25) {
         const along = (z - frame.z0) / Math.max(1e-4, frame.z1 - frame.z0);
         if (along >= 0.32 && along <= 0.76) {
           uvZ = lerp(frame.z0, frame.z1, 0.84);
