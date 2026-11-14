@@ -1423,18 +1423,37 @@ async function fetchAndCropTexture(url, patterned = false) {
     const boxFor = ([c0, c1]) => {
       let r0 = effH;
       let r1 = -1;
+      const rowWidths = new Array(effH).fill(0);
       for (let cy = 0; cy < effH; cy++) {
         const row = cy * effW * 4;
+        let minX = effW;
+        let maxX = -1;
         for (let cx = c0; cx <= c1; cx++) {
           if (isOpaque(row + cx * 4)) {
             if (cy < r0) r0 = cy;
             if (cy > r1) r1 = cy;
-            break;
+            if (cx < minX) minX = cx;
+            if (cx > maxX) maxX = cx;
           }
         }
+        if (maxX >= minX) rowWidths[cy] = maxX - minX + 1;
       }
       if (r1 < 0) { r0 = 0; r1 = effH - 1; }
-      const toeUp = true;
+      const bh = Math.max(1, r1 - r0 + 1);
+      // Compare forefoot vs heel width: the ball of the foot is wider than the heel.
+      let upperW = 0;
+      let upperN = 0;
+      let lowerW = 0;
+      let lowerN = 0;
+      for (let cy = r0 + Math.floor(bh * 0.16); cy <= r0 + Math.floor(bh * 0.44); cy++) {
+        if (rowWidths[cy] > 0) { upperW += rowWidths[cy]; upperN++; }
+      }
+      for (let cy = r0 + Math.floor(bh * 0.56); cy <= r0 + Math.floor(bh * 0.84); cy++) {
+        if (rowWidths[cy] > 0) { lowerW += rowWidths[cy]; lowerN++; }
+      }
+      const avgUpper = upperN > 0 ? upperW / upperN : 0;
+      const avgLower = lowerN > 0 ? lowerW / lowerN : 0;
+      const toeUp = avgUpper >= avgLower * 0.96;
       return {
         u0: c0 / effW,
         u1: (c1 + 1) / effW,
@@ -1464,6 +1483,65 @@ async function fetchAndCropTexture(url, patterned = false) {
           rightH += colCount[run[1] - k];
         }
         shoeLayout.toeLeft = leftH < rightH;
+      }
+    }
+
+    // Analyze top-down shoe box for T-strap / thong center strap & closed heel cup
+    const refBox = shoeLayout.boxes?.[0] || shoeLayout.box;
+    if (refBox && (shoeLayout.mode === 'pair' || shoeLayout.mode === 'top')) {
+      const bx0 = Math.floor(refBox.u0 * effW);
+      const bx1 = Math.min(effW - 1, Math.ceil(refBox.u1 * effW) - 1);
+      const by0 = Math.floor((1 - refBox.v1) * effH);
+      const by1 = Math.min(effH - 1, Math.ceil((1 - refBox.v0) * effH) - 1);
+      const bw = Math.max(1, bx1 - bx0 + 1);
+      const bh = Math.max(1, by1 - by0 + 1);
+      const toeUp = refBox.toeUp !== false;
+      const sampleMean = (xA, xB, yA, yB) => {
+        let sr = 0, sg = 0, sb = 0, cnt = 0;
+        const xStart = bx0 + Math.floor(bw * xA);
+        const xEnd = bx0 + Math.floor(bw * xB);
+        const yStart = by0 + Math.floor(bh * yA);
+        const yEnd = by0 + Math.floor(bh * yB);
+        for (let cy = yStart; cy <= yEnd; cy += 2) {
+          const row = cy * effW * 4;
+          for (let cx = xStart; cx <= xEnd; cx += 2) {
+            const o = row + cx * 4;
+            if (isOpaque(o)) {
+              sr += layoutData[o];
+              sg += layoutData[o + 1];
+              sb += layoutData[o + 2];
+              cnt++;
+            }
+          }
+        }
+        return cnt > 0 ? [sr / cnt, sg / cnt, sb / cnt, cnt] : null;
+      };
+      const foreY0 = toeUp ? 0.18 : 0.55;
+      const foreY1 = toeUp ? 0.45 : 0.82;
+      const centerCol = sampleMean(0.45, 0.55, foreY0, foreY1);
+      const leftBed = sampleMean(0.22, 0.34, foreY0, foreY1);
+      const rightBed = sampleMean(0.66, 0.78, foreY0, foreY1);
+      if (centerCol && leftBed && rightBed) {
+        const bedR = 0.5 * (leftBed[0] + rightBed[0]);
+        const bedG = 0.5 * (leftBed[1] + rightBed[1]);
+        const bedB = 0.5 * (leftBed[2] + rightBed[2]);
+        const centerDiff = Math.hypot(centerCol[0] - bedR, centerCol[1] - bedG, centerCol[2] - bedB);
+        const sideDiff = Math.hypot(leftBed[0] - rightBed[0], leftBed[1] - rightBed[1], leftBed[2] - rightBed[2]);
+        if (centerDiff > 16 && centerDiff > sideDiff * 1.4) {
+          shoeLayout.sandalStyle = 'tstrap';
+        }
+      }
+      const heelY0 = toeUp ? 0.78 : 0.04;
+      const heelY1 = toeUp ? 0.94 : 0.20;
+      const heelRimL = sampleMean(0.16, 0.28, heelY0, heelY1);
+      const heelRimR = sampleMean(0.72, 0.84, heelY0, heelY1);
+      const heelIn = sampleMean(0.40, 0.60, heelY0, heelY1);
+      if (heelRimL && heelRimR && heelIn) {
+        const rimLum = 0.5 * ((heelRimL[0] + heelRimL[1] + heelRimL[2]) + (heelRimR[0] + heelRimR[1] + heelRimR[2])) / 3;
+        const inLum = (heelIn[0] + heelIn[1] + heelIn[2]) / 3;
+        if (Math.abs(rimLum - inLum) > 12) {
+          shoeLayout.hasHeelCup = true;
+        }
       }
     }
   } catch {

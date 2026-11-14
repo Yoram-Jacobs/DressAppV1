@@ -219,9 +219,19 @@ export function resolveFootwearSpec(garment) {
 
   const hasTongue = kind === 'sneaker' || kind === 'loafer' || kind === 'ankle_boot' || kind === 'boot';
   const hasWelt = true;
+  const sandalStyle = kind === 'sandal'
+    ? (has(/thong|t[-_\s]*strap|flip.?flop|toe.?post|אצבע/)
+        ? 'tstrap'
+        : has(/slide|mule|סלייד|כפכף/)
+          ? 'slide'
+          : heelHeight >= 0.035
+            ? 'ankle_strap'
+            : null)
+    : null;
 
   return {
     kind,
+    sandalStyle,
     heelHeight,
     heelStyle,
     collar,
@@ -640,7 +650,88 @@ function buildAnkleStrapAndHeelCounter(side, a, yAnkle, bandH, off, frame, layou
 }
 
 /**
- * Builds an open-toe, open-instep sandal (contoured footbed, toe strap, and ankle or vamp strap).
+ * Builds a sleek 3D T-strap / thong center stem from the toe post up to the instep,
+ * plus two arched side wings down to the footbed edges.
+ */
+function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
+  const zToePost = a.toeZ - 0.032;
+  const zVamp = a.ankleZ + 0.048;
+  const nz = 12;
+  const nW = 4;
+  const thick = 0.0045;
+  const halfW = 0.009;
+  const startIdx = verts.length / 3;
+
+  // Center stem along dorsal ridge from toe post to instep
+  for (let i = 0; i <= nz; i++) {
+    const t = i / nz;
+    const z = lerp(zToePost, zVamp, t);
+    const p = sampleProfile(a.profile, 'z', z);
+    const cx = side * ((p.x0 + p.x1) / 2);
+    const yTop = (i === 0 ? 0.004 : Math.max(0.014, p.top + off)) + thick;
+    const yBot = i === 0 ? -0.003 : Math.max(0.010, p.top + off);
+    const ringPts = [];
+    for (let j = 0; j < nW; j++) {
+      const u = (j / (nW - 1)) * 2 - 1;
+      ringPts.push([cx + u * halfW, yTop]);
+    }
+    for (let j = nW - 1; j >= 0; j--) {
+      const u = (j / (nW - 1)) * 2 - 1;
+      ringPts.push([cx + u * halfW, yBot]);
+    }
+    ringPts.forEach(([x, y]) => {
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    });
+  }
+  const ring = nW * 2;
+  for (let i = 0; i < nz; i++) {
+    for (let j = 0; j < ring; j++) {
+      const jn = (j + 1) % ring;
+      appendQuad(indices, startIdx + i * ring + j, startIdx + i * ring + jn, startIdx + (i + 1) * ring + j, startIdx + (i + 1) * ring + jn);
+    }
+  }
+
+  // Arched T-bar wings across the instep connecting the stem to the sole edges
+  buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices);
+}
+
+/**
+ * Builds a sleek closed heel cup wrapping around the back of the heel up to ~0.048m.
+ */
+function buildHeelCup(side, a, off, frame, layout, verts, uvs, indices) {
+  const z0 = a.heelZ - 0.010;
+  const zCupEnd = a.heelZ + 0.058;
+  const nz = 10;
+  const nArc = 16;
+  const yWelt = Math.min(-0.006, (a.soleBottomY || -0.0061) - 0.002);
+  const startIdx = verts.length / 3;
+
+  for (let i = 0; i <= nz; i++) {
+    const t = i / nz;
+    const z = lerp(z0, zCupEnd, t);
+    const { endTaper, cx, hw } = footSliceMetrics(a, side, z, z0, a.toeZ + 0.010, off);
+    const rimH = lerp(0.052, 0.020, Math.pow(t, 1.4)) * endTaper;
+    for (let j = 0; j < nArc; j++) {
+      const phi = Math.PI * (j / (nArc - 1));
+      const cphi = Math.cos(phi);
+      const sphi = Math.sin(phi);
+      const x = cx + side * hw * Math.sign(cphi) * Math.pow(Math.abs(cphi), 0.78);
+      const y = lerp(yWelt, Math.max(0.016, rimH), Math.pow(sphi, 0.55));
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    }
+  }
+  for (let i = 0; i < nz; i++) {
+    for (let j = 0; j < nArc - 1; j++) {
+      appendQuad(indices, startIdx + i * nArc + j, startIdx + i * nArc + j + 1, startIdx + (i + 1) * nArc + j, startIdx + (i + 1) * nArc + j + 1);
+    }
+  }
+}
+
+/**
+ * Builds an open-toe, open-instep sandal matching the actual sandal style
+ * (T-strap/thong with optional heel cup, heeled ankle-strap, or slide).
  */
 function buildSandalGeometry(side, a, s, off, frame, layout, verts, uvs, indices) {
   const sole = Math.max(0.010, s.soleThickness || 0.012);
@@ -648,14 +739,27 @@ function buildSandalGeometry(side, a, s, off, frame, layout, verts, uvs, indices
   const z1 = a.toeZ + 0.008;
   buildFootbedGeometry(side, a, sole, z0, z1, off * 0.65, frame, layout, verts, uvs, indices);
 
+  const style = layout?.sandalStyle || s.sandalStyle || (s.heelHeight >= 0.035 ? 'ankle_strap' : 'slide');
+  const hasHeelCup = Boolean(layout?.hasHeelCup);
+
+  if (style === 'tstrap') {
+    buildTStrap(side, a, off, frame, layout, verts, uvs, indices);
+    if (hasHeelCup) {
+      buildHeelCup(side, a, off, frame, layout, verts, uvs, indices);
+    } else if (s.heelHeight >= 0.035) {
+      buildAnkleStrapAndHeelCounter(side, a, 0.095, 0.016, off * 0.45, frame, layout, verts, uvs, indices);
+    }
+    return;
+  }
+
   // Forefoot strap across the ball of the foot (leaves toes open and visible)
   buildFootStrap(side, a, a.ballZ - 0.004, a.ballZ + 0.024, off * 0.55, 0.0045, frame, layout, verts, uvs, indices);
 
-  if (s.heelHeight >= 0.035) {
+  if (style === 'ankle_strap' || s.heelHeight >= 0.035) {
     // Heeled sandal: delicate ankle strap + slim heel counter
     buildAnkleStrapAndHeelCounter(side, a, 0.095, 0.016, off * 0.45, frame, layout, verts, uvs, indices);
   } else {
-    // Flat sandal / slide: second midfoot/instep strap
+    // Flat slide sandal: second midfoot/instep strap
     buildFootStrap(side, a, a.ankleZ + 0.055, a.ankleZ + 0.088, off * 0.55, 0.0045, frame, layout, verts, uvs, indices);
   }
 }
