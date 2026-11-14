@@ -441,7 +441,7 @@ function footSliceMetrics(a, side, z, z0, z1, off) {
 /**
  * Builds a watertight contoured outsole/footbed from z0 to z1 for one foot.
  */
-function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, uvs, indices) {
+function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, uvs, indices, suppressCenterInsole = false) {
   const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002);
   const yInsole = Math.max(yWelt + 0.003, -0.0015);
   const yOutsoleBottom = yWelt - sole;
@@ -463,7 +463,21 @@ function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, 
       const yHalf = 0.5 * (yInsole - yOutsoleBottom);
       const y = yMid + yHalf * Math.sign(sa) * Math.pow(Math.abs(sa), 0.65);
       verts.push(x, y, z);
-      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+      let uvX = x;
+      let uvZ = z;
+      if (suppressCenterInsole && sa > 0.25 && Math.abs(ca) < 0.85) {
+        const along = (z - frame.z0) / Math.max(1e-4, frame.z1 - frame.z0);
+        const across = (x - frame.x0) / Math.max(1e-4, frame.x1 - frame.x0);
+        if (along >= 0.34 && along <= 0.78) {
+          if (across >= 0.36 && across <= 0.64) {
+            uvX = lerp(frame.x0, frame.x1, across < 0.5 ? 0.26 : 0.74);
+          }
+          if (along <= 0.48) {
+            uvZ = lerp(frame.z0, frame.z1, 0.58);
+          }
+        }
+      }
+      uvs.push(...shoeUV(side, uvX, Math.max(0, y), uvZ, frame, layout));
     }
   }
 
@@ -503,7 +517,7 @@ function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, 
 /**
  * Builds a 3D contoured arch strap across the foot at zStart..zEnd, anchored to the footbed edges.
  */
-function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, verts, uvs, indices) {
+function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, verts, uvs, indices, vSweep = 0) {
   const nz = 4;
   const nArc = 16;
   const yBase = Math.min(-0.005, (a.soleBottomY || -0.0061));
@@ -512,8 +526,8 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
   // Build closed tube-like arch band (outer arch + inner arch)
   const ring = nArc * 2;
   for (let i = 0; i <= nz; i++) {
-    const z = lerp(zStart, zEnd, i / nz);
-    const p = sampleProfile(a.profile, 'z', z);
+    const zBase = lerp(zStart, zEnd, i / nz);
+    const p = sampleProfile(a.profile, 'z', zBase);
     const cx = side * ((p.x0 + p.x1) / 2);
     const hwInner = (p.x1 - p.x0) / 2 + off;
     const hwOuter = hwInner + thickness;
@@ -528,6 +542,7 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const ey = Math.pow(sphi, 0.82);
       const x = cx + side * hwOuter * ex;
       const y = yBase + (archOuter - yBase) * ey;
+      const z = zBase - vSweep * Math.abs(ex);
       verts.push(x, y, z);
       uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
     }
@@ -539,6 +554,7 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const ey = Math.pow(sphi, 0.82);
       const x = cx + side * hwInner * ex;
       const y = yBase + (archInner - yBase) * ey;
+      const z = zBase - vSweep * Math.abs(ex);
       verts.push(x, y, z);
       uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
     }
@@ -654,20 +670,21 @@ function buildAnkleStrapAndHeelCounter(side, a, yAnkle, bandH, off, frame, layou
  * plus two arched side wings down to the footbed edges.
  */
 function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
-  const zToePost = a.toeZ - 0.032;
+  const zToePost = a.toeZ - 0.036;
   const zVamp = a.ankleZ + 0.048;
-  const nz = 12;
-  const nW = 4;
+  const nz = 14;
+  const nW = 6;
   const thick = 0.0045;
-  const halfW = 0.009;
   const startIdx = verts.length / 3;
 
-  // Center stem along dorsal ridge from toe post to instep
+  // Center stem along dorsal ridge from toe post to instep, widening across the ring/medallion zone
   for (let i = 0; i <= nz; i++) {
     const t = i / nz;
     const z = lerp(zToePost, zVamp, t);
     const p = sampleProfile(a.profile, 'z', z);
     const cx = side * ((p.x0 + p.x1) / 2);
+    const swell = Math.sin(Math.PI * smoothstep(0.12, 0.98, t));
+    const halfW = 0.0065 + 0.0115 * swell;
     const yTop = (i === 0 ? 0.004 : Math.max(0.014, p.top + off)) + thick;
     const yBot = i === 0 ? -0.003 : Math.max(0.010, p.top + off);
     const ringPts = [];
@@ -692,8 +709,8 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
     }
   }
 
-  // Arched T-bar wings across the instep connecting the stem to the sole edges
-  buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices);
+  // Arched V/T-bar wings across the instep sweeping back slightly to follow the strap silhouette
+  buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices, 0.019);
 }
 
 /**
@@ -737,9 +754,8 @@ function buildSandalGeometry(side, a, s, off, frame, layout, verts, uvs, indices
   const sole = Math.max(0.010, s.soleThickness || 0.012);
   const z0 = a.heelZ - 0.008;
   const z1 = a.toeZ + 0.008;
-  buildFootbedGeometry(side, a, sole, z0, z1, off * 0.65, frame, layout, verts, uvs, indices);
-
   const style = layout?.sandalStyle || s.sandalStyle || (s.heelHeight >= 0.035 ? 'ankle_strap' : 'slide');
+  buildFootbedGeometry(side, a, sole, z0, z1, off * 0.65, frame, layout, verts, uvs, indices, style === 'tstrap');
   const hasHeelCup = Boolean(layout?.hasHeelCup);
 
   if (style === 'tstrap') {
