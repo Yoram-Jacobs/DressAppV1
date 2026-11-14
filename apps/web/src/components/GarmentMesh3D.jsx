@@ -1516,30 +1516,39 @@ async function fetchAndCropTexture(url, patterned = false) {
         }
         return cnt > 0 ? [sr / cnt, sg / cnt, sb / cnt, cnt] : null;
       };
-      const foreY0 = toeUp ? 0.18 : 0.55;
-      const foreY1 = toeUp ? 0.45 : 0.82;
-      const centerCol = sampleMean(0.45, 0.55, foreY0, foreY1);
-      const leftBed = sampleMean(0.22, 0.34, foreY0, foreY1);
-      const rightBed = sampleMean(0.66, 0.78, foreY0, foreY1);
-      if (centerCol && leftBed && rightBed) {
+      const foreY0 = toeUp ? 0.22 : 0.52;
+      const foreY1 = toeUp ? 0.48 : 0.78;
+      const centerCol = sampleMean(0.47, 0.53, foreY0, foreY1);
+      const midVampY0 = toeUp ? 0.38 : 0.42;
+      const midVampY1 = toeUp ? 0.58 : 0.62;
+      const centerVamp = sampleMean(0.42, 0.58, midVampY0, midVampY1);
+      const leftBed = sampleMean(0.20, 0.33, foreY0, foreY1);
+      const rightBed = sampleMean(0.67, 0.80, foreY0, foreY1);
+      if (leftBed && rightBed) {
         const bedR = 0.5 * (leftBed[0] + rightBed[0]);
         const bedG = 0.5 * (leftBed[1] + rightBed[1]);
         const bedB = 0.5 * (leftBed[2] + rightBed[2]);
-        const centerDiff = Math.hypot(centerCol[0] - bedR, centerCol[1] - bedG, centerCol[2] - bedB);
         const sideDiff = Math.hypot(leftBed[0] - rightBed[0], leftBed[1] - rightBed[1], leftBed[2] - rightBed[2]);
-        if (centerDiff > 16 && centerDiff > sideDiff * 1.4) {
+        const centerDiff = centerCol
+          ? Math.hypot(centerCol[0] - bedR, centerCol[1] - bedG, centerCol[2] - bedB)
+          : 0;
+        const vampDiff = centerVamp
+          ? Math.hypot(centerVamp[0] - bedR, centerVamp[1] - bedG, centerVamp[2] - bedB)
+          : 0;
+        if (Math.max(centerDiff, vampDiff) > 15 && Math.max(centerDiff, vampDiff) > sideDiff * 1.3) {
           shoeLayout.sandalStyle = 'tstrap';
         }
       }
-      const heelY0 = toeUp ? 0.78 : 0.04;
-      const heelY1 = toeUp ? 0.94 : 0.20;
-      const heelRimL = sampleMean(0.16, 0.28, heelY0, heelY1);
-      const heelRimR = sampleMean(0.72, 0.84, heelY0, heelY1);
+      const heelY0 = toeUp ? 0.80 : 0.04;
+      const heelY1 = toeUp ? 0.94 : 0.18;
+      const heelRimL = sampleMean(0.14, 0.26, heelY0, heelY1);
+      const heelRimR = sampleMean(0.74, 0.86, heelY0, heelY1);
       const heelIn = sampleMean(0.40, 0.60, heelY0, heelY1);
       if (heelRimL && heelRimR && heelIn) {
         const rimLum = 0.5 * ((heelRimL[0] + heelRimL[1] + heelRimL[2]) + (heelRimR[0] + heelRimR[1] + heelRimR[2])) / 3;
         const inLum = (heelIn[0] + heelIn[1] + heelIn[2]) / 3;
-        if (Math.abs(rimLum - inLum) > 12) {
+        // Ignore bright white brand logos printed on the heel footbed (inLum > 155)
+        if (inLum <= 155 && rimLum - inLum > 12) {
           shoeLayout.hasHeelCup = true;
         }
       }

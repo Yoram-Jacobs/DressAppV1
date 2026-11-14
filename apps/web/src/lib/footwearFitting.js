@@ -165,7 +165,7 @@ export function resolveFootwearSpec(garment) {
   else if (has(/wedge|טריז/)) heelHeight = 0.075;
   else if (has(/block\s*heel|עקב רחב|chunky\s*heel/)) heelHeight = 0.065;
   else if (has(/heels?\b|high.?heel|pumps?\b|עקב|עקבים|talon|tacón|tacco|absatz|каблук|高跟|ヒール|كعب/)) heelHeight = 0.085;
-  else if (isPlatform && !isSneaker) heelHeight = 0.045;
+  // Flat platform sandals/shoes elevate the entire sole (soleThickness) without tilting the heel above the forefoot.
 
   if (Number.isFinite(explicitHeel) && explicitHeel > 0) {
     heelHeight = Math.min(0.14, explicitHeel / 100);
@@ -1060,7 +1060,7 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
  * lifted local frame. Returns null for flat footwear without heel elevation.
  */
 export function createHeelGeometry({ isMale = false, spec, pose } = {}) {
-  if (!pose?.active || !spec || spec.heelHeight < 0.02) return null;
+  if (!pose?.active || !spec || spec.heelHeight < 0.02 || spec.heelStyle === 'platform') return null;
   const supportsStandaloneHeel =
     spec.kind === 'heel' ||
     spec.kind === 'sandal' ||
