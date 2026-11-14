@@ -4299,10 +4299,10 @@ function GarmentTemplateMeshInner({
       {hardwareGeometry && (
         <mesh geometry={hardwareGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color="#c4c9d2"
-            metalness={0.88}
-            roughness={0.20}
-            envMapIntensity={1.35}
+            color="#d8dde6"
+            metalness={0.90}
+            roughness={0.18}
+            envMapIntensity={1.45}
           />
         </mesh>
       )}
@@ -4766,10 +4766,10 @@ export function GarmentMeshCore({
       {hardwareGeometry && (
         <mesh geometry={hardwareGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color="#c4c9d2"
-            metalness={0.88}
-            roughness={0.20}
-            envMapIntensity={1.35}
+            color="#d8dde6"
+            metalness={0.90}
+            roughness={0.18}
+            envMapIntensity={1.45}
           />
         </mesh>
       )}

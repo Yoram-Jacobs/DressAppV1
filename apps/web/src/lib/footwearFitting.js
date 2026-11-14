@@ -796,9 +796,8 @@ function buildKeeperLoop(side, a, off, zCenter, halfZ, halfW, liftH, uvStrapX, u
 function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
   const zToePost = a.toeZ - 0.036;
   const zVamp = a.ankleZ + 0.048;
-  const zRingBot = lerp(zToePost, zVamp, 0.30);
-  const zLowerRing = lerp(zRingBot, zVamp, 0.32);
-  const zUpperRing = lerp(zRingBot, zVamp, 0.78);
+  const zUpperRing = zVamp + 0.025;
+  const zLowerRing = zVamp + 0.058;
   const nz = 16;
   const nW = 5;
   const thick = 0.0042;
@@ -812,7 +811,7 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
     const z = lerp(zToePost, zVamp, t);
     const p = sampleProfile(a.profile, 'z', z);
     const cx = side * ((p.x0 + p.x1) / 2);
-    const halfW = lerp(0.0045, 0.0145, smoothstep(0.18, 0.42, t));
+    const halfW = lerp(0.0045, 0.0155, smoothstep(0.18, 0.42, t));
     const yTop = (i === 0 ? 0.004 : Math.max(0.013, p.top + off)) + thick;
     const yBot = i === 0 ? -0.003 : Math.max(0.009, p.top + off);
     const ringPts = [];
@@ -838,8 +837,8 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
   }
 
   // Leather keeper loops threading the top of the upper ring and bottom of the lower ring
-  buildKeeperLoop(side, a, off, zUpperRing - 0.010, 0.0055, 0.0068, 0.0062, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
-  buildKeeperLoop(side, a, off, zLowerRing + 0.015, 0.0050, 0.0065, 0.0062, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
+  buildKeeperLoop(side, a, off, zUpperRing - 0.010, 0.0055, 0.0070, 0.0068, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
+  buildKeeperLoop(side, a, off, zLowerRing + 0.0155, 0.0050, 0.0068, 0.0068, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
 
   // Arched V/T-bar wings across the instep
   buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices, 0.006);
@@ -1273,13 +1272,11 @@ export function createFootwearHardwareGeometry({ isMale = false, spec, layout, p
   if (!spec || spec.kind !== 'sandal' || style !== 'tstrap') return null;
 
   const a = getFootAnatomy(isMale);
-  const off = 0.0045;
-  const zToePost = a.toeZ - 0.036;
+  const off = 0.0065;
   const zVamp = a.ankleZ + 0.048;
-  const zRingBot = lerp(zToePost, zVamp, 0.30);
-  const zLowerRing = lerp(zRingBot, zVamp, 0.32);
-  const zUpperRing = lerp(zRingBot, zVamp, 0.78);
-  const zJoin = 0.5 * ((zUpperRing + 0.0105) + (zLowerRing - 0.0165));
+  const zUpperRing = zVamp + 0.025;
+  const zLowerRing = zVamp + 0.058;
+  const zJoin = 0.5 * ((zUpperRing + 0.010) + (zLowerRing - 0.016));
 
   const verts = [];
   const indices = [];
