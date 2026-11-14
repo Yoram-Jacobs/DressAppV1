@@ -682,7 +682,7 @@ function buildHardwareRing(side, a, off, zCenter, rx, rz, tubeR, verts, indices)
     const cx = side * ((p.x0 + p.x1) / 2);
     const xRing = cx + rx * ct;
     // Sit cleanly above the leather strap top surface (p.top + off + 0.0042)
-    const yRing = Math.max(0.014, p.top + off) + 0.0042 + tubeR * 1.15;
+    const yRing = Math.max(0.014, p.top + off) + 0.0044 + tubeR * 1.35;
 
     for (let j = 0; j < nMinor; j++) {
       const phi = (j / nMinor) * Math.PI * 2;
@@ -737,7 +737,7 @@ function buildHardwareLink(side, a, off, zJoin, halfW, tubeR, verts, indices) {
   const nPhi = 10;
   const p = sampleProfile(a.profile, 'z', zJoin);
   const cx = side * ((p.x0 + p.x1) / 2);
-  const yBase = Math.max(0.014, p.top + off) + 0.0042 + tubeR * 1.2;
+  const yBase = Math.max(0.014, p.top + off) + 0.0044 + tubeR * 1.40;
   const barStart = verts.length / 3;
 
   for (let i = 0; i <= nx; i++) {
@@ -811,7 +811,7 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
     const z = lerp(zToePost, zVamp, t);
     const p = sampleProfile(a.profile, 'z', z);
     const cx = side * ((p.x0 + p.x1) / 2);
-    const halfW = lerp(0.0045, 0.0155, smoothstep(0.18, 0.42, t));
+    const halfW = lerp(0.0045, 0.0135, smoothstep(0.18, 0.42, t));
     const yTop = (i === 0 ? 0.004 : Math.max(0.013, p.top + off)) + thick;
     const yBot = i === 0 ? -0.003 : Math.max(0.009, p.top + off);
     const ringPts = [];
@@ -1281,9 +1281,9 @@ export function createFootwearHardwareGeometry({ isMale = false, spec, layout, p
   const verts = [];
   const indices = [];
   [-1, 1].forEach((side) => {
-    buildHardwareRing(side, a, off, zLowerRing, 0.0130, 0.0165, 0.0025, verts, indices);
-    buildHardwareRing(side, a, off, zUpperRing, 0.0095, 0.0105, 0.0023, verts, indices);
-    buildHardwareLink(side, a, off, zJoin, 0.0095, 0.0023, verts, indices);
+    buildHardwareRing(side, a, off, zLowerRing, 0.0145, 0.0170, 0.0026, verts, indices);
+    buildHardwareRing(side, a, off, zUpperRing, 0.0100, 0.0110, 0.0024, verts, indices);
+    buildHardwareLink(side, a, off, zJoin, 0.0095, 0.0024, verts, indices);
   });
 
   let geo = new THREE.BufferGeometry();

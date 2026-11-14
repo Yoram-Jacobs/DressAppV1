@@ -4654,12 +4654,20 @@ export function GarmentMeshCore({
     [rawSlot, visible, isMale, footwearSpec, footPose]
   );
 
-  const hardwareGeometry = useMemo(
-    () => (rawSlot === 'shoes' && visible && footwearSpec
-      ? createFootwearHardwareGeometry({ isMale, spec: footwearSpec, layout: shoeLayout, pose: footPose })
-      : null),
-    [rawSlot, visible, isMale, footwearSpec, shoeLayout, footPose]
-  );
+  const hardwareGeometry = useMemo(() => {
+    if (rawSlot !== 'shoes' || !visible || !footwearSpec) return null;
+    const baseHw = createFootwearHardwareGeometry({ isMale, spec: footwearSpec, layout: shoeLayout, pose: null });
+    if (!baseHw) return null;
+    const morphedHw = isStandalone
+      ? baseHw
+      : applyAvatarMorphsToGeometry(baseHw, morphField, morphInfluences, {
+          exactLowerBody: true,
+        });
+    const posedHw = poseGeometry(morphedHw, footPose);
+    if (morphedHw !== baseHw) baseHw.dispose?.();
+    if (posedHw !== morphedHw) morphedHw.dispose?.();
+    return posedHw;
+  }, [rawSlot, visible, isMale, footwearSpec, shoeLayout, footPose, isStandalone, morphField, morphInfluences]);
 
   const matchedTemplateId = useMemo(() => {
     return resolveGarmentTemplate({
