@@ -451,23 +451,12 @@ def _deterministic_compose(
 def _category_to_slot(cat: str) -> str | None:
     if not cat:
         return None
-    cat = cat.lower()
+    cat = cat.strip().lower()
     if "dress" in cat:
         return "dress"
-    if cat in {"top", "shirt", "tshirt", "t-shirt", "blouse", "sweater", "knit", "tee"}:
-        return "top"
-    if cat in {"bottom", "pants", "trousers", "jeans", "shorts", "skirt"}:
-        return "bottom"
-    if cat in {"outerwear", "jacket", "coat", "blazer"}:
-        return "outerwear"
-    if cat in {"shoes", "footwear", "sneakers", "boots", "heels"}:
-        return "shoes"
-    if cat in {"bag", "handbag", "backpack", "purse"}:
-        return "bag"
-    if cat in {"hat", "cap", "headwear", "scarf"}:
-        return "headwear"
-    if cat in {"accessory", "jewellery", "jewelry", "belt", "watch"}:
-        return "accessory"
+    for slot, synonyms in marketplace_search.SLOT_CATEGORY_SYNONYMS.items():
+        if cat in synonyms:
+            return slot
     return None
 
 
@@ -511,6 +500,8 @@ async def _fill_gaps_from_closet(
                 "candidate_id": cid,
                 "source": "closet",
                 "image_data_url": item.get("thumbnail_data_url")
+                or item.get("reconstructed_image_url")
+                or item.get("clean_image_url")
                 or item.get("segmented_image_url")
                 or item.get("original_image_url"),
                 "closet_item_id": item.get("id"),
@@ -535,23 +526,7 @@ async def _fill_gaps_from_closet(
 
 
 def _slot_to_category_query(role: str) -> dict[str, Any] | None:
-    if role == "top":
-        return {"category": {"$in": ["top", "shirt", "tshirt", "blouse", "sweater"]}}
-    if role == "bottom":
-        return {"category": {"$in": ["bottom", "pants", "jeans", "shorts", "skirt", "trousers"]}}
-    if role == "dress":
-        return {"category": "dress"}
-    if role == "outerwear":
-        return {"category": {"$in": ["outerwear", "jacket", "coat", "blazer"]}}
-    if role == "shoes":
-        return {"category": {"$in": ["shoes", "footwear", "sneakers", "boots", "heels"]}}
-    if role == "bag":
-        return {"category": {"$in": ["bag", "handbag", "backpack", "purse"]}}
-    if role == "headwear":
-        return {"category": {"$in": ["hat", "cap", "headwear", "scarf"]}}
-    if role == "accessory":
-        return {"category": "accessory"}
-    return None
+    return marketplace_search.role_to_category_query(role) or None
 
 
 # ─── helpers ─────────────────────────────────────────────────

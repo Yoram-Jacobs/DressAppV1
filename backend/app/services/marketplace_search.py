@@ -90,7 +90,11 @@ async def _suggest_for_role(
     # something 10× over budget.
     budget = _resolve_budget(constraints, role)
     if budget:
-        query["price_cents"] = {"$lte": int(budget * 1.5)}
+        cap = int(budget * 1.5)
+        query["$or"] = [
+            {"price_cents": {"$lte": cap}},
+            {"financial_metadata.list_price_cents": {"$lte": cap}},
+        ]
 
     cursor = db.listings.find(query, {"_id": 0}).sort([("created_at", -1)]).limit(50)
     listings = [doc async for doc in cursor]
@@ -114,24 +118,29 @@ async def _suggest_for_role(
     ]
 
 
+SLOT_CATEGORY_SYNONYMS: dict[str, list[str]] = {
+    "top": ["top", "tops", "shirt", "tshirt", "t-shirt", "blouse", "sweater", "knit", "tee"],
+    "bottom": ["bottom", "bottoms", "pants", "jeans", "shorts", "skirt", "trousers"],
+    "dress": ["dress", "dresses", "full body", "full_body", "fullbody", "full-body", "one-piece", "jumpsuit", "romper"],
+    "outerwear": ["outerwear", "jacket", "coat", "blazer"],
+    "shoes": ["shoes", "shoe", "footwear", "sneakers", "boots", "heels", "sandals", "loafers"],
+    "bag": ["bag", "bags", "handbag", "backpack", "purse"],
+    "headwear": ["hat", "cap", "headwear", "scarf"],
+    "accessory": ["accessory", "accessories", "jewellery", "jewelry", "belt", "watch"],
+}
+
+
+def role_to_category_query(role: str) -> dict[str, Any]:
+    """Return a case-insensitive MongoDB category filter for an outfit slot role."""
+    synonyms = SLOT_CATEGORY_SYNONYMS.get((role or "").strip().lower())
+    if not synonyms:
+        return {}
+    pattern = "^(" + "|".join(re.escape(s) for s in synonyms) + ")$"
+    return {"category": {"$regex": pattern, "$options": "i"}}
+
+
 def _role_to_listing_filter(role: str) -> dict[str, Any]:
-    if role == "top":
-        return {"category": {"$in": ["top", "shirt", "tshirt", "blouse", "sweater"]}}
-    if role == "bottom":
-        return {"category": {"$in": ["bottom", "pants", "jeans", "shorts", "skirt", "trousers"]}}
-    if role == "dress":
-        return {"category": "dress"}
-    if role == "outerwear":
-        return {"category": {"$in": ["outerwear", "jacket", "coat", "blazer"]}}
-    if role == "shoes":
-        return {"category": {"$in": ["shoes", "footwear", "sneakers", "boots", "heels"]}}
-    if role == "bag":
-        return {"category": {"$in": ["bag", "handbag", "backpack"]}}
-    if role == "headwear":
-        return {"category": {"$in": ["hat", "cap", "headwear", "scarf"]}}
-    if role == "accessory":
-        return {"category": "accessory"}
-    return {}
+    return role_to_category_query(role)
 
 
 def _resolve_budget(constraints: dict[str, Any], role: str) -> int | None:
@@ -186,7 +195,8 @@ def _score_listing(
     overlap = len(keywords & tag_pool)
     score += min(overlap, 4) * 0.5
     # Budget fit
-    price = listing.get("price_cents") or 0
+    price, _ = _extract_price(listing)
+    price = price or 0
     if budget and price:
         if price <= budget:
             score += 0.5
@@ -199,15 +209,43 @@ def _score_listing(
     return score
 
 
+def _extract_image_url(lst: dict[str, Any]) -> str | None:
+    """Resolve the primary display image across legacy and current listing schemas."""
+    for key in ("image_url", "thumbnail_url", "reconstructed_image_url", "clean_image_url"):
+        val = lst.get(key)
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+    images = lst.get("images")
+    if isinstance(images, list):
+        for img in images:
+            if isinstance(img, str) and img.strip():
+                return img.strip()
+    thumb = lst.get("thumbnail_data_url")
+    if isinstance(thumb, str) and thumb.strip():
+        return thumb.strip()
+    return None
+
+
+def _extract_price(lst: dict[str, Any]) -> tuple[int | None, str | None]:
+    """Resolve price_cents and currency from top-level fields or financial_metadata."""
+    fm = lst.get("financial_metadata") if isinstance(lst.get("financial_metadata"), dict) else {}
+    price_cents = lst.get("price_cents")
+    if price_cents is None:
+        price_cents = fm.get("list_price_cents")
+    currency = lst.get("currency") or fm.get("currency")
+    return price_cents, currency
+
+
 def _to_suggestion(
     lst: dict[str, Any], *, role: str, score: float
 ) -> dict[str, Any]:
+    price_cents, currency = _extract_price(lst)
     return {
         "listing_id": lst.get("id") or "",
         "title": lst.get("title") or "Marketplace listing",
-        "image_url": lst.get("image_url") or lst.get("thumbnail_url"),
-        "price_cents": lst.get("price_cents"),
-        "currency": lst.get("currency"),
+        "image_url": _extract_image_url(lst),
+        "price_cents": price_cents,
+        "currency": currency,
         "seller_display_name": lst.get("seller_display_name"),
         "fills_slot": role,
         "match_score": round(min(max(score / 4.0, 0.0), 1.0), 3),
