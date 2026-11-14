@@ -445,32 +445,47 @@ function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, 
   const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002);
   const yInsole = Math.max(yWelt + 0.003, -0.0015);
   const yOutsoleBottom = yWelt - sole;
-  const nz = 42;
-  const nRing = 20;
+  const nz = 48;
+  const nRing = 24;
   const startIdx = verts.length / 3;
   const pBall = sampleProfile(a.profile, 'z', a.ballZ);
   const cxBall = side * ((pBall.x0 + pBall.x1) / 2);
-  const zHeelRound = a.heelZ + 0.022;
-  const zToeRound = a.toeZ - 0.032;
+  const zHeelAnchor = a.heelZ + 0.022;
+  const zToeAnchor = a.toeZ - 0.024;
+  const smoothSlice = (zPos) => {
+    const p0 = sampleProfile(a.profile, 'z', zPos - 0.012);
+    const p1 = sampleProfile(a.profile, 'z', zPos);
+    const p2 = sampleProfile(a.profile, 'z', zPos + 0.012);
+    return {
+      cx: side * (((p0.x0 + p0.x1) + (p1.x0 + p1.x1) + (p2.x0 + p2.x1)) / 6),
+      hw: ((p0.x1 - p0.x0) + (p1.x1 - p1.x0) + (p2.x1 - p2.x0)) / 6 + off,
+    };
+  };
+  const heelAnchor = smoothSlice(zHeelAnchor);
+  const toeAnchor = smoothSlice(zToeAnchor);
 
   for (let i = 0; i <= nz; i++) {
-    const t = i / nz;
+    // Cosine spacing concentrates slices at the heel and toe tips so circular arcs stay smooth.
+    const t = 0.5 * (1 - Math.cos((i / nz) * Math.PI));
     const z = lerp(z0, z1, t);
-    const p0 = sampleProfile(a.profile, 'z', z - 0.012);
-    const p1 = sampleProfile(a.profile, 'z', z);
-    const p2 = sampleProfile(a.profile, 'z', z + 0.012);
-    let cx = side * (((p0.x0 + p0.x1) + (p1.x0 + p1.x1) + (p2.x0 + p2.x1)) / 6);
-    const baseHw = ((p0.x1 - p0.x0) + (p1.x1 - p1.x0) + (p2.x1 - p2.x0)) / 6 + off;
-    let roundTaper = 1.0;
-    if (z < zHeelRound) {
-      const u = Math.max(0, Math.min(1, (zHeelRound - z) / Math.max(1e-4, zHeelRound - z0)));
-      roundTaper = Math.sqrt(Math.max(0.06, 1 - u * u * 0.94));
-    } else if (z > zToeRound) {
-      const u = Math.max(0, Math.min(1, (z - zToeRound) / Math.max(1e-4, z1 - zToeRound)));
-      roundTaper = Math.sqrt(Math.max(0.06, 1 - u * u * 0.94));
-      cx = lerp(cx, cxBall, u * u * 0.35);
+    let cx;
+    let baseHw;
+    if (z < zHeelAnchor) {
+      const u = Math.max(0, Math.min(1, (zHeelAnchor - z) / Math.max(1e-4, zHeelAnchor - z0)));
+      const roundTaper = Math.sqrt(Math.max(0.0064, 1 - u * u * 0.9936));
+      cx = heelAnchor.cx;
+      baseHw = heelAnchor.hw * roundTaper;
+    } else if (z > zToeAnchor) {
+      const u = Math.max(0, Math.min(1, (z - zToeAnchor) / Math.max(1e-4, z1 - zToeAnchor)));
+      const roundTaper = Math.sqrt(Math.max(0.0064, 1 - u * u * 0.9936));
+      cx = lerp(toeAnchor.cx, cxBall, 0.25 * u);
+      baseHw = toeAnchor.hw * roundTaper;
+    } else {
+      const s = smoothSlice(z);
+      cx = s.cx;
+      baseHw = s.hw;
     }
-    const hwSole = (baseHw + 0.0025) * roundTaper;
+    const hwSole = baseHw + (z >= zHeelAnchor && z <= zToeAnchor ? 0.0025 : 0.0025 * (baseHw / Math.max(1e-4, z < zHeelAnchor ? heelAnchor.hw : toeAnchor.hw)));
     for (let j = 0; j < nRing; j++) {
       const ang = (j / nRing) * Math.PI * 2;
       const ca = Math.cos(ang);
@@ -504,8 +519,8 @@ function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, 
   }
 
   [
-    { sliceIdx: 0, zCap: z0 - 0.0015, flip: false },
-    { sliceIdx: nz, zCap: z1 + 0.0015, flip: true },
+    { sliceIdx: 0, zCap: z0, flip: false },
+    { sliceIdx: nz, zCap: z1, flip: true },
   ].forEach(({ sliceIdx, zCap, flip }) => {
     const ringOffset = startIdx + sliceIdx * nRing;
     let sumX = 0;
