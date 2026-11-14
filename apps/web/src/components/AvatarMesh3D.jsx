@@ -100,15 +100,30 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       continue;
     }
 
-    // 1. Foot, toe, and boot-shaft enclosure under shoes: strongly retract covered foot & toes inward into shoe core,
-    // and for boots, retract calf skin within the shaft so skin never pokes through footwear!
+    // 1. Foot, toe, and boot-shaft enclosure under shoes:
+    // Sandals are open-toe/open-instep and NEVER shrink the avatar's feet.
+    // Low-cut shoes (pumps/heels/flats/loafers) only retract the covered toe/heel cup, keeping the instep natural.
+    // Closed shoes (sneakers/boots) retract covered foot & shaft skin inside the upper.
+    const shoeKind = coveredZones?.shoeKind || null;
+    const isSandal = shoeKind === 'sandal';
+    const isLowCutShoe = shoeKind === 'heel' || shoeKind === 'flat' || shoeKind === 'loafer';
     const shoeCollarY = Math.max(0.128, Number(coveredZones?.shoeCollar) || 0.128);
-    if (hasShoes && y < shoeCollarY) {
+    if (hasShoes && !isSandal && y < shoeCollarY) {
       const sign = x < 0 ? -1 : 1;
       const cx = sign * footCx;
+      if (isLowCutShoe) {
+        const ballZ = isMale ? 0.122 : 0.168;
+        const heelCupZ = isMale ? -0.022 : 0.035;
+        const inToeOrHeel = z >= ballZ - 0.015 || z <= heelCupZ;
+        if (y < 0.045 && inToeOrHeel) {
+          arr[idx] = cx + (x - cx) * 0.82;
+          arr[idx + 1] = Math.min(y, 0.028);
+          arr[idx + 2] = footCz + (z - footCz) * 0.90;
+        }
+        continue;
+      }
       if (y < 0.088) {
-        // Safely compress foot, heel, and toe vertices inside the footwear upper/sole volume
-        // Shrink radially toward foot core with vertical compression so vertices never poke through sole, heel, or vamp
+        // Safely compress foot, heel, and toe vertices inside the closed footwear upper/sole volume
         arr[idx] = cx + (x - cx) * 0.15;
         arr[idx + 1] = 0.055 + (y - 0.010) * 0.25;
         arr[idx + 2] = footCz + (z - footCz) * 0.15;
@@ -294,7 +309,7 @@ export default function AvatarMesh3D({
         (matName && matName.includes('nails')) ||
         (node.name && node.name.includes('nails'))
       );
-      if (isNailsNode && coveredZones?.hasShoes) {
+      if (isNailsNode && coveredZones?.hasShoes && coveredZones?.shoeKind !== 'sandal') {
         if (!original.boundingBox) original.computeBoundingBox?.();
         if (original.boundingBox && original.boundingBox.max.y < 0.25) {
           node.visible = false;

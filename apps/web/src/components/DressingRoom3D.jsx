@@ -718,6 +718,7 @@ export default function DressingRoom3D({
       hasDress: visibleSlots.has('dress'),
       hasBottom: visibleSlots.has('bottom'),
       hasShoes: visibleSlots.has('shoes'),
+      shoeKind: shoeSpec?.kind || null,
       hasHeadwear: visibleSlots.has('headwear'),
       isSleeveless,
       isStrapless,
