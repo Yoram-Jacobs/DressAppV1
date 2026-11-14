@@ -1429,7 +1429,7 @@
     "tomorrowSuggestionSubtitle": "あなたのスタイル、明日の天気予報、予定に合わせてコーディネートしました。",
     "tomorrowSuggestionRefreshed": "明日の提案を更新しました！",
     "wearTomorrow": "明日着る",
-    "upgradeForDailySuggestionsDesc": "毎日の提案を利用するには、マネージャーまたはプロフェッショナルプランにアップグレードしてください。",
+    "upgradeForDailySuggestionsDesc": "毎日のコーデ提案は1回につき1 AIクレジットを消費します。",
     "calendar": {
       "searchPlaceholder": "スタイル検索：「夏のバーベキュー」、「モールでお買い物」、「ビジネスミーティング」、「黒のTシャツ」、「ケミカルウォッシュジーンズ」など...",
       "quickVibes": "スタイル：",
@@ -2238,7 +2238,9 @@
     "addToChrome": "Chromeに追加",
     "recommendedDesktop": "デスクトップ推奨",
     "connectExtension": "拡張機能を接続",
-    "alreadyInstalled": "インストール済みですか？"
+    "alreadyInstalled": "インストール済みですか？",
+    "schedulerCreditNote": "毎日の提案は1回につき1 AIクレジットを消費します。",
+    "schedulerUpgradeDesc": "毎日のコーデ提案は無料プランで1 AIクレジットを消費します。マネージャーまたはプロフェッショナルでは無制限でご利用いただけます。"
   },
   "admin": {
     "title": "管理",
@@ -2434,7 +2436,12 @@
       "dress": "ドレス",
       "headwear": "帽子",
       "glasses": "眼鏡",
-      "belt": "ベルト"
+      "belt": "ベルト",
+      "watch": "腕時計",
+      "necktie": "ネクタイ",
+      "scarf": "スカーフ",
+      "bag": "バッグ",
+      "jewelry": "ジュエリー"
     },
     "dress_code": {
       "casual": "カジュアル",
@@ -2796,7 +2803,38 @@
       "peach": "ピーチ",
       "lavender": "ラベンダー",
       "charcoal": "チャコール",
-      "light_grey": "ライトグレー"
+      "light_grey": "ライトグレー",
+      "sage_green": "セージグリーン",
+      "forest_green": "フォレストグリーン",
+      "emerald": "エメラルド",
+      "lime": "ライム",
+      "mustard": "マスタード",
+      "amber": "アンバー",
+      "rust": "ラスト",
+      "terracotta_brown": "テラコッタ",
+      "champagne_gold": "シャンパンゴールド",
+      "ivory": "アイボリー",
+      "off_white": "オフホワイト",
+      "khaki": "カーキ",
+      "camel": "キャメル",
+      "tan": "タン",
+      "chocolate": "チョコレート",
+      "taupe": "トープ",
+      "sand": "サンド",
+      "bronze": "ブロンズ",
+      "cobalt": "コバルトブルー",
+      "denim": "デニム",
+      "hot_pink": "ホットピンク",
+      "blush": "ブラッシュピンク",
+      "dusty_rose": "ダスティローズ",
+      "salmon": "サーモンピンク",
+      "fuchsia": "フクシア",
+      "magenta": "マゼンタ",
+      "lilac": "ライラック",
+      "plum": "プラム",
+      "mauve": "モーヴ",
+      "scarlet": "スカーレット",
+      "crimson": "クリムゾン"
     },
     "material": {
       "acrylic": "アクリル",
@@ -4115,7 +4153,7 @@
     "tiers_title": "サブスクリプションプラン",
     "tiers_p1": "DressAppは、お客様 of クローゼットの容量やスタイリングのニーズに合わせた、柔軟なサブスクリプションプランを提供しています。料金プランページでアップグレードすると、すべての機能制限が解除されます。",
     "tiers_free_title": "無料プラン",
-    "tiers_free_desc": "基本上限100点（友達招待で最大150点まで拡張可能）、1日10回のオンプレミスAIクレジット（30日間で最大300回）、および5回の初回登録ボーナスクレジット。クレジットパック（15クレジット以上）購入で一括アップロードが解除されます。",
+    "tiers_free_desc": "基本上限100着（友達招待で最大150着まで拡張可能）、1日10回のオンプレミスAIクレジット（30日間で最大300回累積）、初回特典のスタジオAI修復クレジット5回付き。Geminiによる毎日のコーデ提案も利用可能（1回の提案につき1 AIクレジット消費）。クレジットパック（15クレジット以上）購入でまとめ撮影アップロードを解除できます。",
     "tiers_manager_title": "Managerプラン",
     "tiers_manager_desc": "月額$10（または年額$100）。クローゼット容量が無制限になり、DressAppの最先端AIモデル、朝のコーデ通知、カレンダー連携、マーケットプレイス出品、Trend Scoutの全機能が解放されます。",
     "tiers_pro_title": "Professionalプラン",
@@ -5860,7 +5898,11 @@
     "avatar_studio_badge": "360° アバタースタジオ",
     "loading": "3Dスタジオを準備しています…",
     "side_view": "側面",
-    "back_view": "背面"
+    "back_view": "背面",
+    "mesh_tailored": "3Dテーラード",
+    "mesh_photo": "フォトフィット",
+    "mesh_mode_tailored_active": "3Dテーラード有効 — クリックでフォトフィットに切替",
+    "mesh_mode_photo_active": "フォトフィット有効 — クリックで3Dテーラードに切替"
   },
   "dressingRoom": {
     "title": "3D試着室",

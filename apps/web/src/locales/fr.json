@@ -1429,7 +1429,7 @@
     "tomorrowSuggestionSubtitle": "Sélectionnée pour demain selon votre profil de style, les prévisions météo et votre agenda.",
     "tomorrowSuggestionRefreshed": "Suggestion pour demain actualisée !",
     "wearTomorrow": "Porter demain",
-    "upgradeForDailySuggestionsDesc": "Passez au forfait Manager ou Professional pour débloquer les suggestions quotidiennes.",
+    "upgradeForDailySuggestionsDesc": "Les suggestions de tenues quotidiennes consomment 1 crédit IA chacune.",
     "calendar": {
       "searchPlaceholder": "Recherche d'ambiance : « Barbecue d'été », « Shopping au centre commercial », « Réunion professionnelle », « T-shirt noir », « Jean délavé »...",
       "quickVibes": "Ambiances :",
@@ -2238,7 +2238,9 @@
     "addToChrome": "Ajouter à Chrome",
     "recommendedDesktop": "Recommandé sur ordinateur",
     "connectExtension": "Connecter l'extension",
-    "alreadyInstalled": "Déjà installée ?"
+    "alreadyInstalled": "Déjà installée ?",
+    "schedulerCreditNote": "Chaque proposition quotidienne consomme 1 crédit IA.",
+    "schedulerUpgradeDesc": "Les suggestions quotidiennes consomment 1 crédit IA avec le forfait Gratuit, ou profitez d'un accès illimité avec Manager et Professionnel."
   },
   "admin": {
     "title": "Administrateur",
@@ -2434,7 +2436,12 @@
       "dress": "Robe",
       "headwear": "Chapeaux",
       "glasses": "Lunettes",
-      "belt": "Ceinture"
+      "belt": "Ceinture",
+      "watch": "Montre",
+      "necktie": "Cravate",
+      "scarf": "Écharpe",
+      "bag": "Sac",
+      "jewelry": "Bijoux"
     },
     "dress_code": {
       "casual": "Occasionnel",
@@ -2789,7 +2796,38 @@
       "peach": "Pêche",
       "lavender": "Lavande",
       "charcoal": "Anthracite",
-      "light_grey": "Gris clair"
+      "light_grey": "Gris clair",
+      "sage_green": "Vert sauge",
+      "forest_green": "Vert forêt",
+      "emerald": "Émeraude",
+      "lime": "Citron vert",
+      "mustard": "Moutarde",
+      "amber": "Ambre",
+      "rust": "Rouille",
+      "terracotta_brown": "Terre cuite",
+      "champagne_gold": "Or champagne",
+      "ivory": "Ivoire",
+      "off_white": "Blanc cassé",
+      "khaki": "Kaki",
+      "camel": "Camel",
+      "tan": "Havane",
+      "chocolate": "Chocolat",
+      "taupe": "Taupe",
+      "sand": "Sable",
+      "bronze": "Bronze",
+      "cobalt": "Bleu cobalt",
+      "denim": "Denim",
+      "hot_pink": "Rose vif",
+      "blush": "Rose poudré",
+      "dusty_rose": "Vieux rose",
+      "salmon": "Saumon",
+      "fuchsia": "Fuchsia",
+      "magenta": "Magenta",
+      "lilac": "Lilas",
+      "plum": "Prune",
+      "mauve": "Mauve",
+      "scarlet": "Écarlate",
+      "crimson": "Cramoisi"
     },
     "material": {
       "acrylic": "Acrylique",
@@ -4108,7 +4146,7 @@
     "tiers_title": "Niveaux d'abonnement",
     "tiers_p1": "DressApp propose des niveaux d'abonnement flexibles adaptés à la taille de votre garde-robe et à vos besoins de style. Mettez à niveau sur la page des tarifs pour débloquer des fonctionnalités illimitées.",
     "tiers_free_title": "Plan gratuit",
-    "tiers_free_desc": "Limite de base de 100 articles (extensible jusqu'à 150 via parrainage), 10 crédits IA locaux quotidiens (jusqu'à 300 sur 30 jours) et 5 crédits de bienvenue pour la reconstruction. Les packs de crédits (15+) débloquent le téléversement groupé.",
+    "tiers_free_desc": "Limite de base de 100 articles (extensible jusqu'à 150 via le parrainage d'amis), 10 crédits IA locaux par jour (jusqu'à 300 sur 30 jours) et 5 crédits bonus uniques de reconstruction en studio. Comprend des suggestions de tenues quotidiennes propulsées par Gemini (1 crédit IA par suggestion). Achetez des packs de crédits (15+ crédits) pour débloquer le téléversement par lots.",
     "tiers_manager_title": "Plan Manager",
     "tiers_manager_desc": "10 $/mois (ou 100 $/an). Débloque un dressing illimité, le modèle d'IA de pointe de DressApp, les alertes tenues du matin, la synchronisation du calendrier, la vente sur la Marketplace et l'accès complet à Trend Scout.",
     "tiers_pro_title": "Plan Professional",
@@ -5852,7 +5890,11 @@
     "avatar_studio_badge": "Studio avatar 360°",
     "loading": "Préparation de votre studio 3D…",
     "side_view": "Vue de côté",
-    "back_view": "Vue de dos"
+    "back_view": "Vue de dos",
+    "mesh_tailored": "Coupe 3D",
+    "mesh_photo": "Ajustement Photo",
+    "mesh_mode_tailored_active": "Coupe 3D active — cliquez pour Ajustement Photo",
+    "mesh_mode_photo_active": "Ajustement Photo actif — cliquez pour Coupe 3D"
   },
   "dressingRoom": {
     "title": "Cabine d'essayage 3D",

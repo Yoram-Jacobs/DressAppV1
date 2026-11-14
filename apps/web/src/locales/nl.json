@@ -1429,7 +1429,7 @@
     "tomorrowSuggestionSubtitle": "Samengesteld voor morgen op basis van je stijlprofiel, weersvoorspelling en agenda.",
     "tomorrowSuggestionRefreshed": "Suggestie voor morgen vernieuwd!",
     "wearTomorrow": "Morgen dragen",
-    "upgradeForDailySuggestionsDesc": "Upgrade naar het Manager- of Professional-abonnement om dagelijkse suggesties te ontgrendelen.",
+    "upgradeForDailySuggestionsDesc": "Dagelijkse outfitsuggesties verbruiken elk 1 AI-credit.",
     "calendar": {
       "searchPlaceholder": "Vibe-zoekopdracht: \"Zomerbarbecue\", \"Winkelen in het winkelcentrum\", \"Zakelijke bijeenkomst\", \"Zwart T-shirt\", \"Stone-washed jeans\"...",
       "quickVibes": "Vibes:",
@@ -2238,7 +2238,9 @@
     "addToChrome": "Toevoegen aan Chrome",
     "recommendedDesktop": "Aanbevolen voor desktop",
     "connectExtension": "Extensie koppelen",
-    "alreadyInstalled": "Al geïnstalleerd?"
+    "alreadyInstalled": "Al geïnstalleerd?",
+    "schedulerCreditNote": "Elk dagelijks voorstel verbruikt 1 AI-credit.",
+    "schedulerUpgradeDesc": "Dagelijkse outfitsuggesties verbruiken 1 AI-credit op het gratis abonnement, of geniet van onbeperkte toegang met Manager en Professional."
   },
   "admin": {
     "title": "Beheerder",
@@ -2434,7 +2436,12 @@
       "dress": "Jurk",
       "headwear": "Hoofddeksels",
       "glasses": "Bril",
-      "belt": "Riem"
+      "belt": "Riem",
+      "watch": "Horloge",
+      "necktie": "Stropdas",
+      "scarf": "Sjaal",
+      "bag": "Tas",
+      "jewelry": "Sieraden"
     },
     "dress_code": {
       "casual": "Casual",
@@ -2796,7 +2803,38 @@
       "peach": "Perzik",
       "lavender": "Lavendel",
       "charcoal": "Antraciet",
-      "light_grey": "Lichtgrijs"
+      "light_grey": "Lichtgrijs",
+      "sage_green": "Saliegroen",
+      "forest_green": "Bosgroen",
+      "emerald": "Smaragdgroen",
+      "lime": "Limoen",
+      "mustard": "Mosterdgeel",
+      "amber": "Amber",
+      "rust": "Roestbruin",
+      "terracotta_brown": "Terracotta",
+      "champagne_gold": "Champagnegoud",
+      "ivory": "Ivoor",
+      "off_white": "Gebroken wit",
+      "khaki": "Kaki",
+      "camel": "Camel",
+      "tan": "Lichtbruin",
+      "chocolate": "Chocoladebruin",
+      "taupe": "Taupe",
+      "sand": "Zand",
+      "bronze": "Brons",
+      "cobalt": "Kobaltblauw",
+      "denim": "Denim",
+      "hot_pink": "Felroze",
+      "blush": "Blush",
+      "dusty_rose": "Oudroze",
+      "salmon": "Zalmroze",
+      "fuchsia": "Fuchsia",
+      "magenta": "Magenta",
+      "lilac": "Lila",
+      "plum": "Pruim",
+      "mauve": "Mauve",
+      "scarlet": "Scharlakenrood",
+      "crimson": "Karmozijn"
     },
     "material": {
       "acrylic": "Acryl",
@@ -4115,7 +4153,7 @@
     "tiers_title": "Abonnementen",
     "tiers_p1": "DressApp biedt flexibele abonnementen die zijn afgestemd op uw kledingkastgrootte en stylingbehoeften. Upgrade op de tarievenpagina om onbeperkte functies te ontgrendelen.",
     "tiers_free_title": "Gratis plan",
-    "tiers_free_desc": "Basislimiet van 100 items (uitbreidbaar tot 150 via vriendenuitnodigingen), 10 dagelijkse lokale AI-credits (tot 300 over 30 dagen) en 5 eenmalige bonuscredits voor reconstructie. Creditpakketten (15+) ontgrendelen Cluster Upload.",
+    "tiers_free_desc": "Basislimiet van 100 kledingstukken (uitbreidbaar tot 150 via uitnodigingen), 10 dagelijkse on-premises AI-credits (oplopend tot 300 over 30 dagen) en 5 eenmalige AI-studioreconstructie bonuscredits. Inclusief dagelijkse outfitsuggesties aangedreven door Gemini (1 AI-credit per suggestie). Koop creditbundels (15+ credits) om clusterupload te ontgrendelen.",
     "tiers_manager_title": "Manager-plan",
     "tiers_manager_desc": "$10/maand (of $100/jaar). Ontgrendelt onbeperkte kastruimte, het geavanceerde AI-model van DressApp, ochtendmeldingen voor outfits, agendasynchronisatie, verkopen op de Marktplaats en volledige toegang tot Trend Scout.",
     "tiers_pro_title": "Professional-plan",
@@ -5863,7 +5901,11 @@
     "avatar_studio_badge": "360° Avatar Studio",
     "loading": "Je 3D-studio wordt voorbereid…",
     "side_view": "Zijaanzicht",
-    "back_view": "Achteraanzicht"
+    "back_view": "Achteraanzicht",
+    "mesh_tailored": "3D Pasvorm",
+    "mesh_photo": "Foto-pasvorm",
+    "mesh_mode_tailored_active": "3D Pasvorm actief — klik voor Foto-pasvorm",
+    "mesh_mode_photo_active": "Foto-pasvorm actief — klik voor 3D Pasvorm"
   },
   "dressingRoom": {
     "title": "3D-paskamer",

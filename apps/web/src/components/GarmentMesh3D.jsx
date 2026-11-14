@@ -8,6 +8,7 @@ import {
   resolveFootwearSpec,
   createFittedFootwearGeometry,
   createHeelGeometry,
+  createFootwearHardwareGeometry,
   poseGeometry,
 } from '@/lib/footwearFitting';
 import {
@@ -3587,6 +3588,7 @@ function GarmentTemplateMeshInner({
   fitProfile = null,
   fallbackGeometry = null,
   heelGeometry = null,
+  hardwareGeometry = null,
 }) {
   const gltf = useGLTF(url, '/draco/');
 
@@ -4294,6 +4296,16 @@ function GarmentTemplateMeshInner({
           />
         </mesh>
       )}
+      {hardwareGeometry && (
+        <mesh geometry={hardwareGeometry} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial
+            color="#c4c9d2"
+            metalness={0.88}
+            roughness={0.20}
+            envMapIntensity={1.35}
+          />
+        </mesh>
+      )}
       <mesh
         name={`garment-template-${templateId}`}
         geometry={geometry}
@@ -4642,6 +4654,13 @@ export function GarmentMeshCore({
     [rawSlot, visible, isMale, footwearSpec, footPose]
   );
 
+  const hardwareGeometry = useMemo(
+    () => (rawSlot === 'shoes' && visible && footwearSpec
+      ? createFootwearHardwareGeometry({ isMale, spec: footwearSpec, layout: shoeLayout, pose: footPose })
+      : null),
+    [rawSlot, visible, isMale, footwearSpec, shoeLayout, footPose]
+  );
+
   const matchedTemplateId = useMemo(() => {
     return resolveGarmentTemplate({
       rawSlot,
@@ -4666,8 +4685,9 @@ export function GarmentMeshCore({
         if (shellGeos.back && shellGeos.back !== shell?.back) shellGeos.back.dispose?.();
       }
       if (heelGeometry) heelGeometry.dispose?.();
+      if (hardwareGeometry) hardwareGeometry.dispose?.();
     };
-  }, [baseGeometry, geometry, shell, shellGeos, heelGeometry]);
+  }, [baseGeometry, geometry, shell, shellGeos, heelGeometry, hardwareGeometry]);
 
   const isTuckableTop = rawSlot === 'top' &&
     !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(matchedTemplateId) &&
@@ -4743,6 +4763,16 @@ export function GarmentMeshCore({
           />
         </mesh>
       )}
+      {hardwareGeometry && (
+        <mesh geometry={hardwareGeometry} castShadow receiveShadow renderOrder={renderOrder}>
+          <meshStandardMaterial
+            color="#c4c9d2"
+            metalness={0.88}
+            roughness={0.20}
+            envMapIntensity={1.35}
+          />
+        </mesh>
+      )}
       <mesh
         geometry={geometry}
         material={geometry?.groups?.length > 1 ? fallbackMaterials : fallbackMaterials[0]}
@@ -4778,6 +4808,7 @@ export function GarmentMeshCore({
         fitProfile={fitProfile}
         fallbackGeometry={geometry}
         heelGeometry={heelGeometry}
+        hardwareGeometry={hardwareGeometry}
         fallbackNode={fallbackProceduralMesh}
       />
     );
@@ -4833,6 +4864,7 @@ export function GarmentMeshCore({
         fitProfile={fitProfile}
         fallbackGeometry={geometry}
         heelGeometry={heelGeometry}
+        hardwareGeometry={hardwareGeometry}
         fallbackNode={fallbackProceduralMesh}
       />
     );

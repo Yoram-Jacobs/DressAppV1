@@ -1421,7 +1421,7 @@
     "lookCounter": "Look {{current}} of {{total}}",
     "wearToday": "Wear Today",
     "wearTomorrow": "Wear Tomorrow",
-    "upgradeForDailySuggestionsDesc": "Upgrade to Manager or Professional to unlock Daily Suggestions.",
+    "upgradeForDailySuggestionsDesc": "Daily outfit suggestions consume 1 AI credit each.",
     "calendar": {
       "searchPlaceholder": "Vibe search: \"Summer barbecue\", \"Mall shopping\", \"Business meeting\", \"Black T-shirt\", \"Stone-washed jeans\"...",
       "quickVibes": "Vibes:",
@@ -2223,7 +2223,9 @@
     "addToChrome": "Add to Chrome",
     "recommendedDesktop": "Recommended for Desktop",
     "connectExtension": "Connect Extension",
-    "alreadyInstalled": "Already installed?"
+    "alreadyInstalled": "Already installed?",
+    "schedulerCreditNote": "Each daily proposal consumes 1 AI credit.",
+    "schedulerUpgradeDesc": "Daily outfit suggestions consume 1 AI credit on the Free plan, or enjoy unlimited access on Manager and Professional."
   },
   "admin": {
     "title": "Admin",
@@ -2419,7 +2421,12 @@
       "dress": "Dress",
       "headwear": "Headwear",
       "glasses": "Glasses",
-      "belt": "Belt"
+      "belt": "Belt",
+      "watch": "Watch",
+      "necktie": "Necktie",
+      "scarf": "Scarf",
+      "bag": "Bag",
+      "jewelry": "Jewelry"
     },
     "dress_code": {
       "casual": "Casual",
@@ -2779,7 +2786,38 @@
       "light_grey": "Light Grey",
       "nude": "Light Beige",
       "light_beige": "Light Beige",
-      "ניוד": "Light Beige"
+      "ניוד": "Light Beige",
+      "sage_green": "Sage Green",
+      "forest_green": "Forest Green",
+      "emerald": "Emerald",
+      "lime": "Lime",
+      "mustard": "Mustard",
+      "amber": "Amber",
+      "rust": "Rust",
+      "terracotta_brown": "Terracotta",
+      "champagne_gold": "Champagne Gold",
+      "ivory": "Ivory",
+      "off_white": "Off-White",
+      "khaki": "Khaki",
+      "camel": "Camel",
+      "tan": "Tan",
+      "chocolate": "Chocolate",
+      "taupe": "Taupe",
+      "sand": "Sand",
+      "bronze": "Bronze",
+      "cobalt": "Cobalt",
+      "denim": "Denim",
+      "hot_pink": "Hot Pink",
+      "blush": "Blush",
+      "dusty_rose": "Dusty Rose",
+      "salmon": "Salmon",
+      "fuchsia": "Fuchsia",
+      "magenta": "Magenta",
+      "lilac": "Lilac",
+      "plum": "Plum",
+      "mauve": "Mauve",
+      "scarlet": "Scarlet",
+      "crimson": "Crimson"
     },
     "material": {
       "acrylic": "Acrylic",
@@ -4109,7 +4147,7 @@
     "tiers_title": "Subscription Plans",
     "tiers_p1": "DressApp offers flexible subscription tiers tailored to your closet size and styling needs:",
     "tiers_free_title": "Free Plan",
-    "tiers_free_desc": "Baseline limit of 100 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 one-time AI reconstruction onboarding bonus credits. Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
+    "tiers_free_desc": "Baseline limit of 100 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 one-time AI reconstruction onboarding bonus credits. Includes daily outfit suggestions powered by Gemini (1 AI credit per suggestion). Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
     "tiers_manager_title": "Manager Plan",
     "tiers_manager_desc": "Costs $10/month (or $100/year). Unlocks unlimited closet space, Cluster Garment Uploading (closets, hangers, shoe racks, and shirt piles), DressApp's cutting-edge AI model, 100 monthly reconstruction credits, morning outfit alerts, calendar sync, marketplace selling, and full Trend Scout access.",
     "tiers_pro_title": "Professional Plan",
@@ -5894,7 +5932,11 @@
     "loading": "Loading 3D dressing room...",
     "side_view": "Side view",
     "back_view": "Back view",
-    "restoring_context": "Restoring 3D Studio…"
+    "restoring_context": "Restoring 3D Studio…",
+    "mesh_tailored": "3D Tailored",
+    "mesh_photo": "Photo Fit",
+    "mesh_mode_tailored_active": "3D Tailored Active — click to switch to Photo Fit",
+    "mesh_mode_photo_active": "Photo Fit Active — click to switch to 3D Tailored"
   },
   "dressingRoom": {
     "title": "3D Dressing Room",

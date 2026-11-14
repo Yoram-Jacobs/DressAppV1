@@ -18,7 +18,7 @@
  * frontend changes.
  */
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Sparkles, AlertTriangle, ShoppingBag, UserRound, X, ImageOff, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,14 +66,17 @@ function SlotCard({ slot, candidate, onOpen }) {
 
   const label = labelForRole(slot.role, t) || slot.role;
   const empty = slot.is_gap || !candidate;
+  const clickable = typeof onOpen === 'function';
   return (
     <button
       type="button"
-      onClick={onOpen}
+      onClick={clickable ? onOpen : undefined}
+      disabled={!clickable}
       data-testid={`outfit-slot-${slot.role}`}
       className={cn(
         'group relative flex flex-col items-center gap-1 rounded-[12px] p-2',
-        'border border-border bg-accent-beige hover:border-primary-brand',
+        'border border-border bg-accent-beige',
+        clickable ? 'cursor-pointer hover:border-primary-brand' : 'cursor-default',
         'transition-colors min-w-[96px] w-[96px] sm:w-[120px]',
       )}
     >
@@ -265,6 +268,7 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
 /** Full canvas — used inside a modal or on /stylist/compose. */
 export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId = null }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
   const candidatesById = useMemo(() => {
@@ -344,14 +348,24 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       <div>
         <div className="text-[14px] font-semibold text-text-brand mb-2">{t('components.outfitCanvas.the_look', { defaultValue: 'The look' })}</div>
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
-          {slots.map((slot, i) => (
-            <SlotCard
-              key={slot.role + i}
-              slot={slot}
-              candidate={slot.candidate_id ? candidatesById[slot.candidate_id] : null}
-              onOpen={() => {}}
-            />
-          ))}
+          {slots.map((slot, i) => {
+            const cand = slot.candidate_id ? candidatesById[slot.candidate_id] : null;
+            return (
+              <SlotCard
+                key={slot.role + i}
+                slot={slot}
+                candidate={cand}
+                onOpen={
+                  !slot.is_gap && cand?.closet_item_id
+                    ? () => {
+                        onClose?.();
+                        navigate(`/closet/${cand.closet_item_id}`);
+                      }
+                    : undefined
+                }
+              />
+            );
+          })}
         </div>
       </div>
 

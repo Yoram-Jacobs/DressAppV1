@@ -25,7 +25,7 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { labelForColor } from '@/lib/taxonomy';
+import { labelForColor, canonicalColorKey } from '@/lib/taxonomy';
 import { DialogOverlay } from '../ui/dialog';
 
 // ---------------------------------------------------------------------------
@@ -33,8 +33,9 @@ import { DialogOverlay } from '../ui/dialog';
 // Achromatic colours map to null (excluded from arc distance calculation).
 // ---------------------------------------------------------------------------
 const HUE_MAP = {
-  // Reds
+  // Reds & Wines
   red: 0, scarlet: 5, crimson: 348, coral: 16, tomato: 9, vermilion: 9,
+  burgundy: 345, maroon: 345, wine: 345, bordeaux: 345,
   // Oranges
   orange: 30, amber: 38, apricot: 25, peach: 28, tangerine: 20, burnt_orange: 18,
   'burnt orange': 18,
@@ -59,9 +60,9 @@ const HUE_MAP = {
   pink: 340, rose: 350, blush: 345, hot_pink: 330, 'hot pink': 330,
   salmon: 15, dusty_rose: 348, 'dusty rose': 348, 'bubblegum pink': 342,
   // Browns
-  brown: 25, tan: 35, caramel: 33, chocolate: 20, rust: 12, sienna: 15,
-  terracotta: 14, chestnut: 17, cinnamon: 22, coffee: 22, mocha: 21,
-  'burnt sienna': 15,
+  brown: 25, tan: 35, caramel: 33, camel: 34, chocolate: 20, rust: 12, sienna: 15,
+  terracotta: 14, 'terracotta brown': 14, chestnut: 17, cinnamon: 22, coffee: 22, mocha: 21,
+  'burnt sienna': 15, bronze: 30,
   // Achromatics → null (excluded)
   white: null, black: null, grey: null, gray: null, silver: null,
   beige: null, cream: null, ivory: null, off_white: null, 'off-white': null,
@@ -69,10 +70,24 @@ const HUE_MAP = {
   'nude pink': null, oatmeal: null, champagne: null, blond: null,
 };
 
+/** Normalize any localized or compound color name into an English lookup key. */
+function toEnglishLookupKey(name) {
+  if (!name) return '';
+  const raw = String(name).toLowerCase().trim().replace(/[_\s]+/g, ' ');
+  if (raw in HUE_MAP) return raw;
+  const canonical = canonicalColorKey(name);
+  if (canonical) {
+    const asSpace = canonical.replace(/_/g, ' ');
+    if (asSpace in HUE_MAP) return asSpace;
+    return asSpace;
+  }
+  return raw;
+}
+
 /** Resolve a colour name to its hue (0..360) or null for achromatic. */
 function resolveHue(name) {
   if (!name) return null;
-  const key = name.toLowerCase().trim().replace(/[_\s]+/g, ' ');
+  const key = toEnglishLookupKey(name);
   // Exact match
   if (key in HUE_MAP) return HUE_MAP[key];
   // Substring match (e.g. "light dusty rose" → "dusty rose")
@@ -190,14 +205,7 @@ function getCssBackground(colorName) {
   const name = colorName.toLowerCase().trim();
   
   const getSingleColor = (color) => {
-    const c = color.trim().replace(/[\s_\-]+/g, ' ');
-    
-    // Direct hue HSL lookup if matching
-    const lookupKey = c.replace(' ', '_');
-    const hue = HUE_MAP[lookupKey] ?? HUE_MAP[c] ?? null;
-    if (hue !== null) {
-      return `hsl(${hue}, 65%, 52%)`;
-    }
+    const c = toEnglishLookupKey(color).replace(/[\s_-]+/g, ' ').trim();
     
     const exactMap = {
       black: '#111827',
@@ -210,6 +218,7 @@ function getCssBackground(colorName) {
       'light gray': '#e5e7eb',
       silver: '#cbd5e1',
       beige: '#f5f5dc',
+      'light beige': '#f5f0e6',
       cream: '#fef08a',
       ivory: '#fffff0',
       'off white': '#fafaf9',
@@ -218,12 +227,28 @@ function getCssBackground(colorName) {
       linen: '#f7f7f7',
       nude: '#fed7aa',
       oatmeal: '#e2e8f0',
+      sand: '#d6c6a5',
+      taupe: '#8b7d7b',
       champagne: '#fde047',
+      'champagne gold': '#f3e5ab',
       navy: '#1e3a8a',
       charcoal: '#1f2937',
+      'charcoal grey': '#1f2937',
+      'sage green': '#8fa882',
+      sage: '#8fa882',
+      'olive green': '#6b7f3e',
+      olive: '#6b7f3e',
+      'forest green': '#22543d',
     };
     
     if (c in exactMap) return exactMap[c];
+
+    // Direct hue HSL lookup if matching
+    const lookupKey = c.replace(/\s+/g, '_');
+    const hue = HUE_MAP[lookupKey] ?? HUE_MAP[c] ?? null;
+    if (hue !== null) {
+      return `hsl(${hue}, 65%, 52%)`;
+    }
     
     // Fallback checks
     if (c.includes('dark')) {
@@ -235,7 +260,7 @@ function getCssBackground(colorName) {
       if (sub in exactMap) return exactMap[sub];
     }
     
-    return c;
+    return c || '#d1d5db';
   };
   
   const separators = [/\s+&\s+/, /\s+and\s+/, /\s*\/\s*/, /\s*-\s*/];

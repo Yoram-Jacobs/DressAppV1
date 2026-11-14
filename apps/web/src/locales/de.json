@@ -1429,7 +1429,7 @@
     "tomorrowSuggestionSubtitle": "Für morgen kuratiert basierend auf Ihrem Stilprofil, der Wettervorhersage und Terminen.",
     "tomorrowSuggestionRefreshed": "Vorschlag für morgen aktualisiert!",
     "wearTomorrow": "Morgen tragen",
-    "upgradeForDailySuggestionsDesc": "Führen Sie ein Upgrade auf den Manager- oder Professional-Tarif durch, um tägliche Vorschläge freizuschalten.",
+    "upgradeForDailySuggestionsDesc": "Tägliche Outfit-Vorschläge verbrauchen jeweils 1 KI-Credit.",
     "calendar": {
       "searchPlaceholder": "Vibe-Suche: „Sommer-Grillparty“, „Shopping in der Mall“, „Geschäftstreffen“, „Schwarzes T-Shirt“, „Stone-washed Jeans“...",
       "quickVibes": "Vibes:",
@@ -2238,7 +2238,9 @@
     "addToChrome": "Zu Chrome hinzufügen",
     "recommendedDesktop": "Empfohlen für Desktop",
     "connectExtension": "Erweiterung verbinden",
-    "alreadyInstalled": "Bereits installiert?"
+    "alreadyInstalled": "Bereits installiert?",
+    "schedulerCreditNote": "Jeder tägliche Outfit-Vorschlag verbraucht 1 KI-Credit.",
+    "schedulerUpgradeDesc": "Tägliche Outfit-Vorschläge verbrauchen 1 KI-Credit im kostenlosen Plan, oder unbegrenzt mit Manager und Professional."
   },
   "admin": {
     "title": "Admin",
@@ -2434,7 +2436,12 @@
       "dress": "Kleid",
       "headwear": "Kopfbedeckung",
       "glasses": "Gläser",
-      "belt": "Gürtel"
+      "belt": "Gürtel",
+      "watch": "Uhr",
+      "necktie": "Krawatte",
+      "scarf": "Schal",
+      "bag": "Tasche",
+      "jewelry": "Schmuck"
     },
     "dress_code": {
       "casual": "Lässig",
@@ -2789,7 +2796,38 @@
       "peach": "Pfirsich",
       "lavender": "Lavendel",
       "charcoal": "Anthrazit",
-      "light_grey": "Hellgrau"
+      "light_grey": "Hellgrau",
+      "sage_green": "Salbeigrün",
+      "forest_green": "Waldgrün",
+      "emerald": "Smaragdgrün",
+      "lime": "Limette",
+      "mustard": "Senfgelb",
+      "amber": "Bernstein",
+      "rust": "Rostrot",
+      "terracotta_brown": "Terrakotta",
+      "champagne_gold": "Champagnergold",
+      "ivory": "Elfenbein",
+      "off_white": "Cremeweiß",
+      "khaki": "Khaki",
+      "camel": "Kamel",
+      "tan": "Hellbraun",
+      "chocolate": "Schokoladenbraun",
+      "taupe": "Taupe",
+      "sand": "Sand",
+      "bronze": "Bronze",
+      "cobalt": "Kobaltblau",
+      "denim": "Denim",
+      "hot_pink": "Knallpink",
+      "blush": "Zartrosa",
+      "dusty_rose": "Altrosa",
+      "salmon": "Lachs",
+      "fuchsia": "Fuchsia",
+      "magenta": "Magenta",
+      "lilac": "Flieder",
+      "plum": "Pflaume",
+      "mauve": "Malve",
+      "scarlet": "Scharlachrot",
+      "crimson": "Karmesinrot"
     },
     "material": {
       "acrylic": "Acryl",
@@ -4108,7 +4146,7 @@
     "tiers_title": "Abonnement-Stufen",
     "tiers_p1": "DressApp bietet flexible Abonnement-Stufen, die auf Ihre Kleiderschrankgröße und Ihre Styling-Bedürfnisse zugeschnitten sind. Führen Sie ein Upgrade auf der Preisseite durch, um unbegrenzte Funktionen freizuschalten.",
     "tiers_free_title": "Kostenloser Plan",
-    "tiers_free_desc": "Basislimit von 100 Artikeln (erweiterbar auf bis zu 150 Artikel durch Freundschaftseinladungen), 10 tägliche On-Premise-KI-Guthaben (bis zu 300 über 30 Tage) und 5 einmalige Onboarding-Guthaben. Guthabenpakete (ab 15 Credits) schalten den Cluster-Upload frei.",
+    "tiers_free_desc": "Basislimit von 100 Artikeln (durch Freundeseinladungen auf bis zu 150 erweiterbar), 10 tägliche On-Premises-KI-Credits (bis zu 300 über 30 Tage) und 5 einmalige KI-Studio-Bonuscredits. Beinhaltet tägliche Outfit-Vorschläge mit Gemini (1 KI-Credit pro Vorschlag). Kaufen Sie Credit-Pakete (ab 15 Credits), um den Cluster-Upload freizuschalten.",
     "tiers_manager_title": "Manager-Plan",
     "tiers_manager_desc": "10 $/Monat (oder 100 $/Jahr). Unbegrenzter Platz im Kleiderschrank, das hochmoderne KI-Modell von DressApp, morgendliche Outfit-Vorschläge, Kalendersynchronisierung, Verkauf auf dem Marktplatz und voller Zugriff auf Trend Scout.",
     "tiers_pro_title": "Professional-Plan",
@@ -5852,7 +5890,11 @@
     "avatar_studio_badge": "360° Avatar-Studio",
     "loading": "3D-Studio wird vorbereitet…",
     "side_view": "Seitenansicht",
-    "back_view": "Rückansicht"
+    "back_view": "Rückansicht",
+    "mesh_tailored": "3D-Maßschnitt",
+    "mesh_photo": "Foto-Passform",
+    "mesh_mode_tailored_active": "3D-Maßschnitt aktiv — für Foto-Passform klicken",
+    "mesh_mode_photo_active": "Foto-Passform aktiv — für 3D-Maßschnitt klicken"
   },
   "dressingRoom": {
     "title": "3D-Umkleidekabine",

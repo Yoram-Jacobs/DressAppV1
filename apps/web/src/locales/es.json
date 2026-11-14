@@ -1429,7 +1429,7 @@
     "tomorrowSuggestionSubtitle": "Seleccionado para mañana según tu perfil de estilo, el pronóstico del tiempo y tu calendario.",
     "tomorrowSuggestionRefreshed": "¡Sugerencia de mañana actualizada!",
     "wearTomorrow": "Usar mañana",
-    "upgradeForDailySuggestionsDesc": "Actualiza al plan Manager o Professional para desbloquear las sugerencias diarias.",
+    "upgradeForDailySuggestionsDesc": "Las sugerencias de conjuntos diarios consumen 1 crédito de IA cada una.",
     "calendar": {
       "searchPlaceholder": "Búsqueda por estilo: \"Barbacoa de verano\", \"Compras en el centro comercial\", \"Reunión de negocios\", \"Camiseta negra\", \"Vaqueros lavados a la piedra\"...",
       "quickVibes": "Estilos:",
@@ -2238,7 +2238,9 @@
     "addToChrome": "Añadir a Chrome",
     "recommendedDesktop": "Recomendado para ordenador",
     "connectExtension": "Conectar extensión",
-    "alreadyInstalled": "¿Ya la tienes instalada?"
+    "alreadyInstalled": "¿Ya la tienes instalada?",
+    "schedulerCreditNote": "Cada propuesta diaria consume 1 crédito de IA.",
+    "schedulerUpgradeDesc": "Las sugerencias diarias consumen 1 crédito de IA en el plan Gratuito, o disfruta de acceso ilimitado en Manager y Professional."
   },
   "admin": {
     "title": "Administrador",
@@ -2434,7 +2436,12 @@
       "dress": "Vestido",
       "headwear": "Sombreros",
       "glasses": "Anteojos",
-      "belt": "Cinturón"
+      "belt": "Cinturón",
+      "watch": "Reloj",
+      "necktie": "Corbata",
+      "scarf": "Bufanda",
+      "bag": "Bolso",
+      "jewelry": "Joyería"
     },
     "dress_code": {
       "casual": "Informal",
@@ -2789,7 +2796,38 @@
       "peach": "Melocotón",
       "lavender": "Lavanda",
       "charcoal": "Gris marengo",
-      "light_grey": "Gris claro"
+      "light_grey": "Gris claro",
+      "sage_green": "Verde salvia",
+      "forest_green": "Verde bosque",
+      "emerald": "Esmeralda",
+      "lime": "Lima",
+      "mustard": "Mostaza",
+      "amber": "Ámbar",
+      "rust": "Óxido",
+      "terracotta_brown": "Terracota",
+      "champagne_gold": "Oro champán",
+      "ivory": "Marfil",
+      "off_white": "Blanco roto",
+      "khaki": "Caqui",
+      "camel": "Camel",
+      "tan": "Tostado",
+      "chocolate": "Chocolate",
+      "taupe": "Topo",
+      "sand": "Arena",
+      "bronze": "Bronce",
+      "cobalt": "Azul cobalto",
+      "denim": "Denim",
+      "hot_pink": "Rosa fuerte",
+      "blush": "Rosa empolvado",
+      "dusty_rose": "Rosa viejo",
+      "salmon": "Salmón",
+      "fuchsia": "Fucsia",
+      "magenta": "Magenta",
+      "lilac": "Lila",
+      "plum": "Ciruela",
+      "mauve": "Malva",
+      "scarlet": "Escarlata",
+      "crimson": "Carmesí"
     },
     "material": {
       "acrylic": "Acrílico",
@@ -4108,7 +4146,7 @@
     "tiers_title": "Niveles de suscripción",
     "tiers_p1": "DressApp ofrece niveles de suscripción flexibles adaptados al tamaño de su armario y sus necesidades de estilo. Actualice en la página de precios para desbloquear funciones ilimitadas.",
     "tiers_free_title": "Plan gratuito",
-    "tiers_free_desc": "Límite base de 100 prendas (ampliable hasta 150 prendas mediante invitaciones de amigos), 10 créditos diarios de IA local (hasta 300 en 30 días) y 5 créditos de bienvenida para reconstrucción. Los paquetes de créditos (15+) desbloquean la Carga por Lotes.",
+    "tiers_free_desc": "Límite base de 100 artículos (ampliable hasta 150 mediante invitaciones a amigos), 10 créditos diarios de IA local (hasta 300 en 30 días) y 5 créditos de bonificación únicos para reconstrucción en estudio. Incluye sugerencias de conjuntos diarios impulsadas por Gemini (1 crédito de IA por sugerencia). Compra paquetes de créditos (15 o más) para desbloquear la subida en lote.",
     "tiers_manager_title": "Plan Manager",
     "tiers_manager_desc": "10 $/mes (o 100 $/año). Desbloquea espacio ilimitado en el armario, el modelo de IA de última generación de DressApp, alertas matutinas, sincronización de calendario, ventas en el mercado y acceso completo a Trend Scout.",
     "tiers_pro_title": "Plan Professional",
@@ -5856,7 +5894,11 @@
     "avatar_studio_badge": "Estudio avatar 360°",
     "loading": "Preparando tu estudio 3D…",
     "side_view": "Vista lateral",
-    "back_view": "Vista trasera"
+    "back_view": "Vista trasera",
+    "mesh_tailored": "Corte 3D",
+    "mesh_photo": "Ajuste Foto",
+    "mesh_mode_tailored_active": "Corte 3D activo — haz clic para cambiar a Ajuste Foto",
+    "mesh_mode_photo_active": "Ajuste Foto activo — haz clic para cambiar a Corte 3D"
   },
   "dressingRoom": {
     "title": "Probador 3D",

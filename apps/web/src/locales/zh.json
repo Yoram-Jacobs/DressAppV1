@@ -1429,7 +1429,7 @@
     "tomorrowSuggestionSubtitle": "根据您的个人风格、明日天气预报及日程安排精心搭配。",
     "tomorrowSuggestionRefreshed": "已刷新明日穿搭建议！",
     "wearTomorrow": "明日穿着",
-    "upgradeForDailySuggestionsDesc": "升级到经理或专业版计划以解锁每日穿搭建议。",
+    "upgradeForDailySuggestionsDesc": "每日穿搭建议每次消耗1点AI积分。",
     "calendar": {
       "searchPlaceholder": "风格搜索：“夏日烧烤聚会”、“商场购物”、“商务会议”、“黑色T恤”、“磨白牛仔裤”...",
       "quickVibes": "风格标签：",
@@ -2238,7 +2238,9 @@
     "addToChrome": "添加至 Chrome",
     "recommendedDesktop": "桌面端推荐",
     "connectExtension": "连接扩展程序",
-    "alreadyInstalled": "已经安装？"
+    "alreadyInstalled": "已经安装？",
+    "schedulerCreditNote": "每个每日穿搭方案消耗1点AI积分。",
+    "schedulerUpgradeDesc": "免费套餐下每日穿搭建议每次消耗1点AI积分，Manager与Professional套餐享无限畅用。"
   },
   "admin": {
     "title": "管理",
@@ -2434,7 +2436,12 @@
       "dress": "连衣裙",
       "headwear": "头饰",
       "glasses": "眼镜",
-      "belt": "腰带"
+      "belt": "腰带",
+      "watch": "手表",
+      "necktie": "领带",
+      "scarf": "围巾",
+      "bag": "包袋",
+      "jewelry": "珠宝"
     },
     "dress_code": {
       "casual": "休闲",
@@ -2796,7 +2803,38 @@
       "peach": "桃色",
       "lavender": "薰衣草色",
       "charcoal": "炭灰色",
-      "light_grey": "浅灰色"
+      "light_grey": "浅灰色",
+      "sage_green": "鼠尾草绿",
+      "forest_green": "森林绿",
+      "emerald": "祖母绿",
+      "lime": "青柠色",
+      "mustard": "芥末黄",
+      "amber": "琥珀色",
+      "rust": "铁锈红",
+      "terracotta_brown": "赤陶色",
+      "champagne_gold": "香槟金",
+      "ivory": "象牙白",
+      "off_white": "米白色",
+      "khaki": "卡其色",
+      "camel": "驼色",
+      "tan": "棕褐色",
+      "chocolate": "巧克力色",
+      "taupe": "灰褐色",
+      "sand": "沙色",
+      "bronze": "古铜色",
+      "cobalt": "钴蓝色",
+      "denim": "牛仔蓝",
+      "hot_pink": "亮粉色",
+      "blush": "腮红粉",
+      "dusty_rose": "干燥玫瑰粉",
+      "salmon": "三文鱼粉",
+      "fuchsia": "紫红色",
+      "magenta": "品红色",
+      "lilac": "丁香紫",
+      "plum": "梅子色",
+      "mauve": "藕荷色",
+      "scarlet": "猩红色",
+      "crimson": "深红色"
     },
     "material": {
       "acrylic": "腈纶",
@@ -4115,7 +4153,7 @@
     "tiers_title": "订阅方案",
     "tiers_p1": "DressApp 提供了灵活的订阅方案，可根据您的衣橱容量和穿搭需求量身定制。在价格页面升级以解锁无限功能。",
     "tiers_free_title": "免费方案",
-    "tiers_free_desc": "基础限制为100件衣橱物品（通过好友邀请最多可扩展至150件），每天提供10个本地AI额度（30天最多300个），以及5个一次性注册重建奖励。购买15个或更多额度的点数包即可解锁成组上传。",
+    "tiers_free_desc": "基础容量100件（通过邀请好友可扩展至150件），每天10点本地AI积分（30天内最多累计300点），以及注册赠送的5点一次性AI工作室修图积分。包含由Gemini驱动的每日穿搭建议（每次建议消耗1点AI积分）。购买积分包（15点以上）即可解锁衣橱批量拍摄上传。",
     "tiers_manager_title": "Manager 方案",
     "tiers_manager_desc": "$10/月（或 $100/年）。解锁无限衣橱容量、DressApp 最前沿的 AI 模型、早间穿搭提醒、日历同步、闲置市场售卖以及完整的 Trend Scout 潮流资讯。",
     "tiers_pro_title": "Professional 方案",
@@ -5859,7 +5897,11 @@
     "avatar_studio_badge": "360° 形象试衣间",
     "loading": "正在准备您的3D工作室…",
     "side_view": "侧面",
-    "back_view": "背面"
+    "back_view": "背面",
+    "mesh_tailored": "3D剪裁",
+    "mesh_photo": "照片贴合",
+    "mesh_mode_tailored_active": "3D剪裁已启用 — 点击切换至照片贴合",
+    "mesh_mode_photo_active": "照片贴合已启用 — 点击切换至3D剪裁"
   },
   "dressingRoom": {
     "title": "3D试衣间",

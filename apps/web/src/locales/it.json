@@ -1429,7 +1429,7 @@
     "tomorrowSuggestionSubtitle": "Creato per domani in base al tuo profilo di stile, alle previsioni meteo e agli impegni.",
     "tomorrowSuggestionRefreshed": "Suggerimento per domani aggiornato!",
     "wearTomorrow": "Indossa domani",
-    "upgradeForDailySuggestionsDesc": "Esegui l'upgrade al piano Manager o Professional per sbloccare i suggerimenti giornalieri.",
+    "upgradeForDailySuggestionsDesc": "I suggerimenti giornalieri di outfit consumano 1 credito IA ciascuno.",
     "calendar": {
       "searchPlaceholder": "Cerca stile: \"Barbecue estivo\", \"Shopping al centro commerciale\", \"Riunione di lavoro\", \"T-shirt nera\", \"Jeans stone-washed\"...",
       "quickVibes": "Vibes:",
@@ -2238,7 +2238,9 @@
     "addToChrome": "Aggiungi a Chrome",
     "recommendedDesktop": "Consigliato per desktop",
     "connectExtension": "Collega estensione",
-    "alreadyInstalled": "Già installata?"
+    "alreadyInstalled": "Già installata?",
+    "schedulerCreditNote": "Ogni proposta giornaliera consuma 1 credito IA.",
+    "schedulerUpgradeDesc": "I suggerimenti giornalieri consumano 1 credito IA nel piano Gratuito, oppure goditi l'accesso illimitato con Manager e Professional."
   },
   "admin": {
     "title": "Amministratore",
@@ -2434,7 +2436,12 @@
       "dress": "Abito",
       "headwear": "Copricapo",
       "glasses": "Occhiali",
-      "belt": "Cintura"
+      "belt": "Cintura",
+      "watch": "Orologio",
+      "necktie": "Cravatta",
+      "scarf": "Sciarpa",
+      "bag": "Borsa",
+      "jewelry": "Gioielli"
     },
     "dress_code": {
       "casual": "Casuale",
@@ -2796,7 +2803,38 @@
       "peach": "Pesca",
       "lavender": "Lavanda",
       "charcoal": "Antracite",
-      "light_grey": "Grigio chiaro"
+      "light_grey": "Grigio chiaro",
+      "sage_green": "Verde salvia",
+      "forest_green": "Verde bosco",
+      "emerald": "Smeraldo",
+      "lime": "Lime",
+      "mustard": "Senape",
+      "amber": "Ambra",
+      "rust": "Ruggine",
+      "terracotta_brown": "Terracotta",
+      "champagne_gold": "Oro champagne",
+      "ivory": "Avorio",
+      "off_white": "Bianco sporco",
+      "khaki": "Kaki",
+      "camel": "Cammello",
+      "tan": "Cuoio",
+      "chocolate": "Cioccolato",
+      "taupe": "Tortora",
+      "sand": "Sabbia",
+      "bronze": "Bronzo",
+      "cobalt": "Blu cobalto",
+      "denim": "Denim",
+      "hot_pink": "Rosa acceso",
+      "blush": "Rosa cipria",
+      "dusty_rose": "Rosa antico",
+      "salmon": "Salmone",
+      "fuchsia": "Fucsia",
+      "magenta": "Magenta",
+      "lilac": "Lilla",
+      "plum": "Prugna",
+      "mauve": "Malva",
+      "scarlet": "Scarlatto",
+      "crimson": "Cremisi"
     },
     "material": {
       "acrylic": "Acrilico",
@@ -4115,7 +4153,7 @@
     "tiers_title": "Piani di abbonamento",
     "tiers_p1": "DressApp offre piani di abbonamento flessibili su misura per le dimensioni del tuo guardaroba e le tue esigenze di stile. Esegui l'upgrade nella pagina dei prezzi per sbloccare funzionalità illimitate.",
     "tiers_free_title": "Piano Free",
-    "tiers_free_desc": "Limite di base di 100 articoli (espandibile fino a 150 tramite inviti agli amici), 10 crediti IA locali giornalieri (fino a 300 in 30 giorni) e 5 crediti di benvenuto per la ricostruzione. I pacchetti di crediti (15+) sbloccano il Caricamento a Grappolo.",
+    "tiers_free_desc": "Limite base di 100 articoli (espandibile fino a 150 invitando amici), 10 crediti IA locali giornalieri (fino a 300 in 30 giorni) e 5 crediti bonus una tantum per la ricostruzione in studio. Include suggerimenti giornalieri di outfit basati su Gemini (1 credito IA per suggerimento). Acquista pacchetti di crediti (15+ crediti) per sbloccare il caricamento a grappolo.",
     "tiers_manager_title": "Piano Manager",
     "tiers_manager_desc": "10 $/mese (o 100 $/anno). Sblocca spazio illimitato nell'armadio, il modello IA all'avanguardia di DressApp, avvisi outfit mattutini, sincronizzazione calendario, vendita sul Marketplace e accesso completo a Trend Scout.",
     "tiers_pro_title": "Piano Professional",
@@ -5859,7 +5897,11 @@
     "avatar_studio_badge": "Studio avatar 360°",
     "loading": "Preparazione del tuo studio 3D…",
     "side_view": "Vista laterale",
-    "back_view": "Vista posteriore"
+    "back_view": "Vista posteriore",
+    "mesh_tailored": "Taglio 3D",
+    "mesh_photo": "Vestibilità Foto",
+    "mesh_mode_tailored_active": "Taglio 3D attivo — clicca per Vestibilità Foto",
+    "mesh_mode_photo_active": "Vestibilità Foto attiva — clicca per Taglio 3D"
   },
   "dressingRoom": {
     "title": "Camerino 3D",
