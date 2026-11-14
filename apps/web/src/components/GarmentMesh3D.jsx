@@ -1539,6 +1539,53 @@ async function fetchAndCropTexture(url, patterned = false) {
           shoeLayout.sandalStyle = 'tstrap';
         }
       }
+      if (shoeLayout.sandalStyle !== 'tstrap') {
+        const stemY0 = by0 + Math.floor(bh * (toeUp ? 0.18 : 0.48));
+        const stemY1 = by0 + Math.floor(bh * (toeUp ? 0.52 : 0.82));
+        const lA = bx0 + Math.floor(bw * 0.20);
+        const lB = bx0 + Math.floor(bw * 0.33);
+        const cA = bx0 + Math.floor(bw * 0.43);
+        const cB = bx0 + Math.floor(bw * 0.57);
+        const rA = bx0 + Math.floor(bw * 0.67);
+        const rB = bx0 + Math.floor(bw * 0.80);
+        let stemRows = 0;
+        let totRows = 0;
+        for (let cy = stemY0; cy <= stemY1; cy += 2) {
+          const row = cy * effW * 4;
+          let lr = 0, lg = 0, lb = 0, ln = 0;
+          for (let cx = lA; cx <= lB; cx++) {
+            const o = row + cx * 4;
+            if (isOpaque(o)) { lr += layoutData[o]; lg += layoutData[o + 1]; lb += layoutData[o + 2]; ln++; }
+          }
+          let rr = 0, rg = 0, rb = 0, rn = 0;
+          for (let cx = rA; cx <= rB; cx++) {
+            const o = row + cx * 4;
+            if (isOpaque(o)) { rr += layoutData[o]; rg += layoutData[o + 1]; rb += layoutData[o + 2]; rn++; }
+          }
+          if (!ln || !rn) continue;
+          lr /= ln; lg /= ln; lb /= ln;
+          rr /= rn; rg /= rn; rb /= rn;
+          let maxBoth = 0;
+          let cn = 0;
+          for (let cx = cA; cx <= cB; cx++) {
+            const o = row + cx * 4;
+            if (!isOpaque(o)) continue;
+            cn++;
+            const pr = layoutData[o], pg = layoutData[o + 1], pb = layoutData[o + 2];
+            const dL = Math.hypot(pr - lr, pg - lg, pb - lb);
+            const dR = Math.hypot(pr - rr, pg - rg, pb - rb);
+            const dBoth = Math.min(dL, dR);
+            if (dBoth > maxBoth) maxBoth = dBoth;
+          }
+          if (cn) {
+            totRows++;
+            if (maxBoth > 28) stemRows++;
+          }
+        }
+        if (totRows >= 6 && stemRows / totRows >= 0.35) {
+          shoeLayout.sandalStyle = 'tstrap';
+        }
+      }
       const heelY0 = toeUp ? 0.80 : 0.04;
       const heelY1 = toeUp ? 0.94 : 0.18;
       const heelRimL = sampleMean(0.14, 0.26, heelY0, heelY1);
