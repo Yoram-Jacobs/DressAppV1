@@ -537,11 +537,10 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const x = cx + side * hwOuter * ex;
       const y = yBase + (archOuter - yBase) * ey;
       const z = zBase - vSweep * Math.abs(ex);
-      const uvZ = vSweep > 0
-        ? (Math.abs(ex) < 0.35 ? zStart - 0.008 : zBase - 0.014 * Math.abs(ex))
-        : z;
+      const uvX = vSweep > 0 ? lerp(frame.x0, frame.x1, Math.max(0.22, Math.min(0.78, 0.5 + 0.28 * side * ex))) : x;
+      const uvZ = vSweep > 0 ? lerp(frame.z0, frame.z1, 0.405) : z;
       verts.push(x, y, z);
-      uvs.push(...shoeUV(side, x, Math.max(0, y), uvZ, frame, layout));
+      uvs.push(...shoeUV(side, uvX, Math.max(0, y), uvZ, frame, layout));
     }
     for (let j = nArc - 1; j >= 0; j--) {
       const phi = Math.PI * (j / (nArc - 1));
@@ -552,11 +551,10 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const x = cx + side * hwInner * ex;
       const y = yBase + (archInner - yBase) * ey;
       const z = zBase - vSweep * Math.abs(ex);
-      const uvZ = vSweep > 0
-        ? (Math.abs(ex) < 0.35 ? zStart - 0.008 : zBase - 0.014 * Math.abs(ex))
-        : z;
+      const uvX = vSweep > 0 ? lerp(frame.x0, frame.x1, Math.max(0.22, Math.min(0.78, 0.5 + 0.28 * side * ex))) : x;
+      const uvZ = vSweep > 0 ? lerp(frame.z0, frame.z1, 0.405) : z;
       verts.push(x, y, z);
-      uvs.push(...shoeUV(side, x, Math.max(0, y), uvZ, frame, layout));
+      uvs.push(...shoeUV(side, uvX, Math.max(0, y), uvZ, frame, layout));
     }
   }
 
