@@ -113,13 +113,16 @@ function StudioPedestal() {
       </mesh>
 
       {/* Polished Champagne Gold Rim Ring */}
-      <mesh position={[0, -0.001, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh position={[0, 0.0005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.815, 0.842, 64]} />
         <meshStandardMaterial
           color="#C5A880"
           roughness={0.22}
           metalness={0.78}
           side={THREE.DoubleSide}
+          polygonOffset
+          polygonOffsetFactor={-2}
+          polygonOffsetUnits={-2}
         />
       </mesh>
 
@@ -949,6 +952,7 @@ export default function DressingRoom3D({
               shadow-mapSize-width={1024}
               shadow-mapSize-height={1024}
               shadow-bias={-0.0001}
+              shadow-normalBias={0.02}
             />
 
             {/* Soft Fill Light from opposite flank */}
@@ -1040,7 +1044,7 @@ export default function DressingRoom3D({
                               showAvatar={showAvatar}
                               standaloneMode={!showAvatar}
                               bypassSilhouette={meshMode === 'tailored'}
-                              extraLayerOffset={intraSlotIndex * 0.0035}
+                              extraLayerOffset={intraSlotIndex * 0.006}
                               renderOrderOffset={intraSlotIndex}
                             />
                           </Suspense>

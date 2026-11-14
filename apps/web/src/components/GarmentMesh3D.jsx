@@ -3095,20 +3095,20 @@ export function createAnatomicalAccessoryGeometry(
       }
     }
   } else if (type === 'headwear') {
-    // Rigid Anchor Transformation: fixed scale offset on Head crown with zero shrinkwrap deformation
+    // Rigid Anchor Transformation: snug scale offset on Head crown with zero shrinkwrap deformation
     const ny = 8;
     const nx = 20;
-    const rHead = 0.125;
+    const rHead = 0.118;
     for (let i = 0; i <= ny; i++) {
       const v = i / ny;
       const phi = v * (Math.PI * 0.45);
-      const y = baseHeadY + rHead * Math.cos(phi);
-      const r = rHead * Math.sin(phi) + 0.02;
+      const y = baseHeadY - 0.032 + rHead * Math.cos(phi);
+      const r = rHead * Math.sin(phi) + 0.012;
 
       for (let j = 0; j <= nx; j++) {
         const u = j / nx;
         const theta = -Math.PI + u * 2 * Math.PI;
-        verts.push(r * Math.sin(theta), y, 0.04 + r * Math.cos(theta));
+        verts.push(r * Math.sin(theta), y, 0.035 + r * Math.cos(theta));
         uvs.push(u, 1 - v);
         deformWeights.push(0.0);
       }
@@ -3120,17 +3120,17 @@ export function createAnatomicalAccessoryGeometry(
       }
     }
   } else if (type === 'glasses') {
-    // Rigid Anchor Transformation: positioned at nose bridge and temples with zero vertex displacement
-    const yEye = isMale ? 1.62 : 1.56;
+    // Rigid Anchor Transformation: positioned forward of nose bridge and eyes so temples don't clip into cheeks
+    const yEye = isMale ? 1.628 : 1.568;
     const nxG = 12;
     const nyG = 2;
     for (let i = 0; i <= nyG; i++) {
       const v = i / nyG;
-      const y = yEye + 0.024 - v * 0.048;
+      const y = yEye + 0.022 - v * 0.044;
       for (let j = 0; j <= nxG; j++) {
         const u = j / nxG;
-        const x = (u - 0.5) * 0.15;
-        const curveZ = 0.138 - Math.pow(Math.abs(u - 0.5) * 2, 1.8) * 0.022;
+        const x = (u - 0.5) * 0.142;
+        const curveZ = 0.154 - Math.pow(Math.abs(u - 0.5) * 2, 1.8) * 0.024;
         verts.push(x, y, curveZ);
         uvs.push(u, 1 - v);
         deformWeights.push(0.0);
@@ -3143,13 +3143,13 @@ export function createAnatomicalAccessoryGeometry(
       }
     }
   } else if (type === 'bag') {
-    // 1. Rigid Bag_Body (`deformWeight = 0.0`) near right hip/hand (-X side)
-    const cx = isMale ? -0.27 : -0.24;
+    // 1. Rigid Bag_Body (`deformWeight = 0.0`) slim rounded tote/handbag near right hip (-X side)
+    const cx = isMale ? -0.235 : -0.21;
     const cy = isMale ? 0.84 : 0.80;
-    const cz = 0.04;
-    const hw = 0.055;
-    const hh = 0.11;
-    const hd = 0.095;
+    const cz = 0.03;
+    const hw = 0.032;
+    const hh = 0.105;
+    const hd = 0.088;
     const nyB = 8;
     const nxB = 20;
     for (let i = 0; i <= nyB; i++) {
@@ -3158,7 +3158,13 @@ export function createAnatomicalAccessoryGeometry(
       for (let j = 0; j <= nxB; j++) {
         const u = j / nxB;
         const theta = -Math.PI + u * 2 * Math.PI;
-        verts.push(cx + hw * Math.sin(theta), y, cz + hd * Math.cos(theta));
+        const sx = Math.sin(theta);
+        const cz0 = Math.cos(theta);
+        verts.push(
+          cx + hw * Math.sign(sx) * Math.pow(Math.abs(sx), 0.55),
+          y,
+          cz + hd * Math.sign(cz0) * Math.pow(Math.abs(cz0), 0.55)
+        );
         uvs.push(u, 1 - v);
         deformWeights.push(0.0);
       }
@@ -3330,8 +3336,11 @@ export function resolveMaterialPBRProps(garmentText = '', rawSlot = 'top') {
   if (has('wool', 'knit', 'cashmere', 'fleece', 'sweater', 'צמר', 'סריג', 'קשמיר', 'פליז')) {
     return { roughness: 0.88, metalness: 0.01, envMapIntensity: 0.50 };
   }
+  if (rawSlot === 'shoes' && has('sneaker', 'trainer', 'running', 'canvas', 'mesh', 'knit', 'סניקרס', 'התעמלות', 'ריצה')) {
+    return { roughness: 0.72, metalness: 0.02, envMapIntensity: 0.65 };
+  }
   if (rawSlot === 'shoes' || rawSlot === 'belt' || rawSlot === 'bag') {
-    return { roughness: 0.38, metalness: 0.10, envMapIntensity: 1.15 };
+    return { roughness: 0.48, metalness: 0.04, envMapIntensity: 0.85 };
   }
   return { roughness: 0.76, metalness: 0.02, envMapIntensity: 0.72 };
 }
@@ -4706,6 +4715,8 @@ export function GarmentMeshCore({
   const fallbackMaterials = useMemo(() => {
     const fallbackCol = dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#CBD5E1';
     const isCoreClothing = ['top', 'outerwear', 'dress', 'bottom'].includes(rawSlot);
+    const slotBias = rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? -1 : -2)));
+    const totalBias = slotBias - (renderOrderOffset || 0) * 2;
     const baseProps = {
       roughness: pbrProps.roughness,
       metalness: pbrProps.metalness,
@@ -4715,8 +4726,8 @@ export function GarmentMeshCore({
       alphaTest: isOpaqueSlot ? 0 : 0.02,
       depthWrite: true,
       polygonOffset: true,
-      polygonOffsetFactor: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? -1 : -2))),
-      polygonOffsetUnits: rawSlot === 'outerwear' ? -7 : (rawSlot === 'belt' ? -5 : (rawSlot === 'bottom' ? -4 : (shouldTuck ? -1 : -2))),
+      polygonOffsetFactor: totalBias,
+      polygonOffsetUnits: totalBias,
     };
     const frontMap = (rawSlot === 'shoes'
       ? (filledTexture || opaqueTexture || texture)

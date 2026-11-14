@@ -411,9 +411,12 @@ function shoeUV(side, x, y, z, frame, layout) {
   bx = inset(bx);
   // along = 0 at heel -> along = 1 at toe.
   // With toeUp (standard for shoe photos), toe is at v1 (top) and heel is at v0 (bottom).
+  // Pull UVs slightly inward near the rounded heel/toe tips so corners sample inside the shoe silhouette
+  const tipPull = along > 0.82 ? ((along - 0.82) / 0.18) * 0.18 : (along < 0.18 ? ((0.18 - along) / 0.18) * 0.16 : 0);
+  const acrossSafe = lerp(across, 0.5, tipPull);
   const toeUp = bx.toeUp !== false;
   const v = toeUp ? bx.v0 + along * (bx.v1 - bx.v0) : bx.v0 + (1 - along) * (bx.v1 - bx.v0);
-  return [bx.u0 + across * (bx.u1 - bx.u0), v];
+  return [bx.u0 + acrossSafe * (bx.u1 - bx.u0), v];
 }
 
 function appendQuad(indices, a0, b0, c0, d0) {
@@ -1048,35 +1051,45 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
     }
 
     const startIdx = verts.length / 3;
+    const zHeelAnchor = a.heelZ + 0.020;
+    const zToeAnchor = a.toeZ - 0.024;
+    const pHeelAnchor = sampleProfile(a.profile, 'z', zHeelAnchor);
+    const pToeAnchor = sampleProfile(a.profile, 'z', zToeAnchor);
+    const pBall = sampleProfile(a.profile, 'z', a.ballZ);
+    const cxBall = side * ((pBall.x0 + pBall.x1) / 2);
+    const nzClosed = 44;
 
-    for (let i = 0; i <= nz; i++) {
-      const t = i / nz;
+    for (let i = 0; i <= nzClosed; i++) {
+      const t = 0.5 * (1 - Math.cos((i / nzClosed) * Math.PI));
       const z = lerp(z0, z1, t);
       const p = sampleProfile(a.profile, 'z', z);
 
-      // Keep full anatomical width across [heelZ, toeZ], rounding only in the extended bumper caps
       let endTaper = 1.0;
-      if (z < a.heelZ) {
-        const uHeel = Math.max(0, (z - z0) / Math.max(1e-4, a.heelZ - z0));
-        endTaper = 0.35 + 0.65 * Math.pow(uHeel, 0.45);
-      } else if (z > a.toeZ) {
-        const uToe = Math.max(0, (z1 - z) / Math.max(1e-4, z1 - a.toeZ));
-        endTaper = 0.30 + 0.70 * Math.pow(uToe, 0.42);
+      let cxR = (p.x0 + p.x1) / 2;
+      let baseHalfW = (p.x1 - p.x0) / 2 + off;
+      if (z < zHeelAnchor) {
+        const u = Math.max(0, Math.min(1, (zHeelAnchor - z) / Math.max(1e-4, zHeelAnchor - z0)));
+        endTaper = Math.sqrt(Math.max(0.0064, 1 - u * u * 0.9936));
+        cxR = (pHeelAnchor.x0 + pHeelAnchor.x1) / 2;
+        baseHalfW = (pHeelAnchor.x1 - pHeelAnchor.x0) / 2 + off;
+      } else if (z > zToeAnchor) {
+        const u = Math.max(0, Math.min(1, (z - zToeAnchor) / Math.max(1e-4, z1 - zToeAnchor)));
+        endTaper = Math.sqrt(Math.max(0.0064, 1 - u * u * 0.9936));
+        cxR = lerp((pToeAnchor.x0 + pToeAnchor.x1) / 2, Math.abs(cxBall), 0.25 * u);
+        baseHalfW = (pToeAnchor.x1 - pToeAnchor.x0) / 2 + off;
       }
 
-      const cxR = (p.x0 + p.x1) / 2;
-      const baseHalfW = (p.x1 - p.x0) / 2 + off;
       const hw = baseHalfW * endTaper;
       const cx = side * cxR;
 
       // Full foot coverage: upper roof ALWAYS clears p.top + off across the entire foot!
       // Plus sculpted toe box puff at the front and tongue / collar contour at the ankle.
       const footTop = p.top + off;
-      const toeBoxPuff = smoothstep(a.ballZ, a.toeZ, z) * (isSneaker ? 0.007 : 0.012) * endTaper;
+      const toeBoxPuff = smoothstep(a.ballZ, a.toeZ, z) * (isSneaker ? 0.007 : 0.012) * Math.max(0.35, endTaper);
       const tongueZone = smoothstep(a.ankleZ, a.ankleZ + 0.04, z) * (1 - smoothstep(a.ballZ - 0.04, a.ballZ + 0.01, z));
       const tongueBoost = s.hasTongue ? tongueZone * (isSneaker ? 0.010 : 0.014) : 0;
       const collarBoost = z <= a.ankleZ + 0.05 ? Math.max(0, s.collar - footTop) * (isSneaker ? 0.22 : 0.35) : 0;
-      const archTop = Math.max(0.022, (footTop + toeBoxPuff + tongueBoost + collarBoost) * endTaper);
+      const archTop = Math.max(0.022, (footTop + toeBoxPuff + tongueBoost + collarBoost) * Math.max(0.45, endTaper));
 
       // Subtle tread ripples along outsole bottom for realism
       const treadRipple = Math.sin(t * Math.PI * 14) * 0.0012;
@@ -1128,7 +1141,7 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
       }
     }
 
-    for (let i = 0; i < nz; i++) {
+    for (let i = 0; i < nzClosed; i++) {
       for (let j = 0; j < ring; j++) {
         const jn = (j + 1) % ring;
         const a0 = startIdx + i * ring + j;
@@ -1139,10 +1152,10 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
       }
     }
 
-    // Watertight Heel Cap (i = 0) and Toe Box Cap (i = nz)
+    // Watertight Heel Cap (i = 0) and Toe Box Cap (i = nzClosed)
     [
-      { sliceIdx: 0, zCap: z0 - 0.002, flip: false },
-      { sliceIdx: nz, zCap: z1 + 0.002, flip: true },
+      { sliceIdx: 0, zCap: z0, flip: false },
+      { sliceIdx: nzClosed, zCap: z1, flip: true },
     ].forEach(({ sliceIdx, zCap, flip }) => {
       const ringOffset = startIdx + sliceIdx * ring;
       let sumX = 0;
