@@ -198,7 +198,7 @@ export function resolveFootwearSpec(garment) {
   } else if (isSandal) {
     kind = 'sandal';
     collar = 0.065;
-    soleThickness = isPlatform ? 0.038 : 0.016;
+    soleThickness = isPlatform ? 0.036 : (heelHeight >= 0.04 ? 0.010 : 0.014);
   } else if (isLoaferOrOxford) {
     kind = 'loafer';
     collar = 0.092;
@@ -406,36 +406,346 @@ function shoeUV(side, x, y, z, frame, layout) {
   return [bx.u0 + across * (bx.u1 - bx.u0), v];
 }
 
+function appendQuad(indices, a0, b0, c0, d0) {
+  indices.push(a0, c0, b0, b0, c0, d0);
+}
+
 /**
- * Builds a high-detail, watertight closed shoe shell (contoured upper, tongue,
- * collar cushion, welt lip, and sculpted outsole) wrapped around both feet in
- * base foot coordinates, plus an optional boot shaft.
- * Guarantees 100% enclosure of the sole and full coverage of the foot so avatar
- * skin never pokes through.
+ * Computes anatomical foot cross-section width & center at z along one foot.
+ */
+function footSliceMetrics(a, side, z, z0, z1, off) {
+  const p = sampleProfile(a.profile, 'z', z);
+  let endTaper = 1.0;
+  if (z < a.heelZ) {
+    const uHeel = Math.max(0, (z - z0) / Math.max(1e-4, a.heelZ - z0));
+    endTaper = 0.35 + 0.65 * Math.pow(uHeel, 0.45);
+  } else if (z > a.toeZ) {
+    const uToe = Math.max(0, (z1 - z) / Math.max(1e-4, z1 - a.toeZ));
+    endTaper = 0.30 + 0.70 * Math.pow(uToe, 0.42);
+  }
+  const cxR = (p.x0 + p.x1) / 2;
+  const hw = ((p.x1 - p.x0) / 2 + off) * endTaper;
+  return { p, endTaper, cx: side * cxR, hw };
+}
+
+/**
+ * Builds a watertight contoured outsole/footbed from z0 to z1 for one foot.
+ */
+function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, uvs, indices) {
+  const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002);
+  const yInsole = Math.max(yWelt + 0.003, -0.0015);
+  const yOutsoleBottom = yWelt - sole;
+  const nz = 24;
+  const nRing = 12;
+  const startIdx = verts.length / 3;
+
+  for (let i = 0; i <= nz; i++) {
+    const t = i / nz;
+    const z = lerp(z0, z1, t);
+    const { endTaper, cx, hw } = footSliceMetrics(a, side, z, z0, z1, off);
+    const hwSole = hw + 0.0025 * endTaper;
+    for (let j = 0; j < nRing; j++) {
+      const ang = (j / nRing) * Math.PI * 2;
+      const ca = Math.cos(ang);
+      const sa = Math.sin(ang);
+      const x = cx + side * hwSole * Math.sign(ca) * Math.pow(Math.abs(ca), 0.65);
+      const yMid = 0.5 * (yInsole + yOutsoleBottom);
+      const yHalf = 0.5 * (yInsole - yOutsoleBottom);
+      const y = yMid + yHalf * Math.sign(sa) * Math.pow(Math.abs(sa), 0.65);
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    }
+  }
+
+  for (let i = 0; i < nz; i++) {
+    for (let j = 0; j < nRing; j++) {
+      const jn = (j + 1) % nRing;
+      const a0 = startIdx + i * nRing + j;
+      const b0 = startIdx + i * nRing + jn;
+      const c0 = startIdx + (i + 1) * nRing + j;
+      const d0 = startIdx + (i + 1) * nRing + jn;
+      appendQuad(indices, a0, b0, c0, d0);
+    }
+  }
+
+  [
+    { sliceIdx: 0, zCap: z0 - 0.0015, flip: false },
+    { sliceIdx: nz, zCap: z1 + 0.0015, flip: true },
+  ].forEach(({ sliceIdx, zCap, flip }) => {
+    const ringOffset = startIdx + sliceIdx * nRing;
+    let sumX = 0;
+    let sumY = 0;
+    for (let j = 0; j < nRing; j++) {
+      sumX += verts[(ringOffset + j) * 3];
+      sumY += verts[(ringOffset + j) * 3 + 1];
+    }
+    const centerIdx = verts.length / 3;
+    verts.push(sumX / nRing, sumY / nRing, zCap);
+    uvs.push(...shoeUV(side, sumX / nRing, Math.max(0, sumY / nRing), zCap, frame, layout));
+    for (let j = 0; j < nRing; j++) {
+      const jn = (j + 1) % nRing;
+      if (flip) indices.push(centerIdx, ringOffset + j, ringOffset + jn);
+      else indices.push(centerIdx, ringOffset + jn, ringOffset + j);
+    }
+  });
+}
+
+/**
+ * Builds a 3D contoured arch strap across the foot at zStart..zEnd, anchored to the footbed edges.
+ */
+function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, verts, uvs, indices) {
+  const nz = 4;
+  const nArc = 16;
+  const yBase = Math.min(-0.005, (a.soleBottomY || -0.0061));
+  const startIdx = verts.length / 3;
+
+  // Build closed tube-like arch band (outer arch + inner arch)
+  const ring = nArc * 2;
+  for (let i = 0; i <= nz; i++) {
+    const z = lerp(zStart, zEnd, i / nz);
+    const p = sampleProfile(a.profile, 'z', z);
+    const cx = side * ((p.x0 + p.x1) / 2);
+    const hwInner = (p.x1 - p.x0) / 2 + off;
+    const hwOuter = hwInner + thickness;
+    const archInner = Math.max(0.016, p.top + off);
+    const archOuter = archInner + thickness;
+
+    for (let j = 0; j < nArc; j++) {
+      const phi = Math.PI * (j / (nArc - 1));
+      const cphi = Math.cos(phi);
+      const sphi = Math.sin(phi);
+      const ex = Math.sign(cphi) * Math.pow(Math.abs(cphi), 0.78);
+      const ey = Math.pow(sphi, 0.82);
+      const x = cx + side * hwOuter * ex;
+      const y = yBase + (archOuter - yBase) * ey;
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    }
+    for (let j = nArc - 1; j >= 0; j--) {
+      const phi = Math.PI * (j / (nArc - 1));
+      const cphi = Math.cos(phi);
+      const sphi = Math.sin(phi);
+      const ex = Math.sign(cphi) * Math.pow(Math.abs(cphi), 0.78);
+      const ey = Math.pow(sphi, 0.82);
+      const x = cx + side * hwInner * ex;
+      const y = yBase + (archInner - yBase) * ey;
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    }
+  }
+
+  for (let i = 0; i < nz; i++) {
+    for (let j = 0; j < ring; j++) {
+      const jn = (j + 1) % ring;
+      appendQuad(
+        indices,
+        startIdx + i * ring + j,
+        startIdx + i * ring + jn,
+        startIdx + (i + 1) * ring + j,
+        startIdx + (i + 1) * ring + jn
+      );
+    }
+  }
+  // Cap front & back edges of strap
+  [0, nz].forEach((sliceIdx) => {
+    const r0 = startIdx + sliceIdx * ring;
+    for (let j = 0; j < nArc - 1; j++) {
+      const o0 = r0 + j;
+      const o1 = r0 + j + 1;
+      const i1 = r0 + (ring - 1 - (j + 1));
+      const i0 = r0 + (ring - 1 - j);
+      if (sliceIdx === 0) appendQuad(indices, o0, i0, o1, i1);
+      else appendQuad(indices, o0, o1, i0, i1);
+    }
+  });
+}
+
+/**
+ * Builds a sleek 3D ankle strap ring around the lower ankle shaft plus a slim heel counter spine.
+ */
+function buildAnkleStrapAndHeelCounter(side, a, yAnkle, bandH, off, frame, layout, verts, uvs, indices) {
+  const nTheta = 20;
+  const sp = sampleProfile(a.shaft, 'y', yAnkle);
+  const rxIn = sp.rx + off;
+  const rzIn = sp.rz + off;
+  const thick = 0.004;
+  const y0 = yAnkle - bandH * 0.5;
+  const y1 = yAnkle + bandH * 0.5;
+
+  // 4-ring rectangular-section cuff around ankle (bottom-out, top-out, top-in, bottom-in)
+  const rings = [
+    { y: y0, rx: rxIn + thick, rz: rzIn + thick },
+    { y: y1, rx: rxIn + thick, rz: rzIn + thick },
+    { y: y1, rx: rxIn, rz: rzIn },
+    { y: y0, rx: rxIn, rz: rzIn },
+  ];
+  const baseIdx = verts.length / 3;
+  rings.forEach(({ y, rx, rz }) => {
+    for (let j = 0; j <= nTheta; j++) {
+      const th = -Math.PI + (j / nTheta) * Math.PI * 2;
+      const x = side * sp.cx + rx * Math.sin(th);
+      const z = sp.cz + rz * Math.cos(th);
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    }
+  });
+  const stride = nTheta + 1;
+  for (let r = 0; r < 4; r++) {
+    const rn = (r + 1) % 4;
+    for (let j = 0; j < nTheta; j++) {
+      appendQuad(
+        indices,
+        baseIdx + r * stride + j,
+        baseIdx + r * stride + j + 1,
+        baseIdx + rn * stride + j,
+        baseIdx + rn * stride + j + 1
+      );
+    }
+  }
+
+  // Slim heel counter spine connecting heel footbed up to ankle strap
+  const ny = 6;
+  const nArc = 9;
+  const pHeel = sampleProfile(a.profile, 'z', a.heelZ);
+  const cxHeel = side * (pHeel.x0 + pHeel.x1) / 2;
+  const hwHeel = (pHeel.x1 - pHeel.x0) / 2 + off + 0.003;
+  const spineStart = verts.length / 3;
+  for (let i = 0; i <= ny; i++) {
+    const t = i / ny;
+    const y = lerp(-0.004, yAnkle, t);
+    const sTop = sampleProfile(a.shaft, 'y', Math.max(0.10, y));
+    const cx = lerp(cxHeel, side * sTop.cx, t);
+    const rx = lerp(hwHeel, sTop.rx + off + 0.003, t);
+    const czBack = lerp(a.heelZ - 0.004, sTop.cz - (sTop.rz + off + 0.003), t);
+    for (let j = 0; j < nArc; j++) {
+      // Back arc around heel (-65 deg to +65 deg facing -Z)
+      const ang = lerp(-1.1, 1.1, j / (nArc - 1));
+      const x = cx + rx * Math.sin(ang);
+      const z = czBack + 0.022 * (1 - Math.cos(ang));
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    }
+  }
+  for (let i = 0; i < ny; i++) {
+    for (let j = 0; j < nArc - 1; j++) {
+      appendQuad(
+        indices,
+        spineStart + i * nArc + j,
+        spineStart + i * nArc + j + 1,
+        spineStart + (i + 1) * nArc + j,
+        spineStart + (i + 1) * nArc + j + 1
+      );
+    }
+  }
+}
+
+/**
+ * Builds an open-toe, open-instep sandal (contoured footbed, toe strap, and ankle or vamp strap).
+ */
+function buildSandalGeometry(side, a, s, off, frame, layout, verts, uvs, indices) {
+  const sole = Math.max(0.010, s.soleThickness || 0.012);
+  const z0 = a.heelZ - 0.008;
+  const z1 = a.toeZ + 0.008;
+  buildFootbedGeometry(side, a, sole, z0, z1, off * 0.65, frame, layout, verts, uvs, indices);
+
+  // Forefoot strap across the ball of the foot (leaves toes open and visible)
+  buildFootStrap(side, a, a.ballZ - 0.004, a.ballZ + 0.024, off * 0.55, 0.0045, frame, layout, verts, uvs, indices);
+
+  if (s.heelHeight >= 0.035) {
+    // Heeled sandal: delicate ankle strap + slim heel counter
+    buildAnkleStrapAndHeelCounter(side, a, 0.095, 0.016, off * 0.45, frame, layout, verts, uvs, indices);
+  } else {
+    // Flat sandal / slide: second midfoot/instep strap
+    buildFootStrap(side, a, a.ankleZ + 0.055, a.ankleZ + 0.088, off * 0.55, 0.0045, frame, layout, verts, uvs, indices);
+  }
+}
+
+/**
+ * Builds a low-cut closed-toe/closed-heel shoe (pumps, heels, ballet flats, loafers)
+ * with an open instep/throat so the top of the foot and ankle remain visible.
+ */
+function buildLowCutShoeGeometry(side, a, s, off, frame, layout, verts, uvs, indices) {
+  const sole = Math.max(0.010, s.soleThickness || 0.014);
+  const z0 = a.heelZ - 0.010;
+  const z1 = a.toeZ + 0.012;
+  buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, uvs, indices);
+
+  const isLoafer = s.kind === 'loafer';
+  const yWelt = Math.min(-0.006, (a.soleBottomY || -0.0061) - 0.002);
+  const nz = 32;
+  const nArc = 20;
+  const startIdx = verts.length / 3;
+  const zToeVamp = isLoafer ? a.ballZ - 0.055 : a.ballZ - 0.018;
+  const zHeelCup = a.heelZ + 0.048;
+
+  for (let i = 0; i <= nz; i++) {
+    const z = lerp(z0, z1, i / nz);
+    const { p, endTaper, cx, hw } = footSliceMetrics(a, side, z, z0, z1, off);
+    const footTop = p.top + off;
+    const toePuff = smoothstep(a.ballZ, a.toeZ, z) * 0.008 * endTaper;
+    const closedTop = Math.max(0.020, (footTop + toePuff) * endTaper);
+
+    // Throat opening: full upper over toe box [zToeVamp..z1] and heel cup [z0..zHeelCup],
+    // dipping down to low side quarters in between so the instep stays open!
+    const inToe = smoothstep(zToeVamp - 0.018, zToeVamp + 0.012, z);
+    const inHeel = 1 - smoothstep(zHeelCup - 0.012, zHeelCup + 0.018, z);
+    const upperCover = Math.max(inToe, inHeel);
+    const sideWallTop = Math.min(closedTop, 0.030);
+
+    for (let j = 0; j < nArc; j++) {
+      const phi = Math.PI * (j / (nArc - 1));
+      const cphi = Math.cos(phi);
+      const sphi = Math.sin(phi);
+      const ex = Math.sign(cphi) * Math.pow(Math.abs(cphi), 0.78);
+      const ey = Math.pow(sphi, 0.82);
+
+      // In the open throat zone (upperCover < 1), pull the dorsal crest down to sideWallTop
+      const crestFactor = Math.pow(sphi, 2.2);
+      const archRoof = lerp(sideWallTop, closedTop, Math.max(upperCover, 1 - crestFactor));
+      const x = cx + side * hw * ex;
+      const y = yWelt + (archRoof - yWelt) * ey;
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+    }
+  }
+
+  for (let i = 0; i < nz; i++) {
+    for (let j = 0; j < nArc - 1; j++) {
+      appendQuad(
+        indices,
+        startIdx + i * nArc + j,
+        startIdx + i * nArc + j + 1,
+        startIdx + (i + 1) * nArc + j,
+        startIdx + (i + 1) * nArc + j + 1
+      );
+    }
+  }
+}
+
+/**
+ * Builds a high-detail, watertight closed shoe shell (sneakers, ankle boots, tall boots)
+ * wrapped around both feet in base foot coordinates, plus an optional boot shaft.
  */
 export function createFittedFootwearGeometry({ isMale = false, spec, layout } = {}) {
   const a = getFootAnatomy(isMale);
   const s = spec || resolveFootwearSpec(null);
   const isSneaker = s.kind === 'sneaker';
-  // Precise anatomical clearance: sleek athletic profile for sneakers (0.0055m = 5.5mm),
-  // snugger than heavy boots so sneakers don't look bloated or rectangular.
   const off = isSneaker ? 0.0055 : (s.kind === 'boot' || s.kind === 'ankle_boot' ? 0.010 : 0.0065);
-  const sole = Math.max(0.012, s.soleThickness || 0.016);
-  const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002); // below foot sole bottom
+  const sole = Math.max(0.010, s.soleThickness || 0.016);
+  const yWelt = Math.min(-0.007, (a.soleBottomY || -0.0061) - 0.002);
   const yOutsoleBottom = yWelt - sole;
   const z0 = a.heelZ - (isSneaker ? 0.010 : 0.014);
   const z1 = a.toeZ + (isSneaker ? 0.012 : 0.016);
   const nz = 36;
   const nArch = 24;
   const nSole = 10;
-  const ring = nArch + nSole; // closed loop: upper arch + welt/outsole perimeter + sole bottom
+  const ring = nArch + nSole;
 
   const verts = [];
   const uvs = [];
   const indices = [];
 
   [-1, 1].forEach((side) => {
-    const startIdx = verts.length / 3;
     const minX = Math.min(...a.profile.map((q) => q.x0)) - off;
     const maxX = Math.max(...a.profile.map((q) => q.x1)) + off;
     const frame = {
@@ -445,6 +755,18 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
       z1,
       yTop: Math.max(s.collar, 0.135),
     };
+
+    if (s.kind === 'sandal') {
+      buildSandalGeometry(side, a, s, off, frame, layout, verts, uvs, indices);
+      return;
+    }
+
+    if (s.kind === 'heel' || s.kind === 'flat' || s.kind === 'loafer') {
+      buildLowCutShoeGeometry(side, a, s, off, frame, layout, verts, uvs, indices);
+      return;
+    }
+
+    const startIdx = verts.length / 3;
 
     for (let i = 0; i <= nz; i++) {
       const t = i / nz;
@@ -635,10 +957,11 @@ export function createFittedFootwearGeometry({ isMale = false, spec, layout } = 
  */
 export function createHeelGeometry({ isMale = false, spec, pose } = {}) {
   if (!pose?.active || !spec || spec.heelHeight < 0.02) return null;
-  // All enclosed footwear (boots, sneakers, loafers, flats, oxfords) already have fully sculpted,
-  // watertight outsoles in createFittedFootwearGeometry. Only standalone stiletto high heels
-  // require a separate thin stiletto pillar down to the ground.
-  if (spec.kind !== 'heel' || spec.heelStyle !== 'stiletto') {
+  const supportsStandaloneHeel =
+    spec.kind === 'heel' ||
+    spec.kind === 'sandal' ||
+    (spec.heelHeight >= 0.035 && (spec.kind === 'boot' || spec.kind === 'ankle_boot' || spec.kind === 'loafer'));
+  if (!supportsStandaloneHeel) {
     return null;
   }
   const a = pose.anatomy;

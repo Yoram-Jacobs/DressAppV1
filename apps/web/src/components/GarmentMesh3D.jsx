@@ -4154,7 +4154,7 @@ function GarmentTemplateMeshInner({
       {!['shoes_boots', 'shoes_sneakers', 'boots', 'sneakers'].includes(templateId) && heelGeometry && (
         <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
+            color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#1e293b'}
             roughness={0.35}
             metalness={0.12}
           />
@@ -4502,7 +4502,7 @@ export function GarmentMeshCore({
   }, [shell, shellFit, morphField, morphInfluences, isStandalone, rawSlot, autoHasSleeves]);
 
   const heelGeometry = useMemo(
-    () => (rawSlot === 'shoes' && visible && footwearSpec?.kind === 'heel' && footwearSpec?.heelStyle === 'stiletto'
+    () => (rawSlot === 'shoes' && visible && footwearSpec && footwearSpec.heelHeight >= 0.02
       ? createHeelGeometry({ isMale, spec: footwearSpec, pose: footPose })
       : null),
     [rawSlot, visible, isMale, footwearSpec, footPose]
@@ -4603,7 +4603,7 @@ export function GarmentMeshCore({
       {heelGeometry && (
         <mesh geometry={heelGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color={dominantColor && dominantColor !== '#ffffff' && dominantColor !== '#222226' && dominantColor !== '#18181B' ? dominantColor : '#475569'}
+            color={dominantColor && dominantColor !== '#ffffff' ? dominantColor : '#1e293b'}
             roughness={0.35}
             metalness={0.12}
           />
