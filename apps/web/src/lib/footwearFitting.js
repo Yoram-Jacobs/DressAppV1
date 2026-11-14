@@ -537,7 +537,9 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const x = cx + side * hwOuter * ex;
       const y = yBase + (archOuter - yBase) * ey;
       const z = zBase - vSweep * Math.abs(ex);
-      const uvZ = vSweep > 0 ? zBase - 0.014 * Math.abs(ex) : z;
+      const uvZ = vSweep > 0
+        ? (Math.abs(ex) < 0.35 ? zStart - 0.008 : zBase - 0.014 * Math.abs(ex))
+        : z;
       verts.push(x, y, z);
       uvs.push(...shoeUV(side, x, Math.max(0, y), uvZ, frame, layout));
     }
@@ -550,7 +552,9 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const x = cx + side * hwInner * ex;
       const y = yBase + (archInner - yBase) * ey;
       const z = zBase - vSweep * Math.abs(ex);
-      const uvZ = vSweep > 0 ? zBase - 0.014 * Math.abs(ex) : z;
+      const uvZ = vSweep > 0
+        ? (Math.abs(ex) < 0.35 ? zStart - 0.008 : zBase - 0.014 * Math.abs(ex))
+        : z;
       verts.push(x, y, z);
       uvs.push(...shoeUV(side, x, Math.max(0, y), uvZ, frame, layout));
     }
@@ -662,7 +666,7 @@ function buildAnkleStrapAndHeelCounter(side, a, yAnkle, bandH, off, frame, layou
 }
 
 /**
- * Builds a contoured 3D oval torus ring sitting on top of the center T-strap.
+ * Builds a contoured 3D oval torus ring resting cleanly ON TOP of the center T-strap.
  */
 function buildHardwareRing(side, a, off, zCenter, rx, rz, tubeR, verts, indices) {
   const nMajor = 24;
@@ -677,7 +681,8 @@ function buildHardwareRing(side, a, off, zCenter, rx, rz, tubeR, verts, indices)
     const p = sampleProfile(a.profile, 'z', z);
     const cx = side * ((p.x0 + p.x1) / 2);
     const xRing = cx + rx * ct;
-    const yRing = Math.max(0.014, p.top + off) + 0.0044 + tubeR * 0.9;
+    // Sit cleanly above the leather strap top surface (p.top + off + 0.0042)
+    const yRing = Math.max(0.014, p.top + off) + 0.0042 + tubeR * 1.15;
 
     for (let j = 0; j < nMinor; j++) {
       const phi = (j / nMinor) * Math.PI * 2;
@@ -701,21 +706,44 @@ function buildHardwareRing(side, a, off, zCenter, rx, rz, tubeR, verts, indices)
 }
 
 /**
- * Builds the metal connecting link bar + center stud between two stacked T-strap rings.
+ * Builds a 3D metal sphere/stud at (cx, cy, cz) with radius r.
+ */
+function buildHardwareStud(cx, cy, cz, r, verts, indices) {
+  const nLat = 8;
+  const nLon = 12;
+  const startIdx = verts.length / 3;
+  for (let i = 0; i <= nLat; i++) {
+    const theta = (i / nLat) * Math.PI;
+    const st = Math.sin(theta);
+    const ct = Math.cos(theta);
+    for (let j = 0; j <= nLon; j++) {
+      const phi = (j / nLon) * Math.PI * 2;
+      verts.push(cx + r * st * Math.cos(phi), cy + r * ct, cz + r * st * Math.sin(phi));
+    }
+  }
+  const stride = nLon + 1;
+  for (let i = 0; i < nLat; i++) {
+    for (let j = 0; j < nLon; j++) {
+      appendQuad(indices, startIdx + i * stride + j, startIdx + i * stride + j + 1, startIdx + (i + 1) * stride + j, startIdx + (i + 1) * stride + j + 1);
+    }
+  }
+}
+
+/**
+ * Builds the metal connecting link bar + central dome stud + side beads between two stacked rings.
  */
 function buildHardwareLink(side, a, off, zJoin, halfW, tubeR, verts, indices) {
   const nx = 10;
   const nPhi = 10;
   const p = sampleProfile(a.profile, 'z', zJoin);
   const cx = side * ((p.x0 + p.x1) / 2);
-  const yBase = Math.max(0.014, p.top + off) + 0.0046 + tubeR * 0.9;
+  const yBase = Math.max(0.014, p.top + off) + 0.0042 + tubeR * 1.2;
   const barStart = verts.length / 3;
 
   for (let i = 0; i <= nx; i++) {
     const u = (i / nx) * 2 - 1;
     const x = cx + u * halfW;
-    // Slight barrel swell at center stud and end clasps
-    const r = tubeR * (1 + 0.55 * Math.exp(-u * u * 10));
+    const r = tubeR * (1 + 0.35 * Math.exp(-u * u * 10));
     for (let j = 0; j < nPhi; j++) {
       const phi = (j / nPhi) * Math.PI * 2;
       verts.push(x, yBase + r * Math.sin(phi), zJoin + r * Math.cos(phi));
@@ -727,29 +755,64 @@ function buildHardwareLink(side, a, off, zJoin, halfW, tubeR, verts, indices) {
       appendQuad(indices, barStart + i * nPhi + j, barStart + i * nPhi + jn, barStart + (i + 1) * nPhi + j, barStart + (i + 1) * nPhi + jn);
     }
   }
+
+  // Central metal dome stud + two smaller side clasp beads
+  buildHardwareStud(cx, yBase + 0.0006, zJoin, tubeR * 1.9, verts, indices);
+  buildHardwareStud(cx - halfW * 0.72, yBase + 0.0002, zJoin + 0.0025, tubeR * 1.25, verts, indices);
+  buildHardwareStud(cx + halfW * 0.72, yBase + 0.0002, zJoin + 0.0025, tubeR * 1.25, verts, indices);
+}
+
+/**
+ * Builds a small raised leather keeper loop over a ring bar so the ring looks threaded through the strap.
+ */
+function buildKeeperLoop(side, a, off, zCenter, halfZ, halfW, liftH, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices) {
+  const nz = 4;
+  const nArc = 8;
+  const startIdx = verts.length / 3;
+  for (let i = 0; i <= nz; i++) {
+    const z = lerp(zCenter - halfZ, zCenter + halfZ, i / nz);
+    const p = sampleProfile(a.profile, 'z', z);
+    const cx = side * ((p.x0 + p.x1) / 2);
+    const yStrapTop = Math.max(0.013, p.top + off) + 0.0040;
+    for (let j = 0; j < nArc; j++) {
+      const phi = Math.PI * (j / (nArc - 1));
+      const x = cx + halfW * Math.cos(phi);
+      const y = yStrapTop + liftH * Math.sin(phi);
+      verts.push(x, y, z);
+      uvs.push(...shoeUV(side, uvStrapX, Math.max(0, y), uvStrapZ, frame, layout));
+    }
+  }
+  for (let i = 0; i < nz; i++) {
+    for (let j = 0; j < nArc - 1; j++) {
+      appendQuad(indices, startIdx + i * nArc + j, startIdx + i * nArc + j + 1, startIdx + (i + 1) * nArc + j, startIdx + (i + 1) * nArc + j + 1);
+    }
+  }
 }
 
 /**
  * Builds a sleek 3D T-strap / thong continuous center leather strap from toe-post to vamp,
- * plus arched V-strap wings down to the footbed edges. (Metal hardware is built separately.)
+ * leather keeper loops for threading the rings, and arched V-strap wings.
  */
 function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
   const zToePost = a.toeZ - 0.036;
   const zVamp = a.ankleZ + 0.048;
-  const nz = 14;
+  const zRingBot = lerp(zToePost, zVamp, 0.30);
+  const zLowerRing = lerp(zRingBot, zVamp, 0.32);
+  const zUpperRing = lerp(zRingBot, zVamp, 0.78);
+  const nz = 16;
   const nW = 5;
   const thick = 0.0042;
-  const uvStrapZ = lerp(frame.z0, frame.z1, 0.415);
+  const uvStrapZ = lerp(frame.z0, frame.z1, 0.40);
   const uvStrapX = lerp(frame.x0, frame.x1, 0.50);
   const startIdx = verts.length / 3;
 
-  // Continuous black leather center strap from toe post up to the V-strap (supporting the rings)
+  // Continuous black leather center strap from toe post up to the V-strap (wide backing under the rings)
   for (let i = 0; i <= nz; i++) {
     const t = i / nz;
     const z = lerp(zToePost, zVamp, t);
     const p = sampleProfile(a.profile, 'z', z);
     const cx = side * ((p.x0 + p.x1) / 2);
-    const halfW = lerp(0.0045, 0.0085, smoothstep(0.18, 0.45, t));
+    const halfW = lerp(0.0045, 0.0145, smoothstep(0.18, 0.42, t));
     const yTop = (i === 0 ? 0.004 : Math.max(0.013, p.top + off)) + thick;
     const yBot = i === 0 ? -0.003 : Math.max(0.009, p.top + off);
     const ringPts = [];
@@ -773,6 +836,10 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
       appendQuad(indices, startIdx + i * ring + j, startIdx + i * ring + jn, startIdx + (i + 1) * ring + j, startIdx + (i + 1) * ring + jn);
     }
   }
+
+  // Leather keeper loops threading the top of the upper ring and bottom of the lower ring
+  buildKeeperLoop(side, a, off, zUpperRing - 0.010, 0.0055, 0.0068, 0.0062, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
+  buildKeeperLoop(side, a, off, zLowerRing + 0.015, 0.0050, 0.0065, 0.0062, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
 
   // Arched V/T-bar wings across the instep
   buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices, 0.006);
@@ -1212,13 +1279,13 @@ export function createFootwearHardwareGeometry({ isMale = false, spec, layout, p
   const zRingBot = lerp(zToePost, zVamp, 0.30);
   const zLowerRing = lerp(zRingBot, zVamp, 0.32);
   const zUpperRing = lerp(zRingBot, zVamp, 0.78);
-  const zJoin = 0.5 * (zLowerRing + 0.0155 + (zUpperRing - 0.0105));
+  const zJoin = 0.5 * ((zUpperRing + 0.0105) + (zLowerRing - 0.0165));
 
   const verts = [];
   const indices = [];
   [-1, 1].forEach((side) => {
-    buildHardwareRing(side, a, off, zLowerRing, 0.0125, 0.0165, 0.0024, verts, indices);
-    buildHardwareRing(side, a, off, zUpperRing, 0.009, 0.011, 0.0022, verts, indices);
+    buildHardwareRing(side, a, off, zLowerRing, 0.0130, 0.0165, 0.0025, verts, indices);
+    buildHardwareRing(side, a, off, zUpperRing, 0.0095, 0.0105, 0.0023, verts, indices);
     buildHardwareLink(side, a, off, zJoin, 0.0095, 0.0023, verts, indices);
   });
 
