@@ -2883,7 +2883,10 @@
       "plum": "Prune",
       "mauve": "Mauve",
       "scarlet": "Écarlate",
-      "crimson": "Cramoisi"
+      "crimson": "Cramoisi",
+      "nude": "Beige clair",
+      "light_beige": "Beige clair",
+      "ניוד": "Beige clair"
     },
     "material": {
       "acrylic": "Acrylique",

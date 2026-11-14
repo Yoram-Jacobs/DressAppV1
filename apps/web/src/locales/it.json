@@ -2834,7 +2834,10 @@
       "plum": "Prugna",
       "mauve": "Malva",
       "scarlet": "Scarlatto",
-      "crimson": "Cremisi"
+      "crimson": "Cremisi",
+      "nude": "Beige chiaro",
+      "light_beige": "Beige chiaro",
+      "ניוד": "Beige chiaro"
     },
     "material": {
       "acrylic": "Acrilico",

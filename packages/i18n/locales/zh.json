@@ -2890,7 +2890,10 @@
       "plum": "梅子色",
       "mauve": "藕荷色",
       "scarlet": "猩红色",
-      "crimson": "深红色"
+      "crimson": "深红色",
+      "nude": "浅米色",
+      "light_beige": "浅米色",
+      "ניוד": "浅米色"
     },
     "material": {
       "acrylic": "腈纶",

@@ -26,7 +26,6 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { labelForColor, canonicalColorKey } from '@/lib/taxonomy';
-import { DialogOverlay } from '../ui/dialog';
 
 // ---------------------------------------------------------------------------
 // Colour name → HSL hue lookup (0..360). Only hue matters for harmony.
@@ -49,9 +48,9 @@ const HUE_MAP = {
   'hunter green': 132,
   // Blues
   blue: 220, navy: 240, cobalt: 215, royal: 225, 'royal blue': 225,
-  sky: 200, 'sky blue': 200, baby: 205, 'baby blue': 205, cornflower: 219,
-  cerulean: 207, indigo: 250, periwinkle: 230, denim: 218, steel: 207,
-  'steel blue': 207, 'powder blue': 204,
+  sky: 200, 'sky blue': 200, baby: 205, 'baby blue': 205, 'light blue': 205,
+  cyan: 185, cornflower: 219, cerulean: 207, indigo: 250, periwinkle: 230,
+  denim: 218, steel: 207, 'steel blue': 207, 'powder blue': 204,
   // Purples
   purple: 270, violet: 280, lavender: 270, lilac: 272, mauve: 300,
   plum: 290, magenta: 300, fuchsia: 300, orchid: 302, grape: 285,
@@ -199,7 +198,7 @@ const VERDICT_CONFIG = {
 };
 
 // Resolve named color to visual Hex/HSL values, splitting and rendering linear gradients for multi-color values
-function getCssBackground(colorName) {
+export function getCssBackground(colorName) {
   if (!colorName) return '#d1d5db';
   
   const name = colorName.toLowerCase().trim();
@@ -254,10 +253,14 @@ function getCssBackground(colorName) {
     if (c.includes('dark')) {
       const sub = c.replace('dark', '').trim();
       if (sub in exactMap) return exactMap[sub];
+      const subHue = HUE_MAP[sub.replace(/\s+/g, '_')] ?? HUE_MAP[sub] ?? null;
+      if (subHue !== null) return `hsl(${subHue}, 65%, 32%)`;
     }
     if (c.includes('light')) {
       const sub = c.replace('light', '').trim();
       if (sub in exactMap) return exactMap[sub];
+      const subHue = HUE_MAP[sub.replace(/\s+/g, '_')] ?? HUE_MAP[sub] ?? null;
+      if (subHue !== null) return `hsl(${subHue}, 65%, 72%)`;
     }
     
     return c || '#d1d5db';
@@ -286,7 +289,7 @@ function getCssBackground(colorName) {
 }
 
 // Localize color name using existing taxonomy module, handling compound colors
-function translateColorName(colorName, t) {
+export function translateColorName(colorName, t) {
   if (!colorName) return '';
   
   const name = colorName.toLowerCase().trim();

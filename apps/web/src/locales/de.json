@@ -2827,7 +2827,10 @@
       "plum": "Pflaume",
       "mauve": "Malve",
       "scarlet": "Scharlachrot",
-      "crimson": "Karmesinrot"
+      "crimson": "Karmesinrot",
+      "nude": "Hellbeige",
+      "light_beige": "Hellbeige",
+      "ניוד": "Hellbeige"
     },
     "material": {
       "acrylic": "Acryl",

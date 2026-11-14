@@ -2834,7 +2834,10 @@
       "plum": "Pruim",
       "mauve": "Mauve",
       "scarlet": "Scharlakenrood",
-      "crimson": "Karmozijn"
+      "crimson": "Karmozijn",
+      "nude": "Lichtbeige",
+      "light_beige": "Lichtbeige",
+      "ניוד": "Lichtbeige"
     },
     "material": {
       "acrylic": "Acryl",
