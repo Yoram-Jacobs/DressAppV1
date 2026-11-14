@@ -465,16 +465,10 @@ function buildFootbedGeometry(side, a, sole, z0, z1, off, frame, layout, verts, 
       verts.push(x, y, z);
       let uvX = x;
       let uvZ = z;
-      if (suppressCenterInsole && sa > 0.25 && Math.abs(ca) < 0.85) {
+      if (suppressCenterInsole && sa > 0.15 && Math.abs(ca) < 0.92) {
         const along = (z - frame.z0) / Math.max(1e-4, frame.z1 - frame.z0);
-        const across = (x - frame.x0) / Math.max(1e-4, frame.x1 - frame.x0);
-        if (along >= 0.34 && along <= 0.78) {
-          if (across >= 0.36 && across <= 0.64) {
-            uvX = lerp(frame.x0, frame.x1, across < 0.5 ? 0.26 : 0.74);
-          }
-          if (along <= 0.48) {
-            uvZ = lerp(frame.z0, frame.z1, 0.58);
-          }
+        if (along >= 0.32 && along <= 0.76) {
+          uvZ = lerp(frame.z0, frame.z1, 0.84);
         }
       }
       uvs.push(...shoeUV(side, uvX, Math.max(0, y), uvZ, frame, layout));
@@ -543,8 +537,9 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const x = cx + side * hwOuter * ex;
       const y = yBase + (archOuter - yBase) * ey;
       const z = zBase - vSweep * Math.abs(ex);
+      const uvZ = vSweep > 0 ? zBase : z;
       verts.push(x, y, z);
-      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+      uvs.push(...shoeUV(side, x, Math.max(0, y), uvZ, frame, layout));
     }
     for (let j = nArc - 1; j >= 0; j--) {
       const phi = Math.PI * (j / (nArc - 1));
@@ -555,8 +550,9 @@ function buildFootStrap(side, a, zStart, zEnd, off, thickness, frame, layout, ve
       const x = cx + side * hwInner * ex;
       const y = yBase + (archInner - yBase) * ey;
       const z = zBase - vSweep * Math.abs(ex);
+      const uvZ = vSweep > 0 ? zBase : z;
       verts.push(x, y, z);
-      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+      uvs.push(...shoeUV(side, x, Math.max(0, y), uvZ, frame, layout));
     }
   }
 
@@ -666,27 +662,73 @@ function buildAnkleStrapAndHeelCounter(side, a, yAnkle, bandH, off, frame, layou
 }
 
 /**
- * Builds a sleek 3D T-strap / thong center stem from the toe post up to the instep,
- * plus two arched side wings down to the footbed edges.
+ * Builds a contoured 3D oval torus ring sitting along the foot's dorsal ridge.
+ */
+function buildDorsalRing(side, a, off, zCenter, rx, rz, tubeR, frame, layout, verts, uvs, indices) {
+  const nMajor = 22;
+  const nMinor = 8;
+  const startIdx = verts.length / 3;
+  const uvSampleX = lerp(frame.x0, frame.x1, 0.425);
+  const uvSampleZ = lerp(frame.z0, frame.z1, 0.56);
+
+  for (let i = 0; i <= nMajor; i++) {
+    const theta = (i / nMajor) * Math.PI * 2;
+    const ct = Math.cos(theta);
+    const st = Math.sin(theta);
+    const z = zCenter + rz * st;
+    const p = sampleProfile(a.profile, 'z', z);
+    const cx = side * ((p.x0 + p.x1) / 2);
+    const xRing = cx + rx * ct;
+    const yRing = Math.max(0.014, p.top + off) + tubeR * 1.1;
+
+    for (let j = 0; j < nMinor; j++) {
+      const phi = (j / nMinor) * Math.PI * 2;
+      const cp = Math.cos(phi);
+      const sp = Math.sin(phi);
+      const x = xRing + tubeR * cp * ct;
+      const zTube = z + tubeR * cp * st;
+      const y = yRing + tubeR * sp;
+      verts.push(x, y, zTube);
+      uvs.push(...shoeUV(side, uvSampleX, Math.max(0, y), uvSampleZ, frame, layout));
+    }
+  }
+  for (let i = 0; i < nMajor; i++) {
+    for (let j = 0; j < nMinor; j++) {
+      const jn = (j + 1) % nMinor;
+      appendQuad(
+        indices,
+        startIdx + i * nMinor + j,
+        startIdx + i * nMinor + jn,
+        startIdx + (i + 1) * nMinor + j,
+        startIdx + (i + 1) * nMinor + jn
+      );
+    }
+  }
+}
+
+/**
+ * Builds a sleek 3D T-strap / thong toe-post stem, sculpted 3D ring hardware,
+ * and arched V-strap wings down to the footbed edges.
  */
 function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
   const zToePost = a.toeZ - 0.036;
   const zVamp = a.ankleZ + 0.048;
-  const nz = 14;
-  const nW = 6;
-  const thick = 0.0045;
+  const zRingBot = lerp(zToePost, zVamp, 0.34);
+  const nz = 8;
+  const nW = 5;
+  const thick = 0.0042;
+  const halfW = 0.0048;
   const startIdx = verts.length / 3;
 
-  // Center stem along dorsal ridge from toe post to instep, widening across the ring/medallion zone
+  // Slim leather toe-post rising from the sole between the toes up to the lower ring
   for (let i = 0; i <= nz; i++) {
     const t = i / nz;
-    const z = lerp(zToePost, zVamp, t);
+    const z = lerp(zToePost, zRingBot, t);
     const p = sampleProfile(a.profile, 'z', z);
     const cx = side * ((p.x0 + p.x1) / 2);
-    const swell = Math.sin(Math.PI * smoothstep(0.12, 0.98, t));
-    const halfW = 0.0065 + 0.0115 * swell;
-    const yTop = (i === 0 ? 0.004 : Math.max(0.014, p.top + off)) + thick;
-    const yBot = i === 0 ? -0.003 : Math.max(0.010, p.top + off);
+    const yTop = (i === 0 ? 0.004 : Math.max(0.013, p.top + off)) + thick;
+    const yBot = i === 0 ? -0.003 : Math.max(0.009, p.top + off);
+    const uvPostZ = lerp(frame.z0, frame.z1, 0.68);
     const ringPts = [];
     for (let j = 0; j < nW; j++) {
       const u = (j / (nW - 1)) * 2 - 1;
@@ -698,7 +740,7 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
     }
     ringPts.forEach(([x, y]) => {
       verts.push(x, y, z);
-      uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+      uvs.push(...shoeUV(side, cx, Math.max(0, y), uvPostZ, frame, layout));
     });
   }
   const ring = nW * 2;
@@ -709,8 +751,14 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
     }
   }
 
-  // Arched V/T-bar wings across the instep sweeping back slightly to follow the strap silhouette
-  buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices, 0.019);
+  // Sculpted 3D interlocking metal rings along the center stem
+  const zLowerRing = lerp(zRingBot, zVamp, 0.34);
+  const zUpperRing = lerp(zRingBot, zVamp, 0.78);
+  buildDorsalRing(side, a, off, zLowerRing, 0.0125, 0.017, 0.0026, frame, layout, verts, uvs, indices);
+  buildDorsalRing(side, a, off, zUpperRing, 0.009, 0.0115, 0.0024, frame, layout, verts, uvs, indices);
+
+  // Arched V/T-bar wings across the instep
+  buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices, 0.006);
 }
 
 /**
