@@ -130,7 +130,7 @@ describe('Canonical Hooded 3D Garments (Hood-On / Hood-Off)', () => {
 
   test('Catalog and legacy template resolvers detect hooded garments, respect hoodMode, and keep crewnecks hoodless', () => {
     for (const mod of [catalog, templates]) {
-      expect(mod.TEMPLATE_CACHE_VERSION).toBe('clean8');
+      expect(mod.TEMPLATE_CACHE_VERSION).toBe('clean9');
       expect(mod.isHoodedGarment({ rawSlot: 'top', garmentText: 'Black Zip-Up Hoodie' })).toBe(true);
       expect(mod.isHoodedGarment({ rawSlot: 'top', garmentText: 'קפוצ׳ון פליז שחור' })).toBe(true);
       expect(mod.isHoodedGarment({ rawSlot: 'outerwear', garmentText: 'Olive Winter Parka Hooded Coat' })).toBe(true);
@@ -142,8 +142,8 @@ describe('Canonical Hooded 3D Garments (Hood-On / Hood-Off)', () => {
       expect(mod.resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Olive Winter Parka Hooded Coat', hoodMode: 'on' })).toBe('hooded_coat_hood_on');
       expect(mod.resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Classic Crewneck Sweatshirt', hoodMode: 'on' })).toBe('top_longsleeve');
 
-      expect(mod.getTemplateGlbUrl('hoodie_hood_on', true)).toBe('/models/templates/male/hoodie_hood_on.glb?v=clean8');
-      expect(mod.getTemplateGlbUrl('hooded_coat_hood_on', false)).toBe('/models/templates/female/hooded_coat_hood_on.glb?v=clean8');
+      expect(mod.getTemplateGlbUrl('hoodie_hood_on', true)).toBe('/models/templates/male/hoodie_hood_on.glb?v=clean9');
+      expect(mod.getTemplateGlbUrl('hooded_coat_hood_on', false)).toBe('/models/templates/female/hooded_coat_hood_on.glb?v=clean9');
     }
   });
 
@@ -174,6 +174,8 @@ describe('Canonical Hooded 3D Garments (Hood-On / Hood-Off)', () => {
       const yHeadMin = gender === 'male' ? 1.54 : 1.44;
       let hoodMaxZ = -Infinity;
       let headMaxAbsX = 0;
+      let centerCrownMaxY = -Infinity;
+      let sideCrownMaxY = -Infinity;
       for (let i = 0; i < posAcc.count; i++) {
         const off = startByte + i * stride;
         const x = buf.readFloatLE(off);
@@ -182,9 +184,11 @@ describe('Canonical Hooded 3D Garments (Hood-On / Hood-Off)', () => {
         if (y > yHeadMin) {
           if (z > hoodMaxZ) hoodMaxZ = z;
           if (Math.abs(x) > headMaxAbsX) headMaxAbsX = Math.abs(x);
+          if (Math.abs(x) < 0.008 && y > centerCrownMaxY) centerCrownMaxY = y;
+          if (Math.abs(x) >= 0.015 && Math.abs(x) <= 0.060 && y > sideCrownMaxY) sideCrownMaxY = y;
         }
       }
-      return { posAcc, hoodMaxZ, headMaxAbsX };
+      return { posAcc, hoodMaxZ, headMaxAbsX, centerCrownMaxY, sideCrownMaxY };
     };
 
     for (const gender of ['male', 'female']) {
@@ -196,6 +200,7 @@ describe('Canonical Hooded 3D Garments (Hood-On / Hood-Off)', () => {
         expect(aliasOff.posAcc.min[2]).toBeLessThan(-0.12);
         expect(on.posAcc.max[1]).toBeGreaterThan(off.posAcc.max[1] + 0.18);
         expect(on.posAcc.max[1]).toBeLessThan(gender === 'male' ? 1.845 : 1.740);
+        expect(on.centerCrownMaxY).toBeGreaterThanOrEqual(on.sideCrownMaxY - 0.002);
         expect(on.hoodMaxZ).toBeLessThan(gender === 'male' ? 0.172 : 0.160);
         expect(on.headMaxAbsX).toBeLessThan(0.118);
       }

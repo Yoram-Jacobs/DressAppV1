@@ -78,6 +78,20 @@ def load_avatar_data(gender):
     bm.faces.ensure_lookup_table()
     bvh = BVHTree.FromBMesh(bm)
 
+    mat_names = [ms.material.name.lower() if ms.material else "" for ms in main_obj.material_slots]
+    skin_bm = bmesh.new()
+    for f in bm.faces:
+        mname = mat_names[f.material_index] if f.material_index < len(mat_names) else ""
+        if "skin" in mname:
+            try:
+                skin_bm.faces.new([skin_bm.verts.new(v.co) for v in f.verts])
+            except ValueError:
+                pass
+    skin_bm.verts.ensure_lookup_table()
+    skin_bm.faces.ensure_lookup_table()
+    skin_only_bvh = BVHTree.FromBMesh(skin_bm) if len(skin_bm.faces) > 0 else bvh
+    skin_bm.free()
+
     # Combined head+hair+body BVH across all mesh objects in the avatar GLB (for hood skin/hair clearance)
     full_bm = bmesh.new()
     for m_obj in meshes:
@@ -101,6 +115,7 @@ def load_avatar_data(gender):
         "verts": verts,
         "bm": bm,
         "bvh": bvh,
+        "skin_only_bvh": skin_only_bvh,
         "full_bvh": full_bvh,
         "avatar_obj": main_obj,
     }
@@ -1400,7 +1415,7 @@ def build_hood_on_mesh(avatar_data, torso_bm, offset, z_neck, is_coat=False):
     """
     is_male = avatar_data["gender"] == "male"
     av_verts = avatar_data["verts"]
-    skin_bvh = avatar_data["bvh"]
+    outer_skin_bvh = avatar_data.get("skin_only_bvh") or avatar_data["bvh"]
 
     coat_extra = 0.0050 if is_coat else 0.0
     nk_pts = [p for p in av_verts if abs(p.z - z_neck) < 0.03 and abs(p.x) < 0.11]
@@ -1423,9 +1438,9 @@ def build_hood_on_mesh(avatar_data, torso_bm, offset, z_neck, is_coat=False):
 
     rx_rim = (0.088 if is_male else 0.084) + coat_extra * 0.8
     x_lapel = 0.016
-    z_brow = (1.756 if is_male else 1.650) + coat_extra * 0.5
+    z_brow = (1.760 if is_male else 1.654) + coat_extra * 0.5
     z_lapel = z_neck - 0.012
-    y_brow = (-0.155 if is_male else -0.140) - coat_extra * 0.6
+    y_brow = (-0.156 if is_male else -0.142) - coat_extra * 0.6
     y_side_rim = (-0.098 if is_male else -0.092) - coat_extra * 0.5
     y_lapel = y_col_f - 0.008
 
@@ -1451,8 +1466,10 @@ def build_hood_on_mesh(avatar_data, torso_bm, offset, z_neck, is_coat=False):
             return p
         ray_dir = diff / cur_dist
 
-        hit_loc, _hn, _hi, hit_dist = skin_bvh.ray_cast(c_ref, ray_dir, 0.35)
+        outer_dist = 0.25
+        hit_loc, _hn, _hi, d_from_outer = outer_skin_bvh.ray_cast(c_ref + ray_dir * outer_dist, -ray_dir, outer_dist)
         if hit_loc is not None:
+            hit_dist = outer_dist - d_from_outer
             up_w = max(0.0, ray_dir.z) ** 2
             rim_fade = max(0.0, 1.0 - ((i_row / n_v) ** 4))
             crown_loft = (0.025 if is_coat else 0.022) * up_w * rim_fade
