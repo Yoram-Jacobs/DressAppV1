@@ -368,9 +368,58 @@ describe('createRealisticFootwearGeometry', () => {
       expect(groupMats.has(1)).toBe(true);
       if (spec.kind === 'boot') {
         expect(box.max.y).toBeGreaterThan(0.35);
+        expect(groupMats.has(2)).toBe(true);
       } else if (spec.kind === 'ankle_boot') {
         expect(box.max.y).toBeGreaterThan(0.13);
+        expect(groupMats.has(2)).toBe(true);
       }
+    }
+  });
+
+  test('ankle_boot and boot have rounded toe/heel domes, lined collar (Group 2), and smooth heel-to-shaft transition', () => {
+    for (const [isMale, spec] of [
+      [true, { kind: 'ankle_boot', soleThickness: 0.020 }],
+      [false, { kind: 'boot', collar: 0.40, soleThickness: 0.022 }],
+    ]) {
+      const geo = createRealisticFootwearGeometry({ isMale, spec, standalone: true });
+      assertValidGeometry(geo);
+      const groupMats = new Set(geo.groups.map((g) => g.materialIndex));
+      expect(groupMats.has(0)).toBe(true);
+      expect(groupMats.has(1)).toBe(true);
+      expect(groupMats.has(2)).toBe(true);
+
+      const pos = geo.getAttribute('position');
+      const idx = geo.getIndex();
+      const anatomy = getFootAnatomy(isMale);
+      const group0Verts = [];
+      let soleToeApex = null;
+      let soleHeelApex = null;
+      for (const grp of geo.groups) {
+        for (let k = grp.start; k < grp.start + grp.count; k++) {
+          const vi = idx.getX(k);
+          const vx = pos.getX(vi);
+          if (vx <= 0) continue;
+          const pt = { x: vx, y: pos.getY(vi), z: pos.getZ(vi) };
+          if (grp.materialIndex === 0) {
+            group0Verts.push(pt);
+          } else if (grp.materialIndex === 1) {
+            if (!soleToeApex || pt.z > soleToeApex.z) soleToeApex = pt;
+            if (!soleHeelApex || pt.z < soleHeelApex.z) soleHeelApex = pt;
+          }
+        }
+      }
+      const minDistToGroup0 = (target) =>
+        group0Verts.reduce(
+          (best, p) => Math.min(best, Math.hypot(p.x - target.x, p.y - target.y, p.z - target.z)),
+          Infinity
+        );
+      expect(minDistToGroup0(soleToeApex)).toBeLessThan(1e-5);
+      expect(minDistToGroup0(soleHeelApex)).toBeLessThan(1e-5);
+
+      const toeBand = group0Verts.filter((p) => p.z >= anatomy.toeZ - 0.006 && p.z <= anatomy.toeZ + 0.004);
+      const toeMinX = Math.min(...toeBand.map((p) => p.x));
+      const toeMaxX = Math.max(...toeBand.map((p) => p.x));
+      expect(toeMaxX - toeMinX).toBeGreaterThan(isMale ? 0.060 : 0.056);
     }
   });
 });
