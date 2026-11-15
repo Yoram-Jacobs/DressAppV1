@@ -5904,7 +5904,9 @@
     "mesh_tailored": "3D剪裁",
     "mesh_photo": "照片贴合",
     "mesh_mode_tailored_active": "3D剪裁已启用 — 点击切换至照片贴合",
-    "mesh_mode_photo_active": "照片贴合已启用 — 点击切换至3D剪裁"
+    "mesh_mode_photo_active": "照片贴合已启用 — 点击切换至3D剪裁",
+    "hood_on": "戴上兜帽",
+    "hood_off": "放下兜帽"
   },
   "dressingRoom": {
     "title": "3D试衣间",

@@ -5962,7 +5962,9 @@
     "avatar_studio_badge": "Estúdio avatar • 3D",
     "loading": "Carregando provador 3D...",
     "side_view": "Vista lateral",
-    "back_view": "Vista traseira"
+    "back_view": "Vista traseira",
+    "hood_on": "Capuz colocado",
+    "hood_off": "Capuz abaixado"
   },
   "dressingRoom": {
     "title": "Provador 3D",

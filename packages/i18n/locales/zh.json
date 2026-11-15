@@ -5962,7 +5962,9 @@
     "avatar_studio_badge": "虚拟模特工作室 • 3D",
     "loading": "正在加载3D试衣间...",
     "side_view": "侧视图",
-    "back_view": "后视图"
+    "back_view": "后视图",
+    "hood_on": "戴上兜帽",
+    "hood_off": "放下兜帽"
   },
   "dressingRoom": {
     "title": "3D试衣间",

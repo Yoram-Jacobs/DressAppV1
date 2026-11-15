@@ -78,11 +78,30 @@ def load_avatar_data(gender):
     bm.faces.ensure_lookup_table()
     bvh = BVHTree.FromBMesh(bm)
 
+    # Combined head+hair+body BVH across all mesh objects in the avatar GLB (for hood skin/hair clearance)
+    full_bm = bmesh.new()
+    for m_obj in meshes:
+        tmp_bm = bmesh.new()
+        tmp_bm.from_mesh(m_obj.data)
+        bmesh.ops.transform(tmp_bm, matrix=m_obj.matrix_world, verts=tmp_bm.verts)
+        v_map = {v: full_bm.verts.new(v.co) for v in tmp_bm.verts}
+        for f in tmp_bm.faces:
+            try:
+                full_bm.faces.new([v_map[v] for v in f.verts])
+            except ValueError:
+                pass
+        tmp_bm.free()
+    full_bm.verts.ensure_lookup_table()
+    full_bm.faces.ensure_lookup_table()
+    full_bvh = BVHTree.FromBMesh(full_bm)
+    full_bm.free()
+
     return {
         "gender": gender,
         "verts": verts,
         "bm": bm,
         "bvh": bvh,
+        "full_bvh": full_bvh,
         "avatar_obj": main_obj,
     }
 
@@ -1190,6 +1209,365 @@ def finalize_and_export_mesh(
     return obj, len(non_manifold_edges), len(zero_area_faces)
 
 
+def merge_bmesh_with_uvs(dst_bm, dst_faces_uvs, src_bm, src_faces_uvs):
+    """Copies a standalone closed-manifold BMesh and its per-face UVs into dst_bm without sharing topology."""
+    v_map = {v: dst_bm.verts.new(v.co) for v in src_bm.verts}
+    uv_by_face = {f: uvs for f, uvs in src_faces_uvs}
+    for f in src_bm.faces:
+        new_verts = [v_map[v] for v in f.verts]
+        try:
+            nf = dst_bm.faces.new(new_verts)
+            uvs = uv_by_face.get(f)
+            if uvs is not None and len(uvs) == len(new_verts):
+                dst_faces_uvs.append((nf, uvs))
+            else:
+                dst_faces_uvs.append((nf, [(0.50, 0.68)] * len(new_verts)))
+        except ValueError:
+            pass
+
+
+def compute_hood_faces_uvs(bm_hood, is_male):
+    """
+    Assigns clean interior-fabric UVs in [0.30..0.70] x [0.52..0.82] so hoods inherit the
+    garment's base weave/color cleanly without projecting chest prints, pockets, or zippers.
+    """
+    z_min = min((v.co.z for v in bm_hood.verts), default=(1.30 if is_male else 1.22))
+    z_max = max((v.co.z for v in bm_hood.verts), default=(1.82 if is_male else 1.72))
+    dz = max(0.08, z_max - z_min)
+    faces_uvs = []
+    for f in bm_hood.faces:
+        uvs = []
+        for l in f.loops:
+            p = l.vert.co
+            u = 0.50 + max(-0.18, min(0.18, p.x * 1.25))
+            v_uv = 0.52 + 0.30 * max(0.0, min(1.0, (p.z - z_min) / dz))
+            uvs.append((u, v_uv))
+        faces_uvs.append((f, uvs))
+    return faces_uvs
+
+
+def build_hood_off_mesh(avatar_data, torso_bm, offset, z_neck, is_coat=False):
+    """
+    Builds a 2-walled manifold folded-back hood resting on the garment's upper posterior back.
+    Anterior throat/chin stays open; side/posterior profile shows a plump folded cowl pouch.
+    """
+    is_male = avatar_data["gender"] == "male"
+    av_verts = avatar_data["verts"]
+    head_bvh = avatar_data.get("full_bvh") or avatar_data["bvh"]
+    torso_bvh = BVHTree.FromBMesh(torso_bm)
+
+    coat_extra = 0.0055 if is_coat else 0.0
+    nk_pts = [p for p in av_verts if abs(p.z - z_neck) < 0.03 and abs(p.x) < 0.11]
+    y_nk_front = min((p.y for p in nk_pts), default=(-0.090 if is_male else -0.068))
+    y_nk_back = max((p.y for p in nk_pts), default=(0.060 if is_male else 0.044))
+    cy_nk = 0.5 * (y_nk_front + y_nk_back)
+    rx_collar = (0.095 if is_male else 0.088) + coat_extra
+    ry_collar_f = (0.078 if is_male else 0.072) + coat_extra
+    ry_collar_b = (0.082 if is_male else 0.074) + coat_extra + offset * 0.45
+
+    n_v = 18
+    n_u = 24
+    half_u = n_u // 2  # j == half_u is exact spine s_u = 0
+    drop_len = (0.215 if is_male else 0.195) + (0.025 if is_coat else 0.0)
+    w_max = (0.128 if is_male else 0.116) + (0.012 if is_coat else 0.0)
+    z_top_cowl = z_neck + (0.024 if is_coat else 0.020)
+
+    def sample_back_garment_y(x_q, z_q):
+        hit, _n, _idx, _d = torso_bvh.ray_cast(Vector((x_q, 0.32, z_q)), Vector((0.0, -1.0, 0.0)), 0.40)
+        if hit is not None:
+            return hit.y
+        return y_nk_back + offset + 0.025
+
+    grid = []
+    for i in range(n_v + 1):
+        t = i / n_v
+        row = []
+        for j in range(n_u + 1):
+            s_u = (j - half_u) / half_u  # [-1 .. +1], strictly symmetric
+            if t <= 0.25:
+                # Collar wrap rising around lateral/posterior neck and rolling backward (+Y) over nape
+                u_c = t / 0.25
+                s_c = u_c * u_c * (3.0 - 2.0 * u_c)
+                theta = (0.5 * math.pi) - s_u * (0.64 * math.pi)
+                rx_ring = rx_collar * (1.0 - 0.15 * s_c) + w_max * (0.88 * s_c)
+                if t <= 0.08:
+                    # Seam overlap flush into collar circumference
+                    x = rx_collar * math.cos(theta)
+                    ry = ry_collar_b if math.sin(theta) >= 0 else ry_collar_f
+                    y = cy_nk + ry * math.sin(theta)
+                    z = (z_neck - 0.012) + 0.018 * (0.5 + 0.5 * math.sin(theta))
+                else:
+                    x0 = rx_collar * math.cos(theta)
+                    ry0 = ry_collar_b if math.sin(theta) >= 0 else ry_collar_f
+                    y0 = cy_nk + ry0 * math.sin(theta)
+                    z0 = (z_neck - 0.012) + 0.018 * (0.5 + 0.5 * math.sin(theta))
+
+                    x1 = s_u * w_max
+                    z1 = z_top_cowl - 0.012 * (s_u ** 2)
+                    y_bg = sample_back_garment_y(x1, min(z1, z_neck - 0.03))
+                    puff1 = ((0.048 if is_coat else 0.040) if not is_male else (0.044 if is_coat else 0.036)) * (1.0 - 0.70 * (s_u ** 2))
+                    y1 = max(y_nk_back + 0.044 + coat_extra, y_bg + puff1)
+
+                    lift_z = 0.020 * math.sin(s_c * math.pi * 0.85) * (1.0 - 0.45 * (s_u ** 2))
+                    x = x0 * (1.0 - s_c) + x1 * s_c
+                    y = y0 * (1.0 - s_c) + y1 * s_c
+                    z = z0 * (1.0 - s_c) + z1 * s_c + lift_z
+            elif t <= 0.86:
+                # Folded hood body draped down the upper scapulae
+                u_f = (t - 0.25) / (0.86 - 0.25)
+                w_ring = w_max * (1.0 - 0.54 * (u_f ** 1.40))
+                x = s_u * w_ring
+                z = (z_top_cowl - 0.012 * (s_u ** 2)) - u_f * drop_len
+                y_bg = sample_back_garment_y(x, min(z, z_neck - 0.03))
+                # Layered fold puff profile with soft lateral edge tuck onto garment shoulders
+                env_u = max(0.0, 1.0 - s_u ** 2)
+                fold_bulge = ((0.045 if is_coat else 0.037) if not is_male else (0.040 if is_coat else 0.032)) * (math.sin(u_f * math.pi) ** 0.55)
+                fold_ripple = (0.007 if is_coat else 0.005) * math.sin(u_f * 2.2 * math.pi)
+                y = y_bg + 0.004 + (fold_bulge + fold_ripple) * env_u
+            else:
+                # Soft tucked bottom crown seam resting flush against garment mid-back
+                u_b = (t - 0.86) / (1.0 - 0.86)
+                s_b = u_b * u_b * (3.0 - 2.0 * u_b)
+                w_ring = w_max * (0.46 * (1.0 - 0.35 * s_b))
+                x = s_u * w_ring
+                z = (z_top_cowl - drop_len - 0.012 * (s_u ** 2)) - 0.008 * math.sin(s_b * math.pi * 0.5)
+                y_bg = sample_back_garment_y(x, min(z, z_neck - 0.03))
+                env_u = max(0.0, 1.0 - s_u ** 2)
+                y = y_bg + 0.002 + (0.014 * (1.0 - s_b)) * env_u
+
+            p = Vector((x, y, z))
+            # Never intersect avatar neck/hair or back garment shell
+            if i >= 2:
+                loc_h, norm_h, _idx, _d = head_bvh.find_nearest(p)
+                if loc_h is not None and norm_h is not None:
+                    min_h_clr = 0.015 + coat_extra
+                    sd_h = (p - loc_h).dot(norm_h)
+                    if sd_h < min_h_clr and p.y > cy_nk - 0.02:
+                        p.y += (min_h_clr - sd_h)
+                if t > 0.25:
+                    y_bg_chk = sample_back_garment_y(p.x, min(p.z, z_neck - 0.04))
+                    min_bg_clr = 0.003 if t > 0.86 else 0.006
+                    if p.y < y_bg_chk + min_bg_clr:
+                        p.y = y_bg_chk + min_bg_clr
+            row.append(p)
+        grid.append(row)
+
+    # Smooth interior + enforce strict bilateral symmetry
+    for _pass in range(2):
+        for i in range(1, n_v):
+            for j in range(1, n_u):
+                avg = (grid[i - 1][j] + grid[i + 1][j] + grid[i][j - 1] + grid[i][j + 1]) * 0.25
+                grid[i][j] = grid[i][j] * 0.65 + avg * 0.35
+                if (i / n_v) > 0.25:
+                    y_bg_chk = sample_back_garment_y(grid[i][j].x, min(grid[i][j].z, z_neck - 0.04))
+                    if grid[i][j].y < y_bg_chk + 0.003:
+                        grid[i][j].y = y_bg_chk + 0.003
+    for i in range(n_v + 1):
+        grid[i][half_u].x = 0.0
+        for j in range(half_u):
+            jm = n_u - j
+            avg_x = 0.5 * (abs(grid[i][j].x) + abs(grid[i][jm].x))
+            avg_y = 0.5 * (grid[i][j].y + grid[i][jm].y)
+            avg_z = 0.5 * (grid[i][j].z + grid[i][jm].z)
+            grid[i][j] = Vector((-avg_x, avg_y, avg_z))
+            grid[i][jm] = Vector((avg_x, avg_y, avg_z))
+
+    bm_sheet = bmesh.new()
+    bverts = [[bm_sheet.verts.new(grid[i][j]) for j in range(n_u + 1)] for i in range(n_v + 1)]
+    for i in range(n_v):
+        for j in range(n_u):
+            try:
+                bm_sheet.faces.new((bverts[i][j], bverts[i][j + 1], bverts[i + 1][j + 1], bverts[i + 1][j]))
+            except ValueError:
+                pass
+    bmesh.ops.recalc_face_normals(bm_sheet, faces=bm_sheet.faces[:])
+    bm_sheet.normal_update()
+    # Ensure sheet outer normals point posterior (+Y / +Z), not inward toward body
+    for f in bm_sheet.faces:
+        if f.normal.y < -0.15 and abs(f.normal.x) < 0.7:
+            f.normal_flip()
+    bm_sheet.normal_update()
+
+    bm_hood = solidify_bmesh_manifold(bm_sheet, thickness=(0.0036 if is_coat else 0.0028))
+    faces_uvs = compute_hood_faces_uvs(bm_hood, is_male)
+    return bm_hood, faces_uvs
+
+
+def build_hood_on_mesh(avatar_data, torso_bm, offset, z_neck, is_coat=False):
+    """
+    Builds a 2-walled manifold head-mapped hood cowl rising from the collar around the sides
+    (covering ears/temples) and posterior occiput/crown, framing the face cleanly in anterior view.
+    """
+    is_male = avatar_data["gender"] == "male"
+    av_verts = avatar_data["verts"]
+    head_bvh = avatar_data.get("full_bvh") or avatar_data["bvh"]
+
+    coat_extra = 0.0055 if is_coat else 0.0
+    z_max_av = max(v.z for v in av_verts)
+    nk_pts = [p for p in av_verts if abs(p.z - z_neck) < 0.03 and abs(p.x) < 0.11]
+    y_nk_front = min((p.y for p in nk_pts), default=(-0.090 if is_male else -0.068))
+    y_nk_back = max((p.y for p in nk_pts), default=(0.060 if is_male else 0.044))
+    cy_nk = 0.5 * (y_nk_front + y_nk_back)
+
+    # Skull center & landmarks in Blender Z-up space (front is -Y, back is +Y)
+    cy_skull = -0.045 if is_male else -0.038
+    cz_skull = 1.660 if is_male else 1.560
+    skull_ctr = Vector((0.0, cy_skull, cz_skull))
+
+    # Control rings along periodic cowl tube (s = 0 collar -> s = 1 anterior face frame)
+    rx_col = (0.114 if is_male else 0.106) + coat_extra
+    y_col_f = (-0.110 if is_male else -0.088) - coat_extra
+    y_col_b = (0.084 if is_male else 0.072) + coat_extra
+    z_col_f = z_neck - 0.024
+    z_col_s = z_neck - 0.004
+    z_col_b = z_neck + 0.016
+
+    rx_face = (0.096 if is_male else 0.095) + coat_extra
+    z_face_mid = 1.652 if is_male else 1.552
+    half_h_face = (0.112 if is_male else 0.104) + 0.5 * coat_extra
+    y_brow_brim = (-0.164 if is_male else -0.145) - coat_extra
+    y_cheek_brim = (-0.125 if is_male else -0.114) - coat_extra * 0.5
+    y_chin_brim = (-0.146 if is_male else -0.132) - coat_extra * 0.5
+
+    rx_mid_side = (0.110 if is_male else 0.110) + coat_extra
+    y_occ_peak = (0.088 if is_male else 0.095) + coat_extra
+    z_crown_top = (max(z_max_av + 0.026, 1.822) if is_male else max(z_max_av + 0.024, 1.715)) + coat_extra
+    y_crown_peak = (-0.025 if is_male else -0.020)
+    z_ear_mid = 1.640 if is_male else 1.545
+
+    n_s = 20
+    n_theta = 40  # divisible by 4 -> exact left/right symmetry around theta = +/- pi/2
+
+    def eval_ctrl_ring(stage, theta):
+        ct = math.cos(theta)
+        st = math.sin(theta)
+        top_w = max(0.0, st)
+        bot_w = max(0.0, -st)
+        side_w = 1.0 - abs(st)
+
+        if stage == 0:
+            # Collar loop anchored neatly around the top neckline
+            x = rx_col * ct
+            y = cy_nk * side_w + y_col_b * top_w + y_col_f * bot_w
+            z = z_col_s * side_w + z_col_b * top_w + z_col_f * bot_w
+            return Vector((x, y, z))
+        if stage == 1:
+            # Posterior occiput & behind-ear cowl loop
+            x = (rx_mid_side + 0.004 * st) * ct
+            y_side = 0.020
+            y_bot = 0.5 * (y_col_f + y_chin_brim) - 0.010
+            y = y_side * side_w + y_occ_peak * top_w + y_bot * bot_w
+            z_bot = 0.5 * (z_col_f + (z_face_mid - half_h_face))
+            z = (z_ear_mid - 0.010) * side_w + (z_ear_mid + 0.035) * top_w + z_bot * bot_w
+            return Vector((x, y, z))
+        if stage == 2:
+            # Upper cranial crown & over-temple arch
+            rx_crn = (0.104 if is_male else 0.104) + coat_extra
+            x = rx_crn * ct
+            y_side = -0.055
+            y_bot = 0.25 * y_col_f + 0.75 * y_chin_brim - 0.006
+            y = y_side * side_w + y_crown_peak * top_w + y_bot * bot_w
+            z_bot = 0.25 * z_col_f + 0.75 * (z_face_mid - half_h_face)
+            z = (z_ear_mid + 0.025) * side_w + z_crown_top * top_w + z_bot * bot_w
+            return Vector((x, y, z))
+        # stage == 3: Anterior face-opening rim
+        x = rx_face * ct
+        y = y_cheek_brim * side_w + y_brow_brim * top_w + y_chin_brim * bot_w
+        z = z_face_mid + half_h_face * st
+        return Vector((x, y, z))
+
+    rings_pts = []
+    for i in range(n_s + 1):
+        s = i / n_s
+        # Cubic Bezier across the 4 control rings [s=0 .. s=1]
+        om = 1.0 - s
+        b0 = om ** 3
+        b1 = 3.0 * (om ** 2) * s
+        b2 = 3.0 * om * (s ** 2)
+        b3 = s ** 3
+        ring = []
+        for j in range(n_theta):
+            theta = (j / n_theta) * 2.0 * math.pi
+            p = (
+                eval_ctrl_ring(0, theta) * b0
+                + eval_ctrl_ring(1, theta) * b1
+                + eval_ctrl_ring(2, theta) * b2
+                + eval_ctrl_ring(3, theta) * b3
+            )
+            if i >= 2:
+                loc_h, norm_h, _idx, _d = head_bvh.find_nearest(p)
+                if loc_h is not None and norm_h is not None:
+                    req_clear = (0.015 + coat_extra) if i < n_s - 1 else (0.011 + coat_extra)
+                    sd = (p - loc_h).dot(norm_h)
+                    if sd < req_clear:
+                        out_dir = p - Vector((0.0, cy_skull, p.z if p.z < cz_skull else cz_skull))
+                        # Never push the anterior face opening into blocking the eyes/nose
+                        if i >= n_s - 2:
+                            out_dir.y = max(0.0, out_dir.y)
+                        if out_dir.length > 1e-4:
+                            p += out_dir.normalized() * (req_clear - sd)
+            ring.append(p)
+        rings_pts.append(ring)
+
+    # Smooth intermediate rings & re-enforce head clearance
+    for _pass in range(4):
+        for i in range(1, n_s):
+            for j in range(n_theta):
+                jp = (j + 1) % n_theta
+                jm = (j - 1) % n_theta
+                avg = (rings_pts[i - 1][j] + rings_pts[i + 1][j] + rings_pts[i][jm] + rings_pts[i][jp]) * 0.25
+                p = rings_pts[i][j] * 0.60 + avg * 0.40
+                loc_h, norm_h, _idx, _d = head_bvh.find_nearest(p)
+                if loc_h is not None and norm_h is not None:
+                    req_clear = 0.0145 + coat_extra
+                    sd = (p - loc_h).dot(norm_h)
+                    if sd < req_clear:
+                        out_dir = p - Vector((0.0, cy_skull, min(p.z, cz_skull)))
+                        if i >= n_s - 2:
+                            out_dir.y = max(0.0, out_dir.y)
+                        if out_dir.length > 1e-4:
+                            p += out_dir.normalized() * (req_clear - sd)
+                rings_pts[i][j] = p
+
+    # Enforce strict bilateral symmetry across X=0 (theta vs pi - theta)
+    for i in range(n_s + 1):
+        for j in range(n_theta):
+            theta = (j / n_theta) * 2.0 * math.pi
+            # Symmetrize with mirror index j_mir = (n_theta//2 - j) % n_theta
+            j_mir = (n_theta // 2 - j) % n_theta
+            if j == j_mir:
+                rings_pts[i][j].x = 0.0
+            elif j < j_mir:
+                avg_x = 0.5 * (abs(rings_pts[i][j].x) + abs(rings_pts[i][j_mir].x))
+                avg_y = 0.5 * (rings_pts[i][j].y + rings_pts[i][j_mir].y)
+                avg_z = 0.5 * (rings_pts[i][j].z + rings_pts[i][j_mir].z)
+                sx_j = 1.0 if math.cos(theta) >= 0.0 else -1.0
+                rings_pts[i][j] = Vector((sx_j * avg_x, avg_y, avg_z))
+                rings_pts[i][j_mir] = Vector((-sx_j * avg_x, avg_y, avg_z))
+
+    bm_sheet = bmesh.new()
+    bverts = [[bm_sheet.verts.new(rings_pts[i][j]) for j in range(n_theta)] for i in range(n_s + 1)]
+    for i in range(n_s):
+        for j in range(n_theta):
+            jn = (j + 1) % n_theta
+            try:
+                bm_sheet.faces.new((bverts[i][j], bverts[i][jn], bverts[i + 1][jn], bverts[i + 1][j]))
+            except ValueError:
+                pass
+    bmesh.ops.recalc_face_normals(bm_sheet, faces=bm_sheet.faces[:])
+    bm_sheet.normal_update()
+    for f in bm_sheet.faces:
+        fc = f.calc_center_median()
+        rad = Vector((fc.x, fc.y - cy_skull, max(-0.05, fc.z - (z_neck + 0.08))))
+        if rad.dot(f.normal) < 0.0:
+            f.normal_flip()
+    bm_sheet.normal_update()
+
+    bm_hood = solidify_bmesh_manifold(bm_sheet, thickness=(0.0035 if is_coat else 0.0028))
+    faces_uvs = compute_hood_faces_uvs(bm_hood, is_male)
+    return bm_hood, faces_uvs
+
+
 def build_top_template(avatar_data, variant="tshirt"):
     gender = avatar_data["gender"]
     avatar_obj = avatar_data["avatar_obj"]
@@ -1235,13 +1613,36 @@ def build_top_template(avatar_data, variant="tshirt"):
         x_arm_max = 0.490 if is_male else 0.445
         sleeve_type = "long"
         neck_tilt = -0.32 if is_male else -0.30
-    elif variant == "hoodie":
-        offset = 0.0150
-        z_neck = 1.536 if is_male else 1.438
-        z_hem = 0.82 if is_male else 0.78
+    elif variant in ("hoodie", "hoodie_hood_off"):
+        offset = 0.0155
+        z_neck = 1.525 if is_male else 1.428
+        z_hem = 0.85 if is_male else 0.81
         x_arm_max = 0.475 if is_male else 0.430
         sleeve_type = "long"
-        neck_tilt = -0.28 if is_male else -0.26
+        neck_tilt = -0.26 if is_male else -0.24
+    elif variant == "hoodie_hood_on":
+        offset = 0.0155
+        z_neck = 1.515 if is_male else 1.420
+        z_hem = 0.85 if is_male else 0.81
+        x_arm_max = 0.475 if is_male else 0.430
+        sleeve_type = "long"
+        neck_tilt = -0.22 if is_male else -0.20
+    elif variant in ("hooded_coat", "hooded_coat_hood_off"):
+        offset = 0.0195
+        z_neck = 1.530 if is_male else 1.432
+        z_hem = 0.54 if is_male else 0.50
+        x_arm_max = 0.475 if is_male else 0.430
+        sleeve_type = "long"
+        flare_hips = True
+        neck_tilt = -0.26 if is_male else -0.24
+    elif variant == "hooded_coat_hood_on":
+        offset = 0.0195
+        z_neck = 1.520 if is_male else 1.424
+        z_hem = 0.54 if is_male else 0.50
+        x_arm_max = 0.475 if is_male else 0.430
+        sleeve_type = "long"
+        flare_hips = True
+        neck_tilt = -0.22 if is_male else -0.20
     elif variant in ("jacket", "top_outerwear_jacket"):
         offset = 0.0160
         z_neck = 1.532 if is_male else 1.434
@@ -1557,7 +1958,10 @@ def build_top_template(avatar_data, variant="tshirt"):
             span_z = z_hip_cut - z_hem
             n_steps = max(4, min(16, int(round(span_z / 0.022))))
             dz_step = span_z / n_steps
-            is_flared_or_coat = flare_hips or variant in ("coat", "trench_coat", "tunic", "top_tunic")
+            is_flared_or_coat = flare_hips or variant in (
+                "coat", "trench_coat", "tunic", "top_tunic",
+                "hooded_coat", "hooded_coat_hood_off", "hooded_coat_hood_on",
+            )
             radial_x_step = (0.0020 if is_flared_or_coat else (0.008 / n_steps))
             radial_y_step = (0.0015 if is_flared_or_coat else (0.006 / n_steps))
             for _step in range(1, n_steps + 1):
@@ -1679,9 +2083,14 @@ def build_top_template(avatar_data, variant="tshirt"):
         "top_outerwear_jacket": 0.85,
         "jacket_blazer": 0.86,
         "hoodie": 0.88,
+        "hoodie_hood_off": 0.88,
+        "hoodie_hood_on": 0.88,
         "tunic": 0.84,
         "top_tunic": 0.84,
         "coat": 0.92,
+        "hooded_coat": 0.93,
+        "hooded_coat_hood_off": 0.93,
+        "hooded_coat_hood_on": 0.93,
         "trench_coat": 0.94,
     }
     drape_looseness = drape_map.get(variant, 0.75)
@@ -1766,6 +2175,16 @@ def build_top_template(avatar_data, variant="tshirt"):
                 v_norm = v_torso
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
+
+    is_coat_hood = variant.startswith("hooded_coat")
+    if variant in ("hoodie", "hoodie_hood_off", "hooded_coat", "hooded_coat_hood_off"):
+        bm_hood, hood_uvs = build_hood_off_mesh(avatar_data, bm_final, offset, z_neck, is_coat=is_coat_hood)
+        merge_bmesh_with_uvs(bm_final, faces_uvs, bm_hood, hood_uvs)
+        bm_hood.free()
+    elif variant in ("hoodie_hood_on", "hooded_coat_hood_on"):
+        bm_hood, hood_uvs = build_hood_on_mesh(avatar_data, bm_final, offset, z_neck, is_coat=is_coat_hood)
+        merge_bmesh_with_uvs(bm_final, faces_uvs, bm_hood, hood_uvs)
+        bm_hood.free()
 
     vert_weights = [(v, {"Torso_Deform": 1.0}) for v in bm_final.verts]
 
@@ -2405,6 +2824,16 @@ def build_dress_template(avatar_data, variant="dress"):
             uvs.append((max(0.005, min(0.995, u)), max(0.005, min(0.995, v_norm))))
         faces_uvs.append((f, uvs))
 
+    is_coat_hood = variant.startswith("hooded_coat")
+    if variant in ("hoodie", "hoodie_hood_off", "hooded_coat", "hooded_coat_hood_off"):
+        bm_hood, hood_uvs = build_hood_off_mesh(avatar_data, bm_final, offset, z_neck, is_coat=is_coat_hood)
+        merge_bmesh_with_uvs(bm_final, faces_uvs, bm_hood, hood_uvs)
+        bm_hood.free()
+    elif variant in ("hoodie_hood_on", "hooded_coat_hood_on"):
+        bm_hood, hood_uvs = build_hood_on_mesh(avatar_data, bm_final, offset, z_neck, is_coat=is_coat_hood)
+        merge_bmesh_with_uvs(bm_final, faces_uvs, bm_hood, hood_uvs)
+        bm_hood.free()
+
     vert_weights = [(v, {"Torso_Deform": 1.0}) for v in bm_final.verts]
     return bm_final, faces_uvs, vert_weights, ["Torso_Deform"]
 
@@ -2615,12 +3044,15 @@ CANONICAL_SPECS = [
     ("top_strapless", "top", "strapless", ["strapless.glb", "corset.glb", "tube.glb", "bandeau.glb", "bustier.glb"]),
     ("singlet", "top", "singlet", ["singlet.glb", "tank.glb"]),
     ("top_longsleeve", "top", "longsleeve", ["longsleeve.glb", "shirt.glb"]),
-    ("hoodie", "top", "hoodie", ["hoodie.glb"]),
+    ("hoodie", "top", "hoodie_hood_off", ["hoodie.glb", "hoodie_hood_off.glb"]),
+    ("hoodie_hood_on", "top", "hoodie_hood_on", ["hoodie_hood_on.glb"]),
     ("top_outerwear_jacket", "top", "jacket", ["jacket.glb"]),
     ("jacket_blazer", "top", "jacket_blazer", ["jacket_blazer.glb"]),
     ("cardigan", "top", "cardigan", ["cardigan.glb"]),
     ("vest", "top", "vest", ["vest.glb"]),
     ("coat", "top", "coat", ["coat.glb"]),
+    ("hooded_coat", "top", "hooded_coat_hood_off", ["hooded_coat.glb", "hooded_coat_hood_off.glb"]),
+    ("hooded_coat_hood_on", "top", "hooded_coat_hood_on", ["hooded_coat_hood_on.glb"]),
     ("trench_coat", "top", "trench_coat", ["trench_coat.glb"]),
     ("top_tunic", "top", "tunic", ["tunic.glb"]),
     # Lower Body
@@ -2798,6 +3230,8 @@ def main():
         if "shoes_sneakers" in generated_objs and "bottom_trousers" in generated_objs:
             verify_collision_and_rigidity(gender, generated_objs, avatar_data)
         avatar_data["bm"].free()
+        if avatar_data.get("full_bvh") is not None:
+            del avatar_data["full_bvh"]
 
     print(f"\nALL {total_exported} CANONICAL BASEMESHES GENERATED AND VERIFIED SUCCESSFULLY.")
 

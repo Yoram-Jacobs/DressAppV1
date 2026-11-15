@@ -5905,7 +5905,9 @@
     "mesh_tailored": "3D टेलर्ड",
     "mesh_photo": "फ़ोटो फ़िट",
     "mesh_mode_tailored_active": "3D टेलर्ड सक्रिय — फ़ोटो फ़िट के लिए क्लिक करें",
-    "mesh_mode_photo_active": "फ़ोटो फ़िट सक्रिय — 3D टेलर्ड के लिए क्लिक करें"
+    "mesh_mode_photo_active": "फ़ोटो फ़िट सक्रिय — 3D टेलर्ड के लिए क्लिक करें",
+    "hood_on": "हुड पहना हुआ",
+    "hood_off": "हुड उतारा हुआ"
   },
   "dressingRoom": {
     "title": "3D ड्रेसिंग रूम",

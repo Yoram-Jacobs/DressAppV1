@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean6';
+export const TEMPLATE_CACHE_VERSION = 'clean7';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -25,8 +25,13 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'bandeau_torso',
   'bustier',
   'corset',
-  // Outerwear
+  // Outerwear & Hooded Models
   'hoodie',
+  'hoodie_hood_off',
+  'hoodie_hood_on',
+  'hooded_coat',
+  'hooded_coat_hood_off',
+  'hooded_coat_hood_on',
   'cardigan',
   'jacket_blazer',
   'top_outerwear_jacket',
@@ -70,8 +75,15 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   bustier: 'strapless_torso',
   corset: 'strapless_torso',
 
-  // Outerwear
+  // Outerwear & Hooded Models
   hoodie: 'hoodie',
+  hoodie_hood_off: 'hoodie_hood_off',
+  hoodie_hood_on: 'hoodie_hood_on',
+  hooded_coat: 'hooded_coat',
+  hooded_coat_hood_off: 'hooded_coat_hood_off',
+  hooded_coat_hood_on: 'hooded_coat_hood_on',
+  parka: 'hooded_coat',
+  anorak: 'hooded_coat',
   cardigan: 'cardigan',
   blazer: 'jacket_blazer',
   jacket_blazer: 'jacket_blazer',
@@ -120,6 +132,50 @@ const PARAMETRIC_ONLY_SLOTS = new Set([
   'accessory',
 ]);
 
+const HOODED_KEYWORDS = [
+  'hoodie', 'hooded', 'zip-up hood', 'zip hood', 'pullover hood',
+  'קפוצ׳ון', "קפוצ'ון", 'קפוצון', 'עם כובע', 'כובע צמוד', 'סווטשירט קפוצ',
+  'capuche', 'kapuze', 'capucha', 'cappuccio', 'капюшон', 'худи',
+  '连帽', 'フード', 'パーカー', '후드', 'هودي',
+];
+
+const INHERENT_HOODED_OUTERWEAR_KEYWORDS = [
+  'parka', 'anorak', 'duffle coat', 'duffel coat',
+  'פארקה', 'אנורק', 'מעיל קפוצ',
+];
+
+const COAT_OR_JACKET_KEYWORDS = [
+  'coat', 'overcoat', 'peacoat', 'parka', 'anorak', 'duster', 'trench',
+  'puffer', 'down jacket', 'raincoat', 'windbreaker', 'jacket', 'duffle', 'duffel',
+  'מעיל', "ג'קט", "ז'קט", 'ג׳קט', 'ז׳קט', 'פארקה', 'אנורק', 'טרנץ',
+  'manteau', 'mantel', 'abrigo',
+];
+
+/**
+ * Returns true when an upper-body garment carries a hood (hoodie, zip-hoodie,
+ * hooded coat, parka, anorak, etc.).
+ */
+export function isHoodedGarment({
+  rawSlot = '',
+  garmentText = '',
+  slot = '',
+  category = '',
+} = {}) {
+  const effectiveSlot = String(rawSlot || slot || '').toLowerCase().trim();
+  if (!effectiveSlot || PARAMETRIC_ONLY_SLOTS.has(effectiveSlot) || effectiveSlot === 'bottom' || effectiveSlot === 'dress') {
+    return false;
+  }
+  const text = `${garmentText} ${category} ${slot} ${rawSlot}`.toLowerCase();
+  const has = (words) => words.some((w) => text.includes(w));
+  if (has(INHERENT_HOODED_OUTERWEAR_KEYWORDS)) {
+    return true;
+  }
+  if (has(HOODED_KEYWORDS)) {
+    return true;
+  }
+  return has(COAT_OR_JACKET_KEYWORDS) && (text.includes('hood') || text.includes('קפוצ'));
+}
+
 /**
  * Resolves the gender-specific GLB URL for a canonical template ID, or null if invalid.
  */
@@ -141,6 +197,7 @@ export function resolveGarmentTemplate({
   aspect = 0.75,
   slot = '',
   category = '',
+  hoodMode = 'off',
 } = {}) {
   const effectiveSlot = String(rawSlot || slot || '').toLowerCase().trim();
   if (!effectiveSlot || PARAMETRIC_ONLY_SLOTS.has(effectiveSlot)) {
@@ -149,6 +206,7 @@ export function resolveGarmentTemplate({
 
   const text = `${garmentText} ${category} ${slot}`.toLowerCase();
   const has = (...words) => words.some((w) => text.includes(w));
+  const wantHoodOn = hoodMode === 'on';
 
   // 1. DRESSES / FULL-BODY
   if (effectiveSlot === 'dress') {
@@ -199,20 +257,26 @@ export function resolveGarmentTemplate({
     ) {
       return 'vest';
     }
+    const isHoodedCoat =
+      has(...INHERENT_HOODED_OUTERWEAR_KEYWORDS) ||
+      (has(...COAT_OR_JACKET_KEYWORDS) && (has(...HOODED_KEYWORDS) || text.includes('hood') || text.includes('קפוצ')));
+    if (isHoodedCoat) {
+      return wantHoodOn ? 'hooded_coat_hood_on' : 'hooded_coat';
+    }
+    if (has(...HOODED_KEYWORDS)) {
+      return wantHoodOn ? 'hoodie_hood_on' : 'hoodie';
+    }
     if (has('trench', 'טרנץ', 'gabardine', 'raincoat', 'מעיל גשם')) {
       return 'trench_coat';
     }
     if (has('kaftan', 'kimono', 'robe', 'קפטן', 'קימונו', 'חלוק')) {
       return 'kaftan';
     }
-    if (has('overcoat', 'peacoat', 'parka', 'duster', 'coat', 'מעיל', 'manteau', 'mantel', 'abrigo')) {
+    if (has('overcoat', 'peacoat', 'duster', 'coat', 'מעיל', 'manteau', 'mantel', 'abrigo')) {
       return 'coat';
     }
     if (has('cardigan', 'קרדיגן', 'עליונית סרוגה')) {
       return 'cardigan';
-    }
-    if (has('hoodie', 'קפוצ׳ון', "קפוצ'ון", 'סווטשירט קפוצ')) {
-      return 'hoodie';
     }
     if (has('blazer', 'suit jacket', 'sport coat', 'tuxedo', 'בלייזר', 'מקטורן', 'חליפה')) {
       return 'jacket_blazer';
@@ -243,8 +307,11 @@ export function resolveGarmentTemplate({
     if (has('tank', 'sleeveless', 'muscle tee', 'גופיה', 'גופייה', 'ללא שרוולים')) {
       return 'tank';
     }
-    if (has('hoodie', 'sweatshirt', 'קפוצ׳ון', "קפוצ'ון", 'סווטשירט')) {
-      return 'hoodie';
+    if (has(...HOODED_KEYWORDS)) {
+      return wantHoodOn ? 'hoodie_hood_on' : 'hoodie';
+    }
+    if (has('sweatshirt', 'סווטשירט')) {
+      return 'top_longsleeve';
     }
     if (has('cardigan', 'קרדיגן')) {
       return 'cardigan';
@@ -282,7 +349,7 @@ export function resolveGarmentTemplate({
     return 'top_tshirt';
   }
 
-  // 4. FOOTWEAR / SHOES
+  // 5. FOOTWEAR / SHOES
   if (effectiveSlot === 'shoes' || effectiveSlot === 'footwear') {
     if (has('sneaker', 'trainer', 'running', 'tennis', 'athletic', 'סניקרס', 'נעלי ספורט', 'basket', 'zapatilla', 'кроссовк', 'turnschuhe')) {
       return 'shoes_sneakers';

@@ -1307,8 +1307,114 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
 
     // Locale files all contain mesh_tailored, mesh_photo, and taxonomy.categories.watch
     const heLocale = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../locales/he.json'), 'utf8'));
+    const enLocale = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../locales/en.json'), 'utf8'));
     expect(heLocale.dressing_room_3d.mesh_tailored).toBeTruthy();
     expect(heLocale.dressing_room_3d.mesh_photo).toBeTruthy();
+    expect(heLocale.dressing_room_3d.hood_on).toBe('כובע חבוש');
+    expect(heLocale.dressing_room_3d.hood_off).toBe('כובע מקופל');
+    expect(enLocale.dressing_room_3d.hood_on).toBe('Hood On');
+    expect(enLocale.dressing_room_3d.hood_off).toBe('Hood Off');
     expect(heLocale.taxonomy.categories.watch).toBe('שעון');
+  });
+
+  test('Hooded garment templates resolve distinct Hood-Off and Hood-On GLBs with verified anatomical bounds and toggle button', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const {
+      isHoodedGarment,
+      resolveGarmentTemplate,
+    } = require('@/lib/garmentTemplatesCatalog');
+
+    expect(isHoodedGarment({ rawSlot: 'top', garmentText: 'Black Zip-Up Hoodie' })).toBe(true);
+    expect(isHoodedGarment({ rawSlot: 'top', garmentText: 'קפוצ׳ון פליז שחור' })).toBe(true);
+    expect(isHoodedGarment({ rawSlot: 'outerwear', garmentText: 'Olive Winter Parka Hooded Coat' })).toBe(true);
+    expect(isHoodedGarment({ rawSlot: 'top', garmentText: 'Classic Crewneck Sweatshirt' })).toBe(false);
+
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Black Zip-Up Hoodie', hoodMode: 'off' })).toBe('hoodie');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Black Zip-Up Hoodie', hoodMode: 'on' })).toBe('hoodie_hood_on');
+    expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Olive Winter Parka Hooded Coat', hoodMode: 'off' })).toBe('hooded_coat');
+    expect(resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Olive Winter Parka Hooded Coat', hoodMode: 'on' })).toBe('hooded_coat_hood_on');
+    expect(resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Classic Crewneck Sweatshirt', hoodMode: 'on' })).toBe('top_longsleeve');
+
+    const readGlb = (relPath) => {
+      const full = path.resolve(__dirname, '../../../public/models/templates', relPath);
+      const buf = fs.readFileSync(full);
+      const jsonLen = buf.readUInt32LE(12);
+      const gltf = JSON.parse(buf.slice(20, 20 + jsonLen).toString('utf8'));
+      const prim = gltf.meshes[0].primitives[0];
+      const attrs = Object.keys(prim.attributes);
+      expect(attrs.length).toBeLessThanOrEqual(4);
+      expect(attrs).toContain('POSITION');
+      expect(attrs).toContain('NORMAL');
+      expect(attrs).toContain('TEXCOORD_0');
+      const posAcc = gltf.accessors[prim.attributes.POSITION];
+      expect(posAcc.min[0]).toBeLessThan(-0.35);
+      expect(posAcc.max[0]).toBeGreaterThan(0.35);
+      expect(Math.abs(posAcc.max[0] + posAcc.min[0])).toBeLessThan(0.03);
+      return posAcc;
+    };
+
+    for (const gender of ['male', 'female']) {
+      for (const base of ['hoodie', 'hooded_coat']) {
+        const offAcc = readGlb(`${gender}/${base}.glb`);
+        const aliasOffAcc = readGlb(`${gender}/${base}_hood_off.glb`);
+        const onAcc = readGlb(`${gender}/${base}_hood_on.glb`);
+        expect(offAcc.min[2]).toBeLessThan(-0.12);
+        expect(aliasOffAcc.min[2]).toBeLessThan(-0.12);
+        expect(onAcc.max[1]).toBeGreaterThan(offAcc.max[1] + 0.18);
+      }
+    }
+
+    render(
+      <DressingRoom3D
+        open={true}
+        onOpenChange={jest.fn()}
+        outfitItems={{
+          top: {
+            id: 'hoodie-test-1',
+            name: 'Black Zip-Up Hoodie',
+            url: '/assets/onboarding/m_tshirt_crew_white.png',
+            category: 'top',
+          },
+          bottom: {
+            id: 'pants-test-1',
+            name: 'Black Twill Chinos',
+            url: '/assets/onboarding/m_pants_chinos_black.png',
+            category: 'bottom',
+          },
+        }}
+        measurements={sampleMeasurements}
+        sex="male"
+      />
+    );
+
+    const hoodBtn = screen.getByTestId('toggle-hood-mode-btn');
+    expect(hoodBtn).toBeInTheDocument();
+    expect(screen.getByText('Hood Off')).toBeInTheDocument();
+    fireEvent.click(hoodBtn);
+    expect(screen.getByText('Hood On')).toBeInTheDocument();
+    fireEvent.click(hoodBtn);
+    expect(screen.getByText('Hood Off')).toBeInTheDocument();
+  });
+
+  test('Hood toggle button stays hidden when no hooded garment is active', () => {
+    render(
+      <DressingRoom3D
+        open={true}
+        onOpenChange={jest.fn()}
+        outfitItems={{
+          top: {
+            id: 'crew-test-1',
+            name: 'White Crew T-Shirt',
+            url: '/assets/onboarding/m_tshirt_crew_white.png',
+            category: 'top',
+          },
+        }}
+        measurements={sampleMeasurements}
+        sex="male"
+      />
+    );
+
+    expect(screen.queryByTestId('toggle-hood-mode-btn')).toBeNull();
   });
 });

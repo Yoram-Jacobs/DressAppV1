@@ -5905,7 +5905,9 @@
     "mesh_tailored": "3Dテーラード",
     "mesh_photo": "フォトフィット",
     "mesh_mode_tailored_active": "3Dテーラード有効 — クリックでフォトフィットに切替",
-    "mesh_mode_photo_active": "フォトフィット有効 — クリックで3Dテーラードに切替"
+    "mesh_mode_photo_active": "フォトフィット有効 — クリックで3Dテーラードに切替",
+    "hood_on": "フード着用",
+    "hood_off": "フード外す"
   },
   "dressingRoom": {
     "title": "3D試着室",

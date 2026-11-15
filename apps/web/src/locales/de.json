@@ -5897,7 +5897,9 @@
     "mesh_tailored": "3D-Maßschnitt",
     "mesh_photo": "Foto-Passform",
     "mesh_mode_tailored_active": "3D-Maßschnitt aktiv — für Foto-Passform klicken",
-    "mesh_mode_photo_active": "Foto-Passform aktiv — für 3D-Maßschnitt klicken"
+    "mesh_mode_photo_active": "Foto-Passform aktiv — für 3D-Maßschnitt klicken",
+    "hood_on": "Kapuze aufgesetzt",
+    "hood_off": "Kapuze abgesetzt"
   },
   "dressingRoom": {
     "title": "3D-Umkleidekabine",

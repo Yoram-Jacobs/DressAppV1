@@ -15,7 +15,41 @@ import {
   resolveGarmentTemplate,
   getTemplateGlbUrl,
   AVAILABLE_TEMPLATES,
+  isHoodedGarment,
 } from '@/lib/garmentTemplatesCatalog';
+
+const HOODED_TEMPLATE_IDS = [
+  'hoodie',
+  'hoodie_hood_off',
+  'hoodie_hood_on',
+  'hooded_coat',
+  'hooded_coat_hood_off',
+  'hooded_coat_hood_on',
+];
+
+const NON_TUCKABLE_TEMPLATE_IDS = [
+  'jacket',
+  'top_outerwear_jacket',
+  'coat',
+  'trench_coat',
+  'cardigan',
+  'jacket_blazer',
+  ...HOODED_TEMPLATE_IDS,
+];
+
+function checkTuckableTop(rawSlot, templateId, garmentText) {
+  return (
+    rawSlot === 'top' &&
+    !NON_TUCKABLE_TEMPLATE_IDS.includes(templateId) &&
+    !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText)
+  );
+}
+
+function blendHeadRadialCz(baseCz, y, isMale) {
+  const yHeadStart = isMale ? 1.54 : 1.44;
+  const headW = Math.max(0, Math.min(1, (y - yHeadStart) / 0.08));
+  return baseCz * (1 - headW) + 0.042 * headW;
+}
 import {
   analyzeGarmentFit,
   buildSilhouetteShell,
@@ -3606,9 +3640,7 @@ function GarmentTemplateMeshInner({
     // Tuck state is needed by the ease, hem, tuck, AND radial-clearance passes below, so it must live at
     // function scope (a block-scoped declaration here crashed every top/dress template with
     // "ReferenceError: shouldTuck is not defined" and silently fell back to the procedural mesh).
-    const isTuckableTop = rawSlot === 'top' &&
-      !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(templateId) &&
-      !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
+    const isTuckableTop = checkTuckableTop(rawSlot, templateId, garmentText);
     const shouldTuck = isTuckableTop && hasBottom;
     let geo = null;
     if (gltf?.scene) {
@@ -3664,7 +3696,7 @@ function GarmentTemplateMeshInner({
           //   • Tops / Outerwear / Dresses: anchored strictly at the shoulders & neckline (tDrop = 0 at shoulders).
           //   • Bottoms: anchored strictly at the waistline (tDrop = 0 at waist).
           const fitMode = fitProfile?.fit || 'regular';
-          const preDrapedLooseTemplates = ['hoodie', 'cardigan', 'coat', 'trench_coat', 'kaftan', 'top_tunic', 'bermuda'];
+          const preDrapedLooseTemplates = [...HOODED_TEMPLATE_IDS, 'cardigan', 'coat', 'trench_coat', 'kaftan', 'top_tunic', 'bermuda'];
           const isPreDrapedLoose = preDrapedLooseTemplates.includes(templateId);
           if (fitMode !== 'regular' && !(isPreDrapedLoose && fitMode === 'loose')) {
             // Canonical templates already sit at exact draped cloth clearance;
@@ -3742,7 +3774,7 @@ function GarmentTemplateMeshInner({
                       z = armCz + dzArm * (1 + (rScaleSleeve - 1) * sDrop);
                     }
                   } else {
-                    const isAlreadyFlaredTemplate = templateId === 'trench_coat' || templateId === 'kaftan';
+                    const isAlreadyFlaredTemplate = ['trench_coat', 'kaftan', 'hooded_coat', 'hooded_coat_hood_off', 'hooded_coat_hood_on'].includes(templateId);
                     const flareAdd = (!shouldTuck && fitMode === 'flared' && !isAlreadyFlaredTemplate)
                       ? Math.max(0, yWaistAnchor - y) * (fitProfile?.flareRate || 0.28)
                       : 0;
@@ -3862,7 +3894,7 @@ function GarmentTemplateMeshInner({
           // Sleeve Hem & Cuff Boundary Protection:
           // Preserve authentic 3D rounded cuffs authored in canonical GLB basemeshes.
           // Clamp sleeve UVs away from outer texture margins to eliminate hallucinated white border stripes.
-          const longSleeveTemplates = ['hoodie', 'top_outerwear_jacket', 'jacket', 'jacket_blazer', 'cardigan', 'coat', 'trench_coat', 'top_longsleeve', 'shirt', 'longsleeve', 'kaftan'];
+          const longSleeveTemplates = [...HOODED_TEMPLATE_IDS, 'top_outerwear_jacket', 'jacket', 'jacket_blazer', 'cardigan', 'coat', 'trench_coat', 'top_longsleeve', 'shirt', 'longsleeve', 'kaftan'];
           const isLongSleeveGarment = longSleeveTemplates.includes(templateId) || (['top', 'outerwear', 'dress'].includes(rawSlot) && detectSleeveStyle({ garmentText }).type === 'long');
           if (isLongSleeveGarment && pos && uv) {
             const xCuffThresh = isMale ? 0.28 : 0.24;
@@ -3901,7 +3933,7 @@ function GarmentTemplateMeshInner({
           // Adapts template collar geometry to match the authentic garment neckline (strapless, V-neck, scoop, square, boat neck),
           // ensuring crew necks are NOT forced on non-crew garments.
           const isCoreTop = ['top', 'outerwear', 'dress'].includes(rawSlot);
-          if (isCoreTop && pos) {
+          if (isCoreTop && pos && !HOODED_TEMPLATE_IDS.includes(templateId)) {
             const necklineType = detectNecklineStyle({ garmentText });
             const isDedicatedStrapless = templateId === 'top_strapless' || templateId === 'dress_strapless';
             const isStraplessTop = !isDedicatedStrapless && (shellFit?.isStrapless || necklineType === 'strapless');
@@ -4159,7 +4191,7 @@ function GarmentTemplateMeshInner({
           const sleeveBoost = (rawSlot === 'outerwear' ? 0.0080 : 0.0025) +
             (Number.isFinite(extraLayerOffset) ? extraLayerOffset : 0);
 
-          const torsoCz = getTorsoSlice(Math.max(0.5, y), isMale).cz || 0;
+          const torsoCz = blendHeadRadialCz(getTorsoSlice(Math.max(0.5, y), isMale).cz || 0, y, isMale);
           const yTuckThresh = isMale ? 1.085 : 1.045;
           let torsoBoost;
           if (rawSlot === 'outerwear') {
@@ -4183,7 +4215,7 @@ function GarmentTemplateMeshInner({
             allowInnerX = false;
           }
         } else {
-          cz = getTorsoSlice(Math.max(0.5, y), isMale).cz || 0;
+          cz = blendHeadRadialCz(getTorsoSlice(Math.max(0.5, y), isMale).cz || 0, y, isMale);
         }
         const dx = x - cx;
         const dz = z - cz;
@@ -4233,7 +4265,8 @@ function GarmentTemplateMeshInner({
         } else if (['bottom', 'belt'].includes(rawSlot)) {
           splitZ = getTorsoSlice(Math.max(0.5, midY), isMale).cz || 0;
         }
-        if (midZ < splitZ) {
+        const isHoodedRegion = HOODED_TEMPLATE_IDS.includes(templateId) && Boolean(backTexture) && midY > (isMale ? 1.545 : 1.450);
+        if (midZ < splitZ || isHoodedRegion) {
           backTriangles.push(i0, i1, i2);
         } else {
           frontTriangles.push(i0, i1, i2);
@@ -4254,7 +4287,7 @@ function GarmentTemplateMeshInner({
     }
 
     return geo;
-  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, extraLayerOffset, rawSlot, garmentText, isMale, hasBottom, hasOuterwear, shellFit, fitProfile, templateId, texture]);
+  }, [gltf, fallbackGeometry, morphField, morphInfluences, layerOffset, extraLayerOffset, rawSlot, garmentText, isMale, hasBottom, hasOuterwear, shellFit, fitProfile, templateId, texture, backTexture]);
 
   const materials = useMemo(() => {
     const hasFrontTex = Boolean(texture);
@@ -4364,6 +4397,7 @@ export function GarmentMeshCore({
   morphField = null,
   extraLayerOffset = 0,
   renderOrderOffset = 0,
+  hoodMode = 'off',
 }) {
   const isStandalone = Boolean(!showAvatar || standaloneMode);
   const patternLabel = String(garment?.pattern || garment?.rawItem?.pattern || '').toLowerCase().trim();
@@ -4680,6 +4714,16 @@ export function GarmentMeshCore({
     return posedHw;
   }, [rawSlot, visible, isMale, footwearSpec, shoeLayout, footPose, isStandalone, morphField, morphInfluences]);
 
+  const itemIsHooded = useMemo(
+    () => isHoodedGarment({
+      rawSlot,
+      garmentText,
+      slot: slot || garment?.slot,
+      category: garment?.category || garment?.rawItem?.category,
+    }),
+    [rawSlot, garmentText, slot, garment]
+  );
+
   const matchedTemplateId = useMemo(() => {
     return resolveGarmentTemplate({
       rawSlot,
@@ -4687,8 +4731,9 @@ export function GarmentMeshCore({
       aspect,
       slot: slot || garment?.slot,
       category: garment?.category || garment?.rawItem?.category,
+      hoodMode,
     });
-  }, [rawSlot, garmentText, aspect, slot, garment]);
+  }, [rawSlot, garmentText, aspect, slot, garment, hoodMode]);
 
   // VRAM cleanup: dispose transient morphed and generated geometries on unmount / recompute
   useEffect(() => {
@@ -4708,9 +4753,8 @@ export function GarmentMeshCore({
     };
   }, [baseGeometry, geometry, shell, shellGeos, heelGeometry, hardwareGeometry]);
 
-  const isTuckableTop = rawSlot === 'top' &&
-    !['jacket', 'top_outerwear_jacket', 'coat', 'trench_coat', 'cardigan', 'jacket_blazer'].includes(matchedTemplateId) &&
-    !/(?:overcoat|trench|jacket|blazer|coat|מעיל|ז['’]קט|ג['’]קט|בלייזר)/i.test(garmentText);
+  const isTuckableTop = checkTuckableTop(rawSlot, matchedTemplateId, garmentText);
+  const effectiveBypassSilhouette = bypassSilhouette || (itemIsHooded && hoodMode === 'on');
   const shouldTuck = isTuckableTop && hasBottom;
   const isOpaqueSlot = ['top', 'outerwear', 'dress', 'bottom', 'shoes', 'belt', 'necktie', 'watch'].includes(rawSlot);
 
@@ -4807,7 +4851,7 @@ export function GarmentMeshCore({
   // 1. Dedicated Canonical 3D Templates (Reproduced from Avatar Body via Blender):
   //    Rendered in 3D Tailored mode (default) and whenever a canonical 3D template matches,
   //    so garments wrap smoothly around the avatar with full 3D continuous volume (no flat razor-blade sheets).
-  if (matchedTemplateId && (!shellGeos || bypassSilhouette)) {
+  if (matchedTemplateId && (!shellGeos || effectiveBypassSilhouette)) {
     return (
       <GarmentTemplateMesh
         templateId={matchedTemplateId}
@@ -4836,7 +4880,7 @@ export function GarmentMeshCore({
   }
 
   // 2. Photo Cutout Silhouette Shell (when user explicitly selects photo cutout mode)
-  if (isCoreClothing && shellGeos && texture && !bypassSilhouette) {
+  if (isCoreClothing && shellGeos && texture && !effectiveBypassSilhouette) {
     const shellMaterialProps = {
       color: '#FFFFFF',
       alphaTest: 0.02,

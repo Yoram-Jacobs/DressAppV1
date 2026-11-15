@@ -5963,7 +5963,9 @@
     "avatar_studio_badge": "अवतार स्टूडियो • 3D",
     "loading": "3D ड्रेसिंग रूम लोड हो रहा है...",
     "side_view": "साइड व्यू",
-    "back_view": "बैक व्यू"
+    "back_view": "बैक व्यू",
+    "hood_on": "हुड पहना हुआ",
+    "hood_off": "हुड उतारा हुआ"
   },
   "dressingRoom": {
     "title": "3D ड्रेसिंग रूम",

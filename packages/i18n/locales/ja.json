@@ -5963,7 +5963,9 @@
     "avatar_studio_badge": "アバタースタジオ • 3D",
     "loading": "3D試着室を読み込み中...",
     "side_view": "サイドビュー",
-    "back_view": "バックビュー"
+    "back_view": "バックビュー",
+    "hood_on": "フード着用",
+    "hood_off": "フード外す"
   },
   "dressingRoom": {
     "title": "3D試着室",

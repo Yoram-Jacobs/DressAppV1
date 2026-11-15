@@ -5906,7 +5906,9 @@
     "mesh_tailored": "3D-крой",
     "mesh_photo": "По фото",
     "mesh_mode_tailored_active": "3D-крой активен — нажмите для режима По фото",
-    "mesh_mode_photo_active": "Режим По фото активен — нажмите для 3D-кроя"
+    "mesh_mode_photo_active": "Режим По фото активен — нажмите для 3D-кроя",
+    "hood_on": "Капюшон надет",
+    "hood_off": "Капюшон снят"
   },
   "dressingRoom": {
     "title": "3D-примерочная",

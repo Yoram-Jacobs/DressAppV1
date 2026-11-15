@@ -5964,7 +5964,9 @@
     "avatar_studio_badge": "Студия аватара • 3D",
     "loading": "Загрузка 3D-примерочной...",
     "side_view": "Вид сбоку",
-    "back_view": "Вид сзади"
+    "back_view": "Вид сзади",
+    "hood_on": "Капюшон надет",
+    "hood_off": "Капюшон снят"
   },
   "dressingRoom": {
     "title": "3D-примерочная",

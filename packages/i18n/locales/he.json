@@ -6063,7 +6063,9 @@
     "avatar_studio_badge": "סטודיו אווטאר • תלת-ממד",
     "loading": "טוען חדר הלבשה תלת-ממדי...",
     "side_view": "מבט צד",
-    "back_view": "מבט מאחור"
+    "back_view": "מבט מאחור",
+    "hood_on": "כובע חבוש",
+    "hood_off": "כובע מקופל"
   },
   "dressingRoom": {
     "title": "חדר מדידה בתלת-ממד",

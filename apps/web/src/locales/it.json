@@ -5904,7 +5904,9 @@
     "mesh_tailored": "Taglio 3D",
     "mesh_photo": "Vestibilità Foto",
     "mesh_mode_tailored_active": "Taglio 3D attivo — clicca per Vestibilità Foto",
-    "mesh_mode_photo_active": "Vestibilità Foto attiva — clicca per Taglio 3D"
+    "mesh_mode_photo_active": "Vestibilità Foto attiva — clicca per Taglio 3D",
+    "hood_on": "Cappuccio su",
+    "hood_off": "Cappuccio giù"
   },
   "dressingRoom": {
     "title": "Camerino 3D",

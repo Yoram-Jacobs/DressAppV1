@@ -5966,7 +5966,9 @@
     "avatar_studio_badge": "Avatarstudio • 3D",
     "loading": "3D paskamer laden...",
     "side_view": "Zijaanzicht",
-    "back_view": "Achteraanzicht"
+    "back_view": "Achteraanzicht",
+    "hood_on": "Capuchon op",
+    "hood_off": "Capuchon af"
   },
   "dressingRoom": {
     "title": "3D-paskamer",

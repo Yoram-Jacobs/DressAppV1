@@ -5955,7 +5955,9 @@
     "avatar_studio_badge": "Studio avatar • 3D",
     "loading": "Chargement de la cabine 3D...",
     "side_view": "Vue latérale",
-    "back_view": "Vue arrière"
+    "back_view": "Vue arrière",
+    "hood_on": "Capuche mise",
+    "hood_off": "Capuche baissée"
   },
   "dressingRoom": {
     "title": "Cabine d'essayage 3D",

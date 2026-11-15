@@ -5908,7 +5908,9 @@
     "mesh_tailored": "3D Pasvorm",
     "mesh_photo": "Foto-pasvorm",
     "mesh_mode_tailored_active": "3D Pasvorm actief — klik voor Foto-pasvorm",
-    "mesh_mode_photo_active": "Foto-pasvorm actief — klik voor 3D Pasvorm"
+    "mesh_mode_photo_active": "Foto-pasvorm actief — klik voor 3D Pasvorm",
+    "hood_on": "Capuchon op",
+    "hood_off": "Capuchon af"
   },
   "dressingRoom": {
     "title": "3D-paskamer",

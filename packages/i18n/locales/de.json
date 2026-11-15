@@ -5955,7 +5955,9 @@
     "avatar_studio_badge": "Avatar-Studio • 3D",
     "loading": "3D-Umkleidekabine wird geladen...",
     "side_view": "Seitenansicht",
-    "back_view": "Rückansicht"
+    "back_view": "Rückansicht",
+    "hood_on": "Kapuze aufgesetzt",
+    "hood_off": "Kapuze abgesetzt"
   },
   "dressingRoom": {
     "title": "3D-Umkleidekabine",

@@ -5936,7 +5936,9 @@
     "mesh_tailored": "3D Tailored",
     "mesh_photo": "Photo Fit",
     "mesh_mode_tailored_active": "3D Tailored Active — click to switch to Photo Fit",
-    "mesh_mode_photo_active": "Photo Fit Active — click to switch to 3D Tailored"
+    "mesh_mode_photo_active": "Photo Fit Active — click to switch to 3D Tailored",
+    "hood_on": "Hood On",
+    "hood_off": "Hood Off"
   },
   "dressingRoom": {
     "title": "3D Dressing Room",

@@ -5897,7 +5897,9 @@
     "mesh_tailored": "Coupe 3D",
     "mesh_photo": "Ajustement Photo",
     "mesh_mode_tailored_active": "Coupe 3D active — cliquez pour Ajustement Photo",
-    "mesh_mode_photo_active": "Ajustement Photo actif — cliquez pour Coupe 3D"
+    "mesh_mode_photo_active": "Ajustement Photo actif — cliquez pour Coupe 3D",
+    "hood_on": "Capuche mise",
+    "hood_off": "Capuche baissée"
   },
   "dressingRoom": {
     "title": "Cabine d'essayage 3D",

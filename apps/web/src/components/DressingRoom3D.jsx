@@ -39,7 +39,23 @@ import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFitting';
+import { isHoodedGarment } from '@/lib/garmentTemplatesCatalog';
 import { useModalBack } from '@/lib/useModalBack';
+
+function isGarmentItemHooded(garment) {
+  if (!garment) return false;
+  const metaText = resolveGarmentMetadataText(garment) || garment.name || garment.title || '';
+  return isHoodedGarment({
+    rawSlot: normalizeGarmentRole(
+      garment.slot,
+      garment.category || garment.rawItem?.category,
+      metaText
+    ),
+    slot: garment.slot,
+    category: garment.category || garment.rawItem?.category,
+    garmentText: metaText,
+  });
+}
 
 class SafeGarmentWrapper extends React.Component {
   constructor(props) {
@@ -466,6 +482,7 @@ export default function DressingRoom3D({
   const [autoRotate, setAutoRotate] = useState(false);
   const [cameraPreset, setCameraPreset] = useState(null);
   const [meshMode, setMeshMode] = useState('tailored'); // 'tailored' (canonical basemesh) | 'photo' (cutout shell)
+  const [hoodMode, setHoodMode] = useState('off'); // 'off' (draped back) | 'on' (up over head)
   const [layerVisibility, setLayerVisibility] = useState({});
   const [showRack, setShowRack] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? false : true));
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -712,6 +729,9 @@ export default function DressingRoom3D({
         if (minY < bottomMinY) bottomMinY = minY;
       });
 
+    const hasHoodedGarment = activeGarments.some(
+      (g) => isGarmentVisible(g) && isGarmentItemHooded(g)
+    );
     const activeShoe = activeGarments.find((g) => g.slot === 'shoes' && isGarmentVisible(g));
     const shoeSpec = activeShoe ? resolveFootwearSpec(activeShoe) : null;
 
@@ -723,12 +743,18 @@ export default function DressingRoom3D({
       hasShoes: visibleSlots.has('shoes'),
       shoeKind: shoeSpec?.kind || null,
       hasHeadwear: visibleSlots.has('headwear'),
+      hasHoodOn: Boolean(hasHoodedGarment && hoodMode === 'on'),
       isSleeveless,
       isStrapless,
       bottomMinY: Number.isFinite(bottomMinY) ? bottomMinY : undefined,
       shoeCollar: shoeSpec?.collar || 0.128,
     };
-  }, [activeGarments, isGarmentVisible]);
+  }, [activeGarments, isGarmentVisible, hoodMode]);
+
+  const hasHoodedGarment = useMemo(
+    () => activeGarments.some((g) => isGarmentVisible(g) && isGarmentItemHooded(g)),
+    [activeGarments, isGarmentVisible]
+  );
 
   const hairProps = useMemo(() => {
     return resolveHairProperties(activeHair, isMale);
@@ -1019,6 +1045,7 @@ export default function DressingRoom3D({
                     .sort((a, b) => resolveGarmentRenderOrder(a.slot, a.name || a.title) - resolveGarmentRenderOrder(b.slot, b.name || b.title))
                     .map((garment) => {
                       const isVisible = isGarmentVisible(garment);
+                      const itemIsHooded = isGarmentItemHooded(garment);
                       const intraSlotIndex = isVisible ? (slotCounts[garment.slot] || 0) : 0;
                       if (isVisible) {
                         slotCounts[garment.slot] = intraSlotIndex + 1;
@@ -1028,7 +1055,7 @@ export default function DressingRoom3D({
                           key={`${garment.slot}-${garment.id}`}
                           slot={garment.slot}
                           garmentId={garment.id}
-                          resetKey={`${garment.id}-${meshMode}-${showAvatar}`}
+                          resetKey={`${garment.id}-${meshMode}-${hoodMode}-${showAvatar}`}
                         >
                           <Suspense fallback={null}>
                             <GarmentMesh3D
@@ -1043,7 +1070,8 @@ export default function DressingRoom3D({
                               footPose={footPose}
                               showAvatar={showAvatar}
                               standaloneMode={!showAvatar}
-                              bypassSilhouette={meshMode === 'tailored'}
+                              bypassSilhouette={meshMode === 'tailored' || (itemIsHooded && hoodMode === 'on')}
+                              hoodMode={itemIsHooded ? hoodMode : 'off'}
                               extraLayerOffset={intraSlotIndex * 0.006}
                               renderOrderOffset={intraSlotIndex}
                             />
@@ -1203,6 +1231,54 @@ export default function DressingRoom3D({
                     : t('dressing_room_3d.mesh_photo', { defaultValue: 'Photo Fit' })}
                 </span>
               </Button>
+
+              {hasHoodedGarment && (
+                <>
+                  <div className="h-4 w-px bg-[#E5DFD5] mx-1 shrink-0" />
+                  <Button
+                    type="button"
+                    variant={hoodMode === 'on' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setHoodMode((prev) => (prev === 'on' ? 'off' : 'on'))}
+                    className={`text-xs font-semibold rounded-xl px-2.5 sm:px-3 py-1.5 h-8 flex items-center gap-1.5 shrink-0 whitespace-nowrap transition-all ${
+                      hoodMode === 'on'
+                        ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'
+                        : 'text-[#374151] hover:text-[#111827] hover:bg-[#F5F2EB]'
+                    }`}
+                    data-testid="toggle-hood-mode-btn"
+                    title={
+                      hoodMode === 'on'
+                        ? t('dressing_room_3d.hood_on', { defaultValue: 'Hood On' })
+                        : t('dressing_room_3d.hood_off', { defaultValue: 'Hood Off' })
+                    }
+                    aria-label={
+                      hoodMode === 'on'
+                        ? t('dressing_room_3d.hood_on', { defaultValue: 'Hood On' })
+                        : t('dressing_room_3d.hood_off', { defaultValue: 'Hood Off' })
+                    }
+                  >
+                    <svg
+                      className={`w-3.5 h-3.5 shrink-0 ${hoodMode === 'on' ? 'text-amber-100' : 'text-amber-700'}`}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 19c0-5 2-13 7-13s7 8 7 13" />
+                      <path d="M8.5 19a3.5 5 0 0 1 7 0" />
+                      <path d="M4 19h16" />
+                    </svg>
+                    <span className="hidden sm:inline">
+                      {hoodMode === 'on'
+                        ? t('dressing_room_3d.hood_on', { defaultValue: 'Hood On' })
+                        : t('dressing_room_3d.hood_off', { defaultValue: 'Hood Off' })}
+                    </span>
+                  </Button>
+                </>
+              )}
 
               <div className="h-4 w-px bg-[#E5DFD5] mx-1 shrink-0" />
 

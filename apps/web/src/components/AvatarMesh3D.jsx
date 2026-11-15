@@ -51,8 +51,8 @@ export function getAvatarMetricTransform({ isMale = false, height = 170, morphIn
  */
 export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale = false, meshName = '', materialName = '') {
   if (!geometry || !coveredZones) return geometry;
-  const { hasTop, hasOuterwear, hasDress, hasBottom, hasShoes, hasHeadwear } = coveredZones;
-  if (!hasTop && !hasOuterwear && !hasDress && !hasBottom && !hasShoes && !hasHeadwear) return geometry;
+  const { hasTop, hasOuterwear, hasDress, hasBottom, hasShoes, hasHeadwear, hasHoodOn } = coveredZones;
+  if (!hasTop && !hasOuterwear && !hasDress && !hasBottom && !hasShoes && !hasHeadwear && !hasHoodOn) return geometry;
 
   const pos = geometry.attributes?.position;
   if (!pos) return geometry;
@@ -61,6 +61,10 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
   const footCx = isMale ? 0.148 : 0.170;
   const footCz = isMale ? 0.055 : 0.095;
   const hatBrimY = isMale ? 1.66 : 1.58;
+  const isHairMesh = Boolean(
+    (materialName && materialName.toLowerCase().includes('hair')) ||
+    (meshName && meshName.toLowerCase().includes('hair'))
+  );
   const isUnderwearMesh = Boolean(
     (materialName && materialName.includes('generic')) ||
     (meshName && (meshName.endsWith('_1') || meshName.includes('generic')))
@@ -97,6 +101,18 @@ export function retractCoveredAvatarSkin(geometry, coveredZones = null, isMale =
       arr[idx] = x * (1 - 0.08 * tCrown);
       arr[idx + 1] = y - 0.012 * tCrown;
       arr[idx + 2] = 0.03 + (z - 0.03) * (1 - 0.08 * tCrown);
+      continue;
+    }
+
+    // 0b. Hood-On hair retraction: tuck crown, rear, and temporal hair inside the hood opening
+    // without disturbing non-hair head/face skin meshes.
+    if (hasHoodOn && isHairMesh) {
+      if (z < (isMale ? 0.142 : 0.138) || y > (isMale ? 1.705 : 1.605) || absX > 0.072) {
+        const skullCy = isMale ? 1.69 : 1.59;
+        arr[idx] = x * 0.76;
+        arr[idx + 1] = y > skullCy ? skullCy + (y - skullCy) * 0.74 : y;
+        arr[idx + 2] = 0.042 + (z - 0.042) * 0.76;
+      }
       continue;
     }
 
@@ -279,7 +295,7 @@ export default function AvatarMesh3D({
     if (!clonedScene) return;
     const hasCoverage = Boolean(
       coveredZones &&
-      (coveredZones.hasTop || coveredZones.hasOuterwear || coveredZones.hasDress || coveredZones.hasBottom || coveredZones.hasShoes || coveredZones.hasHeadwear)
+      (coveredZones.hasTop || coveredZones.hasOuterwear || coveredZones.hasDress || coveredZones.hasBottom || coveredZones.hasShoes || coveredZones.hasHeadwear || coveredZones.hasHoodOn)
     );
     clonedScene.traverse((node) => {
       const original = originalGeomMap.current.get(node);
@@ -318,8 +334,8 @@ export default function AvatarMesh3D({
       }
       if (!footPose?.active && !hasCoverage) return;
       if (!original.boundingBox) original.computeBoundingBox?.();
-      // Skip hair/head-only meshes located high above the shoulders unless a hat is worn (crown collision mask)
-      if (original.boundingBox && original.boundingBox.min.y > 1.42 && !coveredZones?.hasHeadwear) return;
+      // Skip hair/head-only meshes located high above the shoulders unless a hat or hood-on is worn
+      if (original.boundingBox && original.boundingBox.min.y > 1.42 && !(coveredZones?.hasHeadwear || coveredZones?.hasHoodOn)) return;
       let nextGeo = original.clone();
       if (hasCoverage) {
         nextGeo = retractCoveredAvatarSkin(nextGeo, coveredZones, isMale, node.name, matName);
@@ -379,15 +395,23 @@ export default function AvatarMesh3D({
   // Reactive updates for prop changes (ensures re-rendering when colors or morphs update)
   useEffect(() => {
     if (!clonedScene) return;
+    const effectiveMorphs = coveredZones?.hasHoodOn && morphInfluences
+      ? Object.fromEntries(
+          Object.entries(morphInfluences).map(([k, v]) => [
+            k,
+            k.startsWith('hair_') ? Math.min(Number(v) || 0, 0.18) : v,
+          ])
+        )
+      : morphInfluences;
     applyAvatarAppearance(clonedScene, {
       skinColor,
       hairProps,
       isMale,
-      morphInfluences,
+      morphInfluences: effectiveMorphs,
       castShadow,
       receiveShadow,
     });
-  }, [clonedScene, skinColor, hairProps, isMale, morphInfluences, castShadow, receiveShadow]);
+  }, [clonedScene, skinColor, hairProps, isMale, morphInfluences, coveredZones?.hasHoodOn, castShadow, receiveShadow]);
 
   if (!clonedScene) return null;
 

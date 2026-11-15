@@ -5962,7 +5962,9 @@
     "avatar_studio_badge": "Studio avatar • 3D",
     "loading": "Caricamento camerino 3D...",
     "side_view": "Vista laterale",
-    "back_view": "Vista posteriore"
+    "back_view": "Vista posteriore",
+    "hood_on": "Cappuccio su",
+    "hood_off": "Cappuccio giù"
   },
   "dressingRoom": {
     "title": "Camerino 3D",

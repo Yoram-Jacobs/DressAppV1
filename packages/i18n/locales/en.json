@@ -6008,7 +6008,9 @@
     "avatar_studio_badge": "Avatar Studio • 3D",
     "loading": "Loading 3D dressing room...",
     "side_view": "Side view",
-    "back_view": "Back view"
+    "back_view": "Back view",
+    "hood_on": "Hood On",
+    "hood_off": "Hood Off"
   },
   "dressingRoom": {
     "title": "3D Dressing Room",

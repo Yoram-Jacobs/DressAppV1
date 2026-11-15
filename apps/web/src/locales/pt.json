@@ -5904,7 +5904,9 @@
     "mesh_tailored": "Corte 3D",
     "mesh_photo": "Ajuste Foto",
     "mesh_mode_tailored_active": "Corte 3D ativo — clique para Ajuste Foto",
-    "mesh_mode_photo_active": "Ajuste Foto ativo — clique para Corte 3D"
+    "mesh_mode_photo_active": "Ajuste Foto ativo — clique para Corte 3D",
+    "hood_on": "Capuz colocado",
+    "hood_off": "Capuz abaixado"
   },
   "dressingRoom": {
     "title": "Provador 3D",

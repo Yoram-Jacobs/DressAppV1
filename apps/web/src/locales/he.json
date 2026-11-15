@@ -6103,7 +6103,9 @@
     "mesh_tailored": "תפירת תלת-ממד",
     "mesh_photo": "התאמת תמונה",
     "mesh_mode_tailored_active": "תפירת תלת-ממד פעילה — לחץ למעבר להתאמת תמונה",
-    "mesh_mode_photo_active": "התאמת תמונה פעילה — לחץ למעבר לתפירת תלת-ממד"
+    "mesh_mode_photo_active": "התאמת תמונה פעילה — לחץ למעבר לתפירת תלת-ממד",
+    "hood_on": "כובע חבוש",
+    "hood_off": "כובע מקופל"
   },
   "dressingRoom": {
     "title": "חדר מדידה בתלת-ממד",
