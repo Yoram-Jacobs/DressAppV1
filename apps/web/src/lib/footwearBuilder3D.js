@@ -1234,10 +1234,14 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const computeSoleProfile = (z) => {
     const heelT = clamp((z - zStart) / Math.max(1e-4, ballZ - zStart), 0, 1);
     const springT = smoothstep(ballZ, zEnd, z);
-    // Athletic sneakers curl upward gently at the toe tip (toe-spring) while keeping heel/ball grounded.
-    const toeSpringLift = (kind === 'sneaker' ? 0.0055 : isBootKind ? 0.0032 : 0.0025) * springT * springT;
-    // Boots feature a slight midfoot waist arch between the grounded heel block and forefoot ball.
-    const waistLift = isBootKind ? Math.sin(smoothstep(heelZ + 0.024, ballZ - 0.01, z) * Math.PI) * 0.0035 : 0;
+    const hasRealHeel = heelExtra > 0.01;
+    // Athletic sneakers curl upward gently at the toe tip; flat no-heel boots/shoes sit flat on the floor.
+    const toeSpringLift =
+      (kind === 'sneaker' ? 0.0055 : isBootKind ? (hasRealHeel ? 0.0025 : 0.0012) : 0.0025) *
+      springT *
+      springT;
+    const waistLift =
+      isBootKind && hasRealHeel ? Math.sin(smoothstep(heelZ + 0.024, ballZ - 0.01, z) * Math.PI) * 0.003 : 0;
     const botY = yOutsoleBottom + waistLift + toeSpringLift;
     // Cup-sole foxing rises slightly above yWelt on sneakers; boots have a crisp Goodyear welt ledge.
     const foxingRise = kind === 'sneaker' ? lerp(0.012, 0.005, heelT) : isBootKind ? 0.004 : 0.003;
@@ -1248,15 +1252,12 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
   const computeCollarAndDorsalY = (z, sAbs /* 0 at center spine, 1 at sole wall */) => {
     if (isBootKind) {
-      const throatZ = ankleZ + 0.022;
+      const throatZ = ankleZ + 0.018;
       if (z <= throatZ) {
-        const backT = clamp((z - zStart) / Math.max(1e-4, throatZ - zStart), 0, 1);
-        // Taper down smoothly toward the back heel counter so rearClosedGrid flows into the flared
-        // boot shaft base instead of forming a boxy horizontal shelf behind the ankle.
-        return lerp(ankleY - 0.026, ankleY + 0.010, Math.pow(backT, 0.85));
+        return ankleY + 0.006;
       }
       const vampT = clamp((z - throatZ) / Math.max(1e-4, zEnd - throatZ), 0, 1);
-      return lerp(ankleY + 0.010, toeCapY, Math.pow(vampT, 0.82));
+      return lerp(ankleY + 0.006, toeCapY, Math.pow(vampT, 0.80));
     }
 
     if (kind === 'flat' || kind === 'heel') {
@@ -1524,174 +1525,238 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   parts.push({ geometry: toeCapGrid, materialIndex: 0 });
 
   // (B) Rear Quarters & Heel Counter (r = 0 .. rAnkleSplit)
-  // Build left quarter wall and right quarter wall rising from welt soleTopY up to collarRimY,
-  // smoothly meeting around back heel counter (r = 0) AND meeting the forefoot at r = rAnkleSplit!
+  // For boot / ankle_boot: ONE unified, continuous lofted Chelsea/tall boot mesh from the
+  // rear sole welt & foreGrid instep arch all the way up to the sculpted boot collar (no separate cylinder).
   const sideSplitIdx = nUpperArch / 2; // 8 verts per side
 
-  // Watertight heel-end dome cap converging to the exact welt-plane apex shared with soleGrid heel endcap.
-  const stHeel = stations[0];
-  const hHW = stHeel.hw + upperPad;
-  const { topY: hSoleTop } = computeSoleProfile(stHeel.z);
-  const heelApexZ = stHeel.z - capExtHeel;
-  const heelBulgeAmp = isBootKind ? 0 : -0.004;
-  const heelMinArch = isBootKind ? 0.02 : 0.015;
-  const heelEndCap = buildGridPart(
-    nUpperCapRows,
-    nUpperArch,
-    (rr, c) => {
-      const tCap = rr / nUpperCapRows;
-      const angle = tCap * Math.PI * 0.5;
-      const radialScale = Math.cos(angle);
-      const zBlend = Math.sin(angle);
-      const uParam = c / nUpperArch;
-      const tWall = uParam <= 0.5 ? uParam * 2 : (1 - uParam) * 2;
-      const theta = uParam * Math.PI;
-      const cosT = cosTVal(theta);
-      const sinT = Math.max(0, Math.sin(theta));
-      const archHeight = computeCollarAndDorsalY(stHeel.z, 1 - tWall) - hSoleTop;
-      const xFrac = -Math.sign(cosT) * Math.pow(Math.abs(cosT), 0.72);
-      const wallElev = Math.pow(sinT, 0.78);
-      const xRing = stHeel.cx + xFrac * hHW;
-      const yRing = hSoleTop + wallElev * Math.max(heelMinArch, archHeight);
-      const zRing = stHeel.z + heelBulgeAmp * Math.sin(tWall * Math.PI * 0.75);
-      const x = lerp(stHeel.cx, xRing, radialScale);
-      const y = hSoleTop + (yRing - hSoleTop) * radialScale;
-      const z = lerp(zRing, heelApexZ, zBlend);
-      const archU = lerp(uParam, 0.5, tCap * 0.65);
-      const [u, v] = evalUpperUV(x, y, z, archU, wallElev * radialScale);
-      return { x, y, z, u, v };
-    },
-    true
-  );
-  parts.push({ geometry: heelEndCap, materialIndex: 0 });
-
-  // Left & Right outer quarter walls + heel counter continuity.
-  // For boot / ankle_boot, keep closed ring around full leg shaft (same topology as foreGrid!).
   if (isBootKind) {
-    const rearClosedGrid = buildGridPart(rAnkleSplit, nUpperArch, (r, c) => {
-      const st = stations[r];
-      const hw = st.hw + upperPad;
-      const { topY: soleTopY } = computeSoleProfile(st.z);
-      const uParam = c / nUpperArch;
-      const theta = uParam * Math.PI;
-      const sAbs = Math.abs(uParam - 0.5) * 2;
-      const archHeight = computeCollarAndDorsalY(st.z, sAbs) - soleTopY;
-      const xFrac = -Math.sign(cosTVal(theta)) * Math.pow(Math.abs(cosTVal(theta)), 0.72);
-      const yFrac = Math.pow(Math.max(0, Math.sin(theta)), 0.78);
-      const x = st.cx + xFrac * hw;
-      const y = soleTopY + yFrac * Math.max(0.02, archHeight);
-      const [u, v] = evalUpperUV(x, y, st.z, uParam, yFrac);
-      return { x, y, z: st.z, u, v };
-    });
-    parts.push({ geometry: rearClosedGrid, materialIndex: 0 });
+    const stHeel = stations[0];
+    const stSplit = stations[rAnkleSplit];
+    const hHW = stHeel.hw + upperPad;
+    const { topY: hSoleTop } = computeSoleProfile(stHeel.z);
+    const { topY: splitSoleTop } = computeSoleProfile(stSplit.z);
+    const hwSplit = stSplit.hw + upperPad;
 
-    // Dedicated sculpted lower-leg shaft flaring organically into the heel counter and instep,
-    // finished with a rolled collar rim and recessed dark interior lining (Group 2).
     const shaftArr = anatomy.shaft || [];
-    if (shaftArr.length >= 2) {
-      const yStart = Math.max(yWelt + 0.045, ankleY - 0.028);
-      const yEnd = kind === 'ankle_boot' ? Math.max(0.145, ankleY + 0.065) : Math.max(0.36, spec?.collar || 0.40);
-      const shaftOff = kind === 'ankle_boot' ? 0.003 : 0.0065;
-      const xSign = shaftArr[0].cx < 0 ? -1 : 1;
-      const sampleShaftAtY = (yVal) => {
-        const cy = clamp(yVal, shaftArr[0].y, shaftArr[shaftArr.length - 1].y);
-        let idx = 0;
-        while (idx < shaftArr.length - 2 && shaftArr[idx + 1].y < cy) idx++;
-        const a = shaftArr[idx];
-        const b = shaftArr[idx + 1] || a;
-        const t = b.y > a.y ? clamp((cy - a.y) / (b.y - a.y), 0, 1) : 0;
+    const xSign = shaftArr.length && shaftArr[0].cx < 0 ? -1 : 1;
+    const sampleShaftAtY = (yVal) => {
+      if (!shaftArr.length) {
+        return { cx: stSplit.cx, rx: 0.036, cz: ankleZ - 0.004, rz: 0.048 };
+      }
+      const cy = clamp(yVal, shaftArr[0].y, shaftArr[shaftArr.length - 1].y);
+      let idx = 0;
+      while (idx < shaftArr.length - 2 && shaftArr[idx + 1].y < cy) idx++;
+      const a = shaftArr[idx];
+      const b = shaftArr[idx + 1] || a;
+      const t = b.y > a.y ? clamp((cy - a.y) / (b.y - a.y), 0, 1) : 0;
+      return {
+        cx: lerp(a.cx, b.cx, t) * xSign,
+        rx: lerp(a.rx, b.rx, t),
+        cz: lerp(a.cz, b.cz, t),
+        rz: lerp(a.rz, b.rz, t),
+      };
+    };
+
+    const yEnd = kind === 'ankle_boot' ? Math.max(0.148, ankleY + 0.068) : Math.max(0.36, spec?.collar || 0.40);
+    const shaftOff = kind === 'ankle_boot' ? 0.004 : 0.0065;
+    // Align ankle collar center with the foot's own centerline (gentle blend for tall boots above ankle).
+    const alignShaftCenter = (yVal, sp) => {
+      const tallBlend = kind === 'ankle_boot' ? 0.15 : smoothstep(0.14, 0.34, yVal);
+      const spCx = side > 0 ? sp.cx : -sp.cx;
+      return {
+        cx: lerp(stSplit.cx, spCx, tallBlend),
+        cz: lerp(ankleZ - 0.004, sp.cz, tallBlend),
+      };
+    };
+
+    const evalBootBottomLoop = (th) => {
+      // Front half (-PI/2 .. +PI/2): exact back arch of foreGrid at r = rAnkleSplit
+      if (Math.abs(th) <= Math.PI * 0.5 + 1e-6) {
+        const uParam = clamp((th + Math.PI * 0.5) / Math.PI, 0, 1);
+        const theta = uParam * Math.PI;
+        const archH = computeCollarAndDorsalY(stSplit.z, Math.abs(uParam - 0.5) * 2) - splitSoleTop;
+        const xFrac = -Math.sign(Math.cos(theta)) * Math.pow(Math.abs(Math.cos(theta)), 0.72);
+        const yFrac = Math.pow(Math.max(0, Math.sin(theta)), 0.78);
         return {
-          cx: lerp(a.cx, b.cx, t) * xSign,
-          rx: lerp(a.rx, b.rx, t),
-          cz: lerp(a.cz, b.cz, t),
-          rz: lerp(a.rz, b.rz, t),
+          x: stSplit.cx + xFrac * hwSplit,
+          y: splitSoleTop + yFrac * Math.max(0.02, archH),
+          z: stSplit.z,
+          wallElev: yFrac,
         };
+      }
+      // Back half (|th| > PI/2): rear sole welt from heel apex forward to stSplit
+      const backS = clamp((Math.PI - Math.abs(th)) / (Math.PI * 0.5), 0, 1);
+      const sideSign = th < 0 ? -1 : 1;
+      if (backS <= 0.22) {
+        const capT = backS / 0.22;
+        const angle = (1 - capT) * Math.PI * 0.5;
+        return {
+          x: stHeel.cx + sideSign * hHW * Math.cos(angle),
+          y: hSoleTop,
+          z: lerp(stHeel.z, stHeel.z - capExtHeel, Math.sin(angle)),
+          wallElev: 0,
+        };
+      }
+      const weltT = (backS - 0.22) / 0.78;
+      const fIdx = weltT * rAnkleSplit;
+      const i0 = clamp(Math.floor(fIdx), 0, rAnkleSplit);
+      const i1 = clamp(i0 + 1, 0, rAnkleSplit);
+      const fFrac = fIdx - i0;
+      const stA = stations[i0];
+      const stB = stations[i1];
+      const cx = lerp(stA.cx, stB.cx, fFrac);
+      const hw = lerp(stA.hw, stB.hw, fFrac) + upperPad;
+      const z = lerp(stA.z, stB.z, fFrac);
+      const { topY: soleTopY } = computeSoleProfile(z);
+      return {
+        x: cx + sideSign * hw,
+        y: soleTopY,
+        z,
+        wallElev: 0,
       };
-      const evalShaftOuterPoint = (vT, th) => {
-        const y = lerp(yStart, yEnd, vT);
-        const sp = sampleShaftAtY(y);
-        const baseFlare = Math.pow(1 - smoothstep(0, 0.45, vT), 1.35);
-        const cuffFlare = smoothstep(0.88, 1.0, vT) * 0.0025;
-        const cosTh = Math.cos(th);
-        const sinTh = Math.sin(th);
-        // Flare bottom of shaft into the heel counter (-Z) and instep vamp (+Z) so there is no step seam.
-        const zExt = (cosTh < 0 ? 0.022 : 0.020) * baseFlare;
-        const rx = sp.rx + shaftOff + cuffFlare + 0.006 * baseFlare;
-        const rz = sp.rz + shaftOff + cuffFlare + zExt;
-        const x = (side > 0 ? sp.cx : -sp.cx) + rx * sinTh;
-        const z = sp.cz + rz * cosTh;
-        return { x, y, z, sp, rx, rz };
+    };
+
+    const evalCollarTopPoint = (th) => {
+      const collarDip = kind === 'ankle_boot' ? 0.008 * Math.cos(2 * th) : 0.004 * Math.cos(2 * th);
+      const yTop = yEnd + collarDip;
+      const sp = sampleShaftAtY(yEnd);
+      const center = alignShaftCenter(yEnd, sp);
+      const rx = sp.rx + shaftOff;
+      const rz = sp.rz + shaftOff;
+      return {
+        x: center.cx + rx * Math.sin(th),
+        y: yTop,
+        z: center.cz + rz * Math.cos(th),
+        rx,
+        rz,
+        center,
       };
-      const nyShaft = 16;
-      const nTheta = 24;
-      const shaftGrid = buildGridPart(
-        nyShaft,
-        nTheta,
-        (ry, c) => {
-          const vT = ry / nyShaft;
-          const th = -Math.PI + (c / nTheta) * Math.PI * 2;
-          const p = evalShaftOuterPoint(vT, th);
-          const blendStart = ankleY - 0.015;
-          const [u, v] = shoeUVAnatomical(side, p.x, p.y, p.z, frame, layout, {
-            bootShaftBlend: smoothstep(blendStart, ankleY + 0.025, p.y),
-            shaftY0: yStart,
-            shaftY1: yEnd,
-          });
-          return { x: p.x, y: p.y, z: p.z, u, v };
-        },
-        true
-      );
-      parts.push({ geometry: shaftGrid, materialIndex: 0 });
+    };
 
-      // Rolled collar rim & recessed interior shaft lining (Group 2) so top-down/front views are watertight.
-      const wallThick = 0.0045;
-      const yInnerBot = Math.max(ankleY + 0.012, yEnd - (kind === 'ankle_boot' ? 0.052 : 0.10));
-      const liningProfile = [
-        { y: yEnd, inset: 0 },
-        { y: yEnd + 0.0022, inset: wallThick * 0.45 },
-        { y: yEnd, inset: wallThick },
-        { y: lerp(yEnd, yInnerBot, 0.35), inset: wallThick + 0.0005 },
-        { y: lerp(yEnd, yInnerBot, 0.72), inset: wallThick + 0.001 },
-        { y: yInnerBot, inset: wallThick + 0.0015 },
-      ];
-      const shaftLiningGrid = buildGridPart(
-        liningProfile.length - 1,
-        nTheta,
-        (ry, c) => {
-          const lp = liningProfile[ry];
-          const sp = sampleShaftAtY(Math.min(lp.y, yEnd));
-          const cuffFlare = ry <= 2 ? 0.0025 : 0;
-          const th = -Math.PI + (c / nTheta) * Math.PI * 2;
-          const rx = Math.max(0.016, sp.rx + shaftOff + cuffFlare - lp.inset);
-          const rz = Math.max(0.018, sp.rz + shaftOff + cuffFlare - lp.inset);
-          const x = (side > 0 ? sp.cx : -sp.cx) + rx * Math.sin(th);
-          const z = sp.cz + rz * Math.cos(th);
-          return { x, y: lp.y, z, u: c / nTheta, v: ry / (liningProfile.length - 1) };
-        },
-        true
-      );
-      parts.push({ geometry: shaftLiningGrid, materialIndex: 2 });
+    const nyBoot = 20;
+    const nBootLoop = 32;
+    const bootUpperGrid = buildGridPart(
+      nyBoot,
+      nBootLoop,
+      (ry, c) => {
+        const vT = ry / nyBoot;
+        const th = -Math.PI + (c / nBootLoop) * Math.PI * 2;
+        const bot = evalBootBottomLoop(th);
+        const top = evalCollarTopPoint(th);
 
-      // Closed dark shaft floor cap at yInnerBot so looking down into the boot never shows empty space.
-      const spBot = sampleShaftAtY(yInnerBot);
-      const botFloorGrid = buildGridPart(
-        1,
-        nTheta,
-        (r, c) => {
-          const th = -Math.PI + (c / nTheta) * Math.PI * 2;
-          const cx = side > 0 ? spBot.cx : -spBot.cx;
-          const rx = Math.max(0.016, spBot.rx + shaftOff - (wallThick + 0.0015));
-          const rz = Math.max(0.018, spBot.rz + shaftOff - (wallThick + 0.0015));
-          const x = r === 0 ? cx : cx + rx * Math.sin(th);
-          const z = r === 0 ? spBot.cz : spBot.cz + rz * Math.cos(th);
-          return { x, y: yInnerBot, z, u: 0.5, v: 0.5 };
-        },
-        false
-      );
-      parts.push({ geometry: botFloorGrid, materialIndex: 2 });
-    }
+        // Smooth S-curve loft from foot last (vT=0) to sculpted boot collar (vT=1)
+        const y = lerp(bot.y, top.y, vT);
+        const sXZ = smoothstep(0, 1, Math.pow(vT, 0.85));
+        let x = lerp(bot.x, top.x, sXZ);
+        let z = lerp(bot.z, top.z, sXZ);
+
+        // Tall boot calf contour above ankle
+        if (kind === 'boot' && vT > 0.35) {
+          const spY = sampleShaftAtY(y);
+          const cY = alignShaftCenter(y, spY);
+          const calfX = cY.cx + (spY.rx + shaftOff) * Math.sin(th);
+          const calfZ = cY.cz + (spY.rz + shaftOff) * Math.cos(th);
+          const calfBlend = smoothstep(0.35, 0.85, vT);
+          x = lerp(x, calfX, calfBlend);
+          z = lerp(z, calfZ, calfBlend);
+        }
+
+        // Subtle anatomical heel counter roundness at rear lower quarter (vT ~ 0.15..0.35)
+        const heelCup = Math.max(0, -Math.cos(th)) * Math.sin(vT * Math.PI) * (1 - vT) * 0.005;
+        z -= heelCup;
+
+        const [u, v] = shoeUVAnatomical(side, x, y, z, frame, layout, {
+          wallElev: lerp(bot.wallElev, 1, smoothstep(0, 0.45, vT)),
+          bootShaftBlend: smoothstep(ankleY - 0.02, ankleY + 0.025, y),
+          shaftY0: ankleY - 0.02,
+          shaftY1: yEnd,
+        });
+        return { x, y, z, u, v };
+      },
+      true
+    );
+    parts.push({ geometry: bootUpperGrid, materialIndex: 0 });
+
+    // Rolled collar rim & recessed interior shaft lining (Group 2) continuing seamlessly from top collar loop.
+    const wallThick = 0.0045;
+    const yInnerBot = Math.max(ankleY + 0.012, yEnd - (kind === 'ankle_boot' ? 0.052 : 0.10));
+    const liningProfile = [
+      { t: 0, dy: 0, inset: 0 },
+      { t: 0.2, dy: 0.0022, inset: wallThick * 0.45 },
+      { t: 0.4, dy: 0, inset: wallThick },
+      { t: 0.65, yAbs: lerp(yEnd, yInnerBot, 0.45), inset: wallThick + 0.0005 },
+      { t: 1.0, yAbs: yInnerBot, inset: wallThick + 0.0015 },
+    ];
+    const shaftLiningGrid = buildGridPart(
+      liningProfile.length - 1,
+      nBootLoop,
+      (ry, c) => {
+        const lp = liningProfile[ry];
+        const th = -Math.PI + (c / nBootLoop) * Math.PI * 2;
+        const top = evalCollarTopPoint(th);
+        const y = lp.yAbs !== undefined ? lp.yAbs : top.y + lp.dy;
+        const rx = Math.max(0.016, top.rx - lp.inset);
+        const rz = Math.max(0.018, top.rz - lp.inset);
+        const x = top.center.cx + rx * Math.sin(th);
+        const z = top.center.cz + rz * Math.cos(th);
+        return { x, y, z, u: c / nBootLoop, v: lp.t };
+      },
+      true
+    );
+    parts.push({ geometry: shaftLiningGrid, materialIndex: 2 });
+
+    const topCenter = evalCollarTopPoint(0);
+    const botFloorGrid = buildGridPart(
+      1,
+      nBootLoop,
+      (r, c) => {
+        const th = -Math.PI + (c / nBootLoop) * Math.PI * 2;
+        const rx = Math.max(0.016, topCenter.rx - (wallThick + 0.0015));
+        const rz = Math.max(0.018, topCenter.rz - (wallThick + 0.0015));
+        const x = r === 0 ? topCenter.center.cx : topCenter.center.cx + rx * Math.sin(th);
+        const z = r === 0 ? topCenter.center.cz : topCenter.center.cz + rz * Math.cos(th);
+        return { x, y: yInnerBot, z, u: 0.5, v: 0.5 };
+      },
+      false
+    );
+    parts.push({ geometry: botFloorGrid, materialIndex: 2 });
   } else {
     // Open-collar shoe (sneaker / loafer / flat / heel):
+    // Watertight heel-end dome cap converging to the exact welt-plane apex shared with soleGrid heel endcap.
+    const stHeel = stations[0];
+    const hHW = stHeel.hw + upperPad;
+    const { topY: hSoleTop } = computeSoleProfile(stHeel.z);
+    const heelApexZ = stHeel.z - capExtHeel;
+    const heelEndCap = buildGridPart(
+      nUpperCapRows,
+      nUpperArch,
+      (rr, c) => {
+        const tCap = rr / nUpperCapRows;
+        const angle = tCap * Math.PI * 0.5;
+        const radialScale = Math.cos(angle);
+        const zBlend = Math.sin(angle);
+        const uParam = c / nUpperArch;
+        const tWall = uParam <= 0.5 ? uParam * 2 : (1 - uParam) * 2;
+        const theta = uParam * Math.PI;
+        const cosT = cosTVal(theta);
+        const sinT = Math.max(0, Math.sin(theta));
+        const archHeight = computeCollarAndDorsalY(stHeel.z, 1 - tWall) - hSoleTop;
+        const xFrac = -Math.sign(cosT) * Math.pow(Math.abs(cosT), 0.72);
+        const wallElev = Math.pow(sinT, 0.78);
+        const xRing = stHeel.cx + xFrac * hHW;
+        const yRing = hSoleTop + wallElev * Math.max(0.015, archHeight);
+        const zRing = stHeel.z - 0.004 * Math.sin(tWall * Math.PI * 0.75);
+        const x = lerp(stHeel.cx, xRing, radialScale);
+        const y = hSoleTop + (yRing - hSoleTop) * radialScale;
+        const z = lerp(zRing, heelApexZ, zBlend);
+        const archU = lerp(uParam, 0.5, tCap * 0.65);
+        const [u, v] = evalUpperUV(x, y, z, archU, wallElev * radialScale);
+        return { x, y, z, u, v };
+      },
+      true
+    );
+    parts.push({ geometry: heelEndCap, materialIndex: 0 });
+
     // Around heel counter r = 0..rAnkleSplit, outer wall rises from welt edge (soleTopY) to collarRimY,
     // and meets foreGrid seamlessly at r = rAnkleSplit!
     for (const qSign of [-1, 1]) {
@@ -1903,6 +1968,24 @@ function buildSandalForSide(side, anatomy, spec, layout) {
  * - Group 1: Contoured midsole/outsole foxing & heel block (clean rubber color, zero barcode streaks)
  * - Group 2: Padded interior collar liner & insole (standalone sneaker/open-shoe studio mode)
  */
+/**
+ * Ensures flat / no-heel boots (e.g., Chelsea boots) are not given a synthetic heel lift
+ * unless the garment metadata explicitly describes a heeled silhouette.
+ */
+export function normalizeFlatFootwearSpec(spec, garmentText = '') {
+  if (!spec) return spec;
+  const isBoot = spec.kind === 'boot' || spec.kind === 'ankle_boot';
+  if (
+    isBoot &&
+    spec.heelHeight > 0 &&
+    spec.heelHeight <= 0.035 &&
+    !/(?:heel|stiletto|wedge|platform|pump|עקב)/i.test(garmentText || '')
+  ) {
+    return { ...spec, heelHeight: 0 };
+  }
+  return spec;
+}
+
 export function createRealisticFootwearGeometry({
   isMale = false,
   spec = {},

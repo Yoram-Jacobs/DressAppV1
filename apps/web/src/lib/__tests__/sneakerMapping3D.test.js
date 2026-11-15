@@ -3,6 +3,7 @@ import {
   shoeUVAnatomical,
   createRealisticFootwearGeometry,
   getFootAnatomy,
+  normalizeFlatFootwearSpec,
 } from '@/lib/footwearBuilder3D';
 
 function makeImageBuffer(w, h, paintPixel) {
@@ -420,6 +421,30 @@ describe('createRealisticFootwearGeometry', () => {
       const toeMinX = Math.min(...toeBand.map((p) => p.x));
       const toeMaxX = Math.max(...toeBand.map((p) => p.x));
       expect(toeMaxX - toeMinX).toBeGreaterThan(isMale ? 0.060 : 0.056);
+
+      // Collar shaft centerline must align closely with the foot's own centerline (no sideways cylinder offset)
+      const collarBand = group0Verts.filter((p) => p.y > (spec.kind === 'ankle_boot' ? 0.13 : 0.34));
+      expect(collarBand.length).toBeGreaterThan(8);
+      const collarMinX = Math.min(...collarBand.map((p) => p.x));
+      const collarMaxX = Math.max(...collarBand.map((p) => p.x));
+      const collarCx = 0.5 * (collarMinX + collarMaxX);
+      const footMidBand = group0Verts.filter((p) => Math.abs(p.z - anatomy.ankleZ) < 0.025 && p.y < 0.04);
+      const footCx = 0.5 * (Math.min(...footMidBand.map((p) => p.x)) + Math.max(...footMidBand.map((p) => p.x)));
+      expect(Math.abs(collarCx - footCx)).toBeLessThan(spec.kind === 'ankle_boot' ? 0.008 : 0.030);
     }
+  });
+
+  test('normalizeFlatFootwearSpec flattens no-heel Chelsea boots while preserving heeled boots', () => {
+    const flatChelsea = normalizeFlatFootwearSpec(
+      { kind: 'ankle_boot', heelHeight: 0.025, soleThickness: 0.02 },
+      'Sturdy Black Leather Australian Pull-On Boots'
+    );
+    expect(flatChelsea.heelHeight).toBe(0);
+
+    const heeledBoot = normalizeFlatFootwearSpec(
+      { kind: 'ankle_boot', heelHeight: 0.06, soleThickness: 0.014 },
+      'High Heel Leather Ankle Boot'
+    );
+    expect(heeledBoot.heelHeight).toBe(0.06);
   });
 });

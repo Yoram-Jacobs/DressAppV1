@@ -39,6 +39,7 @@ import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { resolveFootwearSpec, computeFootPose } from '@/lib/footwearFitting';
+import { normalizeFlatFootwearSpec } from '@/lib/footwearBuilder3D';
 import { isHoodedGarment } from '@/lib/garmentTemplatesCatalog';
 import { useModalBack } from '@/lib/useModalBack';
 
@@ -683,7 +684,7 @@ export default function DressingRoom3D({
   const footPose = useMemo(() => {
     const shoe = activeGarments.find((g) => g.slot === 'shoes' && isGarmentVisible(g));
     if (!shoe) return null;
-    const spec = resolveFootwearSpec(shoe);
+    const spec = normalizeFlatFootwearSpec(resolveFootwearSpec(shoe), resolveGarmentMetadataText(shoe));
     return computeFootPose(isMale, spec.heelHeight, spec.soleThickness);
   }, [activeGarments, isGarmentVisible, isMale]);
 

@@ -13,6 +13,7 @@ import {
 import {
   extractShoePhotoLayout,
   createRealisticFootwearGeometry,
+  normalizeFlatFootwearSpec,
 } from '@/lib/footwearBuilder3D';
 import {
   resolveGarmentTemplate,
@@ -4209,8 +4210,8 @@ export function GarmentMeshCore({
   const garmentText = metadataText;
   const pbrProps = useMemo(() => resolveMaterialPBRProps(garmentText, rawSlot), [garmentText, rawSlot]);
   const footwearSpec = useMemo(
-    () => (rawSlot === 'shoes' ? resolveFootwearSpec(garment) : null),
-    [rawSlot, garment]
+    () => (rawSlot === 'shoes' ? normalizeFlatFootwearSpec(resolveFootwearSpec(garment), garmentText) : null),
+    [rawSlot, garment, garmentText]
   );
 
   // ── Silhouette shell fit: resolve early so base geometry and templates can safely use shellFit parameters ──
