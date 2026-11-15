@@ -554,15 +554,81 @@ export function extractShoePhotoLayout(rgbaData, effW, effH) {
     const insetR = isPair && idx === 0 ? 0.015 : 0.025;
     const insetT = 0.015;
     const insetB = 0.015;
-    const u0 = clamp((b.px0 + b.bw * insetL) / effW, 0.002, 0.996);
-    const u1 = clamp((b.px1 - b.bw * insetR + 1) / effW, 0.004, 0.998);
-    const v1 = clamp(1 - (b.py0 + b.bh * insetT) / effH, 0.004, 0.998);
-    const v0 = clamp(1 - (b.py1 - b.bh * insetB + 1) / effH, 0.002, 0.996);
+    const rawU0 = clamp((b.px0 + b.bw * insetL) / effW, 0.002, 0.996);
+    const rawU1 = clamp((b.px1 - b.bw * insetR + 1) / effW, 0.004, 0.998);
+    const rawV1 = clamp(1 - (b.py0 + b.bh * insetT) / effH, 0.004, 0.998);
+    const rawV0 = clamp(1 - (b.py1 - b.bh * insetB + 1) / effH, 0.002, 0.996);
+    const nu0 = Math.min(rawU0, rawU1 - 0.005);
+    const nu1 = Math.max(rawU1, rawU0 + 0.005);
+    const nv0 = Math.min(rawV0, rawV1 - 0.005);
+    const nv1 = Math.max(rawV1, rawV0 + 0.005);
+    const minSpan = (nu1 - nu0) * 0.36;
+
+    // 24-bin median silhouette span from nv0 (bottom) to nv1 (top) to exclude smeared margins & outer sole rim.
+    const N_BINS = 24;
+    let spans = [];
+    const bandHalf = Math.max(2, Math.floor(b.bh / 36));
+    for (let k = 0; k < N_BINS; k++) {
+      const vVal = lerp(nv0, nv1, k / (N_BINS - 1));
+      const yCenter = Math.round((1 - vVal) * effH);
+      const yStart = clamp(yCenter - bandHalf, b.py0, b.py1);
+      const yEnd = clamp(yCenter + bandHalf, b.py0, b.py1);
+      const lefts = [];
+      const rights = [];
+      for (let y = yStart; y <= yEnd; y++) {
+        let lx = -1;
+        let rx = -1;
+        for (let x = b.px0; x <= b.px1; x++) {
+          if (isOpaque((y * effW + x) * 4)) {
+            lx = x;
+            break;
+          }
+        }
+        if (lx < 0) continue;
+        for (let x = b.px1; x >= lx; x--) {
+          if (isOpaque((y * effW + x) * 4)) {
+            rx = x;
+            break;
+          }
+        }
+        if (rx > lx + 3) {
+          lefts.push(lx);
+          rights.push(rx);
+        }
+      }
+      let uL = nu0;
+      let uR = nu1;
+      if (lefts.length > 0) {
+        lefts.sort((p, q) => p - q);
+        rights.sort((p, q) => p - q);
+        uL = clamp(lefts[Math.floor(lefts.length * 0.5)] / effW, nu0, nu1);
+        uR = clamp((rights[Math.floor(rights.length * 0.5)] + 1) / effW, nu0, nu1);
+      }
+      if (uR - uL < minSpan) {
+        const mid = (uL + uR) * 0.5;
+        uL = clamp(mid - minSpan * 0.5, nu0, nu1 - minSpan);
+        uR = clamp(uL + minSpan, nu0 + minSpan, nu1);
+      }
+      spans.push([uL, uR]);
+    }
+    for (let pass = 0; pass < 2; pass++) {
+      spans = spans.map((cur, i) => {
+        if (i === 0 || i === spans.length - 1) return cur;
+        const prev = spans[i - 1];
+        const next = spans[i + 1];
+        return [
+          prev[0] * 0.25 + cur[0] * 0.5 + next[0] * 0.25,
+          prev[1] * 0.25 + cur[1] * 0.5 + next[1] * 0.25,
+        ];
+      });
+    }
+
     return {
-      u0: Math.min(u0, u1 - 0.005),
-      u1: Math.max(u1, u0 + 0.005),
-      v0: Math.min(v0, v1 - 0.005),
-      v1: Math.max(v1, v0 + 0.005),
+      u0: nu0,
+      u1: nu1,
+      v0: nv0,
+      v1: nv1,
+      rowSpans: spans,
       toeUp: b.toeUp,
       isFrontThreeQuarter: b.isFrontThreeQuarter,
       aspect: b.boxAspect,
@@ -833,43 +899,76 @@ export function shoeUVAnatomical(side, x, y, z, frame, layout, opts = {}) {
   const acrossEff = Number.isFinite(opts.archU)
     ? lerp(acrossRaw, clamp(opts.archU, 0, 1), 0.75)
     : acrossRaw;
-  const wallElev = Number.isFinite(opts.wallElev) ? clamp(opts.wallElev, 0, 1) : 1;
+  const wallElev = Number.isFinite(opts.wallElev)
+    ? clamp(opts.wallElev, 0, 1)
+    : clamp((y - yMin) / ySpan, 0, 1);
 
   // Flip X->U only when photo was shot in top-down wearer POV (toeUp === true).
   const lateralU = toeUp ? 1 - acrossEff : acrossEff;
 
+  let uBoxNorm;
   let photoFromToe;
-  // Inset [0.12..0.88] avoids raw cutout border shadow/alpha-fringe streaks on steep walls.
-  const uNorm = lerp(0.12, 0.88, lateralU);
+  let edgeInset = 0.12;
 
   if (opts.isBootShaft) {
-    // Boot shaft: vertical world Y maps directly toward collar top in photo.
     const shaftY0 = opts.shaftY0 !== undefined ? opts.shaftY0 : yMin;
     const shaftY1 = opts.shaftY1 !== undefined ? opts.shaftY1 : yMax;
     const elev = clamp((y - shaftY0) / Math.max(1e-4, shaftY1 - shaftY0), 0, 1);
-    photoFromToe = lerp(0.28, 0.90, elev);
-  } else if (z >= ankleZ) {
-    // Forefoot + tongue + toe-box: monotonic fwdT 0 (tongue crest) -> 1 (toe tip).
-    const fwdT = clamp((z - ankleZ) / Math.max(1e-4, z1 - ankleZ), 0, 1);
-    // Slightly slow progression over the top tongue patch (0.72..0.90) so branding isn't squashed.
-    const curvedFwd = Math.pow(fwdT, 0.88);
-    // Subtle sidewall elevation offset steps vertical walls smoothly across knit weave while keeping top centerline (wallElev=1) exact.
-    photoFromToe = clamp(lerp(0.88, 0.07, curvedFwd) - (1 - wallElev) * 0.07, 0.05, 0.92);
+    uBoxNorm = lerp(0.16, 0.84, lateralU);
+    photoFromToe = lerp(0.28, 0.88, elev);
   } else {
-    // Rear quarters + heel counter behind ankleZ:
-    // Sweep longitudinally from 0.88 (C0 match at z = ankleZ) down to 0.20 (clean geometric forefoot knit at back heel z0),
-    // preserving full lateral 2D variation in uNorm so side walls show genuine knit texture (zero vertical barcode columns)
-    // and the back Achilles seam (backT -> 1, photoFromToe -> 0.20) never touches the top tongue logo [0.74..0.92].
-    const backT = clamp((ankleZ - z) / Math.max(1e-4, ankleZ - z0), 0, 1);
-    photoFromToe = clamp(lerp(0.88, 0.20, Math.pow(backT, 0.78)) - (1 - wallElev) * 0.07, 0.12, 0.91);
+    // 1. Dorsal tongue + laces + forefoot vamp (ahead of tongueOriginZ):
+    const tongueOriginZ = frame.tongueStartZ !== undefined ? frame.tongueStartZ : ankleZ;
+    const fwdT = clamp((z - tongueOriginZ) / Math.max(1e-4, z1 - tongueOriginZ), 0, 1);
+    const curvedFwd = Math.pow(fwdT, 0.86);
+    const uDorsal = lerp(0.08, 0.92, lateralU);
+    // End at 0.14 at toe tip (z1) so knit upper stays above bottom outsole shadow / rubber rim [0.00..0.12].
+    const vDorsal = lerp(0.90, 0.14, curvedFwd);
+
+    // 2. Properly oriented 2D knit/upper swatch for side quarters, heel counter & lower sidewalls:
+    //    Horizontal Z maps across U, vertical wallElev maps across V within the clean forefoot/vamp
+    //    fabric band [0.16..0.32], eliminating 90°-rotated vertical lace/collar stripes on sidewalls
+    //    and wrapping C-infinity smoothly across 0.5 at the back heel seam.
+    const alongShoe = clamp((z - z0) / zSpan, 0, 1);
+    const sideFactor = Math.sin((lateralU - 0.5) * Math.PI);
+    const uQuarter = 0.5 + sideFactor * lerp(0.12, 0.36, alongShoe);
+    const vQuarter = lerp(0.16, 0.32, clamp(wallElev * 0.82 + (1 - alongShoe) * 0.18, 0, 1));
+
+    // 3. Smooth saddle mask isolating tongue/laces to upper dorsal instep while unifying across forefoot toe box.
+    const sAbs = Math.abs(acrossEff - 0.5) * 2;
+    const zAhead = smoothstep(ankleZ - 0.012, tongueOriginZ, z);
+    const dorsalElev = smoothstep(0.24, 0.68, wallElev);
+    const dorsalCenter = 1 - smoothstep(0.60, 0.90, sAbs) * (1 - smoothstep(0.75, 0.92, wallElev));
+    const forefootUnify = smoothstep(0.55, 0.82, fwdT);
+    const saddleMask = clamp(
+      Math.max(zAhead * dorsalElev * dorsalCenter, zAhead * forefootUnify * 0.85),
+      0,
+      1
+    );
+
+    uBoxNorm = lerp(uQuarter, uDorsal, saddleMask);
+    photoFromToe = lerp(vQuarter, vDorsal, saddleMask);
+    edgeInset = lerp(0.14, 0.07, saddleMask);
   }
 
-  const u = lerp(bx.u0, bx.u1, clamp(uNorm, 0.02, 0.98));
-  const vPos = clamp(photoFromToe, 0.02, 0.97);
-  // Three.js CanvasTexture flipY = true: v1 is TOP of image, v0 is BOTTOM of image.
-  // When toeUp === false, toe is at bottom (v0) and tongue/collar is at top (v1).
-  // When toeUp === true, toe is at top (v1) and tongue/collar is at bottom (v0).
+  const vPos = clamp(photoFromToe, 0.04, 0.96);
   const v = toeUp ? lerp(bx.v1, bx.v0, vPos) : lerp(bx.v0, bx.v1, vPos);
+
+  let uSpan0 = lerp(bx.u0, bx.u1, edgeInset);
+  let uSpan1 = lerp(bx.u0, bx.u1, 1 - edgeInset);
+  if (Array.isArray(bx.rowSpans) && bx.rowSpans.length >= 2) {
+    const vBoxFrac = clamp((v - bx.v0) / Math.max(1e-4, bx.v1 - bx.v0), 0, 1);
+    const fIdx = vBoxFrac * (bx.rowSpans.length - 1);
+    const i0 = Math.floor(fIdx);
+    const i1 = Math.min(bx.rowSpans.length - 1, i0 + 1);
+    const ft = fIdx - i0;
+    const rawL = lerp(bx.rowSpans[i0][0], bx.rowSpans[i1][0], ft);
+    const rawR = lerp(bx.rowSpans[i0][1], bx.rowSpans[i1][1], ft);
+    uSpan0 = lerp(rawL, rawR, edgeInset);
+    uSpan1 = lerp(rawL, rawR, 1 - edgeInset);
+  }
+
+  const u = lerp(uSpan0, uSpan1, clamp(uBoxNorm, 0.01, 0.99));
   return [u, v];
 }
 
@@ -1107,6 +1206,11 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
   const parts = [];
 
+  let rAnkleSplit = 1;
+  while (rAnkleSplit < nSlices - 4 && stations[rAnkleSplit].z < ankleZ + 0.002) {
+    rAnkleSplit++;
+  }
+
   const frame = {
     z0: zStart,
     z1: zEnd,
@@ -1115,6 +1219,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
     yMin: soleBottomY,
     yMax: Math.max(tonguePeakY, sideCollarY) + 0.01,
     ankleZ,
+    tongueStartZ: stations[rAnkleSplit].z,
   };
 
   const evalUpperUV = (x, y, z, archU = null, wallElev = 1) =>
@@ -1244,12 +1349,8 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
   // --- PART 2: GROUP 0 UPPER SHELL + PROUD TONGUE + PADDED COLLAR ---
   // Divide longitudinal shoe into:
-  //   (A) Forefoot / Tongue / Toe-Box (from rTongueStart = slice near ankleZ to nSlices)
-  //   (B) Rear Quarters & Heel Counter (from r=0 to rTongueStart)
-  let rAnkleSplit = 1;
-  while (rAnkleSplit < nSlices - 4 && stations[rAnkleSplit].z < ankleZ + 0.002) {
-    rAnkleSplit++;
-  }
+  //   (A) Forefoot / Tongue / Toe-Box (from rAnkleSplit near ankleZ to nSlices)
+  //   (B) Rear Quarters & Heel Counter (from r=0 to rAnkleSplit)
   const nUpperArch = 16;
 
   // (A) Forefoot + Proud Tongue Grid (r = rAnkleSplit .. nSlices)

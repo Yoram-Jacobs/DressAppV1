@@ -190,23 +190,35 @@ describe('shoeUVAnatomical', () => {
       expect(vHeel).toBeLessThan(bx.v0 + 0.35 * (bx.v1 - bx.v0));
       expect(vHeel).toBeGreaterThan(bx.v0 + 0.12 * (bx.v1 - bx.v0));
 
-      // Side quarters vary smoothly in V along Z and in U across steep sidewall rings (zero barcode strips)
-      const [, vQuarterFront] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.06, -0.02, frame, layout4cdc, {
-        archU: 0.15,
-        wallElev: 0.65,
+      // Side quarters orient horizontal Z along U and vertical wallElev along V strictly inside clean vamp band [0.12..0.36]
+      const [uQuarterFront, vQuarterMidF] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.06, -0.02, frame, layout4cdc, {
+        archU: 0.12,
+        wallElev: 0.5,
       });
-      const [, vQuarterBack] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.06, -0.06, frame, layout4cdc, {
-        archU: 0.15,
-        wallElev: 0.65,
+      const [uQuarterBack, vQuarterMidB] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.06, -0.07, frame, layout4cdc, {
+        archU: 0.12,
+        wallElev: 0.5,
       });
-      expect(Math.abs(vQuarterFront - vQuarterBack)).toBeGreaterThan(0.15);
+      expect(vQuarterMidF).toBeLessThan(bx.v0 + 0.36 * (bx.v1 - bx.v0));
+      expect(vQuarterMidB).toBeLessThan(bx.v0 + 0.36 * (bx.v1 - bx.v0));
+      expect(Math.abs(uQuarterFront - uQuarterBack) / (bx.u1 - bx.u0)).toBeGreaterThan(0.025);
 
-      const [uWall0] = shoeUVAnatomical(side, frame.xMin + 0.002, 0.03, 0.08, frame, layout4cdc, {
+      const [, vQuarterBot] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.02, -0.04, frame, layout4cdc, {
+        archU: 0.12,
+        wallElev: 0.05,
+      });
+      const [, vQuarterTop] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.09, -0.04, frame, layout4cdc, {
+        archU: 0.12,
+        wallElev: 0.95,
+      });
+      expect(vQuarterTop - vQuarterBot).toBeGreaterThan(0.08 * (bx.v1 - bx.v0));
+
+      const [uWall0] = shoeUVAnatomical(side, frame.xMin + 0.002, 0.03, 0.16, frame, layout4cdc, {
         archU: 0.0,
         wallElev: 0.0,
       });
-      const [uWall3] = shoeUVAnatomical(side, frame.xMin + 0.002, 0.05, 0.08, frame, layout4cdc, {
-        archU: 0.18,
+      const [uWall3] = shoeUVAnatomical(side, frame.xMin + 0.002, 0.05, 0.16, frame, layout4cdc, {
+        archU: 0.25,
         wallElev: 0.55,
       });
       expect(Math.abs(uWall0 - uWall3)).toBeGreaterThan(0.04);
