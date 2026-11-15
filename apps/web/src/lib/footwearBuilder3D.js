@@ -1036,17 +1036,17 @@ function sampleProfileStations(anatomy, side, numSlices, zPadBack = 0.006, zPadF
         // Natural rounded athletic toe-box last: prevents bare-toe pinky-side wedge & UV twist
         // while strictly enclosing the bare foot bounds inside [smoothed[0].z .. smoothed[last].z].
         const tToe = clamp((z - ballZ) / Math.max(1e-4, zEnd - ballZ), 0, 1);
-        const toeInwardShift = (side > 0 ? -0.004 : 0.004) * Math.pow(tToe, 1.5);
+        const toeInwardShift = (side > 0 ? -0.006 : 0.006) * Math.pow(tToe, 1.5);
         const cxTarget = cxBall + toeInwardShift;
-        const hwTarget = hwBall * Math.pow(Math.max(0.11, 1 - Math.pow(tToe, 2.5)), 0.44);
+        const hwTarget = hwBall * Math.pow(Math.max(0.19, 1 - Math.pow(tToe, 2.5)), 0.44);
         if (z <= smoothed[smoothed.length - 1].z) {
           xMin = Math.min(xMin, cxTarget - hwTarget);
           xMax = Math.max(xMax, cxTarget + hwTarget);
         } else {
           const ft = clamp((z - smoothed[smoothed.length - 1].z) / Math.max(1e-4, zEnd - smoothed[smoothed.length - 1].z), 0, 1);
           const toeEdge = evalKnot(smoothed[smoothed.length - 1].z);
-          const toeInwardAtEdge = (side > 0 ? -0.004 : 0.004) * Math.pow((smoothed[smoothed.length - 1].z - ballZ) / Math.max(1e-4, zEnd - ballZ), 1.5);
-          const hwAtEdge = hwBall * Math.pow(Math.max(0.11, 1 - Math.pow((smoothed[smoothed.length - 1].z - ballZ) / Math.max(1e-4, zEnd - ballZ), 2.5)), 0.44);
+          const toeInwardAtEdge = (side > 0 ? -0.006 : 0.006) * Math.pow((smoothed[smoothed.length - 1].z - ballZ) / Math.max(1e-4, zEnd - ballZ), 1.5);
+          const hwAtEdge = hwBall * Math.pow(Math.max(0.19, 1 - Math.pow((smoothed[smoothed.length - 1].z - ballZ) / Math.max(1e-4, zEnd - ballZ), 2.5)), 0.44);
           const edgeMin = Math.min(toeEdge.xMin, cxBall + toeInwardAtEdge - hwAtEdge);
           const edgeMax = Math.max(toeEdge.xMax, cxBall + toeInwardAtEdge + hwAtEdge);
           xMin = lerp(edgeMin, cxTarget - hwTarget, smoothstep(0, 1, ft));
@@ -1092,6 +1092,17 @@ function sampleProfileStations(anatomy, side, numSlices, zPadBack = 0.006, zPadF
       for (let i = 1; i < stations.length - 1; i++) {
         stations[i].cx = copy[i - 1].cx * 0.25 + copy[i].cx * 0.5 + copy[i + 1].cx * 0.25;
         stations[i].hw = copy[i - 1].hw * 0.25 + copy[i].hw * 0.5 + copy[i + 1].hw * 0.25;
+      }
+    }
+    // Re-enforce strict bare-foot enclosure after smoothing so zero toe/heel pokethrough can occur.
+    for (let i = 0; i < stations.length; i++) {
+      const st = stations[i];
+      if (st.z >= smoothed[0].z && st.z <= smoothed[smoothed.length - 1].z) {
+        const rawBounds = evalKnot(st.z);
+        const sMin = Math.min(st.cx - st.hw, rawBounds.xMin);
+        const sMax = Math.max(st.cx + st.hw, rawBounds.xMax);
+        st.cx = (sMin + sMax) * 0.5;
+        st.hw = (sMax - sMin) * 0.5;
       }
     }
   }
