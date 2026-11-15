@@ -548,12 +548,22 @@ def retrieve_fashion_axioms(
 
     if temp is not None:
         try:
-            temp_val = float(temp)
-            if temp_val <= 5.0:
+            from app.services.thermal_comfort import assess_thermal_comfort
+            assessment = assess_thermal_comfort(
+                weather,
+                occasion=occasion or "",
+                user_text=user_text or "",
+            )
+            eff_temp = assessment.effective_temp_c if assessment else float(temp)
+            if eff_temp <= 5.0:
                 add_rule("rule_weather_subzero_layering")
-            elif 6.0 <= temp_val <= 16.0:
+            elif eff_temp <= 13.5:
+                add_rule("rule_weather_cold_full_coats")
+            elif eff_temp < 18.0:
                 add_rule("rule_weather_transitional_layering")
-            elif temp_val >= 25.0:
+            elif eff_temp <= 22.0:
+                add_rule("rule_weather_crossover_transition")
+            else:
                 add_rule("rule_weather_summer_breathability")
         except (ValueError, TypeError):
             pass

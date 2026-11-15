@@ -531,9 +531,9 @@ item_has_any_tag = _item_has_any_tag
 async def get_recent_wardrobe_history(
     user_id: str,
     target_date_str: str | None = None,
-    lookback_days: int = 5,
+    lookback_days: int = 14,
 ) -> tuple[dict[str, int], list[dict[str, Any]]]:
-    """Retrieve items worn or scheduled in recent days to enforce genuine wardrobe rotation.
+    """Retrieve items worn or scheduled in recent days to enforce genuine wardrobe rotation across multiple weeks.
     
     Returns:
         recency_map: dict of garment_id -> days_ago (0 = today/target date, 1 = yesterday, etc.)
@@ -625,6 +625,41 @@ async def get_recent_wardrobe_history(
                         })
     except Exception as exc:
         logger.warning("Error fetching recent logged outfits history: %s", exc)
+
+    # 3. Query closet items with last_worn_at or last_suggested_at in the lookback window
+    try:
+        items_cursor = db.closet_items.find({
+            "user_id": user_id,
+            "$or": [
+                {"last_worn_at": {"$gte": start_str}},
+                {"last_suggested_at": {"$gte": start_str}},
+            ]
+        }, {"id": 1, "title": 1, "name": 1, "category": 1, "last_worn_at": 1, "last_suggested_at": 1})
+        if hasattr(items_cursor, "__aiter__"):
+            async for c_item in items_cursor:
+                cid = str(c_item.get("id") or "")
+                if not cid:
+                    continue
+                latest_ts = c_item.get("last_worn_at") or c_item.get("last_suggested_at") or ""
+                try:
+                    c_dt = datetime.strptime(str(latest_ts)[:10], "%Y-%m-%d").date()
+                    days_ago = (ref_dt - c_dt).days
+                    if days_ago >= 0:
+                        if cid not in recency_map or days_ago < recency_map[cid]:
+                            recency_map[cid] = days_ago
+                        if cid not in seen_ids:
+                            seen_ids.add(cid)
+                            summary.append({
+                                "id": cid,
+                                "name": c_item.get("title") or c_item.get("name") or "Garment",
+                                "role": c_item.get("category") or "garment",
+                                "days_ago": days_ago,
+                                "date": str(latest_ts)[:10],
+                            })
+                except Exception:
+                    pass
+    except Exception as exc:
+        logger.warning("Error checking closet item timestamps: %s", exc)
 
     return recency_map, summary
 
@@ -737,24 +772,26 @@ async def get_rotation_prioritized_closet(
                 has_exact_tag_match = True
                 break
 
-    # Determine target season
-    target_season = None
-    if weather:
-        temp = weather.get("temp_c")
-        if temp is not None:
-            if temp >= 23:
-                target_season = "summer"
-            elif temp <= 15:
-                target_season = "winter"
-            else:
-                target_season = "spring"
-    
+    # Determine target season & thermal comfort assessment
+    from app.services.thermal_comfort import assess_thermal_comfort, is_heavy_coat_garment
+    from app.services.stylist_qa_engine import is_shorts_garment
+
+    ref_month = ref_date.month if "ref_date" in locals() and ref_date else datetime.now().month
+    thermal_assessment = assess_thermal_comfort(
+        weather,
+        occasion=style_dress_for or "",
+        month=ref_month,
+    )
+    target_season = thermal_assessment.target_season if thermal_assessment else None
+
     if not target_season:
         # Fallback to current calendar month
-        now_month = datetime.now().month
-        if now_month in [5, 6, 7, 8, 9]:
+        now_month = ref_month
+        if now_month in [6, 7, 8]:
             target_season = "summer"
-        elif now_month in [11, 12, 1, 2]:
+        elif now_month in [9, 10, 11]:
+            target_season = "autumn"
+        elif now_month in [12, 1, 2]:
             target_season = "winter"
         else:
             target_season = "spring"
@@ -772,8 +809,9 @@ async def get_rotation_prioritized_closet(
         # 0 days ago (today/target date): 1000
         # 1 day ago (yesterday): 600
         # 2 days ago: 400
-        # 3 days ago: 200
-        # 4-5 days ago: 100
+        # 3 days ago: 250
+        # 4-7 days ago: 180 - days_ago * 15
+        # 8-14 days ago: 50
         days_ago = item_recency_map.get(cid)
         recent_penalty = 0
         if days_ago is not None:
@@ -784,9 +822,13 @@ async def get_rotation_prioritized_closet(
             elif days_ago == 2:
                 recent_penalty = 400
             elif days_ago == 3:
-                recent_penalty = 200
+                recent_penalty = 250
+            elif days_ago <= 7:
+                recent_penalty = max(80, 180 - days_ago * 15)
+            elif days_ago <= 14:
+                recent_penalty = 50
             else:
-                recent_penalty = 100
+                recent_penalty = 20
 
         # Also check item's last_worn_at field
         last_worn = str(item.get("last_worn_at") or "")
@@ -801,9 +843,38 @@ async def get_rotation_prioritized_closet(
                 elif diff_days == 2:
                     recent_penalty = max(recent_penalty, 400)
                 elif diff_days == 3:
-                    recent_penalty = max(recent_penalty, 200)
+                    recent_penalty = max(recent_penalty, 250)
+                elif diff_days <= 7:
+                    recent_penalty = max(recent_penalty, 100)
+                elif diff_days <= 14:
+                    recent_penalty = max(recent_penalty, 40)
             except Exception:
                 pass
+
+        # Check item's last_suggested_at field
+        last_suggested = str(item.get("last_suggested_at") or "")
+        if last_suggested:
+            try:
+                ls_date = datetime.strptime(last_suggested[:10], "%Y-%m-%d").date()
+                diff_days = (ref_date - ls_date).days
+                if diff_days <= 0:
+                    recent_penalty = max(recent_penalty, 800)
+                elif diff_days == 1:
+                    recent_penalty = max(recent_penalty, 450)
+                elif diff_days == 2:
+                    recent_penalty = max(recent_penalty, 250)
+                elif diff_days <= 7:
+                    recent_penalty = max(recent_penalty, 80)
+            except Exception:
+                pass
+
+        wear_count = item.get("wear_count") or 0
+        wear_penalty = min(wear_count * 20, 200)
+
+        # Unworn bonus: Prioritize garments that have NEVER been worn to achieve full closet asset utilization!
+        unworn_bonus = 0
+        if wear_count == 0 and not last_worn:
+            unworn_bonus = -50  # Actively pulls fresh, unused closet items to the front
 
         style_score = calculate_garment_style_score(
             item, 
@@ -814,22 +885,33 @@ async def get_rotation_prioritized_closet(
             user_gender=user_gender,
         )
         matches_season = matches_season_func(item, target_season)
-        season_score = 10 if matches_season else 0
+        season_score = 15 if matches_season else 0
 
-        wear_count = item.get("wear_count") or 0
-        wear_penalty = min(wear_count * 10, 100)
+        thermal_penalty = 0
+        if thermal_assessment is not None:
+            if not thermal_assessment.shorts_allowed and is_shorts_garment(item):
+                thermal_penalty = 800
+            elif not thermal_assessment.heavy_coat_allowed and is_heavy_coat_garment(item):
+                thermal_penalty = 800
+
+        # Tiered style score for casual / everyday outfits:
+        # In casual/daily mode, do not let a single tag boost permanently overshadow all other clothes.
+        # Compress style score so rotation hash operates freely across all compatible everyday garments.
+        is_general_casual = not is_tags_filter and (not style_dress_for or style_dress_for.lower() in ("casual", "daily", "casual/daily dress", "everyday", "יומיומי"))
+        normalized_style = min(style_score, 20) if is_general_casual else style_score
 
         # Dynamic daily rotation hash (changes every single day to rotate ties across days)
         date_seed = str(target_date or ref_date.strftime("%Y-%m-%d"))
         rot_hash = abs(hash(f"{user_id}_{cid}_{style_dress_for or ''}_{date_seed}")) % 1000
 
         # Sort order:
-        # 1. recent_penalty: 0 for fresh items (FIRST!), 100-1000 for recent items (LAST!)
-        # 2. wear_penalty: items with fewer wears come first among items of equal match
-        # 3. -style_score: highest style match first
+        # 1. thermal_penalty: push thermally inappropriate garments (shorts in cool/cold, heavy coats in warm) last
+        # 2. recent_penalty: 0 for fresh items (FIRST!), 40-1000 for recent items (LAST!)
+        # 3. wear_penalty + unworn_bonus: items with fewer/zero wears come first
         # 4. -season_score: season match bonus
-        # 5. rot_hash: deterministic daily pseudo-random rotation
-        return (recent_penalty, wear_penalty, -style_score, -season_score, rot_hash)
+        # 5. -normalized_style: style suitability
+        # 6. rot_hash: deterministic daily pseudo-random rotation to rotate different items each day
+        return (thermal_penalty, recent_penalty, wear_penalty + unworn_bonus, -season_score, -normalized_style, rot_hash)
 
     # Partition items into category buckets using global norm_category
     buckets: dict[str, list[dict[str, Any]]] = {
@@ -1387,7 +1469,7 @@ async def generate_scheduled_proposals(
     recent_item_weights, recent_items_summary = await get_recent_wardrobe_history(
         user_id,
         target_date_str=target_date_str,
-        lookback_days=5,
+        lookback_days=14,
     )
     if exclude_item_ids:
         for eid in exclude_item_ids:
@@ -1396,7 +1478,7 @@ async def generate_scheduled_proposals(
     # Fetch closet items prioritized by tag restriction, rotation, and weather/season matching
     raw_closet = await get_rotation_prioritized_closet(
         user_id,
-        limit=25,
+        limit=50,
         style_dress_for=style_dress_for,
         weather=weather,
         filter_tags=filter_tags,
@@ -1415,7 +1497,8 @@ async def generate_scheduled_proposals(
         used_closet = [x for x in raw_closet if x["id"] in exclude_set]
         raw_closet = fresh_closet + used_closet
 
-    # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
+    # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM,
+    # but include wear and rotation metadata so LLM can intelligently maximize closet asset utilization
     prioritized_closet = [
         {
             "id": item["id"],
@@ -1429,6 +1512,12 @@ async def generate_scheduled_proposals(
             "dress_code": item.get("dress_code"),
             "season": item.get("season"),
             "tags": item.get("tags") or [],
+            "wear_count": item.get("wear_count") or 0,
+            "last_worn": item.get("last_worn_at") or "never",
+            "rotation_priority": (
+                "high (unworn)" if (item.get("wear_count") or 0) == 0 and not item.get("last_worn_at")
+                else ("medium" if (item.get("wear_count") or 0) <= 2 else "low (frequently worn)")
+            ),
         }
         for item in raw_closet
     ]
@@ -1485,14 +1574,29 @@ async def generate_scheduled_proposals(
     weather_info = ""
     if weather:
         temp = weather.get("temp_c")
+        feels = weather.get("feels_like_c")
+        wind = weather.get("wind_speed")
         cond = weather.get("condition") or weather.get("description")
-        weather_info = f"Weather forecast for {day_label}: {temp}°C, {cond}." if temp is not None else f"Weather condition for {day_label}: {cond}."
+        extra_bits = []
+        if feels is not None and temp is not None and feels != temp:
+            extra_bits.append(f"feels like {feels}°C")
+        if wind is not None:
+            extra_bits.append(f"wind {wind} m/s")
+        extra_str = f" ({', '.join(extra_bits)})" if extra_bits else ""
+        weather_info = f"Weather forecast for {day_label}: {temp}°C{extra_str}, {cond}." if temp is not None else f"Weather condition for {day_label}: {cond}."
 
     calendar_info = ""
     if calendar_events:
         event_titles = [f"'{e.get('summary') or e.get('title') or 'Event'}'" for e in calendar_events if (e.get('summary') or e.get('title'))]
         if event_titles:
             calendar_info = f"Scheduled calendar events for {day_label}: {', '.join(event_titles)}."
+
+    from app.services.thermal_comfort import format_thermal_guidance
+    thermal_directive = format_thermal_guidance(
+        weather,
+        occasion=f"{style_display} {calendar_info}",
+    )
+    thermal_line = f"- {thermal_directive}\n" if thermal_directive else ""
 
     weather_line = f"- {weather_info}\n" if weather_info else ""
     calendar_line = f"- {calendar_info}\n" if calendar_info else ""
@@ -1530,18 +1634,37 @@ async def generate_scheduled_proposals(
     )
 
     recent_items_prompt_section = ""
-    if recent_items_summary:
+    # Combine recent_items_summary with exclude_item_ids if provided
+    combined_recent_summary = list(recent_items_summary or [])
+    if exclude_item_ids:
+        raw_by_id = {x["id"]: x for x in raw_closet if x.get("id")}
+        existing_cids = {str(ri.get("id")) for ri in combined_recent_summary}
+        for eid in exclude_item_ids:
+            s_eid = str(eid)
+            if s_eid not in existing_cids:
+                matching_item = raw_by_id.get(s_eid)
+                combined_recent_summary.append({
+                    "id": s_eid,
+                    "name": (matching_item.get("title") or matching_item.get("name") or "Recently suggested item") if matching_item else "Recently suggested item",
+                    "role": matching_item.get("category") or "garment" if matching_item else "garment",
+                    "days_ago": 0,
+                })
+                existing_cids.add(s_eid)
+
+    if combined_recent_summary:
         lines = []
-        for ri in recent_items_summary[:8]:
+        for ri in combined_recent_summary[:25]:
             role = ri.get("role", "garment")
             name = ri.get("name", "Item")
             days_ago = ri.get("days_ago", 1)
             day_str = "today" if days_ago == 0 else ("yesterday" if days_ago == 1 else f"{days_ago} days ago")
             lines.append(f"     • {name} ({role}) - worn/scheduled {day_str}")
         recent_items_prompt_section = (
-            f"   - RECENTLY WORN / SCHEDULED ITEMS (DO NOT REPEAT):\n"
+            f"   - RECENTLY WORN / SCHEDULED ITEMS (STRICTLY DO NOT REPEAT):\n"
             + "\n".join(lines) + "\n"
-            f"     • ROTATION MANDATE: The user explicitly requires diverse daily wardrobe rotation. You MUST NOT select the garments listed above unless there are NO other garments available in that category in the closet inventory below.\n"
+            f"     • ROTATION MANDATE: The user explicitly requires diverse daily wardrobe rotation to fully utilize all closet assets.\n"
+            f"     • You MUST NOT select any garment listed above unless there are literally no other garments available in that category in the closet inventory below.\n"
+            f"     • Prioritize garments marked with rotation_priority: 'high (unworn)' and low wear_count to ensure the entire closet is rotated through across days.\n"
             f"     • Pick fresh, unworn pieces from the closet items below to create an exciting, new combination!\n"
         )
 
@@ -1569,7 +1692,8 @@ async def generate_scheduled_proposals(
         f"{occupation_rule}"
         f"4. STRICT WARDROBE ROTATION & DIVERSITY (MANDATORY):\n"
         f"{recent_items_prompt_section}"
-        f"   - Rotate items within categories: make every item count and get used.\n"
+        f"   - Rotate items within categories: make every item in the closet count and get used. Strongly favor unworn garments (rotation_priority: 'high (unworn)') and items with wear_count: 0.\n"
+        f"   - NEVER repeatedly select the same tops, bottoms, or shoes day after day.\n"
         f"   - Select a fresh, cohesive combination suited for {day_label}.\n"
         f"5. NEVER MIX CATEGORIES (STRICT ANATOMICAL ROLES):\n"
         f"   - A garment's 'role' MUST strictly match its anatomical category:\n"
@@ -1580,8 +1704,12 @@ async def generate_scheduled_proposals(
         f"     • Category 'Dress' / 'One-piece' MUST have role: 'dress'.\n"
         f"     • Category 'Accessories' / 'Bags' / 'Belts' / 'Hats' MUST have role: 'accessory'.\n"
         f"   - Never duplicate singleton anatomical roles (e.g. do not put two bottoms or two pairs of shoes in the same outfit).\n"
-        f"6. WEATHER AWARE:\n"
-        f"   - Outfits must be perfectly suited to the forecast temperature and conditions. NEVER suggest shorts for rainy/cold weather, and NEVER suggest a heavy wool sweater or warm coat for a hot summer day. Match fabrics (e.g. breathable linen/cotton for warm weather, insulated wool/layering for cold).\n"
+        f"6. WEATHER AWARE & THERMAL LAYERING:\n"
+        f"   - Above 22°C: Shorts & short sleeves (~0.36 clo minimal insulation).\n"
+        f"   - 18°C–20°C (Crossover Zone): Light trousers or jeans replace shorts for casual wear, paired with a T-shirt and a carryable light layer. Direct sun can keep shorts viable, while wind/shade (-3°C to -4°C) or autumn acclimatization triggers an immediate switch to long pants.\n"
+        f"   - 14°C–17°C: Long pants + light outerwear (hoodies, cardigans, light jackets; ~0.61 clo). High-exertion sports/running/hiking can still use athletic shorts down to 10–15°C.\n"
+        f"   - 13°C and below: Full long outfits (long trousers, long-sleeve shirts, medium-to-heavy coats).\n"
+        f"{thermal_line}"
         f"7. CALENDAR AWARE:\n"
         f"   - When calendar events are scheduled for the day, tailor the outfits to appropriately suit those event descriptions (e.g., formal/business for meetings, smart-casual for lunches, functional for active/outdoor events).\n"
         f"8. COMPLETE FULL-BODY OUTFIT (MANDATORY TOP + BOTTOM + SHOES):\n"

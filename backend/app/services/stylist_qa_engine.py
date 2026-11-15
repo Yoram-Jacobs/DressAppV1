@@ -1223,6 +1223,20 @@ def validate_garment_against_negative_constraints(
         if any(w in all_text for w in ("crop top", "revealing", "גופיית בטן")):
             return False, "Revealing garments violate Powwow protocol."
 
+    # 34. Weather & Thermal Comfort Constraints
+    elif rule_id in ("rule_weather_subzero_layering", "rule_weather_cold_full_coats"):
+        if is_shorts_garment(it, all_text, role=role):
+            return False, "Shorts are thermally unsuitable at or below 13°C; full long trousers are required."
+    elif rule_id == "rule_weather_transitional_layering":
+        if is_shorts_garment(it, all_text, role=role) and not any(
+            w in all_text for w in ("running", "athletic", "sport", "gym", "workout", "ספורט", "ריצה")
+        ):
+            return False, "Casual shorts are unsuitable in 14–17°C cool weather; choose long pants with light outerwear."
+    elif rule_id in ("rule_weather_crossover_transition", "rule_weather_summer_breathability"):
+        from app.services.thermal_comfort import is_heavy_coat_garment
+        if is_heavy_coat_garment(it):
+            return False, "Heavy winter coats are thermally unsuitable for warm or crossover temperatures."
+
     return True, None
 
 

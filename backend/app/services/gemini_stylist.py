@@ -192,6 +192,15 @@ async def prepare_stylist_prompt(
     if axioms_text:
         sys_msg = sys_msg + "\n\n" + axioms_text + "\n"
 
+    from app.services.thermal_comfort import format_thermal_guidance
+    thermal_guidance = format_thermal_guidance(
+        weather,
+        occasion=first_evt or "",
+        user_text=user_text or "",
+    )
+    if thermal_guidance:
+        sys_msg = sys_msg + "\n" + thermal_guidance + "\n"
+
     conv_hist = (user_profile or {}).get("conversation_history") if isinstance(user_profile, dict) else None
     text_only_mode = is_text_only_stylist_query(user_text, conv_hist)
 

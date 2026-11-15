@@ -168,17 +168,43 @@
     "example": "Thermal base top + merino wool turtleneck + heavy wool overcoat + lined leather boots."
   },
   {
+    "id": "rule_weather_cold_full_coats",
+    "category": "weather_thermodynamics",
+    "title": "Cold Weather Full Long Outfits & Coats (<= 13°C)",
+    "rule_statement": "At 13°C (55°F) and below, require full long outfits: long trousers, long-sleeve shirts, and medium-to-heavy coats (>=0.61 clo) to prevent skin temperature from dropping below comfort thresholds.",
+    "negative_constraint": "Prohibit shorts, bare legs, or sleeveless/short-sleeve-only outfits without insulated outerwear at or below 13°C.",
+    "criteria": {
+      "min_temp_c": 5.1,
+      "max_temp_c": 13.5
+    },
+    "priority": 9,
+    "example": "Long wool trousers, long-sleeve Oxford or knit top, and a medium-to-heavy overcoat or puffer."
+  },
+  {
     "id": "rule_weather_transitional_layering",
     "category": "weather_thermodynamics",
-    "title": "Transitional Mid-Temperature Layering (6°C - 16°C)",
-    "rule_statement": "In temperate to cool weather (6°C - 16°C), design flexible layered looks featuring a collared shirt or fine-gauge knit under a trench coat, blazer, or utility jacket that can be adjusted through the day.",
-    "negative_constraint": "Avoid heavy sub-zero thermal puffers or lightweight summer shorts in 10-15°C climates.",
+    "title": "Cool Weather Long Pants & Light Outerwear (14°C - 17°C)",
+    "rule_statement": "In cool weather (14°C - 17°C / 57°F - 63°F), long pants become the norm for everyday walking and sitting, paired with light outerwear such as hoodies, cardigans, or light jackets (~0.61 clo). High-exertion runners/hikers may still wear athletic shorts down to 10-15°C.",
+    "negative_constraint": "Avoid heavy sub-zero thermal puffers or casual shorts in 14-17°C weather (unless high-exertion running/hiking).",
     "criteria": {
-      "min_temp_c": 6.0,
-      "max_temp_c": 16.0
+      "min_temp_c": 13.6,
+      "max_temp_c": 17.9
     },
     "priority": 8,
-    "example": "Cotton Oxford shirt under a V-neck merino pullover and a classic cotton gabardine trench coat."
+    "example": "Straight-leg jeans or chinos with a breathable tee and a zip hoodie, cardigan, or light jacket."
+  },
+  {
+    "id": "rule_weather_crossover_transition",
+    "category": "weather_thermodynamics",
+    "title": "The Crossover Zone: Shorts-to-Pants & Carryable Layer (18°C - 22°C)",
+    "rule_statement": "In the 18°C - 20°C (65°F - 68°F) crossover zone (and up to 22°C in wind/shade or autumn), light trousers or jeans replace shorts for casual wear, paired with a T-shirt and a carryable light layer. Direct sun (+3°C), spring acclimatization, or high physical exertion can keep shorts comfortable, while shade or steady breeze (-3°C to -4°C) triggers an immediate switch to long pants.",
+    "negative_constraint": "Avoid heavy winter coats or thick wool puffers in the 18-22°C crossover zone.",
+    "criteria": {
+      "min_temp_c": 18.0,
+      "max_temp_c": 22.0
+    },
+    "priority": 8,
+    "example": "Light cotton chinos or jeans with a short-sleeve T-shirt and a carryable denim jacket or cardigan."
   },
   {
     "id": "rule_weather_summer_breathability",
