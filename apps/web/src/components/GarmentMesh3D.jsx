@@ -6,11 +6,14 @@ import { buildAvatarMorphField, applyAvatarMorphsToGeometry } from '@/lib/avatar
 import { MALE_GLB_URL, FEMALE_GLB_URL } from './AvatarMesh3D';
 import {
   resolveFootwearSpec,
-  createFittedFootwearGeometry,
   createHeelGeometry,
   createFootwearHardwareGeometry,
   poseGeometry,
 } from '@/lib/footwearFitting';
+import {
+  extractShoePhotoLayout,
+  createRealisticFootwearGeometry,
+} from '@/lib/footwearBuilder3D';
 import {
   resolveGarmentTemplate,
   getTemplateGlbUrl,
@@ -1406,235 +1409,10 @@ async function fetchAndCropTexture(url, patterned = false) {
   // so every foot samples only inside its own shoe in the photo.
   const effW = finalCropW;
   const effH = finalCropH;
-  const shoeLayout = { mode: aspect > 1.25 ? 'side' : 'top', toeLeft: true, boxes: null, box: null };
+  let shoeLayout = { mode: aspect > 1.25 ? 'side' : 'top', toeLeft: true, boxes: null, box: null };
   try {
     const layoutData = cleanCropImgData ? cleanCropImgData.data : cropCtx.getImageData(0, 0, effW, effH).data;
-    const isOpaque = (o) => {
-      const nearWhite = layoutData[o] > 238 && layoutData[o + 1] > 238 && layoutData[o + 2] > 238;
-      return layoutData[o + 3] > 40 && !nearWhite;
-    };
-    const colCount = new Array(effW).fill(0);
-    for (let cy = 0; cy < effH; cy++) {
-      const row = cy * effW * 4;
-      for (let cx = 0; cx < effW; cx++) {
-        if (isOpaque(row + cx * 4)) colCount[cx]++;
-      }
-    }
-    const maxCov = Math.max(1, ...colCount);
-    const runs = [];
-    let runStart = -1;
-    for (let cx = 0; cx <= effW; cx++) {
-      const on = cx < effW && colCount[cx] > maxCov * 0.06;
-      if (on && runStart < 0) runStart = cx;
-      if (!on && runStart >= 0) {
-        runs.push([runStart, cx - 1]);
-        runStart = -1;
-      }
-    }
-    // Merge tiny runs into neighbours, keep the substantial ones
-    let big = runs.filter(([r0, r1]) => r1 - r0 + 1 >= effW * 0.12);
-
-    // If only one wide run was detected, check if it actually contains a pair of shoes
-    // separated by a coverage valley in the middle third of the image
-    if (big.length === 1 && (big[0][1] - big[0][0] + 1) >= effW * 0.45) {
-      const [rStart, rEnd] = big[0];
-      const midMin = Math.max(rStart + Math.floor((rEnd - rStart) * 0.30), Math.floor(effW * 0.35));
-      const midMax = Math.min(rStart + Math.floor((rEnd - rStart) * 0.70), Math.floor(effW * 0.65));
-      let minCov = Infinity;
-      let valleyX = -1;
-      for (let cx = midMin; cx <= midMax; cx++) {
-        if (colCount[cx] < minCov) {
-          minCov = colCount[cx];
-          valleyX = cx;
-        }
-      }
-      if (valleyX > 0 && minCov < maxCov * 0.65) {
-        big = [
-          [rStart, valleyX - 1],
-          [valleyX, rEnd],
-        ];
-      }
-    }
-    const boxFor = ([c0, c1]) => {
-      let r0 = effH;
-      let r1 = -1;
-      const rowWidths = new Array(effH).fill(0);
-      for (let cy = 0; cy < effH; cy++) {
-        const row = cy * effW * 4;
-        let minX = effW;
-        let maxX = -1;
-        for (let cx = c0; cx <= c1; cx++) {
-          if (isOpaque(row + cx * 4)) {
-            if (cy < r0) r0 = cy;
-            if (cy > r1) r1 = cy;
-            if (cx < minX) minX = cx;
-            if (cx > maxX) maxX = cx;
-          }
-        }
-        if (maxX >= minX) rowWidths[cy] = maxX - minX + 1;
-      }
-      if (r1 < 0) { r0 = 0; r1 = effH - 1; }
-      const bh = Math.max(1, r1 - r0 + 1);
-      // Compare forefoot vs heel width: the ball of the foot is wider than the heel.
-      let upperW = 0;
-      let upperN = 0;
-      let lowerW = 0;
-      let lowerN = 0;
-      for (let cy = r0 + Math.floor(bh * 0.16); cy <= r0 + Math.floor(bh * 0.44); cy++) {
-        if (rowWidths[cy] > 0) { upperW += rowWidths[cy]; upperN++; }
-      }
-      for (let cy = r0 + Math.floor(bh * 0.56); cy <= r0 + Math.floor(bh * 0.84); cy++) {
-        if (rowWidths[cy] > 0) { lowerW += rowWidths[cy]; lowerN++; }
-      }
-      const avgUpper = upperN > 0 ? upperW / upperN : 0;
-      const avgLower = lowerN > 0 ? lowerW / lowerN : 0;
-      const toeUp = avgUpper >= avgLower * 0.96;
-      return {
-        u0: c0 / effW,
-        u1: (c1 + 1) / effW,
-        v0: 1 - (r1 + 1) / effH,
-        v1: 1 - r0 / effH,
-        toeUp,
-      };
-    };
-    if (big.length >= 2) {
-      const sorted = big.sort((p1, p2) => (p2[1] - p2[0]) - (p1[1] - p1[0])).slice(0, 2).sort((p1, p2) => p1[0] - p2[0]);
-      shoeLayout.mode = 'pair';
-      shoeLayout.boxes = sorted.map(boxFor);
-    } else {
-      const run = big[0] || [0, effW - 1];
-      const box = boxFor(run);
-      shoeLayout.box = box;
-      const bw = (box.u1 - box.u0) * effW;
-      const bh = (box.v1 - box.v0) * effH;
-      shoeLayout.mode = bw / Math.max(1, bh) > 1.25 ? 'side' : 'top';
-      if (shoeLayout.mode === 'side') {
-        // The toe end of a side-view shoe is the lower end
-        const quarter = Math.max(1, Math.floor((run[1] - run[0] + 1) * 0.25));
-        let leftH = 0;
-        let rightH = 0;
-        for (let k = 0; k < quarter; k++) {
-          leftH += colCount[run[0] + k];
-          rightH += colCount[run[1] - k];
-        }
-        shoeLayout.toeLeft = leftH < rightH;
-      }
-    }
-
-    // Analyze top-down shoe box for T-strap / thong center strap & closed heel cup
-    const refBox = shoeLayout.boxes?.[0] || shoeLayout.box;
-    if (refBox && (shoeLayout.mode === 'pair' || shoeLayout.mode === 'top')) {
-      const bx0 = Math.floor(refBox.u0 * effW);
-      const bx1 = Math.min(effW - 1, Math.ceil(refBox.u1 * effW) - 1);
-      const by0 = Math.floor((1 - refBox.v1) * effH);
-      const by1 = Math.min(effH - 1, Math.ceil((1 - refBox.v0) * effH) - 1);
-      const bw = Math.max(1, bx1 - bx0 + 1);
-      const bh = Math.max(1, by1 - by0 + 1);
-      const toeUp = refBox.toeUp !== false;
-      const sampleMean = (xA, xB, yA, yB) => {
-        let sr = 0, sg = 0, sb = 0, cnt = 0;
-        const xStart = bx0 + Math.floor(bw * xA);
-        const xEnd = bx0 + Math.floor(bw * xB);
-        const yStart = by0 + Math.floor(bh * yA);
-        const yEnd = by0 + Math.floor(bh * yB);
-        for (let cy = yStart; cy <= yEnd; cy += 2) {
-          const row = cy * effW * 4;
-          for (let cx = xStart; cx <= xEnd; cx += 2) {
-            const o = row + cx * 4;
-            if (isOpaque(o)) {
-              sr += layoutData[o];
-              sg += layoutData[o + 1];
-              sb += layoutData[o + 2];
-              cnt++;
-            }
-          }
-        }
-        return cnt > 0 ? [sr / cnt, sg / cnt, sb / cnt, cnt] : null;
-      };
-      const foreY0 = toeUp ? 0.22 : 0.52;
-      const foreY1 = toeUp ? 0.48 : 0.78;
-      const centerCol = sampleMean(0.47, 0.53, foreY0, foreY1);
-      const midVampY0 = toeUp ? 0.38 : 0.42;
-      const midVampY1 = toeUp ? 0.58 : 0.62;
-      const centerVamp = sampleMean(0.42, 0.58, midVampY0, midVampY1);
-      const leftBed = sampleMean(0.20, 0.33, foreY0, foreY1);
-      const rightBed = sampleMean(0.67, 0.80, foreY0, foreY1);
-      if (leftBed && rightBed) {
-        const bedR = 0.5 * (leftBed[0] + rightBed[0]);
-        const bedG = 0.5 * (leftBed[1] + rightBed[1]);
-        const bedB = 0.5 * (leftBed[2] + rightBed[2]);
-        const sideDiff = Math.hypot(leftBed[0] - rightBed[0], leftBed[1] - rightBed[1], leftBed[2] - rightBed[2]);
-        const centerDiff = centerCol
-          ? Math.hypot(centerCol[0] - bedR, centerCol[1] - bedG, centerCol[2] - bedB)
-          : 0;
-        const vampDiff = centerVamp
-          ? Math.hypot(centerVamp[0] - bedR, centerVamp[1] - bedG, centerVamp[2] - bedB)
-          : 0;
-        if (Math.max(centerDiff, vampDiff) > 15 && Math.max(centerDiff, vampDiff) > sideDiff * 1.3) {
-          shoeLayout.sandalStyle = 'tstrap';
-        }
-      }
-      if (shoeLayout.sandalStyle !== 'tstrap') {
-        const stemY0 = by0 + Math.floor(bh * (toeUp ? 0.18 : 0.48));
-        const stemY1 = by0 + Math.floor(bh * (toeUp ? 0.52 : 0.82));
-        const lA = bx0 + Math.floor(bw * 0.20);
-        const lB = bx0 + Math.floor(bw * 0.33);
-        const cA = bx0 + Math.floor(bw * 0.43);
-        const cB = bx0 + Math.floor(bw * 0.57);
-        const rA = bx0 + Math.floor(bw * 0.67);
-        const rB = bx0 + Math.floor(bw * 0.80);
-        let stemRows = 0;
-        let totRows = 0;
-        for (let cy = stemY0; cy <= stemY1; cy += 2) {
-          const row = cy * effW * 4;
-          let lr = 0, lg = 0, lb = 0, ln = 0;
-          for (let cx = lA; cx <= lB; cx++) {
-            const o = row + cx * 4;
-            if (isOpaque(o)) { lr += layoutData[o]; lg += layoutData[o + 1]; lb += layoutData[o + 2]; ln++; }
-          }
-          let rr = 0, rg = 0, rb = 0, rn = 0;
-          for (let cx = rA; cx <= rB; cx++) {
-            const o = row + cx * 4;
-            if (isOpaque(o)) { rr += layoutData[o]; rg += layoutData[o + 1]; rb += layoutData[o + 2]; rn++; }
-          }
-          if (!ln || !rn) continue;
-          lr /= ln; lg /= ln; lb /= ln;
-          rr /= rn; rg /= rn; rb /= rn;
-          let maxBoth = 0;
-          let cn = 0;
-          for (let cx = cA; cx <= cB; cx++) {
-            const o = row + cx * 4;
-            if (!isOpaque(o)) continue;
-            cn++;
-            const pr = layoutData[o], pg = layoutData[o + 1], pb = layoutData[o + 2];
-            const dL = Math.hypot(pr - lr, pg - lg, pb - lb);
-            const dR = Math.hypot(pr - rr, pg - rg, pb - rb);
-            const dBoth = Math.min(dL, dR);
-            if (dBoth > maxBoth) maxBoth = dBoth;
-          }
-          if (cn) {
-            totRows++;
-            if (maxBoth > 28) stemRows++;
-          }
-        }
-        if (totRows >= 6 && stemRows / totRows >= 0.35) {
-          shoeLayout.sandalStyle = 'tstrap';
-        }
-      }
-      const heelY0 = toeUp ? 0.80 : 0.04;
-      const heelY1 = toeUp ? 0.94 : 0.18;
-      const heelRimL = sampleMean(0.14, 0.26, heelY0, heelY1);
-      const heelRimR = sampleMean(0.74, 0.86, heelY0, heelY1);
-      const heelIn = sampleMean(0.40, 0.60, heelY0, heelY1);
-      if (heelRimL && heelRimR && heelIn) {
-        const rimLum = 0.5 * ((heelRimL[0] + heelRimL[1] + heelRimL[2]) + (heelRimR[0] + heelRimR[1] + heelRimR[2])) / 3;
-        const inLum = (heelIn[0] + heelIn[1] + heelIn[2]) / 3;
-        // Ignore bright white brand logos printed on the heel footbed (inLum > 155)
-        if (inLum <= 155 && rimLum - inLum > 12) {
-          shoeLayout.hasHeelCup = true;
-        }
-      }
-    }
+    shoeLayout = extractShoePhotoLayout(layoutData, effW, effH);
   } catch {
     // Keep default layout
   }
@@ -4602,10 +4380,11 @@ export function GarmentMeshCore({
 
     // 5. SHOES
     if (rawSlot === 'shoes') {
-      return createFittedFootwearGeometry({
+      return createRealisticFootwearGeometry({
         isMale,
         spec: footwearSpec,
         layout: shoeLayout,
+        standalone: isStandalone,
       });
     }
 
@@ -4793,15 +4572,36 @@ export function GarmentMeshCore({
       color: frontCol,
       map: frontMap,
     });
+    if (rawSlot === 'shoes') {
+      const soleMat = new THREE.MeshStandardMaterial({
+        ...baseProps,
+        side: THREE.FrontSide,
+        transparent: false,
+        alphaTest: 0,
+        roughness: Math.max(0.58, pbrProps.roughness),
+        metalness: 0.02,
+        color: shoeLayout?.soleColor || '#e2e4e8',
+        map: null,
+      });
+      const liningMat = new THREE.MeshStandardMaterial({
+        ...baseProps,
+        side: THREE.DoubleSide,
+        transparent: false,
+        alphaTest: 0,
+        roughness: 0.92,
+        metalness: 0.0,
+        color: shoeLayout?.liningColor || '#1c1f26',
+        map: null,
+      });
+      return [frontMat, soleMat, liningMat];
+    }
     const backMat = new THREE.MeshStandardMaterial({
       ...baseProps,
-      color: rawSlot === 'shoes'
-        ? frontCol
-        : (backTexture ? '#FFFFFF' : fallbackCol),
-      map: (rawSlot === 'shoes' ? frontMap : backTexture) || null,
+      color: backTexture ? '#FFFFFF' : fallbackCol,
+      map: backTexture || null,
     });
     return [frontMat, backMat];
-  }, [filledTexture, opaqueTexture, texture, backTexture, dominantColor, pbrProps, rawSlot, isOpaqueSlot, shouldTuck]);
+  }, [filledTexture, opaqueTexture, texture, backTexture, dominantColor, pbrProps, rawSlot, isOpaqueSlot, shouldTuck, shoeLayout, renderOrderOffset]);
 
   useEffect(() => {
     return () => {
