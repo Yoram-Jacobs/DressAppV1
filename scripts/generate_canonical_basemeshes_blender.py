@@ -1395,175 +1395,179 @@ def build_hood_off_mesh(avatar_data, torso_bm, offset, z_neck, is_coat=False):
 
 def build_hood_on_mesh(avatar_data, torso_bm, offset, z_neck, is_coat=False):
     """
-    Builds a 2-walled manifold head-mapped hood cowl rising from the collar around the sides
-    (covering ears/temples) and posterior occiput/crown, framing the face cleanly in anterior view.
+    Builds a 2-walled manifold open-throat tailored hood rising from the collar around the sides
+    (covering ears/temples) and posterior occiput/crown, framing the face cleanly in anterior and side views.
     """
     is_male = avatar_data["gender"] == "male"
     av_verts = avatar_data["verts"]
-    head_bvh = avatar_data.get("full_bvh") or avatar_data["bvh"]
+    skin_bvh = avatar_data["bvh"]
 
-    coat_extra = 0.0055 if is_coat else 0.0
-    z_max_av = max(v.z for v in av_verts)
+    coat_extra = 0.0050 if is_coat else 0.0
     nk_pts = [p for p in av_verts if abs(p.z - z_neck) < 0.03 and abs(p.x) < 0.11]
     y_nk_front = min((p.y for p in nk_pts), default=(-0.090 if is_male else -0.068))
     y_nk_back = max((p.y for p in nk_pts), default=(0.060 if is_male else 0.044))
     cy_nk = 0.5 * (y_nk_front + y_nk_back)
 
     # Skull center & landmarks in Blender Z-up space (front is -Y, back is +Y)
-    cy_skull = -0.045 if is_male else -0.038
-    cz_skull = 1.660 if is_male else 1.560
-    skull_ctr = Vector((0.0, cy_skull, cz_skull))
+    cy_skull = -0.042 if is_male else -0.036
+    cz_skull = 1.655 if is_male else 1.558
+    z_ear_mid = 1.635 if is_male else 1.540
 
-    # Control rings along periodic cowl tube (s = 0 collar -> s = 1 anterior face frame)
-    rx_col = (0.114 if is_male else 0.106) + coat_extra
-    y_col_f = (-0.110 if is_male else -0.088) - coat_extra
-    y_col_b = (0.084 if is_male else 0.072) + coat_extra
-    z_col_f = z_neck - 0.024
-    z_col_s = z_neck - 0.004
-    z_col_b = z_neck + 0.016
+    n_v = 20
+    n_u = 36
+    half_u = n_u // 2  # j == half_u is exact spine s_u = 0
 
-    rx_face = (0.096 if is_male else 0.095) + coat_extra
-    z_face_mid = 1.652 if is_male else 1.552
-    half_h_face = (0.112 if is_male else 0.104) + 0.5 * coat_extra
-    y_brow_brim = (-0.164 if is_male else -0.145) - coat_extra
-    y_cheek_brim = (-0.125 if is_male else -0.114) - coat_extra * 0.5
-    y_chin_brim = (-0.146 if is_male else -0.132) - coat_extra * 0.5
+    rx_col = (0.095 if is_male else 0.088) + coat_extra
+    y_col_f = (-0.104 if is_male else -0.088) - coat_extra
+    y_col_b = (0.082 if is_male else 0.068) + coat_extra
 
-    rx_mid_side = (0.110 if is_male else 0.110) + coat_extra
-    y_occ_peak = (0.088 if is_male else 0.095) + coat_extra
-    z_crown_top = (max(z_max_av + 0.026, 1.822) if is_male else max(z_max_av + 0.024, 1.715)) + coat_extra
-    y_crown_peak = (-0.025 if is_male else -0.020)
-    z_ear_mid = 1.640 if is_male else 1.545
+    rx_rim = (0.088 if is_male else 0.084) + coat_extra * 0.8
+    x_lapel = 0.016
+    z_brow = (1.756 if is_male else 1.650) + coat_extra * 0.5
+    z_lapel = z_neck - 0.012
+    y_brow = (-0.155 if is_male else -0.140) - coat_extra * 0.6
+    y_side_rim = (-0.098 if is_male else -0.092) - coat_extra * 0.5
+    y_lapel = y_col_f - 0.008
 
-    n_s = 20
-    n_theta = 40  # divisible by 4 -> exact left/right symmetry around theta = +/- pi/2
+    rx_mid_side = (0.103 if is_male else 0.101) + coat_extra
+    y_occ_peak = (0.084 if is_male else 0.088) + coat_extra
+    z_occ_mid = 1.665 if is_male else 1.568
 
-    def eval_ctrl_ring(stage, theta):
-        ct = math.cos(theta)
-        st = math.sin(theta)
-        top_w = max(0.0, st)
-        bot_w = max(0.0, -st)
-        side_w = 1.0 - abs(st)
+    rx_crn = (0.100 if is_male else 0.098) + coat_extra
+    y_crown_ctrl = -0.032 if is_male else -0.028
+    z_crown_ctrl = (1.895 if is_male else 1.785) + coat_extra
 
-        if stage == 0:
-            # Collar loop anchored neatly around the top neckline
-            x = rx_col * ct
-            y = cy_nk * side_w + y_col_b * top_w + y_col_f * bot_w
-            z = z_col_s * side_w + z_col_b * top_w + z_col_f * bot_w
-            return Vector((x, y, z))
-        if stage == 1:
-            # Posterior occiput & behind-ear cowl loop
-            x = (rx_mid_side + 0.004 * st) * ct
-            y_side = 0.020
-            y_bot = 0.5 * (y_col_f + y_chin_brim) - 0.010
-            y = y_side * side_w + y_occ_peak * top_w + y_bot * bot_w
-            z_bot = 0.5 * (z_col_f + (z_face_mid - half_h_face))
-            z = (z_ear_mid - 0.010) * side_w + (z_ear_mid + 0.035) * top_w + z_bot * bot_w
-            return Vector((x, y, z))
-        if stage == 2:
-            # Upper cranial crown & over-temple arch
-            rx_crn = (0.104 if is_male else 0.104) + coat_extra
-            x = rx_crn * ct
-            y_side = -0.055
-            y_bot = 0.25 * y_col_f + 0.75 * y_chin_brim - 0.006
-            y = y_side * side_w + y_crown_peak * top_w + y_bot * bot_w
-            z_bot = 0.25 * z_col_f + 0.75 * (z_face_mid - half_h_face)
-            z = (z_ear_mid + 0.025) * side_w + z_crown_top * top_w + z_bot * bot_w
-            return Vector((x, y, z))
-        # stage == 3: Anterior face-opening rim
-        x = rx_face * ct
-        y = y_cheek_brim * side_w + y_brow_brim * top_w + y_chin_brim * bot_w
-        z = z_face_mid + half_h_face * st
-        return Vector((x, y, z))
+    def enforce_head_envelope(p, i_row):
+        if i_row == 0:
+            return p
+        t_h = max(0.0, min(1.0, (p.z - z_neck) / max(0.04, z_ear_mid - z_neck)))
+        cy_ref = cy_nk * (1.0 - t_h) + cy_skull * t_h
+        cz_ref = p.z * (1.0 - t_h) + z_ear_mid * t_h
+        c_ref = Vector((0.0, cy_ref, cz_ref))
 
-    rings_pts = []
-    for i in range(n_s + 1):
-        s = i / n_s
-        # Cubic Bezier across the 4 control rings [s=0 .. s=1]
-        om = 1.0 - s
+        diff = p - c_ref
+        cur_dist = diff.length
+        if cur_dist < 1e-4:
+            return p
+        ray_dir = diff / cur_dist
+
+        hit_loc, _hn, _hi, hit_dist = skin_bvh.ray_cast(c_ref, ray_dir, 0.35)
+        if hit_loc is not None:
+            up_w = max(0.0, ray_dir.z) ** 2
+            rim_fade = max(0.0, 1.0 - ((i_row / n_v) ** 4))
+            crown_loft = (0.025 if is_coat else 0.022) * up_w * rim_fade
+            base_min = (0.011 if is_coat else 0.0085) if (i_row <= 2 or i_row >= n_v - 2) else (0.0155 if is_coat else 0.0120)
+            min_clear = base_min + crown_loft * 0.75
+            max_clear = (0.028 if is_coat else 0.022) + crown_loft
+            if cur_dist < hit_dist + min_clear:
+                p = c_ref + ray_dir * (hit_dist + min_clear)
+            elif p.z > (z_ear_mid - 0.015) and i_row < n_v and cur_dist > hit_dist + max_clear:
+                p = c_ref + ray_dir * (hit_dist + max_clear)
+        return p
+
+    ctrl_c0, ctrl_c1, ctrl_c2, ctrl_c3 = [], [], [], []
+    for j in range(n_u + 1):
+        s_u = (j - half_u) / half_u
+        a = abs(s_u)
+        sx = -1.0 if j < half_u else (1.0 if j > half_u else 0.0)
+
+        # C_0(s_u): Collar seam tucked into neckline from left collarbone -> nape -> right collarbone
+        theta_0 = 0.5 * math.pi - s_u * (0.92 * math.pi)
+        ct0, st0 = math.cos(theta_0), math.sin(theta_0)
+        x0 = rx_col * ct0
+        y0 = cy_nk * (1.0 - abs(st0)) + (y_col_b if st0 >= 0.0 else y_col_f) * abs(st0)
+        z0 = (z_neck - 0.008) * (1.0 - abs(st0)) + ((z_neck + 0.006) if st0 >= 0.0 else (z_neck - 0.026)) * abs(st0)
+        c0 = Vector((x0, y0, z0))
+
+        # C_3(s_u): Open-throat V-collar -> jaw/temple arch -> forehead brow brim
+        sin_a_pi = max(0.0, math.sin(a * math.pi))
+        x3 = sx * (rx_rim * (sin_a_pi ** 0.78) + x_lapel * (a ** 2.6))
+        s_z3 = (a * a) * (3.0 - 2.0 * a)
+        z3 = z_brow * (1.0 - s_z3) + z_lapel * s_z3
+        w_side3 = sin_a_pi ** 1.15
+        y_end3 = y_brow * (1.0 - a * a) + y_lapel * (a * a)
+        y3 = y_end3 * (1.0 - w_side3) + y_side_rim * w_side3
+        c3 = Vector((x3, y3, z3))
+
+        # C_1(s_u): Occiput & behind-ear control curve
+        p_lap1 = c0 * (2.0 / 3.0) + c3 * (1.0 / 3.0)
+        p_arch1 = Vector((
+            sx * rx_mid_side * max(0.0, math.sin(a * math.pi * 0.85)),
+            y_occ_peak * (1.0 - a) + (-0.065) * a,
+            z_occ_mid * (1.0 - a * a) + z_lapel * (a * a),
+        ))
+        c1 = p_arch1 * (1.0 - a ** 3) + p_lap1 * (a ** 3)
+
+        # C_2(s_u): Upper cranial crown & parietal side control curve
+        p_lap2 = c0 * (1.0 / 3.0) + c3 * (2.0 / 3.0)
+        p_arch2 = Vector((
+            sx * rx_crn * max(0.0, math.sin(a * math.pi * 0.88)),
+            y_crown_ctrl * (1.0 - a) + (-0.095) * a,
+            z_crown_ctrl * (1.0 - a ** 1.7) + (z_lapel + 0.010) * (a ** 1.7),
+        ))
+        c2 = p_arch2 * (1.0 - a ** 2.5) + p_lap2 * (a ** 2.5)
+
+        ctrl_c0.append(c0)
+        ctrl_c1.append(c1)
+        ctrl_c2.append(c2)
+        ctrl_c3.append(c3)
+
+    grid = []
+    for i in range(n_v + 1):
+        v_t = i / n_v
+        om = 1.0 - v_t
         b0 = om ** 3
-        b1 = 3.0 * (om ** 2) * s
-        b2 = 3.0 * om * (s ** 2)
-        b3 = s ** 3
-        ring = []
-        for j in range(n_theta):
-            theta = (j / n_theta) * 2.0 * math.pi
-            p = (
-                eval_ctrl_ring(0, theta) * b0
-                + eval_ctrl_ring(1, theta) * b1
-                + eval_ctrl_ring(2, theta) * b2
-                + eval_ctrl_ring(3, theta) * b3
-            )
-            if i >= 2:
-                loc_h, norm_h, _idx, _d = head_bvh.find_nearest(p)
-                if loc_h is not None and norm_h is not None:
-                    req_clear = (0.015 + coat_extra) if i < n_s - 1 else (0.011 + coat_extra)
-                    sd = (p - loc_h).dot(norm_h)
-                    if sd < req_clear:
-                        out_dir = p - Vector((0.0, cy_skull, p.z if p.z < cz_skull else cz_skull))
-                        # Never push the anterior face opening into blocking the eyes/nose
-                        if i >= n_s - 2:
-                            out_dir.y = max(0.0, out_dir.y)
-                        if out_dir.length > 1e-4:
-                            p += out_dir.normalized() * (req_clear - sd)
-            ring.append(p)
-        rings_pts.append(ring)
+        b1 = 3.0 * (om ** 2) * v_t
+        b2 = 3.0 * om * (v_t ** 2)
+        b3 = v_t ** 3
+        row = []
+        for j in range(n_u + 1):
+            p = ctrl_c0[j] * b0 + ctrl_c1[j] * b1 + ctrl_c2[j] * b2 + ctrl_c3[j] * b3
+            p = enforce_head_envelope(p, i)
+            row.append(p)
+        grid.append(row)
 
-    # Smooth intermediate rings & re-enforce head clearance
-    for _pass in range(4):
-        for i in range(1, n_s):
-            for j in range(n_theta):
-                jp = (j + 1) % n_theta
-                jm = (j - 1) % n_theta
-                avg = (rings_pts[i - 1][j] + rings_pts[i + 1][j] + rings_pts[i][jm] + rings_pts[i][jp]) * 0.25
-                p = rings_pts[i][j] * 0.60 + avg * 0.40
-                loc_h, norm_h, _idx, _d = head_bvh.find_nearest(p)
-                if loc_h is not None and norm_h is not None:
-                    req_clear = 0.0145 + coat_extra
-                    sd = (p - loc_h).dot(norm_h)
-                    if sd < req_clear:
-                        out_dir = p - Vector((0.0, cy_skull, min(p.z, cz_skull)))
-                        if i >= n_s - 2:
-                            out_dir.y = max(0.0, out_dir.y)
-                        if out_dir.length > 1e-4:
-                            p += out_dir.normalized() * (req_clear - sd)
-                rings_pts[i][j] = p
+    # Interior Laplacian relaxation + head skin clearance envelope
+    for _pass in range(3):
+        for i in range(1, n_v):
+            for j in range(1, n_u):
+                avg4 = (grid[i - 1][j] + grid[i + 1][j] + grid[i][j - 1] + grid[i][j + 1]) * 0.25
+                p = grid[i][j] * 0.65 + avg4 * 0.35
+                grid[i][j] = enforce_head_envelope(p, i)
 
-    # Enforce strict bilateral symmetry across X=0 (theta vs pi - theta)
-    for i in range(n_s + 1):
-        for j in range(n_theta):
-            theta = (j / n_theta) * 2.0 * math.pi
-            # Symmetrize with mirror index j_mir = (n_theta//2 - j) % n_theta
-            j_mir = (n_theta // 2 - j) % n_theta
-            if j == j_mir:
-                rings_pts[i][j].x = 0.0
-            elif j < j_mir:
-                avg_x = 0.5 * (abs(rings_pts[i][j].x) + abs(rings_pts[i][j_mir].x))
-                avg_y = 0.5 * (rings_pts[i][j].y + rings_pts[i][j_mir].y)
-                avg_z = 0.5 * (rings_pts[i][j].z + rings_pts[i][j_mir].z)
-                sx_j = 1.0 if math.cos(theta) >= 0.0 else -1.0
-                rings_pts[i][j] = Vector((sx_j * avg_x, avg_y, avg_z))
-                rings_pts[i][j_mir] = Vector((-sx_j * avg_x, avg_y, avg_z))
+    # Enforce strict bilateral symmetry across X=0
+    for i in range(n_v + 1):
+        grid[i][half_u].x = 0.0
+        for j in range(half_u):
+            jm = n_u - j
+            avg_x = 0.5 * (abs(grid[i][j].x) + abs(grid[i][jm].x))
+            avg_y = 0.5 * (grid[i][j].y + grid[i][jm].y)
+            avg_z = 0.5 * (grid[i][j].z + grid[i][jm].z)
+            grid[i][j] = Vector((-avg_x, avg_y, avg_z))
+            grid[i][jm] = Vector((avg_x, avg_y, avg_z))
 
     bm_sheet = bmesh.new()
-    bverts = [[bm_sheet.verts.new(rings_pts[i][j]) for j in range(n_theta)] for i in range(n_s + 1)]
-    for i in range(n_s):
-        for j in range(n_theta):
-            jn = (j + 1) % n_theta
+    bverts = [[bm_sheet.verts.new(grid[i][j]) for j in range(n_u + 1)] for i in range(n_v + 1)]
+    for i in range(n_v):
+        for j in range(n_u):
             try:
-                bm_sheet.faces.new((bverts[i][j], bverts[i][jn], bverts[i + 1][jn], bverts[i + 1][j]))
+                bm_sheet.faces.new((bverts[i][j], bverts[i][j + 1], bverts[i + 1][j + 1], bverts[i + 1][j]))
             except ValueError:
                 pass
     bmesh.ops.recalc_face_normals(bm_sheet, faces=bm_sheet.faces[:])
     bm_sheet.normal_update()
-    for f in bm_sheet.faces:
-        fc = f.calc_center_median()
-        rad = Vector((fc.x, fc.y - cy_skull, max(-0.05, fc.z - (z_neck + 0.08))))
-        if rad.dot(f.normal) < 0.0:
-            f.normal_flip()
-    bm_sheet.normal_update()
 
-    bm_hood = solidify_bmesh_manifold(bm_sheet, thickness=(0.0035 if is_coat else 0.0028))
+    # Global outward orientation (never flip individual faces)
+    out_sum = sum(
+        (f.calc_center_median() - Vector((0.0, -0.030, min(f.calc_center_median().z, cz_skull - 0.02)))).dot(f.normal)
+        for f in bm_sheet.faces
+    )
+    if out_sum < 0.0:
+        for f in bm_sheet.faces:
+            f.normal_flip()
+        bm_sheet.normal_update()
+
+    bm_hood = solidify_bmesh_manifold(bm_sheet, thickness=(0.0034 if is_coat else 0.0026))
     faces_uvs = compute_hood_faces_uvs(bm_hood, is_male)
     return bm_hood, faces_uvs
 

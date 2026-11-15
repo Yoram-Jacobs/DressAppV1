@@ -4265,7 +4265,11 @@ function GarmentTemplateMeshInner({
         } else if (['bottom', 'belt'].includes(rawSlot)) {
           splitZ = getTorsoSlice(Math.max(0.5, midY), isMale).cz || 0;
         }
-        const isHoodedRegion = HOODED_TEMPLATE_IDS.includes(templateId) && Boolean(backTexture) && midY > (isMale ? 1.545 : 1.450);
+        const isHoodOnTemplate = templateId === 'hoodie_hood_on' || templateId === 'hooded_coat_hood_on';
+        const hoodRegionMinY = isHoodOnTemplate && Math.abs(midX) < 0.14
+          ? (isMale ? 1.510 : 1.415)
+          : (isMale ? 1.545 : 1.450);
+        const isHoodedRegion = HOODED_TEMPLATE_IDS.includes(templateId) && Boolean(backTexture) && midY > hoodRegionMinY;
         if (midZ < splitZ || isHoodedRegion) {
           backTriangles.push(i0, i1, i2);
         } else {

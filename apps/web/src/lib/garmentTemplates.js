@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean7';
+export const TEMPLATE_CACHE_VERSION = 'clean8';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
