@@ -339,9 +339,7 @@ export function getGarmentAnatomicalEnvelope(
       flareExtra = 3.0;
     }
     const collarY0 = g.yChin - 0.6;
-    const hoodLift = isHoodieGarment(garment)
-      ? Math.max(8.5, Math.min(13.5, (yBot0 - collarY0) * 0.105))
-      : 0;
+    const hoodLift = isHoodieGarment(garment) ? 3.0 : 0;
     yTop0 = collarY0 - hoodLift;
   } else if (roleKey === 'bottom') {
     bottomMetrics = getBottomRiseAndCrotchMetrics(garment, g);
@@ -377,7 +375,7 @@ export function getGarmentAnatomicalEnvelope(
     // 'top'
     yTop0 = isStrapless
       ? g.yChest - 7.5
-      : g.yChin - 0.6 - (isHoodieGarment(garment) ? 10.5 : 0);
+      : g.yChin - 0.6 - (isHoodieGarment(garment) ? 3.0 : 0);
     if (/\b(crop|bralette|sports_bra|bikini_top|קרופ|חולצת בטן|חזיית)\b/i.test(text)) {
       yBot0 = g.yWaist - 2.0;
     } else if (/\b(tunic|kurta|longline|kaftan|galabiya|טוניקה|קורטה)\b/i.test(text)) {
@@ -1112,10 +1110,22 @@ function warpRealGarmentPhotoToDefaultCanvas(
     ? detectPantsCrotchRatio(croppedAlpha, cropW, cropH, bottomMetrics.isShort)
     : null;
 
+  const isHoodieUpper =
+    (roleKey === 'top' || roleKey === 'outerwear') && isHoodieGarment(garment);
+
   // Helper that maps normalized SVG slice position `tSvg` (0..1 in [yTop0, yBot0])
   // to normalized photo vertical coordinate `vPhoto` (0..1 in [0, cropH])
   const mapSvgFractionToPhotoV = (tSvg) => {
     const ySvg = yTop0 + tSvg * (yBot0 - yTop0);
+    if (isHoodieUpper && g.yShoulders > yTop0 + 4 && g.yShoulders < yBot0 - 10) {
+      const vHoodPhoto = 0.21;
+      if (ySvg <= g.yShoulders) {
+        const hoodFrac = (ySvg - yTop0) / Math.max(1, g.yShoulders - yTop0);
+        return hoodFrac * vHoodPhoto;
+      }
+      const torsoFrac = (ySvg - g.yShoulders) / Math.max(1, yBot0 - g.yShoulders);
+      return vHoodPhoto + torsoFrac * (1 - vHoodPhoto);
+    }
     if (
       !isPantsOrShorts ||
       vCrotchPhoto === null ||
@@ -1303,8 +1313,10 @@ function warpRealGarmentPhotoToDefaultCanvas(
     for (let s = 0; s < SLICES; s++) {
       const t0 = s / SLICES;
       const t1 = (s + 1) / SLICES;
-      const sy = t0 * cropH;
-      const sh = Math.max(1, (t1 - t0) * cropH);
+      const v0 = mapSvgFractionToPhotoV(t0);
+      const v1 = mapSvgFractionToPhotoV(t1);
+      const sy = v0 * cropH;
+      const sh = Math.max(1, (v1 - v0) * cropH);
       const ySvgTop = yTop0 + t0 * (yBot0 - yTop0);
       const ySvgBot = yTop0 + t1 * (yBot0 - yTop0);
       const dy = ySvgTop * SCALE;

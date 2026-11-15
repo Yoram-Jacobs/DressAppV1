@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { resolveMediaUrl } from '@/lib/itemImage';
+import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { userStore } from '@/lib/api';
@@ -16,6 +16,8 @@ import { isClosedOuterwear } from '@/lib/closetGarmentFitter';
  */
 function getPieceImageUrl(piece) {
   if (!piece) return null;
+  const best = bestImageUrl(piece);
+  if (best) return best;
   const raw =
     piece.imageUrl ||
     piece.url ||

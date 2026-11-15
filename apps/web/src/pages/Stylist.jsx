@@ -188,6 +188,7 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
           id: cid,
           closet_item_id: cid,
           image_url: img,
+          reconstructed_image_url: matchedCi?.reconstructed_image_url || matchedCi?.reconstruct_image_url || g.reconstructed_image_url || g.reconstruct_image_url || null,
           clean_image_url: matchedCi?.clean_image_url || g.clean_image_url || img,
           role: role,
           category: matchedCi?.category || g.category,
@@ -2758,8 +2759,9 @@ export default function Stylist() {
                             : t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' })
                         );
                       }
-                    } catch {
-                      toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
+                    } catch (err) {
+                      const errMsg = err?.response?.data?.detail || err?.message || t('common.error', { defaultValue: 'Failed to refresh' });
+                      toast.error(errMsg);
                     } finally {
                       setGeneratingDaily(false);
                     }
@@ -3616,8 +3618,9 @@ export default function Stylist() {
                                                   ? t('stylist.tomorrowSuggestionRefreshed', { defaultValue: 'Refreshed tomorrow’s suggestion!' })
                                                   : t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' })
                                               );
-                                            } catch {
-                                              toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
+                                            } catch (err) {
+                                              const errMsg = err?.response?.data?.detail || err?.message || t('common.error', { defaultValue: 'Failed to refresh' });
+                                              toast.error(errMsg);
                                             } finally {
                                               setGeneratingDaily(false);
                                             }
