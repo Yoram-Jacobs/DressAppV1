@@ -202,7 +202,7 @@ export function getDefaultAvatarFitterGeometry(sex = 'female', customAnatomy = n
 export function isHoodieGarment(garment = {}) {
   if (!garment) return false;
   const text = `${garment.name || ''} ${garment.title || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`;
-  return /\b(hoodies?|hooded)\b|קפוצ['׳"]?ון|הודי|הודיס/i.test(text);
+  return /\b(hoodies?|hooded)\b|קפוצ['׳’"]?ון|הודי|הודיס|هودي|capucha|capuche|kapuzen|худи|толстовк/i.test(text);
 }
 
 /**
@@ -338,9 +338,7 @@ export function getGarmentAnatomicalEnvelope(
       yBot0 = g.yHip + 9.0;
       flareExtra = 3.0;
     }
-    const collarY0 = g.yChin - 0.6;
-    const hoodLift = isHoodieGarment(garment) ? 3.0 : 0;
-    yTop0 = collarY0 - hoodLift;
+    yTop0 = g.yChin - 0.6;
   } else if (roleKey === 'bottom') {
     bottomMetrics = getBottomRiseAndCrotchMetrics(garment, g);
     yTop0 = bottomMetrics.yTop0;
@@ -373,9 +371,7 @@ export function getGarmentAnatomicalEnvelope(
     yBot0 = g.yFeet + 2.8;
   } else {
     // 'top'
-    yTop0 = isStrapless
-      ? g.yChest - 7.5
-      : g.yChin - 0.6 - (isHoodieGarment(garment) ? 3.0 : 0);
+    yTop0 = isStrapless ? g.yChest - 7.5 : g.yChin - 0.6;
     if (/\b(crop|bralette|sports_bra|bikini_top|קרופ|חולצת בטן|חזיית)\b/i.test(text)) {
       yBot0 = g.yWaist - 2.0;
     } else if (/\b(tunic|kurta|longline|kaftan|galabiya|טוניקה|קורטה)\b/i.test(text)) {
@@ -1015,6 +1011,119 @@ export function analyzeFootwearCutout(croppedAlpha, cropW, cropH) {
 }
 
 /**
+ * Detects and crops off a protruding hood dome at the top of a hoodie cutout so
+ * 2D anterior rendering starts cleanly at the collar/shoulder junction (matching
+ * the 3D Dressing Room anterior view) without colliding with the avatar's neck/chin.
+ */
+function stripProtrudingHoodFromCrop(cropCanvas, croppedAlpha, cropW, cropH) {
+  if (!cropCanvas || !croppedAlpha || cropW < 24 || cropH < 32) {
+    return { cropCanvas, croppedAlpha, cropW, cropH, hoodStripped: false };
+  }
+
+  const maxScanY = Math.min(cropH - 1, Math.floor(cropH * 0.56));
+  const rawSpanU = new Float64Array(maxScanY + 1);
+  for (let y = 0; y <= maxScanY; y++) {
+    const rowOff = y * cropW;
+    let minX = -1;
+    let maxX = -1;
+    for (let x = 0; x < cropW; x++) {
+      if (croppedAlpha[rowOff + x] > 60) {
+        if (minX === -1) minX = x;
+        maxX = x;
+      }
+    }
+    rawSpanU[y] = minX !== -1 && maxX > minX ? (maxX - minX) / Math.max(1, cropW - 1) : 0;
+  }
+
+  const spanU = new Float64Array(maxScanY + 1);
+  for (let y = 0; y <= maxScanY; y++) {
+    let sum = 0;
+    let cnt = 0;
+    for (let k = Math.max(0, y - 2); k <= Math.min(maxScanY, y + 2); k++) {
+      if (rawSpanU[k] > 0) {
+        sum += rawSpanU[k];
+        cnt++;
+      }
+    }
+    spanU[y] = cnt > 0 ? sum / cnt : 0;
+  }
+
+  const bodySpans = [];
+  for (let y = Math.floor(cropH * 0.30); y <= Math.min(maxScanY, Math.floor(cropH * 0.54)); y++) {
+    if (spanU[y] > 0.15) bodySpans.push(spanU[y]);
+  }
+  bodySpans.sort((a, b) => a - b);
+  const bodySpanU =
+    bodySpans.length > 0 ? bodySpans[Math.floor(bodySpans.length * 0.75)] : 0.85;
+
+  const hoodTopSpans = [];
+  for (let y = Math.floor(cropH * 0.03); y <= Math.min(maxScanY, Math.floor(cropH * 0.12)); y++) {
+    if (spanU[y] > 0.02) hoodTopSpans.push(spanU[y]);
+  }
+  hoodTopSpans.sort((a, b) => a - b);
+  const hoodTopSpanU =
+    hoodTopSpans.length > 0 ? hoodTopSpans[Math.floor(hoodTopSpans.length * 0.5)] : 0;
+
+  // Only strip when a narrow protruding hood cap actually exists above wider shoulders
+  if (!hoodTopSpanU || hoodTopSpanU <= 0.05 || hoodTopSpanU >= bodySpanU * 0.68) {
+    return { cropCanvas, croppedAlpha, cropW, cropH, hoodStripped: false };
+  }
+
+  const flareTarget = hoodTopSpanU + 0.35 * (bodySpanU - hoodTopSpanU);
+  let yFlare = Math.floor(cropH * 0.24);
+  let foundFlare = false;
+  for (let y = Math.floor(cropH * 0.08); y <= Math.min(maxScanY, Math.floor(cropH * 0.42)); y++) {
+    if (spanU[y] >= flareTarget) {
+      yFlare = y;
+      foundFlare = true;
+      break;
+    }
+  }
+  if (!foundFlare) {
+    return { cropCanvas, croppedAlpha, cropW, cropH, hoodStripped: false };
+  }
+
+  let minHoodSpanU = hoodTopSpanU;
+  for (let y = Math.floor(cropH * 0.04); y <= yFlare; y++) {
+    if (spanU[y] > 0.05 && spanU[y] < minHoodSpanU) {
+      minHoodSpanU = spanU[y];
+    }
+  }
+
+  const cutThreshold = minHoodSpanU + 0.16 * (bodySpanU - minHoodSpanU);
+  let yCutRaw = Math.round(cropH * 0.20);
+  for (let y = yFlare; y >= Math.floor(cropH * 0.08); y--) {
+    if (spanU[y] > 0 && spanU[y] <= cutThreshold) {
+      yCutRaw = y;
+      break;
+    }
+  }
+
+  const yCut = Math.max(
+    Math.round(cropH * 0.10),
+    Math.min(Math.round(cropH * 0.32), yCutRaw)
+  );
+  const newH = Math.max(16, cropH - yCut);
+  const trimmedCanvas = document.createElement('canvas');
+  trimmedCanvas.width = cropW;
+  trimmedCanvas.height = newH;
+  const trimmedCtx = trimmedCanvas.getContext('2d', { willReadFrequently: true });
+  if (!trimmedCtx) {
+    return { cropCanvas, croppedAlpha, cropW, cropH, hoodStripped: false };
+  }
+  trimmedCtx.drawImage(cropCanvas, 0, yCut, cropW, newH, 0, 0, cropW, newH);
+  const trimmedAlpha = croppedAlpha.subarray(yCut * cropW, (yCut + newH) * cropW);
+
+  return {
+    cropCanvas: trimmedCanvas,
+    croppedAlpha: trimmedAlpha,
+    cropW,
+    cropH: newH,
+    hoodStripped: true,
+  };
+}
+
+/**
  * Tier 1: Warps a real segmented closet garment cutout (`cropCanvas`, `croppedAlpha`)
  * onto the Default Avatar's `400 x 900` canvas so its collar, shoulders, chest,
  * waist, hips, crotch barrier, and hem align with the Default Avatar's exact landmarks.
@@ -1026,10 +1135,14 @@ function warpRealGarmentPhotoToDefaultCanvas(
   cropH,
   garment,
   roleKey,
-  sex = 'female'
+  sex = 'female',
+  options = {}
 ) {
   const env = getGarmentAnatomicalEnvelope(garment, roleKey, sex);
-  const { g, yTop0, yBot0, yCrotchTarget, bottomMetrics, halfWidthAtY } = env;
+  let { g, yTop0, yBot0, yCrotchTarget, bottomMetrics, halfWidthAtY } = env;
+  if (options.hoodStripped) {
+    yTop0 = g.yShoulders - g.neckHeight * 0.44;
+  }
 
   const outCanvas = document.createElement('canvas');
   outCanvas.width = CANVAS_W;
@@ -1111,7 +1224,7 @@ function warpRealGarmentPhotoToDefaultCanvas(
     : null;
 
   const isHoodieUpper =
-    (roleKey === 'top' || roleKey === 'outerwear') && isHoodieGarment(garment);
+    !options.hoodStripped && (roleKey === 'top' || roleKey === 'outerwear') && isHoodieGarment(garment);
 
   // Helper that maps normalized SVG slice position `tSvg` (0..1 in [yTop0, yBot0])
   // to normalized photo vertical coordinate `vPhoto` (0..1 in [0, cropH])
@@ -1288,7 +1401,7 @@ function warpRealGarmentPhotoToDefaultCanvas(
 
     // Anchor horizontal centerline using the collar/shoulder zone + dominant torso runs
     // so an asymmetrically extended sleeve on one side never shifts the collar/torso off the spine
-    const isHoodieTop = isHoodieGarment(garment);
+    const isHoodieTop = !options.hoodStripped && isHoodieGarment(garment);
     const collarStartFrac = isHoodieTop ? 0.22 : 0.04;
     const collarEndFrac = isHoodieTop ? 0.34 : 0.26;
     const collarCenters = [];
@@ -1357,6 +1470,16 @@ function warpRealGarmentPhotoToDefaultCanvas(
         rightDestW,
         dh
       );
+    }
+    if (options.hoodStripped) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      const neckRx = Math.max(7.5, g.wNeck * 0.92) * SCALE;
+      const neckRy = 3.0 * SCALE;
+      ctx.ellipse(g.x0 * SCALE, (yTop0 - 0.8) * SCALE, neckRx, neckRy, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
     return outCanvas;
   }
@@ -2076,7 +2199,7 @@ export function fitClosetGarmentToDefaultAvatar(garment, loadedImg, roleKey = 't
   }
 
   const hasLoadedImg = Boolean(loadedImg && (loadedImg.naturalWidth || loadedImg.width) > 16);
-  const cacheKey = `v4::${sex}::${roleKey}::img:${hasLoadedImg ? 1 : 0}::${garment.id || ''}::${garment.url || ''}::${garment.category || ''}::${garment.sub_category || ''}::${garment.color || ''}`;
+  const cacheKey = `v5::${sex}::${roleKey}::img:${hasLoadedImg ? 1 : 0}::${garment.id || ''}::${garment.url || ''}::${garment.category || ''}::${garment.sub_category || ''}::${garment.color || ''}`;
   if (fittedClosetGarmentCache.has(cacheKey)) {
     return fittedClosetGarmentCache.get(cacheKey);
   }
@@ -2144,16 +2267,31 @@ export function fitClosetGarmentToDefaultAvatar(garment, loadedImg, roleKey = 't
             cropCtx.putImageData(cropImageData, 0, 0);
           }
 
-          const quality = assessPhotoContourQuality(croppedAlpha, cropW, cropH, roleKey);
+          let activeCropCanvas = cropCanvas;
+          let activeCroppedAlpha = croppedAlpha;
+          let activeCropW = cropW;
+          let activeCropH = cropH;
+          let hoodStripped = false;
+          if ((roleKey === 'top' || roleKey === 'outerwear') && isHoodieGarment(garment)) {
+            const stripped = stripProtrudingHoodFromCrop(cropCanvas, croppedAlpha, cropW, cropH);
+            activeCropCanvas = stripped.cropCanvas;
+            activeCroppedAlpha = stripped.croppedAlpha;
+            activeCropW = stripped.cropW;
+            activeCropH = stripped.cropH;
+            hoodStripped = stripped.hoodStripped;
+          }
+
+          const quality = assessPhotoContourQuality(activeCroppedAlpha, activeCropW, activeCropH, roleKey);
           if (quality.canWarpPhoto) {
             fullCanvas400x900 = warpRealGarmentPhotoToDefaultCanvas(
-              cropCanvas,
-              croppedAlpha,
-              cropW,
-              cropH,
+              activeCropCanvas,
+              activeCroppedAlpha,
+              activeCropW,
+              activeCropH,
               garment,
               roleKey,
-              sex
+              sex,
+              { hoodStripped }
             );
             if (fullCanvas400x900) {
               fitMode = 'photo_contour';
