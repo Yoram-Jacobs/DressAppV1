@@ -337,6 +337,19 @@ describe('createRealisticFootwearGeometry', () => {
     expect(soleHeelApex).not.toBeNull();
     expect(minDistToGroup0(soleToeApex)).toBeLessThan(1e-5);
     expect(minDistToGroup0(soleHeelApex)).toBeLessThan(1e-5);
+
+    // Rounded athletic sneaker last: toe box (at z ~ toeZ) and heel (at z ~ heelZ) are full & rounded, not a pointed wedge
+    const toeBand = group0Verts.filter((p) => p.z >= anatomy.toeZ - 0.006 && p.z <= anatomy.toeZ + 0.004);
+    const toeMinX = Math.min(...toeBand.map((p) => p.x));
+    const toeMaxX = Math.max(...toeBand.map((p) => p.x));
+    expect(toeMaxX - toeMinX).toBeGreaterThan(0.062);
+    expect(toeMinX).toBeLessThan(0.104);
+    expect(toeMaxX).toBeGreaterThan(0.165);
+
+    const heelBand = group0Verts.filter((p) => p.z <= anatomy.heelZ + 0.006 && p.z >= anatomy.heelZ - 0.004);
+    const heelMinX = Math.min(...heelBand.map((p) => p.x));
+    const heelMaxX = Math.max(...heelBand.map((p) => p.x));
+    expect(heelMaxX - heelMinX).toBeGreaterThan(0.050);
   });
 
   test('supports worn sneakers, sandals, heels, flats, loafers, and boots cleanly', () => {

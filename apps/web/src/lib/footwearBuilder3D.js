@@ -939,9 +939,9 @@ export function shoeUVAnatomical(side, x, y, z, frame, layout, opts = {}) {
     const zAhead = smoothstep(ankleZ - 0.012, tongueOriginZ, z);
     const dorsalElev = smoothstep(0.24, 0.68, wallElev);
     const dorsalCenter = 1 - smoothstep(0.60, 0.90, sAbs) * (1 - smoothstep(0.75, 0.92, wallElev));
-    const forefootUnify = smoothstep(0.55, 0.82, fwdT);
+    const forefootUnify = smoothstep(0.38, 0.68, fwdT);
     const saddleMask = clamp(
-      Math.max(zAhead * dorsalElev * dorsalCenter, zAhead * forefootUnify * 0.85),
+      Math.max(zAhead * dorsalElev * dorsalCenter, zAhead * forefootUnify),
       0,
       1
     );
@@ -976,7 +976,7 @@ export function shoeUVAnatomical(side, x, y, z, frame, layout, opts = {}) {
  * Returns smoothed longitudinal foot profile stations across [zStart..zEnd]
  * aligned to the canonical left/right avatar foot frame.
  */
-function sampleProfileStations(anatomy, side, numSlices, zPadBack = 0.006, zPadFront = 0.005) {
+function sampleProfileStations(anatomy, side, numSlices, zPadBack = 0.006, zPadFront = 0.005, opts = {}) {
   const raw = anatomy.profile;
   const xSign = anatomy.shaft?.[0]?.cx < 0 ? -1 : 1;
 
@@ -1012,25 +1012,88 @@ function sampleProfileStations(anatomy, side, numSlices, zPadBack = 0.006, zPadF
     return { xMin, xMax, top };
   };
 
+  const athleticLast = !!opts.athleticLast;
+  const ballZ = opts.ballZ !== undefined ? opts.ballZ : anatomy.ballZ;
+  const heelContactZ = opts.heelContactZ !== undefined ? opts.heelContactZ : anatomy.heelContactZ;
+  const ballKnot = evalKnot(ballZ);
+  const cxBall = (ballKnot.xMin + ballKnot.xMax) * 0.5;
+  const hwBall = (ballKnot.xMax - ballKnot.xMin) * 0.5;
+  const heelKnot = evalKnot(heelContactZ);
+  const cxHeelRef = (heelKnot.xMin + heelKnot.xMax) * 0.5;
+  const hwHeelRef = Math.max(hwBall * 0.66, (heelKnot.xMax - heelKnot.xMin) * 0.5);
+
   const stations = [];
   for (let i = 0; i <= numSlices; i++) {
-    // Cosine-concentrate samples slightly near heel & toe tips for smooth rounded silhouettes.
     const linT = i / numSlices;
     const z = lerp(zStart, zEnd, linT);
-    const { xMin, xMax, top } = evalKnot(z);
-    const cx = (xMin + xMax) * 0.5;
-    let hw = (xMax - xMin) * 0.5;
+    const rawBounds = evalKnot(z);
+    let xMin = rawBounds.xMin;
+    let xMax = rawBounds.xMax;
+    const top = rawBounds.top;
 
-    // Gentle hemispherical nose/heel tapering inside pad extensions beyond raw knots.
-    if (z < smoothed[0].z) {
-      const bt = clamp((z - zStart) / Math.max(1e-4, smoothed[0].z - zStart), 0, 1);
-      hw *= Math.sqrt(Math.max(0.08, bt));
-    } else if (z > smoothed[smoothed.length - 1].z) {
-      const ft = clamp((zEnd - z) / Math.max(1e-4, zEnd - smoothed[smoothed.length - 1].z), 0, 1);
-      hw *= Math.sqrt(Math.max(0.08, ft));
+    if (athleticLast) {
+      if (z > ballZ) {
+        // Natural rounded athletic toe-box last: prevents bare-toe pinky-side wedge & UV twist
+        // while strictly enclosing the bare foot bounds inside [smoothed[0].z .. smoothed[last].z].
+        const tToe = clamp((z - ballZ) / Math.max(1e-4, zEnd - ballZ), 0, 1);
+        const toeInwardShift = (side > 0 ? -0.004 : 0.004) * Math.pow(tToe, 1.5);
+        const cxTarget = cxBall + toeInwardShift;
+        const hwTarget = hwBall * Math.pow(Math.max(0.11, 1 - Math.pow(tToe, 2.5)), 0.44);
+        if (z <= smoothed[smoothed.length - 1].z) {
+          xMin = Math.min(xMin, cxTarget - hwTarget);
+          xMax = Math.max(xMax, cxTarget + hwTarget);
+        } else {
+          const ft = clamp((z - smoothed[smoothed.length - 1].z) / Math.max(1e-4, zEnd - smoothed[smoothed.length - 1].z), 0, 1);
+          const toeEdge = evalKnot(smoothed[smoothed.length - 1].z);
+          const toeInwardAtEdge = (side > 0 ? -0.004 : 0.004) * Math.pow((smoothed[smoothed.length - 1].z - ballZ) / Math.max(1e-4, zEnd - ballZ), 1.5);
+          const hwAtEdge = hwBall * Math.pow(Math.max(0.11, 1 - Math.pow((smoothed[smoothed.length - 1].z - ballZ) / Math.max(1e-4, zEnd - ballZ), 2.5)), 0.44);
+          const edgeMin = Math.min(toeEdge.xMin, cxBall + toeInwardAtEdge - hwAtEdge);
+          const edgeMax = Math.max(toeEdge.xMax, cxBall + toeInwardAtEdge + hwAtEdge);
+          xMin = lerp(edgeMin, cxTarget - hwTarget, smoothstep(0, 1, ft));
+          xMax = lerp(edgeMax, cxTarget + hwTarget, smoothstep(0, 1, ft));
+        }
+      } else if (z < heelContactZ) {
+        // Rounded athletic heel cup & outsole perimeter (eliminates pinched arrowhead heel).
+        const tHeel = clamp((heelContactZ - z) / Math.max(1e-4, heelContactZ - zStart), 0, 1);
+        const hwTarget = hwHeelRef * Math.pow(Math.max(0.14, 1 - Math.pow(tHeel, 2.3)), 0.45);
+        if (z >= smoothed[0].z) {
+          xMin = Math.min(xMin, cxHeelRef - hwTarget);
+          xMax = Math.max(xMax, cxHeelRef + hwTarget);
+        } else {
+          const bt = clamp((smoothed[0].z - z) / Math.max(1e-4, smoothed[0].z - zStart), 0, 1);
+          const heelEdge = evalKnot(smoothed[0].z);
+          const hwAtEdge = hwHeelRef * Math.pow(Math.max(0.14, 1 - Math.pow((heelContactZ - smoothed[0].z) / Math.max(1e-4, heelContactZ - zStart), 2.3)), 0.45);
+          const edgeMin = Math.min(heelEdge.xMin, cxHeelRef - hwAtEdge);
+          const edgeMax = Math.max(heelEdge.xMax, cxHeelRef + hwAtEdge);
+          xMin = lerp(edgeMin, cxHeelRef - hwTarget, smoothstep(0, 1, bt));
+          xMax = lerp(edgeMax, cxHeelRef + hwTarget, smoothstep(0, 1, bt));
+        }
+      }
+      const cx = (xMin + xMax) * 0.5;
+      const hw = (xMax - xMin) * 0.5;
+      stations.push({ z, cx, hw: Math.max(0.012, hw), rawTop: top });
+    } else {
+      const cx = (xMin + xMax) * 0.5;
+      let hw = (xMax - xMin) * 0.5;
+      if (z < smoothed[0].z) {
+        const bt = clamp((z - zStart) / Math.max(1e-4, smoothed[0].z - zStart), 0, 1);
+        hw *= Math.sqrt(Math.max(0.08, bt));
+      } else if (z > smoothed[smoothed.length - 1].z) {
+        const ft = clamp((zEnd - z) / Math.max(1e-4, zEnd - smoothed[smoothed.length - 1].z), 0, 1);
+        hw *= Math.sqrt(Math.max(0.08, ft));
+      }
+      stations.push({ z, cx, hw: Math.max(0.008, hw), rawTop: top });
     }
+  }
 
-    stations.push({ z, cx, hw: Math.max(0.008, hw), rawTop: top });
+  if (athleticLast && stations.length > 4) {
+    for (let pass = 0; pass < 2; pass++) {
+      const copy = stations.map((s) => ({ ...s }));
+      for (let i = 1; i < stations.length - 1; i++) {
+        stations[i].cx = copy[i - 1].cx * 0.25 + copy[i].cx * 0.5 + copy[i + 1].cx * 0.25;
+        stations[i].hw = copy[i - 1].hw * 0.25 + copy[i].hw * 0.5 + copy[i + 1].hw * 0.25;
+      }
+    }
   }
 
   return { stations, zStart, zEnd };
@@ -1092,7 +1155,11 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const zPadBack = kind === 'sneaker' ? 0.010 : 0.007;
   const zPadFront = kind === 'sneaker' ? 0.009 : 0.006;
   const nSlices = 36;
-  const { stations, zStart, zEnd } = sampleProfileStations(anatomy, side, nSlices, zPadBack, zPadFront);
+  const { stations, zStart, zEnd } = sampleProfileStations(anatomy, side, nSlices, zPadBack, zPadFront, {
+    athleticLast: kind === 'sneaker' || kind === 'loafer' || kind === 'boot' || kind === 'ankle_boot',
+    ballZ: anatomy.ballZ,
+    heelContactZ: anatomy.heelContactZ,
+  });
 
   const upperPad = kind === 'sneaker' ? 0.0065 : kind === 'boot' || kind === 'ankle_boot' ? 0.006 : 0.004;
   const frameXMin = Math.min(...stations.map((s) => s.cx - s.hw - upperPad));
@@ -1306,38 +1373,43 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   );
   parts.push({ geometry: soleGrid, materialIndex: 1 });
 
-  // Endcaps for sole (heel back cap & toe front cap cleanly closed at r=0 and r=nSlices).
+  // Endcaps for sole (rounded heel back cap & toe front cap cleanly closed at r=0 and r=nSlices).
+  const capExtHeel = kind === 'sneaker' ? 0.008 : 0.0045;
+  const capExtToe = kind === 'sneaker' ? 0.009 : 0.005;
   for (const endIdx of [0, nSlices]) {
     const st = stations[endIdx];
     const hw = st.hw + upperPad;
     const { botY, topY, flange } = computeSoleProfile(st.z);
-    const capZ = endIdx === 0 ? st.z - 0.0035 : st.z + 0.0035;
+    const capZ = endIdx === 0 ? st.z - capExtHeel : st.z + capExtToe;
+    const nSoleCapRows = 3;
     const gCap = buildGridPart(
-      1,
+      nSoleCapRows,
       nSoleCols,
       (rr, c) => {
+        const tCap = rr / nSoleCapRows;
+        const angle = tCap * Math.PI * 0.5;
+        const radialScale = Math.cos(angle);
+        const zBlend = Math.sin(angle);
         const outerHW = hw + flange;
-        const shrink = rr === 0 ? 1 : 0;
-        let x = st.cx;
-        let y = topY;
-        if (rr === 0) {
-          if (c === 0) { x = st.cx - hw; y = topY; }
-          else if (c === 1) { x = st.cx - outerHW; y = topY - 0.0018; }
-          else if (c === 2) { x = st.cx - (outerHW + 0.0012); y = lerp(botY, topY, 0.52); }
-          else if (c === 3) { x = st.cx - (hw + flange * 0.45); y = botY + 0.0015; }
-          else if (c === 4) { x = st.cx - hw * 0.55; y = botY; }
-          else if (c === 5) { x = st.cx; y = botY; }
-          else if (c === 6) { x = st.cx + hw * 0.55; y = botY; }
-          else if (c === 7) { x = st.cx + (hw + flange * 0.45); y = botY + 0.0015; }
-          else if (c === 8) { x = st.cx + (outerHW + 0.0012); y = lerp(botY, topY, 0.52); }
-          else if (c === 9) { x = st.cx + outerHW; y = topY - 0.0018; }
-          else { x = st.cx + hw; y = topY; }
-        } else {
-          // Converge to exact welt-plane apex shared with upper toeCapGrid / heelEndCap for watertight seal.
-          x = st.cx;
-          y = topY;
-        }
-        return { x, y, z: rr === 0 ? st.z : capZ, u: 0.5 * shrink, v: 0.5 };
+        let rx = st.cx;
+        let ry = topY;
+        if (c === 0) { rx = st.cx - hw; ry = topY; }
+        else if (c === 1) { rx = st.cx - outerHW; ry = topY - 0.0018; }
+        else if (c === 2) { rx = st.cx - (outerHW + 0.0012); ry = lerp(botY, topY, 0.52); }
+        else if (c === 3) { rx = st.cx - (hw + flange * 0.45); ry = botY + 0.0015; }
+        else if (c === 4) { rx = st.cx - hw * 0.55; ry = botY; }
+        else if (c === 5) { rx = st.cx; ry = botY; }
+        else if (c === 6) { rx = st.cx + hw * 0.55; ry = botY; }
+        else if (c === 7) { rx = st.cx + (hw + flange * 0.45); ry = botY + 0.0015; }
+        else if (c === 8) { rx = st.cx + (outerHW + 0.0012); ry = lerp(botY, topY, 0.52); }
+        else if (c === 9) { rx = st.cx + outerHW; ry = topY - 0.0018; }
+        else { rx = st.cx + hw; ry = topY; }
+
+        // Converge cleanly onto exact welt-plane apex shared with toeCapGrid / heelEndCap.
+        const x = lerp(st.cx, rx, radialScale);
+        const y = lerp(topY, ry, radialScale);
+        const z = lerp(st.z, capZ, zBlend);
+        return { x, y, z, u: 0.5 * radialScale, v: 0.5 };
       },
       endIdx === nSlices
     );
@@ -1391,12 +1463,16 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const toeHW = stToe.hw + upperPad;
   const { topY: toeSoleTop } = computeSoleProfile(stToe.z);
   const toeDorsalY = computeCollarAndDorsalY(stToe.z, 0);
-  const toeApexZ = stToe.z + 0.0035;
+  const toeApexZ = stToe.z + capExtToe;
+  const nUpperCapRows = 3;
   const toeCapGrid = buildGridPart(
-    2,
+    nUpperCapRows,
     nUpperArch,
     (rr, c) => {
-      const tCap = rr / 2;
+      const tCap = rr / nUpperCapRows;
+      const angle = tCap * Math.PI * 0.5;
+      const radialScale = Math.cos(angle);
+      const zBlend = Math.sin(angle);
       const uParam = c / nUpperArch;
       const theta = uParam * Math.PI;
       const cosT = Math.cos(theta);
@@ -1405,11 +1481,11 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
       const yFrac = Math.pow(sinT, 0.78);
       const xRing = stToe.cx + xFrac * toeHW;
       const yRing = toeSoleTop + yFrac * Math.max(0.012, toeDorsalY - toeSoleTop);
-      const x = lerp(xRing, stToe.cx, tCap);
-      const y = toeSoleTop + (yRing - toeSoleTop) * Math.cos(tCap * Math.PI * 0.5);
-      const z = lerp(stToe.z, toeApexZ, tCap) + 0.0022 * Math.sin(tCap * Math.PI) * sinT;
-      const archU = lerp(uParam, 0.5, tCap);
-      const wallElev = yFrac * (1 - tCap * 0.8);
+      const x = lerp(stToe.cx, xRing, radialScale);
+      const y = toeSoleTop + (yRing - toeSoleTop) * radialScale;
+      const z = lerp(stToe.z, toeApexZ, zBlend);
+      const archU = lerp(uParam, 0.5, tCap * 0.65);
+      const wallElev = yFrac * radialScale;
       const [u, v] = evalUpperUV(x, y, z, archU, wallElev);
       return { x, y, z, u, v };
     },
@@ -1427,14 +1503,17 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const stHeel = stations[0];
   const hHW = stHeel.hw + upperPad;
   const { topY: hSoleTop } = computeSoleProfile(stHeel.z);
-  const heelApexZ = stHeel.z - 0.0035;
+  const heelApexZ = stHeel.z - capExtHeel;
   const heelBulgeAmp = isBootKind ? 0 : -0.004;
   const heelMinArch = isBootKind ? 0.02 : 0.015;
   const heelEndCap = buildGridPart(
-    2,
+    nUpperCapRows,
     nUpperArch,
     (rr, c) => {
-      const tCap = rr / 2;
+      const tCap = rr / nUpperCapRows;
+      const angle = tCap * Math.PI * 0.5;
+      const radialScale = Math.cos(angle);
+      const zBlend = Math.sin(angle);
       const uParam = c / nUpperArch;
       const tWall = uParam <= 0.5 ? uParam * 2 : (1 - uParam) * 2;
       const theta = uParam * Math.PI;
@@ -1446,11 +1525,11 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
       const xRing = stHeel.cx + xFrac * hHW;
       const yRing = hSoleTop + wallElev * Math.max(heelMinArch, archHeight);
       const zRing = stHeel.z + heelBulgeAmp * Math.sin(tWall * Math.PI * 0.75);
-      const x = lerp(xRing, stHeel.cx, tCap);
-      const y = hSoleTop + (yRing - hSoleTop) * Math.cos(tCap * Math.PI * 0.5);
-      const z = lerp(zRing, heelApexZ, tCap) - 0.0018 * Math.sin(tCap * Math.PI) * sinT;
-      const archU = lerp(uParam, 0.5, tCap);
-      const [u, v] = evalUpperUV(x, y, z, archU, wallElev * (1 - tCap * 0.8));
+      const x = lerp(stHeel.cx, xRing, radialScale);
+      const y = hSoleTop + (yRing - hSoleTop) * radialScale;
+      const z = lerp(zRing, heelApexZ, zBlend);
+      const archU = lerp(uParam, 0.5, tCap * 0.65);
+      const [u, v] = evalUpperUV(x, y, z, archU, wallElev * radialScale);
       return { x, y, z, u, v };
     },
     true
