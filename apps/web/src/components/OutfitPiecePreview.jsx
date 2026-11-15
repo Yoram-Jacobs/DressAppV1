@@ -9,6 +9,7 @@ import {
   FittedGarmentLayer,
   resolveOnboardingAvatarFit,
 } from './AvatarViewer2D';
+import { isClosedOuterwear } from '@/lib/closetGarmentFitter';
 
 /**
  * Normalizes an outfit piece to get its transparent studio image URL.
@@ -348,7 +349,7 @@ export default function OutfitPiecePreview({
         )}
 
         {/* Top (Shirts, Tees, Blouses, Sweaters) -> zIndex 20 */}
-        {slots.top && !hasDress && (
+        {slots.top && !hasDress && !isClosedOuterwear(slots.outerwear) && (
           <FittedGarmentLayer
             key={`preview-top-${slots.top.id || slots.top.imageUrl}`}
             garment={slots.top}

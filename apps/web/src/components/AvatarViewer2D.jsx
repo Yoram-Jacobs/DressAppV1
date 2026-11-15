@@ -22,6 +22,7 @@ import {
 import {
   fitClosetGarmentToDefaultAvatar,
   extractBodyPhotoAnatomy,
+  isClosedOuterwear,
 } from '@/lib/closetGarmentFitter';
 
 export const FITTED_AVATAR_SLOTS = new Set(['dress', 'top', 'bottom', 'outerwear', 'shoes']);
@@ -1879,7 +1880,7 @@ export default function AvatarViewer2D({
               renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), dressTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, dressTopo.align, 'contain')
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), topTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, topTopo.align, 'contain')}
+                {!isClosedOuterwear(garments.outerwear) && renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), topTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, topTopo.align, 'contain')}
                 {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), bottomTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, bottomTopo.align, 'contain')}
               </>
             )}
@@ -1942,7 +1943,7 @@ export default function AvatarViewer2D({
               renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), dressTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, dressTopo.align, 'contain')
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), topTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, topTopo.align, 'contain')}
+                {!isClosedOuterwear(garments.outerwear) && renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), topTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, topTopo.align, 'contain')}
                 {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), bottomTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, bottomTopo.align, 'contain')}
               </>
             )}

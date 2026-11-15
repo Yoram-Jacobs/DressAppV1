@@ -196,6 +196,29 @@ export function getDefaultAvatarFitterGeometry(sex = 'female', customAnatomy = n
 }
 
 /**
+ * Returns true if the garment text describes a hoodie (whose cropped top edge
+ * is the top of the hood rather than the neckline/collar).
+ */
+export function isHoodieGarment(garment = {}) {
+  if (!garment) return false;
+  const text = `${garment.name || ''} ${garment.title || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`;
+  return /\b(hoodies?|hooded)\b|קפוצ['׳"]?ון|הודי|הודיס/i.test(text);
+}
+
+/**
+ * Returns true if an outerwear piece is a closed pullover/hoodie/sweatshirt
+ * that should completely cover an underlying top in 2D previews.
+ */
+export function isClosedOuterwear(garment = {}) {
+  if (!garment) return false;
+  const text = `${garment.name || ''} ${garment.title || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`;
+  if (/\b(open[\s-]*front|cardigan|blazer|vest|gilet|kimono|shrug|bolero|poncho|cape)\b|קרדיגן|בלייזר|וסט|אפודה|עליונית/i.test(text)) {
+    return false;
+  }
+  return /\b(hoodies?|hooded|sweatshirts?|pullovers?|sweaters?|fleeces?|anoraks?)\b|קפוצ['׳"]?ון|הודי|הודיס|סווטשירט|סוודר|פליז/i.test(text);
+}
+
+/**
  * Computes style-dependent rise position (`yTop0` between `g.yWaist` upper limit
  * and `g.yHip` lower limit), pelvis width interpolation, and the absolute
  * crotch ("crunch") barrier (`yCrotchTarget >= g.yCrotch`) for any bottom/pants item.
@@ -305,7 +328,6 @@ export function getGarmentAnatomicalEnvelope(
       flareExtra = 3.5;
     }
   } else if (roleKey === 'outerwear') {
-    yTop0 = g.yChin - 0.6;
     easeMult = 1.09;
     if (/\b(crop|bolero|shrug|קרופ|עליונית קצרה)\b/i.test(text)) {
       yBot0 = g.yWaist + 4.0;
@@ -316,6 +338,11 @@ export function getGarmentAnatomicalEnvelope(
       yBot0 = g.yHip + 9.0;
       flareExtra = 3.0;
     }
+    const collarY0 = g.yChin - 0.6;
+    const hoodLift = isHoodieGarment(garment)
+      ? Math.max(8.5, Math.min(13.5, (yBot0 - collarY0) * 0.105))
+      : 0;
+    yTop0 = collarY0 - hoodLift;
   } else if (roleKey === 'bottom') {
     bottomMetrics = getBottomRiseAndCrotchMetrics(garment, g);
     yTop0 = bottomMetrics.yTop0;
@@ -335,8 +362,8 @@ export function getGarmentAnatomicalEnvelope(
       const isMaxi = /\b(maxi|long|מקסי|ארוכה)\b/i.test(text);
       yBot0 = isMaxi ? g.yAnkles + 1.0 : g.yKnees + 22.0;
       flareExtra = /\b(pleat|a-line|a_line|flared|פליסה)\b/i.test(text) ? 13.0 : 8.0;
-    } else if (/\b(capri|cropped|culotte|3\/4|קפרי)\b/i.test(text)) {
-      yBot0 = g.yKnees + 18.0;
+    } else if (/\b(capris?|cropped|culottes?|pedal\s*pushers?|three[\s-]*quarters?)\b|3\/4|7\/8|קפרי|שבע\s*שמיניות|מתחת\s*לברך/i.test(text)) {
+      yBot0 = g.yKnees + 16.0;
       flareExtra = 2.5;
     } else {
       yBot0 = g.yAnkles + 2.0;
@@ -348,7 +375,9 @@ export function getGarmentAnatomicalEnvelope(
     yBot0 = g.yFeet + 2.8;
   } else {
     // 'top'
-    yTop0 = isStrapless ? g.yChest - 7.5 : g.yChin - 0.6;
+    yTop0 = isStrapless
+      ? g.yChest - 7.5
+      : g.yChin - 0.6 - (isHoodieGarment(garment) ? 10.5 : 0);
     if (/\b(crop|bralette|sports_bra|bikini_top|קרופ|חולצת בטן|חזיית)\b/i.test(text)) {
       yBot0 = g.yWaist - 2.0;
     } else if (/\b(tunic|kurta|longline|kaftan|galabiya|טוניקה|קורטה)\b/i.test(text)) {
@@ -1134,10 +1163,12 @@ function warpRealGarmentPhotoToDefaultCanvas(
       if (isPantsOrShorts && s > 0 && s >= Math.floor(SLICES * 0.35)) {
         const prevSpan = rawU1[s - 1] - rawU0[s - 1];
         const curSpan = curU1 - curU0;
-        if (prevSpan > 0.28 && curSpan < 0.60 * prevSpan) {
-          if (curU1 < 0.50) {
+        if (prevSpan > 0.24 && curSpan < 0.68 * prevSpan) {
+          const leftJump = curU0 - rawU0[s - 1];
+          const rightJump = rawU1[s - 1] - curU1;
+          if (curU1 < 0.50 || rightJump > leftJump + 0.06) {
             curU1 = rawU1[s - 1];
-          } else if (curU0 > 0.50) {
+          } else if (curU0 > 0.50 || leftJump > rightJump + 0.06) {
             curU0 = rawU0[s - 1];
           }
         }
@@ -1247,8 +1278,11 @@ function warpRealGarmentPhotoToDefaultCanvas(
 
     // Anchor horizontal centerline using the collar/shoulder zone + dominant torso runs
     // so an asymmetrically extended sleeve on one side never shifts the collar/torso off the spine
+    const isHoodieTop = isHoodieGarment(garment);
+    const collarStartFrac = isHoodieTop ? 0.22 : 0.04;
+    const collarEndFrac = isHoodieTop ? 0.34 : 0.26;
     const collarCenters = [];
-    for (let s = Math.floor(SLICES * 0.04); s <= Math.floor(SLICES * 0.26); s++) {
+    for (let s = Math.floor(SLICES * collarStartFrac); s <= Math.floor(SLICES * collarEndFrac); s++) {
       collarCenters.push(0.5 * (smoothU0[s] + smoothU1[s]));
     }
     for (let s = Math.floor(SLICES * 0.78); s <= Math.floor(SLICES * 0.92); s++) {
@@ -1393,7 +1427,7 @@ function warpRealGarmentPhotoToDefaultCanvas(
     }
 
     const effectiveCenterU = isPantsOrShorts
-      ? Math.max(0.44, Math.min(0.56, sliceCenterU))
+      ? Math.max(0.47, Math.min(0.53, sliceCenterU))
       : sliceCenterU;
     const svgLeftX = g.x0 - effectiveCenterU * fullSliceSvgWidth;
     const dx = svgLeftX * SCALE;
