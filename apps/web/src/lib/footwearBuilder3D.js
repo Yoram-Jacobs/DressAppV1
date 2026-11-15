@@ -1253,10 +1253,10 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
         const backT = clamp((z - zStart) / Math.max(1e-4, throatZ - zStart), 0, 1);
         // Taper down smoothly toward the back heel counter so rearClosedGrid flows into the flared
         // boot shaft base instead of forming a boxy horizontal shelf behind the ankle.
-        return lerp(ankleY - 0.012, ankleY + 0.008, Math.pow(backT, 0.85));
+        return lerp(ankleY - 0.026, ankleY + 0.010, Math.pow(backT, 0.85));
       }
       const vampT = clamp((z - throatZ) / Math.max(1e-4, zEnd - throatZ), 0, 1);
-      return lerp(ankleY + 0.008, toeCapY, Math.pow(vampT, 0.82));
+      return lerp(ankleY + 0.010, toeCapY, Math.pow(vampT, 0.82));
     }
 
     if (kind === 'flat' || kind === 'heel') {
@@ -1610,13 +1610,13 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
       const evalShaftOuterPoint = (vT, th) => {
         const y = lerp(yStart, yEnd, vT);
         const sp = sampleShaftAtY(y);
-        const baseFlare = Math.pow(1 - smoothstep(0, 0.38, vT), 1.4);
+        const baseFlare = Math.pow(1 - smoothstep(0, 0.45, vT), 1.35);
         const cuffFlare = smoothstep(0.88, 1.0, vT) * 0.0025;
         const cosTh = Math.cos(th);
         const sinTh = Math.sin(th);
         // Flare bottom of shaft into the heel counter (-Z) and instep vamp (+Z) so there is no step seam.
-        const zExt = (cosTh < 0 ? 0.015 : 0.017) * baseFlare;
-        const rx = sp.rx + shaftOff + cuffFlare + 0.0035 * baseFlare;
+        const zExt = (cosTh < 0 ? 0.022 : 0.020) * baseFlare;
+        const rx = sp.rx + shaftOff + cuffFlare + 0.006 * baseFlare;
         const rz = sp.rz + shaftOff + cuffFlare + zExt;
         const x = (side > 0 ? sp.cx : -sp.cx) + rx * sinTh;
         const z = sp.cz + rz * cosTh;
@@ -1645,7 +1645,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
       // Rolled collar rim & recessed interior shaft lining (Group 2) so top-down/front views are watertight.
       const wallThick = 0.0045;
-      const yInnerBot = Math.max(yStart + 0.015, yEnd - (kind === 'ankle_boot' ? 0.065 : 0.11));
+      const yInnerBot = Math.max(ankleY + 0.012, yEnd - (kind === 'ankle_boot' ? 0.052 : 0.10));
       const liningProfile = [
         { y: yEnd, inset: 0 },
         { y: yEnd + 0.0022, inset: wallThick * 0.45 },
