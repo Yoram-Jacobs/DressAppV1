@@ -1254,10 +1254,10 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
     if (isBootKind) {
       const throatZ = ankleZ + 0.018;
       if (z <= throatZ) {
-        return ankleY + 0.006;
+        return ankleY + 0.014;
       }
       const vampT = clamp((z - throatZ) / Math.max(1e-4, zEnd - throatZ), 0, 1);
-      return lerp(ankleY + 0.006, toeCapY, Math.pow(vampT, 0.80));
+      return lerp(ankleY + 0.014, toeCapY, Math.pow(vampT, 0.80));
     }
 
     if (kind === 'flat' || kind === 'heel') {
@@ -1558,14 +1558,14 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
     };
 
     const yEnd = kind === 'ankle_boot' ? Math.max(0.148, ankleY + 0.068) : Math.max(0.36, spec?.collar || 0.40);
-    const shaftOff = kind === 'ankle_boot' ? 0.004 : 0.0065;
+    const shaftOff = kind === 'ankle_boot' ? 0.0055 : 0.007;
     // Align ankle collar center with the foot's own centerline (gentle blend for tall boots above ankle).
     const alignShaftCenter = (yVal, sp) => {
       const tallBlend = kind === 'ankle_boot' ? 0.15 : smoothstep(0.14, 0.34, yVal);
       const spCx = side > 0 ? sp.cx : -sp.cx;
       return {
         cx: lerp(stSplit.cx, spCx, tallBlend),
-        cz: lerp(ankleZ - 0.004, sp.cz, tallBlend),
+        cz: lerp(ankleZ + 0.001, sp.cz, tallBlend),
       };
     };
 
@@ -1661,9 +1661,10 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
           z = lerp(z, calfZ, calfBlend);
         }
 
-        // Subtle anatomical heel counter roundness at rear lower quarter (vT ~ 0.15..0.35)
+        // Subtle anatomical heel counter roundness at rear lower quarter & forward ankle clearance
         const heelCup = Math.max(0, -Math.cos(th)) * Math.sin(vT * Math.PI) * (1 - vT) * 0.005;
-        z -= heelCup;
+        const frontAnkleEase = Math.max(0, Math.cos(th)) * Math.sin(vT * Math.PI) * 0.007;
+        z += frontAnkleEase - heelCup;
 
         const [u, v] = shoeUVAnatomical(side, x, y, z, frame, layout, {
           wallElev: lerp(bot.wallElev, 1, smoothstep(0, 0.45, vT)),
