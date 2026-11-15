@@ -1252,12 +1252,12 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
   const computeCollarAndDorsalY = (z, sAbs /* 0 at center spine, 1 at sole wall */) => {
     if (isBootKind) {
-      const throatZ = ankleZ + 0.018;
+      const throatZ = ankleZ + 0.030;
       if (z <= throatZ) {
-        return ankleY + 0.014;
+        return ankleY + 0.018;
       }
       const vampT = clamp((z - throatZ) / Math.max(1e-4, zEnd - throatZ), 0, 1);
-      return lerp(ankleY + 0.014, toeCapY, Math.pow(vampT, 0.80));
+      return lerp(ankleY + 0.018, toeCapY, Math.pow(vampT, 0.80));
     }
 
     if (kind === 'flat' || kind === 'heel') {
@@ -1305,7 +1305,8 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const parts = [];
 
   let rAnkleSplit = 1;
-  while (rAnkleSplit < nSlices - 4 && stations[rAnkleSplit].z < ankleZ + 0.002) {
+  const splitTargetZ = isBootKind ? ankleZ + 0.030 : ankleZ + 0.002;
+  while (rAnkleSplit < nSlices - 4 && stations[rAnkleSplit].z < splitTargetZ) {
     rAnkleSplit++;
   }
 
