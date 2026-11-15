@@ -671,21 +671,51 @@ function extractPaletteFromPhoto(rgbaData, effW, effH, isOpaque, boxes, toeUp, m
       }
     }
   } else {
-    // Trace lowest opaque pixel per column in foreground & lower perimeter.
+    // Trace lowest opaque pixel per column in foreground & lower perimeter (stepping inward past contact-shadow fringe).
+    const maxDy = Math.max(4, Math.min(12, Math.floor(bh * 0.045)));
     for (let x = b.px0 + 2; x <= b.px1 - 2; x += Math.max(1, Math.floor(bw / 40))) {
       if (!toeUp) {
         for (let y = b.py1; y >= b.py0 + Math.floor(bh * 0.55); y--) {
           if (isOpaque((y * effW + x) * 4)) {
-            for (let dy = 0; dy < 4 && y - dy >= b.py0; dy++) samplePixel(x, y - dy);
+            let added = 0;
+            for (let dy = 1; dy <= maxDy && y - dy >= b.py0; dy++) {
+              samplePixel(x, y - dy);
+              added++;
+            }
+            if (!added) samplePixel(x, y);
             break;
           }
         }
       } else {
         for (let y = b.py0; y <= b.py0 + Math.floor(bh * 0.45); y++) {
           if (isOpaque((y * effW + x) * 4)) {
-            for (let dy = 0; dy < 4 && y + dy <= b.py1; dy++) samplePixel(x, y + dy);
+            let added = 0;
+            for (let dy = 1; dy <= maxDy && y + dy <= b.py1; dy++) {
+              samplePixel(x, y + dy);
+              added++;
+            }
+            if (!added) samplePixel(x, y);
             break;
           }
+        }
+      }
+    }
+
+    // Also sample lower left/right outer silhouette walls where white rubber midsole sidewalls sit.
+    const wallY0 = b.py0 + Math.floor(bh * (toeUp ? 0.08 : 0.55));
+    const wallY1 = b.py0 + Math.floor(bh * (toeUp ? 0.45 : 0.92));
+    const wallStep = Math.max(2, Math.floor(bh / 24));
+    for (let y = wallY0; y <= wallY1; y += wallStep) {
+      for (let x = b.px0; x <= b.px1; x++) {
+        if (isOpaque((y * effW + x) * 4)) {
+          for (let dx = 2; dx <= 6 && x + dx <= b.px1; dx++) samplePixel(x + dx, y);
+          break;
+        }
+      }
+      for (let x = b.px1; x >= b.px0; x--) {
+        if (isOpaque((y * effW + x) * 4)) {
+          for (let dx = 2; dx <= 6 && x - dx >= b.px0; dx++) samplePixel(x - dx, y);
+          break;
         }
       }
     }
@@ -693,13 +723,14 @@ function extractPaletteFromPhoto(rgbaData, effW, effH, isOpaque, boxes, toeUp, m
 
   let soleColor = '#e2e4e8';
   if (rimSamples.length >= 6) {
-    // Check if there is a distinct bright white/light-grey rubber midsole rim (>= 25% samples lum > 175).
+    // Check if there is a distinct bright white/light-grey rubber midsole rim.
     const bright = rimSamples.filter((s) => s.lum > 175);
-    const pool = bright.length >= rimSamples.length * 0.25 ? bright : rimSamples;
+    const hasBrightRim = bright.length >= Math.max(5, Math.floor(rimSamples.length * 0.14));
+    const pool = hasBrightRim ? bright : rimSamples;
     pool.sort((p, q) => p.lum - q.lum);
-    const mid = pool[Math.floor(pool.length * 0.55)];
+    const mid = pool[Math.floor(pool.length * (hasBrightRim ? 0.72 : 0.52))];
     // Cap pure white down slightly so sole catches 3D directional lighting without blowing out.
-    const scale = mid.lum > 235 ? 232 / mid.lum : 1;
+    const scale = mid.lum > 236 ? 234 / mid.lum : 1;
     soleColor = rgbToHex(mid.r * scale, mid.g * scale, mid.b * scale);
   }
 
@@ -799,39 +830,41 @@ export function shoeUVAnatomical(side, x, y, z, frame, layout, opts = {}) {
   const bx = resolveShoeBox(side, layout);
   const toeUp = !!bx.toeUp;
   const acrossRaw = clamp((x - xMin) / xSpan, 0, 1);
+  const acrossEff = Number.isFinite(opts.archU)
+    ? lerp(acrossRaw, clamp(opts.archU, 0, 1), 0.75)
+    : acrossRaw;
+  const wallElev = Number.isFinite(opts.wallElev) ? clamp(opts.wallElev, 0, 1) : 1;
+
   // Flip X->U only when photo was shot in top-down wearer POV (toeUp === true).
-  const lateralU = toeUp ? 1 - acrossRaw : acrossRaw;
+  const lateralU = toeUp ? 1 - acrossEff : acrossEff;
 
   let photoFromToe;
-  let uNorm = lerp(0.06, 0.94, lateralU);
+  // Inset [0.12..0.88] avoids raw cutout border shadow/alpha-fringe streaks on steep walls.
+  const uNorm = lerp(0.12, 0.88, lateralU);
 
   if (opts.isBootShaft) {
     // Boot shaft: vertical world Y maps directly toward collar top in photo.
     const shaftY0 = opts.shaftY0 !== undefined ? opts.shaftY0 : yMin;
     const shaftY1 = opts.shaftY1 !== undefined ? opts.shaftY1 : yMax;
     const elev = clamp((y - shaftY0) / Math.max(1e-4, shaftY1 - shaftY0), 0, 1);
-    photoFromToe = lerp(0.28, 0.92, elev);
+    photoFromToe = lerp(0.28, 0.90, elev);
   } else if (z >= ankleZ) {
     // Forefoot + tongue + toe-box: monotonic fwdT 0 (tongue crest) -> 1 (toe tip).
     const fwdT = clamp((z - ankleZ) / Math.max(1e-4, z1 - ankleZ), 0, 1);
     // Slightly slow progression over the top tongue patch (0.72..0.90) so branding isn't squashed.
     const curvedFwd = Math.pow(fwdT, 0.88);
-    photoFromToe = lerp(0.90, 0.06, curvedFwd);
+    // Subtle sidewall elevation offset steps vertical walls smoothly across knit weave while keeping top centerline (wallElev=1) exact.
+    photoFromToe = clamp(lerp(0.88, 0.07, curvedFwd) - (1 - wallElev) * 0.07, 0.05, 0.92);
   } else {
     // Rear quarters + heel counter behind ankleZ:
-    // Blend C0-continuously at z = ankleZ outward into side quarter fabric
-    // so the center tongue badge/logo never duplicates onto the back of the heel.
+    // Sweep longitudinally from 0.88 (C0 match at z = ankleZ) down to 0.20 (clean geometric forefoot knit at back heel z0),
+    // preserving full lateral 2D variation in uNorm so side walls show genuine knit texture (zero vertical barcode columns)
+    // and the back Achilles seam (backT -> 1, photoFromToe -> 0.20) never touches the top tongue logo [0.74..0.92].
     const backT = clamp((ankleZ - z) / Math.max(1e-4, ankleZ - z0), 0, 1);
-    const backBlend = smoothstep(0.08, 0.92, backT);
-    const heightT = clamp((y - yMin) / ySpan, 0, 1);
-
-    photoFromToe = lerp(0.88, lerp(0.46, 0.72, heightT), backBlend);
-    // Mirror cleanly onto outer lateral quarter texture (avoids x=0 seam jump at back midline).
-    const outerSideU = side >= 0 ? 0.84 : 0.16;
-    uNorm = lerp(uNorm, outerSideU, backBlend * 0.85);
+    photoFromToe = clamp(lerp(0.88, 0.20, Math.pow(backT, 0.78)) - (1 - wallElev) * 0.07, 0.12, 0.91);
   }
 
-  const u = lerp(bx.u0, bx.u1, clamp(uNorm, 0.015, 0.985));
+  const u = lerp(bx.u0, bx.u1, clamp(uNorm, 0.02, 0.98));
   const vPos = clamp(photoFromToe, 0.02, 0.97);
   // Three.js CanvasTexture flipY = true: v1 is TOP of image, v0 is BOTTOM of image.
   // When toeUp === false, toe is at bottom (v0) and tongue/collar is at top (v1).
@@ -1084,8 +1117,10 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
     ankleZ,
   };
 
-  const evalUpperUV = (x, y, z) =>
+  const evalUpperUV = (x, y, z, archU = null, wallElev = 1) =>
     shoeUVAnatomical(side, x, y, z, frame, layout, {
+      archU,
+      wallElev,
       isBootShaft: (kind === 'boot' || kind === 'ankle_boot') && y > ankleY + 0.02,
       shaftY0: ankleY,
       shaftY1: sideCollarY,
@@ -1171,7 +1206,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
     const st = stations[endIdx];
     const hw = st.hw + upperPad;
     const { botY, topY, flange } = computeSoleProfile(st.z);
-    const capZ = endIdx === 0 ? st.z - 0.0025 : st.z + 0.0025;
+    const capZ = endIdx === 0 ? st.z - 0.0035 : st.z + 0.0035;
     const gCap = buildGridPart(
       1,
       nSoleCols,
@@ -1179,7 +1214,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
         const outerHW = hw + flange;
         const shrink = rr === 0 ? 1 : 0;
         let x = st.cx;
-        let y = lerp(botY, topY, 0.5);
+        let y = topY;
         if (rr === 0) {
           if (c === 0) { x = st.cx - hw; y = topY; }
           else if (c === 1) { x = st.cx - outerHW; y = topY - 0.0018; }
@@ -1193,8 +1228,9 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
           else if (c === 9) { x = st.cx + outerHW; y = topY - 0.0018; }
           else { x = st.cx + hw; y = topY; }
         } else {
+          // Converge to exact welt-plane apex shared with upper toeCapGrid / heelEndCap for watertight seal.
           x = st.cx;
-          y = lerp(botY, topY, 0.5);
+          y = topY;
         }
         return { x, y, z: rr === 0 ? st.z : capZ, u: 0.5 * shrink, v: 0.5 };
       },
@@ -1244,34 +1280,37 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
         ? -0.0035 * Math.sin((rf / 3) * Math.PI) * Math.max(0, sinT - 0.35)
         : 0;
     const z = st.z + tongueTipPush;
-    const [u, v] = evalUpperUV(x, y, z);
+    const [u, v] = evalUpperUV(x, y, z, uParam, yFrac);
     return { x, y, z, u, v };
   });
   parts.push({ geometry: foreGrid, materialIndex: 0 });
 
-  // Toe-tip rounded dome cap at r = nSlices so toe tip is watertight without sharp flat disc.
+  // Toe-tip rounded dome cap converging to the exact welt-plane apex shared with soleGrid endcap.
   const stToe = stations[nSlices];
   const toeHW = stToe.hw + upperPad;
   const { topY: toeSoleTop } = computeSoleProfile(stToe.z);
   const toeDorsalY = computeCollarAndDorsalY(stToe.z, 0);
-  const toeApexZ = stToe.z + 0.003;
-  const toeApexY = lerp(toeSoleTop, toeDorsalY, 0.38);
+  const toeApexZ = stToe.z + 0.0035;
   const toeCapGrid = buildGridPart(
-    1,
+    2,
     nUpperArch,
     (rr, c) => {
-      if (rr === 0) {
-        const uParam = c / nUpperArch;
-        const theta = uParam * Math.PI;
-        const xFrac = -Math.sign(Math.cos(theta)) * Math.pow(Math.abs(Math.cos(theta)), 0.72);
-        const yFrac = Math.pow(Math.max(0, Math.sin(theta)), 0.78);
-        const x = stToe.cx + xFrac * toeHW;
-        const y = toeSoleTop + yFrac * Math.max(0.012, toeDorsalY - toeSoleTop);
-        const [u, v] = evalUpperUV(x, y, stToe.z);
-        return { x, y, z: stToe.z, u, v };
-      }
-      const [u, v] = evalUpperUV(stToe.cx, toeApexY, toeApexZ);
-      return { x: stToe.cx, y: toeApexY, z: toeApexZ, u, v };
+      const tCap = rr / 2;
+      const uParam = c / nUpperArch;
+      const theta = uParam * Math.PI;
+      const cosT = Math.cos(theta);
+      const sinT = Math.max(0, Math.sin(theta));
+      const xFrac = -Math.sign(cosT) * Math.pow(Math.abs(cosT), 0.72);
+      const yFrac = Math.pow(sinT, 0.78);
+      const xRing = stToe.cx + xFrac * toeHW;
+      const yRing = toeSoleTop + yFrac * Math.max(0.012, toeDorsalY - toeSoleTop);
+      const x = lerp(xRing, stToe.cx, tCap);
+      const y = toeSoleTop + (yRing - toeSoleTop) * Math.cos(tCap * Math.PI * 0.5);
+      const z = lerp(stToe.z, toeApexZ, tCap) + 0.0022 * Math.sin(tCap * Math.PI) * sinT;
+      const archU = lerp(uParam, 0.5, tCap);
+      const wallElev = yFrac * (1 - tCap * 0.8);
+      const [u, v] = evalUpperUV(x, y, z, archU, wallElev);
+      return { x, y, z, u, v };
     },
     false
   );
@@ -1282,9 +1321,44 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   // smoothly meeting around back heel counter (r = 0) AND meeting the forefoot at r = rAnkleSplit!
   const sideSplitIdx = nUpperArch / 2; // 8 verts per side
 
+  // Watertight heel-end dome cap converging to the exact welt-plane apex shared with soleGrid heel endcap.
+  const isBootKind = kind === 'boot' || kind === 'ankle_boot';
+  const stHeel = stations[0];
+  const hHW = stHeel.hw + upperPad;
+  const { topY: hSoleTop } = computeSoleProfile(stHeel.z);
+  const heelApexZ = stHeel.z - 0.0035;
+  const heelBulgeAmp = isBootKind ? 0 : -0.004;
+  const heelMinArch = isBootKind ? 0.02 : 0.015;
+  const heelEndCap = buildGridPart(
+    2,
+    nUpperArch,
+    (rr, c) => {
+      const tCap = rr / 2;
+      const uParam = c / nUpperArch;
+      const tWall = uParam <= 0.5 ? uParam * 2 : (1 - uParam) * 2;
+      const theta = uParam * Math.PI;
+      const cosT = cosTVal(theta);
+      const sinT = Math.max(0, Math.sin(theta));
+      const archHeight = computeCollarAndDorsalY(stHeel.z, 1 - tWall) - hSoleTop;
+      const xFrac = -Math.sign(cosT) * Math.pow(Math.abs(cosT), 0.72);
+      const wallElev = Math.pow(sinT, 0.78);
+      const xRing = stHeel.cx + xFrac * hHW;
+      const yRing = hSoleTop + wallElev * Math.max(heelMinArch, archHeight);
+      const zRing = stHeel.z + heelBulgeAmp * Math.sin(tWall * Math.PI * 0.75);
+      const x = lerp(xRing, stHeel.cx, tCap);
+      const y = hSoleTop + (yRing - hSoleTop) * Math.cos(tCap * Math.PI * 0.5);
+      const z = lerp(zRing, heelApexZ, tCap) - 0.0018 * Math.sin(tCap * Math.PI) * sinT;
+      const archU = lerp(uParam, 0.5, tCap);
+      const [u, v] = evalUpperUV(x, y, z, archU, wallElev * (1 - tCap * 0.8));
+      return { x, y, z, u, v };
+    },
+    true
+  );
+  parts.push({ geometry: heelEndCap, materialIndex: 0 });
+
   // Left & Right outer quarter walls + heel counter continuity.
   // For boot / ankle_boot, keep closed ring around full leg shaft (same topology as foreGrid!).
-  if (kind === 'boot' || kind === 'ankle_boot') {
+  if (isBootKind) {
     const rearClosedGrid = buildGridPart(rAnkleSplit, nUpperArch, (r, c) => {
       const st = stations[r];
       const hw = st.hw + upperPad;
@@ -1297,7 +1371,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
       const yFrac = Math.pow(Math.max(0, Math.sin(theta)), 0.78);
       const x = st.cx + xFrac * hw;
       const y = soleTopY + yFrac * Math.max(0.02, archHeight);
-      const [u, v] = evalUpperUV(x, y, st.z);
+      const [u, v] = evalUpperUV(x, y, st.z, uParam, yFrac);
       return { x, y, z: st.z, u, v };
     });
     parts.push({ geometry: rearClosedGrid, materialIndex: 0 });
@@ -1373,32 +1447,20 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
           const archX = st.cx - Math.sign(cosT) * Math.pow(Math.abs(cosT), 0.72) * hw;
 
           const x = lerp(archX, lerp(st.cx + qSign * hw, rimTargetX, tWall), openRing * smoothstep(0.35, 1.0, tWall));
-          const y = soleTopY + Math.pow(Math.max(0, Math.sin(theta)), 0.78) * Math.max(0.015, archHeight);
+          const wallElev = Math.pow(Math.max(0, Math.sin(theta)), 0.78);
+          const y = soleTopY + wallElev * Math.max(0.015, archHeight);
           const bulge = r === 0 ? -0.004 : r === 1 ? -0.001 : 0;
           const z = st.z + bulge * Math.sin(tWall * Math.PI * 0.75);
-          const [u, v] = evalUpperUV(x, y, z);
+          const rimArchU = qSign < 0 ? 0.19 : 0.81;
+          const archUEnd = lerp(0.5, rimArchU, openRing);
+          const archU = qSign < 0 ? lerp(0, archUEnd, tWall) : lerp(1, archUEnd, tWall);
+          const [u, v] = evalUpperUV(x, y, z, archU, wallElev);
           return { x, y, z, u, v };
         },
         qSign > 0
       );
       parts.push({ geometry: qGrid, materialIndex: 0 });
     }
-
-    // Back Achilles heel dome seam bridge cleanly sealing r = 0..2 center heel.
-    const stHeel = stations[0];
-    const hHW = stHeel.hw + upperPad;
-    const { topY: hSoleTop } = computeSoleProfile(stHeel.z);
-    const hTopY = computeCollarAndDorsalY(stHeel.z, 0);
-    const heelBackCap = buildGridPart(2, 6, (rh, ch) => {
-      const th = (ch / 6) * Math.PI; // -1..+1 across back heel width
-      const xf = -Math.cos(th) * (hHW * 0.42);
-      const yf = lerp(hSoleTop, hTopY, rh / 2);
-      const zCurve = stHeel.z - 0.0045 * Math.sin((rh / 2) * Math.PI) * Math.sin(th);
-      const x = stHeel.cx + xf;
-      const [u, v] = evalUpperUV(x, yf, zCurve);
-      return { x, y: yf, z: zCurve, u, v };
-    });
-    parts.push({ geometry: heelBackCap, materialIndex: 0 });
 
     // --- PART 3: COLLAR INTERIOR & TONGUE LINING (GROUP 2) ---
     // Keeps Group 2 strictly BEHIND z = ankleZ - 0.004 so the front tongue face (Group 0)

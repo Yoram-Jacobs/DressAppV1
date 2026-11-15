@@ -54,7 +54,7 @@ describe('extractShoePhotoLayout', () => {
     expect(layout.boxes[0].toeUp).toBe(false);
     expect(layout.boxes[1].toeUp).toBe(false);
     expect(layout.isFrontThreeQuarter).toBe(true);
-    expect(parseInt(layout.soleColor.slice(1, 3), 16)).toBeGreaterThan(180);
+    expect(parseInt(layout.soleColor.slice(1, 3), 16)).toBeGreaterThan(205);
     expect(parseInt(layout.liningColor.slice(1, 3), 16)).toBeLessThan(90);
   });
 
@@ -121,6 +121,7 @@ describe('extractShoePhotoLayout', () => {
     const layout = extractShoePhotoLayout(buf, w, h);
     expect(layout.mode).toBe('top');
     expect(layout.boxes).toBeNull();
+    expect(parseInt(layout.soleColor.slice(1, 3), 16)).toBeLessThan(80);
   });
 
   test('detects side view horizontal shoe and toe direction', () => {
@@ -185,10 +186,30 @@ describe('shoeUVAnatomical', () => {
       expect(vTongue).toBeGreaterThan(vLaces);
       expect(vLaces).toBeGreaterThan(vToe);
       expect(vToe).toBeLessThan(bx.v0 + 0.18 * (bx.v1 - bx.v0));
-      // Rear heel routes outward away from center tongue logo zone [0.32..0.68]
-      const heelNormInBox = (uHeel - bx.u0) / (bx.u1 - bx.u0);
-      expect(Math.abs(heelNormInBox - 0.5)).toBeGreaterThan(0.18);
-      expect(vHeel).toBeGreaterThan(bx.v0 + 0.40 * (bx.v1 - bx.v0));
+      // Back heel samples the clean forefoot knit weave zone, well below the top tongue logo [0.74..0.92]
+      expect(vHeel).toBeLessThan(bx.v0 + 0.35 * (bx.v1 - bx.v0));
+      expect(vHeel).toBeGreaterThan(bx.v0 + 0.12 * (bx.v1 - bx.v0));
+
+      // Side quarters vary smoothly in V along Z and in U across steep sidewall rings (zero barcode strips)
+      const [, vQuarterFront] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.06, -0.02, frame, layout4cdc, {
+        archU: 0.15,
+        wallElev: 0.65,
+      });
+      const [, vQuarterBack] = shoeUVAnatomical(side, frame.xMin + 0.01, 0.06, -0.06, frame, layout4cdc, {
+        archU: 0.15,
+        wallElev: 0.65,
+      });
+      expect(Math.abs(vQuarterFront - vQuarterBack)).toBeGreaterThan(0.15);
+
+      const [uWall0] = shoeUVAnatomical(side, frame.xMin + 0.002, 0.03, 0.08, frame, layout4cdc, {
+        archU: 0.0,
+        wallElev: 0.0,
+      });
+      const [uWall3] = shoeUVAnatomical(side, frame.xMin + 0.002, 0.05, 0.08, frame, layout4cdc, {
+        archU: 0.18,
+        wallElev: 0.55,
+      });
+      expect(Math.abs(uWall0 - uWall3)).toBeGreaterThan(0.04);
     }
   });
 
@@ -276,6 +297,34 @@ describe('createRealisticFootwearGeometry', () => {
       }
     }
     expect(liningMaxZ).toBeLessThan(anatomy.ankleZ);
+
+    // Watertight toe & heel seams: Group 0 (upper) and Group 1 (sole) share exact welt-plane apexes
+    const group0Verts = [];
+    let soleToeApex = null;
+    let soleHeelApex = null;
+    for (const grp of realistic.groups) {
+      for (let k = grp.start; k < grp.start + grp.count; k++) {
+        const vi = idx.getX(k);
+        const vx = pos.getX(vi);
+        if (vx <= 0) continue; // inspect right-side shoe cleanly
+        const pt = { x: vx, y: pos.getY(vi), z: pos.getZ(vi) };
+        if (grp.materialIndex === 0) {
+          group0Verts.push(pt);
+        } else if (grp.materialIndex === 1) {
+          if (!soleToeApex || pt.z > soleToeApex.z) soleToeApex = pt;
+          if (!soleHeelApex || pt.z < soleHeelApex.z) soleHeelApex = pt;
+        }
+      }
+    }
+    const minDistToGroup0 = (target) =>
+      group0Verts.reduce(
+        (best, p) => Math.min(best, Math.hypot(p.x - target.x, p.y - target.y, p.z - target.z)),
+        Infinity
+      );
+    expect(soleToeApex).not.toBeNull();
+    expect(soleHeelApex).not.toBeNull();
+    expect(minDistToGroup0(soleToeApex)).toBeLessThan(1e-5);
+    expect(minDistToGroup0(soleHeelApex)).toBeLessThan(1e-5);
   });
 
   test('supports worn sneakers, sandals, heels, flats, loafers, and boots cleanly', () => {
