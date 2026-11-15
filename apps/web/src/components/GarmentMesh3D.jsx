@@ -2166,8 +2166,8 @@ export function createAnatomicalTopGeometry({
   const ny = 20;
   const nx = 28;
   const yShoulder = isMale ? 1.48 : 1.42;
-  const yWaistTop = isMale ? 1.06 : 1.02;
-  const effBottom = isTucked ? (isMale ? 1.010 : 0.980) : yBottom;
+  const yWaistTop = isMale ? 1.095 : 1.065;
+  const effBottom = isTucked ? (isMale ? 1.03 : 1.00) : yBottom;
   const hasAnySleeve = hasSleeves && sleeveFactor > 0.05;
 
   for (let i = 0; i <= ny; i++) {
@@ -2175,9 +2175,9 @@ export function createAnatomicalTopGeometry({
     const y = yTop - vNorm * (yTop - effBottom);
     const slice = getTorsoSlice(y, isMale);
 
-    const effOffset = isTucked && y <= yWaistTop ? 0.004 : layerOffset;
     const uTuck = (isTucked && y <= yWaistTop) ? Math.min(1.0, Math.max(0.0, (yWaistTop - y) / Math.max(0.01, yWaistTop - effBottom))) : 0;
-    const scaleRad = 1.0 - (isTucked ? 0.025 * uTuck : 0);
+    const effOffset = isTucked && y <= yWaistTop ? (layerOffset * (1 - uTuck) + 0.001 * uTuck) : layerOffset;
+    const scaleRad = 1.0 - (isTucked ? 0.06 * uTuck : 0);
     const rx = (slice.rx + effOffset) * scaleRad;
     const rz = (slice.rz + effOffset) * scaleRad;
     const cz = slice.cz;
@@ -2208,11 +2208,12 @@ export function createAnatomicalTopGeometry({
       const bustFactor = Math.max(0, Math.cos(theta * 1.3));
       const bustBulge = (y >= 1.12 && y <= 1.34 && !isMale) ? 0.026 * bustFactor : 0.0;
       const frontCos = Math.pow(Math.max(0, Math.cos(theta)), 0.65);
-      const rzFrontEff = ((slice.rzFront || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.03 * uTuck) : 1.0);
-      const rzBackEff = ((slice.rzBack || rz) + effOffset) * (uTuck > 0 ? (1.0 - 0.03 * uTuck) : 1.0);
+      const rzFrontEff = ((slice.rzFront || slice.rz) + effOffset) * scaleRad;
+      const rzBackEff = ((slice.rzBack || slice.rz) + effOffset) * scaleRad;
+      const backEase = 0.012 * (1 - uTuck);
       const z = isFront
         ? cz + (rzFrontEff + bustBulge) * frontCos
-        : cz - (rzBackEff + 0.012) * Math.abs(Math.cos(theta));
+        : cz - (rzBackEff + backEase) * Math.abs(Math.cos(theta));
       verts.push(x, y, z);
 
       // Continuous 360° UV projection: front and back views share the same texture and pattern
@@ -3756,8 +3757,9 @@ function GarmentTemplateMeshInner({
                     const sDep = sDrop * sTorsoX;
                     const effW = shouldTuck && y < yWaistAnchor ? 1.0 : wScale;
                     const effD = shouldTuck && y < yWaistAnchor ? 1.0 : dScale;
-                    x = x * (1 + (effW - 1) * sLat) + Math.sign(x) * flareAdd * sLat;
-                    z = cz + (z - cz) * (1 + (effD - 1) * sDep) + Math.sign(z - cz) * flareAdd * 0.45 * sDep;
+                    const tuckShrink = (shouldTuck && y < yWaistAnchor) ? Math.max(0.92, 1.0 - (yWaistAnchor - y) * 1.4) : 1.0;
+                    x = (x * (1 + (effW - 1) * sLat) + Math.sign(x) * flareAdd * sLat) * tuckShrink;
+                    z = cz + ((z - cz) * (1 + (effD - 1) * sDep) + Math.sign(z - cz) * flareAdd * 0.45 * sDep) * tuckShrink;
                   }
                   pos.setXYZ(i, x, y, z);
                 }
