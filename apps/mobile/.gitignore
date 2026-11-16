@@ -3,6 +3,9 @@ node_modules/
 dist/
 build/
 *.jks
+*.keystore
+credentials.json
+google-service-account.json
 *.p8
 *.p12
 *.key

@@ -39,6 +39,15 @@ apps/mobile/dist-debug/
 *.map
 *.tgz
 
+# ─── Credentials & Signing Keys ──────────────────────────────────────────────
+credentials.json
+google-service-account.json
+*.keystore
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
 # ─── OS / editor files ────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

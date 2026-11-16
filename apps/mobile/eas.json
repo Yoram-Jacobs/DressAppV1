@@ -36,6 +36,7 @@
     },
     "production": {
       "channel": "production",
+      "credentialsSource": "local",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://dressapp.co"
       },
