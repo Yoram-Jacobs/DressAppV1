@@ -1253,11 +1253,20 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const computeCollarAndDorsalY = (z, sAbs /* 0 at center spine, 1 at sole wall */) => {
     if (isBootKind) {
       const throatZ = ankleZ + 0.030;
+      const throatPeakY = ankleY + 0.030;
+      const bootBallY = yWelt + 0.048;
+      const bootToeY = yWelt + 0.030;
       if (z <= throatZ) {
-        return ankleY + 0.036;
+        return throatPeakY;
       }
-      const vampT = clamp((z - throatZ) / Math.max(1e-4, zEnd - throatZ), 0, 1);
-      return lerp(ankleY + 0.036, toeCapY, Math.pow(vampT, 0.80));
+      if (z <= ballZ) {
+        // Smooth concave bow from the ankle throat into the horizontal forefoot vamp
+        const lt = clamp((z - throatZ) / Math.max(1e-4, ballZ - throatZ), 0, 1);
+        return lerp(bootBallY, throatPeakY, Math.pow(1 - lt, 2.2));
+      }
+      // Rounded convex toe box dome down to the toe tip
+      const tt = clamp((z - ballZ) / Math.max(1e-4, zEnd - ballZ), 0, 1);
+      return lerp(bootBallY, bootToeY, Math.pow(tt, 1.55));
     }
 
     if (kind === 'flat' || kind === 'heel') {
@@ -1560,13 +1569,14 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
     const yEnd = kind === 'ankle_boot' ? Math.max(0.148, ankleY + 0.068) : Math.max(0.36, spec?.collar || 0.40);
     const shaftOff = kind === 'ankle_boot' ? 0.0055 : 0.007;
-    // Align ankle collar center with the foot's own centerline (gentle blend for tall boots above ankle).
+    // Align ankle collar center with the foot's own centerline and prevent forward collar overhang.
     const alignShaftCenter = (yVal, sp) => {
       const tallBlend = kind === 'ankle_boot' ? 0.15 : smoothstep(0.14, 0.34, yVal);
       const spCx = side > 0 ? sp.cx : -sp.cx;
+      const ankleCz = Math.min(sp.cz, stSplit.z + 0.004 - (sp.rz + shaftOff));
       return {
         cx: lerp(stSplit.cx, spCx, tallBlend),
-        cz: lerp(ankleZ + 0.001, sp.cz, tallBlend),
+        cz: lerp(ankleCz, sp.cz, kind === 'ankle_boot' ? 0 : smoothstep(0.14, 0.34, yVal)),
       };
     };
 
@@ -1647,7 +1657,9 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
         // Smooth S-curve loft from foot last (vT=0) to sculpted boot collar (vT=1)
         const y = lerp(bot.y, top.y, vT);
-        const sXZ = smoothstep(0, 1, Math.pow(vT, 0.85));
+        const sXZ = Math.cos(th) > 0
+          ? smoothstep(0, 1, Math.pow(vT, 1.15))
+          : smoothstep(0, 1, Math.pow(vT, 0.85));
         let x = lerp(bot.x, top.x, sXZ);
         let z = lerp(bot.z, top.z, sXZ);
 
@@ -1662,10 +1674,9 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
           z = lerp(z, calfZ, calfBlend);
         }
 
-        // Subtle anatomical heel counter roundness at rear lower quarter & forward ankle clearance
+        // Subtle anatomical heel counter roundness at rear lower quarter
         const heelCup = Math.max(0, -Math.cos(th)) * Math.sin(vT * Math.PI) * (1 - vT) * 0.005;
-        const frontAnkleEase = Math.max(0, Math.cos(th)) * Math.sin(vT * Math.PI) * 0.016;
-        z += frontAnkleEase - heelCup;
+        z -= heelCup;
 
         const [u, v] = shoeUVAnatomical(side, x, y, z, frame, layout, {
           wallElev: lerp(bot.wallElev, 1, smoothstep(0, 0.45, vT)),
