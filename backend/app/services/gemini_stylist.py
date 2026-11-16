@@ -881,22 +881,21 @@ async def parse_urls_and_context(text: str | None, session_id: str = "") -> str:
                     continue
 
             # 2) If it is an external URL, scrape title/description using a simple HTTP GET
-            from app.services.security_validator import is_safe_external_url
+            from app.services.security_validator import is_safe_external_url, safe_fetch_external
             if not is_safe_external_url(url):
                 logger.warning("SSRF blocked in parse_urls_and_context: %s", url)
                 continue
 
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                resp = await client.get(url, follow_redirects=True)
-                if resp.status_code == 200:
-                    # Extract html title and cap length to prevent prompt injection payload injection
-                    html_text = resp.text[:10000]
-                    title_match = re.search(r'<title>(.*?)</title>', html_text, re.IGNORECASE)
-                    title = title_match.group(1).strip() if title_match else "Webpage"
-                    title = re.sub(r'[\r\n\t]+', ' ', title)[:100]
-                    title = re.sub(r'(system|assistant|instruction|ignore all)', '', title, flags=re.IGNORECASE)
-                    desc = f"Link: {title}"
-                    text = text.replace(url, f"{url} ({desc})")
+            resp = await safe_fetch_external(url, timeout=5.0, max_redirects=5, max_bytes=2_000_000)
+            if resp.status_code == 200:
+                # Extract html title and cap length to prevent prompt injection payload injection
+                html_text = resp.text[:10000]
+                title_match = re.search(r'<title>(.*?)</title>', html_text, re.IGNORECASE)
+                title = title_match.group(1).strip() if title_match else "Webpage"
+                title = re.sub(r'[\r\n\t]+', ' ', title)[:100]
+                title = re.sub(r'(system|assistant|instruction|ignore all)', '', title, flags=re.IGNORECASE)
+                desc = f"Link: {title}"
+                text = text.replace(url, f"{url} ({desc})")
         except Exception as e:
             logger.warning("Failed to parse URL %s: %s", url, e)
             

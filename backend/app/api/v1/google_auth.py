@@ -252,6 +252,12 @@ async def _handle_calendar_link_callback(
             f"{redirect_base}{sep}calendar=error&reason=token_exchange_failed"
         )
 
+    if not data.get("reconsent") and not calendar_service.has_calendar_scope(tokens):
+        logger.warning("google-calendar: user_id=%s completed OAuth without granting calendar scope", user_id)
+        return RedirectResponse(
+            f"{redirect_base}{sep}calendar=error&reason=calendar_scope_denied"
+        )
+
     try:
         await calendar_service.persist_tokens_for_user(user_id, tokens)
     except Exception:  # noqa: BLE001
@@ -967,8 +973,16 @@ async def calendar_status(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     tokens = (user or {}).get("google_calendar_tokens") or {}
+    has_token = bool(tokens.get("refresh_token") or tokens.get("access_token"))
+    scope_ok = calendar_service.has_calendar_scope(tokens) and not bool(
+        tokens.get("calendar_scope_error")
+    )
+    connected = bool(tokens.get("refresh_token")) and scope_ok
     return {
-        "connected": bool(tokens.get("refresh_token")),
+        "connected": connected,
+        "google_linked": has_token,
+        "calendar_scope_granted": scope_ok,
+        "needs_reconsent": has_token and not scope_ok,
         "google_email": tokens.get("google_email"),
         "connected_at": tokens.get("connected_at"),
         "scope": tokens.get("scope"),
@@ -980,8 +994,19 @@ async def calendar_upcoming(
     hours_ahead: int = Query(default=48, ge=1, le=168),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
+    tokens = (user or {}).get("google_calendar_tokens") or {}
     events = await calendar_service.get_events_for_user(user, hours_ahead=hours_ahead)
-    return {"events": events, "count": len(events)}
+    scope_ok = calendar_service.has_calendar_scope(tokens) and not bool(
+        tokens.get("calendar_scope_error")
+    )
+    has_token = bool(tokens.get("refresh_token") or tokens.get("access_token"))
+    return {
+        "events": events,
+        "count": len(events),
+        "connected": bool(tokens.get("refresh_token")) and scope_ok,
+        "scope_missing": has_token and not scope_ok,
+        "needs_reconsent": has_token and not scope_ok,
+    }
 
 
 @auth_router.api_route("/sync-profile", methods=["GET", "POST"])

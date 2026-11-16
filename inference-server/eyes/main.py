@@ -1098,7 +1098,7 @@ async def transcribe(
     t0 = time.time()
     async with httpx.AsyncClient() as client:
         r = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={key}",
             json=payload,
             headers={"Content-Type": "application/json"},
             timeout=30.0

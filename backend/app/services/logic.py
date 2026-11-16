@@ -25,10 +25,11 @@ logger = logging.getLogger(__name__)
 async def fetch_image_bytes(url_or_bytes: str | bytes) -> bytes:
     if isinstance(url_or_bytes, bytes):
         return url_or_bytes
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.get(url_or_bytes, follow_redirects=True)
-        resp.raise_for_status()
-        return resp.content
+    from app.services.security_validator import safe_fetch_external
+
+    resp = await safe_fetch_external(url_or_bytes, timeout=30.0, max_redirects=5, max_bytes=15_000_000)
+    resp.raise_for_status()
+    return resp.content
 
 
 async def get_styling_advice(

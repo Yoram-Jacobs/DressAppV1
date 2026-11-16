@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 from typing import Any, Optional, Literal, Dict
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
@@ -35,13 +36,45 @@ pricing_router = APIRouter(prefix="/pricing", tags=["pricing"])  # Complementary
 quota_router = APIRouter(prefix="/quota", tags=["quota"])  # Quota management endpoints
 
 
-_CREDIT_PACKS = {"10": 10, "25": 25, "50": 50, "100": 100}  # Updated to match modern pack sizes
+_CREDIT_PACKS = {"10": 10, "50": 50, "100": 100}
+_CREDIT_PACK_PRICES_CENTS = {"10": 300, "50": 1200, "100": 2000}
 
 
 class AiCreditPurchaseIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     pack: Literal["10", "50", "100"]
     currency: str = "USD"
+    return_url: str | None = None
+    cancel_url: str | None = None
+
+
+def _validate_checkout_redirect_url(raw_url: str | None, field_name: str) -> str | None:
+    """Validate optional return/cancel URLs against safe origins or deep links."""
+    if raw_url is None:
+        return None
+    cleaned = raw_url.strip()
+    if not cleaned:
+        return None
+    if "\n" in cleaned or "\r" in cleaned or "\t" in cleaned:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Invalid {field_name}")
+    if cleaned.startswith("/") and not cleaned.startswith("//"):
+        return f"{settings.APP_PUBLIC_URL}{cleaned}"
+    if cleaned.startswith(("dressapp://", "exp://", "exps://")):
+        return cleaned
+
+    parsed = urlparse(cleaned)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Invalid {field_name} scheme")
+
+    origin = f"{parsed.scheme}://{parsed.netloc}".lower()
+    host = (parsed.hostname or "").lower()
+    allowed = {settings.APP_PUBLIC_URL.lower(), "https://dressapp.co", "https://www.dressapp.co"}
+    for cors_item in (settings.CORS_ORIGINS or "").split(","):
+        if cors_item.strip():
+            allowed.add(cors_item.strip().rstrip("/").lower())
+    if origin in allowed or host in ("localhost", "127.0.0.1"):
+        return cleaned
+    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Untrusted {field_name} origin")
 
 
 class CreditUsageRequest(BaseModel):
@@ -83,8 +116,15 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
     """Get comprehensive pricing and credit information (publicly accessible)."""
     try:
         user_tier = "free"
-        ai_provider = "dressapp_eyes"
-        ai_model = "gemma-4-E4B"
+        from app.services import eyes_override
+
+        active_provider = await eyes_override.get_active_provider()
+        if active_provider == "gemma":
+            ai_provider = "dressapp_eyes"
+            ai_model = "Qwen2.5-VL-3B-Instruct"
+        else:
+            ai_provider = settings.DEFAULT_STYLIST_PROVIDER or "gemini"
+            ai_model = settings.DEFAULT_STYLIST_MODEL or "gemini-3.5-flash-lite"
         ai_daily_used = 0
         total_credits = 0
         free_credits = 0
@@ -250,10 +290,6 @@ async def get_balance(
     }
 
 
-_CREDIT_PACKS = {"10": 10, "50": 50, "100": 100}
-_CREDIT_PACK_PRICES_CENTS = {"10": 300, "50": 1200, "100": 2000}
-
-
 @ai_credits_router.post("/purchase")
 async def create_purchase(
     payload: AiCreditPurchaseIn,
@@ -268,11 +304,19 @@ async def create_purchase(
     amount_cents = _CREDIT_PACK_PRICES_CENTS.get(pack, 300)
     credits_amount = _CREDIT_PACKS.get(pack, 10)
 
+    validated_return = _validate_checkout_redirect_url(payload.return_url, "return_url")
+    validated_cancel = _validate_checkout_redirect_url(payload.cancel_url, "cancel_url")
+
     purchase_id = f"ai_pur_{uuid.uuid4().hex[:16]}"
     description = f"DressApp AI Credit Pack ({credits_amount} credits)"
 
     db = get_db()
-    approve_url = f"{settings.APP_PUBLIC_URL}/pricing?credit_status=success&token={purchase_id}"
+    approve_url = (
+        f"{validated_return}{'&' if '?' in validated_return else '?'}token={purchase_id}"
+        if validated_return
+        else f"{settings.APP_PUBLIC_URL}/pricing?credit_status=success&token={purchase_id}"
+    )
+    cancel_url = validated_cancel or f"{settings.APP_PUBLIC_URL}/pricing?credit_status=cancel"
     order_id = f"mock_{purchase_id}"
 
     if paypal_client.is_configured() and not settings.PAYPAL_MOCK_MODE:
@@ -282,6 +326,8 @@ async def create_purchase(
                 currency=currency,
                 reference_id=f"aipack:{purchase_id}",
                 description=description,
+                return_url=validated_return or f"{settings.APP_PUBLIC_URL}/pricing?credit_status=success",
+                cancel_url=cancel_url,
                 custom_id=purchase_id,
             )
             order_id = order["id"]
@@ -317,6 +363,21 @@ async def create_purchase(
     }
 
 
+def _extract_paypal_capture_status(captured: dict[str, Any] | None) -> str:
+    if not isinstance(captured, dict):
+        return ""
+    captures = (
+        (captured.get("purchase_units") or [{}])[0]
+        .get("payments", {})
+        .get("captures", [])
+    )
+    if captures and isinstance(captures[0], dict) and captures[0].get("status"):
+        return str(captures[0]["status"]).upper()
+    if captured.get("status"):
+        return str(captured["status"]).upper()
+    return ""
+
+
 @ai_credits_router.post("/purchase/{purchase_id}/capture")
 async def capture_purchase(
     purchase_id: str,
@@ -324,33 +385,69 @@ async def capture_purchase(
 ) -> Dict[str, Any]:
     """Capture payment and provision paid credits that never expire."""
     db = get_db()
-    purchase = await db.ai_credit_purchases.find_one({"id": purchase_id, "user_id": user["id"]})
+    purchase = await db.ai_credit_purchases.find_one(
+        {
+            "$or": [{"id": purchase_id}, {"paypal_order_id": purchase_id}],
+            "user_id": user["id"],
+        }
+    )
     if not purchase:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Purchase transaction not found")
 
     if purchase.get("status") == "captured":
         return {"success": True, "already_captured": True, "credits_added": purchase["credits"]}
 
+    # Atomically acquire capture lock so concurrent requests cannot double-credit
+    lock_res = await db.ai_credit_purchases.update_one(
+        {"id": purchase["id"], "user_id": user["id"], "status": {"$in": ["pending", "failed"]}},
+        {"$set": {"status": "capturing", "updated_at": _now_iso()}},
+    )
+    if getattr(lock_res, "modified_count", 1) == 0:
+        latest = await db.ai_credit_purchases.find_one({"id": purchase["id"], "user_id": user["id"]}) or {}
+        if latest.get("status") == "captured":
+            return {"success": True, "already_captured": True, "credits_added": latest.get("credits", purchase["credits"])}
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Purchase capture is already in progress")
+
     order_id = purchase.get("paypal_order_id")
     if paypal_client.is_configured() and not settings.PAYPAL_MOCK_MODE and order_id and not order_id.startswith("mock_"):
         try:
-            await paypal_client.capture_order(order_id)
+            captured = await paypal_client.capture_order(order_id)
         except Exception as exc:
+            await db.ai_credit_purchases.update_one(
+                {"id": purchase["id"]},
+                {"$set": {"status": "failed", "updated_at": _now_iso()}},
+            )
             logger.error("PayPal capture error for credit pack %s: %s", purchase_id, exc)
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"PayPal capture failed: {exc}")
 
+        if not captured.get("mock") and _extract_paypal_capture_status(captured) != "COMPLETED":
+            await db.ai_credit_purchases.update_one(
+                {"id": purchase["id"]},
+                {"$set": {"status": "pending", "updated_at": _now_iso()}},
+            )
+            raise HTTPException(
+                status.HTTP_402_PAYMENT_REQUIRED,
+                detail="PayPal capture did not complete",
+            )
+
     credits_to_add = int(purchase["credits"])
     from app.services.credit_manager import add_paid_credits
-    await add_paid_credits(user["id"], credits_to_add)
+    credited = await add_paid_credits(user["id"], credits_to_add)
+    if not credited:
+        await db.ai_credit_purchases.update_one(
+            {"id": purchase["id"]},
+            {"$set": {"status": "failed", "updated_at": _now_iso()}},
+        )
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to provision paid credits")
 
     await db.ai_credit_purchases.update_one(
-        {"id": purchase_id},
+        {"id": purchase["id"]},
         {"$set": {"status": "captured", "captured_at": _now_iso(), "updated_at": _now_iso()}}
     )
 
     return {
         "success": True,
-        "purchase_id": purchase_id,
+        "purchase_id": purchase["id"],
         "credits_added": credits_to_add,
         "message": f"Successfully added {credits_to_add} AI credits to your account!",
     }

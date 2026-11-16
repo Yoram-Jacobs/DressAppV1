@@ -6,15 +6,58 @@ clear, loud failure at application startup so we never silently mock providers.
 """
 from __future__ import annotations
 
+import logging
 import os
+import secrets
+import sys
 from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
 
+logger = logging.getLogger(__name__)
+
 # Load .env once at import time
 ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
+
+_LEGACY_DEFAULT_JWT_SECRET = "dressapp_jwt_secret_xK9mQ2nP4vR7sT8uW"
+_EPHEMERAL_DEV_JWT_SECRET: str | None = None
+
+
+def _resolve_jwt_secret() -> str:
+    """Resolve JWT signing secret, failing closed in production when unset or default."""
+    global _EPHEMERAL_DEV_JWT_SECRET
+    raw = (os.environ.get("JWT_SECRET") or "").strip()
+    if raw and raw != _LEGACY_DEFAULT_JWT_SECRET:
+        return raw
+
+    app_env = (
+        os.environ.get("APP_ENV")
+        or os.environ.get("ENVIRONMENT")
+        or os.environ.get("DRESSAPP_ENV")
+        or ""
+    ).strip().lower()
+    pub_url = os.environ.get("APP_PUBLIC_URL", "http://localhost:3000").strip().lower()
+    is_test = "pytest" in sys.modules or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+    is_prod_like = app_env in ("production", "prod", "staging") or (
+        pub_url.startswith("https://")
+        and "localhost" not in pub_url
+        and "127.0.0.1" not in pub_url
+        and app_env not in ("dev", "development", "local", "test")
+    )
+    if is_prod_like and not is_test:
+        raise RuntimeError(
+            "CRITICAL SECURITY ERROR: JWT_SECRET must be set to a strong unique secret "
+            "and cannot use the insecure repository default in production/staging."
+        )
+
+    if _EPHEMERAL_DEV_JWT_SECRET is None:
+        _EPHEMERAL_DEV_JWT_SECRET = secrets.token_urlsafe(48)
+        logger.warning(
+            "JWT_SECRET is unset or uses legacy default; generated an ephemeral per-process dev/test secret."
+        )
+    return _EPHEMERAL_DEV_JWT_SECRET
 
 
 def _module_installed(name: str) -> bool:
@@ -86,7 +129,7 @@ class Settings:
     )
 
     # --- auth ---
-    JWT_SECRET: str = os.environ.get("JWT_SECRET", "dressapp_jwt_secret_xK9mQ2nP4vR7sT8uW")
+    JWT_SECRET: str = _resolve_jwt_secret()
     JWT_ALGORITHM: str = os.environ.get("JWT_ALGORITHM", "HS256")
     JWT_EXPIRES_MIN: int = int(os.environ.get("JWT_EXPIRES_MIN", "43200"))
 

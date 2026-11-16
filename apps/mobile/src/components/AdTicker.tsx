@@ -99,7 +99,7 @@ export function AdTicker({ placement = 'footer', limit = 6, style }: AdTickerPro
     if (current._isCampaign) {
       (campaignApi as any).trackCampaignView?.(current._campaignId).catch(() => {});
     } else {
-      (api as any).trackAdImpression?.(current.id).catch(() => {});
+      (api as any).trackAdImpression?.(current.id, current.tracking_token).catch(() => {});
     }
   }, [ads, idx]);
 
@@ -121,7 +121,7 @@ export function AdTicker({ placement = 'footer', limit = 6, style }: AdTickerPro
       }
     } else if (creative.cta_url) {
       Linking.openURL(creative.cta_url).catch(() => {});
-      (api as any).trackAdClick?.(current.id).catch(() => {});
+      (api as any).trackAdClick?.(current.id, current.tracking_token).catch(() => {});
     }
   };
 

@@ -3,7 +3,7 @@
 Start every morning with a ready-to-wear outfit suggestion tailored to your day's weather forecast and calendar schedule.
 
 ## Prerequisites
-- An active **Manager** or **Professional** plan (or available styling credits).
+- Available styling credits (Free accounts consume 1 AI credit per daily suggestion; Manager and Professional plans include daily suggestions with priority access).
 - Browser notifications enabled on your device.
 - Location services enabled for accurate local weather.
 

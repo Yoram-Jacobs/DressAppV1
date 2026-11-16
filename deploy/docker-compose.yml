@@ -62,6 +62,12 @@ services:
     environment:
       # Make sure the backend trusts the Caddy forwarded headers.
       FORWARDED_ALLOW_IPS: "*"
+      # Cap ONNX/PyTorch thread pools to prevent memory/CPU bloat on 4-vCPU VPS
+      OMP_NUM_THREADS: ${OMP_NUM_THREADS:-2}
+      OPENBLAS_NUM_THREADS: ${OPENBLAS_NUM_THREADS:-2}
+      MKL_NUM_THREADS: ${MKL_NUM_THREADS:-2}
+      TORCH_NUM_THREADS: ${TORCH_NUM_THREADS:-2}
+      TOKENIZERS_PARALLELISM: "false"
     expose:
       - "8001"
     # Heavy ML inference — give it a generous memory ceiling but let it
@@ -85,21 +91,12 @@ services:
     networks: [dress]
 
   # ---------------------------------------------------------------
-  # DressApp Eyes (Phase O.3) — self-hosted Gemma-4 E2B inference.
-  # Internal-only; reached by the backend at http://eyes:7860 over
-  # the dress network. Caddy never proxies it. Lifts the Qwen-VL
-  # leg of garment_vision.py when EYES_PROVIDER=gemma in .env.
-  #
-  # Model artefacts: the container loads its GGUF + mmproj from a
-  # bind-mounted local directory (see ``volumes:`` below). It does
-  # NOT download from HuggingFace at runtime — see
-  # ``quarantine/2026-05-sabotage/READ_THIS_FIRST.md`` for why the
-  # earlier HF-download bootstrap was removed.
-  # Aug 4 2026: service enabled. Fine-tuned Gemma4-E2B weights
-  # (Q4_K_M main + BF16 mmproj) are bind-mounted from
-  # /srv/AI-Stylist/eyes_gguf on the VPS.
+  # DressApp Eyes — parked behind Compose profile "eyes".
+  # Currently disabled in production while running Gemini across all
+  # tiers; source stays intact for future private VLM/vLLM hosting.
   # ---------------------------------------------------------------
   eyes:
+    profiles: ["eyes"]
     build:
       context: ../inference-server/eyes
       dockerfile: Dockerfile

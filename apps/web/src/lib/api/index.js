@@ -13,10 +13,11 @@ import { campaignApi } from '@dressapp/api-client';
 import {
   auth, users, closet, listings, transactions, stylist, outfits,
   suitcase, admin, trends, professionals, promotions, pricing, share, avatar,
-  calendar, misc, streamNdjson, sync, syncManager,
+  calendar, misc, streamNdjson, sync,
 } from '@dressapp/api-client';
 
 import { getBackendUrl, isPublicPath } from './client.js';
+import { createSafeSyncManager } from './syncClient.js';
 
 const STORAGE_TOKEN = 'dressapp.token';
 const STORAGE_USER  = 'dressapp.user';
@@ -45,11 +46,27 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
 const callableStylist = (formData, config) => stylist.stylist(formData, config);
 Object.assign(callableStylist, stylist);
 
+const syncManager = createSafeSyncManager(client, API_BASE);
+
 export const api = buildApi();
 api.outfits = outfits;
 api.closet = closet;
 api.misc = misc;
 api.stylist = callableStylist;
+api.trackAdImpression = (id, token) =>
+  client
+    .post(`/promotions/impression/${encodeURIComponent(id)}`, token ? { token } : {})
+    .then((r) => r.data)
+    .catch(() => null);
+api.trackAdClick = (id, token) =>
+  client
+    .post(`/promotions/click/${encodeURIComponent(id)}`, token ? { token } : {})
+    .then((r) => r.data)
+    .catch(() => null);
+if (promotions) {
+  promotions.trackAdImpression = api.trackAdImpression;
+  promotions.trackAdClick = api.trackAdClick;
+}
 
 // ============================================================
 // Individual adapters (for focused imports)

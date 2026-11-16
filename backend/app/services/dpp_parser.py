@@ -97,17 +97,22 @@ async def parse_dpp(qr_payload: str) -> dict[str, Any]:
         logger.warning("dpp: refusing non-public URL %s", payload[:120])
         return _empty(reason="url_blocked")
 
+    from app.services.security_validator import SafeFetchError, safe_fetch_external
+
     try:
-        async with httpx.AsyncClient(
-            timeout=_FETCH_TIMEOUT, follow_redirects=True, max_redirects=5
-        ) as client:
-            resp = await client.get(
-                payload,
-                headers={
-                    "Accept": "application/ld+json, application/json;q=0.9, text/html;q=0.8",
-                    "User-Agent": "DressApp-DPP-Importer/1.0",
-                },
-            )
+        resp = await safe_fetch_external(
+            payload,
+            timeout=_FETCH_TIMEOUT,
+            max_redirects=5,
+            max_bytes=_MAX_BYTES,
+            headers={
+                "Accept": "application/ld+json, application/json;q=0.9, text/html;q=0.8",
+                "User-Agent": "DressApp-DPP-Importer/1.0",
+            },
+        )
+    except SafeFetchError as exc:
+        logger.warning("dpp: blocked URL %s (%s)", payload[:120], exc)
+        return _empty(reason="url_blocked", source_url=payload)
     except Exception as exc:  # noqa: BLE001
         logger.info("dpp: fetch failed for %s: %s", payload[:120], exc)
         return _empty(reason="fetch_failed", source_url=payload)
@@ -216,14 +221,16 @@ async def _finalise(raw: Any, *, source_url: str | None) -> dict[str, Any]:
     image_url = _first_image_url(product)
     if image_url and (image_url.startswith("http://") or image_url.startswith("https://")):
         if _is_public_url(image_url):
+            from app.services.security_validator import safe_fetch_external
+
             try:
-                async with httpx.AsyncClient(
-                    timeout=_FETCH_TIMEOUT, follow_redirects=True, max_redirects=5
-                ) as client:
-                    r2 = await client.get(
-                        image_url,
-                        headers={"User-Agent": "DressApp-DPP-Importer/1.0"},
-                    )
+                r2 = await safe_fetch_external(
+                    image_url,
+                    timeout=_FETCH_TIMEOUT,
+                    max_redirects=5,
+                    max_bytes=_MAX_IMAGE_BYTES,
+                    headers={"User-Agent": "DressApp-DPP-Importer/1.0"},
+                )
                 if r2.status_code == 200 and len(r2.content) <= _MAX_IMAGE_BYTES:
                     ct = (r2.headers.get("content-type") or "image/jpeg").split(";", 1)[0]
                     if ct.startswith("image/"):
@@ -530,39 +537,7 @@ def _extract_jsonld_from_html(body: bytes) -> Any:
 # SSRF guard
 # ---------------------------------------------------------------------
 def _is_public_url(url: str) -> bool:
-    """Block loopback / link-local / private-network IPs."""
-    try:
-        parsed = urlparse(url)
-    except Exception:  # noqa: BLE001
-        return False
-    if parsed.scheme not in ("http", "https"):
-        return False
-    host = parsed.hostname
-    if not host:
-        return False
-    # Reject obvious metadata/localhost-like hostnames outright.
-    lowered = host.lower()
-    if lowered in {"localhost", "metadata", "metadata.google.internal"}:
-        return False
-    try:
-        # If it's already an IP, check it directly; otherwise resolve.
-        try:
-            ip = ipaddress.ip_address(host)
-            ips = [ip]
-        except ValueError:
-            infos = socket.getaddrinfo(host, None)
-            ips = [ipaddress.ip_address(info[4][0]) for info in infos]
-    except Exception as exc:  # noqa: BLE001
-        logger.info("dpp: DNS resolve failed for %s: %s", host, exc)
-        return False
-    for ip in ips:
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_multicast
-            or ip.is_reserved
-            or ip.is_unspecified
-        ):
-            return False
-    return True
+    """Block loopback / link-local / private-network IPs via centralized SSRF validator."""
+    from app.services.security_validator import is_safe_external_url
+
+    return is_safe_external_url(url)

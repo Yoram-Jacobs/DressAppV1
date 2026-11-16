@@ -84,45 +84,17 @@ def _is_tags_style(user: dict) -> tuple[bool, list[str]]:
 
 
 def check_scheduler_access(user: dict) -> None:
-    """Enforce that daily outfit proposals require an active Manager or Professional subscription/trial."""
-    sub = user.get("subscription") or {}
-    is_active = sub.get("is_active", False)
-    plan_type = (sub.get("plan_type") or "free").lower()
-    tier = (sub.get("tier") or "free").lower()
-
-    # 1. Check active trial in trial_info
-    trial = user.get("trial_info") or {}
-    if trial.get("is_active") and trial.get("expires_at"):
-        try:
-            exp = datetime.fromisoformat(trial["expires_at"].replace("Z", "+00:00"))
-            if exp > datetime.now(timezone.utc):
-                return
-        except Exception:
-            pass
-
-    # 2. Check active subscription
-    if is_active and plan_type != "free":
-        expires_at_str = sub.get("expires_at")
-        if expires_at_str:
-            try:
-                exp = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
-                if exp <= datetime.now(timezone.utc):
-                    raise HTTPException(
-                        status_code=403,
-                        detail="Daily outfit proposals require a Manager or Professional subscription."
-                    )
-            except HTTPException:
-                raise
-            except Exception:
-                pass
-
-        if tier in ["pro", "manager", "business", "professional"] or plan_type in ["pro", "manager", "business", "professional"]:
-            return
-
-    raise HTTPException(
-        status_code=403,
-        detail="Daily outfit proposals require a Manager or Professional subscription."
-    )
+    """Validate user access to daily outfit proposals.
+    
+    Free users are fully permitted to use daily outfit suggestions.
+    Each newly generated daily suggestion consumes 1 AI credit.
+    """
+    if not user or not user.get("id"):
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required."
+        )
+    return
 
 
 @router.get("/daily-proposal")
@@ -338,6 +310,13 @@ async def _generate_and_save_daily_proposal(
         )
         if existing and len(existing.get("items") or []) > 0:
             return existing
+
+    # Deduct 1 AI credit for generating a daily outfit proposal
+    from app.services.billing_service import deduct_user_credits
+    from app.services.credit_manager import make_insufficient_credits_exception
+
+    if not await deduct_user_credits(db, user, cost=1, operation="daily_proposal"):
+        raise make_insufficient_credits_exception(user, cost=1)
             
     if force:
         # On 'New Look', mark previous proposals for today as replaced and unwear them
@@ -346,10 +325,10 @@ async def _generate_and_save_daily_proposal(
             {"$set": {"worn": False, "replaced": True, "dismissed": True}},
         )
 
-    # Gather items already used in recent proposals (up to 5 days back) to enforce genuine multi-day rotation
+    # Gather items already used in recent proposals (up to 14 days back) to enforce genuine multi-day rotation
     from app.services.stylist_scheduler_brain import get_recent_wardrobe_history
     recent_item_weights, recent_items_summary = await get_recent_wardrobe_history(
-        user["id"], target_date_str=date_str, lookback_days=5
+        user["id"], target_date_str=date_str, lookback_days=14
     )
     past_item_ids: set[str] = set(recent_item_weights.keys())
 
@@ -519,9 +498,13 @@ async def _generate_and_save_daily_proposal(
                 elif days_ago == 2:
                     recent_penalty = 400
                 elif days_ago == 3:
-                    recent_penalty = 200
+                    recent_penalty = 250
+                elif days_ago <= 7:
+                    recent_penalty = max(80, 180 - days_ago * 15)
+                elif days_ago <= 14:
+                    recent_penalty = 50
                 else:
-                    recent_penalty = 100
+                    recent_penalty = 20
             elif iid in past_item_ids:
                 recent_penalty = 600
 
@@ -537,15 +520,43 @@ async def _generate_and_save_daily_proposal(
                         recent_penalty = max(recent_penalty, 600)
                     elif diff_days == 2:
                         recent_penalty = max(recent_penalty, 400)
+                    elif diff_days == 3:
+                        recent_penalty = max(recent_penalty, 250)
+                    elif diff_days <= 7:
+                        recent_penalty = max(recent_penalty, 100)
+                    elif diff_days <= 14:
+                        recent_penalty = max(recent_penalty, 40)
                 except Exception:
                     pass
 
-            style_score = calculate_garment_style_score(item, effective_occasion, is_tags_mode=is_tags_mode)
+            last_suggested = str(item.get("last_suggested_at") or "")
+            if last_suggested:
+                try:
+                    ls_date = datetime.strptime(last_suggested[:10], "%Y-%m-%d").date()
+                    tgt_date = datetime.strptime(str(date_str)[:10], "%Y-%m-%d").date()
+                    diff_days = (tgt_date - ls_date).days
+                    if diff_days <= 0:
+                        recent_penalty = max(recent_penalty, 800)
+                    elif diff_days == 1:
+                        recent_penalty = max(recent_penalty, 450)
+                    elif diff_days == 2:
+                        recent_penalty = max(recent_penalty, 250)
+                    elif diff_days <= 7:
+                        recent_penalty = max(recent_penalty, 80)
+                except Exception:
+                    pass
+
             wear_count = item.get("wear_count") or 0
-            wear_penalty = min(wear_count * 10, 100)
+            wear_penalty = min(wear_count * 20, 200)
+            unworn_bonus = -50 if (wear_count == 0 and not last_worn) else 0
+
+            style_score = calculate_garment_style_score(item, effective_occasion, is_tags_mode=is_tags_mode)
+            is_general_casual = not is_tags_mode and (not effective_occasion or effective_occasion.lower() in ("casual", "daily", "everyday", "יומיומי"))
+            normalized_style = min(style_score, 20) if is_general_casual else style_score
+
             date_seed = f"{date_str}_{iid}"
             jitter = (abs(hash(date_seed)) % 1000) / 1000.0
-            return (recent_penalty, wear_penalty, -style_score, jitter)
+            return (recent_penalty, wear_penalty + unworn_bonus, -normalized_style, jitter)
 
         tops.sort(key=_fallback_sort_key)
         bottoms.sort(key=_fallback_sort_key)

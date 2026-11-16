@@ -175,7 +175,7 @@ class GeminiImageService:
         from app.services import provider_activity
 
         prepared_bytes = _prepare_reference_image(image_bytes) if image_bytes else None
-        fallback_models = [self.model, "gemini-3.1-flash-image", "gemini-2.5-flash-image"]
+        fallback_models = [self.model, "gemini-3.1-flash-lite-image", "gemini-3.1-flash-image"]
         last_exc: Exception | None = None
         for attempt in range(3):
             active_model = fallback_models[min(attempt, len(fallback_models) - 1)]
@@ -333,12 +333,11 @@ async def _to_bytes(image: bytes | str) -> bytes:
         return image
     if image.startswith("data:"):
         return base64.b64decode(image.split(",", 1)[1])
-    import httpx
+    from app.services.security_validator import safe_fetch_external
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.get(image, follow_redirects=True)
-        resp.raise_for_status()
-        return resp.content
+    resp = await safe_fetch_external(image, timeout=30.0, max_redirects=5, max_bytes=15_000_000)
+    resp.raise_for_status()
+    return resp.content
 
 
 # Module-level singleton — None when the direct Gemini key is absent. The

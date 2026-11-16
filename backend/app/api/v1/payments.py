@@ -301,6 +301,7 @@ async def create_topup(
 async def capture_topup(
     topup_id: str, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
+    db = get_db()
     topup = await db.credit_topups.find_one(
         {"id": topup_id, "user_id": user["id"]}, {"_id": 0}
     )
@@ -311,6 +312,18 @@ async def capture_topup(
     order_id = topup.get("paypal_order_id")
     if not order_id:
         raise HTTPException(400, "Topup has no PayPal order id")
+
+    # Atomically claim capture lock to prevent concurrent double-crediting
+    lock_res = await db.credit_topups.update_one(
+        {"id": topup_id, "user_id": user["id"], "status": {"$in": ["pending", "failed"]}},
+        {"$set": {"status": "capturing", "updated_at": _now_iso()}},
+    )
+    if getattr(lock_res, "modified_count", 1) == 0:
+        latest = await db.credit_topups.find_one({"id": topup_id, "user_id": user["id"]}, {"_id": 0}) or topup
+        if latest.get("status") == "captured":
+            return {"ok": True, "already_captured": True, "topup": latest}
+        raise HTTPException(409, "Topup capture is already in progress")
+
     try:
         captured = await paypal_client.capture_order(order_id)
     except paypal_client.PayPalError as exc:
@@ -319,21 +332,19 @@ async def capture_topup(
         )
         raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
 
-    capture_status = (
+    captures = (
         (captured.get("purchase_units") or [{}])[0]
         .get("payments", {})
-        .get("captures", [{}])[0]
-        .get("status", "COMPLETED")
+        .get("captures", [])
     )
-    capture_id = (
-        (captured.get("purchase_units") or [{}])[0]
-        .get("payments", {})
-        .get("captures", [{}])[0]
-        .get("id")
-    )
+    first_capture = captures[0] if captures and isinstance(captures[0], dict) else {}
+    capture_status = str(
+        first_capture.get("status") or captured.get("status") or ""
+    ).upper()
+    capture_id = first_capture.get("id")
     payer_email = (captured.get("payer") or {}).get("email_address")
 
-    new_status = "captured" if capture_status == "COMPLETED" else "pending"
+    new_status = "captured" if (capture_status == "COMPLETED" or captured.get("mock")) else "pending"
     await db.credit_topups.update_one(
         {"id": topup_id},
         {
@@ -374,18 +385,17 @@ async def capture_topup(
         await add_paid_credits(user["id"], credits_purchased)
 
         ai_config = user.get("ai_configuration") or {}
-        existing_credits = int(ai_config.get("current_credits", 0))
         await db.users.update_one(
             {"id": user["id"]},
             {
+                "$inc": {"ai_configuration.current_credits": credits_purchased},
                 "$set": {
-                    "ai_configuration.current_credits": existing_credits + credits_purchased,
                     "ai_configuration.credits_used_this_month": 0,
                     "ai_configuration.provider_mode": ai_config.get("provider_mode") or "standard",
                     "ai_configuration.selected_provider": ai_config.get("selected_provider") or "google_ai",
-                    "ai_configuration.selected_model": ai_config.get("selected_model") or "gemini-3.5-flash",
-                }
-            }
+                    "ai_configuration.selected_model": ai_config.get("selected_model") or settings.DEFAULT_STYLIST_MODEL,
+                },
+            },
         )
 
         # Dispatch localized thank-you receipt email
@@ -407,7 +417,7 @@ async def capture_topup(
     final = await db.credit_topups.find_one({"id": topup_id}, {"_id": 0})
     balance = await _get_or_create_credits(db, user["id"], topup["currency"])
     return {
-        "ok": True,
+        "ok": new_status == "captured",
         "topup": final,
         "balance": {
             "currency": balance["currency"],

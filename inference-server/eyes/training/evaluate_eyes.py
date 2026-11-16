@@ -14,6 +14,7 @@ Exits with code 0 on PASS, code 1 on REGRESSION GATE FAILURE.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import logging
 import os
@@ -238,6 +239,60 @@ def try_load_adapter_model(
         return None
 
 
+_EVAL_SCHEMA_VERSION = "2.0"
+MIN_REQUIRED_LIVE_SAMPLES = 50
+
+
+def _compute_file_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _compute_adapter_digest(adapter_dir: Path | None) -> str:
+    if not adapter_dir or not adapter_dir.exists():
+        return "none"
+    h = hashlib.sha256()
+    for name in ("adapter_config.json", "adapter_model.safetensors", "pytorch_model.bin", "train_stats.json"):
+        fp = adapter_dir / name
+        if fp.is_file():
+            h.update(name.encode("utf-8"))
+            h.update(_compute_file_sha256(fp).encode("utf-8"))
+    return h.hexdigest()
+
+
+def _select_stratified_indices(samples: list[dict[str, Any]], live_samples: int) -> set[int]:
+    """Select up to `live_samples` stratified evenly across task types & categories."""
+    if live_samples <= 0 or not samples:
+        return set()
+    if live_samples >= len(samples):
+        return set(range(len(samples)))
+
+    buckets: dict[str, list[int]] = {}
+    for idx, s in enumerate(samples):
+        key = f"{s.get('type', 'unknown')}:{str(s.get('expected_category') or '').strip().lower()}"
+        buckets.setdefault(key, []).append(idx)
+
+    selected: list[int] = []
+    keys = sorted(buckets.keys())
+    pos = {k: 0 for k in keys}
+    while len(selected) < live_samples:
+        progressed = False
+        for k in keys:
+            arr = buckets[k]
+            if pos[k] < len(arr):
+                selected.append(arr[pos[k]])
+                pos[k] += 1
+                progressed = True
+                if len(selected) >= live_samples:
+                    break
+        if not progressed:
+            break
+    return set(selected)
+
+
 def run_evaluation(
     val_dataset: Path,
     adapter_dir: Path | None = None,
@@ -248,30 +303,16 @@ def run_evaluation(
     metrics_out: Path | None = None,
     mock_eval: bool = False,
     max_samples: int | None = None,
-    live_samples: int = 2,
+    live_samples: int = MIN_REQUIRED_LIVE_SAMPLES,
+    trust_gpu_metrics: bool = False,
 ) -> dict[str, Any]:
     """Runs evaluation benchmarks across the validation dataset."""
-    # Check if RunPod GPU compute backend already completed evaluation and exported metrics
-    if metrics_out and metrics_out.exists():
-        try:
-            cached = json.loads(metrics_out.read_text(encoding="utf-8"))
-            if cached.get("status") == "PASSED" and "schema_accuracy" in cached:
-                logger.info("Found passing evaluation metrics at %s (computed on RunPod GPU backend).", metrics_out)
-                logger.info("================ EVALUATION GATE RESULTS ================")
-                logger.info("Status:                   %s", cached.get("status"))
-                logger.info("JSON Schema Valid Ratio:  %.2f%% (Min: %.2f%%)", cached.get("schema_accuracy", 0.0) * 100, min_schema_acc * 100)
-                logger.info("Taxonomy Category Acc:    %.2f%% (Min: %.2f%%)", cached.get("category_accuracy", 0.0) * 100, min_category_acc * 100)
-                logger.info("Shoes & Accessory Acc:    %.2f%% (Min: %.2f%%)", cached.get("shoes_accessory_accuracy", 0.0) * 100, min_shoes_acc * 100)
-                logger.info("=========================================================")
-                return cached
-            elif cached.get("status") == "FAILED":
-                logger.warning("Cached metrics at %s indicate FAILED. Re-running evaluation gate verification...", metrics_out)
-        except Exception:
-            pass
-
     logger.info("Loading validation samples from %s", val_dataset)
     if not val_dataset.exists():
         raise FileNotFoundError(f"Validation dataset not found: {val_dataset}")
+
+    dataset_sha256 = _compute_file_sha256(val_dataset)
+    adapter_digest = _compute_adapter_digest(adapter_dir)
 
     lines = val_dataset.read_text(encoding="utf-8").strip().split("\n")
     samples = [json.loads(line) for line in lines if line.strip()]
@@ -279,26 +320,68 @@ def run_evaluation(
         samples = samples[:max_samples]
 
     total_samples = len(samples)
-    logger.info("Evaluating %d validation samples...", total_samples)
+    expected_live_floor = min(total_samples, max(1, live_samples))
 
-    # Attempt live model inference if adapter present and not mock_eval
+    # Only accept precomputed RunPod GPU metrics when caller explicitly opts in AND
+    # cryptographic dataset + adapter digests and live-sample thresholds match.
+    if trust_gpu_metrics and metrics_out and metrics_out.exists():
+        try:
+            cached = json.loads(metrics_out.read_text(encoding="utf-8"))
+            cached_live_count = int(cached.get("live_samples_evaluated") or 0)
+            cached_gt_fallback = int(cached.get("ground_truth_fallback_count") or 0)
+            digests_match = (
+                cached.get("eval_schema_version") == _EVAL_SCHEMA_VERSION
+                and cached.get("dataset_sha256") == dataset_sha256
+                and cached.get("adapter_digest") == adapter_digest
+            )
+            if (
+                cached.get("status") == "PASSED"
+                and "schema_accuracy" in cached
+                and digests_match
+                and cached_gt_fallback == 0
+                and cached_live_count >= expected_live_floor
+                and float(cached.get("schema_accuracy", 0.0)) >= min_schema_acc
+                and float(cached.get("category_accuracy", 0.0)) >= min_category_acc
+                and float(cached.get("shoes_accessory_accuracy", 0.0)) >= min_shoes_acc
+            ):
+                logger.info("Verified RunPod GPU metrics digest & thresholds at %s.", metrics_out)
+                return cached
+            logger.warning("Precomputed metrics at %s failed digest/live-sample verification; re-running.", metrics_out)
+        except Exception as cache_exc:
+            logger.warning("Failed reading cached metrics at %s: %s", metrics_out, cache_exc)
+
+    logger.info("Evaluating %d validation samples (live_samples target=%d, mock_eval=%s)...", total_samples, expected_live_floor, mock_eval)
+
+    # Attempt live model inference unless running explicit mock schema validation
     live_bundle = None
     if not mock_eval:
         live_bundle = try_load_adapter_model(adapter_dir, base_model=base_model)
+        if live_bundle is None:
+            raise RuntimeError(
+                "Live model inference unavailable (missing CUDA GPU or failed adapter load). "
+                "Fail closed: refusing to substitute dataset ground truth for model evaluation unless --mock-test is set."
+            )
+
+    live_indices = _select_stratified_indices(samples, live_samples) if live_bundle is not None else set()
 
     schema_valid_count = 0
     category_matches = 0
     attribute_samples_count = 0
     outfit_samples_count = 0
     shoes_accessory_compliant_count = 0
+    live_samples_evaluated = 0
+    live_samples_failed = 0
+    ground_truth_fallback_count = 0
 
     eval_failures: list[dict[str, Any]] = []
 
     for idx, sample in enumerate(samples):
         task_type = sample.get("type", "unknown")
         raw_output: str | None = None
+        is_live_sample = live_bundle is not None and idx in live_indices
 
-        if live_bundle is not None and idx < live_samples:
+        if is_live_sample:
+            live_samples_evaluated += 1
             model, processor = live_bundle
             messages = sample.get("messages", [])
             clean_messages = []
@@ -345,28 +428,28 @@ def run_evaluation(
                 )
                 sys.stdout.flush()
 
-                # Verify candidate output can be parsed as JSON
-                try:
-                    _ = extract_json(candidate_output)
-                    raw_output = candidate_output
-                    logger.info("Sample %d: Live inference output successfully parsed as JSON.", idx + 1)
-                except Exception as parse_err:
-                    logger.warning(
-                        "Sample %d: Live inference output could not be parsed as JSON (%s). Raw: %s. Using benchmark ground truth.",
-                        idx + 1,
-                        parse_err,
-                        candidate_output[:120],
-                    )
-                    raw_output = None
-            except Exception as gen_err:
-                logger.warning("Live inference generation skipped for sample %d: %s", idx + 1, gen_err)
-                sys.stdout.flush()
-                raw_output = None
-
-        if not raw_output:
+                # Verify candidate output can be parsed as JSON — NEVER fall back to ground truth
+                _ = extract_json(candidate_output)
+                raw_output = candidate_output
+            except Exception as live_err:
+                live_samples_failed += 1
+                if task_type == "attribute_parsing":
+                    attribute_samples_count += 1
+                elif task_type == "outfit_completion":
+                    outfit_samples_count += 1
+                eval_failures.append({
+                    "sample_idx": idx,
+                    "error": f"Live inference/JSON failure: {live_err}",
+                })
+                continue
+        else:
+            # Explicit mock dataset structural check (or non-live tail beyond live_samples)
+            if not mock_eval and live_samples > 0:
+                continue
             model_turn = next((m for m in sample.get("messages", []) if m["role"] == "model"), None)
             if not model_turn:
                 continue
+            ground_truth_fallback_count += 1
             raw_output = model_turn["content"]
 
         # 1. Test JSON Schema Conformance
@@ -418,25 +501,42 @@ def run_evaluation(
                     })
 
         except Exception as exc:
+            if is_live_sample:
+                live_samples_failed += 1
             eval_failures.append({
                 "sample_idx": idx,
                 "error": f"Schema Validation Error: {exc}",
-                "raw_text": raw_output[:200],
+                "raw_text": (raw_output or "")[:200],
             })
 
-    schema_accuracy = (schema_valid_count / total_samples) if total_samples > 0 else 0.0
-    category_accuracy = (category_matches / attribute_samples_count) if attribute_samples_count > 0 else 1.0
-    shoes_accuracy = (shoes_accessory_compliant_count / outfit_samples_count) if outfit_samples_count > 0 else 1.0
+    evaluated_denom = (
+        len(live_indices)
+        if (not mock_eval and live_bundle is not None)
+        else total_samples
+    )
+    schema_accuracy = (schema_valid_count / evaluated_denom) if evaluated_denom > 0 else 0.0
+    category_accuracy = (category_matches / attribute_samples_count) if attribute_samples_count > 0 else 0.0
+    shoes_accuracy = (shoes_accessory_compliant_count / outfit_samples_count) if outfit_samples_count > 0 else (1.0 if outfit_samples_count == 0 and mock_eval else 0.0)
 
     passed = (
-        schema_accuracy >= min_schema_acc
+        evaluated_denom > 0
+        and (mock_eval or (live_samples_evaluated >= expected_live_floor and ground_truth_fallback_count == 0))
+        and schema_accuracy >= min_schema_acc
         and category_accuracy >= min_category_acc
         and shoes_accuracy >= min_shoes_acc
     )
 
     metrics = {
+        "eval_schema_version": _EVAL_SCHEMA_VERSION,
+        "eval_mode": "mock_dataset_check" if mock_eval else "live_inference",
         "status": "PASSED" if passed else "FAILED",
+        "dataset_sha256": dataset_sha256,
+        "adapter_digest": adapter_digest,
         "total_samples": total_samples,
+        "evaluated_samples": evaluated_denom,
+        "live_samples_evaluated": live_samples_evaluated,
+        "live_samples_failed": live_samples_failed,
+        "ground_truth_fallback_count": ground_truth_fallback_count,
         "attribute_samples": attribute_samples_count,
         "outfit_samples": outfit_samples_count,
         "schema_accuracy": round(schema_accuracy, 4),
@@ -446,11 +546,13 @@ def run_evaluation(
         "shoes_accessory_accuracy": round(shoes_accuracy, 4),
         "min_shoes_threshold": min_shoes_acc,
         "failures_count": len(eval_failures),
-        "failures": eval_failures[:5],  # top 5 failure cases for report
+        "failures": eval_failures[:10],
     }
 
     logger.info("================ EVALUATION GATE RESULTS ================")
+    logger.info("Mode:                     %s", metrics["eval_mode"])
     logger.info("Status:                   %s", metrics["status"])
+    logger.info("Live Samples Evaluated:   %d (failed: %d)", live_samples_evaluated, live_samples_failed)
     logger.info("JSON Schema Valid Ratio:  %.2f%% (Min: %.2f%%)", schema_accuracy * 100, min_schema_acc * 100)
     logger.info("Taxonomy Category Acc:    %.2f%% (Min: %.2f%%)", category_accuracy * 100, min_category_acc * 100)
     logger.info("Shoes & Accessory Acc:    %.2f%% (Min: %.2f%%)", shoes_accuracy * 100, min_shoes_acc * 100)
@@ -474,25 +576,32 @@ def main() -> None:
     parser.add_argument("--metrics-out", type=Path, default=Path("build/metrics.json"))
     parser.add_argument("--base-model", type=str, default="google/gemma-4-e4b-it")
     parser.add_argument("--max-samples", type=int, default=None, help="Max evaluation samples to process")
-    parser.add_argument("--live-samples", type=int, default=2, help="Max samples for live model inference verification")
-    parser.add_argument("--mock-test", action="store_true", help="Run evaluation without live GPU inference")
+    parser.add_argument("--live-samples", type=int, default=MIN_REQUIRED_LIVE_SAMPLES, help="Min stratified samples for live model inference verification")
+    parser.add_argument("--mock-test", action="store_true", help="Run dataset schema validation without live GPU inference")
+    parser.add_argument("--trust-gpu-metrics", action="store_true", help="Verify and accept RunPod GPU metrics matching dataset & adapter digests")
     args = parser.parse_args()
 
-    metrics = run_evaluation(
-        val_dataset=args.val_dataset,
-        adapter_dir=args.adapter_dir,
-        base_model=args.base_model,
-        min_schema_acc=args.min_schema_acc,
-        min_category_acc=args.min_category_acc,
-        min_shoes_acc=args.min_shoes_acc,
-        metrics_out=args.metrics_out,
-        mock_eval=args.mock_test,
-        max_samples=args.max_samples,
-        live_samples=args.live_samples,
-    )
+    try:
+        metrics = run_evaluation(
+            val_dataset=args.val_dataset,
+            adapter_dir=args.adapter_dir,
+            base_model=args.base_model,
+            min_schema_acc=args.min_schema_acc,
+            min_category_acc=args.min_category_acc,
+            min_shoes_acc=args.min_shoes_acc,
+            metrics_out=args.metrics_out,
+            mock_eval=args.mock_test,
+            max_samples=args.max_samples,
+            live_samples=args.live_samples,
+            trust_gpu_metrics=args.trust_gpu_metrics,
+        )
+    except Exception as exc:
+        logger.error("Quality & Regression Gate aborted: %s", exc)
+        sys.exit(1)
 
     if metrics["status"] != "PASSED":
         logger.error("Quality & Regression Gate FAILED! Halting CI/CD pipeline.")
+        sys.exit(1)
         sys.exit(1)
     else:
         logger.info("Quality & Regression Gate PASSED! Model is certified for production export.")

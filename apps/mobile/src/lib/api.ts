@@ -15,6 +15,7 @@ import type { NavigationContainerRef } from '@react-navigation/native';
 import { CommonActions } from '@react-navigation/native';
 import type { RootStackParamList } from '@mobile/navigation/types';
 import { emitAuthChange } from './authEvents';
+import { createMobileSyncManager } from './syncClient';
 
 export const TOKEN_KEY = 'dressapp.token';
 export const USER_KEY  = 'dressapp.user';
@@ -86,8 +87,20 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
 
 const builtApi = buildApi();
 
+export const syncManager = createMobileSyncManager(client, API_BASE);
+
 export const api = {
   ...builtApi,
+  trackAdImpression: (id: string, token?: string) =>
+    client
+      .post(`/promotions/impression/${encodeURIComponent(id)}`, token ? { token } : {})
+      .then((r: any) => r.data)
+      .catch(() => null),
+  trackAdClick: (id: string, token?: string) =>
+    client
+      .post(`/promotions/click/${encodeURIComponent(id)}`, token ? { token } : {})
+      .then((r: any) => r.data)
+      .catch(() => null),
   getWiki: async (lang: string, topic: string): Promise<string> => {
     const res: any = await (client as any).get(`/wiki/${encodeURIComponent(lang)}/${encodeURIComponent(topic)}`, {
       responseType: 'text',
@@ -102,5 +115,5 @@ export { emitAuthChange } from './authEvents';
 export {
   auth, users, closet, listings, transactions, stylist, outfits,
   suitcase, trends, professionals, promotions, pricing, share, avatar,
-  calendar, misc, campaignApi, sync, syncManager,
+  calendar, misc, campaignApi, sync,
 } from '@dressapp/api-client';

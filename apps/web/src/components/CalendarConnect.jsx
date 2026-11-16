@@ -103,6 +103,14 @@ export const CalendarConnect = () => {
                 >
                   <CheckCircle2 className="h-3 w-3 me-1 inline" /> {t('calendar.connectedBadge')}
                 </Badge>
+              ) : status.needs_reconsent ? (
+                <Badge
+                  variant="outline"
+                  className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] rounded-full py-0.5 px-2 font-semibold"
+                  data-testid="calendar-reconsent-badge"
+                >
+                  <AlertCircle className="h-3 w-3 me-1 inline" /> {t('calendar.permissionRequired', { defaultValue: 'Permission Required' })}
+                </Badge>
               ) : (
                 <Badge
                   variant="outline"

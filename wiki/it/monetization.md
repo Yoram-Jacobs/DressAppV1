@@ -7,6 +7,7 @@ DressApp offre un modello di abbonamento trasparente a tre livelli (**Free**, **
 | Funzionalità | Free ($0) | Manager ($10/mese o $100/anno) | Professional ($15/mese o $150/anno) |
 | :--- | :--- | :--- | :--- |
 | **Capacità Massima Armadio** | 50 capi | 200 capi | 300 capi |
+   - Include **suggerimenti giornalieri di outfit** basati su Gemini (**1 credito IA** per ogni suggerimento giornaliero dal tuo saldo giornaliero o pacchetto crediti).
 | **Ricostruzioni Capi AI** | 5 / mese | 50 / mese | 100 / mese |
 | **Caricamento Gruppi di Capi (`mass`)** | Sbloccato con 15+ crediti di ricostruzione IA | Incluso | Incluso |
 | **Suggerimenti Outfit AI** | 5 / mese | 30 / mese | 100 / mese |

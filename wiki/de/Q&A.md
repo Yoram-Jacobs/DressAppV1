@@ -1,6 +1,7 @@
 # DressApp: Kurzübersicht & Häufige Fragen zum Einstieg
 
 Willkommen bei **DressApp** – Ihrem intelligenten Garderoben-Assistenten, persönlichen Stylisten und Begleiter für nachhaltige Mode. Egal, ob Sie Ihr erstes Kleidungsstück hochladen oder eine Packliste für eine Reise planen: Dieser Leitfaden verbindet eine kompakte **Kurzübersicht** mit **Häufig gestellten Fragen** für einen schnellen Start.
+- **Täglicher Outfit-Vorschlag**: **1 Credit** pro generiertem Look
 
 ---
 

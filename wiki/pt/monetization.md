@@ -7,6 +7,7 @@ O DressApp oferece um modelo transparente de assinatura em três níveis (**Grá
 | Recurso | Grátis ($0) | Manager ($10/mês ou $100/ano) | Professional ($15/mês ou $150/ano) |
 | :--- | :--- | :--- | :--- |
 | **Capacidade Máxima do Armário** | 50 peças | 200 peças | 300 peças |
+   - Inclui **sugestões diárias de looks** alimentadas pelo Gemini (**1 crédito de IA** por sugestão diária do seu saldo diário ou pacote de créditos).
 | **Reconstruções de Peças com IA** | 5 / mês | 50 / mês | 100 / mês |
 | **Upload de Conjunto de Peças (`mass`)** | Desbloqueado com 15+ créditos de reconstrução de IA | Incluído | Incluído |
 | **Sugestões de Looks com IA** | 5 / mês | 30 / mês | 100 / mês |

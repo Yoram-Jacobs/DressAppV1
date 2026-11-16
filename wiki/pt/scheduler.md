@@ -1,16 +1,25 @@
-# Agenda de Looks e Planeamento Semanal
+# Alertas matinais de looks e sincronização de calendário
 
-A **Agenda de Looks** ajuda-o a planear com antecedência o que vestir em cada dia da semana para o trabalho, eventos especiais e viagens.
+Comece cada manhã com uma sugestão de look pronta para vestir, personalizada de acordo com a previsão do tempo e a sua agenda do dia.
 
----
+## Pré-requisitos
+- Créditos de estilo disponíveis (contas gratuitas consomem 1 crédito de IA por sugestão diária; os planos Manager e Professional incluem sugestões diárias com acesso prioritário).
+- Notificações do navegador ativadas no seu dispositivo.
+- Serviços de localização ativados para obter a previsão do tempo local com precisão.
 
-## 1. Agendar Looks no Calendário
-1. Abra o separador **Agenda** e selecione uma data no calendário.
-2. Escolha um look guardado, crie uma nova combinação ou peça ao stylist uma sugestão para esse dia.
-3. Adicione uma etiqueta de ocasião (como *Reunião de Trabalho*, *Jantar* ou *Casual*).
+## Passo a passo de configuração
 
----
+1. **Abrir Alertas matinais de looks**:
+   - Acesse sua página de **Perfil** e role até a seção **Alertas matinais de looks**.
 
-## 2. Histórico de Utilização
-- Cada look agendado atualiza automaticamente o histórico de utilização das peças incluídas.
-- Isto evita sugestões repetidas em dias seguidos e calcula estatísticas de uso e custo por utilização.
+2. **Escolher sua programação**:
+   - Ative os lembretes diários, selecione em quais dias da semana deseja receber alertas e defina seu horário matinal preferido.
+
+3. **Escolher seu estilo do dia**:
+   - Escolha o estilo geral para suas sugestões diárias — como **Casual**, **Trabalho / Formal**, **Esportivo** ou **Personalizado**.
+
+4. **Conectar seu calendário**:
+   - Vincule o seu Google Agenda para que o seu Stylist de IA saiba se você tem uma reunião importante, treino ou jantar programado para aquele dia.
+
+5. **Visualizar seu look da manhã**:
+   - Quando o alerta matinal chegar, toque nele para ver o look completo selecionado do seu guarda-roupa, acompanhado da previsão do tempo e dicas de estilo!

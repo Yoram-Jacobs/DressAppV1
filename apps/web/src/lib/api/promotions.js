@@ -14,8 +14,8 @@ export const promotions = {
   // --- Ad ticker & tracking ---
   adTicker: (params = {}) =>
     client.get('/promotions/ticker', { params }).then((r) => r.data),
-  trackAdImpression: (id) =>
-    client.post(`/promotions/impression/${id}`).then((r) => r.data).catch(() => null),
-  trackAdClick: (id) =>
-    client.post(`/promotions/click/${id}`).then((r) => r.data).catch(() => null),
+  trackAdImpression: (id, token) =>
+    client.post(`/promotions/impression/${encodeURIComponent(id)}`, token ? { token } : {}).then((r) => r.data).catch(() => null),
+  trackAdClick: (id, token) =>
+    client.post(`/promotions/click/${encodeURIComponent(id)}`, token ? { token } : {}).then((r) => r.data).catch(() => null),
 };

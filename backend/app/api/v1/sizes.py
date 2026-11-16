@@ -1880,8 +1880,8 @@ async def _extract_product_from_url(
     chart_image_url = None
 
     try:
-        async with httpx.AsyncClient(timeout=12.0, follow_redirects=True, headers=headers) as client:
-            resp = await client.get(clean_url)
+        from app.services.security_validator import safe_fetch_external
+        if (resp := await safe_fetch_external(clean_url, timeout=12.0, headers=headers, max_redirects=5, max_bytes=5_000_000)):
             if resp.status_code < 400 and "text/html" in resp.headers.get("content-type", ""):
                 soup = BeautifulSoup(resp.text, "html.parser")
 

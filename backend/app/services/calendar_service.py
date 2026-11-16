@@ -311,6 +311,24 @@ class CalendarService:
             
         return profile
 
+    CALENDAR_READ_SCOPES = {
+        "https://www.googleapis.com/auth/calendar.events.readonly",
+        "https://www.googleapis.com/auth/calendar.readonly",
+        "https://www.googleapis.com/auth/calendar",
+    }
+
+    @classmethod
+    def has_calendar_scope(cls, tokens: dict[str, Any] | None) -> bool:
+        """Return True only when the persisted OAuth token includes a Calendar scope."""
+        if not isinstance(tokens, dict):
+            return False
+        raw_scopes = tokens.get("scope") or tokens.get("scopes") or ""
+        if isinstance(raw_scopes, (list, tuple, set)):
+            granted = {str(s).strip() for s in raw_scopes if str(s).strip()}
+        else:
+            granted = {s.strip() for s in str(raw_scopes).split() if s.strip()}
+        return bool(granted & cls.CALENDAR_READ_SCOPES)
+
     # -------------------- persistence helpers --------------------
     @staticmethod
     def _tokens_to_doc(tokens: dict[str, Any], email: str | None) -> dict[str, Any]:
@@ -367,11 +385,24 @@ class CalendarService:
             )
 
         db = get_db()
-        # Preserve the previously stored refresh_token if Google didn't send a
-        # new one (Google only returns refresh_token on first consent).
+        # Preserve the previously stored refresh_token AND granted Calendar scopes if a
+        # subsequent Google Sign-In flow omitted Calendar scopes.
         existing = await db.users.find_one({"id": user_id}) or {}
         prev = (existing.get("google_calendar_tokens") or {}) if existing else {}
-        if not doc.get("refresh_token") and prev.get("refresh_token"):
+        if self.has_calendar_scope(prev) and not self.has_calendar_scope(doc):
+            if prev.get("refresh_token"):
+                doc["refresh_token"] = prev["refresh_token"]
+            if prev.get("access_token") and not prev.get("calendar_scope_error"):
+                doc["access_token"] = prev["access_token"]
+                doc["expires_at"] = prev.get("expires_at")
+            if prev.get("scope"):
+                merged_scopes = list(dict.fromkeys(
+                    (doc.get("scope") or "").split() + str(prev["scope"]).split()
+                ))
+                doc["scope"] = " ".join(merged_scopes)
+            if prev.get("calendar_scope_error"):
+                doc["calendar_scope_error"] = prev["calendar_scope_error"]
+        elif not doc.get("refresh_token") and prev.get("refresh_token"):
             doc["refresh_token"] = prev["refresh_token"]
 
         # Autofill profile fields that are still empty. This gives users a
@@ -457,6 +488,13 @@ class CalendarService:
         if not tokens or not tokens.get("refresh_token"):
             return []
 
+        if not self.has_calendar_scope(tokens):
+            # User authenticated via Google Sign-In but hasn't connected Google Calendar
+            return []
+
+        if tokens.get("calendar_scope_error"):
+            return []
+
         try:
             service = await self._build_service(user["id"], tokens)
             if time_min:
@@ -484,8 +522,22 @@ class CalendarService:
                 maxResults=15,
             ).execute()
         except Exception as exc:  # noqa: BLE001
-            logger.warning("Calendar events fetch failed: %s", exc)
-            return self.get_mock_trip_events(time_min, time_max)
+            err_lower = str(exc).lower()
+            if "insufficientpermissions" in err_lower or "insufficient authentication scopes" in err_lower:
+                logger.warning("Google Calendar missing permissions for user %s — marking re-consent required", user.get("id"))
+                try:
+                    if isinstance(tokens, dict):
+                        tokens["calendar_scope_error"] = "insufficientPermissions"
+                    db = get_db()
+                    await db.users.update_one(
+                        {"id": user["id"]},
+                        {"$set": {"google_calendar_tokens.calendar_scope_error": "insufficientPermissions"}},
+                    )
+                except Exception:
+                    pass
+            else:
+                logger.warning("Calendar events fetch failed: %s", exc)
+            return []
 
         simplified: list[dict[str, Any]] = []
         for ev in events_resp.get("items", []) or []:

@@ -85,11 +85,21 @@ async def fetch_image_url(
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
     }
+    from app.services.security_validator import SafeFetchError, is_safe_external_url, safe_fetch_external
+
+    if not is_safe_external_url(url):
+        raise HTTPException(status_code=400, detail="Invalid or prohibited external URL destination.")
+
     try:
         async with httpx.AsyncClient(
-            timeout=15.0, follow_redirects=True, headers=headers
+            timeout=15.0, follow_redirects=False, headers=headers
         ) as client:
-            resp = await client.get(url)
+            resp = await safe_fetch_external(
+                url,
+                client=client,
+                max_redirects=5,
+                max_bytes=15_000_000,
+            )
             resp.raise_for_status()
             content = resp.content
             content_type = resp.headers.get("content-type", "")
@@ -130,18 +140,26 @@ async def fetch_image_url(
                         detail="Could not find any product image on this webpage."
                     )
                 
-                resolved_img_url = urljoin(url, img_url)
+                resolved_img_url = urljoin(resp.url or url, img_url)
                 
                 # Download the actual image from the resolved CDN link
                 img_headers = dict(headers)
-                img_headers["Referer"] = url
-                img_resp = await client.get(resolved_img_url, headers=img_headers)
+                img_headers["Referer"] = resp.url or url
+                img_resp = await safe_fetch_external(
+                    resolved_img_url,
+                    client=client,
+                    headers=img_headers,
+                    max_redirects=5,
+                    max_bytes=15_000_000,
+                )
                 img_resp.raise_for_status()
                 content = img_resp.content
                 content_type = img_resp.headers.get("content-type", "image/jpeg")
 
             b64_str = base64.b64encode(content).decode("ascii")
             return {"image_b64": b64_str, "mime_type": content_type}
+    except SafeFetchError as s_err:
+        raise HTTPException(status_code=400, detail=f"Blocked unsafe URL destination: {s_err}") from s_err
     except httpx.HTTPStatusError as http_err:
         status_code = http_err.response.status_code
         if status_code in (403, 429):
@@ -376,8 +394,15 @@ async def parse_receipt(
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
                 "Accept-Language": "en-US,en;q=0.9",
             }
-            async with httpx.AsyncClient(timeout=15.0, headers=headers) as client:
-                resp = await client.get(clean_url, follow_redirects=True)
+            from app.services.security_validator import is_safe_external_url, safe_fetch_external
+
+            if not is_safe_external_url(clean_url):
+                raise HTTPException(400, "Invalid or prohibited receipt URL destination")
+
+            async with httpx.AsyncClient(timeout=15.0, follow_redirects=False, headers=headers) as client:
+                resp = await safe_fetch_external(
+                    clean_url, client=client, max_redirects=5, max_bytes=10_000_000
+                )
                 if resp.status_code == 200:
                     ct = resp.headers.get("content-type", "").split(";")[0].strip().lower()
                     if not ct or ct == "application/octet-stream":
@@ -408,8 +433,10 @@ async def parse_receipt(
 
                         if img_url:
                             try:
-                                resolved_img = urljoin(clean_url, img_url)
-                                img_resp = await client.get(resolved_img)
+                                resolved_img = urljoin(resp.url or clean_url, img_url)
+                                img_resp = await safe_fetch_external(
+                                    resolved_img, client=client, max_redirects=5, max_bytes=10_000_000
+                                )
                                 if img_resp.status_code == 200:
                                     img_ct = img_resp.headers.get("content-type", "image/jpeg").split(";")[0].strip().lower()
                                     if "image" in img_ct:

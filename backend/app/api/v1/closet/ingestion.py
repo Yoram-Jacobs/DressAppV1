@@ -406,17 +406,15 @@ async def analyze_item_image(
 
     raw_list: list[bytes] = []
     if payload.images_base64:
-        import httpx
+        from app.services.security_validator import SafeFetchError, safe_fetch_external
         for b64_or_url in payload.images_base64:
             if b64_or_url.startswith(("http://", "https://")):
-                from app.services.security_validator import is_safe_external_url
-                if not is_safe_external_url(b64_or_url):
-                    raise HTTPException(400, "Invalid or prohibited image URL destination in array")
                 try:
-                    async with httpx.AsyncClient(timeout=30.0) as c:
-                        resp = await c.get(b64_or_url, follow_redirects=True)
-                        resp.raise_for_status()
-                        raw_list.append(resp.content)
+                    resp = await safe_fetch_external(b64_or_url, timeout=30.0, max_bytes=15_000_000)
+                    resp.raise_for_status()
+                    raw_list.append(resp.content)
+                except SafeFetchError as exc:
+                    raise HTTPException(400, "Invalid or prohibited image URL destination in array") from exc
                 except Exception as exc:
                     raise HTTPException(400, f"Failed to download image URL in array: {exc}") from exc
             elif b64_or_url.startswith("data:image/"):
@@ -442,14 +440,15 @@ async def analyze_item_image(
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
     elif payload.image_url:
-        from app.services.security_validator import is_safe_external_url
-        if not is_safe_external_url(payload.image_url):
-            raise HTTPException(400, "Invalid or prohibited image URL destination")
-        import httpx
-        async with httpx.AsyncClient(timeout=30.0) as c:
-            resp = await c.get(payload.image_url, follow_redirects=True)
+        from app.services.security_validator import SafeFetchError, safe_fetch_external
+        try:
+            resp = await safe_fetch_external(payload.image_url, timeout=30.0, max_bytes=15_000_000)
             resp.raise_for_status()
             raw_list.append(resp.content)
+        except SafeFetchError as exc:
+            raise HTTPException(400, "Invalid or prohibited image URL destination") from exc
+        except Exception as exc:
+            raise HTTPException(400, f"Failed to download image URL: {exc}") from exc
             
     if not raw_list:
         raise HTTPException(400, "Could not load image bytes")

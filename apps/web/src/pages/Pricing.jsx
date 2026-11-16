@@ -20,6 +20,20 @@ import { QuotaMonitor } from '@/components/pricing/QuotaMonitor';
 import { PricingDisplay } from '@/components/pricing/PricingDisplay';
 import PricingBanner from '../assets/img/inner6.webp';
 import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
+
+function extractApiError(err, fallback) {
+  const detail = err?.response?.data?.detail;
+  if (typeof detail === 'string' && detail.trim()) return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    const firstMsg = detail[0]?.msg || (typeof detail[0] === 'string' ? detail[0] : null);
+    if (firstMsg) return firstMsg;
+  }
+  if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+    return detail.message;
+  }
+  return fallback;
+}
+
 export default function Pricing() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -163,11 +177,12 @@ export default function Pricing() {
       setPricingData(pricingRes);
     } catch (err) {
       toast.error(
-        err?.response?.data?.detail?.message ||
-          err?.response?.data?.detail ||
+        extractApiError(
+          err,
           t('pricing.demoteFailedToast', {
             defaultValue: 'Failed to demote to Free plan.',
           })
+        )
       );
     } finally {
       setSubBusy(false);
@@ -199,7 +214,7 @@ export default function Pricing() {
         toast.error(t('pricing.paymentInitFailed', { defaultValue: 'Failed to initiate subscription payment.' }));
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail?.message || err?.response?.data?.detail || t('pricing.subscriptionError', { defaultValue: 'Error creating subscription' }));
+      toast.error(extractApiError(err, t('pricing.subscriptionError', { defaultValue: 'Error creating subscription' })));
     } finally {
       setSubBusy(false);
     }
@@ -225,7 +240,7 @@ export default function Pricing() {
         toast.error(t('pricing.purchasePackError', { defaultValue: 'Failed to purchase credit pack.' }));
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail?.message || err?.response?.data?.detail || t('pricing.purchasePackError', { defaultValue: 'Failed to purchase credit pack.' }));
+      toast.error(extractApiError(err, t('pricing.purchasePackError', { defaultValue: 'Failed to purchase credit pack.' })));
     } finally {
       setSubBusy(false);
     }

@@ -441,6 +441,8 @@ async def check_and_increment_nano_banana_monthly(
         return False
 
     req_cost = max(1, int(cost))
+    if req_cost > NANO_BANANA_MONTHLY_LIMIT:
+        return False
     state = compute_nano_banana_monthly_state(user_record)
     if state["nano_banana_monthly_remaining"] < req_cost:
         logger.info(
@@ -454,17 +456,57 @@ async def check_and_increment_nano_banana_monthly(
 
     new_used = state["nano_banana_monthly_used"] + req_cost
     new_remaining = max(0, NANO_BANANA_MONTHLY_LIMIT - new_used)
-    await db.users.update_one(
-        {"id": user_id},
+    max_allowed_prior = NANO_BANANA_MONTHLY_LIMIT - req_cost
+
+    if state.get("needs_cycle_reset"):
+        res = await db.users.update_one(
+            {
+                "id": user_id,
+                "$or": [
+                    {"ai_configuration.nano_banana_cycle_start": {"$exists": False}},
+                    {"ai_configuration.nano_banana_cycle_start": {"$ne": state["nano_banana_cycle_start"]}},
+                ],
+            },
+            {
+                "$set": {
+                    "ai_configuration.nano_banana_cycle_start": state["nano_banana_cycle_start"],
+                    "ai_configuration.nano_banana_monthly_used": req_cost,
+                    "ai_configuration.nano_banana_monthly_remaining": max(0, NANO_BANANA_MONTHLY_LIMIT - req_cost),
+                    "ai_configuration.nano_banana_monthly_limit": NANO_BANANA_MONTHLY_LIMIT,
+                }
+            },
+        )
+        if getattr(res, "modified_count", 1) == 0:
+            # Another worker already reset this cycle; retry atomic increment below.
+            user_record = await db.users.find_one({"id": user_id}) or user_record
+            state = compute_nano_banana_monthly_state(user_record)
+            if state["nano_banana_monthly_remaining"] < req_cost:
+                return False
+            new_used = state["nano_banana_monthly_used"] + req_cost
+            new_remaining = max(0, NANO_BANANA_MONTHLY_LIMIT - new_used)
+        else:
+            return True
+
+    res = await db.users.update_one(
         {
+            "id": user_id,
+            "$or": [
+                {"ai_configuration.nano_banana_monthly_used": {"$exists": False}},
+                {"ai_configuration.nano_banana_monthly_used": {"$lte": max_allowed_prior}},
+            ],
+        },
+        {
+            "$inc": {"ai_configuration.nano_banana_monthly_used": req_cost},
             "$set": {
                 "ai_configuration.nano_banana_cycle_start": state["nano_banana_cycle_start"],
-                "ai_configuration.nano_banana_monthly_used": new_used,
                 "ai_configuration.nano_banana_monthly_remaining": new_remaining,
                 "ai_configuration.nano_banana_monthly_limit": NANO_BANANA_MONTHLY_LIMIT,
-            }
+            },
         },
     )
+    if getattr(res, "modified_count", 1) == 0:
+        logger.info("User %s failed atomic monthly Nano Banana quota check.", user_id)
+        return False
     return True
 
 
@@ -1025,28 +1067,17 @@ async def refund_user_credits(
 async def add_paid_credits(user_id: str, amount: int) -> bool:
     try:
         db = get_db()
-        user_record = await db.users.find_one({"id": user_id})
-        if not user_record:
-            return False
-        
         new_bucket = {
-            "amount": amount,
+            "amount": int(amount),
             "type": "paid",
             "created_at": datetime.now(timezone.utc).isoformat(),
-            "expires_at": None
+            "expires_at": None,
         }
-        
-        user_record["credit_buckets"] = user_record.get("credit_buckets", [])
-        user_record["credit_buckets"].append(new_bucket)
-        # Prune zero-amount expired free buckets before writing back.
-        raw_buckets = [CreditBucket(**b) if isinstance(b, dict) else b for b in user_record["credit_buckets"]]
-        clean_buckets = [b.dict() for b in prune_expired_buckets(raw_buckets)]
-
-        await db.users.update_one(
+        res = await db.users.update_one(
             {"id": user_id},
-            {"$set": {"credit_buckets": clean_buckets}}
+            {"$push": {"credit_buckets": new_bucket}},
         )
-        return True
+        return getattr(res, "matched_count", 1) > 0
     except Exception as e:
         logger.error(f"Error adding paid credits: {e}")
         return False

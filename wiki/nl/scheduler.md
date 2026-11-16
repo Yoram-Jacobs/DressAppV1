@@ -1,10 +1,25 @@
 # Ochtendmeldingen voor outfits & agendasynchronisatie
 
-Begin elke ochtend met een kant-en-klare outfitsuggestie die is afgestemd op de weersverwachting en je agenda van die dag.
+Begin elke ochtend met een kant-en-klaar outfitvoorstel, afgestemd op de weersvoorspelling en uw agenda voor die dag.
 
-## Instellen in enkele stappen
-1. Ga naar je **Profiel** en scrol naar **Ochtendmeldingen voor outfits**.
-2. Zet dagelijkse herinneringen aan en kies op welke dagen en hoe laat je het voorstel wilt ontvangen.
-3. Kies je gewenste dagelijkse stijl (Casual, Werk, Sportief of Aangepast).
-4. Koppel je Google Agenda zodat de Stylist rekening houdt met je vergaderingen en afspraken.
-5. Tik 's ochtends op de melding om de volledige outfit uit je eigen kast te bekijken!
+## Vereisten
+- Beschikbare stylingcredits (gratis accounts verbruiken 1 AI-credit per dagelijks voorstel; Manager- en Professional-abonnementen bevatten dagelijkse voorstellen met prioriteitstoegang).
+- Browsermeldingen ingeschakeld op uw apparaat.
+- Locatievoorzieningen ingeschakeld voor nauwkeurig lokaal weer.
+
+## Stapsgewijze installatie
+
+1. **Ochtendmeldingen voor outfits openen**:
+   - Ga naar uw **Profiel**-pagina en scrol naar het gedeelte **Ochtendmeldingen voor outfits**.
+
+2. **Kies uw schema**:
+   - Schakel dagelijkse herinneringen in, selecteer de gewenste dagen van de week en kies uw favoriete ochtendtijdstip.
+
+3. **Kies uw dagelijkse stijl**:
+   - Kies de stijl voor uw dagelijkse suggesties — zoals **Casual**, **Werk / Formeel**, **Sportief** of **Aangepast**.
+
+4. **Koppel uw agenda**:
+   - Koppel uw Google Agenda zodat uw AI Stylist weet of u die dag een belangrijke vergadering, sportsessie of etentje heeft gepland.
+
+5. **Bekijk uw ochtendlook**:
+   - Zodra de ochtendmelding binnenkomt, tikt u erop om de complete outfit uit uw kledingkast te bekijken, inclusief de weersverwachting en stylingtips!

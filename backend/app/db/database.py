@@ -149,6 +149,17 @@ async def ensure_indexes() -> None:
         unique=True,
         partialFilterExpression={"origin_id": {"$type": "string"}},
     )
+    await db.trend_reports.create_index(
+        "created_at_dt",
+        expireAfterSeconds=90 * 24 * 3600,
+        name="trend_reports_ttl_90d",
+    )
+    await db.ad_tracking_events.create_index("key", unique=True)
+    await db.ad_tracking_events.create_index(
+        "created_at_dt",
+        expireAfterSeconds=3600,
+        name="ad_tracking_events_ttl_1h",
+    )
 
 
     # Phase U — professionals directory + ad campaigns

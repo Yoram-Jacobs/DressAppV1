@@ -325,12 +325,12 @@ async def _resolve_item_image(
         # without user needing to click 'Load remote images' in Outlook/Gmail
         if can_attach:
             try:
-                async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
-                    resp = await client.get(raw_src)
-                    if resp.status_code == 200 and resp.content:
-                        cid_src = _bytes_to_cid_attachment(resp.content, attachments)
-                        if cid_src:
-                            return cid_src
+                from app.services.security_validator import safe_fetch_external
+                resp = await safe_fetch_external(raw_src, timeout=3.0, max_redirects=5, max_bytes=10_000_000)
+                if resp.status_code == 200 and resp.content:
+                    cid_src = _bytes_to_cid_attachment(resp.content, attachments)
+                    if cid_src:
+                        return cid_src
             except Exception as exc:
                 logger.debug("Failed fetching remote image %s for CID attachment: %s", raw_src, exc)
 

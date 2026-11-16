@@ -33,7 +33,7 @@ export function CalendarConnect() {
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<{ connected: boolean; google_email?: string | null }>({
+  const [status, setStatus] = useState<{ connected: boolean; needs_reconsent?: boolean; google_email?: string | null }>({
     connected: false,
   });
 
@@ -141,6 +141,8 @@ export function CalendarConnect() {
                     ? t('common.checking', { defaultValue: 'Checking...' })
                     : status.connected
                     ? t('calendar.connectedBadge', { defaultValue: '✓ Connected' })
+                    : status.needs_reconsent
+                    ? t('calendar.permissionRequired', { defaultValue: 'Permission Required' })
                     : t('calendar.notConnected', { defaultValue: 'Not Connected' })}
                 </Text>
               </View>

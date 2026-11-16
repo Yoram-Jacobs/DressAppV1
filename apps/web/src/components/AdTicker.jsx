@@ -103,7 +103,7 @@ export function AdTicker({
     if (current._isCampaign) {
       campaignApi.trackCampaignView(current._campaignId).catch(() => {});
     } else {
-      api.trackAdImpression(current.id);
+      api.trackAdImpression(current.id, current.tracking_token);
     }
   }, [ads, idx]);
 
@@ -117,7 +117,7 @@ export function AdTicker({
       // navigation handled by href — just track click
       return;
     }
-    api.trackAdClick(current.id);
+    api.trackAdClick(current.id, current.tracking_token);
     if (!current?.creative?.cta_url) {
       e.preventDefault();
     }

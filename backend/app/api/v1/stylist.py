@@ -194,11 +194,7 @@ async def stylist_endpoint(
 
     calendar_events: list[dict[str, Any]] | None = None
     if include_calendar:
-        real_events = await calendar_service.get_events_for_user(user)
-        if real_events:
-            calendar_events = real_events
-        else:
-            calendar_events = [calendar_service.mock_event(occasion or "Work day")]
+        calendar_events = await calendar_service.get_events_for_user(user)
 
     if lat is None or lng is None:
         home = user.get("home_location") or {}
@@ -265,6 +261,15 @@ async def stylist_endpoint(
         "conversation_history": conv_history_list,
     }
 
+    # Pre-check and reserve 1 AI credit BEFORE running LLM/Vision/TTS calls
+    from app.db.database import get_db
+    from app.services.billing_service import deduct_user_credits, get_user_tier, refund_user_credits
+    from app.services.credit_manager import make_insufficient_credits_exception
+
+    db = get_db()
+    if not await deduct_user_credits(db, user, cost=1, operation="stylist_chat"):
+        raise make_insufficient_credits_exception(user, cost=1)
+
     user_msg_doc = await append_message(
         session_id=session["id"],
         role="user",
@@ -292,6 +297,13 @@ async def stylist_endpoint(
     from app.services.user_preferences import render_user_preferences
     prefs_block, applied_prefs = render_user_preferences(user)
 
+    async def _refund_reserved_credit() -> None:
+        if get_user_tier(user) == "free":
+            try:
+                await refund_user_credits(db, user["id"], 1, credit_type="free_daily_quota")
+            except Exception as ref_exc:  # noqa: BLE001
+                logger.warning("Failed to refund stylist credit for user %s: %s", user.get("id"), ref_exc)
+
     try:
         advice = await get_styling_advice(
             session_id=session["id"],
@@ -317,19 +329,13 @@ async def stylist_endpoint(
             api_key=api_key_resolved,
             model=user_model,
         )
-        
-        # Deduct credit and count usage
-        from app.db.database import get_db
-        from app.services.billing_service import deduct_user_credits
-        db = get_db()
-        if not await deduct_user_credits(db, user, cost=1):
-            from app.services.credit_manager import make_insufficient_credits_exception
-            raise make_insufficient_credits_exception(user, cost=1)
     except HTTPException:
         raise
     except ValueError as exc:
+        await _refund_reserved_credit()
         raise HTTPException(400, str(exc)) from exc
     except RuntimeError as exc:
+        await _refund_reserved_credit()
         logger.exception("Stylist misconfiguration")
         raise HTTPException(503, str(exc)) from exc
     except Exception as exc:  # noqa: BLE001

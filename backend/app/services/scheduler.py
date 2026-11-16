@@ -5,6 +5,7 @@ This module manages all scheduled background tasks for the DressApp backend.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 from datetime import datetime, timezone, timedelta
 
@@ -257,9 +258,13 @@ def _generate_fallback_advice(
             elif days_ago == 2:
                 score -= 400
             elif days_ago == 3:
-                score -= 200
+                score -= 250
+            elif days_ago <= 7:
+                score -= max(80, 180 - days_ago * 15)
+            elif days_ago <= 14:
+                score -= 50
             else:
-                score -= 100
+                score -= 20
         elif exclude_item_ids and cid in exclude_item_ids:
             score -= 600
 
@@ -275,20 +280,50 @@ def _generate_fallback_advice(
                     score -= 600
                 elif diff_days == 2:
                     score -= 400
+                elif diff_days <= 7:
+                    score -= 100
+                elif diff_days <= 14:
+                    score -= 40
+            except Exception:
+                pass
+
+        last_suggested = str(it.get("last_suggested_at") or "")
+        if last_suggested and target_date_str:
+            try:
+                ls_date = datetime.strptime(last_suggested[:10], "%Y-%m-%d").date()
+                tgt_date = datetime.strptime(str(target_date_str)[:10], "%Y-%m-%d").date()
+                diff_days = (tgt_date - ls_date).days
+                if diff_days <= 0:
+                    score -= 800
+                elif diff_days == 1:
+                    score -= 450
+                elif diff_days == 2:
+                    score -= 250
+                elif diff_days <= 7:
+                    score -= 80
             except Exception:
                 pass
 
         wear_count = it.get("wear_count") or 0
-        score -= min(wear_count * 10, 100)
+        score -= min(wear_count * 20, 200)
+        if wear_count == 0 and not it.get("last_worn_at"):
+            score += 50  # Unworn bonus: pulls fresh items to the front
         return score
 
-    # Sort each bucket by score descending
-    tops.sort(key=score_item, reverse=True)
-    bottoms.sort(key=score_item, reverse=True)
-    shoes.sort(key=score_item, reverse=True)
-    dresses.sort(key=score_item, reverse=True)
-    outerwear.sort(key=score_item, reverse=True)
-    accessories.sort(key=score_item, reverse=True)
+    # Sort each bucket: primary by score descending, tie-broken by date-salted rotation hash
+    def bucket_sort_key(it: dict) -> tuple:
+        s = score_item(it)
+        cid = str(it.get("id") or "")
+        date_seed = f"{target_date_str or ''}_{cid}"
+        rot = (abs(hash(date_seed)) % 1000)
+        return (-s, rot)
+
+    tops.sort(key=bucket_sort_key)
+    bottoms.sort(key=bucket_sort_key)
+    shoes.sort(key=bucket_sort_key)
+    dresses.sort(key=bucket_sort_key)
+    outerwear.sort(key=bucket_sort_key)
+    accessories.sort(key=bucket_sort_key)
 
     all_outfits = []
 
@@ -880,11 +915,7 @@ async def check_scheduler_triggers() -> None:
                 if not user_id:
                     continue
 
-                # Free tier has no Schedule & push notifications
                 user_tier = get_user_tier(user)
-                if user_tier == "free":
-                    continue
-
                 sched = user.get("scheduler_settings") or {}
                 now = datetime.now(timezone.utc)
 
@@ -995,8 +1026,14 @@ async def check_scheduler_triggers() -> None:
                     ):
                         continue
 
+                # Free tier users consume 1 AI credit ONLY when eligible to fire now
+                if user_tier == "free":
+                    from app.services.billing_service import deduct_user_credits
+                    if not await deduct_user_credits(db, user, cost=1, operation="daily_proposal"):
+                        logger.info("Skipping daily scheduled proposal for free user %s due to insufficient credits.", user_id)
+                        continue
+
                 # Claim trigger key immediately before slow LLM generation so overlapping/subsequent checks never double-fire
-                import inspect
                 claim_op = db.users.update_one(
                     {"id": user_id},
                     {
@@ -1073,7 +1110,7 @@ async def check_scheduler_triggers() -> None:
                 try:
                     try:
                         from app.services.stylist_scheduler_brain import generate_scheduled_proposals, get_recent_wardrobe_history
-                        recent_weights, _ = await get_recent_wardrobe_history(user_id, target_date_str=target_date_str, lookback_days=5)
+                        recent_weights, _ = await get_recent_wardrobe_history(user_id, target_date_str=target_date_str, lookback_days=14)
                         proposals_result = await generate_scheduled_proposals(
                             user_clean, 
                             style_option, 
@@ -1327,9 +1364,6 @@ def start_scheduler() -> None:
 
     _scheduler.start()
     logger.info("DressApp Scheduler singleton started")
-
-    if settings.TREND_SCOUT_ENABLED and settings.TREND_SCOUT_RUN_ON_STARTUP:
-        asyncio.create_task(_safe_run())
 
 
 def shutdown_scheduler() -> None:

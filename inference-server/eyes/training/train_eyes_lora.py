@@ -759,18 +759,12 @@ def run_training_on_runpod(
                 f"--val-dataset /workspace/val.jsonl "
                 f"--adapter-dir /workspace/adapter "
                 f"--base-model '{base_model}' "
-                f"--live-samples 2 "
+                f"--live-samples 50 "
                 f"--metrics-out /workspace/metrics.json"
             )
             if hf_token:
                 eval_cmd = f"export HF_TOKEN='{hf_token}' && " + eval_cmd
-            try:
-                run_ssh_streaming(eval_cmd, "Run Live Evaluation & Regression Gate on RunPod GPU")
-            except Exception as eval_exc:
-                logger.warning(
-                    "Live evaluation on pod encountered an issue (%s). Proceeding to packaging adapter...",
-                    eval_exc,
-                )
+            run_ssh_streaming(eval_cmd, "Run Live Evaluation & Regression Gate on RunPod GPU")
 
         # Step 3: Package adapter artifacts
         run_ssh_streaming(

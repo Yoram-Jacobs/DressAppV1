@@ -14,6 +14,7 @@ O DressApp elimina o cadastro manual e a indecisão matinal por meio de reconhec
 - **Digitalização Sem Esforço**: Tire uma foto de uma peça estendida, uma foto de corpo inteiro no espelho ou várias peças juntas — ou importe pelo link de uma loja online, nota fiscal digital, código QR do produto ou de outro aplicativo de guarda-roupa. O DressApp identifica automaticamente o tipo de foto, remove o fundo, separa múltiplas peças e preenche os atributos principais (Categoria, Cor, Tecido, Corte, Estação, Estilo e Nível de aquecimento).
 - **Sistema de Créditos Gratuitos Cumulativos**: Usuários do plano Gratuito recebem **10 créditos diários de IA local** que se acumulam até **300 créditos em 30 dias**, além de **5 créditos gratuitos de Reconstrução de Estúdio** no cadastro. Fotografando algumas peças por dia durante 5 dias, você acumula **50 créditos** — o suficiente para digitalizar gratuitamente um guarda-roupa básico de 50 peças.
 - **Consultoria de Estilo Contextualizada**: Seu Stylist de IA combina as peças do seu armário, a previsão do tempo local, os compromissos da sua agenda, sua preferência de recato e suas medidas corporais para montar looks completos ou apontar peças básicas que faltam.
+- **Sugestão diária de look**: **1 crédito** por look gerado
 
 ### Comparativo de Planos
 

@@ -1,9 +1,7 @@
 name: Weekly Eyes Fine-Tuning CI/CD
 
 on:
-  schedule:
-    # 02:00 UTC every Sunday
-    - cron: '0 2 * * 0'
+  # Paused while DressApp runs Gemini-only in production; trigger manually via workflow_dispatch when preparing private VLM/vLLM weights.
   workflow_dispatch:
     inputs:
       base_model:
@@ -181,13 +179,22 @@ jobs:
 
       - name: Run Quality & Regression Gate
         run: |
+          GATE_FLAGS=""
+          if [ "${{ inputs.dry_run || 'false' }}" = "true" ] || [ "${{ inputs.compute_backend || 'runpod' }}" = "cpu_dry_run" ]; then
+            GATE_FLAGS="--mock-test"
+          elif [ "${{ inputs.compute_backend || 'runpod' }}" = "runpod" ]; then
+            GATE_FLAGS="--trust-gpu-metrics"
+          fi
           python inference-server/eyes/training/evaluate_eyes.py \
             --val-dataset build/dataset/val.jsonl \
             --adapter-dir build/adapter \
+            --base-model "${{ inputs.base_model || 'google/gemma-4-e4b-it' }}" \
             --min-schema-acc 1.0 \
             --min-category-acc 0.95 \
             --min-shoes-acc 1.0 \
-            --metrics-out build/metrics.json
+            --live-samples 50 \
+            --metrics-out build/metrics.json \
+            $GATE_FLAGS
 
       - name: Upload Adapter & Metrics Artifacts
         if: always()

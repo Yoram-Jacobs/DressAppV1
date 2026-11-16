@@ -67,7 +67,7 @@ quantization / memory / latency decisions assume this exact host.
 | --- | --- | --- | --- |
 | `dressapp-mongo` | `mongo:7` | `27017` | Production database — on-prem MongoDB 7.0 with persistent storage on fast local NVMe at `/mnt/dressapp-db-data`. WiredTiger cache capped at 0.75 GB. Migrated off MongoDB Atlas M10 on 2026-10-04. |
 | `dressapp-backend` | [`backend/`](backend/) via [`deploy/Dockerfile.backend`](deploy/Dockerfile.backend) | (behind ingress) | FastAPI app — closet, marketplace, stylist, payments |
-| `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Live on-prem inference server (`llama-server` + FastAPI proxy) running fine-tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` (~2.8 GB resident RAM, NaViT dynamic aspect ratio, native clothing tag OCR). Default engine for **Free Tier** users & background tasks, and transparent safety fallback on cloud quota exhaustion (`429`/`RESOURCE_EXHAUSTED`). Migrated from corrupt Gemma-4 E4B on 2026-10-05. |
+| `dressapp-eyes` *(disabled via Compose `profiles: ["eyes"]`)* | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` *(inactive)* | Retired from the CPX32 VPS to eliminate RAM/swap contention while production runs **Gemini across all users**. Container source stays intact for future private VLM/vLLM hosting when a suitable model/hardware fit is available. |
 | `dressapp-frontend` | [`apps/web/`](apps/web/) via [`deploy/Dockerfile.frontend`](deploy/Dockerfile.frontend) | `3000` | React 19 SPA served by Nginx |
 | `caddy` | [`deploy/Caddyfile`](deploy/Caddyfile) | `80`, `443` | Reverse proxy terminating TLS via Let's Encrypt |
 
@@ -83,8 +83,9 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
 
 | Env var | Value | Purpose |
 | --- | --- | --- |
-| `EYES_GEMMA_SPACE_URL` | `http://eyes:7860` | Internal docker DNS target for [`backend/app/services/vision/service.py`](backend/app/services/vision/service.py) calls |
-| `EYES_PROVIDER` | `gemini` \| `gemma` | Env-default provider (defaults to `gemini` with `gemma` as fallback). **Use the runtime override below to switch in production** — do not edit this on the fly. |
+| `EYES_GEMMA_SPACE_URL` | *(unset in prod)* | Retired while `dressapp-eyes` is disabled on the VPS; reserved for future private VLM/vLLM endpoint URL |
+| `EYES_PROVIDER` | `gemini` | Active runtime provider (`gemini` across all tiers; `gemma` fallback disabled when `EYES_GEMMA_SPACE_URL` is unset) |
+| `STYLIST_PROVIDER` / `STYLIST_FALLBACK` | `gemini` / `none` | Production stylist routing uses Gemini with fallback disabled (`none`) while `dressapp-eyes` is retired |
 | `DEFAULT_STYLIST_MODEL` | `gemini-3.5-flash-lite` | Default primary LLM model for Manager & Professional tiers |
 | `FREE_STYLIST_MODEL` | `gemini-3.5-flash-lite` | Primary LLM model for Free tier users |
 | `FREE_VISION_MODEL` | `gemini-3.5-flash-lite` | Primary vision model for Free tier users |
@@ -110,15 +111,13 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
    - Paid subscribers on the **Manager** and **Professional** plans route interactive reasoning, AI Stylist, Size Chart OCR, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, fallback bounding-box detection (`GARMENT_VISION_DETECT_MODEL`), and single-item/per-crop garment tagging (`GARMENT_VISION_MODEL` / `GARMENT_VISION_CROP_MODEL`) to **Google Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`), anticipating the Google deprecation of `gemini-2.5-flash`.
 2. **Free Tier — Fast Cloud Entry (`gemini-3.5-flash-lite`, 100-item cap)**:
    - **BYOK is retired.** Free-tier users (capped at **100 wardrobe items**, expandable to 150 with referrals, plus 10 daily requests) route to **Google Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`) for both AI Stylist and garment vision, providing sub-second latency while keeping variable token costs negligible (~$0.01–$0.02/active user/month).
-3. **Transparent Quota Safety Net (On-Premises VPS Eyes `Qwen2.5-VL-3B-Instruct`)**:
-   - The self-hosted `dressapp-eyes` container (`Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` on port 7860 of the Hetzner CPX32 VPS) stays idle as the automatic emergency **Quota Safety Net** (and remains selectable by Tester group users).
-   - If Google Gemini external calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm`, `FallbackBrain` (`backend/app/services/stylist_brain.py`), and `GarmentVisionService.analyze` catch the exception and immediately route the query to on-prem Eyes.
-   - The response includes `provider_fallback: "gemma"` and `fallback_from_quota: True`, displaying an informational banner in the UI (`stylist.fallbackQuotaBanner`) without interrupting the user or failing with a 500 error.
+3. **Local Private VLM/vLLM Readiness (Currently Disabled in Prod)**:
+   - The `dressapp-eyes` container definition remains in Git (`inference-server/eyes/` and `deploy/docker-compose.yml` under `profiles: ["eyes"]`), but is disabled on the Hetzner CPX32 VPS (`EYES_GEMMA_SPACE_URL` unset, `EYES_PROVIDER=gemini`, `STYLIST_PROVIDER=gemini`, `STYLIST_FALLBACK=none`) while DressApp runs Gemini across all users. DressApp plans to re-enable a local/edge private VLM/vLLM backend once a suitable model and hardware fit are available.
 4. **Zero-BYOK Platform Architecture**:
    - User-supplied third-party API keys (BYOK) are retired across the platform. Model selection and compute quotas are governed strictly by the user's subscription tier (**Free** vs. **Manager** / **Professional**) and platform credit ledger.
-5. **Headless Model Fine-Tuning & Scheduling Rule**:
-   - Eyes fine-tuning is scheduled weekly (`.github/workflows/eyes-finetune.yml`) utilizing **RunPod serverless GPU pods** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)) with multi-tier candidate failover, strict regression gating, and GGUF quantization.
-   - **Scheduling Rule (Locked):** The fine-tuning workflow applies ONLY when there are **>= 500 newly added and approved items** in the on-prem DressApp database (`closet_items`) since the last watermark (`eyes_finetune_state`). If there are fewer than 500 new items, the routine is safely skipped (`should_train=false`) to protect model weight integrity from distortion caused by training repeatedly on small or static datasets. Manual override is available via `force_training=true` in `workflow_dispatch`.
+5. **On-Demand Model Fine-Tuning Rule (Weekly Cron Paused)**:
+   - Eyes fine-tuning (`.github/workflows/eyes-finetune.yml`, `workflow_dispatch` manual trigger only while `eyes` is retired) utilizes **RunPod serverless GPU pods** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)) with multi-tier candidate failover, fail-closed regression gating, and GGUF quantization.
+   - **Scheduling Rule (Locked):** When triggered, fine-tuning applies ONLY when there are **>= 500 newly added and approved items** in the on-prem DressApp database (`closet_items`) since the last watermark (`eyes_finetune_state`). If there are fewer than 500 new items, the routine is safely skipped (`should_train=false`) unless overridden via `force_training=true` in `workflow_dispatch`.
 
 > **ℹ️ Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN`**:
 > `HF_TOKEN` (or alias `EYES_HF_TOKEN`) is utilized in headless CI/CD automation for model staging, model card generation, and publishing fine-tuned GGUF checkpoints to the official Hugging Face Hub repository (`Yoram-Jacobs/dressapp-eyes-gguf`). The on-prem Hetzner VPS runtime continues to bind-mount its model weights locally without runtime Hugging Face egress.

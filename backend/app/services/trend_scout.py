@@ -594,69 +594,69 @@ SYSTEM_PROMPT = GEMINI_TREND_SCOUT_SYSTEM_PROMPT
 async def browse_web(url: str) -> str:
     """Agent tool to fetch and extract text, article featured images, and inline links from a webpage."""
     from urllib.parse import urljoin, urlparse, unquote
+    from app.services.security_validator import safe_fetch_external
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
         }
-        async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
-            resp = await client.get(url, follow_redirects=True)
-            resp.raise_for_status()
-            soup = BeautifulSoup(resp.text, 'html.parser')
+        resp = await safe_fetch_external(url, timeout=10.0, headers=headers, max_redirects=5, max_bytes=5_000_000)
+        resp.raise_for_status()
+        soup = BeautifulSoup(resp.text, 'html.parser')
 
-            # Extract OpenGraph / Twitter / Hero article image
-            article_image: str | None = None
-            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
-            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
-            if og_img and og_img.get("content"):
-                article_image = urljoin(url, og_img["content"].strip())
-            elif tw_img and tw_img.get("content"):
-                article_image = urljoin(url, tw_img["content"].strip())
-            else:
-                first_img = soup.find("img", src=True)
-                if first_img and first_img.get("src") and not first_img["src"].startswith("data:"):
-                    article_image = urljoin(url, first_img["src"].strip())
+        # Extract OpenGraph / Twitter / Hero article image
+        article_image: str | None = None
+        og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+        tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+        if og_img and og_img.get("content"):
+            article_image = urljoin(url, og_img["content"].strip())
+        elif tw_img and tw_img.get("content"):
+            article_image = urljoin(url, tw_img["content"].strip())
+        else:
+            first_img = soup.find("img", src=True)
+            if first_img and first_img.get("src") and not first_img["src"].startswith("data:"):
+                article_image = urljoin(url, first_img["src"].strip())
 
-            is_yahoo = "search.yahoo.com" in url
+        is_yahoo = "search.yahoo.com" in url
 
-            for tag in soup(["script", "style", "nav", "footer", "header", "noscript"]):
-                tag.extract()
+        for tag in soup(["script", "style", "nav", "footer", "header", "noscript"]):
+            tag.extract()
 
-            for a in soup.find_all("a", href=True):
-                href = a["href"].strip()
-                if not href or href.startswith("#") or href.startswith("javascript:"):
-                    continue
+        for a in soup.find_all("a", href=True):
+            href = a["href"].strip()
+            if not href or href.startswith("#") or href.startswith("javascript:"):
+                continue
 
-                if is_yahoo and "r.search.yahoo.com" in href and "/RU=" in href:
-                    parsed = urlparse(href)
-                    path_parts = parsed.path.split("/")
-                    decoded_url = None
-                    for part in path_parts:
-                        if part.startswith("RU="):
-                            decoded_url = unquote(part[3:])
-                            break
-                    if decoded_url:
-                        absolute_url = decoded_url
-                    else:
-                        absolute_url = urljoin(url, href)
+            if is_yahoo and "r.search.yahoo.com" in href and "/RU=" in href:
+                parsed = urlparse(href)
+                path_parts = parsed.path.split("/")
+                decoded_url = None
+                for part in path_parts:
+                    if part.startswith("RU="):
+                        decoded_url = unquote(part[3:])
+                        break
+                if decoded_url:
+                    absolute_url = decoded_url
                 else:
                     absolute_url = urljoin(url, href)
+            else:
+                absolute_url = urljoin(url, href)
 
-                link_text = a.get_text(strip=True)
-                if link_text:
-                    a.replace_with(f" [{link_text}]({absolute_url}) ")
+            link_text = a.get_text(strip=True)
+            if link_text:
+                a.replace_with(f" [{link_text}]({absolute_url}) ")
 
-            text = soup.get_text(separator=' ', strip=True)
-            text = " ".join(text.split())
+        text = soup.get_text(separator=' ', strip=True)
+        text = " ".join(text.split())
 
-            if is_yahoo and len(text) < 500:
-                return "Failed to fetch search page: anti-bot challenge or empty results."
+        if is_yahoo and len(text) < 500:
+            return "Failed to fetch search page: anti-bot challenge or empty results."
 
-            if article_image and not is_yahoo:
-                return f"{text[:3500]}\n\n[Article Featured Image]: {article_image}"
+        if article_image and not is_yahoo:
+            return f"{text[:3500]}\n\n[Article Featured Image]: {article_image}"
 
-            return text[:4000]
+        return text[:4000]
     except Exception as exc:
         return f"Failed to fetch {url}: {exc}"
 
@@ -1185,13 +1185,13 @@ async def _is_image_url_valid(url: str | None) -> bool:
         "Accept": "image/webp,image/avif,image/jpeg,image/png,*/*;q=0.8",
     }
     try:
-        async with httpx.AsyncClient(timeout=4.0, headers=headers, follow_redirects=True) as client:
-            resp = await client.get(u)
-            if resp.status_code == 200 and len(resp.content) >= 3000:
-                ct = resp.headers.get("content-type", "").lower()
-                if "image" in ct or "octet-stream" in ct or resp.content[:4] in (b"\xff\xd8\xff", b"\x89PNG", b"RIFF", b"GIF8"):
-                    return True
-            return False
+        from app.services.security_validator import safe_fetch_external
+        resp = await safe_fetch_external(u, timeout=4.0, headers=headers, max_redirects=5, max_bytes=8_000_000)
+        if resp.status_code == 200 and len(resp.content) >= 3000:
+            ct = resp.headers.get("content-type", "").lower()
+            if "image" in ct or "octet-stream" in ct or resp.content[:4] in (b"\xff\xd8\xff", b"\x89PNG", b"RIFF", b"GIF8"):
+                return True
+        return False
     except Exception:
         return False
 
@@ -1227,8 +1227,8 @@ async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, 
         "Accept-Language": "en-US,en;q=0.9,he;q=0.8",
     }
     try:
-        async with httpx.AsyncClient(timeout=8.0, headers=headers, follow_redirects=True) as client:
-            resp = await client.get(clean_url)
+        from app.services.security_validator import safe_fetch_external
+        if (resp := await safe_fetch_external(clean_url, timeout=8.0, headers=headers, max_redirects=5, max_bytes=5_000_000)):
             # 1. HARD HTTP ERROR CHECK: Must return 200 OK
             if resp.status_code != 200:
                 logger.info("Trend link verification failed: %s returned HTTP %d (REJECTED)", clean_url, resp.status_code)
@@ -1724,6 +1724,7 @@ async def _run_trend_scout_internal(
                 "style": effective_style,
                 "model": "gemini-3.5-flash-grounded",
                 "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at_dt": datetime.now(timezone.utc),
             }
             await db.trend_reports.replace_one(
                 {
@@ -2007,6 +2008,7 @@ async def fashion_scout_feed(
                         "_origin": cid,
                         "language": language,
                         "country_code": country.upper() if country else None,
+                        "created_at_dt": datetime.now(timezone.utc),
                     }
                     try:
                         await db.trend_reports.update_one(

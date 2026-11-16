@@ -61,12 +61,12 @@ class StylistBrain(Protocol):
 # Gemma provider — on-prem Eyes fine-tuned Gemma-4 E4B
 # -----------------------------------------------------------------
 class GemmaStylistBrain:
-    """Stylist Brain implementation backed by on-prem Eyes / Gemma-4 E4B."""
+    """Stylist Brain implementation backed by on-prem Eyes (Qwen2.5-VL-3B-Instruct)."""
 
     provider_name = "gemma"
 
     def __init__(self, model: str | None = None) -> None:
-        self.model = model or settings.DEFAULT_STYLIST_MODEL or "gemma-4-E4B-it-Q3_K_M.gguf"
+        self.model = model or "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf"
 
     async def advise(
         self,
@@ -149,7 +149,7 @@ class GemmaStylistBrain:
                 image_b64_jpeg=image_base64,
                 max_tokens=2048,
                 temperature=0.2,
-                timeout=60.0,
+                timeout=float(settings.EYES_GEMMA_TIMEOUT_S or 300.0),
             )
         parsed = _parse_json(raw)
 

@@ -8,7 +8,7 @@
 
 import { useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { syncManager } from '@dressapp/api-client';
+import { syncManager } from '@mobile/lib/api';
 import { userStore } from '@mobile/lib/stores/userStore';
 import { closetStore } from '@mobile/lib/stores/closetStore';
 import { closetRepo } from '@mobile/lib/repositories/closetRepository';
