@@ -231,6 +231,7 @@ export function ProfileScreen() {
   // Subscription State
   const [tierName, setTierName] = useState('Free');
   const [credits, setCredits] = useState(10);
+  const [onPremCredits, setOnPremCredits] = useState(10);
   const [dailyCredits, setDailyCredits] = useState(10);
   const [subscription, setSubscription] = useState<any>(null);
   const [isTester, setIsTester] = useState(false);
@@ -375,6 +376,7 @@ export function ProfileScreen() {
         // Subscription & Limits
         const sub = u.subscription || {};
         setSubscription(sub);
+        setOnPremCredits(Number(u.onprem_credits_balance ?? u.ai_configuration?.onprem_credits_balance ?? 10));
         setIsTester(Boolean(sub.is_tester || sub.plan_type === 'tester' || u.roles?.includes('tester')));
         const isActive = Boolean(sub.is_active);
         const effectiveTier = (isActive && sub.tier && sub.tier !== 'free')
@@ -1415,8 +1417,8 @@ export function ProfileScreen() {
                               <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.secondary, borderWidth: 1, borderColor: colors.border }}>
                                 <Text style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}>
                                   {t('profile.onPremAiCreditsCounter', {
-                                    count: (user as any)?.onprem_credits_balance ?? (user as any)?.ai_configuration?.onprem_credits_balance ?? 10,
-                                    defaultValue: `On-Premises AI Credits: ${(user as any)?.onprem_credits_balance ?? 10}`,
+                                    count: onPremCredits,
+                                    defaultValue: `On-Premises AI Credits: ${onPremCredits}`,
                                   })}
                                 </Text>
                               </View>
@@ -1443,8 +1445,8 @@ export function ProfileScreen() {
                                   count: closetCount,
                                   capacity: Math.min(150, 50 + closetBonus),
                                 })} • ${t('profile.onPremAiCreditsCounter', {
-                                  count: (user as any)?.onprem_credits_balance ?? (user as any)?.ai_configuration?.onprem_credits_balance ?? 10,
-                                  defaultValue: `On-Premises AI Credits: ${(user as any)?.onprem_credits_balance ?? 10}`,
+                                  count: onPremCredits,
+                                  defaultValue: `On-Premises AI Credits: ${onPremCredits}`,
                                 })} • ${t('profile.aiCreditsCounter', { count: credits, defaultValue: `Reconstruction Credits: ${credits}` })}`}
                           </Text>
                         </View>

@@ -6,6 +6,7 @@
   },
   "build": {
     "development": {
+      "channel": "development",
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://dressapp.co",
@@ -16,6 +17,7 @@
       }
     },
     "dev-client": {
+      "channel": "development",
       "developmentClient": true,
       "distribution": "internal",
       "env": {
@@ -23,6 +25,7 @@
       }
     },
     "preview": {
+      "channel": "preview",
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://dressapp.co"
@@ -32,6 +35,7 @@
       }
     },
     "production": {
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://dressapp.co"
       },

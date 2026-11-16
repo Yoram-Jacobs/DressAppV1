@@ -91,6 +91,10 @@ export const syncManager = createMobileSyncManager(client, API_BASE);
 
 export const api = {
   ...builtApi,
+  deleteSavedOutfit: (outfitId: string) =>
+    client
+      .delete(`/outfits/${encodeURIComponent(outfitId)}`)
+      .then((r: any) => r.data),
   trackAdImpression: (id: string, token?: string) =>
     client
       .post(`/promotions/impression/${encodeURIComponent(id)}`, token ? { token } : {})
