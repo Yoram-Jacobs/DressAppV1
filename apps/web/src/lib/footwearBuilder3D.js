@@ -1253,7 +1253,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const computeCollarAndDorsalY = (z, sAbs /* 0 at center spine, 1 at sole wall */) => {
     if (isBootKind) {
       const throatZ = ankleZ + 0.030;
-      const throatPeakY = ankleY + 0.030;
+      const throatPeakY = ankleY + 0.036;
       const bootBallY = yWelt + 0.048;
       const bootToeY = yWelt + 0.030;
       if (z <= throatZ) {
@@ -1674,9 +1674,10 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
           z = lerp(z, calfZ, calfBlend);
         }
 
-        // Subtle anatomical heel counter roundness at rear lower quarter
+        // Subtle anatomical heel counter roundness at rear lower quarter & gentle front ankle clearance
         const heelCup = Math.max(0, -Math.cos(th)) * Math.sin(vT * Math.PI) * (1 - vT) * 0.005;
-        z -= heelCup;
+        const frontAnkleEase = Math.max(0, Math.cos(th)) * Math.sin(vT * Math.PI) * 0.009;
+        z += frontAnkleEase - heelCup;
 
         const [u, v] = shoeUVAnatomical(side, x, y, z, frame, layout, {
           wallElev: lerp(bot.wallElev, 1, smoothstep(0, 0.45, vT)),
