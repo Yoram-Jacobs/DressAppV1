@@ -2,12 +2,42 @@ const { withAndroidManifest, withDangerousMod, withGradleProperties } = require(
 const fs = require('fs');
 const path = require('path');
 
+const R8_RULES_MARKER = '# --- DressApp R8 / Play Console Deobfuscation Rules ---';
+const R8_KEEP_RULES = `
+${R8_RULES_MARKER}
+-keepattributes LineNumberTable,SourceFile
+-renamesourcefileattribute SourceFile
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-keep class expo.modules.** { *; }
+-keep class * extends expo.modules.kotlin.modules.Module { *; }
+-keep class * extends expo.modules.kotlin.views.ViewManagerDefinition { *; }
+-keep class com.swmansion.** { *; }
+-keep class com.bumptech.glide.** { *; }
+-dontwarn com.bumptech.glide.**
+-keep class com.google.mlkit.** { *; }
+-dontwarn com.google.mlkit.**
+-keep class okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class com.project.dressapp.** { *; }
+-keep class co.dressapp.mobile.** { *; }
+`;
+
+function upsertGradleProperty(properties, key, value) {
+  const existing = properties.find((prop) => prop.type === 'property' && prop.key === key);
+  if (existing) {
+    existing.value = value;
+  } else {
+    properties.push({ type: 'property', key, value });
+  }
+}
+
 /**
  * Expo Config Plugin to enforce Google Play Store Android 15 & 16 requirements:
  * 1. Remove orientation restrictions & enable resizability for large screens (tablets/foldables).
  * 2. Override GmsBarcodeScanningDelegateActivity orientation to unspecified & resizeable.
  * 3. Provide clean values-v35/styles.xml without deprecated bar coloring APIs.
- * 4. Enable edge-to-edge support in gradle properties.
+ * 4. Enable edge-to-edge support, R8 code/resource shrinking, and ARM ABIs in gradle properties.
  */
 const withGooglePlayRequirements = (config) => {
   // 1. AndroidManifest modifications
@@ -53,25 +83,29 @@ const withGooglePlayRequirements = (config) => {
     return modConfig;
   });
 
-  // 2. Add gradle property for edgeToEdge
+  // 2. Configure edge-to-edge, R8 minification/deobfuscation, resource shrinking, and ARM ABIs
   config = withGradleProperties(config, (modConfig) => {
-    const properties = modConfig.modResults;
-    const exists = properties.some((prop) => prop.type === 'property' && prop.key === 'expo.edgeToEdgeEnabled');
-    if (!exists) {
-      properties.push({
-        type: 'property',
-        key: 'expo.edgeToEdgeEnabled',
-        value: 'true',
-      });
+    const gradleOverrides = {
+      'expo.edgeToEdgeEnabled': 'true',
+      'android.enableMinifyInReleaseBuilds': 'true',
+      'android.enableProguardInReleaseBuilds': 'true',
+      'android.enableShrinkResourcesInReleaseBuilds': 'true',
+      'android.enableR8.fullMode': 'true',
+      'android.r8.optimizedResourceShrinking': 'true',
+      reactNativeArchitectures: 'armeabi-v7a,arm64-v8a',
+    };
+    for (const [key, value] of Object.entries(gradleOverrides)) {
+      upsertGradleProperty(modConfig.modResults, key, value);
     }
     return modConfig;
   });
 
-  // 3. Add values-v35/styles.xml for clean edge-to-edge on Android 15+ (API 35+)
+  // 3. Add values-v35/styles.xml and R8 keep rules for clean stack traces & runtime safety
   config = withDangerousMod(config, [
     'android',
     async (modConfig) => {
-      const v35Dir = path.join(modConfig.modRequest.platformProjectRoot, 'app/src/main/res/values-v35');
+      const platformRoot = modConfig.modRequest.platformProjectRoot;
+      const v35Dir = path.join(platformRoot, 'app/src/main/res/values-v35');
       if (!fs.existsSync(v35Dir)) {
         fs.mkdirSync(v35Dir, { recursive: true });
       }
@@ -87,6 +121,12 @@ const withGooglePlayRequirements = (config) => {
 </resources>
 `;
       fs.writeFileSync(path.join(v35Dir, 'styles.xml'), stylesContent, 'utf8');
+
+      const proguardPath = path.join(platformRoot, 'app/proguard-rules.pro');
+      const existingProguard = fs.existsSync(proguardPath) ? fs.readFileSync(proguardPath, 'utf8') : '';
+      if (!existingProguard.includes(R8_RULES_MARKER)) {
+        fs.writeFileSync(proguardPath, `${existingProguard.trimEnd()}\n${R8_KEEP_RULES}`, 'utf8');
+      }
       return modConfig;
     },
   ]);

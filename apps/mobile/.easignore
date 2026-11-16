@@ -38,6 +38,8 @@ apps/mobile/dist-debug/
 *.log
 *.map
 *.tgz
+apps/mobile/bundle.js
+apps/mobile/screenshot_*.png
 
 # ─── Credentials & Signing Keys ──────────────────────────────────────────────
 credentials.json
