@@ -1253,7 +1253,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
   const computeCollarAndDorsalY = (z, sAbs /* 0 at center spine, 1 at sole wall */) => {
     if (isBootKind) {
       const throatZ = ankleZ + 0.030;
-      const throatPeakY = ankleY + 0.036;
+      const throatPeakY = ankleY + (standalone ? 0.036 : 0.042);
       const bootBallY = yWelt + 0.048;
       const bootToeY = yWelt + 0.030;
       if (z <= throatZ) {
@@ -1262,7 +1262,7 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
       if (z <= ballZ) {
         // Smooth concave bow from the ankle throat into the horizontal forefoot vamp
         const lt = clamp((z - throatZ) / Math.max(1e-4, ballZ - throatZ), 0, 1);
-        return lerp(bootBallY, throatPeakY, Math.pow(1 - lt, 2.2));
+        return lerp(bootBallY, throatPeakY, Math.pow(1 - lt, standalone ? 2.1 : 1.55));
       }
       // Rounded convex toe box dome down to the toe tip
       const tt = clamp((z - ballZ) / Math.max(1e-4, zEnd - ballZ), 0, 1);
