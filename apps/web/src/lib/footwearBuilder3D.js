@@ -1676,8 +1676,8 @@ function buildClosedShoeForSide(side, anatomy, spec, layout, standalone) {
 
         // Subtle anatomical heel counter roundness at rear lower quarter & gentle front ankle clearance
         const heelCup = Math.max(0, -Math.cos(th)) * Math.sin(vT * Math.PI) * (1 - vT) * 0.005;
-        const frontEaseAmp = standalone ? 0.008 : 0.016;
-        const frontAnkleEase = Math.max(0, Math.cos(th)) * Math.sin(vT * Math.PI) * frontEaseAmp;
+        const frontEaseAmp = standalone ? 0.008 : 0.022;
+        const frontAnkleEase = Math.max(0, Math.cos(th)) * Math.sin(Math.pow(vT, 0.65) * Math.PI) * frontEaseAmp;
         z += frontAnkleEase - heelCup;
 
         const [u, v] = shoeUVAnatomical(side, x, y, z, frame, layout, {
