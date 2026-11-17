@@ -13,6 +13,7 @@ from collections import deque
 import hashlib
 import logging
 import random
+import re
 import time
 import uuid
 from datetime import datetime, timezone
@@ -20,7 +21,7 @@ from typing import Any
 
 import jwt
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.config import settings
 from app.db.database import get_db
@@ -148,6 +149,22 @@ async def _consume_ad_token(
 
 
 # ----------------------------- models -----------------------------
+def _validate_safe_ad_url(value: str | None, *, allow_relative_static: bool = False) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    low = cleaned.lower()
+    if low.startswith(("javascript:", "data:", "vbscript:", "file:")):
+        raise ValueError("Unsupported or unsafe URL scheme")
+    if allow_relative_static and cleaned.startswith("/"):
+        return cleaned
+    if not low.startswith(("https://", "http://")):
+        raise ValueError("URL must start with https:// or http://")
+    return cleaned
+
+
 class AdCreativeIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     headline: str = Field(min_length=1, max_length=120)
@@ -155,6 +172,16 @@ class AdCreativeIn(BaseModel):
     image_url: str | None = None
     cta_label: str | None = Field(default=None, max_length=40)
     cta_url: str | None = None
+
+    @field_validator("image_url")
+    @classmethod
+    def _check_image_url(cls, v: str | None) -> str | None:
+        return _validate_safe_ad_url(v, allow_relative_static=True)
+
+    @field_validator("cta_url")
+    @classmethod
+    def _check_cta_url(cls, v: str | None) -> str | None:
+        return _validate_safe_ad_url(v, allow_relative_static=True)
 
 
 class CampaignCreateIn(BaseModel):
@@ -203,6 +230,19 @@ def _strip_doc(doc: dict[str, Any]) -> dict[str, Any]:
 
 
 # ----------------------------- CRUD -----------------------------
+async def _require_funded_credits(db: Any, owner_id: str, currency: str) -> None:
+    """Require a positive ad credit balance in the campaign currency before activation."""
+    credit_doc = await db.user_credits.find_one(
+        {"user_id": owner_id, "currency": (currency or "USD").upper()},
+        {"_id": 0, "balance_cents": 1},
+    )
+    if not credit_doc or int(credit_doc.get("balance_cents") or 0) <= 0:
+        raise HTTPException(
+            status_code=402,
+            detail="Insufficient ad credits to activate campaign. Please top up your balance first.",
+        )
+
+
 @router.post("/campaigns")
 async def create_campaign(
     payload: CampaignCreateIn, user: dict = Depends(get_current_user)
@@ -211,6 +251,12 @@ async def create_campaign(
     if not prof.get("is_professional"):
         raise HTTPException(403, "Only professionals can create ad campaigns")
     db = get_db()
+    currency = (payload.currency or "USD").upper()
+    if not re.fullmatch(r"[A-Z]{3}", currency):
+        raise HTTPException(400, "Invalid currency code")
+    desired_status = payload.status if payload.status in {"draft", "active", "paused"} else "draft"
+    if desired_status == "active":
+        await _require_funded_credits(db, user["id"], currency)
     campaign = AdCampaign(
         owner_id=user["id"],
         name=payload.name,
@@ -222,8 +268,8 @@ async def create_campaign(
         end_date=payload.end_date,
         target_country=payload.target_country,
         target_region=payload.target_region,
-        currency=(payload.currency or "USD").upper(),
-        status=payload.status if payload.status in {"draft", "active", "paused"} else "draft",
+        currency=currency,
+        status=desired_status,
     )
     doc = campaign.model_dump()
     await db.ad_campaigns.insert_one(doc)
@@ -268,9 +314,20 @@ async def patch_campaign(
     if existing["owner_id"] != user["id"]:
         raise HTTPException(403, "Not allowed")
     patch = payload.model_dump(exclude_none=True)
-    # Only permit owners to transition to these states (admin uses /admin/ads/...).
-    if "status" in patch and patch["status"] not in {"draft", "active", "paused", "ended"}:
-        patch.pop("status")
+    if "currency" in patch:
+        patch["currency"] = str(patch["currency"]).upper()
+        if not re.fullmatch(r"[A-Z]{3}", patch["currency"]):
+            raise HTTPException(400, "Invalid currency code")
+    if existing.get("status") in {"disabled", "rejected", "suspended"}:
+        if "status" in patch and patch["status"] != existing.get("status"):
+            raise HTTPException(403, "Admin-disabled campaigns cannot be reactivated by the owner")
+    # Only permit owners to transition between owner-managed states (admin uses /admin/promotions/campaigns/...).
+    if "status" in patch:
+        if patch["status"] not in {"draft", "active", "paused", "ended"}:
+            patch.pop("status")
+        elif patch["status"] == "active" and existing.get("status") != "active":
+            eff_currency = (patch.get("currency") or existing.get("currency") or "USD").upper()
+            await _require_funded_credits(db, user["id"], eff_currency)
     if "creative" in patch:
         patch["creative"] = AdCreative(**patch["creative"]).model_dump()
     patch["updated_at"] = _now_iso()
@@ -316,22 +373,24 @@ def _eligible_filter(country: str | None, region: str | None) -> dict[str, Any]:
         ],
     }
     if country:
+        safe_country = re.escape(country.strip())
         flt["$and"].append(
             {
                 "$or": [
                     {"target_country": None},
                     {"target_country": {"$exists": False}},
-                    {"target_country": {"$regex": f"^{country}$", "$options": "i"}},
+                    {"target_country": {"$regex": f"^{safe_country}$", "$options": "i"}},
                 ]
             }
         )
     if region:
+        safe_region = re.escape(region.strip())
         flt["$and"].append(
             {
                 "$or": [
                     {"target_region": None},
                     {"target_region": {"$exists": False}},
-                    {"target_region": {"$regex": region, "$options": "i"}},
+                    {"target_region": {"$regex": safe_region, "$options": "i"}},
                 ]
             }
         )

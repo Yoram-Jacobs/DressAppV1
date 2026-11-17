@@ -8,17 +8,21 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 import io
 import json
+import re
 import time
 import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterator, Optional
 
-from fastapi import APIRouter, FastAPI, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from app.services.auth import get_current_user
 from garment_analyzer import GarmentValidationError, normalize_garment_type
 from mesh_fitter import generate_3d_garment_glb
 from template_engine import ensure_templates
+
+_MAX_3D_UPLOAD_BYTES = 15 * 1024 * 1024  # 15 MB upload cap
 
 router = APIRouter(tags=["tryon3d"])
 v1_models_router = APIRouter(prefix="/models", tags=["tryon3d"])
@@ -70,7 +74,18 @@ async def _handle_generate_3d(
     input_buffer: Optional[io.BytesIO] = None
 
     try:
-        raw_bytes = await file.read()
+        raw_buf = bytearray()
+        while True:
+            chunk = await file.read(65536)
+            if not chunk:
+                break
+            raw_buf.extend(chunk)
+            if len(raw_buf) > _MAX_3D_UPLOAD_BYTES:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"Uploaded file exceeds maximum {_MAX_3D_UPLOAD_BYTES // (1024 * 1024)} MB limit.",
+                )
+        raw_bytes = bytes(raw_buf)
         if not raw_bytes:
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
@@ -92,6 +107,7 @@ async def _handle_generate_3d(
 
     elapsed_ms = (time.perf_counter() - t_start) * 1000.0
     category = result.metrics.category
+    safe_category = re.sub(r"[^a-zA-Z0-9_-]", "", str(category or "")) or "garment"
     aspect = result.metrics.aspect_ratio
 
     if response_format.strip().lower() == "json":
@@ -99,7 +115,7 @@ async def _handle_generate_3d(
         out_dir = here / "static" / "uploads" / "models3d"
         out_dir.mkdir(parents=True, exist_ok=True)
         asset_id = uuid.uuid4().hex[:12]
-        filename = f"{category}_{asset_id}.glb"
+        filename = f"{safe_category}_{asset_id}.glb"
         out_path = out_dir / filename
         out_path.write_bytes(result.glb_bytes)
 
@@ -158,6 +174,7 @@ async def generate_3d_model_endpoint(
         "glb",
         description="Response format: 'glb' (streams model/gltf-binary) or 'json' (returns storage URL & metrics)",
     ),
+    _user: dict = Depends(get_current_user),
 ):
     """Generate a manifold, PBR-textured `.glb` 3D garment model from a clean 2D RGBA image."""
     effective_dims = target_dimensions if target_dimensions is not None else target_dimensions_form

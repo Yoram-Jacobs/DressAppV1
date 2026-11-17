@@ -309,46 +309,103 @@ def test_factory_runpod_instantiation():
 # 5. Isolated Test Endpoint Tests (`POST /api/v1/image-generation/test`)
 # =========================================================================
 
-def test_api_provider_health():
+from app.services.auth import get_current_user, require_admin
+
+
+def test_api_provider_health_requires_admin():
+    app.dependency_overrides.clear()
     response = client.get("/api/v1/image-generation/health?provider=mock")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert data["class"] == "MockImageProvider"
+    assert response.status_code == 401
+
+
+def test_api_provider_health():
+    app.dependency_overrides.clear()
+    app.dependency_overrides[require_admin] = lambda: {"id": "admin-1", "roles": ["admin"]}
+    try:
+        response = client.get("/api/v1/image-generation/health?provider=mock")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert data["class"] == "MockImageProvider"
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_api_image_generation_test_requires_admin():
+    app.dependency_overrides.clear()
+    response = client.post(
+        "/api/v1/image-generation/test",
+        data={"prompt": "Tailored linen blazer", "provider": "mock"},
+    )
+    assert response.status_code == 401
+
+    app.dependency_overrides[get_current_user] = lambda: {"id": "u-std", "roles": ["user"]}
+    try:
+        forbidden = client.post(
+            "/api/v1/image-generation/test",
+            data={"prompt": "Tailored linen blazer", "provider": "mock"},
+        )
+        assert forbidden.status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_api_image_generation_test_blocks_ssrf_url():
+    app.dependency_overrides[require_admin] = lambda: {"id": "admin-1", "roles": ["admin"]}
+    try:
+        response = client.post(
+            "/api/v1/image-generation/test",
+            data={
+                "prompt": "Test SSRF block",
+                "provider": "mock",
+                "image_url": "http://169.254.169.254/latest/meta-data/",
+            },
+        )
+        assert response.status_code == 400
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_api_image_generation_test_text():
-    response = client.post(
-        "/api/v1/image-generation/test",
-        data={
-            "prompt": "Tailored linen blazer on studio background",
-            "provider": "mock",
-            "strength": "0.45",
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "success"
-    assert data["provider"] == "mock"
-    assert "image_url" in data
-    assert data["image_url"].startswith(("/static/uploads/", "http"))
+    app.dependency_overrides[require_admin] = lambda: {"id": "admin-1", "roles": ["admin"]}
+    try:
+        response = client.post(
+            "/api/v1/image-generation/test",
+            data={
+                "prompt": "Tailored linen blazer on studio background",
+                "provider": "mock",
+                "strength": "0.45",
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["provider"] == "mock"
+        assert "image_url" in data
+        assert data["image_url"].startswith(("/static/uploads/", "http"))
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_api_image_generation_test_with_image_upload():
-    response = client.post(
-        "/api/v1/image-generation/test",
-        data={
-            "prompt": "Remove cuff stain",
-            "provider": "mock",
-            "strength": "0.40",
-        },
-        files={
-            "image": ("input_garment.png", DUMMY_PNG_BYTES, "image/png"),
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "success"
-    assert data["provider"] == "mock"
-    assert data["metadata"]["has_mask"] is False
-    assert data["metadata"]["input_length"] == len(DUMMY_PNG_BYTES)
+    app.dependency_overrides[require_admin] = lambda: {"id": "admin-1", "roles": ["admin"]}
+    try:
+        response = client.post(
+            "/api/v1/image-generation/test",
+            data={
+                "prompt": "Remove cuff stain",
+                "provider": "mock",
+                "strength": "0.40",
+            },
+            files={
+                "image": ("input_garment.png", DUMMY_PNG_BYTES, "image/png"),
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["provider"] == "mock"
+        assert data["metadata"]["has_mask"] is False
+        assert data["metadata"]["input_length"] == len(DUMMY_PNG_BYTES)
+    finally:
+        app.dependency_overrides.clear()

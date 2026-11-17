@@ -5,22 +5,29 @@ import asyncio
 import hashlib
 import json
 import os
+import re
 import shutil
 import tempfile
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from app.services.auth import get_current_user
 from app.services.avatar_service import (
     AVATAR_CACHE_DIR,
     generate_parametric_avatar_glb,
     normalize_avatar_shape_keys,
     resolve_base_avatar_path,
 )
+from app.services.security_validator import is_safe_file_path
+
+_SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{4,64}$")
+_SAFE_TEMPLATE_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}(?:\.glb)?$")
+_SAFE_MODEL_FILE_RE = re.compile(r"^[A-Za-z0-9._-]{4,128}\.glb$")
 
 router = APIRouter(prefix="/dressing-room", tags=["dressing-room"])
 
@@ -86,7 +93,7 @@ class OutfitGarmentItem(BaseModel):
 
 
 class FitOutfitRequest(BaseModel):
-    avatar_id: str = Field(..., description="Target morphed avatar ID")
+    avatar_id: str = Field(..., min_length=4, max_length=64, pattern=r"^[A-Za-z0-9_-]{4,64}$", description="Target morphed avatar ID")
     gender: Optional[str] = Field("female", description="Avatar gender ('male' or 'female')")
     items: List[OutfitGarmentItem] = Field(default_factory=list, description="Ordered garment layers to fit")
 
@@ -111,7 +118,13 @@ def _find_blender_executable() -> Optional[str]:
 
 def _resolve_template_glb(gender: str, category: str, template_id: Optional[str] = None) -> Path:
     gender_key = "male" if str(gender).lower() in ("male", "m", "man", "men") else "female"
-    fname = f"{template_id}.glb" if template_id and not template_id.endswith(".glb") else (template_id or CATEGORY_DEFAULT_TEMPLATES.get(category, "top_tshirt.glb"))
+    if template_id is not None:
+        cleaned_tpl = template_id.strip()
+        if not _SAFE_TEMPLATE_RE.match(cleaned_tpl):
+            raise HTTPException(status_code=400, detail="Invalid template_id format")
+        fname = cleaned_tpl if cleaned_tpl.endswith(".glb") else f"{cleaned_tpl}.glb"
+    else:
+        fname = CATEGORY_DEFAULT_TEMPLATES.get(category, "top_tshirt.glb")
     candidates = [
         ASSETS_TEMPLATES_DIR / gender_key / fname,
         WEB_TEMPLATES_DIR / gender_key / fname,
@@ -120,8 +133,15 @@ def _resolve_template_glb(gender: str, category: str, template_id: Optional[str]
         ASSETS_TEMPLATES_DIR / gender_key / CATEGORY_DEFAULT_TEMPLATES.get(category, "top_tshirt.glb"),
         WEB_TEMPLATES_DIR / gender_key / CATEGORY_DEFAULT_TEMPLATES.get(category, "top_tshirt.glb"),
     ]
-    for p in candidates:
-        if p.exists():
+    allowed_roots = (
+        ASSETS_TEMPLATES_DIR / gender_key,
+        WEB_TEMPLATES_DIR / gender_key,
+        Path("/app/assets/templates") / gender_key,
+        Path("/srv/AI-Stylist/assets/templates") / gender_key,
+    )
+    for idx, p in enumerate(candidates):
+        base_root = allowed_roots[idx] if idx < 4 else allowed_roots[idx - 4]
+        if is_safe_file_path(base_root, p) and p.exists():
             return p
     return candidates[0]
 
@@ -173,8 +193,16 @@ async def _fit_single_garment_layer(
                 "--output",
                 str(out_path),
             ]
-            if item.texture_url and os.path.exists(item.texture_url):
-                cmd.extend(["--texture", item.texture_url])
+            if item.texture_url:
+                tex_candidate = Path(item.texture_url)
+                if (
+                    tex_candidate.exists()
+                    and any(
+                        is_safe_file_path(root_dir, tex_candidate)
+                        for root_dir in (ROOT_DIR / "static", ROOT_DIR / "assets", AVATAR_CACHE_DIR)
+                    )
+                ):
+                    cmd.extend(["--texture", str(tex_candidate.resolve())])
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
@@ -222,7 +250,10 @@ async def _fit_single_garment_layer(
 
 
 @router.post("/avatar")
-async def create_morphed_avatar(payload: AvatarMeasurementsRequest) -> Dict[str, Any]:
+async def create_morphed_avatar(
+    payload: AvatarMeasurementsRequest,
+    _user: dict = Depends(get_current_user),
+) -> Dict[str, Any]:
     """
     Accepts body measurements (height, chest, waist, hips in cm), maps them into
     calibrated normalized shape-key weights (0.0 to 1.0), and generates/caches the morphed avatar .glb.
@@ -243,19 +274,26 @@ async def create_morphed_avatar(payload: AvatarMeasurementsRequest) -> Dict[str,
 
 
 @router.post("/fit-outfit")
-async def fit_outfit_layers(payload: FitOutfitRequest) -> Dict[str, Any]:
+async def fit_outfit_layers(
+    payload: FitOutfitRequest,
+    _user: dict = Depends(get_current_user),
+) -> Dict[str, Any]:
     """
     Accepts avatar_id and an ordered array of garment items (texture_url, category, layer_index).
     Orchestrates parallel fitting across layers following the 7-layer collision hierarchy
     and returns URLs for the fitted outfit GLBs.
     """
     t0 = time.perf_counter()
+    if not _SAFE_ID_RE.match(payload.avatar_id):
+        raise HTTPException(status_code=400, detail="Invalid avatar_id format")
     gender_key = "male" if (
         str(payload.gender or "").lower() in ("male", "m", "man", "men")
         or "_male_" in payload.avatar_id
     ) else "female"
 
     cached_avatar = AVATAR_CACHE_DIR / f"{payload.avatar_id}.glb"
+    if not is_safe_file_path(AVATAR_CACHE_DIR, cached_avatar):
+        raise HTTPException(status_code=400, detail="Invalid avatar path")
     avatar_path = cached_avatar if cached_avatar.exists() else resolve_base_avatar_path(gender_key)
 
     ordered_items = sorted(
@@ -282,11 +320,16 @@ async def fit_outfit_layers(payload: FitOutfitRequest) -> Dict[str, Any]:
 
 
 @router.get("/models/{filename}")
-async def get_dressing_room_model(filename: str):
+async def get_dressing_room_model(
+    filename: str,
+    _user: dict = Depends(get_current_user),
+):
     """Serves generated/cached morphed avatar and fitted garment .glb models."""
     safe_name = Path(filename).name
+    if not _SAFE_MODEL_FILE_RE.match(safe_name) or safe_name != filename:
+        raise HTTPException(status_code=400, detail="Invalid model filename")
     target = AVATAR_CACHE_DIR / safe_name
-    if not target.exists():
+    if not is_safe_file_path(AVATAR_CACHE_DIR, target) or not target.exists():
         raise HTTPException(status_code=404, detail="Fitted 3D model not found")
     return FileResponse(
         str(target),

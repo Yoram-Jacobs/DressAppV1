@@ -14,6 +14,7 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from app.db.database import get_db
 from app.services.auth import get_current_user
+from app.services.security_validator import decode_share_card_image, validate_share_card_b64
 
 router = APIRouter(prefix="/share", tags=["share"])
 
@@ -70,7 +71,8 @@ async def save_shared_outfit_share_card(
     image_b64: str = Body(..., embed=True),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Store the base64-encoded share card for a shared outfit."""
+    """Store the base64-encoded share card for a shared outfit owned by the caller."""
+    validated_b64 = validate_share_card_b64(image_b64)
     db = get_db()
     existing = await db.shared_outfits.find_one({"id": share_id})
     if not existing:
@@ -79,15 +81,22 @@ async def save_shared_outfit_share_card(
             raise HTTPException(status_code=404, detail="Shared outfit not found")
         await db.outfits.update_one(
             {"id": share_id, "user_id": user["id"]},
-            {"$set": {"share_card_b64": image_b64}}
+            {"$set": {"share_card_b64": validated_b64, "updated_at": datetime.now(timezone.utc).isoformat()}},
         )
         return {
             "share_card_url": f"/api/v1/share/outfit/{share_id}/image",
         }
-        
+
+    owner_uid = existing.get("owner_id") or existing.get("user_id")
+    if not owner_uid or owner_uid != user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to modify this shared outfit")
+
     await db.shared_outfits.update_one(
-        {"id": share_id},
-        {"$set": {"share_card_b64": image_b64}}
+        {
+            "id": share_id,
+            "$or": [{"owner_id": user["id"]}, {"user_id": user["id"]}],
+        },
+        {"$set": {"share_card_b64": validated_b64, "updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     return {
         "share_card_url": f"/api/v1/share/outfit/{share_id}/image",
@@ -96,7 +105,7 @@ async def save_shared_outfit_share_card(
 
 @router.get("/outfit/{share_id}/image")
 async def get_shared_outfit_image(share_id: str) -> Response:
-    """Serve the raw PNG image of the shared outfit's share card."""
+    """Serve the verified raster image of the shared outfit's share card."""
     db = get_db()
     doc = await db.shared_outfits.find_one({"id": share_id})
     if not doc or not doc.get("share_card_b64"):
@@ -105,13 +114,14 @@ async def get_shared_outfit_image(share_id: str) -> Response:
             doc = outfit_doc
         else:
             raise HTTPException(status_code=404, detail="Image not found")
-            
-    import base64
-    
-    b64_data = doc["share_card_b64"]
-    if "," in b64_data:
-        b64_data = b64_data.split(",")[1]
-        
-    img_bytes = base64.b64decode(b64_data)
-    return Response(content=img_bytes, media_type="image/png")
+
+    img_bytes, safe_media_type = decode_share_card_image(doc["share_card_b64"])
+    return Response(
+        content=img_bytes,
+        media_type=safe_media_type,
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; script-src 'none'; style-src 'none'; sandbox",
+        },
+    )
 

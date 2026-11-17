@@ -4,19 +4,49 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
-import httpx
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
+from app.services.auth import require_admin
 from app.services.image_generation.factory import get_image_provider
+from app.services.security_validator import SafeFetchError, is_safe_external_url, safe_fetch_external
 from app.services.upload_manager import UploadManager
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/image-generation", tags=["image-generation"])
 
+_MAX_IMAGE_BYTES = 15 * 1024 * 1024  # 15 MB upload / remote fetch cap
+_ALLOWED_IMAGE_CONTENT_TYPES = frozenset({
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/avif",
+    "image/gif",
+})
+
+
+async def _read_bounded_upload(upload: UploadFile, max_bytes: int = _MAX_IMAGE_BYTES) -> bytes:
+    """Read an uploaded image incrementally and fail fast if it exceeds max_bytes."""
+    buf = bytearray()
+    while True:
+        chunk = await upload.read(65536)
+        if not chunk:
+            break
+        buf.extend(chunk)
+        if len(buf) > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Uploaded image exceeds maximum {max_bytes // (1024 * 1024)} MB limit.",
+            )
+    return bytes(buf)
+
 
 @router.get("/health")
-async def provider_health(provider: str | None = None) -> dict[str, Any]:
+async def provider_health(
+    provider: str | None = None,
+    _admin: dict = Depends(require_admin),
+) -> dict[str, Any]:
     """Check health and credential status of configured or requested image provider."""
     try:
         instance = get_image_provider(provider_override=provider)
@@ -27,9 +57,10 @@ async def provider_health(provider: str | None = None) -> dict[str, Any]:
             "class": instance.__class__.__name__,
         }
     except Exception as exc:  # noqa: BLE001
+        logger.warning("Image provider health check failed: %s", exc)
         return {
             "status": "unhealthy",
-            "error": str(exc),
+            "error": "Image generation provider unavailable",
         }
 
 
@@ -41,8 +72,9 @@ async def test_image_generation(
     provider: str | None = Form(None, description="Provider override: 'runpod', 'gemini', or 'mock'"),
     strength: float = Form(0.45, description="Denoising strength (0.35 - 0.65)"),
     aspect_ratio: str = Form("1:1", description="Aspect ratio for text-to-image"),
+    _admin: dict = Depends(require_admin),
 ) -> dict[str, Any]:
-    """Isolated test endpoint to evaluate FLUX.2 Klein 4B without modifying closet items."""
+    """Isolated admin-only test endpoint to evaluate FLUX.2 Klein 4B without modifying closet items."""
     try:
         provider_instance = get_image_provider(provider_override=provider)
     except Exception as exc:
@@ -53,23 +85,44 @@ async def test_image_generation(
 
     input_bytes: bytes | None = None
     if image is not None:
-        input_bytes = await image.read()
+        input_bytes = await _read_bounded_upload(image)
     elif image_url:
+        cleaned_url = image_url.strip()
+        if not is_safe_external_url(cleaned_url):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or prohibited image URL destination",
+            )
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                res = await client.get(image_url)
-                if res.status_code == 200:
-                    input_bytes = res.content
-                else:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"Failed to fetch image from URL: HTTP {res.status_code}",
-                    )
+            res = await safe_fetch_external(
+                cleaned_url,
+                timeout=15.0,
+                max_redirects=5,
+                max_bytes=_MAX_IMAGE_BYTES,
+            )
+        except SafeFetchError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid or prohibited image URL destination: {exc}",
+            ) from exc
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Failed to load image from URL: {exc}",
             ) from exc
+
+        if res.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to fetch image from URL: HTTP {res.status_code}",
+            )
+        raw_ct = (res.headers.get("content-type") or "").split(";")[0].strip().lower()
+        if raw_ct and raw_ct not in _ALLOWED_IMAGE_CONTENT_TYPES:
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail="Remote URL did not return a supported raster image content type.",
+            )
+        input_bytes = res.content
 
     try:
         if input_bytes:

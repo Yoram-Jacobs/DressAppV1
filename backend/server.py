@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import List
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, ConfigDict, Field
@@ -40,6 +40,7 @@ sys.path.insert(0, str(ROOT_DIR))
 
 from app.api.v1.router import api_v1_router  # noqa: E402
 from app.db.database import close as close_db, ensure_indexes, get_client, get_db  # noqa: E402
+from app.services.auth import require_admin  # noqa: E402
 from app.services.scheduler import shutdown_scheduler, start_scheduler  # noqa: E402
 from app.services.warmup import warmup_models  # noqa: E402
 
@@ -101,7 +102,7 @@ class StatusCheck(BaseModel):
 
 
 class StatusCheckCreate(BaseModel):
-    client_name: str
+    client_name: str = Field(..., min_length=1, max_length=120)
 
 
 @api_router.get("/")
@@ -129,7 +130,10 @@ async def health_check() -> dict:
 
 
 @api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate) -> StatusCheck:
+async def create_status_check(
+    input: StatusCheckCreate,
+    _admin: dict = Depends(require_admin),
+) -> StatusCheck:
     status_obj = StatusCheck(**input.model_dump())
     doc = status_obj.model_dump()
     doc["timestamp"] = doc["timestamp"].isoformat()
@@ -138,8 +142,10 @@ async def create_status_check(input: StatusCheckCreate) -> StatusCheck:
 
 
 @api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks() -> List[StatusCheck]:
-    checks = await get_db().status_checks.find({}, {"_id": 0}).to_list(1000)
+async def get_status_checks(
+    _admin: dict = Depends(require_admin),
+) -> List[StatusCheck]:
+    checks = await get_db().status_checks.find({}, {"_id": 0}).to_list(100)
     for check in checks:
         if isinstance(check.get("timestamp"), str):
             check["timestamp"] = datetime.fromisoformat(check["timestamp"])

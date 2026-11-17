@@ -268,3 +268,85 @@ def is_safe_file_path(base_dir: str | Path, target_path: str | Path) -> bool:
     except Exception as exc:
         logger.warning("Error evaluating path safety for '%s' in '%s': %s", target_path, base_dir, exc)
         return False
+
+
+MAX_SHARE_CARD_BYTES = 2 * 1024 * 1024  # 2 MB cap
+ALLOWED_SHARE_CARD_FORMATS = frozenset({"PNG", "JPEG", "WEBP"})
+_SHARE_CARD_MIME_BY_FORMAT = {
+    "PNG": "image/png",
+    "JPEG": "image/jpeg",
+    "WEBP": "image/webp",
+}
+
+
+def _detect_share_card_format(img_bytes: bytes) -> str | None:
+    """Verify binary payload is a valid PNG/JPEG/WEBP image and return its format name."""
+    import io
+    from PIL import Image, UnidentifiedImageError
+
+    try:
+        with Image.open(io.BytesIO(img_bytes)) as im:
+            fmt = (im.format or "").upper()
+            im.verify()
+        return fmt if fmt in ALLOWED_SHARE_CARD_FORMATS else None
+    except (UnidentifiedImageError, Exception):
+        return None
+
+
+def validate_share_card_b64(raw_b64: str) -> str:
+    """Validate and bound a base64-encoded raster share-card image (PNG, JPEG, or WebP)."""
+    import base64
+    from fastapi import HTTPException
+
+    if not raw_b64 or not isinstance(raw_b64, str):
+        raise HTTPException(status_code=400, detail="image_b64 is required")
+    payload = raw_b64.strip()
+    if payload.startswith("data:"):
+        header, sep, b64_part = payload.partition(",")
+        if not sep or ";base64" not in header.lower():
+            raise HTTPException(status_code=400, detail="Malformed image data URL")
+        mime_part = header[5:].split(";", 1)[0].strip().lower()
+        if mime_part not in {"image/png", "image/jpeg", "image/jpg", "image/webp"}:
+            raise HTTPException(status_code=415, detail="Only PNG, JPEG, and WebP share cards are allowed")
+        payload = b64_part.strip()
+    if len(payload) > (MAX_SHARE_CARD_BYTES * 4 // 3) + 64:
+        raise HTTPException(status_code=413, detail="Share card exceeds maximum 2 MB limit")
+    try:
+        img_bytes = base64.b64decode(payload, validate=True)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid base64 share card payload") from exc
+    if len(img_bytes) > MAX_SHARE_CARD_BYTES:
+        raise HTTPException(status_code=413, detail="Share card exceeds maximum 2 MB limit")
+    fmt = _detect_share_card_format(img_bytes)
+    if fmt is None:
+        # Distinguish syntactically corrupt images vs unsupported formats where detectable
+        import io
+        from PIL import Image, UnidentifiedImageError
+
+        try:
+            with Image.open(io.BytesIO(img_bytes)) as im:
+                im.verify()
+        except (UnidentifiedImageError, Exception) as exc:
+            raise HTTPException(status_code=400, detail="Share card payload is not a valid raster image") from exc
+        raise HTTPException(status_code=415, detail="Unsupported share card image format")
+    return raw_b64.strip()
+
+
+def decode_share_card_image(raw_b64: str) -> tuple[bytes, str]:
+    """Decode and raster-verify stored share card bytes and return (bytes, safe_media_type)."""
+    import base64
+    from fastapi import HTTPException
+
+    b64_data = str(raw_b64 or "").strip()
+    if "," in b64_data:
+        b64_data = b64_data.split(",", 1)[1].strip()
+    if not b64_data or len(b64_data) > (MAX_SHARE_CARD_BYTES * 4 // 3) + 1024:
+        raise HTTPException(status_code=404, detail="Invalid share card image")
+    try:
+        img_bytes = base64.b64decode(b64_data)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="Invalid share card image") from exc
+    fmt = _detect_share_card_format(img_bytes)
+    if fmt is None:
+        raise HTTPException(status_code=404, detail="Invalid share card image")
+    return img_bytes, _SHARE_CARD_MIME_BY_FORMAT[fmt]

@@ -205,11 +205,28 @@ class TestTemplateEngineAndMeshFitter:
         assert depth_m > 0.045  # Base thickness + parabolic Z arch
 
 
+from app.services.auth import get_current_user
+
+
 class TestFastAPIServiceEndpoint:
     """Tests for `POST /api/v1/models/generate-3d` route in `service.py`."""
 
     def setup_method(self):
+        app.dependency_overrides[get_current_user] = lambda: {"id": "u-test-3d", "roles": ["user"]}
         self.client = TestClient(app)
+
+    def teardown_method(self):
+        app.dependency_overrides.clear()
+
+    def test_post_generate_3d_requires_authentication(self):
+        app.dependency_overrides.clear()
+        rgba = _make_rect_garment_rgba(canvas_size=(64, 64), rect=(8, 8, 40, 48))
+        png_bytes = _encode_png_bytes(rgba)
+        response = self.client.post(
+            "/api/v1/models/generate-3d?garment_type=tshirt",
+            files={"file": ("garment.png", png_bytes, "image/png")},
+        )
+        assert response.status_code == 401
 
     def test_post_generate_3d_streams_valid_glb_under_400ms(self):
         rgba = _make_rect_garment_rgba(canvas_size=(256, 300), rect=(30, 20, 196, 260))
