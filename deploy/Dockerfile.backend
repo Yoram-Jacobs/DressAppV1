@@ -73,6 +73,7 @@ RUN pip install --no-cache-dir trimesh==5.2.0
 # --- Application code ------------------------------------------------
 COPY backend/ ./backend/
 COPY apps/web/src/locales/ /app/frontend/src/locales/
+COPY wiki/ /app/wiki/
 
 # Pre-create the model-cache mountpoint with writable perms.
 RUN mkdir -p /models/huggingface /models/u2net
