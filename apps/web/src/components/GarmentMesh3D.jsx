@@ -3641,31 +3641,36 @@ function GarmentTemplateMeshInner({
                 geo.computeBoundingBox();
               }
             } else if ((rawSlot === 'top' && !shouldTuck) || rawSlot === 'outerwear') {
-              const yTorsoLock = isMale ? 1.16 : 1.08;
-              const xSleeveGap = isMale ? 0.238 : 0.206;
-              let curTorsoHemY = Infinity;
-              for (let i = 0; i < pos.count; i++) {
-                const x = pos.getX(i);
-                const y = pos.getY(i);
-                if (y < yTorsoLock && Math.abs(x) <= xSleeveGap && y < curTorsoHemY) {
-                  curTorsoHemY = y;
-                }
-              }
-              const minAllowed = rawSlot === 'outerwear' ? 0.18 : 0.68;
-              const maxAllowed = yTorsoLock - 0.04;
-              const targetHemY = Math.max(minAllowed, Math.min(maxAllowed, shellFit.yBottom));
-              if (Number.isFinite(curTorsoHemY) && curTorsoHemY < yTorsoLock - 0.03 && Math.abs(targetHemY - curTorsoHemY) > 0.015) {
-                const scaleY = Math.max(0.04, yTorsoLock - targetHemY) / Math.max(0.04, yTorsoLock - curTorsoHemY);
+              const isDedicatedTunicTemplate = templateId === 'top_tunic' || templateId === 'tunic';
+              if (!isDedicatedTunicTemplate) {
+                const yTorsoLock = isMale ? 1.16 : 1.08;
+                const yHipCutoff = isMale ? 0.92 : 0.89;
+                const xSleeveGap = isMale ? 0.238 : 0.206;
+                let curTorsoHemY = Infinity;
                 for (let i = 0; i < pos.count; i++) {
                   const x = pos.getX(i);
                   const y = pos.getY(i);
-                  if (y < yTorsoLock && Math.abs(x) <= xSleeveGap) {
-                    pos.setY(i, yTorsoLock - (yTorsoLock - y) * scaleY);
+                  if (y < yTorsoLock && (y < yHipCutoff || Math.abs(x) <= xSleeveGap) && y < curTorsoHemY) {
+                    curTorsoHemY = y;
                   }
                 }
-                pos.needsUpdate = true;
-                geo.computeVertexNormals();
-                geo.computeBoundingBox();
+                const isLonglineTunic = /(?:kurta|kurti|tunic|longline|thobe|קורטה|כורטה|קורטי|טוניקה)/i.test(garmentText);
+                const minAllowed = (rawSlot === 'outerwear' || isLonglineTunic) ? 0.18 : 0.68;
+                const maxAllowed = yTorsoLock - 0.04;
+                const targetHemY = Math.max(minAllowed, Math.min(maxAllowed, shellFit.yBottom));
+                if (Number.isFinite(curTorsoHemY) && curTorsoHemY < yTorsoLock - 0.03 && Math.abs(targetHemY - curTorsoHemY) > 0.015) {
+                  const scaleY = Math.max(0.04, yTorsoLock - targetHemY) / Math.max(0.04, yTorsoLock - curTorsoHemY);
+                  for (let i = 0; i < pos.count; i++) {
+                    const x = pos.getX(i);
+                    const y = pos.getY(i);
+                    if (y < yTorsoLock && (y < yHipCutoff || Math.abs(x) <= xSleeveGap)) {
+                      pos.setY(i, yTorsoLock - (yTorsoLock - y) * scaleY);
+                    }
+                  }
+                  pos.needsUpdate = true;
+                  geo.computeVertexNormals();
+                  geo.computeBoundingBox();
+                }
               }
             }
           }
@@ -3673,7 +3678,7 @@ function GarmentTemplateMeshInner({
           // Sleeve Hem & Cuff Boundary Protection:
           // Preserve authentic 3D rounded cuffs authored in canonical GLB basemeshes.
           // Clamp sleeve UVs away from outer texture margins to eliminate hallucinated white border stripes.
-          const longSleeveTemplates = [...HOODED_TEMPLATE_IDS, 'top_outerwear_jacket', 'jacket', 'jacket_blazer', 'cardigan', 'coat', 'trench_coat', 'top_longsleeve', 'shirt', 'longsleeve', 'kaftan'];
+          const longSleeveTemplates = [...HOODED_TEMPLATE_IDS, 'top_outerwear_jacket', 'jacket', 'jacket_blazer', 'cardigan', 'coat', 'trench_coat', 'top_longsleeve', 'shirt', 'longsleeve', 'top_tunic', 'tunic', 'kurta_set', 'kaftan'];
           const isLongSleeveGarment = longSleeveTemplates.includes(templateId) || (['top', 'outerwear', 'dress'].includes(rawSlot) && detectSleeveStyle({ garmentText }).type === 'long');
           if (isLongSleeveGarment && pos && uv) {
             const xCuffThresh = isMale ? 0.28 : 0.24;

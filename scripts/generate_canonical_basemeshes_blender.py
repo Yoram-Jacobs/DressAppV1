@@ -2161,7 +2161,19 @@ def build_top_template(avatar_data, variant="tshirt"):
                     x_sl_in = (0.185 + t_down * 0.235) if is_male else (0.156 + t_down * 0.215)
                     x_sl_out = (0.295 + t_down * 0.205) if is_male else (0.245 + t_down * 0.185)
                     s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
-                    if v.x > 0:
+                    if variant in ("tunic", "top_tunic"):
+                        # Longline kurta/tunic: sleeves hang close to torso and end mid-body (above lower hem/trousers)
+                        if v.x > 0:
+                            v_sl = 0.84 - t_down * (0.84 - 0.52)
+                            u_sl_in = 0.68 + 0.03 * t_down
+                            u_sl_out = 0.78 + 0.03 * t_down
+                            u_sl = u_sl_in + s_across * (u_sl_out - u_sl_in)
+                        else:
+                            v_sl = 0.84 - t_down * (0.84 - 0.52)
+                            u_sl_out = 0.22 - 0.03 * t_down
+                            u_sl_in = 0.32 - 0.03 * t_down
+                            u_sl = u_sl_out + (1.0 - s_across) * (u_sl_in - u_sl_out)
+                    elif v.x > 0:
                         # Right arm (avatar left arm, viewer right)
                         if t_down <= 0.85:
                             v_sl = 0.78 - (t_down / 0.85) * (0.78 - 0.135)
@@ -2881,7 +2893,19 @@ def build_dress_template(avatar_data, variant="dress"):
                     x_sl_in = (0.185 + t_down * 0.235) if is_male else (0.156 + t_down * 0.215)
                     x_sl_out = (0.295 + t_down * 0.205) if is_male else (0.245 + t_down * 0.185)
                     s_across = min(1.0, max(0.0, (abs(v.x) - x_sl_in) / max(0.03, x_sl_out - x_sl_in)))
-                    if v.x > 0:
+                    if variant in ("tunic", "top_tunic"):
+                        # Longline kurta/tunic: sleeves hang close to torso and end mid-body (above lower hem/trousers)
+                        if v.x > 0:
+                            v_sl = 0.84 - t_down * (0.84 - 0.52)
+                            u_sl_in = 0.68 + 0.03 * t_down
+                            u_sl_out = 0.78 + 0.03 * t_down
+                            u_sl = u_sl_in + s_across * (u_sl_out - u_sl_in)
+                        else:
+                            v_sl = 0.84 - t_down * (0.84 - 0.52)
+                            u_sl_out = 0.22 - 0.03 * t_down
+                            u_sl_in = 0.32 - 0.03 * t_down
+                            u_sl = u_sl_out + (1.0 - s_across) * (u_sl_in - u_sl_out)
+                    elif v.x > 0:
                         # Right arm (avatar left arm, viewer right)
                         if t_down <= 0.85:
                             v_sl = 0.78 - (t_down / 0.85) * (0.78 - 0.135)
