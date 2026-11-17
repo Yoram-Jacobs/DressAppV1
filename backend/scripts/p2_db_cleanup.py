@@ -85,6 +85,7 @@ async def run_cleanup(
         "outfits_media_offloaded": 0,
         "users_measurements_normalized": 0,
         "trend_countries_normalized": 0,
+        "trend_country_duplicates_removed": 0,
         "migration_sessions_backfilled": 0,
         "pt_trends_warmed": 0,
         "test_rows_purged": {"credit_topups": 0, "atzmai_topups": 0, "ad_campaigns": 0},
@@ -170,19 +171,28 @@ async def run_cleanup(
             stats["trend_countries_normalized"] += 1
             if not dry_run:
                 flt = {"id": tr["id"]} if tr.get("id") else {"_id": tr["_id"]}
-                await db.trend_reports.update_one(flt, {"$set": {"country_code": norm_cc}})
+                try:
+                    await db.trend_reports.update_one(flt, {"$set": {"country_code": norm_cc}})
+                except Exception as exc:
+                    if "DuplicateKeyError" in type(exc).__name__ or "11000" in str(exc):
+                        del_flt = {"_id": tr["_id"]} if tr.get("_id") is not None else flt
+                        await db.trend_reports.delete_one(del_flt)
+                        stats["trend_country_duplicates_removed"] += 1
+                    else:
+                        raise
 
     # 6. Backfill missing migration_sessions.status
     async for sess in db.migration_sessions.find(
         {"$or": [{"status": {"$exists": False}}, {"status": None}]},
-        {"_id": 0, "id": 1, "parsed_hashes": 1},
+        {"_id": 1, "id": 1, "parsed_hashes": 1},
     ):
         has_hashes = bool(sess.get("parsed_hashes"))
         next_status = "completed" if has_hashes else "expired"
         stats["migration_sessions_backfilled"] += 1
-        if not dry_run and sess.get("id"):
+        if not dry_run and (sess.get("id") or sess.get("_id") is not None):
+            flt = {"id": sess["id"]} if sess.get("id") else {"_id": sess["_id"]}
             await db.migration_sessions.update_one(
-                {"id": sess["id"]},
+                flt,
                 {"$set": {"status": next_status, "updated_at": datetime.now(timezone.utc).isoformat()}},
             )
 

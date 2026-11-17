@@ -339,5 +339,26 @@ async def test_p2_db_cleanup_script_idempotent_on_fake_db() -> None:
         assert summary["outfits_media_offloaded"] == 1
         assert summary["users_measurements_normalized"] == 1
         assert summary["trend_countries_normalized"] == 1
+        assert summary["trend_country_duplicates_removed"] == 0
         assert summary["migration_sessions_backfilled"] == 1
         assert summary["test_rows_purged"] == {"credit_topups": 1, "atzmai_topups": 1, "ad_campaigns": 1}
+
+    # Verify E11000 DuplicateKeyError on trend_reports deletes the colliding legacy row
+    dup_db = _FakeDB()
+    for name in ("closet_items", "listings", "outfits", "users", "migration_sessions"):
+        setattr(dup_db, name, _FakeCollection([]))
+    dup_db.trend_reports = _FakeCollection([{"_id": "oid-dup", "id": "t-dup", "country_code": "ISRAEL"}])
+
+    class _FakeDupError(Exception):
+        pass
+
+    async def _raise_dup(*_a, **_kw):
+        raise _FakeDupError("E11000 duplicate key error")
+
+    dup_db.trend_reports.update_one = AsyncMock(side_effect=_raise_dup)
+    dup_db.trend_reports.delete_one = AsyncMock(return_value=SimpleNamespace(deleted_count=1))
+    with patch.object(cleanup_mod, "get_db", return_value=dup_db):
+        dup_summary = await cleanup_mod.run_cleanup(dry_run=False, warm_pt=False, purge_test_rows=False)
+        assert dup_summary["trend_countries_normalized"] == 1
+        assert dup_summary["trend_country_duplicates_removed"] == 1
+        dup_db.trend_reports.delete_one.assert_awaited_once_with({"_id": "oid-dup"})
