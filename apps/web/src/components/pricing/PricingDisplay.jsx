@@ -217,7 +217,7 @@ export function PricingDisplay({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch" data-testid="pricing-tiers-grid">
         {pricingData.pricing_tiers.map((tier, index) => {
           const isPro = tier.name.toLowerCase() === 'professional';
-          const isCurrent = currentPlanName.toLowerCase() === tier.name.toLowerCase();
+          const isCurrent = Boolean(currentPlanName) && currentPlanName.toLowerCase() === tier.name.toLowerCase();
           const { priceStr, subStr } = getDisplayPrice(tier);
           return (
             <motion.div
@@ -291,7 +291,9 @@ export function PricingDisplay({
                           <>
                             {tier.price > 0
                               ? t('pricing.upgradePlan', { defaultValue: 'Upgrade Plan' })
-                              : t('pricing.demoteToFree', { defaultValue: 'Demote to Free Plan' })}
+                              : (!currentPlanName
+                                  ? t('pricing.startFree', { defaultValue: 'Start Free' })
+                                  : t('pricing.demoteToFree', { defaultValue: 'Demote to Free Plan' }))}
                           </>
                         )}
                       </Button>

@@ -2903,6 +2903,9 @@ export default function AddItem() {
 
     if (!fingerprints.length) {
       if (isBatch) setBgBatch(null);
+      try {
+        api.recordFunnelEvent?.("upload_failed_validation", { count: files.length, isFree });
+      } catch (_) {}
       toast.error(
         t("addItem.uploadFailed", {
           defaultValue: "Failed to process image. Please try again.",
@@ -2961,6 +2964,11 @@ export default function AddItem() {
       }
 
       const skipped = fingerprints.length - survivors.length;
+      if (skipped > 0) {
+        try {
+          api.recordFunnelEvent?.("upload_duplicate_skipped", { count: skipped, allSkipped: !survivors.length, isFree });
+        } catch (_) {}
+      }
       if (!survivors.length) {
         setBgBatch(null);
         toast.message(
@@ -4707,6 +4715,13 @@ export default function AddItem() {
         } catch (_) {}
       }
       if (failures.length) {
+        try {
+          api.recordFunnelEvent?.("upload_failed_save", {
+            count: failures.length,
+            reasons: failures.map((f) => String(f.error || "")).slice(0, 5),
+            isFree,
+          });
+        } catch (_) {}
         closetStore.recordSaveFailures(failures);
       }
     };

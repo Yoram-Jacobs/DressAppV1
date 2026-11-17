@@ -39,10 +39,21 @@ log = logging.getLogger(__name__)
 # Locale source — the frontend JSON files are the canonical store.
 # ---------------------------------------------------------------------------
 
-# Allow override via env var so tests / Docker images can point elsewhere.
-LOCALES_DIR = Path(
-    os.environ.get("DRESSAPP_LOCALES_DIR", "/app/frontend/src/locales")
-).resolve()
+def _resolve_locales_dir() -> Path:
+    explicit = os.environ.get("DRESSAPP_LOCALES_DIR")
+    if explicit:
+        return Path(explicit).resolve()
+    docker_dir = Path("/app/frontend/src/locales")
+    if docker_dir.is_dir():
+        return docker_dir.resolve()
+    repo_dir = Path(__file__).resolve().parents[3] / "apps" / "web" / "src" / "locales"
+    if repo_dir.is_dir():
+        return repo_dir.resolve()
+    return docker_dir
+
+
+# Allow override via env var, falling back cleanly from Docker path to monorepo path.
+LOCALES_DIR = _resolve_locales_dir()
 
 # Mirrors SUPPORTED_LANGUAGES in /app/frontend/src/lib/i18n.js — keep in sync.
 SUPPORTED_LANGUAGES: list[dict[str, str]] = [

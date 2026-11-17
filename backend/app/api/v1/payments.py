@@ -69,8 +69,8 @@ def _platform_fee_math(gross_cents: int) -> TransactionFinancial:
     rate for US transactions is 3.49% + $0.49; we use that as a
     placeholder and keep the same `platform_fee_applied_after` key.
     """
-    processing_pct = 3.49
-    processing_fixed = 49
+    processing_pct = settings.PAYPAL_PROCESSING_FEE_PERCENT
+    processing_fixed = settings.PAYPAL_PROCESSING_FEE_FIXED_CENTS if gross_cents > 0 else 0
     processing_fee = round(gross_cents * (processing_pct / 100.0)) + processing_fixed
     net_after_processing = max(0, gross_cents - processing_fee)
     platform_pct = settings.PAYPAL_PLATFORM_FEE_PERCENT

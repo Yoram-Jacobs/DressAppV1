@@ -1787,11 +1787,44 @@ async def _run_trend_scout_internal(
     }
 
 
+async def warm_trend_translations(
+    languages: list[str] | None = None,
+    country: str = "IL",
+    limit_per_gender: int = 8,
+) -> dict[str, int]:
+    """Ensure canonical trend cards are pre-translated across all supported non-English locales (including pt)."""
+    from app.services.i18n import SUPPORTED_LANGUAGES
+
+    norm_country = normalize_country_code(country) or "IL"
+    targets = languages or [
+        item["code"] for item in SUPPORTED_LANGUAGES if item["code"] != "en"
+    ]
+    warmed: dict[str, int] = {}
+    for lang_code in targets:
+        code = (lang_code or "").split("-")[0].lower()
+        if not code or code == "en":
+            continue
+        cnt = 0
+        for g in ("female", "male"):
+            try:
+                cards = await fashion_scout_feed(
+                    limit=limit_per_gender,
+                    language=code,
+                    country=norm_country,
+                    gender=g,
+                )
+                cnt += len(cards)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("warm_trend_translations failed (%s/%s): %s", code, g, exc)
+        warmed[code] = cnt
+    return warmed
+
+
 async def weekly_trend_scout_refresh() -> dict[str, Any]:
     """Weekly scheduled Trend-Scout refresh executed on Sunday at 10:00 AM local time.
 
     Refreshes both Men's and Women's Fashion Ecosystems with authentic real-time data
-    for primary target locations.
+    for primary target locations and pre-warms multi-language trend caches.
     """
     logger.info("Executing weekly Trend-Scout refresh on Sunday at 10:00 AM local time...")
     results: dict[str, Any] = {}
@@ -1803,6 +1836,10 @@ async def weekly_trend_scout_refresh() -> dict[str, Any]:
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Weekly Trend Scout refresh failed for %s (%s): %s", country, g, exc)
     clear_trend_feed_cache()
+    try:
+        results["translations_warmed"] = await warm_trend_translations(country="IL", limit_per_gender=8)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Weekly Trend Scout translation warmup failed: %s", exc)
     return results
 
 
@@ -1820,7 +1857,7 @@ async def latest_trend_cards(
     db = get_db()
     await ensure_seed_data()
     out: list[dict[str, Any]] = []
-    country = country.upper() if country else None
+    country = normalize_country_code(country)
     gender = "male" if gender == "male" else "female"
     active_buckets = MENS_BUCKETS if gender == "male" else WOMENS_BUCKETS
 
@@ -1896,7 +1933,7 @@ async def fashion_scout_feed(
     """
     db = get_db()
     await ensure_seed_data()
-    language = (language or "en").lower()
+    language = (language or "en").split("-")[0].lower()
     limit = max(1, min(limit, 50))
     fetch_limit = max(limit, pool_size or (30 if user else limit))
     fetch_limit = min(fetch_limit, 60)
@@ -2018,7 +2055,7 @@ async def fashion_scout_feed(
                         "origin_id": cid,
                         "_origin": cid,
                         "language": language,
-                        "country_code": country.upper() if country else None,
+                        "country_code": normalize_country_code(country),
                         "created_at_dt": datetime.now(timezone.utc),
                     }
                     try:
@@ -2154,7 +2191,7 @@ async def _translate_card(
         "image_url": verified_img,
         "video_url": _clean_url(parsed.get("video_url")) or card.get("video_url"),
         "language": language,
-        "country_code": (country or "").upper() or None,
+        "country_code": normalize_country_code(country),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
 

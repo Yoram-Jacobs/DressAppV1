@@ -580,7 +580,7 @@ async def save_closet_item_document(
             p_list.append({
                 "id": doc["id"],
                 "title": doc.get("title") or doc.get("name") or payload.title,
-                "category": payload.category.lower(),
+                "category": (payload.category or "Accessories").lower(),
                 "checked": True,
                 "is_missing": False,
                 "recommendation_source": None,

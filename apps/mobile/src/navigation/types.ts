@@ -42,7 +42,6 @@ export type MarketStackParamList = {
   TransactionLanding: { transactionId: string };
   Transactions: undefined;
   AdsManager: undefined;
-  MockAtzmaiPayment: { paymentId?: string; amount?: string; description?: string; method?: string };
 };
 
 // ── Me (Profile) Stack ────────────────────────────────────────────────────
@@ -71,7 +70,6 @@ export type MeStackParamList = {
   Admin: undefined;
   ExtensionConnect: undefined;
   AdsManager: undefined;
-  MockAtzmaiPayment: { paymentId?: string; amount?: string; description?: string; method?: string };
 };
 
 // ── Main Tabs ─────────────────────────────────────────────────────────────

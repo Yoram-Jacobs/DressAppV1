@@ -37,7 +37,7 @@ export function PricingScreen() {
   const navigation = useNavigation<any>();
 
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
-  const [creditBalance, setCreditBalance] = useState<number>(45);
+  const [creditBalance, setCreditBalance] = useState<number>(0);
   const [currentTier, setCurrentTier] = useState<string>('free');
   const [isSubActive, setIsSubActive] = useState<boolean>(false);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -57,58 +57,52 @@ export function PricingScreen() {
     }).catch(() => {});
   }, []);
 
-  const handleSubscribe = (tierKey: string) => {
-    Alert.alert(
-      t('pricing.choosePaymentMethod', { defaultValue: 'Select Payment Method' }),
-      t('pricing.choosePaymentMethodSub', { defaultValue: 'Choose your preferred payment gateway:' }),
-      [
-        {
-          text: t('pricing.payWithPaypal', { defaultValue: 'PayPal / Credit Card' }),
-          onPress: async () => {
-            setLoadingAction(tierKey);
-            try {
-              const res = await (api as any).createSubscription?.({
-                tier: tierKey,
-                plan_type: billingCycle === 'annual' ? 'yearly' : 'monthly',
-                return_url: 'https://dressapp.co/profile?sub_status=success',
-                cancel_url: 'https://dressapp.co/profile?sub_status=cancelled',
-              });
-              if (res?.approve_url) {
-                Linking.openURL(res.approve_url);
-              } else {
-                Alert.alert(t('common.error', { defaultValue: 'Error' }), t('pricing.errorRedirect', { defaultValue: 'Could not obtain checkout URL.' }));
-              }
-            } catch (err: any) {
-              Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.message || t('pricing.subscribeError', { defaultValue: 'Failed to initiate subscription.' }));
-            } finally {
-              setLoadingAction(null);
-            }
-          },
-        },
-        {
-          text: t('pricing.payWithAtzmai', { defaultValue: 'Atzmai / Bit / Israel' }),
-          onPress: () => {
-            const amount = tierKey === 'manager'
-              ? (billingCycle === 'monthly' ? '4.99' : '50.00')
-              : (billingCycle === 'monthly' ? '9.99' : '100.00');
-            navigation.navigate('MockAtzmaiPayment', {
-              paymentId: `sub_${tierKey}_${Date.now()}`,
-              description: `DressApp ${tierKey.toUpperCase()} Membership (${billingCycle})`,
-              amount,
-            });
-          },
-        },
-        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
-      ]
-    );
+  const handleSubscribe = async (tierKey: string) => {
+    setLoadingAction(tierKey);
+    try {
+      const res = await (api as any).createSubscription?.({
+        tier: tierKey,
+        plan_type: billingCycle === 'annual' ? 'yearly' : 'monthly',
+        return_url: 'dressapp://pricing?sub_status=success',
+        cancel_url: 'dressapp://pricing?sub_status=cancelled',
+      });
+      if (res?.approve_url) {
+        await Linking.openURL(res.approve_url);
+      } else {
+        Alert.alert(t('common.error', { defaultValue: 'Error' }), t('pricing.errorRedirect', { defaultValue: 'Could not obtain checkout URL.' }));
+      }
+    } catch (err: any) {
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.message || t('pricing.subscribeError', { defaultValue: 'Failed to initiate subscription.' }));
+    } finally {
+      setLoadingAction(null);
+    }
   };
 
-  const handleBuyCredits = (packKey: string, amount: string, credits: number) => {
-    navigation.navigate('MockAtzmaiPayment', {
-      paymentId: `credits_${packKey}_${Date.now()}`,
-      description: `${credits} AI Credits Pack`,
-      amount,
-    });
+  const handleBuyCredits = async (packKey: '10' | '50' | '100') => {
+    setLoadingAction(`pack_${packKey}`);
+    try {
+      const res = await (api as any).aiCreditsPurchase?.({
+        pack: packKey,
+        currency: 'USD',
+        return_url: 'dressapp://pricing?credit_status=success',
+        cancel_url: 'dressapp://pricing?credit_status=cancel',
+      });
+      if (res?.approve_url) {
+        await Linking.openURL(res.approve_url);
+      } else {
+        Alert.alert(
+          t('common.error', { defaultValue: 'Error' }),
+          t('pricing.purchasePackError', { defaultValue: 'Could not start PayPal checkout for credit pack.' })
+        );
+      }
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        err?.response?.data?.detail || err?.message || t('pricing.purchasePackError', { defaultValue: 'Failed to purchase credit pack.' })
+      );
+    } finally {
+      setLoadingAction(null);
+    }
   };
 
   return (
@@ -227,13 +221,13 @@ export function PricingScreen() {
             {t('pricing.managerTitle', { defaultValue: 'Manager' })}
           </Text>
           <Text style={[styles.planPrice, { color: colors.foreground }]}>
-            {billingCycle === 'monthly' ? '$4.99' : '$4.17'}
+            {billingCycle === 'monthly' ? '$10' : '$8.33'}
             <Text style={styles.perMonth}> / mo</Text>
           </Text>
           <Text style={[styles.planDesc, { color: colors.mutedFg }]}>
             {billingCycle === 'annual'
-              ? t('pricing.managerAnnualDesc', { defaultValue: '$50.00 billed annually (save 20%)' })
-              : t('pricing.managerMonthlyDesc', { defaultValue: '$4.99 billed monthly' })}
+              ? t('pricing.managerAnnualDesc', { defaultValue: '$100.00 billed annually (save 20%)' })
+              : t('pricing.managerMonthlyDesc', { defaultValue: '$10.00 billed monthly' })}
           </Text>
           <View style={styles.featureList}>
             <Text style={[styles.featureItem, { color: colors.accent, fontFamily: fonts.bodyBold }]}>⚡ 2s / photo (Cloud Gemini, 20× faster)</Text>
@@ -293,13 +287,13 @@ export function PricingScreen() {
             {t('pricing.professionalTitle', { defaultValue: 'Professional' })}
           </Text>
           <Text style={[styles.planPrice, { color: colors.foreground }]}>
-            {billingCycle === 'monthly' ? '$9.99' : '$8.33'}
+            {billingCycle === 'monthly' ? '$15' : '$12.50'}
             <Text style={styles.perMonth}> / mo</Text>
           </Text>
           <Text style={[styles.planDesc, { color: colors.mutedFg }]}>
             {billingCycle === 'annual'
-              ? t('pricing.proAnnualDesc', { defaultValue: '$100.00 billed annually (save 20%)' })
-              : t('pricing.proMonthlyDesc', { defaultValue: '$9.99 billed monthly' })}
+              ? t('pricing.proAnnualDesc', { defaultValue: '$150.00 billed annually (save 20%)' })
+              : t('pricing.proMonthlyDesc', { defaultValue: '$15.00 billed monthly' })}
           </Text>
           <View style={styles.featureList}>
             <Text style={[styles.featureItem, { color: colors.accent, fontFamily: fonts.bodyBold }]}>⚡ 2s / photo (Cloud Gemini, 20× faster)</Text>
@@ -345,31 +339,34 @@ export function PricingScreen() {
           {/* Pack 1 */}
           <TouchableOpacity
             style={[styles.packCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => handleBuyCredits('starter', '4.99', 50)}
+            disabled={Boolean(loadingAction)}
+            onPress={() => handleBuyCredits('10')}
           >
-            <Text style={[styles.packAmount, { color: colors.accent }]}>+50</Text>
+            <Text style={[styles.packAmount, { color: colors.accent }]}>+10</Text>
             <Text style={[styles.packName, { color: colors.foreground }]}>{t('pricing.starterPack', { defaultValue: 'Starter' })}</Text>
-            <Text style={[styles.packPrice, { color: colors.mutedFg }]}>$4.99</Text>
+            <Text style={[styles.packPrice, { color: colors.mutedFg }]}>$3.00</Text>
           </TouchableOpacity>
 
           {/* Pack 2 */}
           <TouchableOpacity
             style={[styles.packCard, { backgroundColor: colors.card, borderColor: colors.accent, borderWidth: 2 }]}
-            onPress={() => handleBuyCredits('power', '9.99', 120)}
+            disabled={Boolean(loadingAction)}
+            onPress={() => handleBuyCredits('50')}
           >
-            <Text style={[styles.packAmount, { color: colors.accent }]}>+120</Text>
+            <Text style={[styles.packAmount, { color: colors.accent }]}>+50</Text>
             <Text style={[styles.packName, { color: colors.foreground }]}>{t('pricing.powerPack', { defaultValue: 'Power' })}</Text>
-            <Text style={[styles.packPrice, { color: colors.mutedFg }]}>$9.99</Text>
+            <Text style={[styles.packPrice, { color: colors.mutedFg }]}>$12.00</Text>
           </TouchableOpacity>
 
           {/* Pack 3 */}
           <TouchableOpacity
             style={[styles.packCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => handleBuyCredits('studio', '24.99', 350)}
+            disabled={Boolean(loadingAction)}
+            onPress={() => handleBuyCredits('100')}
           >
-            <Text style={[styles.packAmount, { color: colors.accent }]}>+350</Text>
+            <Text style={[styles.packAmount, { color: colors.accent }]}>+100</Text>
             <Text style={[styles.packName, { color: colors.foreground }]}>{t('pricing.studioPack', { defaultValue: 'Studio' })}</Text>
-            <Text style={[styles.packPrice, { color: colors.mutedFg }]}>$24.99</Text>
+            <Text style={[styles.packPrice, { color: colors.mutedFg }]}>$20.00</Text>
           </TouchableOpacity>
         </View>
 

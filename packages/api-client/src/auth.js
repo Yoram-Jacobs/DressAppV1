@@ -3,7 +3,6 @@ import { client } from './_singleton.js';
 export const auth = {
   register: (body) => client.post('/auth/register', body).then((r) => r.data),
   login: (body) => client.post('/auth/login', body).then((r) => r.data),
-  devBypass: () => client.post('/auth/dev-bypass').then((r) => r.data),
 
   /** Resolve the Google OAuth start URL for the *sign-in / sign-up* flow.
    * Returns ``{ authorization_url }``. The caller is expected to do a

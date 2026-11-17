@@ -299,8 +299,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchTrends();
-  }, [language, country]);
+    if (user) {
+      fetchTrends();
+    }
+  }, [user?.id, language, country]);
 
   useEffect(() => {
     setCounts((prev) => {

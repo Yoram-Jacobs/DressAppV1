@@ -25,7 +25,6 @@ import { CampaignDetailScreen } from '@mobile/screens/me/CampaignDetailScreen';
 import { AdminScreen } from '@mobile/screens/me/AdminScreen';
 import { ExtensionConnectScreen } from '@mobile/screens/me/ExtensionConnectScreen';
 import { AdsManagerScreen } from '@mobile/screens/market/AdsManagerScreen';
-import { MockAtzmaiPaymentScreen } from '@mobile/screens/market/MockAtzmaiPaymentScreen';
 
 const Stack = createNativeStackNavigator<MeStackParamList>();
 
@@ -55,7 +54,6 @@ export function MeStack() {
       <Stack.Screen name="Admin" component={AdminScreen} />
       <Stack.Screen name="ExtensionConnect" component={ExtensionConnectScreen} />
       <Stack.Screen name="AdsManager" component={AdsManagerScreen} />
-      <Stack.Screen name="MockAtzmaiPayment" component={MockAtzmaiPaymentScreen} options={{ presentation: 'modal' }} />
     </Stack.Navigator>
   );
 }

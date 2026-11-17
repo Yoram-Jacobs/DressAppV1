@@ -68,40 +68,8 @@ export function AdsManagerScreen() {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [campaigns, setCampaigns] = useState<AdCampaign[]>([
-    {
-      id: 'camp_101',
-      name: 'Autumn Trench Collection Spotlight',
-      status: 'active',
-      daily_budget_cents: 2500,
-      bid_cents: 15,
-      impressions: 4820,
-      clicks: 340,
-      spend_cents: 5100,
-      creative: {
-        headline: 'Handcrafted Minimalist Outerwear',
-        body: 'Explore our certified organic wool collection. Worldwide carbon-neutral delivery.',
-        cta_label: 'Shop Now',
-        cta_url: 'https://dressapp.co/market/brand/nordic-chic',
-      },
-    },
-    {
-      id: 'camp_102',
-      name: 'Sustainable Denim Atelier Promo',
-      status: 'paused',
-      daily_budget_cents: 1500,
-      bid_cents: 12,
-      impressions: 2150,
-      clicks: 110,
-      spend_cents: 1320,
-      creative: {
-        headline: 'Circular Selvedge Denim',
-        body: 'Zero-water wash denim crafted for lifetime wear.',
-        cta_label: 'Explore',
-        cta_url: 'https://dressapp.co/market',
-      },
-    },
-  ]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [campaigns, setCampaigns] = useState<AdCampaign[]>([]);
 
   // Modal State
   const [modalVisible, setModalVisible] = useState(false);
@@ -117,18 +85,27 @@ export function AdsManagerScreen() {
   const [targetCountry, setTargetCountry] = useState('');
 
   const loadCampaigns = useCallback(async () => {
+    setLoadError(null);
+    if (!canCreateCampaign) {
+      setCampaigns([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
-      const res = await client.get('/campaigns/my').catch(() => null);
-      if (res?.data?.items) {
-        setCampaigns(res.data.items);
-      }
-    } catch (e) {
-      console.warn('Load campaigns error:', e);
+      const data = await (
+        (api as any).listMyAdCampaigns?.()
+        ?? client.get('/promotions/campaigns').then((r: any) => r.data)
+      );
+      setCampaigns(Array.isArray(data?.items) ? data.items : []);
+    } catch (e: any) {
+      const detail = e?.response?.data?.detail || e?.message || t('campaigns.loadFailed', { defaultValue: 'Could not load ad campaigns.' });
+      setLoadError(typeof detail === 'string' ? detail : JSON.stringify(detail));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [canCreateCampaign, t]);
 
   useEffect(() => {
     loadCampaigns();
@@ -139,15 +116,43 @@ export function AdsManagerScreen() {
     loadCampaigns();
   };
 
-  const handleToggleStatus = (campId: string) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id === campId) {
-          const newStatus = c.status === 'active' ? 'paused' : 'active';
-          return { ...c, status: newStatus };
-        }
-        return c;
-      })
+  const handleToggleStatus = async (camp: AdCampaign) => {
+    const newStatus = camp.status === 'active' ? 'paused' : 'active';
+    try {
+      await (
+        (api as any).patchAdCampaign?.(camp.id, { status: newStatus })
+        ?? client.patch(`/promotions/campaigns/${encodeURIComponent(camp.id)}`, { status: newStatus }).then((r: any) => r.data)
+      );
+      await loadCampaigns();
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || t('ads.saveFailed', { defaultValue: 'Could not update campaign.' });
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), typeof detail === 'string' ? detail : JSON.stringify(detail));
+    }
+  };
+
+  const handleDeleteCampaign = (campId: string) => {
+    Alert.alert(
+      t('ads.deleteCampaign', { defaultValue: 'Delete Campaign' }),
+      t('common.confirmDelete', { defaultValue: 'Are you sure you want to delete this campaign?' }),
+      [
+        { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+        {
+          text: t('common.delete', { defaultValue: 'Delete' }),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await (
+                (api as any).deleteAdCampaign?.(campId)
+                ?? client.delete(`/promotions/campaigns/${encodeURIComponent(campId)}`).then((r: any) => r.data)
+              );
+              await loadCampaigns();
+            } catch (err: any) {
+              const detail = err?.response?.data?.detail || err?.message || t('ads.saveFailed', { defaultValue: 'Could not delete campaign.' });
+              Alert.alert(t('common.error', { defaultValue: 'Error' }), typeof detail === 'string' ? detail : JSON.stringify(detail));
+            }
+          },
+        },
+      ]
     );
   };
 
@@ -161,26 +166,25 @@ export function AdsManagerScreen() {
     }
     setSaving(true);
     try {
-      const newCamp: AdCampaign = {
-        id: `camp_${Date.now()}`,
+      const payload = {
         name: name.trim(),
-        status: 'pending',
-        daily_budget_cents: (parseFloat(dailyBudget) || 20) * 100,
-        bid_cents: parseInt(bidCents, 10) || 15,
-        impressions: 0,
-        clicks: 0,
-        spend_cents: 0,
-        target_country: targetCountry.trim() || undefined,
         creative: {
           headline: headline.trim(),
-          body: body.trim(),
-          image_url: imageUrl.trim() || undefined,
-          cta_label: ctaLabel.trim(),
-          cta_url: ctaUrl.trim() || undefined,
+          body: body.trim() || null,
+          image_url: imageUrl.trim() || null,
+          cta_label: ctaLabel.trim() || null,
+          cta_url: ctaUrl.trim() || null,
         },
+        daily_budget_cents: Math.max(0, Math.round((parseFloat(dailyBudget) || 0) * 100)),
+        bid_cents: Math.max(0, parseInt(bidCents, 10) || 0),
+        target_country: targetCountry.trim() || null,
+        status: 'draft',
       };
-
-      setCampaigns([newCamp, ...campaigns]);
+      await (
+        (api as any).createAdCampaign?.(payload)
+        ?? client.post('/promotions/campaigns', payload).then((r: any) => r.data)
+      );
+      await loadCampaigns();
       setModalVisible(false);
       // Reset form
       setName('');
@@ -190,12 +194,13 @@ export function AdsManagerScreen() {
       setCtaUrl('');
       Alert.alert(
         t('common.success', { defaultValue: 'Submitted' }),
-        t('campaigns.campaignCreatedSuccess', { defaultValue: 'Campaign created and queued for review!' })
+        t('campaigns.campaignCreatedSuccess', { defaultValue: 'Campaign created cleanly.' })
       );
-    } catch (err) {
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || t('campaigns.campaignCreateFailed', { defaultValue: 'Could not create campaign.' });
       Alert.alert(
         t('common.error', { defaultValue: 'Error' }),
-        t('campaigns.campaignCreateFailed', { defaultValue: 'Could not create campaign.' })
+        typeof detail === 'string' ? detail : JSON.stringify(detail)
       );
     } finally {
       setSaving(false);
@@ -293,6 +298,23 @@ export function AdsManagerScreen() {
             {t('campaigns.myCampaigns', { defaultValue: 'Active & Queued Campaigns' })}
           </Text>
 
+          {loadError ? (
+            <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: '#EF4444' }]}>
+              <Text style={[styles.loadingText, { color: '#EF4444' }]}>{loadError}</Text>
+            </View>
+          ) : null}
+
+          {campaigns.length === 0 ? (
+            <View style={[styles.campCard, { backgroundColor: colors.card, borderColor: colors.border, alignItems: 'center', paddingVertical: spacing.lg }]}>
+              <Lucide.Megaphone size={24} color={colors.mutedFg} />
+              <Text style={[styles.loadingText, { color: colors.mutedFg, marginTop: spacing.xs }]}>
+                {canCreateCampaign
+                  ? t('campaigns.empty', { defaultValue: 'No ad campaigns yet. Tap New Ad to create one.' })
+                  : t('ads.onlyProfessionals', { defaultValue: 'Upgrade to Professional to create and manage ad campaigns.' })}
+              </Text>
+            </View>
+          ) : null}
+
           <View style={styles.campaignsList}>
             {campaigns.map((camp) => {
               const isActive = camp.status === 'active';
@@ -383,7 +405,7 @@ export function AdsManagerScreen() {
                   <View style={styles.campActionsRow}>
                     <TouchableOpacity
                       style={[styles.toggleStatusBtn, { borderColor: colors.border }]}
-                      onPress={() => handleToggleStatus(camp.id)}
+                      onPress={() => handleToggleStatus(camp)}
                     >
                       {isActive ? (
                         <>
@@ -400,6 +422,15 @@ export function AdsManagerScreen() {
                           </Text>
                         </>
                       )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.toggleStatusBtn, { borderColor: colors.border, marginLeft: spacing.xs }]}
+                      onPress={() => handleDeleteCampaign(camp.id)}
+                    >
+                      <Lucide.Trash2 size={13} color="#EF4444" />
+                      <Text style={[styles.toggleBtnText, { color: '#EF4444' }]}>
+                        {t('common.delete', { defaultValue: 'Delete' })}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>

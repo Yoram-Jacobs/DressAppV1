@@ -7,7 +7,9 @@ import sys
 from typing import Any, Literal
 
 from fastapi import APIRouter
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.services.canonical import canonicalize_category
 
 from app.models.schemas import (
     DressCode,
@@ -193,6 +195,11 @@ class CreateItemIn(BaseModel):
     # Onboarding Starter Capsule provenance flag
     is_starter_capsule: bool = False
 
+    @field_validator("category", mode="before")
+    @classmethod
+    def _normalize_category(cls, v: Any) -> str:
+        return canonicalize_category(v, default="Top") or "Top"
+
 
 class UpdateItemIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -248,6 +255,13 @@ class UpdateItemIn(BaseModel):
     # Allow clearing the reconstruction (user can "revert" via Repair UI)
     clear_reconstruction: bool = False
     is_starter_capsule: bool | None = None
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def _normalize_optional_category(cls, v: Any) -> str | None:
+        if v is None:
+            return None
+        return canonicalize_category(v)
 
 
 

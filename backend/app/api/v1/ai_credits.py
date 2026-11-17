@@ -671,29 +671,8 @@ async def upgrade_subscription(
 
 
 # ============================================================================
-# Backward-compatible endpoints for existing frontend code
+# Backward-compatible rollover endpoint for existing frontend code
 # ============================================================================
-
-@ai_credits_router.get("/balance")
-async def get_balance_compat(user: dict = Depends(get_current_user)) -> Dict:
-    """Compat wrapper returning same structure as before."""
-    return await get_balance(user)
-
-
-@ai_credits_router.post("/purchase")
-async def create_purchase_compat(payload: AiCreditPurchaseIn, user: dict = Depends(get_current_user)) -> Dict:
-    return await create_purchase(payload, user)
-
-
-@ai_credits_router.post("/purchase/{purchase_id}/capture")
-async def capture_purchase_compat(purchase_id: str, user: dict = Depends(get_current_user)) -> Dict:
-    return await capture_purchase(purchase_id, user)
-
-
-@ai_credits_router.get("/history")
-async def credit_history_compat(limit: int = 30, user: dict = Depends(get_current_user)) -> Dict:
-    return await credit_history(limit, user)
-
 
 @ai_credits_router.post("/rollover")
 async def rollover_credits_compat(user: dict = Depends(get_current_user)) -> Dict:

@@ -214,8 +214,19 @@ async def save_outfit(
                 or item.get("segmented_image_url")
                 or item.get("original_image_url")
             )
+            if isinstance(best_img, str) and best_img.startswith("data:image/") and len(best_img) > 15_000:
+                from app.services.upload_manager import UploadManager
+
+                best_img = await UploadManager.upload_data_url(best_img)
             g_dict["image_url"] = best_img
             g_dict["clean_image_url"] = best_img
+        elif isinstance(g_dict.get("image_url"), str) and g_dict["image_url"].startswith("data:image/") and len(g_dict["image_url"]) > 15_000:
+            from app.services.upload_manager import UploadManager
+
+            uploaded = await UploadManager.upload_data_url(g_dict["image_url"])
+            g_dict["image_url"] = uploaded
+            if isinstance(g_dict.get("clean_image_url"), str) and g_dict["clean_image_url"].startswith("data:image/"):
+                g_dict["clean_image_url"] = uploaded
         garments.append(g_dict)
 
     worn_date = (payload.usage.date if payload.usage and payload.usage.date else now.split("T")[0])

@@ -91,6 +91,21 @@ _HAS_LOCAL_ML = _HAS_TORCH and _HAS_TRANSFORMERS
 _LIGHTWEIGHT_DEPLOY = os.environ.get("LIGHTWEIGHT_DEPLOY", "").lower() == "true"
 
 
+_IS_DEV_OR_TEST = (
+    (
+        os.environ.get("APP_ENV")
+        or os.environ.get("ENVIRONMENT")
+        or os.environ.get("DRESSAPP_ENV")
+        or ""
+    )
+    .strip()
+    .lower()
+    in ("dev", "development", "local", "test")
+    or "pytest" in sys.modules
+    or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+)
+
+
 class Settings:
     # --- infra ---
     MONGO_URL: str = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
@@ -397,11 +412,20 @@ class Settings:
     )
     # Dev-only fallback: if real PayPal auth fails AND this flag is true,
     # the Orders API simulates order create/capture so UI flows can be
-    # demo'd without valid credentials. Never enable in production.
+    # demo'd without valid credentials. Fail closed outside dev/test.
     PAYPAL_MOCK_MODE: bool = (
-        os.environ.get("PAYPAL_MOCK_MODE", "true").lower() == "true"
+        os.environ.get(
+            "PAYPAL_MOCK_MODE", "true" if _IS_DEV_OR_TEST else "false"
+        ).lower()
+        == "true"
     )
-    # Platform fee (mirrors legacy STRIPE_PLATFORM_FEE_PERCENT).
+    # PayPal standard rate (3.49% + $0.49) and platform fee (mirrors legacy STRIPE_PLATFORM_FEE_PERCENT).
+    PAYPAL_PROCESSING_FEE_PERCENT: float = float(
+        os.environ.get("PAYPAL_PROCESSING_FEE_PERCENT", "3.49")
+    )
+    PAYPAL_PROCESSING_FEE_FIXED_CENTS: int = int(
+        os.environ.get("PAYPAL_PROCESSING_FEE_FIXED_CENTS", "49")
+    )
     PAYPAL_PLATFORM_FEE_PERCENT: float = float(
         os.environ.get("PAYPAL_PLATFORM_FEE_PERCENT", "7")
     )

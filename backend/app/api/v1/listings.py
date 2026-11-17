@@ -9,7 +9,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from app.services.canonical import canonicalize_category
+from app.services.upload_manager import UploadManager
 
 from app.db.database import get_db
 from app.models.schemas import (
@@ -176,6 +179,11 @@ class CreateListingIn(BaseModel):
     # product copy nudges users toward 0 for donations.
     shipping_fee_cents: int = Field(default=0, ge=0)
 
+    @field_validator("category", mode="before")
+    @classmethod
+    def _normalize_category(cls, v: Any) -> str:
+        return canonicalize_category(v, default="Top") or "Top"
+
 
 class UpdateListingIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -193,6 +201,13 @@ class UpdateListingIn(BaseModel):
     list_price_cents: int | None = None
     shipping_fee_cents: int | None = Field(default=None, ge=0)
     status: ListingStatus | None = None
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def _normalize_optional_category(cls, v: Any) -> str | None:
+        if v is None:
+            return None
+        return canonicalize_category(v)
 
 
 @router.get("/fee-preview")
@@ -325,6 +340,21 @@ async def create_listing(
     clean_img = (closet_item or {}).get("clean_image_url") if closet_item else None
     reconstructed_img = (closet_item or {}).get("reconstructed_image_url") if closet_item else None
     thumb_img = (closet_item or {}).get("thumbnail_data_url") if closet_item else (images[0] if images else None)
+
+    # Offload any inline data:image/* photos to UploadManager to keep MongoDB listing docs lean.
+    offloaded_images: list[str] = []
+    for img_val in images:
+        if isinstance(img_val, str) and img_val.startswith("data:image/"):
+            offloaded_images.append(await UploadManager.upload_data_url(img_val))
+        else:
+            offloaded_images.append(img_val)
+    images = offloaded_images
+    if isinstance(clean_img, str) and clean_img.startswith("data:image/"):
+        clean_img = await UploadManager.upload_data_url(clean_img)
+    if isinstance(reconstructed_img, str) and reconstructed_img.startswith("data:image/"):
+        reconstructed_img = await UploadManager.upload_data_url(reconstructed_img)
+    if isinstance(thumb_img, str) and thumb_img.startswith("data:image/") and len(thumb_img) > 15_000:
+        thumb_img = images[0] if images else await UploadManager.upload_data_url(thumb_img)
 
     tags = list(payload.tags or [])
     cultural_tags = list(payload.cultural_tags or [])
@@ -835,6 +865,13 @@ async def update_listing(
     if not listing:
         raise HTTPException(404, "Listing not found")
     patch = payload.model_dump(exclude_none=True)
+    if isinstance(patch.get("images"), list):
+        patch["images"] = [
+            await UploadManager.upload_data_url(img)
+            if isinstance(img, str) and img.startswith("data:image/")
+            else img
+            for img in patch["images"]
+        ]
     if "list_price_cents" in patch:
         fees = compute_fees(patch["list_price_cents"])
         patch["financial_metadata.list_price_cents"] = patch.pop("list_price_cents")

@@ -402,7 +402,7 @@ export function ProfileScreen() {
 
           // Check live balance from API if available
           try {
-            const balRes: any = await (client as any).get('/api/v1/ai-credits/balance');
+            const balRes: any = await (client as any).get('/ai-credits/balance');
             if (balRes?.data) {
               const used = balRes.data.daily_usage ?? balRes.data.daily_used ?? 0;
               const liveRemaining = Math.min(10, Math.max(0, 10 - Number(used)));

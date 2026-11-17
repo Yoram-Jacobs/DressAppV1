@@ -269,7 +269,7 @@ export default function Pricing() {
       </div>
     );
   }
-  const currentPlanName = pricingData?.pricing_plan?.plan_type || 'free';
+  const currentPlanName = user ? (pricingData?.pricing_plan?.plan_type || 'free') : '';
   return (
     <>
       {/* Banner Section */}

@@ -516,13 +516,13 @@ export default function Onboarding() {
       data-testid="onboarding-wizard-page"
     >
       {/* Top Header Bar */}
-      <header className="max-w-6xl w-full mx-auto flex items-center justify-between gap-4 pb-4">
-        <Link to="/home" className="flex items-center gap-2.5 shrink-0">
+      <header className="max-w-6xl w-full mx-auto flex flex-wrap items-center justify-between gap-3 sm:gap-4 pb-4">
+        <Link to="/home" className="flex items-center gap-2.5 shrink-0 order-1">
           <BrandLogo size="md" testId="onboarding-brand-logo" />
         </Link>
 
         {/* Endowed Progress Bar (20% -> 50% -> 80% -> 95%) */}
-        <div className="flex-1 max-w-md mx-auto">
+        <div className="order-3 sm:order-2 w-full sm:w-auto sm:flex-1 sm:max-w-md mx-auto">
           <div className="flex items-center justify-between text-xs font-semibold text-dark-brand mb-1.5">
             <span>
               {t('onboarding.progress.stepCounter', {
@@ -546,7 +546,7 @@ export default function Onboarding() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 order-2 sm:order-3">
           {!user && (
             <Link
               to="/login"

@@ -114,6 +114,10 @@ async def get_funnel_metrics(db, now: datetime, users_total: int, items_total: i
     """Calculate upload completion rates vs. trial opt-ins & conversion lift."""
     uploads_started = await db.funnel_events.count_documents({"event": "upload_started"})
     uploads_completed = await db.funnel_events.count_documents({"event": "upload_completed"})
+    uploads_failed_validation = await db.funnel_events.count_documents({"event": "upload_failed_validation"})
+    uploads_failed_save = await db.funnel_events.count_documents({"event": "upload_failed_save"})
+    uploads_duplicate_skipped = await db.funnel_events.count_documents({"event": "upload_duplicate_skipped"})
+    uploads_cancelled = await db.funnel_events.count_documents({"event": "upload_cancelled"})
 
     # Fallback to closet_items count if event log is fresh/empty
     effective_completed = uploads_completed if uploads_completed > 0 else items_total
@@ -177,6 +181,10 @@ async def get_funnel_metrics(db, now: datetime, users_total: int, items_total: i
             "started": effective_started,
             "completed": effective_completed,
             "completion_rate": upload_completion_rate,
+            "failed_validation": uploads_failed_validation,
+            "failed_save": uploads_failed_save,
+            "duplicate_skipped": uploads_duplicate_skipped,
+            "cancelled": uploads_cancelled,
         },
         "trials": {
             "opt_ins": trial_opt_ins,

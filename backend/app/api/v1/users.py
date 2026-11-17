@@ -371,9 +371,13 @@ async def update_me(
             "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
         }
 
+    from app.services.canonical import canonicalize_measurements
+
     for k, v in patch.items():
         if k == "ai_configuration":
             continue
+        if k in ("body_measurements", "measurements") and isinstance(v, dict):
+            v = canonicalize_measurements(v) or {}
         if k in _MERGEABLE_DICT_FIELDS and isinstance(v, dict):
             # Check if parent is not a dictionary in database (e.g. null or missing)
             db_val = user.get(k)

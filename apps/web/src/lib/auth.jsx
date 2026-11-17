@@ -40,14 +40,6 @@ export function AuthProvider({ children }) {
     }
   }, [refresh]);
 
-  const devBypass = async () => {
-    const res = await api.devBypass();
-    tokenStore.set(res.access_token);
-    userStore.set(res.user);
-    setUser(res.user);
-    return res.user;
-  };
-
   const logout = () => {
     tokenStore.clear();
     setUser(null);
@@ -61,7 +53,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, devBypass, logout, refresh, updateUserLocal }}
+      value={{ user, loading, logout, refresh, updateUserLocal }}
     >
       {children}
     </AuthContext.Provider>

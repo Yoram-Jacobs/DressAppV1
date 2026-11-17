@@ -57,13 +57,16 @@ class WardrobeMigrationAgent:
             user = None
         session = await db.migration_sessions.find_one({"id": session_id})
         if not session:
-            # Create session on the fly if needed
+            # Create session on the fly with explicit initial status
+            now_iso = datetime.now(timezone.utc).isoformat()
             session = {
                 "id": session_id,
                 "user_id": user_id,
                 "app_name": app_name,
+                "status": "started",
                 "parsed_hashes": [],
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": now_iso,
+                "updated_at": now_iso,
             }
             await db.migration_sessions.insert_one(session)
 
@@ -248,16 +251,23 @@ class WardrobeMigrationAgent:
                     user=user,
                 )
 
-            # Update the session's parsed hashes
+            # Update the session's parsed hashes and lifecycle status
+            step_status = "active" if should_scroll else "completed"
             await db.migration_sessions.update_one(
                 {"id": session_id},
-                {"$set": {"parsed_hashes": parsed_hashes}},
+                {
+                    "$set": {
+                        "parsed_hashes": parsed_hashes,
+                        "status": step_status,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                },
             )
 
             action = "scroll" if should_scroll else "done"
             scroll_amt = int(viewport_height * 0.7) if (viewport_height and viewport_height > 100) else 650
             return {
-                "status": "active" if should_scroll else "completed",
+                "status": step_status,
                 "action": action,
                 "scroll_amount": scroll_amt,
                 "new_items_found": new_items,
@@ -265,6 +275,19 @@ class WardrobeMigrationAgent:
 
         except Exception as exc:
             logger.error("Agent process_step failed: %s", exc)
+            try:
+                await db.migration_sessions.update_one(
+                    {"id": session_id},
+                    {
+                        "$set": {
+                            "status": "failed",
+                            "error": str(exc)[:300],
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                    },
+                )
+            except Exception:
+                pass
             return {
                 "status": "active",
                 "action": "scroll",
