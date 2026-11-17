@@ -2,7 +2,7 @@
 
 **Data de Vigência:** 23 de setembro de 2026  
 **Última Atualização:** 16 de outubro de 2026  
-**Versão da Aplicação:** 1.0.5  
+**Versão da Aplicação:** 1.0.8  
 **Website Oficial:** [https://dressapp.co](https://dressapp.co)  
 **URL Dedicada à Privacidade:** [https://dressapp.co/privacy](https://dressapp.co/privacy)  
 

@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ 解锁极速 Turbo",
     "standardUploadDesc": "标准处理队列。正在深度分析服装。",
     "standardStylistDesc": "标准处理队列。AI 造型师正在设计您的造型。",
-    "standardSuitcaseDesc": "标准处理队列。正在生成精选旅行衣橱。"
+    "standardSuitcaseDesc": "标准处理队列。正在生成精选旅行衣橱。",
+    "listSeparator": "、"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -912,6 +913,17 @@
       "massClusterCreditsRequiredLabel": "最低 AI 重建积分要求：15",
       "massClusterCurrentCreditsLabel": "您当前的余额：{{available}}"
     },
+    "quota": {
+      "title": "已达到点数限额",
+      "insufficientSubtitle": "点数不足或已达配额上限",
+      "messageWithBalance": "您分析 {{count}} 件衣物的请求超出了点数配额。您的免费计划中尚有 {{balance}} 个可用点数。您希望现在添加 {{balance}} 件衣物，还是升级计划？",
+      "messageZeroBalance": "您分析 {{count}} 件衣物的请求超出了每日点数限额。您的免费计划今日剩余 0 点。升级计划以获取无限 AI 分析，或继续在不使用 AI 的情况下手动添加衣物。",
+      "availableCreditsLabel": "可用 AI 点数：",
+      "addAllowedButton": "添加 {{count}} 件衣物",
+      "upgradeButton": "升级计划",
+      "editManuallyButton": "手动继续",
+      "manualContinueHint": "您可以手动输入信息并保存衣物。"
+    },
     "fitPlaceholder": "选择版型"
   },
   "itemDetail": {
@@ -1419,7 +1431,7 @@
     "tomorrowSuggestionSubtitle": "根据您的个人风格、明日天气预报及日程安排精心搭配。",
     "tomorrowSuggestionRefreshed": "已刷新明日穿搭建议！",
     "wearTomorrow": "明日穿着",
-    "upgradeForDailySuggestionsDesc": "升级到经理或专业版计划以解锁每日穿搭建议。",
+    "upgradeForDailySuggestionsDesc": "每日穿搭建议每次消耗1点AI积分。",
     "calendar": {
       "searchPlaceholder": "风格搜索：“夏日烧烤聚会”、“商场购物”、“商务会议”、“黑色T恤”、“磨白牛仔裤”...",
       "quickVibes": "风格标签：",
@@ -1452,7 +1464,27 @@
     "modeFullBody": "全身单品 (连衣裙 / 连体裤 / 纱丽)",
     "restrictedBySeparates": "分体搭配时已禁用",
     "restrictedByFullBody": "全身穿搭时已禁用",
-    "activateSection": "切换至此项"
+    "activateSection": "切换至此项",
+    "vibe": {
+      "casual": "休闲",
+      "sporty": "运动",
+      "formal": "正式",
+      "classic": "经典"
+    },
+    "season": {
+      "daily": "日常",
+      "summer": "夏季",
+      "winter": "冬季"
+    },
+    "suffix": {
+      "hangout": "出行",
+      "workout": "健身",
+      "attire": "装束"
+    },
+    "colorConnector": " 与 ",
+    "outfitTitleWithColorsPattern": "{{colors}}{{season}}{{vibe}}{{suffix}}",
+    "outfitTitlePattern": "{{season}}{{vibe}}{{suffix}}",
+    "outfitDescriptionPattern": "精心搭配的造型组合，包含 {{items}}。兼具协调感与舒适感。"
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -1865,7 +1897,11 @@
       "type_straight": "直发",
       "type_wavy": "波浪发",
       "type_curly": "卷发",
-      "type_coily": "螺旋卷"
+      "type_coily": "螺旋卷",
+      "default_color_female": "深褐发（Brunette）",
+      "default_style_female": "法式齐颌短发（Karre）",
+      "default_color_male": "深棕色",
+      "default_style_male": "时尚短发"
     },
     "saveProfile": "保存完整资料",
     "savedProfile": "个人资料已保存",
@@ -2204,7 +2240,9 @@
     "addToChrome": "添加至 Chrome",
     "recommendedDesktop": "桌面端推荐",
     "connectExtension": "连接扩展程序",
-    "alreadyInstalled": "已经安装？"
+    "alreadyInstalled": "已经安装？",
+    "schedulerCreditNote": "每个每日穿搭方案消耗1点AI积分。",
+    "schedulerUpgradeDesc": "免费套餐下每日穿搭建议每次消耗1点AI积分，Manager与Professional套餐享无限畅用。"
   },
   "admin": {
     "title": "管理",
@@ -2324,29 +2362,92 @@
     "tomorrow": "明天"
   },
   "seo": {
-    "defaultTitle": "DressApp — 智能数字衣橱、AI私人造型师与时尚交易平台",
-    "defaultDescription": "使用 DressApp 数字化管理您的衣橱——集智能数字衣橱、AI穿搭规划与 7% 低佣金循环时尚交易平台于一体。立即免费开启整理之旅。",
-    "defaultOgTitle": "DressApp — 您的智能数字衣橱、AI造型师与二手时尚社区",
-    "defaultOgDescription": "几秒钟拍照整理实体衣橱，获取结合每日天气的 AI 穿搭建议，并以 7% 的社区服务费买卖或交换闲置美衣。",
-    "schemaDescription": "智能数字衣橱、AI私人造型师、日常穿搭规划器，以及仅收 7% 社区服务费的循环时尚交易平台。",
+    "defaultTitle": "DressApp — 您的衣橱，升级体验",
+    "defaultDescription": "编目您的衣柜，询问 AI 造型师，以公平的 7% 交换或出售。",
     "routes": {
-      "home": {
-        "title": "DressApp — 智能数字衣橱、AI私人造型师与时尚交易平台",
-        "description": "使用 DressApp 数字化管理您的衣橱——集智能数字衣橱、AI穿搭规划与 7% 低佣金循环时尚交易平台于一体。立即免费开启整理之旅。",
-        "ogTitle": "DressApp — 您的智能数字衣橱、AI造型师与二手时尚社区",
-        "ogDescription": "几秒钟拍照整理实体衣橱，获取结合每日天气的 AI 穿搭建议，并以 7% 的社区服务费买卖或交换闲置美衣。"
-      },
       "login": {
-        "title": "登录 — 智能数字衣橱与 AI 私人造型师 | DressApp",
-        "description": "登录 DressApp 访问您的数字衣橱，与 AI 私人造型师一起规划每日穿搭，并在时尚交易平台上购买、出售或交换服装。",
+        "title": "登录",
+        "description": "登录 DressApp 即可管理衣橱、浏览市场，并与 AI 造型师对话。",
         "ogTitle": "登录 DressApp — 您的智能数字衣橱与 AI 造型师",
         "ogDescription": "随时访问您的数字化衣橱、天气联动 AI 穿搭规划器，以及 7% 社区服务费的循环时尚交易平台。"
       },
       "register": {
-        "title": "创建账户 — 免费数字衣橱与 AI 造型师 | DressApp",
-        "description": "立即免费加入 DressApp，将您的衣橱数字化，获取每日 AI 穿搭推荐，并以透明的 7% 社区服务费出售或交换闲置衣物。",
+        "title": "注册账户",
+        "description": "加入 DressApp，将你的衣橱、社区市场和 AI 造型师集于一身。",
         "ogTitle": "加入 DressApp — 免费数字衣橱、AI 造型师与时尚集市",
         "ogDescription": "创建免费 DressApp 账户，几秒钟整理好衣橱，用 AI 规划百变穿搭，并加入可持续循环时尚社区。"
+      },
+      "home": {
+        "title": "今日",
+        "description": "你的每日 DressApp 简报：趋势、衣橱统计和最新的造型师文章。",
+        "ogTitle": "DressApp — 您的智能数字衣橱、AI造型师与二手时尚社区",
+        "ogDescription": "几秒钟拍照整理实体衣橱，获取结合每日天气的 AI 穿搭建议，并以 7% 的社区服务费买卖或交换闲置美衣。"
+      },
+      "closet": {
+        "title": "我的衣橱",
+        "description": "你拥有的每一件单品——智能分类、来源标签，并支持一键 AI 编辑。",
+        "ogTitle": "我的智能数字衣橱与虚拟衣帽间 — DressApp",
+        "ogDescription": "利用 AI 自动抠图、智能品类标签、季节筛选和一键搭配功能，井井有条地管理您的整个衣橱。"
+      },
+      "closet_add": {
+        "title": "加入衣橱",
+        "description": "通过照片或网址向你的 DressApp 衣橱添加一件新单品。",
+        "ogTitle": "几秒钟将衣物添加至您的数字衣橱 — DressApp",
+        "ogDescription": "借助 DressApp 的 AI 多件衣物扫描仪、自动背景抠图与洗护标签 OCR 识别，轻松完成衣物数字化录入。"
+      },
+      "stylist": {
+        "title": "造型师",
+        "description": "懂你衣橱、日历和天气的多模态 AI 造型师。",
+        "ogTitle": "DressApp AI 私人造型师 — 结合天气与日程的穿搭规划",
+        "ogDescription": "根据今日天气、出席场合与色彩偏好，从您自己的数字衣橱中即时生成个性化穿搭组合。"
+      },
+      "market": {
+        "title": "市场",
+        "description": "在社区市场购买、出售、交换或捐赠单品，费用完全透明。",
+        "ogTitle": "DressApp 时尚交易平台 — 7% 低服务费买卖与交换美衣",
+        "ogDescription": "淘选心仪的二手时尚单品，购买前先测试与自己衣橱的搭配度，并可一键上架您的闲置衣物。"
+      },
+      "market_create": {
+        "title": "发布单品",
+        "description": "将你衣橱中的单品发布到 DressApp 市场。",
+        "ogTitle": "在 DressApp 循环时尚交易平台上架闲置单品",
+        "ogDescription": "从数字衣橱中选择任意单品进行出售、交换或捐赠，自动填充衣物信息，享受 7% 透明低佣金。"
+      },
+      "transactions": {
+        "title": "交易",
+        "description": "你的 DressApp 购买与售出记录，7% 平台费完全透明。",
+        "ogTitle": "您的交易记录与订单管理 — DressApp",
+        "ogDescription": "在一处集中管理您的 DressApp 社区商城购买订单、收款结算与换物物流进度。"
+      },
+      "admin": {
+        "title": "管理后台",
+        "description": "DressApp 运营控制台，用于用户、市场、AI 供应商和 Trend-Scout 代理。",
+        "ogTitle": "DressApp 管理员运营控制台",
+        "ogDescription": "用于 DressApp 平台日常运营管理的内部管理后台。"
+      },
+      "me": {
+        "title": "个人资料与设置",
+        "description": "管理你的 DressApp 资料、语音和 Google 日历连接。",
+        "ogTitle": "您的个人资料与风格设置 — DressApp",
+        "ogDescription": "自定义您的 DressApp 衣橱偏好、界面语言与已连接的外部服务。"
+      },
+      "closet_item": {
+        "title": "衣橱单品",
+        "description": "你 DressApp 衣橱中的一件单品。",
+        "ogTitle": "单品详情与穿搭灵感 — DressApp 智能数字衣橱",
+        "ogDescription": "在您的智能数字衣橱中查看衣物标签、造型备注以及与之相配的衣橱单品。"
+      },
+      "market_listing": {
+        "title": "市场商品",
+        "description": "DressApp 上一件待售的单品。",
+        "ogTitle": "DressApp 时尚交易平台上的精选闲置单品",
+        "ogDescription": "在 DressApp 上选购或交换这件社区闲置美衣，支持虚拟衣橱搭配预览与 7% 透明低服务费。"
+      },
+      "trends": {
+        "description": "自您登录以来，您的个性化 DressApp 时尚趋势和造型建议。",
+        "title": "趋势侦察",
+        "ogTitle": "DressApp Trend Scout — 与您衣橱单品智能匹配的时尚趋势",
+        "ogDescription": "直观查看全球秀场趋势与街头时尚如何与您个人数字衣橱中的现有衣物巧妙呼应。"
       },
       "onboarding": {
         "title": "快速上手 — 打造您的智能数字衣橱 | DressApp",
@@ -2366,54 +2467,6 @@
         "ogTitle": "DressApp 价格与订阅方案 — 免费开启您的数字衣橱",
         "ogDescription": "探索透明的 DressApp 会员层级：免费数字衣橱管理、AI 穿搭规划，以及仅收 7% 服务费的循环时尚交易平台。"
       },
-      "closet": {
-        "title": "我的数字衣橱 — 虚拟衣帽间与服装管理神器 | DressApp",
-        "description": "在智能数字衣橱中管理您的每一件衣物，支持 AI 自动抠图去背景、衣物标签分类、单次穿着成本（CPW）追踪与穿搭套装组合。",
-        "ogTitle": "我的智能数字衣橱与虚拟衣帽间 — DressApp",
-        "ogDescription": "利用 AI 自动抠图、智能品类标签、季节筛选和一键搭配功能，井井有条地管理您的整个衣橱。"
-      },
-      "closet_add": {
-        "title": "添加衣物 — AI 衣橱扫描仪与照片自动抠图 | DressApp",
-        "description": "拍照或粘贴网店链接即可将衣物添加至 DressApp 数字衣橱，支持 AI 自动去除背景、色彩识别与洗标 OCR 文字提取。",
-        "ogTitle": "几秒钟将衣物添加至您的数字衣橱 — DressApp",
-        "ogDescription": "借助 DressApp 的 AI 多件衣物扫描仪、自动背景抠图与洗护标签 OCR 识别，轻松完成衣物数字化录入。"
-      },
-      "stylist": {
-        "title": "AI 私人造型师与每日穿搭规划器 | DressApp",
-        "description": "与您的多模态 AI 私人造型师对话，根据您的真实衣橱单品、当地天气预报和近期日程安排，获取每日穿搭灵感。",
-        "ogTitle": "DressApp AI 私人造型师 — 结合天气与日程的穿搭规划",
-        "ogDescription": "根据今日天气、出席场合与色彩偏好，从您自己的数字衣橱中即时生成个性化穿搭组合。"
-      },
-      "market": {
-        "title": "循环时尚交易平台 — 购买、出售与交换闲置衣物 | DressApp",
-        "description": "在 DressApp 社区交易平台上买卖、交换或捐赠闲置时尚单品，支持虚拟试穿预览，仅收取公平透明的 7% 社区服务费。",
-        "ogTitle": "DressApp 时尚交易平台 — 7% 低服务费买卖与交换美衣",
-        "ogDescription": "淘选心仪的二手时尚单品，购买前先测试与自己衣橱的搭配度，并可一键上架您的闲置衣物。"
-      },
-      "market_create": {
-        "title": "出售或交换单品 — 发布到时尚交易平台 | DressApp",
-        "description": "一键将闲置不穿的衣物变现或换新。直接从您的 DressApp 数字衣橱发布商品，仅需 7% 的超低社区交易服务费。",
-        "ogTitle": "在 DressApp 循环时尚交易平台上架闲置单品",
-        "ogDescription": "从数字衣橱中选择任意单品进行出售、交换或捐赠，自动填充衣物信息，享受 7% 透明低佣金。"
-      },
-      "transactions": {
-        "title": "平台交易记录 — 订单、销售与换物管理 | DressApp",
-        "description": "追踪您在 DressApp 交易平台上的购买、销售与换物记录，查看清晰的 7% 社区服务费明细与实时订单状态更新。",
-        "ogTitle": "您的交易记录与订单管理 — DressApp",
-        "ogDescription": "在一处集中管理您的 DressApp 社区商城购买订单、收款结算与换物物流进度。"
-      },
-      "admin": {
-        "title": "管理员仪表盘 — 平台运营控制台 | DressApp",
-        "description": "DressApp 运营管理控制台，用于管理用户、交易平台商品、AI 视觉与造型服务提供商以及 Trend Scout 潮流资讯源。",
-        "ogTitle": "DressApp 管理员运营控制台",
-        "ogDescription": "用于 DressApp 平台日常运营管理的内部管理后台。"
-      },
-      "me": {
-        "title": "个人资料与设置 — 风格偏好与账户管理 | DressApp",
-        "description": "管理您的 DressApp 风格档案、身材尺寸、语言偏好、日历同步以及通知提醒设置。",
-        "ogTitle": "您的个人资料与风格设置 — DressApp",
-        "ogDescription": "自定义您的 DressApp 衣橱偏好、界面语言与已连接的外部服务。"
-      },
       "stats": {
         "title": "衣橱数据洞察 — 单次穿着成本与色彩分析 | DressApp",
         "description": "通过 DressApp 衣橱数据洞察，全面分析您的衣橱总价值、单次穿着成本（CPW）指标、色彩分布比例以及最常穿着的单品。",
@@ -2425,12 +2478,6 @@
         "description": "在 DressApp 上联系认证私人造型师与衣橱顾问，预约线上衣橱诊断、个人色彩分析与专属陪购服务。",
         "ogTitle": "DressApp 时尚专家名录 — 预约专属私人造型师",
         "ogDescription": "浏览经过认证的真人造型师，为您审阅 DressApp 数字衣橱并量身定制专属穿搭手册。"
-      },
-      "trends": {
-        "title": "Trend Scout 潮流侦探 — 每日精选时尚趋势与秀场解读 | DressApp",
-        "description": "探索每日精选时尚趋势、街头穿搭潮流与可持续衣橱灵感，并自动匹配您在 DressApp 衣橱中已有的单品。",
-        "ogTitle": "DressApp Trend Scout — 与您衣橱单品智能匹配的时尚趋势",
-        "ogDescription": "直观查看全球秀场趋势与街头时尚如何与您个人数字衣橱中的现有衣物巧妙呼应。"
       },
       "suitcase": {
         "title": "智能行李箱与旅行打包清单规划器 | DressApp",
@@ -2467,20 +2514,11 @@
         "description": "查阅 DressApp 服务条款，了解关于数字衣橱使用、AI 私人造型服务、会员订阅以及 7% 服务费社区交易平台的详细规定。",
         "ogTitle": "DressApp 服务条款 — 用户与交易平台准则",
         "ogDescription": "阅读使用 DressApp 数字衣橱、AI 造型师与循环时尚交易平台的官方条款及社区准则。"
-      },
-      "closet_item": {
-        "title": "衣橱单品详情与穿搭组合建议 | DressApp",
-        "description": "在您的 DressApp 数字衣橱中查看单品属性、穿着历史、单次穿着成本统计以及 AI 推荐的百变穿搭组合。",
-        "ogTitle": "单品详情与穿搭灵感 — DressApp 智能数字衣橱",
-        "ogDescription": "在您的智能数字衣橱中查看衣物标签、造型备注以及与之相配的衣橱单品。"
-      },
-      "market_listing": {
-        "title": "闲置时尚单品详情 — 循环时尚交易平台 | DressApp",
-        "description": "在 DressApp 交易平台上浏览这件精选闲置单品。预览它与您现有衣橱的搭配效果，并以 7% 的社区服务费购买或交换。",
-        "ogTitle": "DressApp 时尚交易平台上的精选闲置单品",
-        "ogDescription": "在 DressApp 上选购或交换这件社区闲置美衣，支持虚拟衣橱搭配预览与 7% 透明低服务费。"
       }
-    }
+    },
+    "defaultOgTitle": "DressApp — 您的智能数字衣橱、AI造型师与二手时尚社区",
+    "defaultOgDescription": "几秒钟拍照整理实体衣橱，获取结合每日天气的 AI 穿搭建议，并以 7% 的社区服务费买卖或交换闲置美衣。",
+    "schemaDescription": "智能数字衣橱、AI私人造型师、日常穿搭规划器，以及仅收 7% 社区服务费的循环时尚交易平台。"
   },
   "taxonomy": {
     "categories": {
@@ -2497,7 +2535,12 @@
       "dress": "连衣裙",
       "headwear": "头饰",
       "glasses": "眼镜",
-      "belt": "腰带"
+      "belt": "腰带",
+      "watch": "手表",
+      "necktie": "领带",
+      "scarf": "围巾",
+      "bag": "包袋",
+      "jewelry": "珠宝"
     },
     "dress_code": {
       "casual": "休闲",
@@ -2826,7 +2869,9 @@
       "cargo": "工装裤",
       "pants": "裤子",
       "cargo_shorts": "工装短裤",
-      "high_heel_pump": "高跟浅口鞋"
+      "high_heel_pump": "高跟浅口鞋",
+      "solid_shoes": "正装皮鞋",
+      "dress_shoes": "正装皮鞋"
     },
     "color": {
       "black": "黑色",
@@ -3018,7 +3063,10 @@
       "yellow": "黄色",
       "orange": "橙色",
       "gold": "金色",
-      "silver": "银色"
+      "silver": "银色",
+      "nude": "浅米色",
+      "light_beige": "浅米色",
+      "ניוד": "浅米色"
     },
     "fit": {
       "slim": "修身版型 (Slim)",
@@ -4069,8 +4117,8 @@
     "stylist_step7": "",
     "profile_title": "管理个人资料",
     "profile_p1": "在个人资料页面，您可以个性化设置 DressApp 的尺码、风格偏好与语音：",
-    "profile_item1_title": "1. 照片与专属 3D 虚拟形象",
-    "profile_item1_desc": "自定义逼真的 3D 动态虚拟形象（实时响应您的身体尺寸与 8 种自然肤色），或上传全身照进行真实试穿。DressApp 会将每件衣物与配饰精准映射到您的肩部、胸部、腰部、臀部、手臂、腿部与脚部特征点，并支持开启点云合身网格。",
+    "profile_item1_title": "1. 照片与专属虚拟形象",
+    "profile_item1_desc": "上传全身照进行逼真试穿，或自定义虚拟人体模型的体型与肤色。DressApp 会自动去除照片背景，精准检测您的身体解剖特征点（肩部、腰部、骨盆与脚踝），并支持开启 2D 点云合身网格。",
     "profile_item2_title": "2. 风格偏好",
     "profile_item2_desc": "告诉造型师您喜爱的风格、偏好的颜色、想避开的单品以及保守程度，让每次推荐都符合您的心意。",
     "profile_item3_title": "3. 个人与联系信息",
@@ -4110,7 +4158,7 @@
     "planner_title": "服装规划师",
     "planner_p1": "服装规划器可帮助您分层、排列和评估您的造型选择：",
     "planner_item1_title": "服装画布",
-    "planner_item1_desc": "从衣橱中选择上装、下装、连衣裙、鞋履和配饰，在 3D 动态虚拟形象或全身照上试穿。上装贴合肩部、领口与微张的双臂并保留原始剪裁；裤装贴合腰部与骨盆并沿 A 字站姿双腿自然延展；成双鞋履会自动拆分为每只脚穿一只鞋。",
+    "planner_item1_desc": "从衣橱中选择上装、下装、连衣裙、鞋履和配饰在虚拟形象上试穿。上装贴合肩宽与领口并保留原始剪裁；裤装贴合腰部与骨盆并保留裤腿版型；成双鞋履会自动拆分为每只脚穿一只鞋。",
     "planner_item2_title": "双画布（分层）",
     "planner_item2_desc": "如果您在衬衫外穿夹克或外套，界面会呈现并排视图（一个头像显示外套，一个头像不显示），以便您可以同时查看两层。",
     "planner_item3_title": "交互式身体测绘",
@@ -4219,7 +4267,7 @@
     "tiers_title": "订阅方案",
     "tiers_p1": "DressApp 提供了灵活的订阅方案，可根据您的衣橱容量和穿搭需求量身定制。在价格页面升级以解锁无限功能。",
     "tiers_free_title": "免费方案",
-    "tiers_free_desc": "基础限制为100件衣橱物品（通过好友邀请最多可扩展至150件），每天提供10个本地AI额度（30天最多300个），以及5个一次性注册重建奖励。购买15个或更多额度的点数包即可解锁成组上传。",
+    "tiers_free_desc": "基础容量100件（通过邀请好友可扩展至150件），每天10点本地AI积分（30天内最多累计300点），以及注册赠送的5点一次性AI工作室修图积分。包含由Gemini驱动的每日穿搭建议（每次建议消耗1点AI积分）。购买积分包（15点以上）即可解锁衣橱批量拍摄上传。",
     "tiers_manager_title": "Manager 方案",
     "tiers_manager_desc": "$10/月（或 $100/年）。解锁无限衣橱容量、DressApp 最前沿的 AI 模型、早间穿搭提醒、日历同步、闲置市场售卖以及完整的 Trend Scout 潮流资讯。",
     "tiers_pro_title": "Professional 方案",
@@ -4410,7 +4458,40 @@
       "tiers_manager_desc": "$10/月（或 $100/年）。解锁无限衣橱容量、DressApp 最前沿的 AI 模型、早间穿搭提醒、日历同步、闲置市场售卖以及完整的 Trend Scout 潮流资讯。",
       "reanalyze_title": "照片重新分析与 AI 助手",
       "reanalyze_p1": "直接与 AI 助手对话，用自然语言调整或修复衣物照片：",
-      "reanalyze_step4": "AI 会在聊天窗口内直接生成逼真的预览图。"
+      "reanalyze_step4": "AI 会在聊天窗口内直接生成逼真的预览图。",
+      "scheduler_push_title": "早间穿搭提醒",
+      "scheduler_push_p1": "每天醒来即可收到根据当日天气与日程量身定制的现成穿搭建议：",
+      "scheduler_push_step1": "打开 **个人资料 (Profile)** 设置并向下滚动至 **早间穿搭提醒**。",
+      "scheduler_push_step2": "开启每日提醒开关，并选择希望收到穿搭建议的星期与时间。",
+      "scheduler_push_step3": "选择您偏好的日常风格（如休闲、商务、运动或自定义）。",
+      "scheduler_push_step4": "在系统提示时允许浏览器通知，以便提醒能够送达您的设备。",
+      "scheduler_push_step5": "关联日历与位置信息，让造型师了解您的日程与当地天气。",
+      "scheduler_push_step6": "点击早间通知即可查看完整造型与搭配理由，一键设为今日穿搭！",
+      "shopping_assistant_title": "网购尺码助手",
+      "shopping_assistant_p1": "网购时将商家尺码表与您的身体尺寸比对，轻松找到最合身的尺码：",
+      "shopping_assistant_step1": "在电脑上安装 **DressApp 浏览器扩展**，或在个人资料页将 **手机书签工具** 保存到手机。",
+      "shopping_assistant_step2": "请确认您的身体尺寸（身高、体重、腰围与脚长）已保存至个人资料。",
+      "shopping_assistant_step4": "点击页面上的 **DressApp** 按钮（或打开已保存的手机书签）。",
+      "shopping_assistant_step5": "如果商店使用自定义尺码表布局，只需在屏幕上框选尺码表区域即可。",
+      "shopping_assistant_step6": "立即查看推荐尺码、合身度置信评分以及是否建议选大一码或小一码！",
+      "import_wardrobe_title": "导入现有衣橱",
+      "import_wardrobe_p1": "之前用过其他衣橱应用或留有网购小票？自动将您的衣物迁移到 DressApp：",
+      "import_wardrobe_step2": "选择要导入的衣橱应用，或选择从商店链接或电子收据导入。",
+      "import_wardrobe_step3": "按照屏幕上的简单指引将衣物分享至 DressApp。",
+      "import_wardrobe_step4": "DressApp AI 会自动抠图去背景，并按颜色、分类与季节整理好衣物。",
+      "import_wardrobe_step5": "系统会自动跳过重复单品，让您的衣橱保持整洁。",
+      "import_wardrobe_step6": "完成后，所有导入的衣物与保存的穿搭均已在您的衣橱中准备就绪！",
+      "tiers_title": "订阅方案",
+      "tiers_p1": "DressApp 提供灵活方案，适配您的衣橱容量与搭配需求：",
+      "tiers_free_title": "免费版",
+      "tiers_manager_title": "Manager 方案",
+      "tiers_pro_title": "专业版方案",
+      "tiers_pro_desc": "$15/月（或 $150/年）。专为时尚造型师与创作者打造。包含 Manager 方案的全部功能，并额外享有造型师名录展示、推广活动、优先支持及每月 100 个造型积分。",
+      "tiers_how_to_upgrade_title": "如何升级：",
+      "tiers_step1": "打开您的个人资料设置页面。",
+      "tiers_step2": "向下滚动至“订阅与衣橱容量限制”部分。",
+      "tiers_step3": "点击“升级”或“定价”链接。",
+      "tiers_step4": "选择心仪的方案并安全完成结账。"
     },
     "trend_closet_title": "一键直达：“用我的衣橱搭同款”",
     "trend_closet_desc": "点击任意趋势卡片上的按钮，AI 造型师立即提取该趋势的色彩与轮廓，从您已录入的衣橱中寻找最匹配的服饰重现搭配。",
@@ -4421,7 +4502,7 @@
     "tableOfContents": "目录",
     "backToSummary": "返回摘要",
     "whyItMatters": "重要原因：",
-    "overview_onboarding": "只需不到 60 秒即可轻松上手：在登录前校准您的风格 DNA、3D 虚拟形象尺寸和初始胶囊衣橱，即可预览您的第一套知冷暖 AI 穿搭。",
+    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
     "best_practice_title": "最佳实践指南",
     "best_practice_p1": "遵循以下简单习惯，轻松建立精准的数字衣橱、充分利用每日积分，并每天获得量身定制的穿搭推荐。",
     "best_practice_step1": "**先完善个人资料**：在上传衣物前，请先在**个人资料**中设置您的身体尺码、偏爱色彩、风格偏好与端庄度级别。",
@@ -4914,7 +4995,8 @@
     "webviewScanCompleteDesc": "{{appName}} 扫描完成（检测到 {{count}} 件衣物）。您的衣橱正在更新！",
     "scanningInProgressBtn": "正在扫描...",
     "scanAndImportClosetBtn": "扫描并导入衣橱",
-    "itemsCountLabel": "{{count}}+ 件单品"
+    "itemsCountLabel": "{{count}}+ 件单品",
+    "floaterTooltip": "DressApp 助手：可拖拽至任意位置以防遮挡。当停留在衣橱网格页面时点击即可。"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",
@@ -5169,7 +5251,26 @@
     "demoteFailedToast": "切换为免费套餐失败。",
     "clusterFree": "需要 15+ 积分",
     "unlocksCluster": "解锁成簇上传",
-    "packIncludesCluster": "付费包 — 解锁成簇上传 (15+ 积分)"
+    "packIncludesCluster": "付费包 — 解锁成簇上传 (15+ 积分)",
+    "closetFreeCapacityDesc": "100 件（邀请好友最多扩展至 150 件）",
+    "whatCreditBuysShort": "1 积分可兑换",
+    "whatCreditBuysTitle": "精准操作消耗明细：",
+    "fairValueTitle": "透明的 AI 计费方案：",
+    "fairValueSubtitle": "绝无意外账单，绝无隐形扣费。仅在需要高阶功能时按需充值。",
+    "neverExpires": "永久有效",
+    "noSubscriptionNeeded": "无需订阅",
+    "whatYouGet": "此积分包包含：",
+    "pack10Item1": "10 次 Gemini 云端极速分析",
+    "pack10Item2": "10 次 AI 棚拍重绘与局部修补",
+    "pack50Item1": "50 次 Gemini 云端极速分析",
+    "pack50Item2": "解锁成套/多件服装批量上传（15+ 积分）",
+    "pack50Item3": "约可完成 3 次整柜/整架集群扫描",
+    "pack100Item1": "100 次 Gemini 云端极速分析",
+    "pack100Item2": "解锁成套/多件服装批量上传",
+    "pack100Item3": "约可完成 6+ 次整柜/整架集群扫描",
+    "pack100Item4": "优先处理队列与高清 3D 虚拟试穿",
+    "packPerCreditCost": "每积分 ${{cost}}",
+    "packPerCreditCostSave": "每积分 ${{cost}}（省 {{save}}）"
   },
   "avatar": {
     "savedSuccess": "头像和视觉配置文件已保存！",
@@ -5356,7 +5457,10 @@
     "relaxed": "轻松休闲",
     "boho": "波西米亚",
     "smart_casual": "商务休闲",
-    "dresses_skirts": "连衣裙与半身裙"
+    "dresses_skirts": "连衣裙与半身裙",
+    "nude": "浅米色",
+    "light_beige": "浅米色",
+    "ניוד": "浅米色"
   },
   "wardrobeStats": {
     "tabOverview": "概览",
@@ -5917,24 +6021,24 @@
   },
   "stylistTour": {
     "step1": {
-      "badge": "第 1 步 / 共 4 步 • 你的新手基础胶囊",
-      "title": "随心混搭单品",
-      "desc": "你的入门服饰按上衣、下装和鞋履分行排列。滑动或点击箭头即可浏览并尝试符合你身形比例的多种搭配组合。"
+      "badge": "第 1 步 / 共 4 步 • 您的新手胶囊衣橱",
+      "title": "混搭单品",
+      "desc": "您的新手单品按上衣、下装和鞋履分类展示。滑动或点击箭头即可浏览并测试符合您身材比例的搭配。"
     },
     "step2": {
-      "badge": "第 2 步 / 共 4 步 • AI 一键灵感搭配",
+      "badge": "第 2 步 / 共 4 步 • AI 一键随心搭",
       "title": "AI 即时生成整套穿搭",
-      "desc": "随时点击“生成新穿搭”。DressApp 会综合分析色彩学、季节性及你的身形比例，在数秒内为你搭配出一套和谐完美的造型。"
+      "desc": "随时点击“生成新穿搭”。DressApp 会综合考虑色彩理论、季节和身材比例，数秒内为您生成协调穿搭。"
     },
     "step3": {
-      "badge": "第 3 步 / 共 4 步 • 日程与日历智能同步",
-      "title": "为你的真实生活场景量身着装",
-      "desc": "开启“今日日程”，让穿搭智能匹配 Google 日历中的会议安排，或自选场合（工作、休闲、聚会、运动）获取专属着装建议。"
+      "badge": "第 3 步 / 共 4 步 • 日程与日程表同步",
+      "title": "因地制宜，匹配真实日程",
+      "desc": "开启“今日日程”即可根据 Google 日历会议智能搭配，也可选择场合（工作、休闲、聚会、健身）。"
     },
     "step4": {
-      "badge": "第 4 步 / 共 4 步 • 保存灵感与探索衣橱",
-      "title": "保存穿搭并前往我的衣橱",
-      "desc": "喜欢这套搭配吗？点击“保存穿搭”即可将其加入造型画册。当你准备好拍摄并上传自己的真实衣物时，随时前往衣橱体验！",
+      "badge": "第 4 步 / 共 4 步 • 保存并探索衣橱",
+      "title": "保存穿搭，探索我的衣橱",
+      "desc": "喜欢这套搭配？点击“保存穿搭”即可将其加入造型手册。随时可以前往“我的衣橱”拍照上传真实衣物！",
       "closetBtn": "探索我的衣橱"
     }
   },
@@ -5955,22 +6059,27 @@
     "fullscreen": "全屏",
     "exit_fullscreen": "退出全屏",
     "view_item_details": "查看单品详情",
-    "view_garment_only": "仅查看服装（无虚拟模特）",
-    "garment_only": "仅服装",
-    "show_avatar": "显示虚拟模特",
-    "garment_view_badge": "服装工作室 • 360°",
-    "avatar_studio_badge": "虚拟模特工作室 • 3D",
-    "loading": "正在加载3D试衣间...",
-    "side_view": "侧视图",
-    "back_view": "后视图",
+    "view_garment_only": "仅查看衣物（无虚拟形象）",
+    "garment_only": "仅衣物",
+    "show_avatar": "显示形象",
+    "garment_view_badge": "3D衣物展示",
+    "avatar_studio_badge": "360° 形象试衣间",
+    "loading": "正在准备您的3D工作室…",
+    "side_view": "侧面",
+    "back_view": "背面",
+    "mesh_tailored": "3D剪裁",
+    "mesh_photo": "照片贴合",
+    "mesh_mode_tailored_active": "3D剪裁已启用 — 点击切换至照片贴合",
+    "mesh_mode_photo_active": "照片贴合已启用 — 点击切换至3D剪裁",
     "hood_on": "戴上兜帽",
-    "hood_off": "放下兜帽"
+    "hood_off": "放下兜帽",
+    "restoring_context": "正在恢复 3D 试衣工作室…"
   },
   "dressingRoom": {
     "title": "3D试衣间",
     "tryOn3D": "3D试穿",
     "badge3D": "3D",
-    "view3D": "3D视图"
+    "view3D": "3D视角"
   },
   "shareTarget": {
     "badge": "移动端尺码助手",
@@ -6045,7 +6154,77 @@
     "floaterTooltip": "拖动可调整位置，点击可获取尺码推荐。",
     "openHub": "购物中心",
     "storeAssistant": "{{store}} 尺码助手",
-    "noMeasurementsSaved": "个人档案中尚未保存身材数据"
+    "noMeasurementsSaved": "个人档案中尚未保存身材数据",
+    "companionBanner": "助手模式：{{store}} 限制了应用内网页框架，且移动应用无法悬浮显示工具。请保持 DressApp 打开以便随时核对尺码！",
+    "aliexpressNotice": "速卖通迎新弹窗阻挡了操作？请点击“在新标签页打开 ↗”或使用上方的尺码助手！",
+    "openInCleanTab": "在新标签页打开 ↗",
+    "openDirectTab": "在标签页打开 ↗",
+    "loginNotice": "需要登录或关闭弹窗？点击“在标签页打开”即可直接使用您的商店账号进行购物。",
+    "brandSizeGuide": "{{store}} 个性化尺码指南",
+    "basedOnMeasurements": "根据您个人资料中保存的身体数据计算",
+    "topSize": "上衣 / 衬衫",
+    "bottomSize": "裤装 / 下装",
+    "shoeSize": "鞋码",
+    "fitTip": "品牌版型建议",
+    "openStoreWeb": "在标签页打开 {{store}} ↗",
+    "openStoreApp": "打开 {{store}} 应用 📱",
+    "checkSpecificGarment": "查询具体商品尺码",
+    "pasteStoreLink": "粘贴来自 {{store}} 的商品链接...",
+    "analyzeGarment": "查询尺码",
+    "uploadScreenshot": "或上传尺码表截图 ↗",
+    "tryInAppFrame": "仍尝试应用内浏览",
+    "backToAssisted": "返回助手模式",
+    "addressBarPlaceholder": "输入或粘贴商品链接...",
+    "go": "前往",
+    "open": "打开",
+    "analysisSuccess": "商品尺码分析成功！",
+    "analysisFailed": "无法自动提取该链接的尺码表，您可以上传尺码表截图。",
+    "tips": {
+      "zara": "Zara 剪裁偏欧版修身。若上衣尺码介于两个档位之间，建议选大一码。",
+      "shein": "SHEIN 各子品牌尺码不一：MOTF 尺码标准，Dazy 尺码明显偏小。",
+      "mango": "Mango 剪裁考究，符合欧洲标准尺码。",
+      "hm": "H&M 基础款尺码正常；宽松版型设计偏大。",
+      "asos": "ASOS Design 尺码标准，可关注 Tall、Petite 或 Curve 专用分类。",
+      "nike": "耐克鞋码通常偏紧约半码，运动鞋建议选大半码。",
+      "adidas": "阿迪达斯服饰与鞋履符合国际标准尺码。",
+      "aliexpress": "亚洲尺码标准，通常比欧美标准偏小1至2码。",
+      "uniqlo": "优衣库版型舒适宽松，符合国际标准。",
+      "default": "根据您的实际体型数据匹配的标准国际尺码。"
+    }
+  },
+  "migrationHub": {
+    "title": "衣橱数据迁移中心",
+    "subtitle": "连接您之前的衣橱应用，关闭弹窗，浏览到衣橱网格页面，让 DressApp 助手帮您自动迁移衣物。",
+    "searchPlaceholder": "搜索衣橱应用或输入网址（如 Whering、Acloset、Stylebook）...",
+    "savedPlatforms": "已保存的衣橱平台",
+    "curatedPlatforms": "支持迁移的平台",
+    "connectAndMonitor": "连接",
+    "openDirectTab": "在新标签页中打开 ↗",
+    "loginNotice": "1. 登录账号 • 2. 关闭所有弹窗 • 3. 打开衣橱网格 • 4. 点击 DressApp 助手图标开始迁移！",
+    "openInBrowser": "在新标签页打开以登录或绕过弹窗",
+    "openFullSite": "在标签页中打开",
+    "storeApp": "原生应用",
+    "migrateWardrobe": "迁移衣橱",
+    "frameProtectedTitle": "{{name}} 受到同源嵌入保护",
+    "frameProtectedDesc": "部分衣橱平台限制在画中画框架内浏览。您可以在新标签页打开其网页，或一键批量上传衣橱截图！",
+    "openExternalTab": "在新标签页打开 {{name}} ↗",
+    "uploadMediaFallback": "上传截图 / 视频",
+    "agentSheetTitle": "{{name}} 衣橱迁移助手",
+    "agentSheetDesc": "扫描可见衣物、自动抠图去除背景、添加属性标签并保存到您的 DressApp 衣橱中。",
+    "liveAgentScanTab": "实时网格迁移",
+    "checklistTitle": "迁移前确认清单",
+    "checkLogin": "已登录 {{name}} 账号",
+    "checkPopups": "已关闭所有弹窗、通知和 Cookie 提示",
+    "checkGrid": "屏幕上已清晰显示衣橱衣物网格",
+    "startMigrationBtn": "开始迁移衣橱",
+    "scanningWardrobe": "正在扫描衣橱网格...",
+    "harvestingCount": "正在采集衣物...（已找到 {{count}} 张卡片）",
+    "harvestedBadge": "已抓取 {{count}} 件衣物",
+    "migrationComplete": "✓ 已成功将 {{count}} 件衣物迁移至您的 DressApp 衣橱！",
+    "openClosetBtn": "打开我的衣橱",
+    "quickScreenshots": "批量上传截图与视频",
+    "quickScreenshotsDesc": "更喜欢从相册上传？请选择您衣橱的截图或屏幕录制视频。",
+    "openHubBtn": "打开衣橱迁移中心"
   },
   "about": {
     "feature6_desc": "电脑端 Chrome 扩展程序与移动端购物助手，能够自动扫描电商网站的尺码表，在购买前为您提供即时且个性化的合身推荐。"

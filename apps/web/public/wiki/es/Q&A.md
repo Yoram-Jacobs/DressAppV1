@@ -24,6 +24,7 @@ DressApp elimina el trabajo manual y la indecisión matutina mediante reconocimi
 | **Créditos Diarios** | **10/día** (acumulables hasta **300 / 30 días**) | **Ilimitados** para estilismo y escaneo diario | **Ilimitados** para estilismo y escaneo diario |
 | **Reconstrucción de Estudio** | **5 créditos gratis** de bienvenida | **100 créditos mensuales** de Reconstrucción de Estudio | **100 créditos mensuales** de Reconstrucción de Estudio |
 | **Funciones Incluidas** | Armario Digital, Estilista, Planificador, Maleta (y Subida en Grupo con 15+ créditos) | + Subida en Grupo, Agente de Migración, Cazador de Tendencias, Marketplace | + Directorio de Expertos Certificados y Campañas |
+- **Sugerencia de conjunto diario**: **1 crédito** por conjunto generado
 
 ---
 

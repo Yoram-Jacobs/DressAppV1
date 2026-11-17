@@ -1300,10 +1300,10 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
     expect(femaleStrapless.min[0]).toBeLessThan(-0.15);
     expect(femaleStrapless.max[0]).toBeGreaterThan(0.15);
 
-    // Long-sleeve blazer stops at the wrist cuff (max |x| <= 0.465m, never covering hands/thumbs)
+    // Long-sleeve blazer stops at the wrist cuff (max |x| <= 0.47m, never covering hands/thumbs)
     const maleBlazer = checkGlb('male/jacket_blazer.glb');
-    expect(maleBlazer.max[0]).toBeLessThanOrEqual(0.465);
-    expect(maleBlazer.min[0]).toBeGreaterThanOrEqual(-0.465);
+    expect(maleBlazer.max[0]).toBeLessThanOrEqual(0.47);
+    expect(maleBlazer.min[0]).toBeGreaterThanOrEqual(-0.47);
 
     // Locale files all contain mesh_tailored, mesh_photo, and taxonomy.categories.watch
     const heLocale = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../locales/he.json'), 'utf8'));

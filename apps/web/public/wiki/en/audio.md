@@ -8,7 +8,7 @@ This document provides a comprehensive technical breakdown, architectural analys
 
 ### High-Level Overview
 DressApp integrates a dual-tier, highly resilient audio system designed to offer an immersive, hands-free conversation loop with the AI Virtual Stylist. The system supports full bidirectional speech:
-* **Speech-to-Text (STT)**: Transcribes user voice commands to guide closet queries, outfit creation, and style advice. It automatically routes between an on-premises Gemma4 sidecar container and Google's native Gemini 2.5 Flash multimodal endpoint.
+* **Speech-to-Text (STT)**: Transcribes user voice commands to guide closet queries, outfit creation, and style advice. It automatically routes between an on-premises Gemma4 sidecar container and Google's native Gemini 3.5 Flash-Lite multimodal endpoint.
 * **Text-to-Speech (TTS)**: Synthesizes the Virtual Stylist's outfit advice into high-quality spoken audio. It leverages Gemini's native audio generation capabilities at the server level, with automatic client-side Web Speech synthesis and on-device offline Piper TTS engines for mobile pods.
 
 ### Architectural Flow
@@ -30,12 +30,12 @@ graph TD
         API --> STT[STT Service: EyesSTTService]
         STT -->|Check Override| Provider{Provider?}
         Provider -->|Gemma| Gemma[Gemma4 Sidecar Container]
-        Provider -->|Gemini| GeminiSTT[Gemini 2.5 Flash Multimodal]
+        Provider -->|Gemini| GeminiSTT[Gemini 3.5 Flash-Lite Multimodal]
         Gemma -->|Fallback| GeminiSTT
         
         API --> Brain[Stylist Brain Service]
         Brain -->|Text Response| TTS[TTS Service: GeminiTTSService]
-        TTS -->|gemini-2.5-flash response_modalities: AUDIO| GeminiTTS[Gemini 2.5 Flash Multimodal]
+        TTS -->|gemini-3.8-flash-tts response_modalities: AUDIO| GeminiTTS[Gemini Flash TTS]
     end
 
     GeminiTTS -->|Raw Audio Bytes| TTS
@@ -49,7 +49,7 @@ graph TD
 ### User Value Proposition
 * **Frictionless Interaction**: Users can describe styling dilemmas, query closet items, and request outfit matches entirely hands-free.
 * **Low Latency & High Snappiness**: Real-time client-side speech recognition provides instant visual transcription feedback as the user speaks.
-* **Fail-Safe Robustness**: If the dedicated Gemma4 model fails, the system automatically falls back to Gemini 2.5 Flash. If server-side speech generation fails, the browser immediately synthesizes text locally using the Web Speech API.
+* **Fail-Safe Robustness**: If the dedicated Gemma4 model fails, the system automatically falls back to Gemini 3.5 Flash-Lite. If server-side speech generation fails, the browser immediately synthesizes text locally using the Web Speech API.
 * **Privacy & Offline Capabilities**: The Piper/Sherpa-ONNX integration pattern ensures that mobile client applications can run speech generation entirely on-device, saving server bandwidth and securing user privacy.
 
 ---
@@ -105,7 +105,7 @@ graph TD
 #### Dual-Tier Speech-to-Text (`stt_service.py`)
 The backend orchestrator uses `EyesSTTService` to implement a robust, fail-safe dual-path transcription system:
 1. **Dedicated Container Path (Gemma4)**: When `EYES_PROVIDER=gemma` is active, the service submits a `POST` request with the audio file to the Gemma4 container space (`EYES_GEMMA_SPACE_URL`).
-2. **Native Multimodal Path (Gemini 2.5 Flash)**: If the Gemma container fails or is bypassed, `GeminiSTTService` takes over. The audio bytes are converted into an inline multimodal object and processed directly by Gemini:
+2. **Native Multimodal Path (Gemini 3.5 Flash-Lite)**: If the Gemma container fails or is bypassed, `GeminiSTTService` takes over. The audio bytes are converted into an inline multimodal object and processed directly by Gemini:
    ```python
    # Gemini STT transcription request configuration
    text = await client.vision(
@@ -118,7 +118,7 @@ The backend orchestrator uses `EyesSTTService` to implement a robust, fail-safe 
    ```
 
 #### Multimodal Server-Side TTS (`tts_service.py`)
-Instead of relying on third-party cloud audio APIs, DressApp leverages **Gemini 2.5 Flash** native speech synthesis:
+Instead of relying on third-party cloud audio APIs, DressApp leverages **Gemini Flash TTS** (`gemini-3.8-flash-tts`) native speech synthesis:
 * **Audio Model Config**: The request requests Gemini to respond explicitly in audio format:
   ```python
   config = {

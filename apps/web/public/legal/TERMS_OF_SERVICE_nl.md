@@ -2,7 +2,7 @@
 
 **Ingangsdatum:** 27 juli 2026  
 **Laatst bijgewerkt:** 16 oktober 2026  
-**App-versie:** 1.0.5  
+**App-versie:** 1.0.8  
 **Officiële website:** [https://dressapp.co](https://dressapp.co)  
 
 Welkom bij **DressApp** ("DressApp", "wij", "we", "onze" of "ons"), een intelligent platform voor digitale garderobeplanning, stijladvies, een peer-to-peer kledingmarktplaats en een persoonlijke AI-stylist, ontwikkeld en geëxploiteerd door **DressApp Ltd.** Deze Algemene Voorwaarden ("Voorwaarden") zijn van toepassing op uw toegang tot en gebruik van de mobiele applicaties en webapplicaties van DressApp, API's en gekoppelde diensten, met inbegrip van alle functies, content en diensten die via de applicatie worden aangeboden (gezamenlijk de "Dienst").

@@ -14,6 +14,7 @@ DressApp removes manual work and morning decision fatigue with smart visual reco
 - **Effortless Closet Digitization**: Take a photo of a single item, a full-body mirror outfit, or several clothes laid out together—or import from an online store link, receipt, product QR code, or another wardrobe app. DressApp automatically detects the photo type, removes backgrounds, separates multiple items, and fills in key details (Category, Color, Fabric, Cut, Season, Dress Code, and Warmth).
 - **Cumulative Free Credit System**: Free users receive **10 daily On-Premises AI Credits** that accumulate up to **300 credits over 30 days**, plus **5 one-time onboarding bonus Studio Reconstruction Credits** when signing up. By photographing a few items a day over 5 days, you automatically have **50 credits** — enough to digitize a 100-item core wardrobe for free.
 - **Personal Styling for Real Life**: Your AI Stylist combines the clothes in your closet, local weather forecasts, your calendar events, modesty preferences, and body measurements to suggest complete head-to-toe outfits or highlight missing wardrobe basics.
+- **Daily outfit suggestion**: **1 credit** per generated look
 
 ### Plans & Features at a Glance
 

@@ -20,7 +20,7 @@ const LANG_KEY = 'dressapp.lang';
 
 const i18n = createI18n({
   getStoredLang: () => null, // Async read handled below — start with system default
-  setStoredLang: (lang) => {
+  setStoredLang: (lang: string) => {
     AsyncStorage.setItem(LANG_KEY, lang).catch(console.warn);
   },
 });

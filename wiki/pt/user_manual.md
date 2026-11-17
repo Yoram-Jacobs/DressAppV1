@@ -97,7 +97,7 @@ A página de Perfil funciona como o painel de controle central do DressApp. Os c
 
 2. **Perfil de Estilo (Regras de recato, Código de vestimenta)**
    - **Por que isso importa?**: Estabelece limites pessoais para os looks recomendados, evitando que a IA gere sugestões de estilo inadequadas.
-   - **Dependências do subsistema**: Os parâmetros selecionados (ex.: restrições de vestimenta modesta) são enviados diretamente para os prompts de estilo do Gemini 2.5 Flash, filtrando as peças compatíveis do guarda-roupa antes de serem exibidas.
+   - **Dependências do subsistema**: Os parâmetros selecionados (ex.: restrições de vestimenta modesta) são enviados diretamente para os prompts de estilo do Gemini 3.5 Flash-Lite, filtrando as peças compatíveis do guarda-roupa antes de serem exibidas.
 
 3. **Dados Pessoais (Nome, Telefone, Profissão)**
    - **Por que isso importa?**: Personaliza o tom de comunicação e direciona alertas de notificação.

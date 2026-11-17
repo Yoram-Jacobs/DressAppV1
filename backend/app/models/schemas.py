@@ -464,7 +464,7 @@ class FinancialMetadata(BaseModel):
     list_price_cents: int
     currency: str = "USD"
     platform_fee_percent: float = 7.0
-    platform_fee_applied_after: Literal["stripe_processing_fee", "gross"] = (
+    platform_fee_applied_after: Literal["stripe_processing_fee", "paypal_processing_fee", "gross"] = (
         "stripe_processing_fee"
     )
     stripe_processing_fee_percent: float = 2.9
@@ -523,11 +523,12 @@ class Listing(BaseDoc):
 class TransactionFinancial(BaseModel):
     gross_cents: int
     stripe_fee_cents: int
+    processing_fee_cents: int | None = None
     net_after_stripe_cents: int
     platform_fee_percent: float = 7.0
     platform_fee_cents: int
     seller_net_cents: int
-    platform_fee_applied_after: Literal["stripe_processing_fee", "gross"] = (
+    platform_fee_applied_after: Literal["stripe_processing_fee", "paypal_processing_fee", "gross"] = (
         "stripe_processing_fee"
     )
 

@@ -78,12 +78,13 @@ def _platform_fee_math(gross_cents: int) -> TransactionFinancial:
     seller_net = max(0, net_after_processing - platform_fee)
     return TransactionFinancial(
         gross_cents=gross_cents,
-        stripe_fee_cents=processing_fee,  # repurposed field for processor fee
+        stripe_fee_cents=processing_fee,  # backward-compatible field populated with PayPal processing fee
+        processing_fee_cents=processing_fee,
         net_after_stripe_cents=net_after_processing,
         platform_fee_percent=platform_pct,
         platform_fee_cents=platform_fee,
         seller_net_cents=seller_net,
-        platform_fee_applied_after="stripe_processing_fee",
+        platform_fee_applied_after="paypal_processing_fee",
     )
 
 

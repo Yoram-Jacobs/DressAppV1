@@ -621,11 +621,23 @@ _CANONICAL_COLOR_MAP: dict[str, str] = {
 }
 
 
+_CORRUPTED_COLOR_ALIASES: dict[str, str] = {
+    "אlפור": "אפור",
+    "אiפור": "אפור",
+    "א1פור": "אפור",
+    "א|פור": "אפור",
+    "lבן": "לבן",
+    "iבן": "לבן",
+    "שחoר": "שחור",
+    "כחoל": "כחול",
+}
+
+
 def _clean_color_name(raw_name: str, language: str | None = None) -> str:
     if not raw_name:
         return ""
     name_clean = str(raw_name).strip()
-    norm = name_clean.lower()
+    norm = _CORRUPTED_COLOR_ALIASES.get(name_clean.lower(), name_clean.lower())
     lang = (language or "en").lower().strip()
     if "ניוד" in norm:
         return "בז' בהיר"
@@ -638,7 +650,7 @@ def _clean_color_name(raw_name: str, language: str | None = None) -> str:
         mapped = _CANONICAL_COLOR_MAP.get(norm)
         if mapped:
             return mapped
-    return _CANONICAL_COLOR_MAP.get(norm, name_clean.title())
+    return _CANONICAL_COLOR_MAP.get(norm, _CORRUPTED_COLOR_ALIASES.get(name_clean.lower(), name_clean.title()))
 
 
 def _clean_material_name(raw_name: str) -> str:

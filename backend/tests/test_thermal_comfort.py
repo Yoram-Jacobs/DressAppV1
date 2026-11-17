@@ -122,7 +122,7 @@ def test_qa_prefilter_enforces_thermal_constraints():
     assert [it["id"] for it in purged_warm] == ["3"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_stylist_prompt_includes_thermal_guidance():
     """Verify prepare_stylist_prompt injects thermal comfort & layering guidance."""
     sys_msg, _ = await prepare_stylist_prompt(

@@ -2,7 +2,7 @@
 
 **Effective Date:** September 23, 2026  
 **Last Updated:** October 16, 2026  
-**App Version:** 1.0.5  
+**App Version:** 1.0.8  
 **Official Website:** [https://dressapp.co](https://dressapp.co)  
 **Dedicated Privacy URL:** [https://dressapp.co/privacy](https://dressapp.co/privacy)  
 

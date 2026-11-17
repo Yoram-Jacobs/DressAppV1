@@ -97,7 +97,7 @@ La página de Perfil sirve como panel de control principal de DressApp. Los camp
 
 2. **Perfil de Estilo (Reglas de modestia, Código de vestimenta)**
    - **¿Por qué es importante?**: Establece límites personales para los atuendos recomendados, evitando que la IA genere sugerencias de estilo inapropiadas.
-   - **Dependencias del subsistema**: Los parámetros seleccionados (por ejemplo, restricciones de vestimenta recatada) se incorporan directamente en los prompts de estilismo para Gemini 2.5 Flash, filtrando los resultados compatibles del armario antes de mostrarlos.
+   - **Dependencias del subsistema**: Los parámetros seleccionados (por ejemplo, restricciones de vestimenta recatada) se incorporan directamente en los prompts de estilismo para Gemini 3.5 Flash-Lite, filtrando los resultados compatibles del armario antes de mostrarlos.
 
 3. **Datos Personales (Nombre, Teléfono, Ocupación)**
    - **¿Por qué es importante?**: Personaliza el tono de comunicación y enruta las alertas de notificación.

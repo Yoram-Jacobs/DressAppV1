@@ -2173,8 +2173,8 @@ export function synthesizeBackFabricData(data, w, h) {
     for (const r of runs) {
       const prev = merged[merged.length - 1];
       const gap = prev ? r[0] - prev[1] : 999;
-      const isTorsoGap = prev && prev[1] >= w * 0.15 && r[0] <= w * 0.85;
-      const maxGap = isTorsoGap ? 64 : 4;
+      const isTorsoGap = prev && prev[1] >= w * 0.25 && r[0] <= w * 0.75;
+      const maxGap = isTorsoGap ? Math.max(6, Math.floor(w * 0.12)) : Math.max(2, Math.floor(w * 0.04));
       if (merged.length > 0 && gap <= maxGap) {
         merged[merged.length - 1][1] = r[1];
       } else {

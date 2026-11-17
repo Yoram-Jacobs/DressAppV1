@@ -356,7 +356,7 @@ async def list_listings(
 @router.post("/listings/{listing_id}/status")
 async def set_listing_status(
     listing_id: str,
-    status: str = Query(..., regex="^(active|paused|removed|sold)$"),
+    status: str = Query(..., pattern="^(active|paused|removed|sold)$"),
     _: dict = Depends(require_admin),
 ) -> dict[str, Any]:
     db = get_db()

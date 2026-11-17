@@ -46,7 +46,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,7 +53,6 @@ import {
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { SourceTagBadge } from "@/components/SourceTagBadge";
@@ -68,7 +66,6 @@ import { ThumbRepairChip } from "@/components/closet/ThumbRepairChip";
 import { api } from "@/lib/api";
 import { bestImageUrl, isCleanImagePending } from "@/lib/itemImage";
 import ProgressiveImage from "@/components/ui/ProgressiveImage";
-import ImageWithPlaceholder from "@/components/ImageWithPlaceholder";
 import {
   labelForCategory,
   labelForSource,
@@ -83,7 +80,6 @@ import { useLocalStorageSync } from "@/lib/useLocalStorageSync";
 import { closetStore } from "@/lib/closetStore";
 import { workStore } from "@/lib/workStore";
 import { toast } from "sonner";
-import { ScrollToTop } from "@/components/ScrollToTop";
 import closet4 from "../assets/img/closet4.webp";
 import ClosetBanner from "../assets/img/inner6.webp";
 import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
@@ -1748,7 +1744,14 @@ export default function Closet() {
             >
               <span className="text-[16px] font-bold text-dark-brand">
                 {t("closet.garmentsCount", {
-                  count: items.length,
+                  count:
+                    !semanticActive &&
+                    activeFilters.category === "all" &&
+                    activeFilters.source === "all" &&
+                    !activeFilters.search &&
+                    typeof total === "number"
+                      ? total
+                      : items.length,
                   defaultValue: "{{count}} garments",
                 })}
               </span>

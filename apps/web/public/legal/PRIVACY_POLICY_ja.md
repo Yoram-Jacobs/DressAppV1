@@ -2,7 +2,7 @@
 
 **発効日：** 2026年9月23日  
 **最終更新日：** 2026年10月16日  
-**アプリバージョン：** 1.0.5  
+**アプリバージョン：** 1.0.8  
 **公式ウェブサイト：** [https://dressapp.co](https://dressapp.co)  
 **プライバシーポリシー専用URL：** [https://dressapp.co/privacy](https://dressapp.co/privacy)  
 

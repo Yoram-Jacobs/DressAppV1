@@ -97,7 +97,7 @@ La pagina Profilo funge da pannello di controllo principale per DressApp. I camp
 
 2. **Profilo di Stile (Regole di sobrietà, codice di abbigliamento)**
    - **Perché è importante?**: Stabilisce confini personali per gli outfit consigliati, impedendo all'IA di generare suggerimenti di stile inappropriati.
-   - **Dipendenze dei sottosistemi**: I parametri selezionati (ad es. vincoli di abbigliamento sobrio) vengono inseriti direttamente nei prompt di styling per Gemini 2.5 Flash, filtrando gli output del guardaroba corrispondenti prima che vengano mostrati.
+   - **Dipendenze dei sottosistemi**: I parametri selezionati (ad es. vincoli di abbigliamento sobrio) vengono inseriti direttamente nei prompt di styling per Gemini 3.5 Flash-Lite, filtrando gli output del guardaroba corrispondenti prima che vengano mostrati.
 
 3. **Dettagli (Nome, Telefono, Occupazione)**
    - **Perché è importante?**: Personalizza il tono delle comunicazioni e instrada gli avvisi di notifica.

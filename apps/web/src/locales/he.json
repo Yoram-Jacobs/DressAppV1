@@ -935,7 +935,8 @@
       "upgradeButton": "שדרג תוכנית",
       "editManuallyButton": "המשך באופן ידני",
       "manualContinueHint": "באפשרותך להזין את פרטי הפריטים ידנית ולשמור אותם."
-    }
+    },
+    "fitPlaceholder": "בחר גזרה"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1091,7 +1092,8 @@
       "culturalTags": "תגיות תרבותיות",
       "culturalTagPlaceholder": "הוסף תגית תרבותית",
       "notes": "הערות",
-      "priceWithCurrency": "מחיר ({{currency}})"
+      "priceWithCurrency": "מחיר ({{currency}})",
+      "fit": "גזרה"
     },
     "photo": {
       "addLabel": "הוספת תמונה",
@@ -3096,6 +3098,13 @@
       "nude": "בז' בהיר",
       "light_beige": "בז' בהיר",
       "ניוד": "בז' בהיר"
+    },
+    "fit": {
+      "slim": "גזרה צמודה (Slim)",
+      "regular": "גזרה רגילה (Regular)",
+      "loose": "גזרה רפויה / רחבה (Loose)",
+      "oversized": "אוברסייז (Oversized)",
+      "flared": "מתרחבת / גזרת A (Flared)"
     }
   },
   "location": {
@@ -5354,7 +5363,26 @@
     "demoteFailedToast": "המעבר למסלול החינמי נכשל.",
     "clusterFree": "דורש 15+ קרדיטים",
     "unlocksCluster": "פותח העלאת אשכול",
-    "packIncludesCluster": "חבילה בתשלום — פותחת העלאת אשכול (15+ קרדיטים)"
+    "packIncludesCluster": "חבילה בתשלום — פותחת העלאת אשכול (15+ קרדיטים)",
+    "closetFreeCapacityDesc": "100 (עד 150 באמצעות הזמנות חברים)",
+    "whatCreditBuysShort": "מה רוכש קרדיט 1",
+    "whatCreditBuysTitle": "עלות פעולה מדויקת:",
+    "fairValueTitle": "כלכלת AI שקופה:",
+    "fairValueSubtitle": "בלי חיובים מפתיעים ובלי עמלות מחזוריות קטנות. הטעינו רק כשאתם זקוקים ליכולות מתקדמות.",
+    "neverExpires": "ללא תוקף",
+    "noSubscriptionNeeded": "ללא התחייבות למנוי",
+    "whatYouGet": "מה כלול בחבילה:",
+    "pack10Item1": "10 ניתוחי ענן מיידיים עם Gemini",
+    "pack10Item2": "10 צילומי סטודיו והשלמות תמונה ב-AI",
+    "pack50Item1": "50 ניתוחי ענן מיידיים עם Gemini",
+    "pack50Item2": "פותח העלאת מקבץ בגדים (15+ קרדיטים)",
+    "pack50Item3": "כ־3 סריקות מקבץ מלאות של ארון או מתלה",
+    "pack100Item1": "100 ניתוחי ענן מיידיים עם Gemini",
+    "pack100Item2": "פותח העלאת מקבץ בגדים",
+    "pack100Item3": "כ־6+ סריקות מקבץ מלאות של ארון או מתלה",
+    "pack100Item4": "עדיפות בתור והדמיית 3D ברזולוציה גבוהה",
+    "packPerCreditCost": "${{cost}} לקרדיט",
+    "packPerCreditCostSave": "${{cost}} לקרדיט (חיסכון של {{save}})"
   },
   "avatar": {
     "savedSuccess": "אווטאר ופרופיל חזותי נשמר!",

@@ -30,13 +30,13 @@ def test_apply_fashion_glossary():
     assert "שרוואל" in _apply_fashion_glossary("שלוואר משי", "he")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_translate_text_same_lang_fast_return():
     res = await translate_text("Hello world", target_lang="en", source_lang="en")
     assert res == "Hello world"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_translate_text_with_mocked_gemini():
     with patch("app.services.translation_service._translate_via_google_gemini", new_callable=AsyncMock) as mock_gemini:
         mock_gemini.return_value = ["קורטה משי שחור וזהב עם צ'ורידר ירוק"]
@@ -50,7 +50,7 @@ async def test_translate_text_with_mocked_gemini():
         mock_gemini.assert_called_once()
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_translate_stylist_payload():
     sample_payload = {
         "spoken_reply": "Here is an outfit for the event.",
@@ -104,7 +104,7 @@ async def test_translate_stylist_payload():
         assert translated["do_dont"][0] == "כן לנעול נעליים מצוחצחות"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_translate_garment_attributes():
     sample_garment = {
         "title": "Black Silk Kurta",

@@ -2,7 +2,7 @@
 
 **Datum des Inkrafttretens:** 27. Juli 2026  
 **Zuletzt aktualisiert:** 16. Oktober 2026  
-**App-Version:** 1.0.5  
+**App-Version:** 1.0.8  
 **Offizielle Website:** [https://dressapp.co](https://dressapp.co)  
 
 Willkommen bei **DressApp** („DressApp", „wir", „unser" oder „uns"), einer intelligenten Plattform für digitale Garderobenverwaltung, Stilplanung, einen Peer-to-Peer-Kleidermarktplatz und einen persönlichen KI-Stylisten, die von der **DressApp Ltd.** entwickelt und betrieben wird. Diese Allgemeinen Geschäftsbedingungen („AGB" oder „Bedingungen") regeln Ihren Zugriff auf und Ihre Nutzung der mobilen Anwendungen und Webanwendungen von DressApp, der APIs und der verbundenen Dienste, einschließlich aller Funktionen, Inhalte und Dienstleistungen, die über die Anwendung angeboten werden (zusammenfassend der „Dienst").

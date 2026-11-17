@@ -178,49 +178,29 @@ class CreditExhaustionWaiter:
 
 _credit_waiter = CreditExhaustionWaiter()
 
-async def wait_for_credit_replenishment(user_id: str, max_wait: int = 300) -> bool:
+async def wait_for_credit_replenishment(user_id: str, max_wait: int = 0) -> bool:
+    """Fail-fast credit check without blocking HTTP handlers in sleep-poll loops."""
     db = get_db()
-    for attempt in range(max_wait // 5):
-        try:
-            user_record = await db.users.find_one({"id": user_id})
-            if user_record:
-                u_model = User.parse_obj(user_record)
-                if u_model.total_credits > 0:
-                    await _credit_waiter.notify_all()
-                    return True
-        except Exception as e:
-            logger.debug(f"Error checking credit status during wait: {e}")
-        await asyncio.sleep(5)
+    try:
+        user_record = await db.users.find_one({"id": user_id})
+        if user_record:
+            u_model = User.parse_obj(user_record)
+            if u_model.total_credits > 0:
+                await _credit_waiter.notify_all()
+                return True
+    except Exception as e:
+        logger.debug(f"Error checking credit status: {e}")
     return False
 
 async def handle_credit_exhaustion(operation: str, user_id: str, required_credits: int) -> bool:
+    """Check immediately if sufficient credits exist; never sleep-poll inside HTTP handlers."""
     db = get_db()
     user_record = await db.users.find_one({"id": user_id})
     if not user_record:
         return False
-    
+
     u_model = User.parse_obj(user_record)
-    if u_model.total_credits >= required_credits:
-        return True
-    
-    waiter = asyncio.Future()
-    _credit_waiter.add_waiter(waiter)
-    
-    try:
-        did_we_get_credits = await wait_for_credit_replenishment(user_id, max_wait=60)
-        if did_we_get_credits:
-            user_record = await db.users.find_one({"id": user_id})
-            if user_record:
-                u_model = User.parse_obj(user_record)
-                if u_model.total_credits >= required_credits:
-                    return True
-        return False
-    except asyncio.TimeoutError:
-        logger.warning(f"Credit wait timed out for user {user_id}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error in credit exhaustion handler: {str(e)}")
-        return False
+    return u_model.total_credits >= required_credits
 
 # ============================================================================
 # QUOTA & ACCESS CHECKERS

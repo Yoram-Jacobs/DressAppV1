@@ -3456,7 +3456,7 @@ def test_maxi_skirt_fragmented_into_pants_and_skirt_merges_on_human_model():
     assert int(merged_mask[415:520, 225:298].sum()) == (520 - 415) * (298 - 225)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_auto_route_mixed_batch_single_multi_and_mass_pipelines(monkeypatch):
     """Verify that analyze_outfits_stream(mode='auto') automatically routes a mixed batch of
     photos (Photo 0: single t-shirt, Photo 1: worn multi-garment outfit, Photo 2: two pants + belt
@@ -3682,7 +3682,7 @@ def test_hoodie_subcategory_never_identified_as_tshirt():
     assert enforced["item_type"] == "Hoodie"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_full_body_man_in_blazer_shirt_belt_pants_shoes_never_synthesizes_hat_or_collapses_to_shoes(monkeypatch):
     """Issue 2 regression: Full-body man wearing blazer + shirt + belt + trousers + shoes with minimal exposed skin (<1%)
     must be recognized as an anatomical outfit stack, never synthesize a 'Hat' from jacket+Belt, and preserve all 5 garments."""
@@ -3736,7 +3736,7 @@ async def test_full_body_man_in_blazer_shirt_belt_pants_shoes_never_synthesizes_
     assert all(r.get("has_human_skin") is True for r in res)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_wall_hooks_two_pants_and_belt_never_triggers_false_human_skin_and_sets_unworn_cluster_hint(monkeypatch):
     """Issue 3 regression: Two pairs of pants and a belt hanging vertically on a warm beige wall must NOT trigger
     has_human_skin from wall chrominance and MUST set _unworn_cluster_hint=True so it routes to the Mass pipeline."""

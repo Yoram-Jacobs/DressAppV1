@@ -923,7 +923,8 @@
       "upgradeButton": "Abonnement upgraden",
       "editManuallyButton": "Handmatig doorgaan",
       "manualContinueHint": "Je kunt gegevens handmatig invoeren en je kledingstukken opslaan."
-    }
+    },
+    "fitPlaceholder": "Selecteer pasvorm"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1090,7 +1091,8 @@
       "culturalTags": "Culturele tags",
       "culturalTagPlaceholder": "culturele tag toevoegen",
       "notes": "Opmerkingen",
-      "priceWithCurrency": "Prijs ({{currency}})"
+      "priceWithCurrency": "Prijs ({{currency}})",
+      "fit": "Pasvorm"
     },
     "group": {
       "front": "Voorkant",
@@ -2365,61 +2367,158 @@
     "routes": {
       "login": {
         "title": "Log in",
-        "description": "Meld u aan bij DressApp om uw kast te beheren, blader door de marktplaats en chat met de AI-stylist."
+        "description": "Meld u aan bij DressApp om uw kast te beheren, blader door de marktplaats en chat met de AI-stylist.",
+        "ogTitle": "Inloggen bij DressApp — Jouw Slimme Digitale Kledingkast & AI-Stylist",
+        "ogDescription": "Open je gedigitaliseerde garderobe, weerbestendige AI-outfitplanner en circulaire mode-marktplaats met 7% community-commissie."
       },
       "register": {
         "title": "Account aanmaken",
-        "description": "Sluit u aan bij DressApp: uw kledingkast, communitymarktplaats en AI-stylist op één plek."
+        "description": "Sluit u aan bij DressApp: uw kledingkast, communitymarktplaats en AI-stylist op één plek.",
+        "ogTitle": "Word Lid van DressApp — Gratis Digitale Kledingkast, AI-Stylist & Marktplaats",
+        "ogDescription": "Maak een gratis DressApp-account aan om je kledingkast in seconden te ordenen, outfits te plannen met AI en deel te nemen aan circulaire mode."
       },
       "home": {
         "title": "Vandaag",
-        "description": "Je dagelijkse DressApp-overzicht: trends, kaststatistieken en de nieuwste artikelen van stylisten."
+        "description": "Je dagelijkse DressApp-overzicht: trends, kaststatistieken en de nieuwste artikelen van stylisten.",
+        "ogTitle": "DressApp — Jouw Slimme Digitale Kledingkast, AI-Stylist & Marktplaats",
+        "ogDescription": "Fotografeer en organiseer je fysieke kledingkast in seconden, ontvang dagelijks weerbestendig AI-outfitadvies en koop, verkoop of ruil kleding met 7% commissie."
       },
       "closet": {
         "title": "Mijn kast",
-        "description": "Elk stuk dat u bezit, met slimme segmentatie, brontags en bewerken met één tik met AI."
+        "description": "Elk stuk dat u bezit, met slimme segmentatie, brontags en bewerken met één tik met AI.",
+        "ogTitle": "Mijn Slimme Digitale Kledingkast & Virtuele Garderobe — DressApp",
+        "ogDescription": "Organiseer je volledige garderobe met automatische AI-uitsnijding, slimme categorietags, seizoensfilters en outfits maken met één tik."
       },
       "closet_add": {
         "title": "Toevoegen aan kast",
-        "description": "Voeg een nieuw item toe aan je DressApp-kast vanaf een foto of URL."
+        "description": "Voeg een nieuw item toe aan je DressApp-kast vanaf een foto of URL.",
+        "ogTitle": "Voeg in Seconden Kleding toe aan je Digitale Kledingkast — DressApp",
+        "ogDescription": "Digitaliseer kledingstukken moeiteloos met de AI-meervoudige scanner, automatische achtergrondverwijdering en waslabel-OCR van DressApp."
       },
       "stylist": {
         "title": "Stilist",
-        "description": "Multimodale AI-stylist die uw kast, kalender en het weer begrijpt."
+        "description": "Multimodale AI-stylist die uw kast, kalender en het weer begrijpt.",
+        "ogTitle": "DressApp Persoonlijke AI-Stylist — Outfitplanner voor Weer & Agenda",
+        "ogDescription": "Ontvang direct gepersonaliseerde outfitcombinaties uit je eigen kledingkast, afgestemd op het weer van vandaag, de gelegenheid en je kleurenpalet."
       },
       "market": {
         "title": "Marktplaats",
-        "description": "Koop, verkoop, ruil of doneer gemeenschapsstukken met volledige transparantie in de kosten."
+        "description": "Koop, verkoop, ruil of doneer gemeenschapsstukken met volledige transparantie in de kosten.",
+        "ogTitle": "DressApp Mode-Marktplaats — Kopen, Verkopen & Ruilen met 7% Commissie",
+        "ogDescription": "Shop pre-loved kledingstukken, test voor aankoop hoe items bij je eigen kledingkast passen en zet je eigen kleding met één tik te koop."
       },
       "market_create": {
         "title": "Noem een ​​stuk",
-        "description": "Plaats een van je kastitems op de DressApp-marktplaats."
+        "description": "Plaats een van je kastitems op de DressApp-marktplaats.",
+        "ogTitle": "Plaats een Kledingstuk op de Circulaire Mode-Marktplaats van DressApp",
+        "ogDescription": "Selecteer een item uit je digitale kledingkast om te verkopen, ruilen of doneren met vooraf ingevulde gegevens en 7% transparante kosten."
       },
       "transactions": {
         "title": "Transacties",
-        "description": "Uw DressApp-aankopen en -verkopen, met volledige 7% tarieftransparantie."
+        "description": "Uw DressApp-aankopen en -verkopen, met volledige 7% tarieftransparantie.",
+        "ogTitle": "Jouw Marktplaats-Transacties & Bestellingen — DressApp",
+        "ogDescription": "Beheer al je aankopen, uitbetalingen en ruilzendingen op de DressApp-communitymarktplaats overzichtelijk op één plek."
       },
       "admin": {
         "title": "Beheerdersdashboard",
-        "description": "DressApp-bedieningsconsole voor gebruikers, marktplaats, AI-providers en de Trend-Scout-agent."
+        "description": "DressApp-bedieningsconsole voor gebruikers, marktplaats, AI-providers en de Trend-Scout-agent.",
+        "ogTitle": "DressApp Admin-Operatieconsole",
+        "ogDescription": "Intern beheerdashboard voor de platformoperaties van DressApp."
       },
       "me": {
         "title": "Profiel & instellingen",
-        "description": "Beheer uw DressApp-profiel, stem en Google Agenda-verbinding."
+        "description": "Beheer uw DressApp-profiel, stem en Google Agenda-verbinding.",
+        "ogTitle": "Jouw Profiel & Stijlinstellingen — DressApp",
+        "ogDescription": "Pas je garderobevoorkeuren, taal en gekoppelde diensten aan in DressApp."
       },
       "trends": {
         "title": "Trendscout",
-        "description": "Uw gepersonaliseerde DressApp-modetrends en stylingaanbevelingen sinds u zich heeft aangemeld."
+        "description": "Uw gepersonaliseerde DressApp-modetrends en stylingaanbevelingen sinds u zich heeft aangemeld.",
+        "ogTitle": "DressApp Trend Scout — Modetrends Gekoppeld aan Jouw Kledingkast",
+        "ogDescription": "Zie direct hoe wereldwijde catwalk- en streetstyle-trends aansluiten op de kledingstukken in jouw persoonlijke digitale garderobe."
       },
       "closet_item": {
         "title": "Kastitem",
-        "description": "Een stuk in je DressApp-kast."
+        "description": "Een stuk in je DressApp-kast.",
+        "ogTitle": "Kledingstukdetails & Outfit-Ideeën — Digitale Kledingkast van DressApp",
+        "ogDescription": "Inspecteer kledingtags, stylingnotities en bijpassende items in je slimme digitale garderobe."
       },
       "market_listing": {
         "title": "Marktplaats vermelding",
-        "description": "Een stuk te koop op DressApp."
+        "description": "Een stuk te koop op DressApp.",
+        "ogTitle": "Pre-Loved Mode-Item op de DressApp-Marktplaats",
+        "ogDescription": "Koop of ruil dit item uit de DressApp-community met virtuele kledingkast-matching en slechts 7% commissie."
+      },
+      "onboarding": {
+        "title": "Aan de Slag — Bouw Jouw Slimme Digitale Kledingkast | DressApp",
+        "description": "Stel je digitale DressApp-garderobe in, pas je 3D-avatar en stijlprofiel aan en ontvang vanaf vandaag gepersonaliseerde AI-outfitaanbevelingen.",
+        "ogTitle": "Start met DressApp — Slimme Digitale Kledingkast & AI-Stylist",
+        "ogDescription": "Bouw je digitale kledingkast op, personaliseer je 3D-avatar en activeer binnen enkele minuten dagelijkse outfitplanning op basis van het weer."
+      },
+      "about": {
+        "title": "Over Ons — Het Verhaal Achter de Slimme Kledingkast & Circulaire Mode | DressApp",
+        "description": "Ontdek het verhaal achter DressApp: hoe een kledingkastcrisis leidde tot een slimme digitale garderobe, een persoonlijke AI-stylist en een circulaire marktplaats.",
+        "ogTitle": "Over DressApp — Onze Visie op Slimme & Circulaire Mode",
+        "ogDescription": "Lees hoe DressApp een slimme digitale kledingkast, persoonlijke AI-stylist en marktplaats met 7% commissie combineert in 13 talen."
+      },
+      "pricing": {
+        "title": "Prijzen & Abonnementen — Gratis Digitale Kledingkast & Pro AI-Stylist | DressApp",
+        "description": "Vergelijk de Free-, Manager- en Professional-abonnementen van DressApp. Digitaliseer tot 100 items gratis en upgrade voor onbeperkte AI-styling en analyses.",
+        "ogTitle": "DressApp Prijzen & Abonnementen — Start Gratis met je Digitale Kledingkast",
+        "ogDescription": "Bekijk de transparante pakketten van DressApp: gratis digitaal garderobebeheer, AI-outfitplanning en toegang tot de marktplaats met 7% commissie."
+      },
+      "stats": {
+        "title": "Garderobe-Inzichten — Kosten per Dracht & Kleuranalyse | DressApp",
+        "description": "Analyseer de waarde van je garderobe, kosten per dracht, kleurverdeling en meest gedragen kledingstukken met DressApp Garderobe-Inzichten.",
+        "ogTitle": "DressApp Garderobe-Inzichten — Kosten per Dracht & Stijlstatistieken",
+        "ogDescription": "Ontgrendel diepgaande analyses over het gebruik van je kledingkast, kleurbalans, seizoensgereedheid en duurzaamheidsimpact."
+      },
+      "experts": {
+        "title": "Gids met Gecertificeerde Personal Stylisten & Mode-Experts | DressApp",
+        "description": "Kom in contact met gecertificeerde personal stylisten en garderobeconsulenten op DressApp voor live kledingkast-audits, kleuranalyse en personal shopping.",
+        "ogTitle": "DressApp Mode-Experts Gids — Boek een Personal Stylist",
+        "ogDescription": "Bekijk gecertificeerde stylisten die jouw digitale DressApp-kledingkast kunnen beoordelen en persoonlijke lookbooks voor je samenstellen."
+      },
+      "suitcase": {
+        "title": "Slimme Koffer & Reis-Paklijstplanner | DressApp",
+        "description": "Plan zorgeloos reiscapsules met de AI-kofferplanner van DressApp. Pak weerbestendige outfits uit je digitale kledingkast in voor elke bestemming.",
+        "ogTitle": "DressApp Slimme Koffer — AI-Reiscapsule & Paklijstplanner",
+        "ogDescription": "Stel bestemmingsgerichte paklijsten en dagelijkse reisoutfits rechtstreeks samen vanuit je digitale garderobe."
+      },
+      "avatar": {
+        "title": "Virtuele 3D-Paskamer & Gepersonaliseerde Lichaamsavatar | DressApp",
+        "description": "Pas kleding en combineer outfits in 3D op een aanpasbare lichaamsavatar op basis van jouw echte verhoudingen in de Virtuele Paskamer van DressApp.",
+        "ogTitle": "DressApp Virtuele 3D-Paskamer — Kleding Passen op je Eigen Avatar",
+        "ogDescription": "Bekijk kledingstukken en complete outfits vanuit elke hoek op je gepersonaliseerde 3D-avatar voordat je je aankleedt of gaat winkelen."
+      },
+      "shopping": {
+        "title": "Shopping-Assistent — Virtueel Passen & Kledingkast-Match | DressApp",
+        "description": "Test items uit webwinkels met je bestaande digitale kledingkast voordat je koopt. Bekijk outfit-matches, stijlscores en 3D-pasvormen met DressApp.",
+        "ogTitle": "DressApp Shopping-Assistent — Check of Nieuwe Kleding bij je Kast Past",
+        "ogDescription": "Voorkom miskopen door vooraf te testen hoe nieuwe items uit elke webshop combineren met kleding die je al in de kast hebt hangen."
+      },
+      "migration": {
+        "title": "Garderobe-Migratie — Importeer je Kledingkast met Één Klik | DressApp",
+        "description": "Verhuis je bestaande digitale garderobe vanuit andere kledingkast-apps binnen enkele minuten naar DressApp met automatische import en behoud van tags.",
+        "ogTitle": "DressApp Garderobe-Migratie — Verhuis je Digitale Kledingkast Naadloos",
+        "ogDescription": "Neem je volledige kledingcatalogus mee naar DressApp zonder ook maar één kledingstuk opnieuw te hoeven fotograferen."
+      },
+      "privacy": {
+        "title": "Privacybeleid — Gegevensbescherming & Garderobe-Beveiliging | DressApp",
+        "description": "Lees het Privacybeleid van DressApp en ontdek hoe wij je persoonlijke kledingkastfoto's, stijlprofiel en accountgegevens beschermen met strikte controles.",
+        "ogTitle": "DressApp Privacybeleid — Hoe Wij Jouw Garderobegegevens Beschermen",
+        "ogDescription": "Transparante privacyrichtlijnen voor de bescherming van je digitale kledingkastfoto's, AI-stylingsessies en marktplaatstransacties."
+      },
+      "terms": {
+        "title": "Servicevoorwaarden — Platform- & Marktplaatsregels | DressApp",
+        "description": "Bekijk de Servicevoorwaarden van DressApp voor het gebruik van de digitale kledingkast, persoonlijke AI-styling, abonnementen en de marktplaats met 7% commissie.",
+        "ogTitle": "DressApp Servicevoorwaarden — Richtlijnen voor Gebruikers & Marktplaats",
+        "ogDescription": "Lees de officiële voorwaarden en communityrichtlijnen voor het gebruik van de garderobe, AI-stylist en marktplaats van DressApp."
       }
-    }
+    },
+    "defaultOgTitle": "DressApp — Jouw Slimme Digitale Kledingkast, AI-Stylist & Marktplaats",
+    "defaultOgDescription": "Fotografeer en organiseer je fysieke kledingkast in seconden, ontvang dagelijks weerbestendig AI-outfitadvies en koop, verkoop of ruil kleding met 7% commissie.",
+    "schemaDescription": "Slimme digitale kledingkast, persoonlijke AI-stylist, outfitplanner en circulaire mode-marktplaats met 7% community-commissie."
   },
   "taxonomy": {
     "categories": {
@@ -2770,7 +2869,9 @@
       "cargo": "Cargobroek",
       "pants": "Broek",
       "cargo_shorts": "Cargoshorts",
-      "high_heel_pump": "Pumps met hoge hak"
+      "high_heel_pump": "Pumps met hoge hak",
+      "solid_shoes": "Nette schoenen",
+      "dress_shoes": "Nette schoenen"
     },
     "color": {
       "black": "Zwart",
@@ -2962,7 +3063,17 @@
       "yellow": "Geel",
       "orange": "Oranje",
       "gold": "Goud",
-      "silver": "Zilver"
+      "silver": "Zilver",
+      "nude": "Lichtbeige",
+      "light_beige": "Lichtbeige",
+      "ניוד": "Lichtbeige"
+    },
+    "fit": {
+      "slim": "Aansluitende pasvorm (Slim)",
+      "regular": "Normale pasvorm (Regular)",
+      "loose": "Ruime pasvorm (Loose)",
+      "oversized": "Oversized pasvorm (Oversized)",
+      "flared": "Uitlopend / A-lijn (Flared)"
     }
   },
   "location": {
@@ -4351,7 +4462,40 @@
       "profile_item16_title": "",
       "profile_item16_desc": "",
       "tiers_free_desc": "Basislimiet van 100 items (uitbreidbaar tot 150 items via vriendenuitnodigingen), 10 dagelijkse lokale AI-credits (tot 300 over 30 dagen) en 5 eenmalige onboarding-credits.",
-      "tiers_manager_desc": "$10/maand (of $100/jaar). Ontgrendelt onbeperkte kastruimte, het geavanceerde AI-model van DressApp, ochtendmeldingen voor outfits, agendasynchronisatie, verkopen op de Marktplaats en volledige toegang tot Trend Scout."
+      "tiers_manager_desc": "$10/maand (of $100/jaar). Ontgrendelt onbeperkte kastruimte, het geavanceerde AI-model van DressApp, ochtendmeldingen voor outfits, agendasynchronisatie, verkopen op de Marktplaats en volledige toegang tot Trend Scout.",
+      "scheduler_push_title": "Ochtend-outfitmeldingen",
+      "scheduler_push_p1": "Word wakker met een kant-en-klaar outfitvoorstel afgestemd op het weer en je planning van de dag:",
+      "scheduler_push_step1": "Open je **Profiel**-instellingen en scrol naar **Ochtend-outfitmeldingen**.",
+      "scheduler_push_step2": "Schakel de dagelijkse herinnering in en kies de dagen en het tijdstip voor je outfitvoorstel.",
+      "scheduler_push_step3": "Kies je favoriete dagelijkse stijl (Casual, Werk, Sportief of Aangepast).",
+      "scheduler_push_step4": "Sta browsermeldingen toe wanneer daarom gevraagd wordt zodat meldingen je apparaat bereiken.",
+      "scheduler_push_step5": "Koppel je agenda en locatie zodat de stylist je afspraken en het lokale weer kent.",
+      "scheduler_push_step6": "Tik op je ochtendmelding om de volledige outfit te zien, waarom hij gekozen is en hem vandaag te dragen.",
+      "shopping_assistant_title": "Maatassistent voor online winkelen",
+      "shopping_assistant_p1": "Vind je beste maat bij online winkelen door maattabellen van winkels te vergelijken met jouw lichaamsmaten:",
+      "shopping_assistant_step1": "Installeer de **DressApp-browserextensie** op je computer of sla de **mobiele bladwijzer** op via je Profiel.",
+      "shopping_assistant_step2": "Zorg ervoor dat je lichaamsmaten (lengte, gewicht, taille en voetlengte) in je Profiel zijn opgeslagen.",
+      "shopping_assistant_step4": "Klik op de knop **DressApp** op de pagina (of open je opgeslagen mobiele bladwijzer).",
+      "shopping_assistant_step5": "Gebruikt een winkel een aangepast maattabelformaat, sleep dan een kader rond de maattabel op het scherm.",
+      "shopping_assistant_step6": "Bekijk je aanbevolen maat, pasvormzekerheid en advies om een maat groter of kleiner te kiezen.",
+      "import_wardrobe_title": "Je bestaande garderobe importeren",
+      "import_wardrobe_p1": "Gebruik je al een andere kast-app of heb je online aankoopbewijzen? Breng je kleding automatisch over naar DressApp:",
+      "import_wardrobe_step2": "Selecteer de kast-app waaruit je importeert, of kies voor importeren via een winkellink of digitale bon.",
+      "import_wardrobe_step3": "Volg de eenvoudige handleiding op het scherm om je items met DressApp te delen.",
+      "import_wardrobe_step4": "De AI van DressApp verwijdert automatisch achtergronden en ordent je kleding op kleur, categorie en seizoen.",
+      "import_wardrobe_step5": "Dubbele items worden automatisch overgeslagen zodat je kast overzichtelijk blijft.",
+      "import_wardrobe_step6": "Zodra het klaar is, staan al je geïmporteerde kledingstukken en opgeslagen outfits in je kast.",
+      "tiers_title": "Abonnementsplannen",
+      "tiers_p1": "DressApp biedt flexibele plannen afgestemd op de grootte van je kast en jouw stijlbehoeften:",
+      "tiers_free_title": "Gratis abonnement",
+      "tiers_manager_title": "Manager-abonnement",
+      "tiers_pro_title": "Professioneel abonnement",
+      "tiers_pro_desc": "$15/maand (of $150/jaar). Gemaakt voor stylisten en creators. Bevat alles uit Manager plus vermelding in de Stylisten-gids, promotiecampagnes, voorrangsondersteuning en 100 maandelijkse styling-credits.",
+      "tiers_how_to_upgrade_title": "Zo kun je upgraden:",
+      "tiers_step1": "Open je Profiel-instellingen.",
+      "tiers_step2": "Scrol naar het gedeelte Abonnement & kastlimieten.",
+      "tiers_step3": "Klik op de link Upgraden of Prijzen.",
+      "tiers_step4": "Kies je gewenste plan en rond de betaling veilig af."
     },
     "trend_closet_title": "1 Tik: \"Stylen met mijn Kledingkast\"",
     "trend_closet_desc": "Tik op de knop op een trendkaart en laat de AI Stylist kleuren en silhouetten direct matchen met kledingstukken die al in je kast hangen.",
@@ -5111,7 +5255,26 @@
     "demoteFailedToast": "Omzetten naar Gratis abonnement mislukt.",
     "clusterFree": "Vereist 15+ credits",
     "unlocksCluster": "Ontgrendelt cluster upload",
-    "packIncludesCluster": "Betaald pakket — ontgrendelt cluster-upload (15+ credits)"
+    "packIncludesCluster": "Betaald pakket — ontgrendelt cluster-upload (15+ credits)",
+    "closetFreeCapacityDesc": "100 (tot 150 met uitnodigingen)",
+    "whatCreditBuysShort": "Wat 1 credit oplevert",
+    "whatCreditBuysTitle": "Exacte kosten per bewerking:",
+    "fairValueTitle": "Transparante AI-economie:",
+    "fairValueSubtitle": "Geen verrassende facturen en geen kleine terugkerende kosten. Waardeer alleen op wanneer u extra kracht nodig heeft.",
+    "neverExpires": "Verloopt nooit",
+    "noSubscriptionNeeded": "Geen abonnement nodig",
+    "whatYouGet": "Wat dit pakket biedt:",
+    "pack10Item1": "10 directe Gemini-cloudanalyses",
+    "pack10Item2": "10 AI-fotobewerkingen en -herstelacties",
+    "pack50Item1": "50 directe Gemini-cloudanalyses",
+    "pack50Item2": "Ontgrendelt groepsupload van kleding (15+ cr.)",
+    "pack50Item3": "Ongeveer 3 volledige kast- of rekscans",
+    "pack100Item1": "100 directe Gemini-cloudanalyses",
+    "pack100Item2": "Ontgrendelt groepsupload van kleding",
+    "pack100Item3": "Ongeveer 6+ volledige kast- of rekscans",
+    "pack100Item4": "Voorrangswachtrij & hoge-resolutie 3D-passen",
+    "packPerCreditCost": "${{cost}} per credit",
+    "packPerCreditCostSave": "${{cost}} per credit (bespaar {{save}})"
   },
   "avatar": {
     "savedSuccess": "Avatar en visueel profiel opgeslagen!",
@@ -5298,7 +5461,10 @@
     "relaxed": "Relaxed",
     "boho": "Boho",
     "smart_casual": "Smart-casual",
-    "dresses_skirts": "Jurken & rokken"
+    "dresses_skirts": "Jurken & rokken",
+    "nude": "Lichtbeige",
+    "light_beige": "Lichtbeige",
+    "ניוד": "Lichtbeige"
   },
   "wardrobeStats": {
     "tabOverview": "Overzicht",
@@ -5910,7 +6076,8 @@
     "mesh_mode_tailored_active": "3D Pasvorm actief — klik voor Foto-pasvorm",
     "mesh_mode_photo_active": "Foto-pasvorm actief — klik voor 3D Pasvorm",
     "hood_on": "Capuchon op",
-    "hood_off": "Capuchon af"
+    "hood_off": "Capuchon af",
+    "restoring_context": "3D-studio wordt hersteld…"
   },
   "dressingRoom": {
     "title": "3D-paskamer",

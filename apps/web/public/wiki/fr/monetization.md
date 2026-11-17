@@ -7,6 +7,7 @@ DressApp propose un forfait Gratuit généreux ainsi que des abonnements mensuel
 1. **Forfait Gratuit** :
    - Stockez jusqu'à **100 articles** gratuitement — et étendez votre garde-robe jusqu'à **150 articles** en partageant votre lien d'invitation avec vos amis (**+10 emplacements gratuits** par ami inscrit).
    - Fonctionne immédiatement grâce au **modèle d'IA local de DressApp** (**10 crédits quotidiens**, cumulables jusqu'à **300 crédits sur 30 jours**) ainsi que **5 crédits de départ de Reconstruction Studio**.
+   - Comprend des **suggestions de tenues quotidiennes** propulsées par Gemini (**1 crédit IA** par suggestion quotidienne déduit de votre quota quotidien ou pack de crédits).
    - Prend en charge les photos d'un seul vêtement et les tenues portées. **L'import groupé de vêtements** (placards, cintres, étagères à chaussures ou piles de chemises) est débloqué sur le forfait Gratuit dès que vous possédez **15 crédits de reconstruction IA ou plus** (vous pouvez acheter des packs de 10, 50 ou 100 crédits sur la page Tarifs). Si vous avez moins de 15 crédits, DressApp vous proposera d'ignorer l'image, d'acheter un pack de crédits ou de mettre à niveau votre forfait. **L'Agent de Migration de Garde-Robe** (import massif de 50+ articles depuis d'autres applications) est réservé aux forfaits **Manager** et **Professionnel**.
 
 2. **Forfait Manager (10 $/mois ou 100 $/an)** :

@@ -2,7 +2,7 @@
 
 **Date d'entrée en vigueur :** 27 juillet 2026  
 **Dernière mise à jour :** 16 octobre 2026  
-**Version de l'application :** 1.0.5  
+**Version de l'application :** 1.0.8  
 **Site officiel :** [https://dressapp.co](https://dressapp.co)  
 
 Bienvenue sur **DressApp** (« DressApp », « nous », « notre » ou « nos »), une plateforme intelligente de garde-robe numérique, de planification de style, de place de marché communautaire entre particuliers et de stylisme personnel par IA, développée et exploitée par **DressApp Ltd.** Les présentes Conditions d'utilisation (« Conditions ») régissent votre accès et votre utilisation des applications mobiles et web de DressApp, des API et des services connectés, y compris l'ensemble des fonctionnalités, contenus et services proposés via l'application (collectivement, le « Service »).

@@ -305,6 +305,8 @@ async def test_chat_analyse_hebrew_reconstruct_overrides_clarification_hallucina
 
 @pytest.fixture
 def mock_free_user_with_credits():
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone.utc)
     return {
         "id": "user_free_credits",
         "email": "free_credits@example.com",
@@ -314,8 +316,8 @@ def mock_free_user_with_credits():
                 "id": "b1",
                 "amount": 5,
                 "type": "free",
-                "created_at": "2026-10-01T00:00:00Z",
-                "expires_at": "2026-11-01T00:00:00Z",
+                "created_at": now.isoformat(),
+                "expires_at": (now + timedelta(days=30)).isoformat(),
             }
         ],
         "subscription": {
@@ -445,6 +447,7 @@ async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+             patch("app.api.v1.closet.ingestion.get_garment_vision_service", return_value=None), \
              patch("app.services.vision.GarmentVisionService") as mock_vision_cls:
 
             mock_find.return_value = mock_item
@@ -558,6 +561,7 @@ async def test_reanalyze_respects_preferred_image_view_and_image_url_param(mock_
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+             patch("app.api.v1.closet.ingestion.get_garment_vision_service", return_value=None), \
              patch("app.services.vision.GarmentVisionService") as mock_vision_cls:
 
             mock_find.return_value = mock_item

@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from app.api.v1.closet.dpp_receipts import fetch_image_url, FetchImageUrlIn
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_fetch_image_url_direct_image():
     payload = FetchImageUrlIn(
         url="https://images.asos-media.com/products/topshop-alexi-real-suede-2-part-heeled-sandal-in-black/208581834-3?$n_640w$&wid=513&fit=constrain"
@@ -34,7 +34,7 @@ async def test_fetch_image_url_direct_image():
         assert "asos.com" in headers.get("Referer", "")
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_fetch_image_url_html_page():
     payload = FetchImageUrlIn(url="https://www.example.com/product/123")
     fake_user = {"id": "user123"}
@@ -61,7 +61,8 @@ async def test_fetch_image_url_html_page():
     mock_img_resp.content = b"fake-jpeg-bytes"
     mock_img_resp.raise_for_status = MagicMock()
 
-    with patch("httpx.AsyncClient") as mock_client_cls:
+    with patch("app.services.security_validator.is_safe_external_url", return_value=True), \
+         patch("httpx.AsyncClient") as mock_client_cls:
         mock_client = AsyncMock()
         mock_client.get = AsyncMock(side_effect=[mock_page_resp, mock_img_resp])
         mock_client_cls.return_value.__aenter__.return_value = mock_client

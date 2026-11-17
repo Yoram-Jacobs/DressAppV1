@@ -25,7 +25,7 @@ grafiek TD
     DB[(MongoDB: kast_items)]
     Opwarmen[analyse_groep_helper opnieuw]
     SetCheck{Is het een set?}
-    LLM [Gemini 2.5 Flash-groepsanalysator]
+    LLM [Gemini 3.5 Flash-Lite-groepsanalysator]
     Klaar[Status markeren: gereed]
     Stylist[Stylist Hersenen / Planner]
     Avatar[Avatar-viewer 2D]

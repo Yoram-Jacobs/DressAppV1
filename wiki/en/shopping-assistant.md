@@ -5,17 +5,17 @@ Shop smart online and find the exact sizing matching your physical body measurem
 ## Overview
 The DressApp Shopping Assistant helps you find the perfect size when shopping online. It works in two ways:
 - **Chrome Extension**: A full-featured extension for desktop Chrome browsers
-- **Mobile Bookmarklet**: A lightweight bookmarklet for phones and tablets
+- **Mobile Shopping Hub & Native Share Sheet**: Instant size checks directly on your phone or tablet
 
 Both options scan size charts on retail websites, compare them with your saved body measurements, and recommend your best fit instantly. No more guessing — just confident shopping!
 
 ## Prerequisites
 - An active DressApp user account
 - Stored body measurements (height, weight, waist, foot length) in your Profile settings
-- For Chrome Extension: Google Chrome browser on desktop
-- For Mobile Bookmarklet: Any modern mobile browser (Safari, Chrome, etc.)
+- For Desktop: Google Chrome browser
+- For Mobile: Any modern mobile browser (Chrome, Safari, Edge, etc.)
 
-## Option A: Chrome Extension (Recommended)
+## Option A: Desktop Chrome Extension (Recommended for PC/Mac)
 
 ### Installation
 1. Install the official extension directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp)
@@ -38,33 +38,22 @@ Both options scan size charts on retail websites, compare them with your saved b
    - Which measurements matched (bust, waist, etc.)
    - Alternative sizes if you prefer a looser or tighter fit
 
-## Option B: Mobile Bookmarklet
+## Option B: Mobile Shopping Hub & Native Share Sheet (For Mobile Phones)
 
-### Installation
-1. On your phone, go to your DressApp Profile page
-2. Find the **Shopping Assistant** section
-3. Copy the bookmarklet code provided
-4. Add it to your mobile browser's bookmarks:
-   - **Safari (iOS)**: Tap the Share button → "Add to Bookmarks"
-   - **Chrome (Android)**: Tap the three dots → "Bookmark" or "Add to Home Screen"
+On mobile, you do not need to install extensions, copy scripts, or edit bookmarks. You have two frictionless paths:
 
-### How to Use
-1. **Visit any supported store** in your mobile browser
-2. **Navigate to a product page** with size information
-3. **Open your bookmarks** and tap the DressApp bookmarklet
-4. **Grant permission** if prompted (the bookmarklet needs to read the page)
-5. **See your recommendation** — a card appears with your best size match
+### Path 1: Inside DressApp's Shopping Hub
+1. Open the **Shopping Hub** inside DressApp (`/shopping`).
+2. Select any fashion platform (Zara, ASOS, Mango, AliExpress, etc.) or paste any store URL.
+3. Your personalized brand sizes (**Top / Shirt**, **Bottoms / Pants**, **Footwear**) are pre-calculated and displayed immediately.
+4. Tap the **floating tape-measure assistant** anytime on screen to analyze specific garments or scan size tables right in place!
 
-## Manual Crop (If Auto-Detection Doesn't Work)
-
-Sometimes size charts are hidden or in unusual formats. No problem!
-
-1. Click the DressApp button or bookmarklet
-2. If no chart is found automatically, you'll see **"Drag a box around the size chart"**
-3. **Tap and drag** to draw a box around the size chart area
-4. Adjust the box if needed
-5. Tap **Apply** to confirm
-6. The assistant analyzes the cropped area and shows your recommendation
+### Path 2: In Mobile Chrome, Safari, or Retail Apps
+1. When browsing Zara, ASOS, or any store in your mobile browser or store app, find a garment you love.
+2. Tap the browser's native **Share** button (the arrow icon in Safari or 3-dots `⋮` → **Share** in Chrome).
+3. Tap **DressApp** from the share menu.
+4. DressApp opens instantly, matches the garment against your body measurements, and recommends your best fit!
+5. **Tip**: If a store hides measurements behind pop-ups, snap a screenshot and tap **Share → DressApp** on the screenshot preview—DressApp's Gemini Vision OCR reads the table automatically.
 
 ## What You'll See
 
@@ -87,33 +76,26 @@ The Shopping Assistant works on most e-commerce sites, including:
 - Zara
 - Asos
 - H&M
+- Mango
+- Nike
+- Uniqlo
 - And many more!
 
 ## Troubleshooting
 
-### Chrome Extension
+### Desktop Chrome Extension
 - **No DressApp button visible?** Refresh the page and wait a few seconds for the extension to load.
 - **"No clear match" message?** Try drawing a tighter box around just the size chart area (use Manual Crop).
 - **"DressApp was just updated"?** Refresh the page to load the latest version.
 - **Permission requests?** The extension may ask for permission to read the page — this is normal and required to analyze size charts.
 
-### Mobile Bookmarklet
-- **Bookmarklet not working?** Make sure you're on a product page with size information.
-- **No recommendation appears?** Try refreshing the page and tapping the bookmarklet again.
-- **Drawing box doesn't work?** Make sure you're tapping and holding, then dragging to draw the box.
-
-### General Issues
-- **No recommendation badge**: Ensure you are logged into your account in the extension popup or bookmarklet.
-- **Measurements blank**: Go back to your Profile settings and populate all measurement fields (height, weight, waist, foot length).
-- **Wrong size recommended?** Double-check that your body measurements are up to date in your profile.
+### Mobile Shopping
+- **DressApp not showing in your phone's Share sheet?** Open DressApp once on your mobile home screen to let Android/iOS register the share target.
+- **Store link protected by anti-bot verification?** Simply take a screenshot of the size chart table and tap **Share → DressApp** or upload it into the Shopping Assistant.
+- **Wrong size recommended?** Double-check that your body measurements (chest, waist, hip, inseam, foot length) are up to date in your Profile.
 
 ## Privacy & Security
 - Your body measurements are stored securely in your DressApp account
 - The assistant only reads size chart data from product pages
 - No personal shopping data is shared with third parties
 - You can disconnect the extension anytime from your DressApp profile
-
-## Limitations
-- Size chart analysis is limited to supported partner stores
-- Mobile bookmarklet has fewer features than the Chrome Extension
-- Some stores with custom size chart formats may require manual crop

@@ -2,7 +2,7 @@
 
 **Data di entrata in vigore:** 23 settembre 2026  
 **Ultimo aggiornamento:** 16 ottobre 2026  
-**Versione dell'app:** 1.0.5  
+**Versione dell'app:** 1.0.8  
 **Sito web ufficiale:** [https://dressapp.co](https://dressapp.co)  
 **URL dedicato alla privacy:** [https://dressapp.co/privacy](https://dressapp.co/privacy)  
 

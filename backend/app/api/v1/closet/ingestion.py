@@ -466,7 +466,6 @@ async def analyze_item_image(
     if eff_mode not in ("auto", "single", "multi", "mass"):
         eff_mode = "auto" if payload.multi else "single"
 
-    from app.db.database import get_db
     from app.services.billing_service import deduct_user_credits
     from app.services.credit_manager import (
         MIN_CLUSTER_RECONSTRUCTION_CREDITS,

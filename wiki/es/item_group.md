@@ -25,7 +25,7 @@ graph TD
     DB[(MongoDB: closet_items)]
     Warmup[reanalyze_group_helper]
     SetCheck{Is it a Set?}
-    LLM[Gemini 2.5 Flash Group Analyzer]
+    LLM[Gemini 3.5 Flash-Lite Group Analyzer]
     Ready[Mark Status: ready]
     Stylist[Stylist Brain / Scheduler]
     Avatar[Avatar Viewer 2D]

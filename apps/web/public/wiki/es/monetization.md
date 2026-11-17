@@ -7,6 +7,7 @@ DressApp ofrece un generoso Plan Gratis junto con suscripciones mensuales y anua
 1. **Plan Gratis**:
    - Guarda hasta **100 prendas en tu armario** gratis y amplíalo hasta **150 prendas** compartiendo tu enlace de invitación con amigos (**+10 espacios gratis** por cada amigo que se registre).
    - Funciona desde el primer momento con el **modelo de IA local de DressApp** (**10 créditos diarios**, acumulables hasta **300 créditos en 30 días**) más **5 créditos iniciales de Reconstrucción de Estudio**.
+   - Incluye **sugerencias de conjuntos diarios** impulsadas por Gemini (**1 crédito de IA** por sugerencia diaria de tu saldo diario o paquete de créditos).
    - Admite fotos de una sola prenda y fotos de conjuntos puestos. La **carga de grupos de prendas** (armarios, perchas, zapateros o pilas de camisas) se desbloquea en el Plan Gratis cuando posees **15 o más créditos de reconstrucción con IA** (puedes adquirir paquetes de 10, 50 o 100 créditos en la página de Precios). Si tienes menos de 15 créditos, una sola foto podría agotar tu saldo, por lo que DressApp sugerirá omitir la imagen, comprar un paquete de créditos o mejorar tu plan. El **Agente de Migración de Armario** (importación masiva de 50+ prendas desde otras apps) está reservado a los planes **Manager** y **Professional**.
 
 2. **Plan Manager ($10/mes o $100/año)**:

@@ -2,7 +2,7 @@
 
 **Data di entrata in vigore:** 27 luglio 2026  
 **Ultimo aggiornamento:** 16 ottobre 2026  
-**Versione dell'app:** 1.0.5  
+**Versione dell'app:** 1.0.8  
 **Sito web ufficiale:** [https://dressapp.co](https://dressapp.co)  
 
 Benvenuti su **DressApp** ("DressApp", "noi", "nostro" o "ci"), una piattaforma intelligente di guardaroba digitale, pianificazione dello stile, marketplace peer-to-peer dell'armadio e personal stylist basato su IA sviluppata e gestita da **DressApp Ltd.** I presenti Termini di Servizio ("Termini") regolano l'accesso e l'utilizzo delle applicazioni mobili e web di DressApp, delle API e dei servizi connessi, incluse tutte le funzionalità, i contenuti e i servizi offerti tramite l'applicazione (collettivamente, il "Servizio").

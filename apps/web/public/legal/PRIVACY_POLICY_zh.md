@@ -2,7 +2,7 @@
 
 **生效日期：** 2026年9月23日  
 **最后更新：** 2026年10月16日  
-**应用版本：** 1.0.5  
+**应用版本：** 1.0.8  
 **官方网站：** [https://dressapp.co](https://dressapp.co)  
 **专用隐私政策网址：** [https://dressapp.co/privacy](https://dressapp.co/privacy)  
 

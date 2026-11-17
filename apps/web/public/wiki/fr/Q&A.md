@@ -14,6 +14,7 @@ DressApp supprime la saisie manuelle et l'hésitation matinale grâce à la reco
 - **Numérisation Sans Effort** : Prenez en photo un vêtement à plat, une tenue complète devant le miroir ou plusieurs vêtements disposés ensemble — ou importez vos articles depuis le lien d'une boutique en ligne, un reçu numérique, un code QR produit ou une autre application de dressing. DressApp identifie automatiquement le type de photo, retire l'arrière-plan, sépare les pièces et renseigne leurs caractéristiques (Catégorie, Couleur, Matière, Coupe, Saison, Style et Chaleur).
 - **Système de Crédits Gratuits Cumulables** : Les utilisateurs de l'offre Gratuite reçoivent **10 crédits quotidiens d'IA interne** cumulables jusqu'à **300 crédits sur 30 jours**, ainsi que **5 crédits gratuits de Reconstruction Studio** à l'inscription. En photographiant quelques pièces par jour pendant 5 jours, vous cumulez **50 crédits** — de quoi numériser gratuitement une garde-robe essentielle de 50 pièces.
 - **Stylisme Personnel Contextuel** : Votre Styliste IA combine les vêtements de votre dressing, la météo locale, votre agenda, vos préférences de sobriété et vos mensurations pour composer des tenues complètes ou identifier les basiques qui vous manquent.
+- **Suggestion de tenue quotidienne** : **1 crédit** par look généré
 
 ### Comparatif des Offres
 

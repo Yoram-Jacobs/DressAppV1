@@ -687,6 +687,7 @@ def _user_prompt(
     else:
         parts.append("• Language: Canonical English for all keys, values, titles, colors, and captions.")
     parts.append("• Focus strictly on garment fabric pixels; ignore hangers, mannequin parts, crop-edge bleed, and background surfaces.")
+    parts.append("• Materials rule: Knitwear/Sweaters default to Wool/Cashmere/Acrylic/Polyester/Cotton blends; Footwear uppers use Leather/Suede/Canvas/Rubber (NEVER Cotton).")
     parts.append(f"• Gender fallback for neutral basics: {fallback_gender_hint} (never default to 'men').")
     if segformer_hint:
         human = _SEGFORMER_KIND_HUMAN_LABEL.get(segformer_hint.strip().lower(), segformer_hint)

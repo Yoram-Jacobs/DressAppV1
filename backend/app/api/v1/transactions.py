@@ -564,7 +564,7 @@ async def capture_donation_shipping(
 async def transaction_action(
     request: Request,
     token: str = Query(...),
-    decision: str = Query(..., regex="^(accept|deny)$"),
+    decision: str = Query(..., pattern="^(accept|deny)$"),
 ) -> RedirectResponse:
     db = get_db()
     payload = action_tokens.verify(token, expected_decision=decision)
@@ -785,7 +785,7 @@ async def confirm_receipt(
 @router.get("")
 async def list_transactions(
     user: dict = Depends(get_current_user),
-    role: str = Query(default="all", regex="^(buyer|seller|all)$"),
+    role: str = Query(default="all", pattern="^(buyer|seller|all)$"),
     status: TxStatus | None = Query(default=None),
     limit: int = Query(default=50, le=200),
     skip: int = Query(default=0, ge=0),

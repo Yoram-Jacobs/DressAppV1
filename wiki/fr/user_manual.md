@@ -97,7 +97,7 @@ La page Profil sert de panneau de contrôle central pour DressApp. Les champs de
 
 2. **Profil de style (Règles de pudeur, code vestimentaire)**
    - **Pourquoi est-ce important ?** : Établit des limites personnelles pour les tenues recommandées, empêchant l'IA de générer des suggestions de style inappropriées.
-   - **Dépendances des sous-systèmes** : Les paramètres sélectionnés (par ex. les contraintes vestimentaires de pudeur) sont injectés directement dans les invites de stylisme pour Gemini 2.5 Flash, filtrant les résultats de garde-robe correspondants avant leur affichage.
+   - **Dépendances des sous-systèmes** : Les paramètres sélectionnés (par ex. les contraintes vestimentaires de pudeur) sont injectés directement dans les invites de stylisme pour Gemini 3.5 Flash-Lite, filtrant les résultats de garde-robe correspondants avant leur affichage.
 
 3. **Détails (Nom, Téléphone, Profession)**
    - **Pourquoi est-ce important ?** : Personnalise le ton de communication et achemine les alertes de notification.

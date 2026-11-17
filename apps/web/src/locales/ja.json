@@ -923,7 +923,8 @@
       "upgradeButton": "プランをアップグレード",
       "editManuallyButton": "手動で続行",
       "manualContinueHint": "手動で詳細を入力して衣服を保存できます。"
-    }
+    },
+    "fitPlaceholder": "フィット感を選択"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1089,7 +1090,8 @@
       "sectionOrganizationDesc": "服装のフォーマルレベル、タグ、および文化的なスタイリングに関するメモ",
       "sectionCleanBgDesc": "非生成マット モデルを使用して背景を削除する",
       "sectionReanalyseDesc": "分析を再実行して画像から詳細を抽出します",
-      "priceWithCurrency": "価格 ({{currency}})"
+      "priceWithCurrency": "価格 ({{currency}})",
+      "fit": "フィット感"
     },
     "group": {
       "front": "前面",
@@ -2365,61 +2367,158 @@
     "routes": {
       "login": {
         "title": "サインイン",
-        "description": "DressApp にサインインして、クローゼットの管理、マーケットの閲覧、AI スタイリストとのチャットを始めましょう。"
+        "description": "DressApp にサインインして、クローゼットの管理、マーケットの閲覧、AI スタイリストとのチャットを始めましょう。",
+        "ogTitle": "DressAppにログイン — スマートデジタルクローゼット＆AIスタイリスト",
+        "ogDescription": "デジタル化したワードローブ、天気連動のAIコーデプランナー、手数料7%のサーキュラーファッションマーケットプレイスにアクセスできます。"
       },
       "register": {
         "title": "アカウント作成",
-        "description": "DressApp に参加 — クローゼット・コミュニティマーケット・AI スタイリストをひとつに。"
+        "description": "DressApp に参加 — クローゼット・コミュニティマーケット・AI スタイリストをひとつに。",
+        "ogTitle": "DressAppに無料登録 — デジタルクローゼット・AIスタイリスト＆マーケット",
+        "ogDescription": "無料のDressAppアカウントを作成して、数秒でクローゼットを整理し、AIでコーデを組んでサーキュラーファッションに参加しましょう。"
       },
       "home": {
         "title": "今日",
-        "description": "あなたの日次 DressApp ブリーフ：トレンド、クローゼット統計、最新のスタイリストコラム。"
+        "description": "あなたの日次 DressApp ブリーフ：トレンド、クローゼット統計、最新のスタイリストコラム。",
+        "ogTitle": "DressApp — スマートデジタルクローゼット・AIスタイリスト＆マーケットプレイス",
+        "ogDescription": "手持ちの服を数秒で撮影・整理し、天気に合わせた毎日のAIコーデ提案を受け取り、コミュニティ手数料7%で古着の売買や交換ができます。"
       },
       "closet": {
         "title": "マイクローゼット",
-        "description": "あなたが持っているすべてのアイテムを、スマートな分類・出所タグ・ワンタップの AI 編集とともに。"
+        "description": "あなたが持っているすべてのアイテムを、スマートな分類・出所タグ・ワンタップの AI 編集とともに。",
+        "ogTitle": "マイスマートデジタルクローゼット＆バーチャルワードローブ — DressApp",
+        "ogDescription": "AI自動切り抜き、スマートなカテゴリータグ、季節フィルター、ワンタップのコーデ作成機能でワードローブ全体をすっきり整理できます。"
       },
       "closet_add": {
         "title": "クローゼットに追加",
-        "description": "写真または URL から DressApp クローゼットに新しいアイテムを追加します。"
+        "description": "写真または URL から DressApp クローゼットに新しいアイテムを追加します。",
+        "ogTitle": "数秒でデジタルクローゼットに服を追加 — DressApp",
+        "ogDescription": "DressAppのAI複数アイテムスキャナー、自動背景切り抜き、ケアラベルOCRを使って、手持ちの衣類を簡単にデジタル化できます。"
       },
       "stylist": {
         "title": "スタイリスト",
-        "description": "クローゼット・カレンダー・天気を理解するマルチモーダル AI スタイリスト。"
+        "description": "クローゼット・カレンダー・天気を理解するマルチモーダル AI スタイリスト。",
+        "ogTitle": "DressApp AIパーソナルスタイリスト — 天気＆予定連動コーデプランナー",
+        "ogDescription": "今日の天気、TPO、カラーパレットに合わせて、あなた自身のクローゼットから最適なコーディネートを即座に提案します。"
       },
       "market": {
         "title": "マーケット",
-        "description": "コミュニティのアイテムを購入・販売・スワップ・寄付。手数料は完全に透明。"
+        "description": "コミュニティのアイテムを購入・販売・スワップ・寄付。手数料は完全に透明。",
+        "ogTitle": "DressApp ファッションマーケットプレイス — 手数料7%で購入・出品・交換",
+        "ogDescription": "ユーズドアイテムを探し、購入前に自分のクローゼットの服との相性を試したり、ワンタップで手持ちの服を出品したりできます。"
       },
       "market_create": {
         "title": "アイテムを出品",
-        "description": "クローゼットのアイテムを DressApp マーケットに出品します。"
+        "description": "クローゼットのアイテムを DressApp マーケットに出品します。",
+        "ogTitle": "DressApp サーキュラーファッションマーケットプレイスにアイテムを出品",
+        "ogDescription": "デジタルクローゼットからアイテムを選ぶだけで、自動入力された詳細情報と透明な7%の手数料で簡単に販売・交換・寄付ができます。"
       },
       "transactions": {
         "title": "取引履歴",
-        "description": "DressApp の購入・販売履歴。7% の手数料も完全に透明。"
+        "description": "DressApp の購入・販売履歴。7% の手数料も完全に透明。",
+        "ogTitle": "マーケットプレイスの取引履歴と注文管理 — DressApp",
+        "ogDescription": "DressAppコミュニティマーケットプレイスでの購入品、売上金の受け取り、交換アイテムの配送状況を一箇所で管理できます。"
       },
       "admin": {
         "title": "管理ダッシュボード",
-        "description": "ユーザー・マーケット・AI プロバイダー・Trend-Scout エージェントのための DressApp 運用コンソール。"
+        "description": "ユーザー・マーケット・AI プロバイダー・Trend-Scout エージェントのための DressApp 運用コンソール。",
+        "ogTitle": "DressApp 管理者運用コンソール",
+        "ogDescription": "DressAppプラットフォーム運用のための内部管理ダッシュボードです。"
       },
       "me": {
         "title": "プロフィールと設定",
-        "description": "DressApp のプロフィール、ボイス、Google カレンダー連携を管理します。"
+        "description": "DressApp のプロフィール、ボイス、Google カレンダー連携を管理します。",
+        "ogTitle": "マイプロフィール＆スタイル設定 — DressApp",
+        "ogDescription": "DressAppのワードローブ設定、表示言語、連携サービスをカスタマイズできます。"
       },
       "closet_item": {
         "title": "クローゼットのアイテム",
-        "description": "あなたの DressApp クローゼットのアイテム。"
+        "description": "あなたの DressApp クローゼットのアイテム。",
+        "ogTitle": "アイテム詳細＆コーデのアイデア — DressApp デジタルクローゼット",
+        "ogDescription": "スマートなデジタルワードローブ内で、衣類タグ、スタイリングメモ、相性の良い組み合わせアイテムをチェックできます。"
       },
       "market_listing": {
         "title": "マーケット出品",
-        "description": "DressApp で販売中のアイテム。"
+        "description": "DressApp で販売中のアイテム。",
+        "ogTitle": "DressApp マーケットプレイスのユーズドファッションアイテム",
+        "ogDescription": "バーチャルクローゼット相性診断と手数料7%で、DressAppコミュニティの出品アイテムを購入または交換しましょう。"
       },
       "trends": {
         "description": "サインインしてからあなたのパーソナライズされた DressApp ファッション トレンドとスタイリングの推奨事項。",
-        "title": "トレンドスカウト"
+        "title": "トレンドスカウト",
+        "ogTitle": "DressApp Trend Scout — あなたのクローゼットと連動する最新トレンド",
+        "ogDescription": "世界のランウェイやストリートスタイルの最新トレンドが、あなたのデジタルワードローブの中の服とどうつながるかを確認できます。"
+      },
+      "onboarding": {
+        "title": "はじめに — スマートデジタルクローゼットを作成 | DressApp",
+        "description": "DressAppのデジタルワードローブを設定し、3Dアバターやスタイルプロフィールをカスタマイズして、今日からパーソナライズされたAIコーデ提案を受け取りましょう。",
+        "ogTitle": "DressAppをはじめよう — スマートデジタルクローゼット＆AIスタイリスト",
+        "ogDescription": "デジタルクローゼットの構築、3Dアバターのカスタマイズ、天気に合わせた毎日のコーデ計画が数分で完了します。"
+      },
+      "about": {
+        "title": "私たちについて — スマートデジタルクローゼットと循環型ファッションの物語 | DressApp",
+        "description": "DressApp誕生のストーリーをご覧ください。毎日の服選びの悩みから生まれた、スマートデジタルクローゼット、AIスタイリスト、循環型マーケットプレイスの軌跡をご紹介します。",
+        "ogTitle": "DressAppについて — スマート＆サーキュラーファッションへのビジョン",
+        "ogDescription": "スマートデジタルクローゼット、AIパーソナルスタイリスト、手数料7%のコミュニティマーケットプレイスを13言語で提供するDressAppの取り組みをご紹介します。"
+      },
+      "pricing": {
+        "title": "料金プラン — 無料デジタルクローゼット＆プロAIスタイリスト | DressApp",
+        "description": "DressAppの無料・マネージャー・プロフェッショナル各プランを比較。最大100着まで無料でデジタル化でき、アップグレードで無制限のAIスタイリングと分析を利用できます。",
+        "ogTitle": "DressApp 料金プラン — デジタルクローゼットを無料でスタート",
+        "ogDescription": "無料のデジタルワードローブ管理、AIコーディネート計画、手数料7%のマーケットプレイス利用など、明確な料金プランをご確認いただけます。"
+      },
+      "stats": {
+        "title": "ワードローブ分析 — 着用単価（CPW）＆カラー統計 | DressApp",
+        "description": "DressAppのワードローブ分析機能で、クローゼットの資産価値、着用1回あたりのコスト、カラーパレットの割合、最も着用しているアイテムを可視化します。",
+        "ogTitle": "DressApp ワードローブ分析 — 着用単価＆スタイル統計データ",
+        "ogDescription": "クローゼットの稼働率、カラーバランス、季節ごとの準備状況、サステナビリティへの貢献度を詳しく分析できます。"
+      },
+      "experts": {
+        "title": "認定パーソナルスタイリスト＆ファッション専門家ディレクトリ | DressApp",
+        "description": "DressApp上で認定パーソナルスタイリストやワードローブコンサルタントとつながり、ライブクローゼット診断、パーソナルカラー診断、買い物同行を依頼できます。",
+        "ogTitle": "DressApp ファッション専門家ディレクトリ — パーソナルスタイリストを予約",
+        "ogDescription": "あなたのDressAppデジタルクローゼットを確認し、オーダーメイドのルックブックを作成できる認定プロのスタイリストを探せます。"
+      },
+      "suitcase": {
+        "title": "スマートスーツケース＆旅行パッキングリスト作成 | DressApp",
+        "description": "DressAppのAIスーツケースプランナーでストレスフリーな旅行カプセルワードローブを計画。あらゆる旅行先に向けて、デジタルクローゼットから天気に合ったコーデをパッキングできます。",
+        "ogTitle": "DressApp スマートスーツケース — AI旅行カプセル＆パッキングプランナー",
+        "ogDescription": "デジタルワードローブから直接、旅行先にぴったりの持ち物リストと日別の旅行コーディネートを作成できます。"
+      },
+      "avatar": {
+        "title": "3Dバーチャル試着室＆カスタム体型アバター | DressApp",
+        "description": "DressAppのバーチャル試着室で、ご自身の実際の体型比率に合わせてカスタマイズした3Dボディアバターに服を着せ替え、コーディネートを3Dで試着できます。",
+        "ogTitle": "DressApp 3Dバーチャル試着室 — カスタムアバターで着せ替え体験",
+        "ogDescription": "服を着る前や買い物をする前に、パーソナライズされた3Dアバターであらゆる角度から衣類や全身コーディネートを確認できます。"
+      },
+      "shopping": {
+        "title": "ショッピングアシスタント — バーチャル試着＆クローゼット相性診断 | DressApp",
+        "description": "オンラインストアの商品を実際に購入する前に、手持ちのデジタルクローゼットとの相性をテスト。DressAppでコーデの組み合わせ、スタイルスコア、3D試着を確認できます。",
+        "ogTitle": "DressApp ショッピングアシスタント — 購入前に手持ち服との相性をチェック",
+        "ogDescription": "オンラインショップの新作アイテムがすでに持っている服とどう合うかを事前に試すことで、衝動買いや失敗を防げます。"
+      },
+      "migration": {
+        "title": "ワードローブ移行 — ワンクリックでクローゼットをインポート | DressApp",
+        "description": "他のクローゼットアプリにある既存のデジタルワードローブを、衣類の自動インポートとタグ保持機能により数分でDressAppへ移行できます。",
+        "ogTitle": "DressApp ワードローブ移行 — デジタルクローゼットをスムーズにお引越し",
+        "ogDescription": "服を一着も撮り直すことなく、これまでのワードローブカタログ全体をそのままDressAppに取り込めます。"
+      },
+      "privacy": {
+        "title": "プライバシーポリシー — データ保護とワードローブのセキュリティ | DressApp",
+        "description": "DressAppのプライバシーポリシーをお読みいただき、厳格なプライバシー管理によって個人のワードローブ写真、スタイルプロフィール、アカウントデータを保護する仕組みをご確認ください。",
+        "ogTitle": "DressApp プライバシーポリシー — ワードローブデータの保護について",
+        "ogDescription": "デジタルクローゼットの写真、AIスタイリング履歴、マーケットプレイス取引を守る透明性の高いプライバシー保護方針をご案内します。"
+      },
+      "terms": {
+        "title": "利用規約 — プラットフォームおよびマーケットプレイスのルール | DressApp",
+        "description": "デジタルクローゼットの利用、AIパーソナルスタイリング、サブスクリプション、および手数料7%のコミュニティマーケットプレイスに関するDressApp利用規約をご確認ください。",
+        "ogTitle": "DressApp 利用規約 — ユーザーおよびマーケットプレイスのガイドライン",
+        "ogDescription": "DressAppのワードローブ、AIスタイリスト、マーケットプレイスサービスをご利用いただくための公式規約とコミュニティガイドラインです。"
       }
-    }
+    },
+    "defaultOgTitle": "DressApp — スマートデジタルクローゼット・AIスタイリスト＆マーケットプレイス",
+    "defaultOgDescription": "手持ちの服を数秒で撮影・整理し、天気に合わせた毎日のAIコーデ提案を受け取り、コミュニティ手数料7%で古着の売買や交換ができます。",
+    "schemaDescription": "スマートデジタルクローゼット、AIパーソナルスタイリスト、コーデプランナー、コミュニティ手数料7%のサーキュラーファッションマーケットプレイス。"
   },
   "taxonomy": {
     "categories": {
@@ -2770,7 +2869,9 @@
       "cargo": "カーゴパンツ",
       "pants": "パンツ",
       "cargo_shorts": "カーゴショーツ",
-      "high_heel_pump": "ハイヒールパンプス"
+      "high_heel_pump": "ハイヒールパンプス",
+      "solid_shoes": "ドレスシューズ",
+      "dress_shoes": "ドレスシューズ"
     },
     "color": {
       "black": "ブラック",
@@ -2962,7 +3063,17 @@
       "yellow": "イエロー",
       "orange": "オレンジ",
       "gold": "ゴールド",
-      "silver": "シルバー"
+      "silver": "シルバー",
+      "nude": "ライトベージュ",
+      "light_beige": "ライトベージュ",
+      "ניוד": "ライトベージュ"
+    },
+    "fit": {
+      "slim": "スリムフィット (Slim)",
+      "regular": "レギュラーフィット (Regular)",
+      "loose": "ゆったりフィット (Loose)",
+      "oversized": "オーバーサイズ (Oversized)",
+      "flared": "フレア / Aライン (Flared)"
     }
   },
   "location": {
@@ -4347,7 +4458,40 @@
       "tiers_manager_desc": "月額$10（または年額$100）。クローゼット容量が無制限になり、DressAppの最先端AIモデル、朝のコーデ通知、カレンダー連携、マーケットプレイス出品、Trend Scoutの全機能が解放されます。",
       "reanalyze_title": "写真の再分析とAIアシスタント",
       "reanalyze_p1": "AIアシスタントと直接チャットして、自然な言葉で服の写真を調整・補正できます：",
-      "reanalyze_step4": "チャット内でリアルなプレビュー画像がすぐに生成されます。"
+      "reanalyze_step4": "チャット内でリアルなプレビュー画像がすぐに生成されます。",
+      "scheduler_push_title": "朝のコーデ通知",
+      "scheduler_push_p1": "その日の天気や予定に合わせた、すぐ着られるコーディネート提案で朝を迎えましょう：",
+      "scheduler_push_step1": "**プロフィール** 設定を開き、**朝のコーデ通知** までスクロールします。",
+      "scheduler_push_step2": "毎日のリマインダースイッチをオンにし、通知を受け取る曜日と時刻を選びます。",
+      "scheduler_push_step3": "普段の好みスタイル（カジュアル、仕事、スポーツ、カスタム）を選択します。",
+      "scheduler_push_step4": "端末に通知が届くよう、確認画面が表示されたらブラウザ通知を許可してください。",
+      "scheduler_push_step5": "スタイリストが予定や現地の天気を把握できるよう、カレンダーと位置情報を連携します。",
+      "scheduler_push_step6": "朝の通知をタップしてコーデ全体と提案理由を確認し、そのまま今日の服装に選べます！",
+      "shopping_assistant_title": "オンライン買い物サイズアシスタント",
+      "shopping_assistant_p1": "ショップのサイズ表とご自身の身体寸法を比較し、オンラインショッピングで最適なサイズを見つけます：",
+      "shopping_assistant_step1": "パソコンに **DressApp ブラウザ拡張機能** をインストールするか、プロフィール画面からスマホに **モバイルブックマーク** を保存します。",
+      "shopping_assistant_step2": "プロフィールに身体寸法（身長、体重、ウエスト、足のサイズ）が保存されているか確認してください。",
+      "shopping_assistant_step4": "ページ上の **DressApp** ボタンをクリック（または保存済みのモバイルブックマークを開く）します。",
+      "shopping_assistant_step5": "独自レイアウトのサイズ表の場合は、画面上でサイズ表の周囲をドラッグして囲むだけです。",
+      "shopping_assistant_step6": "おすすめサイズ、フィット信頼度、ゆったり／ぴったりめにサイズを上下すべきかのアドバイスが表示されます！",
+      "import_wardrobe_title": "既存のワードローブをインポート",
+      "import_wardrobe_p1": "別のクローゼットアプリをお使いの方やネット通販のレシートをお持ちの方は、自動でDressAppへ取り込めます：",
+      "import_wardrobe_step2": "インポート元のクローゼットアプリ、またはショップURLやデジタルレシートからの取り込みを選びます。",
+      "import_wardrobe_step3": "画面の案内に従ってアイテムを DressApp に共有します。",
+      "import_wardrobe_step4": "DressApp の AI が背景を自動切り抜きし、色・カテゴリ・季節ごとに洋服を整理します。",
+      "import_wardrobe_step5": "重複アイテムは自動でスキップされるため、クローゼットをすっきり保てます。",
+      "import_wardrobe_step6": "完了すると、インポートされたすべての洋服と保存済みコーデがクローゼットに並びます！",
+      "tiers_title": "サブスクリプションプラン",
+      "tiers_p1": "DressApp はクローゼット規模やスタイリングの目的に合わせた柔軟なプランをご用意しています：",
+      "tiers_free_title": "無料プラン",
+      "tiers_manager_title": "Manager プラン",
+      "tiers_pro_title": "プロフェッショナルプラン",
+      "tiers_pro_desc": "月額$15（または年額$150）。ファッションスタイリストやクリエイター向け。Managerの全機能に加え、スタイリストディレクトリ掲載、プロモーションキャンペーン、優先サポート、毎月100スタイリングクレジットを含みます。",
+      "tiers_how_to_upgrade_title": "アップグレード手順：",
+      "tiers_step1": "プロフィール設定ページを開きます。",
+      "tiers_step2": "「サブスクリプションとクローゼット上限」セクションまでスクロールします。",
+      "tiers_step3": "「アップグレード」または「料金プラン」リンクをクリックします。",
+      "tiers_step4": "ご希望のプランを選択し、安全に決済を完了してください。"
     },
     "trend_closet_title": "ワンタップ「マイクローゼットでスタイリング」",
     "trend_closet_desc": "トレンドカードのボタンをタップすると、AIスタイリストがトレンドの色やシルエットをクローゼット内の服と瞬時にマッチングします。",
@@ -5108,7 +5252,26 @@
     "demoteFailedToast": "無料プランへの変更に失敗しました。",
     "clusterFree": "15+ クレジットが必要",
     "unlocksCluster": "クラスターアップロードを解放",
-    "packIncludesCluster": "有料パック — クラスターアップロードを解放 (15+ クレジット)"
+    "packIncludesCluster": "有料パック — クラスターアップロードを解放 (15+ クレジット)",
+    "closetFreeCapacityDesc": "100着（友達招待で最大150着）",
+    "whatCreditBuysShort": "1クレジットでできること",
+    "whatCreditBuysTitle": "各操作の正確な消費クレジット：",
+    "fairValueTitle": "明朗なAI料金体系：",
+    "fairValueSubtitle": "予期せぬ請求や少額の定期課金はありません。高度な機能が必要なときだけチャージできます。",
+    "neverExpires": "有効期限なし",
+    "noSubscriptionNeeded": "サブスクリプション不要",
+    "whatYouGet": "このパックに含まれる内容：",
+    "pack10Item1": "Gemini クラウド即時分析 × 10回",
+    "pack10Item2": "AI写真スタジオ再撮影＆補完 × 10回",
+    "pack50Item1": "Gemini クラウド即時分析 × 50回",
+    "pack50Item2": "まとめアップロード機能を解放（15+ クレジット）",
+    "pack50Item3": "クローゼット／ラック丸ごとスキャン 約3回分",
+    "pack100Item1": "Gemini クラウド即時分析 × 100回",
+    "pack100Item2": "まとめアップロード機能を解放",
+    "pack100Item3": "クローゼット／ラック丸ごとスキャン 約6回分以上",
+    "pack100Item4": "優先処理キュー＆高解像度3D試着",
+    "packPerCreditCost": "1クレジットあたり ${{cost}}",
+    "packPerCreditCostSave": "1クレジットあたり ${{cost}}（{{save}}お得）"
   },
   "avatar": {
     "savedSuccess": "アバターとビジュアルプロフィールを保存しました!",
@@ -5295,7 +5458,10 @@
     "relaxed": "リラックス",
     "boho": "ボヘミアン",
     "smart_casual": "スマートカジュアル",
-    "dresses_skirts": "ドレス＆スカート"
+    "dresses_skirts": "ドレス＆スカート",
+    "nude": "ライトベージュ",
+    "light_beige": "ライトベージュ",
+    "ניוד": "ライトベージュ"
   },
   "wardrobeStats": {
     "tabOverview": "概要",
@@ -5907,7 +6073,8 @@
     "mesh_mode_tailored_active": "3Dテーラード有効 — クリックでフォトフィットに切替",
     "mesh_mode_photo_active": "フォトフィット有効 — クリックで3Dテーラードに切替",
     "hood_on": "フード着用",
-    "hood_off": "フード外す"
+    "hood_off": "フード外す",
+    "restoring_context": "3Dスタジオを復元中…"
   },
   "dressingRoom": {
     "title": "3D試着室",

@@ -97,7 +97,7 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 2. **Style Profile (Modest rules, Dress code)**
    - **Why does it matter?**: It establishes personal boundaries for recommended outfits, preventing the AI from generating inappropriate style suggestions.
-   - **Subsystem Dependencies**: The selected parameters (e.g., Modest clothing constraints) are fed directly into the styling prompts for Gemini 2.5 Flash, filtering matching wardrobe outputs before they are shown.
+   - **Subsystem Dependencies**: The selected parameters (e.g., Modest clothing constraints) are fed directly into the styling prompts for Google Gemini 3.5 Flash-Lite, filtering matching wardrobe outputs before they are shown.
 
 3. **Details (Name, Phone, Occupation)**
    - **Why does it matter?**: It customizes the communication tone and routes notification alerts.

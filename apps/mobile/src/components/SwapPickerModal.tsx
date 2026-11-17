@@ -53,8 +53,8 @@ export function SwapPickerModal({
     setLoading(true);
     api
       .listCloset()
-      .then((res) => {
-        const list = Array.isArray(res) ? res : (res as any)?.items || [];
+      .then((res: any) => {
+        const list = Array.isArray(res) ? res : res?.items || [];
         setItems(list.filter((it: any) => it.title || it.name));
       })
       .catch(() => {})

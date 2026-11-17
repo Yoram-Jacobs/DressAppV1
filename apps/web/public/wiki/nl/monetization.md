@@ -7,6 +7,7 @@ DressApp biedt een transparant abonnementsmodel met drie niveaus (**Free**, **Ma
 | Functie | Free ($0) | Manager ($10/mnd of $100/jr) | Professional ($15/mnd of $150/jr) |
 | :--- | :--- | :--- | :--- |
 | **Maximale Kastcapaciteit** | 100 items | 200 items | 300 items |
+   - Inclusief **dagelijkse outfitsuggesties** aangedreven door Gemini (**1 AI-credit** per dagelijks voorstel uit uw dagelijkse tegoed of creditbundel).
 | **AI Kledingreconstructies** | 5 / maand | 50 / maand | 100 / maand |
 | **Cluster Kleding Uploaden (`mass`)** | Ontgrendeld met 15+ AI-reconstructiecredits | Inbegrepen | Inbegrepen |
 | **AI Outfitsuggesties** | 5 / maand | 30 / maand | 100 / maand |

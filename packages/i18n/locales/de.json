@@ -111,7 +111,8 @@
     "unlockInstantTurbo": "⚡ Sofortiges Turbo freischalten",
     "standardUploadDesc": "Standard-Warteschlange. Detaillierter Kleidungsscan läuft.",
     "standardStylistDesc": "Standard-Warteschlange. KI-Stylist erstellt Ihren Look.",
-    "standardSuitcaseDesc": "Standard-Warteschlange. Reisegarderobe wird zusammengestellt."
+    "standardSuitcaseDesc": "Standard-Warteschlange. Reisegarderobe wird zusammengestellt.",
+    "listSeparator": ", "
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -912,6 +913,17 @@
       "massClusterCreditsRequiredLabel": "Mindestens erforderliche KI-Rekonstruktions-Credits: 15",
       "massClusterCurrentCreditsLabel": "Dein Guthaben: {{available}}"
     },
+    "quota": {
+      "title": "Guthaben-Quote erreicht",
+      "insufficientSubtitle": "Unzureichendes Guthaben oder Kontingentlimit erreicht",
+      "messageWithBalance": "Deine Anfrage für {{count}} Kleidungsstücke übersteigt dein Guthabenkontingent. Du hast {{balance}} Guthaben im kostenlosen Plan verfügbar. Möchtest du jetzt {{balance}} Kleidungsstücke hinzufügen oder deinen Plan upgraden?",
+      "messageZeroBalance": "Deine Anfrage für {{count}} Kleidungsstücke übersteigt dein tägliches Kontingent. Du hast heute 0 Guthaben in deinem kostenlosen Plan übrig. Upgrade deinen Plan für unbegrenzte KI-Analysen oder fahre fort, indem du deine Kleidungsstücke manuell ohne KI hinzufügst.",
+      "availableCreditsLabel": "Verfügbare KI-Guthaben:",
+      "addAllowedButton": "{{count}} Kleidungsstücke hinzufügen",
+      "upgradeButton": "Plan upgraden",
+      "editManuallyButton": "Manuell fortfahren",
+      "manualContinueHint": "Du kannst Details manuell eingeben und deine Kleidungsstücke speichern."
+    },
     "fitPlaceholder": "Passform wählen"
   },
   "itemDetail": {
@@ -1419,7 +1431,7 @@
     "tomorrowSuggestionSubtitle": "Für morgen kuratiert basierend auf Ihrem Stilprofil, der Wettervorhersage und Terminen.",
     "tomorrowSuggestionRefreshed": "Vorschlag für morgen aktualisiert!",
     "wearTomorrow": "Morgen tragen",
-    "upgradeForDailySuggestionsDesc": "Führen Sie ein Upgrade auf den Manager- oder Professional-Tarif durch, um tägliche Vorschläge freizuschalten.",
+    "upgradeForDailySuggestionsDesc": "Tägliche Outfit-Vorschläge verbrauchen jeweils 1 KI-Credit.",
     "calendar": {
       "searchPlaceholder": "Vibe-Suche: „Sommer-Grillparty“, „Shopping in der Mall“, „Geschäftstreffen“, „Schwarzes T-Shirt“, „Stone-washed Jeans“...",
       "quickVibes": "Vibes:",
@@ -1452,7 +1464,27 @@
     "modeFullBody": "Ganzkörper (Kleid / Jumpsuit / Sari)",
     "restrictedBySeparates": "Deaktiviert für Ober- & Unterteil-Zweiteiler",
     "restrictedByFullBody": "Deaktiviert für Ganzkörper-Looks",
-    "activateSection": "Hierhin wechseln"
+    "activateSection": "Hierhin wechseln",
+    "vibe": {
+      "casual": "Lässig",
+      "sporty": "Sportlich",
+      "formal": "Formell",
+      "classic": "Klassisch"
+    },
+    "season": {
+      "daily": "Alltag",
+      "summer": "Sommer",
+      "winter": "Winter"
+    },
+    "suffix": {
+      "hangout": "Treffen",
+      "workout": "Training",
+      "attire": "Outfit"
+    },
+    "colorConnector": " & ",
+    "outfitTitleWithColorsPattern": "{{vibe}} {{colors}} {{season}} {{suffix}}",
+    "outfitTitlePattern": "{{vibe}} {{season}} {{suffix}}",
+    "outfitDescriptionPattern": "Eine sorgfältig zusammengestellte Kombination mit {{items}}. Perfekt für einen stimmigen und bequemen Look."
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -1872,7 +1904,11 @@
       "type_straight": "Glatt",
       "type_wavy": "Wellig",
       "type_curly": "Lockig",
-      "type_coily": "Kraus"
+      "type_coily": "Kraus",
+      "default_color_female": "Brünett",
+      "default_style_female": "Karree-Bob",
+      "default_color_male": "Dunkelbraun",
+      "default_style_male": "Kurz & Modern"
     },
     "saveProfile": "Gesamtes Profil speichern",
     "savedProfile": "Profil gespeichert",
@@ -2204,7 +2240,9 @@
     "addToChrome": "Zu Chrome hinzufügen",
     "recommendedDesktop": "Empfohlen für Desktop",
     "connectExtension": "Erweiterung verbinden",
-    "alreadyInstalled": "Bereits installiert?"
+    "alreadyInstalled": "Bereits installiert?",
+    "schedulerCreditNote": "Jeder tägliche Outfit-Vorschlag verbraucht 1 KI-Credit.",
+    "schedulerUpgradeDesc": "Tägliche Outfit-Vorschläge verbrauchen 1 KI-Credit im kostenlosen Plan, oder unbegrenzt mit Manager und Professional."
   },
   "admin": {
     "title": "Admin",
@@ -2324,29 +2362,92 @@
     "tomorrow": "Morgen"
   },
   "seo": {
-    "defaultTitle": "DressApp — Digitaler Kleiderschrank, KI-Stylist & Mode-Marktplatz",
-    "defaultDescription": "Digitalisieren Sie Ihre Garderobe mit DressApp — Ihrem smarten digitalen Kleiderschrank, KI-Outfit-Planer und Circular-Fashion-Marktplatz mit 7% Gebühr. Jetzt kostenlos starten.",
-    "defaultOgTitle": "DressApp — Ihr smarter digitaler Kleiderschrank, KI-Stylist & Marktplatz",
-    "defaultOgDescription": "Erfassen und organisieren Sie Ihren Kleiderschrank in Sekunden, erhalten Sie wetterbasierte KI-Outfit-Tipps und kaufen, verkaufen oder tauschen Sie Mode mit 7% Gebühr.",
-    "schemaDescription": "Smarter digitaler Kleiderschrank, persönlicher KI-Stylist, Outfit-Planer und Circular-Fashion-Marktplatz mit 7% Community-Gebühr.",
+    "defaultTitle": "DressApp — Deine Garderobe, veredelt",
+    "defaultDescription": "Katalogisiere deine Garderobe, frag eine KI-Stylistin und tausche oder verkaufe für faire 7%.",
     "routes": {
-      "home": {
-        "title": "DressApp — Digitaler Kleiderschrank, KI-Stylist & Mode-Marktplatz",
-        "description": "Digitalisieren Sie Ihre Garderobe mit DressApp — Ihrem smarten digitalen Kleiderschrank, KI-Outfit-Planer und Circular-Fashion-Marktplatz mit 7% Gebühr. Jetzt kostenlos starten.",
-        "ogTitle": "DressApp — Ihr smarter digitaler Kleiderschrank, KI-Stylist & Marktplatz",
-        "ogDescription": "Erfassen und organisieren Sie Ihren Kleiderschrank in Sekunden, erhalten Sie wetterbasierte KI-Outfit-Tipps und kaufen, verkaufen oder tauschen Sie Mode mit 7% Gebühr."
-      },
       "login": {
-        "title": "Anmelden — Digitaler Kleiderschrank & persönlicher KI-Stylist | DressApp",
-        "description": "Melden Sie sich bei DressApp an, um Ihren digitalen Kleiderschrank zu öffnen, tägliche Outfits mit Ihrem KI-Stylisten zu planen und Kleidung auf dem Marktplatz zu handeln.",
+        "title": "Anmelden",
+        "description": "Melde dich bei DressApp an, um deine Garderobe zu verwalten, den Marktplatz zu durchstöbern und mit der KI-Stylistin zu chatten.",
         "ogTitle": "Bei DressApp anmelden — Ihr smarter digitaler Kleiderschrank & KI-Stylist",
         "ogDescription": "Greifen Sie auf Ihre digitalisierte Garderobe, den wetterbasierten KI-Outfit-Planer und den Circular-Fashion-Marktplatz mit 7% Gebühr zu."
       },
       "register": {
-        "title": "Konto erstellen — Kostenloser digitaler Kleiderschrank & KI-Stylist | DressApp",
-        "description": "Registrieren Sie sich heute kostenlos bei DressApp, um Ihre Garderobe zu digitalisieren, tägliche KI-Outfit-Vorschläge zu erhalten und Mode mit 7% Gebühr zu verkaufen oder zu tauschen.",
+        "title": "Konto erstellen",
+        "description": "Tritt DressApp bei — deine Garderobe, dein Community-Marktplatz und deine KI-Stylistin an einem Ort.",
         "ogTitle": "Jetzt zu DressApp — Kostenloser digitaler Kleiderschrank, KI-Stylist & Marktplatz",
         "ogDescription": "Erstellen Sie Ihr kostenloses DressApp-Konto, organisieren Sie Ihren Kleiderschrank in Sekunden und entdecken Sie unseren Circular-Fashion-Marktplatz."
+      },
+      "home": {
+        "title": "Heute",
+        "description": "Dein tägliches DressApp-Briefing: Trends, Garderoben-Statistiken und die neuesten Stylistin-Beiträge.",
+        "ogTitle": "DressApp — Ihr smarter digitaler Kleiderschrank, KI-Stylist & Marktplatz",
+        "ogDescription": "Erfassen und organisieren Sie Ihren Kleiderschrank in Sekunden, erhalten Sie wetterbasierte KI-Outfit-Tipps und kaufen, verkaufen oder tauschen Sie Mode mit 7% Gebühr."
+      },
+      "closet": {
+        "title": "Meine Garderobe",
+        "description": "Jedes Teil, das du besitzt — mit smarter Segmentierung, Quellen-Tags und Edit-with-AI per Tipp.",
+        "ogTitle": "Mein smarter digitaler Kleiderschrank & virtuelle Garderobe — DressApp",
+        "ogDescription": "Organisieren Sie Ihre gesamte Garderobe mit automatischem KI-Freisteller, smarten Kategorien, Saisonfiltern und Outfit-Erstellung per Fingertipp."
+      },
+      "closet_add": {
+        "title": "Zur Garderobe hinzufügen",
+        "description": "Füge ein neues Teil aus einem Foto oder einer URL zu deiner DressApp-Garderobe hinzu.",
+        "ogTitle": "Kleidung in Sekunden zum digitalen Kleiderschrank hinzufügen — DressApp",
+        "ogDescription": "Digitalisieren Sie Kleidungsstücke mühelos mit dem KI-Mehrfachscanner, automatischem Hintergrund-Freisteller und Pflegeetiketten-OCR von DressApp."
+      },
+      "stylist": {
+        "title": "Stylistin",
+        "description": "Multimodale KI-Stylistin, die deine Garderobe, deinen Kalender und das Wetter versteht.",
+        "ogTitle": "DressApp KI-Stylist — Outfit-Planer für Wetter & Terminkalender",
+        "ogDescription": "Erhalten Sie sofort personalisierte Outfit-Kombinationen aus Ihrem eigenen Kleiderschrank, abgestimmt auf Wetter, Anlass und Farbpalette."
+      },
+      "market": {
+        "title": "Marktplatz",
+        "description": "Kaufe, verkaufe, tausche oder spende Community-Teile mit voller Gebühren-Transparenz.",
+        "ogTitle": "DressApp Mode-Marktplatz — Kaufen, verkaufen & tauschen mit 7% Gebühr",
+        "ogDescription": "Entdecken Sie Pre-Loved-Mode, testen Sie vor dem Kauf die Kombination mit Ihrer Garderobe und inserieren Sie eigene Stücke mit einem Tipp."
+      },
+      "market_create": {
+        "title": "Teil einstellen",
+        "description": "Stelle eines deiner Garderoben-Teile auf dem DressApp-Marktplatz ein.",
+        "ogTitle": "Kleidungsstück auf dem DressApp Circular-Fashion-Marktplatz anbieten",
+        "ogDescription": "Wählen Sie ein beliebiges Teil aus Ihrem digitalen Kleiderschrank zum Verkaufen, Tauschen oder Spenden mit vorausgefüllten Details und 7% Gebühr."
+      },
+      "transactions": {
+        "title": "Transaktionen",
+        "description": "Deine DressApp-Käufe und -Verkäufe mit voller 7%-Gebühren-Transparenz.",
+        "ogTitle": "Ihre Marktplatz-Transaktionen & Bestellungen — DressApp",
+        "ogDescription": "Verwalten Sie Ihre Einkäufe, Auszahlungen und Tauschsendungen auf dem DressApp-Community-Marktplatz zentral an einem Ort."
+      },
+      "admin": {
+        "title": "Admin-Dashboard",
+        "description": "DressApp-Operationskonsole für Nutzer, Marktplatz, KI-Provider und den Trend-Scout-Agenten.",
+        "ogTitle": "DressApp Admin-Operations-Konsole",
+        "ogDescription": "Internes Administrations-Dashboard für den Plattformbetrieb von DressApp."
+      },
+      "me": {
+        "title": "Profil und Einstellungen",
+        "description": "Verwalte dein DressApp-Profil, deine Stimme und die Google-Kalender-Verbindung.",
+        "ogTitle": "Ihr Profil & Ihre Stileinstellungen — DressApp",
+        "ogDescription": "Passen Sie Ihre Garderoben-Präferenzen, Sprache und verbundenen Dienste in DressApp individuell an."
+      },
+      "closet_item": {
+        "title": "Garderoben-Teil",
+        "description": "Ein Teil in deiner DressApp-Garderobe.",
+        "ogTitle": "Kleidungsstück-Details & Outfit-Ideen — Digitaler Kleiderschrank von DressApp",
+        "ogDescription": "Prüfen Sie Artikel-Tags, Styling-Notizen und passende Kombinationsstücke in Ihrer smarten digitalen Garderobe."
+      },
+      "market_listing": {
+        "title": "Marktplatz-Eintrag",
+        "description": "Ein Teil zum Verkauf auf DressApp.",
+        "ogTitle": "Pre-Loved-Modestück auf dem DressApp-Marktplatz",
+        "ogDescription": "Kaufen oder tauschen Sie dieses Community-Inserat auf DressApp mit virtuellem Kleiderschrank-Abgleich und 7% Gebühr."
+      },
+      "trends": {
+        "description": "Ihre personalisierten DressApp-Modetrends und Styling-Empfehlungen seit Ihrer Anmeldung.",
+        "title": "Trendscout",
+        "ogTitle": "DressApp Trend Scout — Kuratierte Modetrends passend zu Ihrem Kleiderschrank",
+        "ogDescription": "Sehen Sie sofort, wie globale Laufsteg- und Streetstyle-Trends direkt mit Kleidungsstücken in Ihrer digitalen Garderobe harmonieren."
       },
       "onboarding": {
         "title": "Erste Schritte — Ihren smarten digitalen Kleiderschrank aufbauen | DressApp",
@@ -2366,54 +2467,6 @@
         "ogTitle": "DressApp Preise & Tarife — Starten Sie Ihren digitalen Kleiderschrank kostenlos",
         "ogDescription": "Entdecken Sie transparente DressApp-Tarife: kostenlose Kleiderschrank-Verwaltung, KI-Outfit-Planung und Marktplatz-Zugang mit 7% Gebühr."
       },
-      "closet": {
-        "title": "Mein digitaler Kleiderschrank — Virtuelle Garderobe & Organizer | DressApp",
-        "description": "Verwalten Sie jedes Kleidungsstück in Ihrem smarten digitalen Kleiderschrank mit automatischer KI-Hintergrundentfernung, Schlagworten, Cost-per-Wear-Tracking und Outfit-Sets.",
-        "ogTitle": "Mein smarter digitaler Kleiderschrank & virtuelle Garderobe — DressApp",
-        "ogDescription": "Organisieren Sie Ihre gesamte Garderobe mit automatischem KI-Freisteller, smarten Kategorien, Saisonfiltern und Outfit-Erstellung per Fingertipp."
-      },
-      "closet_add": {
-        "title": "Kleidung hinzufügen — KI-Kleiderschrank-Scanner & Foto-Freisteller | DressApp",
-        "description": "Machen Sie ein Foto oder fügen Sie eine Shop-URL ein, um Kleidung mit automatischer KI-Hintergrundentfernung, Farberkennung und Etiketten-OCR zu DressApp hinzuzufügen.",
-        "ogTitle": "Kleidung in Sekunden zum digitalen Kleiderschrank hinzufügen — DressApp",
-        "ogDescription": "Digitalisieren Sie Kleidungsstücke mühelos mit dem KI-Mehrfachscanner, automatischem Hintergrund-Freisteller und Pflegeetiketten-OCR von DressApp."
-      },
-      "stylist": {
-        "title": "Persönlicher KI-Stylist & täglicher Outfit-Planer | DressApp",
-        "description": "Chatten Sie mit Ihrem multimodalen KI-Stylisten für tägliche Outfit-Ideen basierend auf Ihrem echten Kleiderschrank, der lokalen Wettervorhersage und Ihrem Kalender.",
-        "ogTitle": "DressApp KI-Stylist — Outfit-Planer für Wetter & Terminkalender",
-        "ogDescription": "Erhalten Sie sofort personalisierte Outfit-Kombinationen aus Ihrem eigenen Kleiderschrank, abgestimmt auf Wetter, Anlass und Farbpalette."
-      },
-      "market": {
-        "title": "Circular-Fashion-Marktplatz — Kleidung kaufen, verkaufen & tauschen | DressApp",
-        "description": "Kaufen, verkaufen, tauschen oder spenden Sie Secondhand-Mode auf dem DressApp-Community-Marktplatz mit virtueller Anprobe und einer fairen Gebühr von 7%.",
-        "ogTitle": "DressApp Mode-Marktplatz — Kaufen, verkaufen & tauschen mit 7% Gebühr",
-        "ogDescription": "Entdecken Sie Pre-Loved-Mode, testen Sie vor dem Kauf die Kombination mit Ihrer Garderobe und inserieren Sie eigene Stücke mit einem Tipp."
-      },
-      "market_create": {
-        "title": "Kleidungsstück verkaufen oder tauschen — Auf dem Marktplatz inserieren | DressApp",
-        "description": "Verwandeln Sie ungetragene Kleidung mit einem Tipp in Geld oder Tauschdeals. Inserieren Sie direkt aus Ihrem digitalen DressApp-Kleiderschrank mit nur 7% Gebühr.",
-        "ogTitle": "Kleidungsstück auf dem DressApp Circular-Fashion-Marktplatz anbieten",
-        "ogDescription": "Wählen Sie ein beliebiges Teil aus Ihrem digitalen Kleiderschrank zum Verkaufen, Tauschen oder Spenden mit vorausgefüllten Details und 7% Gebühr."
-      },
-      "transactions": {
-        "title": "Marktplatz-Transaktionen — Bestellungen, Verkäufe & Tauschdeals | DressApp",
-        "description": "Verfolgen Sie Ihre Käufe, Verkäufe und Tauschaktionen auf dem DressApp-Marktplatz mit transparenter 7%-Gebührenübersicht und Bestellstatus-Updates.",
-        "ogTitle": "Ihre Marktplatz-Transaktionen & Bestellungen — DressApp",
-        "ogDescription": "Verwalten Sie Ihre Einkäufe, Auszahlungen und Tauschsendungen auf dem DressApp-Community-Marktplatz zentral an einem Ort."
-      },
-      "admin": {
-        "title": "Admin-Dashboard — Plattform-Operations-Konsole | DressApp",
-        "description": "DressApp-Administrationskonsole zur Verwaltung von Nutzern, Marktplatz-Inseraten, KI-Vision- und Stylist-Anbietern sowie Trend-Scout-Feeds.",
-        "ogTitle": "DressApp Admin-Operations-Konsole",
-        "ogDescription": "Internes Administrations-Dashboard für den Plattformbetrieb von DressApp."
-      },
-      "me": {
-        "title": "Profil & Einstellungen — Stilpräferenzen & Konto | DressApp",
-        "description": "Verwalten Sie Ihr DressApp-Stilprofil, Körpermaße, Spracheinstellungen, Kalendersynchronisierung und Benachrichtigungsoptionen.",
-        "ogTitle": "Ihr Profil & Ihre Stileinstellungen — DressApp",
-        "ogDescription": "Passen Sie Ihre Garderoben-Präferenzen, Sprache und verbundenen Dienste in DressApp individuell an."
-      },
       "stats": {
         "title": "Garderoben-Analysen — Cost-per-Wear & Farb-Statistiken | DressApp",
         "description": "Analysieren Sie den Wert Ihrer Garderobe, Cost-per-Wear-Kennzahlen, Farbpaletten-Verteilung und meistgetragene Stücke mit den DressApp Garderoben-Analysen.",
@@ -2425,12 +2478,6 @@
         "description": "Vernetzen Sie sich auf DressApp mit zertifizierten Personal Stylisten und Garderoben-Beratern für Live-Kleiderschrank-Checks, Farbberatung und Personal Shopping.",
         "ogTitle": "DressApp Mode-Experten-Verzeichnis — Personal Stylist buchen",
         "ogDescription": "Finden Sie zertifizierte Stylisten, die Ihren digitalen DressApp-Kleiderschrank prüfen und individuelle Lookbooks für Sie zusammenstellen."
-      },
-      "trends": {
-        "title": "Trend Scout — Tägliche Modetrends & Laufsteg-Inspirationen | DressApp",
-        "description": "Entdecken Sie täglich kuratierte Modetrends, Streetstyle-Strömungen und nachhaltige Outfit-Inspirationen, passend zu den Stücken in Ihrem DressApp-Kleiderschrank.",
-        "ogTitle": "DressApp Trend Scout — Kuratierte Modetrends passend zu Ihrem Kleiderschrank",
-        "ogDescription": "Sehen Sie sofort, wie globale Laufsteg- und Streetstyle-Trends direkt mit Kleidungsstücken in Ihrer digitalen Garderobe harmonieren."
       },
       "suitcase": {
         "title": "Smarter Koffer & Reise-Packlisten-Planer | DressApp",
@@ -2467,20 +2514,11 @@
         "description": "Lesen Sie die Nutzungsbedingungen von DressApp für die Nutzung des digitalen Kleiderschranks, des KI-Stylisten, der Abonnements und des Marktplatzes mit 7% Gebühr.",
         "ogTitle": "DressApp Nutzungsbedingungen — Richtlinien für Nutzer & Marktplatz",
         "ogDescription": "Offizielle Bedingungen und Community-Richtlinien für die Nutzung von Kleiderschrank, KI-Stylist und Marktplatz bei DressApp."
-      },
-      "closet_item": {
-        "title": "Kleidungsstück-Details & Outfit-Kombinationen | DressApp",
-        "description": "Sehen Sie Artikelmerkmale, Tragehistorie, Cost-per-Wear-Statistiken und KI-gestützte Outfit-Vorschläge in Ihrem digitalen DressApp-Kleiderschrank.",
-        "ogTitle": "Kleidungsstück-Details & Outfit-Ideen — Digitaler Kleiderschrank von DressApp",
-        "ogDescription": "Prüfen Sie Artikel-Tags, Styling-Notizen und passende Kombinationsstücke in Ihrer smarten digitalen Garderobe."
-      },
-      "market_listing": {
-        "title": "Secondhand-Mode-Inserat — Circular-Fashion-Marktplatz | DressApp",
-        "description": "Entdecken Sie dieses Pre-Loved-Stück auf dem DressApp-Marktplatz. Prüfen Sie, wie es zu Ihrem Kleiderschrank passt, und kaufen oder tauschen Sie mit 7% Gebühr.",
-        "ogTitle": "Pre-Loved-Modestück auf dem DressApp-Marktplatz",
-        "ogDescription": "Kaufen oder tauschen Sie dieses Community-Inserat auf DressApp mit virtuellem Kleiderschrank-Abgleich und 7% Gebühr."
       }
-    }
+    },
+    "defaultOgTitle": "DressApp — Ihr smarter digitaler Kleiderschrank, KI-Stylist & Marktplatz",
+    "defaultOgDescription": "Erfassen und organisieren Sie Ihren Kleiderschrank in Sekunden, erhalten Sie wetterbasierte KI-Outfit-Tipps und kaufen, verkaufen oder tauschen Sie Mode mit 7% Gebühr.",
+    "schemaDescription": "Smarter digitaler Kleiderschrank, persönlicher KI-Stylist, Outfit-Planer und Circular-Fashion-Marktplatz mit 7% Community-Gebühr."
   },
   "taxonomy": {
     "categories": {
@@ -2497,7 +2535,12 @@
       "dress": "Kleid",
       "headwear": "Kopfbedeckung",
       "glasses": "Gläser",
-      "belt": "Gürtel"
+      "belt": "Gürtel",
+      "watch": "Uhr",
+      "necktie": "Krawatte",
+      "scarf": "Schal",
+      "bag": "Tasche",
+      "jewelry": "Schmuck"
     },
     "dress_code": {
       "casual": "Lässig",
@@ -2819,7 +2862,9 @@
       "cargo": "Cargohose",
       "pants": "Hose",
       "cargo_shorts": "Cargoshorts",
-      "high_heel_pump": "Pumps mit hohem Absatz"
+      "high_heel_pump": "Pumps mit hohem Absatz",
+      "solid_shoes": "Elegante Schuhe",
+      "dress_shoes": "Elegante Schuhe"
     },
     "color": {
       "black": "Schwarz",
@@ -3011,7 +3056,10 @@
       "yellow": "Gelb",
       "orange": "Orange",
       "gold": "Gold",
-      "silver": "Silber"
+      "silver": "Silber",
+      "nude": "Hellbeige",
+      "light_beige": "Hellbeige",
+      "ניוד": "Hellbeige"
     },
     "fit": {
       "slim": "Schlanke Passform (Slim)",
@@ -4062,8 +4110,8 @@
     "stylist_step7": "",
     "profile_title": "Ihr Profil verwalten",
     "profile_p1": "Auf Ihrer Profilseite passen Sie Maße, Stilvorlieben und Spracheinstellungen an:",
-    "profile_item1_title": "1. Fotos & persönlicher 3D-Avatar",
-    "profile_item1_desc": "Passen Sie Ihren realistischen, dynamischen 3D-Avatar an (der live auf Ihre Körpermaße und 8 natürliche Hauttöne reagiert) oder laden Sie ein Ganzkörperfoto für persönliche Anproben hoch. DressApp richtet jedes Kleidungsstück und Accessoire präzise an Schultern, Brust, Taille, Hüfte, Armen, Beinen und Füßen aus und lässt Sie das Punktwolken-Passformnetz einblenden.",
+    "profile_item1_title": "1. Fotos & persönlicher Avatar",
+    "profile_item1_desc": "Laden Sie ein Ganzkörperfoto für realistische Anproben hoch oder passen Sie Körperform und Hautton Ihrer virtuellen Puppe an. DressApp entfernt automatisch den Hintergrund, erkennt Ihre anatomischen Punkte (Schultern, Taille, Becken und Knöchel) und bietet ein 2D-Punktwolken-Passformnetz.",
     "profile_item2_title": "2. Stilprofil & Vorlieben",
     "profile_item2_desc": "Teilen Sie dem Stylisten Ihre Lieblingsstile, bevorzugten Farben, unerwünschte Schnitte und Ihren gewünschten Bedeckungsgrad mit.",
     "profile_item3_title": "3. Persönliche Daten & Kontakt",
@@ -4103,7 +4151,7 @@
     "planner_title": "Outfit-Planer",
     "planner_p1": "Der Outfit-Planer hilft Ihnen, Ihre Styling-Auswahl zu schichten, anzuordnen und zu bewerten:",
     "planner_item1_title": "Outfit-Leinwand",
-    "planner_item1_desc": "Wählen Sie Oberteile, Hosen, Kleider, Schuhe und Accessoires aus Ihrem Kleiderschrank, um sie an Ihrem dynamischen 3D-Avatar oder Ganzkörperfoto anzuprobieren. Oberteile passen sich Schultern, Ausschnitt und ausgestreckten Armen unter Erhalt des Originalschnitts an; Hosen sitzen an Taille und Becken entlang der A-Stand-Beine; und Paarschuhe werden einzeln pro Fuß platziert.",
+    "planner_item1_desc": "Wählen Sie Oberteile, Hosen, Kleider, Schuhe und Accessoires aus Ihrem Kleiderschrank, um sie an Ihrem Avatar anzuprobieren. Oberteile passen sich Schultern und Ausschnitt unter Erhalt des Originalschnitts an, Hosen sitzen an Taille und Becken bei unverändertem Beinschnitt, und Paarschuhe werden einzeln pro Fuß platziert.",
     "planner_item2_title": "Duale Leinwand (Schichtung)",
     "planner_item2_desc": "Wenn Sie eine Jacke oder Oberbekleidung über einem Hemd tragen, stellt die Benutzeroberfläche eine Ansicht nebeneinander dar (ein Avatar zeigt die Oberbekleidung, einer ohne), sodass Sie beide Schichten gleichzeitig überprüfen können.",
     "planner_item3_title": "Interaktives Bodymapping",
@@ -4212,7 +4260,7 @@
     "tiers_title": "Abonnement-Stufen",
     "tiers_p1": "DressApp bietet flexible Abonnement-Stufen, die auf Ihre Kleiderschrankgröße und Ihre Styling-Bedürfnisse zugeschnitten sind. Führen Sie ein Upgrade auf der Preisseite durch, um unbegrenzte Funktionen freizuschalten.",
     "tiers_free_title": "Kostenloser Plan",
-    "tiers_free_desc": "Basislimit von 100 Artikeln (erweiterbar auf bis zu 150 Artikel durch Freundschaftseinladungen), 10 tägliche On-Premise-KI-Guthaben (bis zu 300 über 30 Tage) und 5 einmalige Onboarding-Guthaben. Guthabenpakete (ab 15 Credits) schalten den Cluster-Upload frei.",
+    "tiers_free_desc": "Basislimit von 100 Artikeln (durch Freundeseinladungen auf bis zu 150 erweiterbar), 10 tägliche On-Premises-KI-Credits (bis zu 300 über 30 Tage) und 5 einmalige KI-Studio-Bonuscredits. Beinhaltet tägliche Outfit-Vorschläge mit Gemini (1 KI-Credit pro Vorschlag). Kaufen Sie Credit-Pakete (ab 15 Credits), um den Cluster-Upload freizuschalten.",
     "tiers_manager_title": "Manager-Plan",
     "tiers_manager_desc": "10 $/Monat (oder 100 $/Jahr). Unbegrenzter Platz im Kleiderschrank, das hochmoderne KI-Modell von DressApp, morgendliche Outfit-Vorschläge, Kalendersynchronisierung, Verkauf auf dem Marktplatz und voller Zugriff auf Trend Scout.",
     "tiers_pro_title": "Professional-Plan",
@@ -4403,7 +4451,40 @@
       "tiers_manager_desc": "10 $/Monat (oder 100 $/Jahr). Unbegrenzter Platz im Kleiderschrank, das hochmoderne KI-Modell von DressApp, morgendliche Outfit-Vorschläge, Kalendersynchronisierung, Verkauf auf dem Marktplatz und voller Zugriff auf Trend Scout.",
       "reanalyze_title": "Foto-Neuanalyse & KI-Assistent",
       "reanalyze_p1": "Chatten Sie direkt mit dem KI-Assistenten, um Kleidungsfotos in natürlicher Sprache anzupassen:",
-      "reanalyze_step4": "Die KI erstellt direkt im Chat eine realistische Vorschau."
+      "reanalyze_step4": "Die KI erstellt direkt im Chat eine realistische Vorschau.",
+      "scheduler_push_title": "Morgendliche Outfit-Hinweise",
+      "scheduler_push_p1": "Starten Sie in den Tag mit einem tragfertigen Outfit-Vorschlag passend zu Wetter und Terminplan:",
+      "scheduler_push_step1": "Öffnen Sie Ihre **Profil**-Einstellungen und scrollen Sie zu **Morgendliche Outfit-Hinweise**.",
+      "scheduler_push_step2": "Aktivieren Sie die tägliche Erinnerung und wählen Sie Tage und Uhrzeit für Ihren Vorschlag.",
+      "scheduler_push_step3": "Wählen Sie Ihren bevorzugten Tagesstil (z. B. Lässig, Arbeit, Sport oder Benutzerdefiniert).",
+      "scheduler_push_step4": "Erlauben Sie Browser-Benachrichtigungen bei Aufforderung, damit Hinweise Ihr Gerät erreichen.",
+      "scheduler_push_step5": "Verbinden Sie Kalender und Standort, damit der Stylist Ihre Termine und das lokale Wetter kennt.",
+      "scheduler_push_step6": "Tippen Sie morgens auf die Benachrichtigung, um das Outfit samt Begründung anzusehen und auszuwählen.",
+      "shopping_assistant_title": "Größenassistent für Online-Shopping",
+      "shopping_assistant_p1": "Finden Sie beim Online-Shopping die optimale Größe durch Abgleich von Größentabellen mit Ihren Körpermaßen:",
+      "shopping_assistant_step1": "Installieren Sie die **DressApp-Browsererweiterung** auf dem Computer oder speichern Sie das **Mobile Lesezeichen** im Profil.",
+      "shopping_assistant_step2": "Stellen Sie sicher, dass Ihre Körpermaße (Größe, Gewicht, Taille, Fußlänge) im Profil gespeichert sind.",
+      "shopping_assistant_step4": "Klicken Sie auf der Seite auf die Schaltfläche **DressApp** (oder öffnen Sie Ihr gespeichertes mobiles Lesezeichen).",
+      "shopping_assistant_step5": "Falls ein Shop ein eigenes Layout verwendet, ziehen Sie einfach einen Rahmen um die Größentabelle.",
+      "shopping_assistant_step6": "Sehen Sie Ihre empfohlene Größe, Passformsicherheit und Hinweise für eine lockerere oder engere Passform.",
+      "import_wardrobe_title": "Bestehende Garderobe importieren",
+      "import_wardrobe_p1": "Nutzen Sie bereits eine andere Kleiderschrank-App oder digitale Kaufbelege? Importieren Sie Ihre Kleidung automatisch:",
+      "import_wardrobe_step2": "Wählen Sie die Quell-App aus oder importieren Sie über einen Shop-Link bzw. digitalen Beleg.",
+      "import_wardrobe_step3": "Folgen Sie der kurzen Anleitung auf dem Bildschirm, um Ihre Artikel mit DressApp zu teilen.",
+      "import_wardrobe_step4": "Die DressApp-KI entfernt automatisch Hintergründe und ordnet Ihre Kleidung nach Farben, Kategorien und Saisons.",
+      "import_wardrobe_step5": "Doppelte Artikel werden automatisch übersprungen, damit Ihre Garderobe übersichtlich bleibt.",
+      "import_wardrobe_step6": "Nach Abschluss stehen alle importierten Kleidungsstücke und Outfits in Ihrer Garderobe bereit.",
+      "tiers_title": "Abonnementpläne",
+      "tiers_p1": "DressApp bietet flexible Pläne passend zur Größe Ihrer Garderobe und Ihren Styling-Anforderungen:",
+      "tiers_free_title": "Kostenloser Plan",
+      "tiers_manager_title": "Manager-Plan",
+      "tiers_pro_title": "Professional-Plan",
+      "tiers_pro_desc": "15 $/Monat (oder 150 $/Jahr). Entwickelt für Stylisten und Mode-Creator. Enthält alles aus Manager sowie Eintrag im Stylisten-Verzeichnis, Werbekampagnen, Prioritäts-Support und 100 monatliche Styling-Credits.",
+      "tiers_how_to_upgrade_title": "So führen Sie ein Upgrade durch:",
+      "tiers_step1": "Öffnen Sie Ihre Profil-Einstellungen.",
+      "tiers_step2": "Scrollen Sie zum Abschnitt Abonnement & Schranklimits.",
+      "tiers_step3": "Klicken Sie auf Upgrade oder Preise.",
+      "tiers_step4": "Wählen Sie Ihren bevorzugten Plan und schließen Sie die Zahlung sicher ab."
     },
     "trend_closet_title": "1-Klick \"Mit meinem Kleiderschrank stylen\"",
     "trend_closet_desc": "Tippen Sie auf die Schaltfläche einer Trendkarte, damit der KI-Stylist Farben und Silhouetten direkt mit Kleidungsstücken aus Ihrem Kleiderschrank abgleicht.",
@@ -4414,7 +4495,7 @@
     "tableOfContents": "Inhaltsverzeichnis",
     "backToSummary": "Zurück zur Übersicht",
     "whyItMatters": "Warum das wichtig ist:",
-    "overview_onboarding": "Der Einstieg dauert weniger als 60 Sekunden: Kalibrieren Sie Ihre Stil-DNA, die Maße Ihres 3D-Avatars und Ihre Starter-Kapsel, um noch vor der Anmeldung Ihr erstes wetterangepasstes KI-Outfit zu sehen.",
+    "overview_onboarding": "Getting started takes under 60 seconds: calibrate your style DNA, 3D avatar measurements, and 24-piece Starter Capsule to see your first weather-aware AI outfit before you even sign in.",
     "best_practice_title": "Best Practices & Tipps",
     "best_practice_p1": "Mit diesen einfachen Gewohnheiten bauen Sie einen präzisen digitalen Kleiderschrank auf, nutzen Ihre täglichen Credits optimal und erhalten jeden Tag passende Outfit-Ideen.",
     "best_practice_step1": "**Zuerst das Profil ausfüllen**: Tragen Sie Körpermaße, Lieblingsfarben, Stilvorlieben und Bedeckungsgrad im **Profil** ein, bevor Sie Kleidung hochladen.",
@@ -4907,7 +4988,8 @@
     "webviewScanCompleteDesc": "Scan von {{appName}} abgeschlossen ({{count}} Kleidungsstücke erkannt). Ihr Kleiderschrank wird aktualisiert!",
     "scanningInProgressBtn": "Scannen...",
     "scanAndImportClosetBtn": "Scannen & Importieren",
-    "itemsCountLabel": "{{count}}+ Teile"
+    "itemsCountLabel": "{{count}}+ Teile",
+    "floaterTooltip": "DressApp Agent: Ziehen Sie ihn an eine freie Stelle. Tippen Sie darauf, sobald Sie sich in Ihrer Kleiderschrank-Übersicht befinden."
   },
   "login_reminder": {
     "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",
@@ -5162,7 +5244,26 @@
     "demoteFailedToast": "Wechsel zum Free-Tarif fehlgeschlagen.",
     "clusterFree": "Erfordert 15+ Credits",
     "unlocksCluster": "Schaltet Cluster-Upload frei",
-    "packIncludesCluster": "Bezahltes Paket — schaltet Cluster-Upload frei (15+ Credits)"
+    "packIncludesCluster": "Bezahltes Paket — schaltet Cluster-Upload frei (15+ Credits)",
+    "closetFreeCapacityDesc": "100 (bis zu 150 über Einladungen)",
+    "whatCreditBuysShort": "Was 1 Credit bietet",
+    "whatCreditBuysTitle": "Genaue Operationskosten:",
+    "fairValueTitle": "Transparente KI-Ökonomie:",
+    "fairValueSubtitle": "Keine Überraschungsrechnungen, keine wiederkehrenden Mikrogebühren. Laden Sie nur auf, wenn Sie mehr Leistung brauchen.",
+    "neverExpires": "Verfällt nie",
+    "noSubscriptionNeeded": "Kein Abo erforderlich",
+    "whatYouGet": "Das erhalten Sie in diesem Paket:",
+    "pack10Item1": "10 sofortige Cloud-Gemini-Analysen",
+    "pack10Item2": "10 KI-Foto-Neubelichtungen & Inpainting",
+    "pack50Item1": "50 sofortige Cloud-Gemini-Analysen",
+    "pack50Item2": "Schaltet Gruppen-Kleiderupload frei (15+ Cr.)",
+    "pack50Item3": "Ca. 3 vollständige Schrank-/Kleiderstangen-Scans",
+    "pack100Item1": "100 sofortige Cloud-Gemini-Analysen",
+    "pack100Item2": "Schaltet Gruppen-Kleiderupload frei",
+    "pack100Item3": "Ca. 6+ vollständige Schrank-/Kleiderstangen-Scans",
+    "pack100Item4": "Prioritätswarteschlange & hochauflösende 3D-Anprobe",
+    "packPerCreditCost": "${{cost}} pro Credit",
+    "packPerCreditCostSave": "${{cost}} pro Credit ({{save}} sparen)"
   },
   "avatar": {
     "savedSuccess": "Avatar und visuelles Profil gespeichert!",
@@ -5349,7 +5450,10 @@
     "relaxed": "Entspannt",
     "boho": "Boho",
     "smart_casual": "Smart-Casual",
-    "dresses_skirts": "Kleider & Röcke"
+    "dresses_skirts": "Kleider & Röcke",
+    "nude": "Hellbeige",
+    "light_beige": "Hellbeige",
+    "ניוד": "Hellbeige"
   },
   "wardrobeStats": {
     "tabOverview": "Übersicht",
@@ -5911,23 +6015,23 @@
   "stylistTour": {
     "step1": {
       "badge": "Schritt 1 von 4 • Deine Starter-Kapsel",
-      "title": "Kombiniere Einzelstücke nach Wunsch",
-      "desc": "Deine Startkleidung ist in Oberteile, Unterteile und Schuhe unterteilt. Wische oder klicke auf die Pfeile, um Kombinationen passend zu deinen persönlichen Proportionen zu testen."
+      "title": "Kombiniere Einzelteile",
+      "desc": "Deine Starter-Kleidungsstücke sind in Reihen für Oberteile, Hosen und Schuhe sortiert. Wische oder klicke auf die Pfeile, um Kombinationen für deine Proportionen zu testen."
     },
     "step2": {
       "badge": "Schritt 2 von 4 • KI-Shuffle mit einem Klick",
-      "title": "Sofortige KI-Outfit-Generierung",
-      "desc": "Klicke jederzeit auf „Neues Outfit generieren“. DressApp analysiert Farbtheorie, Saisonalität und deine Körperproportionen, um in Sekundenschnelle ein harmonisches Outfit zu kreieren."
+      "title": "Sofortige KI-Outfit-Erstellung",
+      "desc": "Klicke jederzeit auf \"Neues Outfit generieren\". DressApp bewertet Farbtheorie, Saison und Körperform, um ein harmonisches Outfit zusammenzustellen."
     },
     "step3": {
-      "badge": "Schritt 3 von 4 • Kalender- & Termin-Synchronisierung",
+      "badge": "Schritt 3 von 4 • Kalender & Agenda-Sync",
       "title": "Perfekt gekleidet für deinen Tag",
-      "desc": "Aktiviere „Heutige Agenda“, um Outfits auf deine Google-Kalender-Termine abzustimmen, oder wähle einen Anlass (Arbeit, Freizeit, Party, Sport) für passende Dresscodes."
+      "desc": "Aktiviere \"Heutige Agenda\", um Outfits an Google Calendar-Termine anzupassen, oder wähle einen Anlass (Büro, Freizeit, Party, Sport)."
     },
     "step4": {
       "badge": "Schritt 4 von 4 • Speichern & Entdecken",
-      "title": "Outfits speichern & Kleiderschrank besuchen",
-      "desc": "Gefällt dir ein Outfit? Klicke auf „Outfit speichern“, um es deinem Lookbook hinzuzufügen. Sobald du deine eigene Kleidung fotografieren möchtest, wechsle in deinen Kleiderschrank!",
+      "title": "Outfits speichern & Kleiderschrank erkunden",
+      "desc": "Gefällt dir das Outfit? Klicke auf \"Outfit speichern\". Sobald du bereit bist, deine echte Kleidung zu fotografieren, wechsle zu deinem Kleiderschrank!",
       "closetBtn": "Meinen Kleiderschrank erkunden"
     }
   },
@@ -5951,13 +6055,18 @@
     "view_garment_only": "Nur Kleidungsstück anzeigen (ohne Avatar)",
     "garment_only": "Nur Kleidungsstück",
     "show_avatar": "Avatar anzeigen",
-    "garment_view_badge": "Kleidungsstudio • 360°",
-    "avatar_studio_badge": "Avatar-Studio • 3D",
-    "loading": "3D-Umkleidekabine wird geladen...",
+    "garment_view_badge": "3D-Kleidungsansicht",
+    "avatar_studio_badge": "360° Avatar-Studio",
+    "loading": "3D-Studio wird vorbereitet…",
     "side_view": "Seitenansicht",
     "back_view": "Rückansicht",
+    "mesh_tailored": "3D-Maßschnitt",
+    "mesh_photo": "Foto-Passform",
+    "mesh_mode_tailored_active": "3D-Maßschnitt aktiv — für Foto-Passform klicken",
+    "mesh_mode_photo_active": "Foto-Passform aktiv — für 3D-Maßschnitt klicken",
     "hood_on": "Kapuze aufgesetzt",
-    "hood_off": "Kapuze abgesetzt"
+    "hood_off": "Kapuze abgesetzt",
+    "restoring_context": "3D-Studio wird wiederhergestellt…"
   },
   "dressingRoom": {
     "title": "3D-Umkleidekabine",
@@ -6038,7 +6147,77 @@
     "floaterTooltip": "Ziehen zum Neupositionieren. Antippen für Größenempfehlung.",
     "openHub": "Shopping Hub",
     "storeAssistant": "{{store}} Größen-Assistent",
-    "noMeasurementsSaved": "Keine Körpermaße im Profil hinterlegt"
+    "noMeasurementsSaved": "Keine Körpermaße im Profil hinterlegt",
+    "companionBanner": "Begleit-Modus: {{store}} blockiert eingebettete Frames und mobile Apps können keine schwebenden Overlays anzeigen. Lass DressApp im Hintergrund geöffnet!",
+    "aliexpressNotice": "Wird der Bildschirm durch das AliExpress-Pop-up blockiert? Tippe auf 'In neuem Tab öffnen ↗' oder nutze den Größen-Assistenten oben!",
+    "openInCleanTab": "In neuem Tab öffnen ↗",
+    "openDirectTab": "Im Tab öffnen ↗",
+    "loginNotice": "Musst du dich anmelden oder schließt ein Pop-up nicht? Tippe auf 'Im Tab öffnen', um direkt im Shop-Konto einzukaufen.",
+    "brandSizeGuide": "Personalisierter Größenratgeber für {{store}}",
+    "basedOnMeasurements": "Basierend auf deinen gespeicherten Körpermaßen",
+    "topSize": "Oberteil / Hemd",
+    "bottomSize": "Hose / Unterteil",
+    "shoeSize": "Schuhe",
+    "fitTip": "Marken-Passformtipp",
+    "openStoreWeb": "{{store}} im Tab öffnen ↗",
+    "openStoreApp": "{{store}} App öffnen 📱",
+    "checkSpecificGarment": "Passform für ein bestimmtes Kleidungsstück prüfen",
+    "pasteStoreLink": "Produktlink von {{store}} einfügen...",
+    "analyzeGarment": "Größe prüfen",
+    "uploadScreenshot": "Oder Screenshot der Größentabelle hochladen ↗",
+    "tryInAppFrame": "Trotzdem In-App-Ansicht versuchen",
+    "backToAssisted": "Zum Begleit-Modus wechseln",
+    "addressBarPlaceholder": "Produktlink eingeben oder einfügen...",
+    "go": "Los",
+    "open": "Öffnen",
+    "analysisSuccess": "Kleidungsstück erfolgreich analysiert!",
+    "analysisFailed": "Größentabelle konnte nicht automatisch abgerufen werden. Du kannst einen Screenshot hochladen.",
+    "tips": {
+      "zara": "Zara ist eher schmal europäisch geschnitten. Bei Oberteilen zwischen zwei Größen lieber eine Nummer größer wählen.",
+      "shein": "SHEIN-Größen variieren stark je nach Untermarke. MOTF fällt normal aus, Dazy sehr zierlich.",
+      "mango": "Mango entspricht regulären europäischen Größen mit taillierter Silhouette.",
+      "hm": "H&M Basics fallen größengerecht aus; Oversize-Linien sind bewusst weit geschnitten.",
+      "asos": "ASOS Standardgrößen passen meist genau. Achte auf Filter für Tall, Petite oder Curve.",
+      "nike": "Nike-Schuhe fallen oft eine halbe Nummer kleiner aus. Für Sportschuhe lieber eine halbe Größe mehr wählen.",
+      "adidas": "Adidas-Schuhe und -Kleidung entsprechen internationalen Standardgrößen.",
+      "aliexpress": "Asiatische Größenstandards: Fallen oft 1–2 Nummern kleiner aus als europäische Größen.",
+      "uniqlo": "Uniqlo bietet bequeme, lockere Schnitte gemäß japanischen/internationalen Standards.",
+      "default": "Internationale Standardgrößen passend zu deinen individuellen Körpermaßen."
+    }
+  },
+  "migrationHub": {
+    "title": "Garderoben-Migrationszentrale",
+    "subtitle": "Verbinden Sie Ihre bisherige Kleiderschrank-App, schließen Sie Pop-ups, navigieren Sie zur Garderoben-Übersicht und starten Sie die automatische Migration mit dem DressApp Agenten.",
+    "searchPlaceholder": "Garderoben-App suchen oder Web-URL eingeben (z. B. Whering, Acloset, Stylebook)...",
+    "savedPlatforms": "Ihre Garderoben-Plattformen",
+    "curatedPlatforms": "Unterstützte Plattformen",
+    "connectAndMonitor": "Verbinden",
+    "openDirectTab": "In Tab öffnen ↗",
+    "loginNotice": "1. Anmelden • 2. Pop-ups schließen • 3. Zur Garderoben-Übersicht navigieren • 4. DressApp Agent-Symbol antippen!",
+    "openInBrowser": "In neuem Tab öffnen, um sich anzumelden oder Pop-ups zu umgehen",
+    "openFullSite": "In Tab öffnen",
+    "storeApp": "App öffnen",
+    "migrateWardrobe": "Garderobe migrieren",
+    "frameProtectedTitle": "{{name}} schützt direktes In-Frame-Browsing",
+    "frameProtectedDesc": "Einige Garderoben-Plattformen blockieren iFrames. Öffnen Sie die Web-App in einem neuen Tab oder laden Sie Screenshots mit einem Klick hoch!",
+    "openExternalTab": "{{name}} in neuem Tab öffnen ↗",
+    "uploadMediaFallback": "Screenshots / Video hochladen",
+    "agentSheetTitle": "{{name}} Garderoben-Migrationsagent",
+    "agentSheetDesc": "Scannt sichtbare Kleidungsstücke, entfernt Hintergründe, taggt Artikel und speichert sie direkt in Ihrer DressApp-Garderobe.",
+    "liveAgentScanTab": "Live-Raster-Migration",
+    "checklistTitle": "Checkliste vor der Migration",
+    "checkLogin": "Bei {{name}} angemeldet",
+    "checkPopups": "Alle Pop-ups, Modals und Cookies geschlossen",
+    "checkGrid": "Kleiderschrank-Raster auf dem Bildschirm sichtbar",
+    "startMigrationBtn": "Garderoben-Migration starten",
+    "scanningWardrobe": "Garderoben-Raster wird gescannt...",
+    "harvestingCount": "Artikel werden erfasst... ({{count}} Karten gefunden)",
+    "harvestedBadge": "{{count}} Artikel erfasst",
+    "migrationComplete": "✓ {{count}} Artikel erfolgreich in Ihre DressApp-Garderobe migriert!",
+    "openClosetBtn": "Meinen Kleiderschrank öffnen",
+    "quickScreenshots": "Screenshots & Videos hochladen",
+    "quickScreenshotsDesc": "Lieber aus der Galerie hochladen? Wählen Sie Screenshots oder eine Bildschirmaufnahme Ihres Kleiderschranks.",
+    "openHubBtn": "Garderoben-Migrationszentrale öffnen"
   },
   "about": {
     "feature6_desc": "Desktop-Chrome-Erweiterung und mobiler Einkaufsassistent, die Größentabellen in Online-Shops scannen und personalisierte Größenempfehlungen vor dem Kauf liefern."

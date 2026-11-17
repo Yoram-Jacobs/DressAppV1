@@ -362,13 +362,13 @@ export default function WardrobeStats() {
         rawColor = typeof first === 'string' ? first : (first?.name || '');
       }
       rawColor = rawColor || 'Other';
-      const raw = rawColor.trim();
+      const raw = rawColor.trim().replace(/א[lI|1]פור/g, 'אפור').replace(/א[lI|1]פ[וo]ר/g, 'אפור');
 
       // Translate the color using our labelForColor helper
-      const localized = rawColor === 'Other' ? t('common.unknownColor', { defaultValue: 'Other' }) : labelForColor(raw, t);
+      const localized = raw === 'Other' ? t('common.unknownColor', { defaultValue: 'Other' }) : labelForColor(raw, t);
 
       if (!colorMap[localized]) {
-        const canonicalKey = rawColor === 'Other' ? 'other' : canonicalColorKey(raw);
+        const canonicalKey = raw === 'Other' ? 'other' : canonicalColorKey(raw);
         const fill = getFillColor(canonicalKey);
 
         colorMap[localized] = {

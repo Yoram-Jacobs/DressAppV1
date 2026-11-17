@@ -77,7 +77,7 @@ def check_trend_scout_access(user: dict) -> None:
 @router.get("/latest")
 async def get_latest_trends(
     per_bucket: int = Query(default=1, ge=1, le=5),
-    gender: str | None = Query(default=None, regex="^(male|female)$"),
+    gender: str | None = Query(default=None, pattern="^(male|female)$"),
     country: str | None = Query(default=None, max_length=4),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
@@ -134,7 +134,7 @@ async def get_fashion_scout_feed(
     limit: int = Query(default=12, ge=1, le=50),
     language: str | None = Query(default=None, max_length=8),
     country: str | None = Query(default=None, max_length=64),
-    gender: str | None = Query(default=None, regex="^(male|female)$"),
+    gender: str | None = Query(default=None, pattern="^(male|female)$"),
     personalized: bool = Query(default=True),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
@@ -178,7 +178,7 @@ async def get_fashion_scout_feed(
 async def run_trend_scout_now(
     force: bool = Query(default=False),
     country: str | None = Query(default=None, max_length=64),
-    gender: str | None = Query(default=None, regex="^(male|female)$"),
+    gender: str | None = Query(default=None, pattern="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(require_admin),
 ) -> dict[str, Any]:
@@ -201,7 +201,7 @@ async def run_trend_scout_now(
 async def run_trend_scout_now_dev(
     force: bool = Query(default=True),
     country: str | None = Query(default=None, max_length=64),
-    gender: str | None = Query(default=None, regex="^(male|female)$"),
+    gender: str | None = Query(default=None, pattern="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:

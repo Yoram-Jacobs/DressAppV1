@@ -95,7 +95,7 @@ export function LanguagePicker({ style, testIdSuffix }: LanguagePickerProps) {
             </View>
 
             <ScrollView style={styles.langList} showsVerticalScrollIndicator={false}>
-              {SUPPORTED_LANGUAGES.map((lang) => {
+              {SUPPORTED_LANGUAGES.map((lang: { code: string; nativeName: string; englishName: string; dir: string }) => {
                 const isSelected = lang.code === currentLang;
                 return (
                   <TouchableOpacity

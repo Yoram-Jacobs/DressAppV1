@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import mimetypes
 from pathlib import Path
@@ -48,7 +49,47 @@ logging.basicConfig(
 )
 logger = logging.getLogger("dressapp")
 
-app = FastAPI(title="DressApp API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    try:
+        # Use Motor client from app.db so indexes live on the shared client
+        _ = get_client()
+        await ensure_indexes()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Index bootstrap skipped: %s", exc)
+    try:
+        start_scheduler()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Scheduler start skipped: %s", exc)
+    try:
+        from app.services.eyes_override import get_active_provider
+        await get_active_provider()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Eyes override warmup skipped: %s", exc)
+    try:
+        from app.services.fashion_rules_rag import sync_rules_to_db
+        await sync_rules_to_db(get_db())
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Fashion rules sync skipped: %s", exc)
+    # Patch M13 (May 2026) — Fire-and-forget warmup of SegFormer + rembg
+    # + FashionCLIP so the FIRST user upload doesn't pay the cumulative
+    # cold-init tax. NEVER awaited inline so readiness probes return fast.
+    try:
+        import asyncio as _asyncio
+        _asyncio.create_task(warmup_models())
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Model warmup task not scheduled: %s", exc)
+    try:
+        yield
+    finally:
+        try:
+            shutdown_scheduler()
+        except Exception:  # noqa: BLE001
+            pass
+        await close_db()
+
+
+app = FastAPI(title="DressApp API", version="0.1.0", lifespan=lifespan)
 api_router = APIRouter(prefix="/api")
 
 
@@ -153,50 +194,4 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin"],
 )
-
-
-@app.on_event("startup")
-async def on_startup() -> None:
-    try:
-        # Use Motor client from app.db so indexes live on the shared client
-        _ = get_client()
-        await ensure_indexes()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Index bootstrap skipped: %s", exc)
-    try:
-        start_scheduler()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Scheduler start skipped: %s", exc)
-    try:
-        from app.services.eyes_override import get_active_provider
-        await get_active_provider()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Eyes override warmup skipped: %s", exc)
-    try:
-        from app.services.fashion_rules_rag import sync_rules_to_db
-        await sync_rules_to_db(get_db())
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Fashion rules sync skipped: %s", exc)
-    # Patch M13 (May 2026) — Fire-and-forget warmup of SegFormer + rembg
-    # + FashionCLIP so the FIRST user upload doesn't pay the cumulative
-    # cold-init tax that previously pushed /closet/analyze past the
-    # ingress 60s ceiling (Issue 3 "Analysis failed on first attempt").
-    # NEVER awaited inline: the supervisor / k8s readiness probe needs
-    # the backend to report ready immediately. The task self-isolates
-    # all exceptions and every dependent service still has its own
-    # lazy fallback if the warm-up fails.
-    try:
-        import asyncio as _asyncio
-        _asyncio.create_task(warmup_models())
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Model warmup task not scheduled: %s", exc)
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client() -> None:
-    try:
-        shutdown_scheduler()
-    except Exception:  # noqa: BLE001
-        pass
-    await close_db()
 

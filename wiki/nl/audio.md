@@ -8,7 +8,7 @@ Dit document biedt een uitgebreide technische analyse, architectuuranalyse en ge
 
 ### Overzicht op hoog niveau
 DressApp integreert een dual-tier, zeer veerkrachtig audiosysteem dat is ontworpen om een meeslepende, handsfree gesprekslus te bieden met de AI Virtual Stylist. Het systeem ondersteunt volledige bidirectionele spraak:
-* **Speech-to-Text (STT)**: Transcribeert spraakopdrachten van gebruikers om vragen over kleding, het maken van outfits en stijladvies te begeleiden. Het routeert automatisch tussen een lokale Gemma4 zijspancontainer en het eigen Gemini 2.5 Flash multimodale eindpunt van Google.
+* **Speech-to-Text (STT)**: Transcribeert spraakopdrachten van gebruikers om vragen over kleding, het maken van outfits en stijladvies te begeleiden. Het routeert automatisch tussen een lokale Gemma4 zijspancontainer en het eigen Gemini 3.5 Flash-Lite multimodale eindpunt van Google.
 * **Tekst-naar-spraak (TTS)**: zet het outfitadvies van de virtuele stylist samen in gesproken audio van hoge kwaliteit. Het maakt gebruik van de mogelijkheden van Gemini voor het genereren van audio op serverniveau, met automatische Web Speech-synthese aan de clientzijde en offline Piper TTS-engines op het apparaat voor mobiele pods.
 
 ### Architecturale stroom
@@ -30,12 +30,12 @@ subgrafie Backend-services
         API --> STT[STT-service: EyesSTTService]
         STT -->|Controleer opheffing| Aanbieder{Aanbieder?}
         Aanbieder -->|Gemma| Gemma[Gemma4 zijspancontainer]
-        Aanbieder -->|Gemini| GeminiSTT[Gemini 2.5 Flash multimodaal]
+        Aanbieder -->|Gemini| GeminiSTT[Gemini 3.5 Flash-Lite multimodaal]
         Gemma -->|Fallback| TweelingSTT
         
         API --> Hersenen[Stylist Hersenservice]
         Hersenen -->|Tekstreactie| TTS[TTS-service: GeminiTTSService]
-        TTS -->|gemini-3.8-flash-tts respons_modaliteiten: AUDIO| GeminiTTS[Gemini 2.5 Flash multimodaal]
+        TTS -->|gemini-3.8-flash-tts respons_modaliteiten: AUDIO| GeminiTTS[Gemini 3.5 Flash-Lite multimodaal]
     einde
 
 GeminiTTS -->|Ruwe audiobytes| TTS
@@ -49,7 +49,7 @@ GeminiTTS -->|Ruwe audiobytes| TTS
 ### Waardepropositie voor gebruikers
 * **Frictieloze interactie**: gebruikers kunnen stylingdilemma's beschrijven, kledingstukken opvragen en outfitmatches geheel handsfree aanvragen.
 * **Lage latentie en hoge snappiness**: Realtime spraakherkenning aan de clientzijde biedt directe visuele transcriptiefeedback terwijl de gebruiker spreekt.
-* **Fail-Safe Robuustheid**: Als het speciale Gemma4-model uitvalt, valt het systeem automatisch terug naar Gemini 2.5 Flash. Als het genereren van spraak op de server mislukt, synthetiseert de browser tekst onmiddellijk lokaal met behulp van de Web Speech API.
+* **Fail-Safe Robuustheid**: Als het speciale Gemma4-model uitvalt, valt het systeem automatisch terug naar Gemini 3.5 Flash-Lite. Als het genereren van spraak op de server mislukt, synthetiseert de browser tekst onmiddellijk lokaal met behulp van de Web Speech API.
 * **Privacy- en offlinemogelijkheden**: het Piper/Sherpa-ONNX-integratiepatroon zorgt ervoor dat mobiele clienttoepassingen de spraakgeneratie volledig op het apparaat kunnen uitvoeren, waardoor serverbandbreedte wordt bespaard en de privacy van gebruikers wordt gewaarborgd.
 
 ---
@@ -105,7 +105,7 @@ GeminiTTS -->|Ruwe audiobytes| TTS
 #### Dual-tier spraak-naar-tekst (`stt_service.py`)
 De backend-orkestrator gebruikt `EyesSTTService` om een robuust, faalveilig dual-path transcriptiesysteem te implementeren:
 1. **Specifiek containerpad (Gemma4)**: wanneer `EYES_PROVIDER=gemma` actief is, verzendt de service een `POST`-verzoek met het audiobestand naar de Gemma4-containerruimte (`EYES_GEMMA_SPACE_URL`).
-2. **Native Multimodal Path (Gemini 2.5 Flash)**: Als de Gemma-container uitvalt of wordt omzeild, neemt `GeminiSTTService` het over. De audiobytes worden omgezet in een inline multimodaal object en rechtstreeks door Gemini verwerkt:
+2. **Native Multimodal Path (Gemini 3.5 Flash-Lite)**: Als de Gemma-container uitvalt of wordt omzeild, neemt `GeminiSTTService` het over. De audiobytes worden omgezet in een inline multimodaal object en rechtstreeks door Gemini verwerkt:
    ```python
    # Gemini STT-transcriptieverzoekconfiguratie
    text = wacht op client.vision(
@@ -118,7 +118,7 @@ De backend-orkestrator gebruikt `EyesSTTService` om een robuust, faalveilig dual
    ```
 
 #### Multimodale server-side TTS (`tts_service.py`)
-In plaats van te vertrouwen op cloudaudio-API's van derden, maakt DressApp gebruik van **Gemini 2.5 Flash** native spraaksynthese:
+In plaats van te vertrouwen op cloudaudio-API's van derden, maakt DressApp gebruik van **Gemini 3.5 Flash-Lite** native spraaksynthese:
 * **Audio Model Config**: Het verzoek vraagt Gemini om expliciet te reageren in audioformaat:
   ```python
   configuratie = {

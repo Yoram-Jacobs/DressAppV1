@@ -151,7 +151,7 @@ export const TopNav = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full h-10 w-10 text-dark-brand hover:text-primary-brand hover:bg-priamry-shadow transition-colors"
+            className="rounded-full h-10 w-10 text-dark-brand hover:text-primary-brand hover:bg-primary-shadow transition-colors"
             onClick={() => setHelpOpen(true)}
             data-testid="topnav-help-button"
             aria-label="Open Help Menu"

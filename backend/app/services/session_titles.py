@@ -83,7 +83,14 @@ def _fallback_title(text: str) -> str:
     words = [w for w in cleaned.split() if len(w) >= 2]
     if not words:
         return "Style advice"
-    return " ".join(words[:5])[:40].strip()
+    selected = words[:5]
+    trailing_stops = {
+        "של", "על", "עם", "את", "אל", "מן", "כי", "שלא",
+        "for", "of", "with", "to", "on", "in", "at", "and", "the", "a", "an",
+    }
+    while len(selected) > 1 and selected[-1].lower() in trailing_stops:
+        selected.pop()
+    return " ".join(selected)[:40].strip()
 
 
 def clean_title(raw: str, fallback_query: str = "") -> str:
