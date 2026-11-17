@@ -160,9 +160,9 @@ export function inferRoleFromName(title) {
   // 1. Wearable core apparel (outerwear, dress, bottom, top, shoes) takes precedence
   // over accessory details (e.g. "מעיל טרנץ' עם חגורה", "belted trench coat", "dress with tie", "pants with belt").
   if (/(?:\b(?:overcoat|trench|coat|jacket|blazer|cardigan|parka|windbreaker|bomber|overshirt)\b|מעיל|ז['’׳]קט|ג['’׳]קט|טרנץ['’׳]?|בלייזר|קרדיגן)/i.test(text)) return 'outerwear';
-  if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya)\b|שמלה|שמלת|אוברול|סרבל)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks|watch)\b/i.test(text)) return 'dress';
+  if (/(?:\b(?:dress|gown|jumpsuit|romper|kaftan|caftan|abaya|anarkali|saree|sari|lehenga|thobe|galabiya|jalabiya|achkan|sherwani|kurta\s+set)\b|שמלה|שמלת|אוברול|סרבל|גלבייה|גלביה|עבאיה|כפתן|סארי|להנגה|שרוואני|סט\s+קורטה)/i.test(text) && !/\bdress\s+(?:shirt|pants|trousers|shoes|socks|watch)\b/i.test(text)) return 'dress';
   if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|leggings|joggers|slacks|sweatpants)\b|מכנס|ג['’]ינס|חצאית|שורטס|טייץ)/i.test(text)) return 'bottom';
-  if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey)\b|חולצ|סוודר|גופי)/i.test(text)) return 'top';
+  if (/(?:\b(?:t-?shirt|tee|shirt|blouse|sweater|hoodie|sweatshirt|pullover|polo|tank|camisole|jersey|kurta|kurti|tunic)\b|חולצ|סוודר|גופי|קורטה|כורטה|קורטי|טוניקה)/i.test(text)) return 'top';
   if (/(?:\b(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?)\b|הנעלה|נעליים|נעלי|מגפיים|מגפי|סנדלים)/i.test(text)) return 'shoes';
   if (/(?:\b(?:hat|cap|headwear|beanie|beret)\b|כובע|כיפה|ברט)/i.test(text)) return 'headwear';
   if (/(?:\b(?:glasses|sunglasses|eyewear)\b|משקפיים|משקפי)/i.test(text)) return 'glasses';
@@ -185,7 +185,7 @@ export function normalizeGarmentRole(role, category, title) {
   const declared = normalizeDeclaredGarmentRole(role, category, title);
   const inferred = inferRoleFromName(title);
   const CORE = ['top', 'bottom', 'outerwear', 'dress', 'necktie', 'watch', 'belt'];
-  if (inferred && inferred !== declared && CORE.includes(declared) && CORE.includes(inferred)) {
+  if (inferred && inferred !== declared && (CORE.includes(declared) || declared === 'accessory') && (CORE.includes(inferred) || inferred === 'shoes')) {
     return inferred;
   }
   return declared;
@@ -227,7 +227,7 @@ function normalizeDeclaredGarmentRole(role, category, title) {
   }
 
   // 3. Multi-lingual Dress & Full Body (including cultural attire)
-  if (/(?:dress|gown|jumpsuit|romper|overall|one_piece|full_body|abaya|kaftan|caftan|thobe|achkan|saree|sari|lehenga|anarkali|kurti|kimono|hanbok|שמלה|שמלת|שמלות|אוברול|סרבל|חלוק|גלבייה|חלק שלם|עבאיה|כפתן|סארי|תוב|قطعة كاملة|فستان|جمبسوت|عباية|قفطان|ثوب|جلابية|cuerpo entero|vestido|mono|corps entier|robe|combinaison|ganzkörper|kleid|completi e abiti|abito|tuta|corpo inteiro|macacão|полный образ|плать|комбинезон|连体|套装|连衣裙|裙装|ワンピース|ドレス|オールインワン|volledig lichaam|jurk|फुल बॉडी|साड़ी|लहंगा)/i.test(text)) {
+  if (/(?:dress|gown|jumpsuit|romper|overall|one_piece|full_body|abaya|kaftan|caftan|thobe|achkan|saree|sari|lehenga|anarkali|kurti|kimono|hanbok|kurta\s+set|שמלה|שמלת|שמלות|אוברול|סרבל|חלוק|גלבייה|גלביה|חלק שלם|עבאיה|כפתן|סארי|להנגה|שרוואני|סט\s+קורטה|תוב|قطعة كاملة|فستان|جمبسوت|عباية|قفطان|ثوب|جلابية|cuerpo entero|vestido|mono|corps entier|robe|combinaison|ganzkörper|kleid|completi e abiti|abito|tuta|corpo inteiro|macacão|полный образ|плать|комбинезон|连体|套装|连衣裙|裙装|ワンピース|ドレス|オールインワン|volledig lichaam|jurk|फुल बॉडी|साड़ी|लहंगा)/i.test(text)) {
     return 'dress';
   }
 
@@ -237,7 +237,7 @@ function normalizeDeclaredGarmentRole(role, category, title) {
   }
 
   // 5. Multi-lingual Tops (shirts, blouses, sweaters, hoodies, tees, polos, tanks, camisoles, knitwear)
-  if (/(?:top|tops|shirt|blouse|sweater|hoodie|tee|t-shirt|polo|tank|crop|sweatshirt|pullover|camisole|jersey|tunic|kurta|חלק עליון|עליון|חולצה|חולצת|חולצות|בלוזה|סוודר|סוודרים|סווטשירט|קפוצ['’]ון|גופייה|גופיה|גופיות|טוניקה|قطعة علوية|الطبقة العلوية|قميص|بلوزة|كنزة|سويتر|توب|superior|parte superior|camisa|blusa|suéter|sueter|camiseta|haut|chemise|chemisier|pull|oberteil|oberschicht|hemd|bluse|maglia|camicia|camicetta|maglione|partes de cima|верх|рубашка|блузка|свитер|футболка|топ|джемпер|толстовка|худи|上装|顶层|上衣|衬衫|卫衣|毛衣|t恤|トップス|シャツ|ブラウス|セーター|bovenkleding|टॉप्स|टॉप|कुर्ता|शर्ट|ब्लाउज|टी-शर्ट|स्वेटर)/i.test(text)) {
+  if (/(?:top|tops|shirt|blouse|sweater|hoodie|tee|t-shirt|polo|tank|crop|sweatshirt|pullover|camisole|jersey|tunic|kurta|חלק עליון|עליון|חולצה|חולצת|חולצות|בלוזה|סוודר|סוודרים|סווטשירט|קפוצ['’]ון|גופייה|גופיה|גופיות|טוניקה|קורטה|כורטה|קורטי|قطعة علوية|الطبقة العلوية|قميص|بلوزة|كنزة|سويتر|توب|superior|parte superior|camisa|blusa|suéter|sueter|camiseta|haut|chemise|chemisier|pull|oberteil|oberschicht|hemd|bluse|maglia|camicia|camicetta|maglione|partes de cima|верх|рубашка|блузка|свитер|футболка|топ|джемпер|толстовка|худи|上装|顶层|上衣|衬衫|卫衣|毛衣|t恤|トップス|シャツ|ブラウス|セーター|bovenkleding|टॉप्स|टॉप|कुर्ता|शर्ट|ब्लाउज|टी-शर्ट|स्वेटर)/i.test(text)) {
     return 'top';
   }
 
@@ -3261,7 +3261,7 @@ export function resolveShellFit({
   const isWideOrLoose = has('wide', 'loose', 'baggy', 'oversized', 'hip-hop', 'hip hop', 'cargo', 'relaxed', 'boyfriend', 'flair', 'flare', 'palazzo', 'ball gown', 'רחב', 'רפוי', 'אוברסייז');
   if (rawSlot === 'top') {
     const isCrop = has('crop', 'sports_bra', 'bralette', 'קרופ', 'חזיה');
-    const isLongline = has('kurta', 'tunic', 'longline', 'thobe', 'טוניקה');
+    const isLongline = has('kurta', 'kurti', 'tunic', 'longline', 'thobe', 'טוניקה', 'קורטה', 'כורטה', 'קורטי');
     const isExplicitOuterwear = has('coat', 'overcoat', 'trench', 'jacket', 'blazer', 'parka', 'puffer', 'מעיל', "ז'קט", 'בלייזר');
     const isTuckable = !isExplicitOuterwear;
     const isTucked = hasBottom && isTuckable;
@@ -4242,7 +4242,7 @@ export function GarmentMeshCore({
     // 1. TOP
     if (rawSlot === 'top') {
       const isCrop = garmentText.includes('crop') || garmentText.includes('sports_bra') || garmentText.includes('bralette') || garmentText.includes('קרופ') || garmentText.includes('חזיה');
-      const isLongline = garmentText.includes('kurta') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה');
+      const isLongline = garmentText.includes('kurta') || garmentText.includes('kurti') || garmentText.includes('tunic') || garmentText.includes('longline') || garmentText.includes('thobe') || garmentText.includes('טוניקה') || garmentText.includes('קורטה') || garmentText.includes('כורטה') || garmentText.includes('קורטי');
       const sleeveStyle = detectSleeveStyle({ garmentText, rawSlot: 'top', aspect });
       const necklineStyle = detectNecklineStyle({ garmentText, garment });
       const isStraplessTop = shellFit?.isStrapless || necklineStyle === 'strapless';

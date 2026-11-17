@@ -210,8 +210,11 @@ export function resolveGarmentTemplate({
 
   // 1. DRESSES / FULL-BODY
   if (effectiveSlot === 'dress') {
-    if (has('kaftan', 'caftan', 'abaya', 'קפטן', 'גלבי')) {
+    if (has('kaftan', 'caftan', 'abaya', 'קפטן', 'כפתן', 'עבאיה', 'גלבי')) {
       return 'kaftan';
+    }
+    if (has('tunic', 'kurta', 'kurti', 'קורטה', 'כורטה', 'קורטי', 'טוניקה', 'longline')) {
+      return 'top_tunic';
     }
     if (has(
       'strapless', 'tube', 'bandeau', 'bustier', 'corset', 'sweetheart',
@@ -316,7 +319,7 @@ export function resolveGarmentTemplate({
     if (has('cardigan', 'קרדיגן')) {
       return 'cardigan';
     }
-    if (has('tunic', 'kurta', 'longline', 'טוניקה')) {
+    if (has('tunic', 'kurta', 'kurti', 'longline', 'טוניקה', 'קורטה', 'כורטה', 'קורטי')) {
       return 'top_tunic';
     }
     if (
