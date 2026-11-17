@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
-import { normalizeGarmentRole } from '@/components/GarmentMesh3D';
+import { resolveGarmentSlot } from '@/components/GarmentMesh3D';
 import {
   ArrowLeft,
   Sparkles,
@@ -1645,12 +1645,7 @@ export default function ItemDetail() {
       .filter((x) => x.id !== (hostView?.id || id))
       .map(imageOf)
       .filter((u) => u && u !== frontImage);
-    const rawCat = base.category || 'top';
-    const normSlot = normalizeGarmentRole(
-      rawCat,
-      base.category,
-      base.title || base.name || base.sub_category || base.item_type
-    ) || 'top';
+    const normSlot = resolveGarmentSlot(base, base.category || 'top') || 'top';
     const itemLike = {
       ...base,
       image_url: frontImage,

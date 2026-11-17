@@ -5,7 +5,7 @@ import { useTranslation, Trans } from "react-i18next";
 import { useAuth } from "@/lib/auth";
 
 const DressingRoom3D = lazy(() => import("@/components/DressingRoom3D"));
-import { normalizeGarmentRole } from '@/components/GarmentMesh3D';
+import { resolveGarmentSlot } from '@/components/GarmentMesh3D';
 import {
   Plus,
   Search,
@@ -278,20 +278,12 @@ export default function Closet() {
 
   const handleOpen3DStudio = useCallback((targetItem = null) => {
     if (targetItem) {
-      const slot = normalizeGarmentRole(
-        targetItem.category,
-        targetItem.category,
-        targetItem.title || targetItem.name || targetItem.sub_category || targetItem.item_type
-      ) || 'top';
+      const slot = resolveGarmentSlot(targetItem, targetItem.category) || 'top';
       setStudio3DItems({ [slot]: targetItem });
     } else {
       const map = {};
       (filteredItems || []).forEach((it) => {
-        const slot = normalizeGarmentRole(
-          it.category,
-          it.category,
-          it.title || it.name || it.sub_category || it.item_type
-        ) || 'top';
+        const slot = resolveGarmentSlot(it, it.category) || 'top';
         const img = it.image_url || it.clean_image_url || it.reconstructed_image_url || it.thumbnail_data_url;
         if (!map[slot] && img) {
           map[slot] = it;

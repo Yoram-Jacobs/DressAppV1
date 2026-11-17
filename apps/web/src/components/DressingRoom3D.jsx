@@ -34,6 +34,7 @@ import GarmentMesh3D, {
   normalizeGarmentRole,
   resolveGarmentRenderOrder,
   resolveGarmentMetadataText,
+  resolveGarmentSlot,
 } from './GarmentMesh3D';
 import { computeMorphInfluences, resolveHairProperties } from './DynamicAvatar';
 import { resolveEffectiveGarmentUrl } from '@/lib/itemImage';
@@ -47,11 +48,7 @@ function isGarmentItemHooded(garment) {
   if (!garment) return false;
   const metaText = resolveGarmentMetadataText(garment) || garment.name || garment.title || '';
   return isHoodedGarment({
-    rawSlot: normalizeGarmentRole(
-      garment.slot,
-      garment.category || garment.rawItem?.category,
-      metaText
-    ),
+    rawSlot: resolveGarmentSlot(garment, garment.slot),
     slot: garment.slot,
     category: garment.category || garment.rawItem?.category,
     garmentText: metaText,
@@ -558,12 +555,7 @@ export default function DressingRoom3D({
       if (!item) return;
       const g = typeof item === 'object' ? item : { id: item, slot: slotKey };
       if (!g.url && !g.image_url && !g.clean_image_url) return;
-      const metaText = resolveGarmentMetadataText(g);
-      const normSlot = normalizeGarmentRole(
-        slotKey,
-        g.category,
-        metaText || g.name || g.title || g.sub_category || g.subcategory || g.item_type
-      );
+      const normSlot = resolveGarmentSlot(g, slotKey);
       let frontUrl = resolveEffectiveGarmentUrl(g) || g.url || g.image_url;
       if (normSlot === 'shoes' && typeof frontUrl === 'string') {
         const onboardingShoeMatch = frontUrl.match(/^\/assets\/onboarding\/([wm]_[a-z0-9_]+)\.png(\?.*)?$/i);
@@ -623,11 +615,7 @@ export default function DressingRoom3D({
           const sibId = sibling.id || sibling._id;
           if (!sibling || sibId === itemId) return;
           if (sibling.group_id !== effectiveGroupId && sibId !== effectiveGroupId) return;
-          const sibSlot = normalizeGarmentRole(
-            sibling.category || slotKey,
-            sibling.category,
-            resolveGarmentMetadataText(sibling) || sibling.name || sibling.title || sibling.sub_category || sibling.item_type
-          );
+          const sibSlot = resolveGarmentSlot(sibling, sibling.category || slotKey);
           if (sibSlot === normSlot) {
             pushView(sibling);
           }

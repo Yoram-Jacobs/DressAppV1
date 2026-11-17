@@ -1417,4 +1417,66 @@ describe('3D Try-On Dressing Room Unit Tests', () => {
 
     expect(screen.queryByTestId('toggle-hood-mode-btn')).toBeNull();
   });
+
+  test('Regression: baseball caps, bandanas, belts, pants, tees, and pull-on boots classify without substring or caption collisions', () => {
+    const { normalizeGarmentRole, resolveGarmentSlot } = require('@/components/GarmentMesh3D');
+
+    // Baseball cap must NOT match French "bas" -> bottom, and headwear override must succeed
+    expect(normalizeGarmentRole('Accessories', 'Accessories', 'Black Embroidered Baseball Cap')).toBe('headwear');
+    expect(normalizeGarmentRole('bottom', 'Accessories', 'Black Embroidered Baseball Cap')).toBe('headwear');
+    expect(
+      resolveGarmentSlot({
+        category: 'Accessories',
+        sub_category: 'Headwear',
+        item_type: 'Baseball Cap',
+        title: 'Black Embroidered Baseball Cap',
+        caption: 'This black baseball cap offers a classic, casual look.',
+      })
+    ).toBe('headwear');
+
+    // Hebrew belt with "דקורטיבית" in caption must NOT match "קורטי" -> top
+    expect(
+      normalizeGarmentRole('Accessories', 'Accessories', 'חגורת עור חומה כהה עם תפירה דקורטיבית')
+    ).toBe('belt');
+    expect(
+      resolveGarmentSlot({
+        category: 'Accessories',
+        sub_category: 'חגורה',
+        item_type: 'חגורת עור קלאסית',
+        title: 'חגורת עור חומה כהה',
+        caption: 'כוללת תפירה דקורטיבית עדינה',
+      })
+    ).toBe('belt');
+
+    // Styling suggestions or print text in captions must never override explicit apparel slots
+    expect(
+      resolveGarmentSlot({
+        category: 'Bottom',
+        sub_category: 'מכנסיים',
+        title: 'מכנסי דנים לבנים קלאסיים',
+        caption: "קל לשילוב עם חולצות טי או ז'קטים מחויטים",
+      })
+    ).toBe('bottom');
+    expect(
+      resolveGarmentSlot({
+        category: 'Top',
+        sub_category: 'Shirt',
+        title: 'Grey Graphic T-shirt',
+        caption: "Features 'ORIGINAL JEANS' graphic print; easily paired with a jacket.",
+      })
+    ).toBe('top');
+    expect(
+      resolveGarmentSlot({
+        category: 'Accessories',
+        sub_category: 'Headwear',
+        item_type: 'Bandana',
+        title: 'Black Paisley Bandana',
+        caption: 'Can be worn as a head covering, necktie, wristband, or on a bag.',
+      })
+    ).toBe('headwear');
+
+    // Pull-on boots must never match French "pull" -> top; fallback caption-only items still work
+    expect(normalizeGarmentRole('item_0', 'Footwear', 'Sturdy Black Leather Australian Pull-On Boots')).toBe('shoes');
+    expect(resolveGarmentSlot({ category: 'Accessories', caption: 'Italian Leather Waist Belt' })).toBe('belt');
+  });
 });
