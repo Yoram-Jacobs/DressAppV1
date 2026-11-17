@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean9';
+export const TEMPLATE_CACHE_VERSION = 'clean10';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -41,6 +41,7 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   // Dresses
   'dress',
   'dress_strapless',
+  'kurta_set',
   // Bottoms
   'bottom_trousers',
   'bottom_shorts',
@@ -97,6 +98,7 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   dress: 'dress',
   dress_midi: 'dress',
   dress_strapless: 'dress_strapless',
+  kurta_set: 'kurta_set',
 
   // Bottoms
   pants: 'bottom_trousers',
@@ -210,7 +212,10 @@ export function resolveGarmentTemplate({
 
   // 1. DRESSES / FULL-BODY
   if (effectiveSlot === 'dress') {
-    if (has('kaftan', 'caftan', 'abaya', 'קפטן', 'כפתן', 'עבאיה', 'גלבי')) {
+    if (has('kurta set', 'kurta_set', 'kurta pyjama', 'kurta-pyjama', 'סט קורטה')) {
+      return 'kurta_set';
+    }
+    if (has('kaftan', 'caftan', 'abaya', 'galabiya', 'jalabiya', 'thobe', 'קפטן', 'כפתן', 'עבאיה', 'גלבי', 'תוב')) {
       return 'kaftan';
     }
     if (has('tunic', 'kurta', 'kurti', 'קורטה', 'כורטה', 'קורטי', 'טוניקה', 'longline')) {

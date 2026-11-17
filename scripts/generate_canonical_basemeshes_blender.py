@@ -1708,9 +1708,9 @@ def build_top_template(avatar_data, variant="tshirt"):
     elif variant in ("tunic", "top_tunic"):
         offset = 0.0140
         z_neck = 1.528 if is_male else 1.430
-        z_hem = 0.66 if is_male else 0.62
-        x_arm_max = 0.260 if is_male else 0.230
-        sleeve_type = "short"
+        z_hem = 0.50 if is_male else 0.46
+        x_arm_max = 0.475 if is_male else 0.430
+        sleeve_type = "long"
         flare_hips = True
         neck_tilt = -0.32 if is_male else -0.30
     else:
@@ -2265,6 +2265,9 @@ def build_bottom_template(avatar_data, variant="trousers"):
     elif variant in ("shorts", "bottom_shorts"):
         z_hem = 0.58 if is_male else 0.55
         offset = 0.0060
+    elif variant == "palazzo":
+        z_hem = 0.090 if is_male else 0.085
+        offset = 0.0110
     else:  # trousers
         z_hem = 0.105 if is_male else 0.100
         offset = 0.0085
@@ -2371,14 +2374,30 @@ def build_bottom_template(avatar_data, variant="trousers"):
         avatar_data,
         offset=offset,
         style="bottom",
-        drape_looseness=0.78 if variant == "trousers" else 0.72,
+        drape_looseness=0.92 if variant == "palazzo" else (0.78 if variant == "trousers" else 0.72),
         z_hem=z_hem,
         z_top=z_waist,
         sleeve_type="none",
         flare_hips=False,
     )
     for v in bm.verts:
-        if variant == "trousers" and v.co.z < 0.22:
+        if variant == "palazzo" and v.co.z < 0.85:
+            # Wide flowing palazzo trouser flare from hip down to ankle cuff, keeping inner leg separation
+            t_leg = min(1.0, max(0.0, (0.85 - v.co.z) / max(0.1, 0.85 - z_hem)))
+            leg_cx = math.copysign(0.105 if is_male else 0.095, v.co.x)
+            dx_leg = v.co.x - leg_cx
+            dy_leg = v.co.y
+            r_leg = max(1e-4, math.hypot(dx_leg, dy_leg))
+            flare = 0.032 * t_leg
+            new_x = v.co.x + (dx_leg / r_leg) * flare
+            # Prevent left and right wide palazzo legs from crossing center x=0
+            if v.co.x >= 0:
+                new_x = max(0.008, new_x)
+            else:
+                new_x = min(-0.008, new_x)
+            v.co.x = new_x
+            v.co.y += (dy_leg / r_leg) * flare
+        elif variant == "trousers" and v.co.z < 0.22:
             t_cuff = min(1.0, max(0.0, (0.22 - v.co.z) / 0.12))
             v.co.x += (0.012 * t_cuff) * (1.0 if v.co.x > 0 else -1.0)
             v.co.y += (0.008 * t_cuff) * (1.0 if v.co.y > 0 else -1.0)
@@ -2535,6 +2554,58 @@ def build_footwear_template(avatar_data, variant="sneakers"):
 
 
 def build_dress_template(avatar_data, variant="dress"):
+    if variant == "kurta_set":
+        bm_top, uvs_top, w_top, _ = build_top_template(avatar_data, "tunic")
+        bm_bot, uvs_bot, w_bot, _ = build_bottom_template(avatar_data, "palazzo")
+
+        bm_merged = bmesh.new()
+        faces_uvs = []
+        vert_weights = []
+
+        # Copy top (kurta) into merged bmesh
+        top_vmap = {}
+        for v in bm_top.verts:
+            nv = bm_merged.verts.new(v.co)
+            top_vmap[v] = nv
+        bm_merged.verts.ensure_lookup_table()
+        for v_orig, w_dict in w_top:
+            nv = top_vmap.get(v_orig)
+            if nv is not None:
+                vert_weights.append((nv, dict(w_dict)))
+        for f_orig, uvs in uvs_top:
+            try:
+                nf = bm_merged.faces.new([top_vmap[l.vert] for l in f_orig.loops])
+                # Map kurta UVs to upper region [0.42, 0.99] so full-body texture splits cleanly
+                mapped_uvs = [(u, 0.42 + v_coord * 0.57) for (u, v_coord) in uvs]
+                faces_uvs.append((nf, mapped_uvs))
+            except ValueError:
+                pass
+
+        # Copy bottom (palazzo pants) into merged bmesh
+        bot_vmap = {}
+        for v in bm_bot.verts:
+            nv = bm_merged.verts.new(v.co)
+            bot_vmap[v] = nv
+        bm_merged.verts.ensure_lookup_table()
+        for v_orig, w_dict in w_bot:
+            nv = bot_vmap.get(v_orig)
+            if nv is not None:
+                vert_weights.append((nv, dict(w_dict)))
+        for f_orig, uvs in uvs_bot:
+            try:
+                nf = bm_merged.faces.new([bot_vmap[l.vert] for l in f_orig.loops])
+                # Map palazzo pants UVs to lower region [0.01, 0.42]
+                mapped_uvs = [(u, 0.01 + v_coord * 0.41) for (u, v_coord) in uvs]
+                faces_uvs.append((nf, mapped_uvs))
+            except ValueError:
+                pass
+
+        bm_top.free()
+        bm_bot.free()
+        bm_merged.verts.ensure_lookup_table()
+        bm_merged.faces.ensure_lookup_table()
+        return bm_merged, faces_uvs, vert_weights, ["Torso_Deform", "Lower_Deform"]
+
     gender = avatar_data["gender"]
     avatar_obj = avatar_data["avatar_obj"]
     is_male = gender == "male"
@@ -2543,7 +2614,7 @@ def build_dress_template(avatar_data, variant="dress"):
 
     z_neck = (1.330 if is_male else 1.275) if is_strapless else ((1.534 if is_male else 1.434) if is_kaftan else (1.532 if is_male else 1.432))
     z_hip = 0.90 if is_male else 0.88
-    z_hem = (0.22 if is_male else 0.18) if is_kaftan else (0.60 if is_male else 0.56)
+    z_hem = (0.08 if is_male else 0.07) if is_kaftan else (0.60 if is_male else 0.56)
     sleeve_type = "strapless" if is_strapless else ("long" if is_kaftan else "sleeveless")
     x_arm_max = (0.195 if is_male else 0.168) if is_strapless else ((0.475 if is_male else 0.430) if is_kaftan else (0.195 if is_male else 0.168))
     offset = 0.008 if is_strapless else (0.014 if is_kaftan else 0.009)
@@ -2712,10 +2783,10 @@ def build_dress_template(avatar_data, variant="dress"):
                     hv.co.y = hv.co.y * (1.0 - 0.88 * tx) + (front_peak_y * 0.99) * (0.88 * tx)
                 elif hv.co.y > 0.0 and hv.co.y < back_peak_y * 0.98:
                     hv.co.y = hv.co.y * (1.0 - 0.90 * tx) + (back_peak_y * 0.99) * (0.90 * tx)
-        n_steps = 16 if is_kaftan else 10
+        n_steps = 20 if is_kaftan else 10
         dz_step = (z_hip - z_hem) / n_steps
-        radial_x_step = 0.0048 if is_kaftan else 0.0042
-        radial_y_step = 0.0034 if is_kaftan else 0.0030
+        radial_x_step = 0.0036 if is_kaftan else 0.0042
+        radial_y_step = 0.0026 if is_kaftan else 0.0030
         for _step in range(1, n_steps + 1):
             ret = bmesh.ops.extrude_edge_only(bm, edges=cur_edges)
             geom_ex = ret["geom"]
@@ -3086,6 +3157,7 @@ CANONICAL_SPECS = [
     ("dress", "dress", "dress", ["dress.glb"]),
     ("dress_strapless", "dress", "strapless", ["dress_strapless.glb"]),
     ("kaftan", "dress", "kaftan", ["kaftan.glb"]),
+    ("kurta_set", "dress", "kurta_set", ["kurta_set.glb"]),
     # Footwear
     ("shoes_sneakers", "footwear", "sneakers", ["sneakers.glb", "sandals.glb"]),
     ("shoes_boots", "footwear", "boots", ["boots.glb", "heels.glb"]),
