@@ -52,8 +52,9 @@ async def demote_user_to_free_plan(
     db_connection: Any,
     user: dict,
 ) -> Dict[str, Any]:
-    """Demote a Manager/Professional user to the Free plan and prune their closet
-    to the last 100 added items (up to 150 with referral bonus) (ordered by created_at descending).
+    """Demote a Manager/Professional user to the Free plan and soft-archive excess
+    items beyond the active capacity limit (100, or up to 150 with referral bonus),
+    preserving archived items and earned capacity bonuses for future upgrades.
     """
     from datetime import datetime, timezone
 
@@ -62,23 +63,31 @@ async def demote_user_to_free_plan(
     bonus = user.get("closet_capacity_bonus", 0)
     effective_limit = min(150, FREE_CLOSET_LIMIT + bonus)
 
-    # Fetch all closet items ordered by created_at DESC (newest first)
+    # Fetch active closet items ordered by created_at DESC (newest first)
     cursor = db_connection.closet_items.find(
-        {"user_id": user_id},
+        {"user_id": user_id, "archived": {"$ne": True}},
         {"_id": 0, "id": 1, "created_at": 1},
     ).sort([("created_at", -1), ("_id", -1)])
     all_items = await cursor.to_list(length=10000)
 
-    removed_count = 0
+    archived_count = 0
     if len(all_items) > effective_limit:
         older_ids = [
             it["id"] for it in all_items[effective_limit:] if it.get("id")
         ]
         if older_ids:
-            del_res = await db_connection.closet_items.delete_many(
-                {"user_id": user_id, "id": {"$in": older_ids}}
+            arch_res = await db_connection.closet_items.update_many(
+                {"user_id": user_id, "id": {"$in": older_ids}},
+                {
+                    "$set": {
+                        "archived": True,
+                        "archived_reason": "plan_demotion",
+                        "archived_at": now_iso,
+                        "updated_at": now_iso,
+                    }
+                },
             )
-            removed_count = int(getattr(del_res, "deleted_count", len(older_ids)))
+            archived_count = int(getattr(arch_res, "modified_count", len(older_ids)))
 
     remaining_count = min(len(all_items), effective_limit)
 
@@ -93,7 +102,6 @@ async def demote_user_to_free_plan(
                 "ai_configuration.subscription.plan_type": "free",
                 "ai_configuration.subscription.is_active": False,
                 "ai_configuration.ai_monthly_limit": 20,
-                "closet_capacity_bonus": 0,
                 "updated_at": now_iso,
             }
         },
@@ -103,11 +111,13 @@ async def demote_user_to_free_plan(
         "ok": True,
         "success": True,
         "plan_type": "free",
-        "removed_closet_items_count": removed_count,
+        "archived_closet_items_count": archived_count,
+        "removed_closet_items_count": archived_count,
         "remaining_closet_items_count": remaining_count,
         "free_closet_limit": FREE_CLOSET_LIMIT,
+        "effective_closet_limit": effective_limit,
         "message": (
-            f"Demoted to Free plan. Retained the last {remaining_count} added items "
-            f"and removed {removed_count} older closet items."
+            f"Demoted to Free plan. Retained {remaining_count} active items "
+            f"and archived {archived_count} older closet items (restored automatically on upgrade)."
         ),
     }

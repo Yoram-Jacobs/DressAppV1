@@ -194,6 +194,10 @@ async def _analyze_uploads(image_bytes_list: list[bytes], api_key: str | None = 
         cid = str(uuid.uuid4())
         title = analysis.get("title") or "Garment"
         category = (analysis.get("category") or "").lower() or None
+        sub_category = analysis.get("sub_category")
+        material = analysis.get("material")
+        fit = analysis.get("fit")
+        img_fp = _image_perceptual_fingerprint(raw)
         return {
             "candidate_id": cid,
             "source": "upload",
@@ -201,10 +205,11 @@ async def _analyze_uploads(image_bytes_list: list[bytes], api_key: str | None = 
             "closet_item_id": None,
             "title": title,
             "category": category,
-            "sub_category": analysis.get("sub_category"),
+            "sub_category": sub_category,
             "color": analysis.get("color"),
             "pattern": analysis.get("pattern"),
-            "material": analysis.get("material"),
+            "material": material,
+            "fit": fit,
             "brand": analysis.get("brand"),
             "formality": analysis.get("formality"),
             "season": analysis.get("season"),
@@ -214,7 +219,15 @@ async def _analyze_uploads(image_bytes_list: list[bytes], api_key: str | None = 
             "dedup_group_id": None,
             # Internal-only signature for cheap dedup; not part of the
             # public schema, popped before serialisation.
-            "_signature": _signature_for(category, analysis.get("color"), analysis.get("pattern")),
+            "_signature": _signature_for(
+                category,
+                analysis.get("color"),
+                analysis.get("pattern"),
+                sub_category=sub_category,
+                material=material,
+                fit=fit,
+                image_fingerprint=img_fp,
+            ),
         }
 
     results = await asyncio.gather(
@@ -237,11 +250,51 @@ def _data_url_for(raw: bytes) -> str | None:
         return None
 
 
-def _signature_for(category: str | None, color: str | None, pattern: str | None) -> str:
-    """Cheap hash for first-pass dedup. Same category+color+pattern bucket
-    means the LLM will sort out the survivor in step 2.
+def _image_perceptual_fingerprint(raw: bytes | None) -> str:
+    """Return a compact 64-bit dHash hex digest (or blake2b fallback) so two
+    genuinely different garment photos never collapse into one bucket while
+    duplicate/re-encoded uploads match.
     """
-    payload = f"{category or '?'}|{(color or '?').lower()}|{(pattern or '?').lower()}"
+    if not raw:
+        return "?"
+    try:
+        import io
+        from PIL import Image
+
+        with Image.open(io.BytesIO(raw)) as im:
+            gray = im.convert("L").resize((9, 8), Image.Resampling.BILINEAR)
+            pixels = gray.tobytes()
+        bits = 0
+        for row in range(8):
+            row_start = row * 9
+            for col in range(8):
+                bits = (bits << 1) | (1 if pixels[row_start + col] > pixels[row_start + col + 1] else 0)
+        return f"{bits:016x}"
+    except Exception:  # noqa: BLE001
+        return hashlib.blake2b(raw, digest_size=8).hexdigest()
+
+
+def _signature_for(
+    category: str | None,
+    color: str | None,
+    pattern: str | None,
+    sub_category: str | None = None,
+    material: str | None = None,
+    fit: str | None = None,
+    image_fingerprint: str | None = None,
+) -> str:
+    """Cheap hash for first-pass dedup incorporating silhouette, fabric, fit,
+    and visual fingerprint so distinct black/solid garments stay separate.
+    """
+    payload = "|".join([
+        (category or "?").strip().lower(),
+        (sub_category or "?").strip().lower(),
+        (color or "?").strip().lower(),
+        (pattern or "?").strip().lower(),
+        (material or "?").strip().lower(),
+        (fit or "?").strip().lower(),
+        (image_fingerprint or "?").strip().lower(),
+    ])
     return hashlib.blake2b(payload.encode("utf-8"), digest_size=8).hexdigest()
 
 

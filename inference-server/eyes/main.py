@@ -489,6 +489,9 @@ class SubCategoryTaxonomy(str, Enum):
     ABAYA = "Abaya"
     KURTA = "Kurta"
     SHERWANI = "Sherwani"
+    ACHKAN = "Achkan"
+    BANDHGALA = "Bandhgala"
+    NEHRU_JACKET = "Nehru Jacket"
     SARI = "Sari"
     LEHENGA = "Lehenga"
     HANBOK = "Hanbok"
@@ -502,6 +505,10 @@ class SubCategoryTaxonomy(str, Enum):
     BLAZER = "Blazer"
     CARDIGAN = "Cardigan"
     VEST = "Vest"
+    CAPES_PONCHOS = "Capes & Ponchos"
+    PONCHO = "Poncho"
+    CAPE = "Cape"
+    SHAWL = "Shawl"
 
     # Footwear
     OXFORDS = "Oxfords"
@@ -550,7 +557,14 @@ DEFAULT_GARMENT_SCHEMA: dict[str, Any] = {
         },
         "dress_code": {
             "type": "string",
-            "enum": ["casual", "smart-casual", "business", "formal", "athletic", "loungewear"],
+            "enum": [
+                "casual", "smart-casual", "business",
+                "formal", "athletic", "loungewear", "traditional",
+            ],
+        },
+        "fit": {
+            "type": ["string", "null"],
+            "enum": ["slim", "regular", "loose", "oversized", "flared", None],
         },
         "season": {
             "type": "array",
@@ -574,12 +588,27 @@ DEFAULT_GARMENT_SCHEMA: dict[str, Any] = {
                 "type": "object",
                 "required": ["name", "pct"],
                 "properties": {
-                    "name": {"type": "string"},
+                    "name": {
+                        "type": "string",
+                        "enum": [
+                            "Cotton", "Leather", "Faux Leather", "Suede", "Wool", "Cashmere",
+                            "Denim", "Silk", "Satin", "Linen", "Polyester", "Nylon",
+                            "Spandex", "Viscose", "Rayon", "Canvas", "Acrylic", "Velvet",
+                            "Chiffon", "Fleece", "Tweed", "Corduroy", "Synthetic", "Rubber",
+                        ],
+                    },
                     "pct": {"type": "integer", "minimum": 1, "maximum": 100},
                 },
             },
         },
-        "pattern": {"type": "string"},
+        "pattern": {
+            "type": "string",
+            "enum": [
+                "camouflage", "printed", "geometric", "striped", "plaid", "floral", "herringbone",
+                "polka", "polka_dot", "paisley", "animal_print",
+                "graphic", "tie_dye", "abstract", "solid", "embroidered",
+            ],
+        },
         "tags": {"type": "array", "items": {"type": "string"}},
     },
 }
@@ -668,6 +697,9 @@ async def get_taxonomy() -> dict[str, Any]:
             SubCategoryTaxonomy.ABAYA.value,
             SubCategoryTaxonomy.KURTA.value,
             SubCategoryTaxonomy.SHERWANI.value,
+            SubCategoryTaxonomy.ACHKAN.value,
+            SubCategoryTaxonomy.BANDHGALA.value,
+            SubCategoryTaxonomy.NEHRU_JACKET.value,
             SubCategoryTaxonomy.SARI.value,
             SubCategoryTaxonomy.LEHENGA.value,
             SubCategoryTaxonomy.HANBOK.value,

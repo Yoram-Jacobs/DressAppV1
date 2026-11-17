@@ -17,12 +17,39 @@ let _state = {
   lastGender: null,
   lastDate: null,
   loading: false,
+  loadingKeys: {},
   error: null,
 };
 
-let _inFlight = null;
-let _lastErrorTime = 0;
+const _cacheByKey = new Map();
+const _inFlightByKey = new Map();
+const _lastErrorByKey = new Map();
 const _listeners = new Set();
+
+function _buildCacheKey(language, country, gender) {
+  const lang = (language || 'en').toString().split('-')[0].toLowerCase();
+  const ctry = (country || '').toString().toUpperCase();
+  const gen = (gender || 'all').toString().toLowerCase();
+  return `${lang}:${ctry}:${gen}`;
+}
+
+function _collectCardsForContext(language, country) {
+  const targetPrefix = `${(language || 'en').toString().split('-')[0].toLowerCase()}:${(country || '').toString().toUpperCase()}:`;
+  const merged = [];
+  const seen = new Set();
+  for (const [k, entry] of _cacheByKey.entries()) {
+    if (!k.startsWith(targetPrefix)) continue;
+    const entryGender = entry.gender && entry.gender !== 'all' ? entry.gender : null;
+    for (const card of entry.cards || []) {
+      const normalized = entryGender && !card?.gender ? { ...card, gender: entryGender } : card;
+      const dedupId = normalized?.id || `${normalized?.gender || ''}:${normalized?.source_url || normalized?.headline || ''}`;
+      if (dedupId && seen.has(dedupId)) continue;
+      if (dedupId) seen.add(dedupId);
+      merged.push(normalized);
+    }
+  }
+  return merged;
+}
 
 function _notify() {
   _listeners.forEach((fn) => {
@@ -45,26 +72,44 @@ export const trendScoutStore = {
     return () => _listeners.delete(fn);
   },
 
-  async prewarm({ language, country, gender, force = false } = {}) {
-    if (_inFlight) return _inFlight;
+  isKeyLoading({ language, country, gender } = {}) {
+    const key = _buildCacheKey(language, country, gender);
+    return Boolean(_state.loadingKeys?.[key]);
+  },
 
-    if (!force && Date.now() - _lastErrorTime < ERROR_COOLDOWN_MS) {
+  async prewarm({ language, country, gender, force = false } = {}) {
+    const key = _buildCacheKey(language, country, gender);
+    const existingFlight = _inFlightByKey.get(key);
+    if (existingFlight) return existingFlight;
+
+    const lastErrAt = _lastErrorByKey.get(key) || 0;
+    if (!force && Date.now() - lastErrAt < ERROR_COOLDOWN_MS) {
       return _state;
     }
 
     const today = new Date().toISOString().slice(0, 10);
-    const isSameParams =
-      _state.lastLanguage === language &&
-      _state.lastCountry === country &&
-      _state.lastGender === gender &&
-      _state.lastDate === today;
-    if (!force && isSameParams && _state.lastSync && Date.now() - _state.lastSync < FRESH_MS) {
+    const cached = _cacheByKey.get(key);
+    if (!force && cached && cached.lastDate === today && Date.now() - cached.lastSync < FRESH_MS) {
+      _set({
+        cards: _collectCardsForContext(language, country),
+        lastLanguage: language,
+        lastCountry: country,
+        lastGender: gender,
+        lastDate: today,
+        lastSync: cached.lastSync,
+        loading: _inFlightByKey.size > 0,
+        error: null,
+      });
       return _state;
     }
 
-    _set({ loading: true, error: null });
+    _set({
+      loading: true,
+      loadingKeys: { ..._state.loadingKeys, [key]: true },
+      error: null,
+    });
 
-    _inFlight = (async () => {
+    const flightPromise = (async () => {
       try {
         const feedParams = { language, country, gender };
         if (force) {
@@ -72,37 +117,54 @@ export const trendScoutStore = {
         }
         const res = await api.fashionScoutFeed(30, feedParams);
         const rawCards = Array.isArray(res?.cards) ? res.cards : [];
-        const cleanCards = rawCards.filter((c) => {
-          const u = c?.source_url || '';
-          return u.startsWith('http') && !u.includes('example.com') && !u.includes('shopisrael.com');
+        const cleanCards = rawCards
+          .filter((c) => {
+            const u = c?.source_url || '';
+            return u.startsWith('http') && !u.includes('example.com') && !u.includes('shopisrael.com');
+          })
+          .map((c) => (gender && !c?.gender ? { ...c, gender } : c));
+        const now = Date.now();
+        _cacheByKey.set(key, {
+          cards: cleanCards,
+          lastSync: now,
+          lastDate: today,
+          language,
+          country,
+          gender,
         });
         _set({
-          cards: cleanCards,
+          cards: _collectCardsForContext(language, country),
           lastLanguage: language,
           lastCountry: country,
           lastGender: gender,
           lastDate: today,
-          lastSync: Date.now(),
+          lastSync: now,
         });
         return _state;
       } catch (err) {
-        _lastErrorTime = Date.now();
+        _lastErrorByKey.set(key, Date.now());
         console.warn('trendScoutStore.prewarm failed:', err);
         _set({ error: err });
         return _state;
       } finally {
-        _set({ loading: false });
+        _inFlightByKey.delete(key);
+        const nextLoadingKeys = { ..._state.loadingKeys };
+        delete nextLoadingKeys[key];
+        _set({
+          loading: _inFlightByKey.size > 0,
+          loadingKeys: nextLoadingKeys,
+        });
       }
     })();
 
-    try {
-      return await _inFlight;
-    } finally {
-      _inFlight = null;
-    }
+    _inFlightByKey.set(key, flightPromise);
+    return flightPromise;
   },
 
   reset() {
+    _cacheByKey.clear();
+    _inFlightByKey.clear();
+    _lastErrorByKey.clear();
     _state = {
       cards: [],
       lastSync: 0,
@@ -111,9 +173,9 @@ export const trendScoutStore = {
       lastGender: null,
       lastDate: null,
       loading: false,
+      loadingKeys: {},
       error: null,
     };
-    _lastErrorTime = 0;
     _notify();
   },
 };

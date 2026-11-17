@@ -3021,6 +3021,7 @@ class GarmentVisionService:
                 force_single_from_router = False
                 if (
                     (not has_human_wearer or not has_explicit_head)
+                    and not has_multi_body_zones
                     and not unworn_cluster_hint
                     and eff_mode == "auto"
                     and not cutout_only

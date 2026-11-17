@@ -839,6 +839,11 @@ export default function WardrobeStats() {
                         <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.carbonTitle', { defaultValue: 'Carbon Tracked' })}</span>
                         <span className="text-[20px] font-bold text-dark-brand">
                           {sustainabilityData.carbon_sum ?? 0} <span className="text-sm text-text-brand font-normal">kg CO₂</span>
+                          {sustainabilityData.carbon_is_estimated && !sustainabilityData.dpp_items_count && (sustainabilityData.carbon_sum ?? 0) > 0 && (
+                            <span className="text-[11px] text-text-brand font-medium ml-1">
+                              ({t('wardrobeStats.estimatedAbbr', { defaultValue: 'est.' })})
+                            </span>
+                          )}
                         </span>
                       </div>
                     </CardContent>

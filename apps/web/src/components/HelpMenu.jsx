@@ -1103,7 +1103,7 @@ export default function HelpMenu({ initialTab, onClose }) {
                         t("help.stylist_step6"),
                         t("help.stylist_step7", { defaultValue: "" }),
                       ]
-                        .filter(Boolean)
+                        .filter((step) => typeof step === "string" && step.trim() && !step.trim().startsWith("help."))
                         .map((text, idx) => (
                           <li key={idx} className="flex items-start gap-3">
                             <span className="h-6 w-6 shrink-0 rounded-full bg-primary-shadow flex items-center justify-center text-[12px] font-semibold text-primary-brand">
@@ -1182,7 +1182,13 @@ export default function HelpMenu({ initialTab, onClose }) {
                             defaultValue: "",
                           }),
                         }))
-                        .filter((item) => item.title && item.desc)
+                        .filter(
+                          (item) =>
+                            item.title &&
+                            item.desc &&
+                            !item.title.trim().startsWith("help.") &&
+                            !item.desc.trim().startsWith("help."),
+                        )
                         .map((item, idx) => (
                           <div
                             key={idx}
@@ -1711,7 +1717,7 @@ export default function HelpMenu({ initialTab, onClose }) {
                           {renderFormattedText(
                             t("help.tiers_free_desc", {
                               defaultValue:
-                                "Baseline limit of 100 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 one-time AI reconstruction onboarding bonus credits. Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
+                                "Baseline limit of 100 items (expandable up to 150 items via friend referrals), 10 daily On-Premises AI credits (up to 300 over 30 days), and 5 one-time AI reconstruction onboarding bonus credits. Includes daily outfit suggestions powered by Gemini (1 AI credit per suggestion). Purchase AI credit packs (15+ credits) to unlock Cluster Upload.",
                             }),
                           )}
                         </p>
@@ -1726,7 +1732,7 @@ export default function HelpMenu({ initialTab, onClose }) {
                           {renderFormattedText(
                             t("help.tiers_manager_desc", {
                               defaultValue:
-                                "Costs $10/mo (or $100/yr). Removes closet size limits entirely, unlocks morning outfit push scheduler, calendar synchronization, circular marketplace selling, and Trend Scout ranking filters.",
+                                "Costs $10/mo (or $100/yr). Removes closet size limits entirely, includes priority morning outfit push scheduler, calendar synchronization, circular marketplace selling, and Trend Scout ranking filters.",
                             }),
                           )}
                         </p>

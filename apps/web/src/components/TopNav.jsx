@@ -10,7 +10,7 @@ import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRo
 import { useAuth } from '@/lib/auth';
 import { ONBOARDING_TOUR_PENDING_KEY } from '@/lib/onboardingStore';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { BrandLogo } from '@/components/BrandLogo';
 import HelpMenu from '@/components/HelpMenu';
 import { LanguagePicker } from '@/components/LanguagePicker';
@@ -370,6 +370,9 @@ export const TopNav = () => {
         onOpenChange={setHelpOpen}
       >
         <DialogContent className="rounded-[12px] !max-w-6xl max-h-[85vh] overflow-y-auto p-5">
+          <DialogTitle className="sr-only">
+            {t('help.modalTitle', { defaultValue: 'Help & User Guide' })}
+          </DialogTitle>
           <HelpMenu onClose={() => setHelpOpen(false)} />
         </DialogContent>
       </Dialog>

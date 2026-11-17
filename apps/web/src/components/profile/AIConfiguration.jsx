@@ -19,12 +19,28 @@ const PROVIDERS = [
     models: ['Eyes v1'],
     requiresApiKey: false,
   },
-  { id: 'google_ai', name: 'Google Gemini', defaultModel: 'gemini-3.5-flash', models: ['gemini-3.5-flash', 'gemini-3.5-pro'], requiresApiKey: true },
-  { id: 'openai', name: 'OpenAI ChatGPT', defaultModel: 'gpt-4o-mini', models: ['gpt-4o-mini', 'gpt-4o'], requiresApiKey: true },
-  { id: 'anthropic', name: 'Anthropic Claude', defaultModel: 'claude-3-5-haiku', models: ['claude-3-5-haiku', 'claude-3-5-sonnet'], requiresApiKey: true },
-  { id: 'deepseek', name: 'DeepSeek', defaultModel: 'deepseek-chat', models: ['deepseek-chat', 'deepseek-coder'], requiresApiKey: true },
-  { id: 'qwen', name: 'Alibaba Qwen', defaultModel: 'qwen-plus', models: ['qwen-plus', 'qwen-max'], requiresApiKey: true }
+  {
+    id: 'google_ai',
+    name: 'Google Gemini',
+    defaultModel: 'gemini-3.5-flash-lite',
+    models: ['gemini-3.5-flash-lite'],
+    requiresApiKey: true,
+  },
 ];
+
+function normalizeProviderId(providerId) {
+  return PROVIDERS.some((p) => p.id === providerId) ? providerId : 'dressapp';
+}
+
+function normalizeModelForProvider(providerId, model) {
+  if (providerId === 'google_ai') {
+    if (!model || model === 'gemini-2.5-flash' || model === 'gemini-2.5-flash-lite' || model === 'gemini-3.5-flash' || model === 'gemini-3.5-pro') {
+      return 'gemini-3.5-flash-lite';
+    }
+    return PROVIDERS.find((p) => p.id === 'google_ai')?.models.includes(model) ? model : 'gemini-3.5-flash-lite';
+  }
+  return 'Eyes v1';
+}
 
 export function AIConfiguration() {
   const { t, i18n } = useTranslation();
@@ -37,12 +53,11 @@ export function AIConfiguration() {
   );
   
   const [providerMode, setProviderMode] = useState('custom_keys');
-  const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'dressapp');
-  const initialModel = user?.ai_configuration?.selected_model;
-  const normalizedInitialModel = (initialModel === 'gemini-2.5-flash' || initialModel === 'gemini-3.5-flash-lite')
-    ? 'gemini-3.5-flash'
-    : (initialModel || (user?.ai_configuration?.selected_provider === 'google_ai' ? 'gemini-3.5-flash' : 'Eyes v1'));
-  const [activeModel, setActiveModel] = useState(normalizedInitialModel);
+  const initialProviderId = normalizeProviderId(user?.ai_configuration?.selected_provider);
+  const [activeProviderId, setActiveProviderId] = useState(initialProviderId);
+  const [activeModel, setActiveModel] = useState(
+    normalizeModelForProvider(initialProviderId, user?.ai_configuration?.selected_model)
+  );
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -74,13 +89,12 @@ export function AIConfiguration() {
     setBusy(true);
     try {
       const currentConfig = user?.ai_configuration || {};
-      const newProviderId = providerId || currentConfig.selected_provider || 'dressapp';
-      const rawModel = currentConfig.selected_model;
-      const normalizedCurrentModel = (rawModel === 'gemini-2.5-flash' || rawModel === 'gemini-3.5-flash-lite')
-        ? 'gemini-3.5-flash'
-        : (rawModel || (newProviderId === 'dressapp' ? 'Eyes v1' : 'gemini-3.5-flash'));
+      const newProviderId = normalizeProviderId(providerId || currentConfig.selected_provider || 'dressapp');
+      const normalizedCurrentModel = normalizeModelForProvider(newProviderId, currentConfig.selected_model);
       const targetDefaultModel = PROVIDERS.find(p => p.id === newProviderId)?.defaultModel || 'Eyes v1';
-      const newModelVal = modelVal || (providerId ? targetDefaultModel : normalizedCurrentModel);
+      const newModelVal = modelVal
+        ? normalizeModelForProvider(newProviderId, modelVal)
+        : (providerId ? targetDefaultModel : normalizedCurrentModel);
       
       const payload = {
         ai_configuration: {
@@ -91,7 +105,7 @@ export function AIConfiguration() {
         }
       };
       
-      const providersList = ['google_ai', 'openai', 'anthropic', 'deepseek', 'qwen'];
+      const providersList = ['google_ai'];
       providersList.forEach(p => {
         if (p === newProviderId && keyVal !== null) {
           payload.ai_configuration.custom_keys[p] = keyVal;
@@ -116,46 +130,12 @@ export function AIConfiguration() {
     }
   };
 
-  const getStepInstructions = () => {
-    switch (activeProviderId) {
-      case 'openai':
-        return {
-          step1: t('profile.aiConfig.stepOpenAI1', { defaultValue: "1. Click 'Get API Key' to visit OpenAI Developer Platform." }),
-          step2: t('profile.aiConfig.stepOpenAI2', { defaultValue: "2. Sign in and navigate to API Keys dashboard." }),
-          step3: t('profile.aiConfig.stepOpenAI3', { defaultValue: "3. Create a new secret key, copy it, and paste it below." }),
-          link: "https://platform.openai.com/api-keys"
-        };
-      case 'anthropic':
-        return {
-          step1: t('profile.aiConfig.stepAnthropic1', { defaultValue: "1. Click 'Get API Key' to visit Anthropic Developer Console." }),
-          step2: t('profile.aiConfig.stepAnthropic2', { defaultValue: "2. Sign in with your developer account." }),
-          step3: t('profile.aiConfig.stepAnthropic3', { defaultValue: "3. Create an API key in settings, copy it, and paste it below." }),
-          link: "https://console.anthropic.com/settings/keys"
-        };
-      case 'deepseek':
-        return {
-          step1: t('profile.aiConfig.stepDeepSeek1', { defaultValue: "1. Click 'Get API Key' to visit DeepSeek Open Platform." }),
-          step2: t('profile.aiConfig.stepDeepSeek2', { defaultValue: "2. Create a developer account and sign in." }),
-          step3: t('profile.aiConfig.stepDeepSeek3', { defaultValue: "3. Generate a new API key, copy it, and paste it below." }),
-          link: "https://platform.deepseek.com/api_keys"
-        };
-      case 'qwen':
-        return {
-          step1: t('profile.aiConfig.stepQwen1', { defaultValue: "1. Click 'Get API Key' to visit Alibaba DashScope Console." }),
-          step2: t('profile.aiConfig.stepQwen2', { defaultValue: "2. Login and navigate to API Key Management." }),
-          step3: t('profile.aiConfig.stepQwen3', { defaultValue: "3. Copy the key, paste it below, and click Save." }),
-          link: "https://dashscope.console.aliyun.com/apiKey"
-        };
-      case 'google_ai':
-      default:
-        return {
-          step1: t('profile.aiConfig.stepGemini1', { defaultValue: "1. Click 'Get API Key' to visit Google AI Studio." }),
-          step2: t('profile.aiConfig.stepGemini2', { defaultValue: "2. Sign in with any Google account and click 'Create API Key'." }),
-          step3: t('profile.aiConfig.stepGemini3', { defaultValue: "3. Copy the generated key, paste it below, and click Save." }),
-          link: "https://aistudio.google.com/"
-        };
-    }
-  };
+  const getStepInstructions = () => ({
+    step1: t('profile.aiConfig.stepGemini1', { defaultValue: "1. Click 'Get API Key' to visit Google AI Studio." }),
+    step2: t('profile.aiConfig.stepGemini2', { defaultValue: "2. Sign in with any Google account and click 'Create API Key'." }),
+    step3: t('profile.aiConfig.stepGemini3', { defaultValue: "3. Copy the generated key, paste it below, and click Save." }),
+    link: "https://aistudio.google.com/app/apikey"
+  });
   const steps = getStepInstructions();
 
   return (

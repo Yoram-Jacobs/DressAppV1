@@ -313,16 +313,13 @@ export function ProfileScreen() {
         if (u.style_profile?.preferred_dress_code) setPreferredDressCode(u.style_profile.preferred_dress_code);
 
         // AI Config
-        setSelectedProvider(u.ai_configuration?.selected_provider || 'dressapp');
-        if (u.ai_configuration?.selected_model) {
-          const m = u.ai_configuration.selected_model;
-          setSelectedModel(
-            m === 'gemini-2.5-flash' || m === 'gemini-3.5-flash-lite'
-              ? 'gemini-3.5-flash'
-              : m
-          );
+        const rawProv = u.ai_configuration?.selected_provider || 'dressapp';
+        const resolvedProv = rawProv === 'google_ai' ? 'google_ai' : 'dressapp';
+        setSelectedProvider(resolvedProv);
+        if (resolvedProv === 'google_ai') {
+          setSelectedModel('gemini-3.5-flash-lite');
         } else {
-          setSelectedModel(u.ai_configuration?.selected_provider === 'google_ai' ? 'gemini-3.5-flash' : 'Eyes v1');
+          setSelectedModel('Eyes v1');
         }
         if (u.preferred_voice_id) setPreferredVoiceId(u.preferred_voice_id);
         if (u.ai_configuration?.custom_keys) setCustomKeys(u.ai_configuration.custom_keys);

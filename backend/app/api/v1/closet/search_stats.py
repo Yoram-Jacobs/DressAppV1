@@ -967,71 +967,251 @@ async def complete_outfit(
 
 # ------------------------- Phase Q: Wardrobe Reconstructor -------------------------
 
+_CATEGORY_WEIGHT_KG: dict[str, float] = {
+    "outerwear": 0.9,
+    "coat": 1.0,
+    "jacket": 0.85,
+    "suit": 0.8,
+    "suits": 0.8,
+    "full body": 0.65,
+    "fullbody": 0.65,
+    "dress": 0.55,
+    "dresses": 0.55,
+    "bottom": 0.55,
+    "jeans": 0.65,
+    "pants": 0.5,
+    "skirt": 0.4,
+    "shorts": 0.35,
+    "footwear": 0.75,
+    "shoes": 0.75,
+    "top": 0.3,
+    "accessories": 0.2,
+    "accessory": 0.2,
+    "underwear": 0.15,
+}
+
+_MATERIAL_CO2_PER_KG: dict[str, float] = {
+    "cashmere": 24.0,
+    "leather": 22.0,
+    "suede": 20.0,
+    "wool": 19.0,
+    "silk": 15.0,
+    "tweed": 14.0,
+    "nylon": 12.5,
+    "acrylic": 11.5,
+    "spandex": 11.0,
+    "faux leather": 10.5,
+    "polyester": 9.5,
+    "synthetic": 9.5,
+    "fleece": 9.5,
+    "rubber": 9.0,
+    "velvet": 9.0,
+    "chiffon": 8.5,
+    "corduroy": 8.0,
+    "denim": 7.5,
+    "cotton": 7.0,
+    "canvas": 6.5,
+    "viscose": 6.0,
+    "rayon": 6.0,
+    "linen": 4.0,
+}
+
+
+def _parse_iso_utc(raw: Any) -> "datetime.datetime | None":
+    import datetime
+
+    if isinstance(raw, datetime.datetime):
+        return raw if raw.tzinfo is not None else raw.replace(tzinfo=datetime.timezone.utc)
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    try:
+        dt = datetime.datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=datetime.timezone.utc)
+    except ValueError:
+        return None
+
+
+def _estimate_item_co2_kg(item: dict[str, Any]) -> tuple[float, bool]:
+    """Return (kg CO2e, is_explicit_dpp) using DPP first, then textile/category baselines."""
+    import re
+
+    dpp = item.get("dpp_data") or {}
+    cfp = dpp.get("carbon_footprint")
+    if isinstance(cfp, (int, float)):
+        return max(0.0, float(cfp)), True
+    if isinstance(cfp, str):
+        match = re.search(r"([\d\.]+)", cfp)
+        if match:
+            return max(0.0, float(match.group(1))), True
+
+    sub_cat = str(item.get("sub_category") or "").strip().lower()
+    cat = str(item.get("category") or "").strip().lower()
+    weight_kg = _CATEGORY_WEIGHT_KG.get(sub_cat) or _CATEGORY_WEIGHT_KG.get(cat) or 0.45
+
+    fabric_list = item.get("fabric_materials")
+    factor_sum = 0.0
+    pct_sum = 0.0
+    if isinstance(fabric_list, list):
+        for entry in fabric_list:
+            if not isinstance(entry, dict):
+                continue
+            mat_name = str(entry.get("name") or "").strip().lower()
+            pct = float(entry.get("pct") or 0)
+            if mat_name and pct > 0:
+                factor = _MATERIAL_CO2_PER_KG.get(mat_name)
+                if factor is None:
+                    factor = next((v for k, v in _MATERIAL_CO2_PER_KG.items() if k in mat_name), 8.0)
+                factor_sum += factor * pct
+                pct_sum += pct
+
+    if pct_sum > 0:
+        avg_factor = factor_sum / pct_sum
+    else:
+        mat_raw = str(item.get("material") or "").strip().lower()
+        avg_factor = next((v for k, v in _MATERIAL_CO2_PER_KG.items() if k in mat_raw), 8.0)
+
+    return weight_kg * avg_factor, False
+
+
+def _build_historical_cpw_trend(
+    items: list[dict[str, Any]],
+    now: "datetime.datetime",
+) -> list[dict[str, Any]]:
+    """Compute historical 6-month CPW trajectory strictly from stored timestamps & wear counts."""
+    import datetime
+    from dateutil.relativedelta import relativedelta
+
+    default_start = now - relativedelta(months=6)
+    parsed_items: list[dict[str, Any]] = []
+    for item in items:
+        created_dt = _parse_iso_utc(item.get("created_at")) or default_start
+        last_worn_dt = _parse_iso_utc(item.get("last_worn_at"))
+        history_dates: list[datetime.datetime] = []
+        raw_hist = item.get("wear_history")
+        if isinstance(raw_hist, list):
+            for entry in raw_hist:
+                ts_val = entry.get("worn_at") or entry.get("date") if isinstance(entry, dict) else entry
+                dt = _parse_iso_utc(ts_val)
+                if dt is not None:
+                    history_dates.append(dt)
+        parsed_items.append({
+            "price": (item.get("price_cents") or 0) / 100.0,
+            "wear_count": max(0, int(item.get("wear_count") or 0)),
+            "created_dt": created_dt,
+            "last_worn_dt": last_worn_dt,
+            "history_dates": history_dates,
+        })
+
+    trend: list[dict[str, Any]] = []
+    for i in range(5, -1, -1):
+        target_month = now - relativedelta(months=i)
+        month_label = target_month.strftime("%b")
+        if i == 0:
+            bucket_end = now
+        else:
+            next_month_start = (target_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0) + relativedelta(months=1))
+            bucket_end = next_month_start - datetime.timedelta(microseconds=1)
+
+        cohort_price = 0.0
+        cohort_wears = 0.0
+        cohort_count = 0
+        for p in parsed_items:
+            if p["created_dt"] > bucket_end:
+                continue
+            cohort_count += 1
+            cohort_price += p["price"]
+            if p["history_dates"]:
+                cohort_wears += sum(1 for dt in p["history_dates"] if dt <= bucket_end)
+            elif i == 0:
+                cohort_wears += p["wear_count"]
+            elif p["wear_count"] > 0:
+                end_dt = p["last_worn_dt"] or now
+                if end_dt <= p["created_dt"]:
+                    cohort_wears += p["wear_count"]
+                elif bucket_end >= end_dt:
+                    cohort_wears += p["wear_count"]
+                else:
+                    span_s = max(1.0, (end_dt - p["created_dt"]).total_seconds())
+                    elapsed_s = max(0.0, (bucket_end - p["created_dt"]).total_seconds())
+                    cohort_wears += p["wear_count"] * min(1.0, elapsed_s / span_s)
+
+        cpw_val = (cohort_price / cohort_wears) if cohort_wears > 0 else cohort_price
+        trend.append({
+            "month": month_label,
+            "cpw": round(cpw_val, 2),
+            "item_count": cohort_count,
+        })
+    return trend
+
+
 @router.get("/stats/sustainability")
 async def get_sustainability_stats(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Calculate sustainability metrics (F5)."""
+    """Calculate sustainability metrics (F5) from real closet item data."""
+    import datetime
+
     db = get_db()
-    
     items_cursor = db.closet_items.find(
-        {"user_id": user["id"]},
-        {"_id": 0, "wear_count": 1, "from_receipt": 1, "dpp_data": 1, "price_cents": 1}
+        {"user_id": user["id"], "archived": {"$ne": True}},
+        {
+            "_id": 0,
+            "wear_count": 1,
+            "from_receipt": 1,
+            "dpp_data": 1,
+            "price_cents": 1,
+            "created_at": 1,
+            "last_worn_at": 1,
+            "wear_history": 1,
+            "fabric_materials": 1,
+            "material": 1,
+            "category": 1,
+            "sub_category": 1,
+        },
     )
-    items = []
-    async for item in items_cursor:
-        items.append(item)
-    
+    items = [item async for item in items_cursor]
+
     total_items = len(items)
     worn_items = sum(1 for item in items if (item.get("wear_count") or 0) > 0)
     utilisation_pct = round((worn_items / total_items) * 100) if total_items > 0 else 0
-    
+
     receipt_items = sum(1 for item in items if item.get("from_receipt", False))
     manual_items = total_items - receipt_items
-    
+
     carbon_sum = 0.0
-    total_price = 0
+    dpp_carbon_sum = 0.0
+    dpp_items_count = 0
+    total_price = 0.0
     total_wears = 0
     for item in items:
-        # Calculate carbon
-        dpp = item.get("dpp_data") or {}
-        cfp = dpp.get("carbon_footprint")
-        if isinstance(cfp, (int, float)):
-            carbon_sum += cfp
-        elif isinstance(cfp, str):
-            import re
-            match = re.search(r"([\d\.]+)", cfp)
-            if match:
-                carbon_sum += float(match.group(1))
-        
-        # Calculate CPW aggregates
+        item_co2, is_dpp = _estimate_item_co2_kg(item)
+        carbon_sum += item_co2
+        if is_dpp:
+            dpp_carbon_sum += item_co2
+            dpp_items_count += 1
+
         price = item.get("price_cents")
         if price is not None:
-            total_price += price / 100
+            total_price += price / 100.0
         total_wears += (item.get("wear_count") or 0)
 
     current_cpw = (total_price / total_wears) if total_wears > 0 else total_price
-
-    import datetime
-    from dateutil.relativedelta import relativedelta
     now = datetime.datetime.now(datetime.timezone.utc)
-    
-    cpw_trend = []
-    for i in range(5, -1, -1):
-        target_month = now - relativedelta(months=i)
-        month_label = target_month.strftime("%b")
-        # Simulate a downward trend for CPW over time
-        mock_cpw = current_cpw * (1 + (i * 0.15))
-        cpw_trend.append({"month": month_label, "cpw": round(mock_cpw, 2)})
-        
+    cpw_trend = _build_historical_cpw_trend(items, now)
+
     return {
         "utilisation_pct": utilisation_pct,
         "cpw_trend": cpw_trend,
+        "current_cpw": round(current_cpw, 2),
+        "cpw_is_simulated": False,
         "intake_breakdown": {
             "receipt": receipt_items,
-            "manual": manual_items
+            "manual": manual_items,
         },
-        "carbon_sum": round(carbon_sum, 1)
+        "carbon_sum": round(carbon_sum, 1),
+        "dpp_carbon_sum": round(dpp_carbon_sum, 1),
+        "dpp_items_count": dpp_items_count,
+        "carbon_is_estimated": total_items > dpp_items_count,
     }
 
 

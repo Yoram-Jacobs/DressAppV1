@@ -3335,7 +3335,7 @@ export function resolveShellFit({
       aspect,
       isMale,
       isSkirt,
-    });
+    }) || {};
     const fabricThickness = resolveFabricThickness(fullText, 'bottom', isSkirt);
     return {
       yTop: isMale ? 1.08 : 1.05,

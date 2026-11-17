@@ -199,18 +199,16 @@ export function TrendScoutScreen() {
   const handleGenderSwitch = useCallback(async (newGender: 'male' | 'female') => {
     if (newGender === selectedGender) return;
     setSelectedGender(newGender);
-    // Prewarm feed immediately for the selected gender
-    prewarm({ language, country, gender: newGender });
-
-    // Check if the selected gender already has cards
-    const existingCount = items.filter((it) => it.gender === newGender).length;
-    if (existingCount < 4) {
-      try {
+    try {
+      await prewarm({ language, country, gender: newGender });
+      const { cards: latestCards } = await import('@mobile/lib/stores/trendScoutStore').then((m) => m.trendScoutStore.getSnapshot());
+      const existingCount = (latestCards || items).filter((it) => !it.gender || it.gender === newGender).length;
+      if (existingCount < 4) {
         await api.trendsRunNowDev(false, newGender, country);
         await prewarm({ language, country, gender: newGender, force: true });
-      } catch (runErr) {
-        console.warn('[TrendScout] On-demand gender crawl warning:', runErr);
       }
+    } catch (runErr) {
+      console.warn('[TrendScout] On-demand gender crawl warning:', runErr);
     }
   }, [selectedGender, items, prewarm, language, country]);
 
@@ -504,7 +502,7 @@ export function TrendScoutScreen() {
         })}
       </ScrollView>
 
-      {loading ? (
+      {loading && displayItems.length === 0 ? (
         <View style={styles.centerBox}>
           <ActivityIndicator size="large" color={colors.accent} />
         </View>

@@ -3,7 +3,7 @@
  *
  * AI Stylist & Model Settings accordion section for DressApp mobile.
  * Features:
- *   - Model Provider selector (Google Gemini, OpenAI, Claude, DeepSeek, Qwen) with framed selection
+ *   - Model Provider selector (DressApp Eyes v1, Google Gemini) with framed selection
  *   - Model selector for chosen provider
  *   - TTS Voice selector across 13 languages with framed selection
  *   - Custom API Key management modal
@@ -46,36 +46,8 @@ export const AI_PROVIDERS: AIProvider[] = [
   {
     id: 'google_ai',
     name: 'Google Gemini',
-    defaultModel: 'gemini-3.5-flash',
-    models: ['gemini-3.5-flash', 'gemini-3.5-pro'],
-    requiresApiKey: true,
-  },
-  {
-    id: 'openai',
-    name: 'OpenAI ChatGPT',
-    defaultModel: 'gpt-4o-mini',
-    models: ['gpt-4o-mini', 'gpt-4o'],
-    requiresApiKey: true,
-  },
-  {
-    id: 'anthropic',
-    name: 'Anthropic Claude',
-    defaultModel: 'claude-3-5-haiku',
-    models: ['claude-3-5-haiku', 'claude-3-5-sonnet'],
-    requiresApiKey: true,
-  },
-  {
-    id: 'deepseek',
-    name: 'DeepSeek',
-    defaultModel: 'deepseek-chat',
-    models: ['deepseek-chat', 'deepseek-coder'],
-    requiresApiKey: true,
-  },
-  {
-    id: 'qwen',
-    name: 'Alibaba Qwen',
-    defaultModel: 'qwen-plus',
-    models: ['qwen-plus', 'qwen-max'],
+    defaultModel: 'gemini-3.5-flash-lite',
+    models: ['gemini-3.5-flash-lite'],
     requiresApiKey: true,
   },
 ];
@@ -148,32 +120,11 @@ export function AIConfiguration({
   };
 
   const getPlaceholder = (providerId: string) => {
-    switch (providerId) {
-      case 'google_ai':
-        return 'AIzaSy...';
-      case 'anthropic':
-        return 'sk-ant-...';
-      case 'openai':
-      case 'deepseek':
-        return 'sk-...';
-      default:
-        return 'Enter API key';
-    }
+    return providerId === 'google_ai' ? 'AIzaSy...' : 'Enter API key';
   };
 
   const getProviderDocUrl = (providerId: string) => {
-    switch (providerId) {
-      case 'google_ai':
-        return 'https://aistudio.google.com/app/apikey';
-      case 'openai':
-        return 'https://platform.openai.com/api-keys';
-      case 'anthropic':
-        return 'https://console.anthropic.com/settings/keys';
-      case 'deepseek':
-        return 'https://platform.deepseek.com/api_keys';
-      default:
-        return null;
-    }
+    return providerId === 'google_ai' ? 'https://aistudio.google.com/app/apikey' : null;
   };
 
   const handleValidateKey = async () => {

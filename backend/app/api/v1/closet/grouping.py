@@ -120,7 +120,7 @@ async def upload_group_member(
             user_tier = "professional"
             
     if user_tier == "free":
-        current_count = await db.closet_items.count_documents({"user_id": user["id"]})
+        current_count = await db.closet_items.count_documents({"user_id": user["id"], "archived": {"$ne": True}})
         capacity_limit = min(150, 100 + user.get("closet_capacity_bonus", 0))
         if current_count >= capacity_limit:
             raise HTTPException(

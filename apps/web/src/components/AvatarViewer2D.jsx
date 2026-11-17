@@ -1766,7 +1766,7 @@ export default function AvatarViewer2D({
         const crownBottomY = (liveAnatomy.yHeadTop || 52) + headH * 0.42;
         const boxH = 18;
         dynamicStyle = {
-          top: `${(((crownBottomY / H) * 100) - boxH).toFixed(2)}%`,
+          top: `${Math.max(0, ((crownBottomY / H) * 100) - boxH).toFixed(2)}%`,
           left: leftPct,
           width: '32%',
           height: `${boxH}%`,

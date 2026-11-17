@@ -48,7 +48,11 @@ export function isSTTSupported() {
 }
 
 export function isTTSSupported() {
-  return typeof window !== 'undefined' && 'speechSynthesis' in window;
+  return (
+    typeof window !== 'undefined' &&
+    'speechSynthesis' in window &&
+    Boolean(window.speechSynthesis)
+  );
 }
 
 /* ---------- TTS voice loading ---------- */
@@ -56,20 +60,36 @@ export function isTTSSupported() {
 let _voicesPromise = null;
 export function ensureVoicesLoaded() {
   if (!isTTSSupported()) return Promise.resolve([]);
+  const synth = window.speechSynthesis;
+  if (!synth || typeof synth.getVoices !== 'function') {
+    return Promise.resolve([]);
+  }
   if (_voicesPromise) return _voicesPromise;
   _voicesPromise = new Promise((resolve) => {
-    const synth = window.speechSynthesis;
     const existing = synth.getVoices();
     if (existing && existing.length) return resolve(existing);
+    if (typeof synth.addEventListener !== 'function') {
+      return resolve([]);
+    }
+    let settled = false;
+    const finish = (voices) => {
+      if (settled) return;
+      settled = true;
+      resolve(Array.isArray(voices) ? voices : []);
+    };
     const handler = () => {
-      synth.removeEventListener('voiceschanged', handler);
-      resolve(synth.getVoices());
+      try {
+        synth.removeEventListener?.('voiceschanged', handler);
+      } catch { /* ignore */ }
+      finish(synth.getVoices());
     };
     synth.addEventListener('voiceschanged', handler);
     // Safety timeout — some browsers never fire the event
     setTimeout(() => {
-      synth.removeEventListener('voiceschanged', handler);
-      resolve(synth.getVoices());
+      try {
+        synth.removeEventListener?.('voiceschanged', handler);
+      } catch { /* ignore */ }
+      finish(synth.getVoices());
     }, 1500);
   });
   return _voicesPromise;

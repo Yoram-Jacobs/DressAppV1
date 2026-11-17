@@ -89,7 +89,7 @@ async def save_closet_item_document(
                 },
             )
 
-        current_count = await db.closet_items.count_documents({"user_id": user["id"]})
+        current_count = await db.closet_items.count_documents({"user_id": user["id"], "archived": {"$ne": True}})
         capacity_limit = min(150, 100 + user.get("closet_capacity_bonus", 0))
         if current_count >= capacity_limit:
             raise HTTPException(
@@ -655,7 +655,7 @@ async def list_items(
     skip: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     db = get_db()
-    query: dict[str, Any] = {"user_id": user["id"]}
+    query: dict[str, Any] = {"user_id": user["id"], "archived": {"$ne": True}}
     if not ids_only:
         query["group_role"] = {"$ne": "member"}
         

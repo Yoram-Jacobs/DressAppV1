@@ -134,22 +134,23 @@ export default function TrendScout() {
     if (isBlocked) return;
     prewarmTrendScout({ language, country, gender: selectedGender });
   }, [language, country, selectedGender, isBlocked]);
+  const activeCacheKey = `${language}:${country}:${selectedGender || 'all'}`;
+  const isFeedLoading = Boolean(trendStore.loading || trendStore.loadingKeys?.[activeCacheKey]);
+
   const handleGenderSwitch = async (newGender) => {
     if (newGender === selectedGender) return;
     setSelectedGender(newGender);
-    // Prewarm feed immediately for the newly selected gender
-    prewarmTrendScout({ language, country, gender: newGender });
-
-    // Check if the selected gender already has cards
-    const existingCount = (trendStore.cards || []).filter((c) => c.gender === newGender).length;
-    if (existingCount < 4) {
-      // Fire on-demand crawling strictly for the 7 buckets of this selected gender
-      try {
+    try {
+      // Wait for this gender's feed prewarm before deciding if an on-demand crawl is needed
+      const nextState = await prewarmTrendScout({ language, country, gender: newGender });
+      const pool = nextState?.cards || trendStore.cards || [];
+      const existingCount = pool.filter((c) => !c.gender || c.gender === newGender).length;
+      if (existingCount < 4) {
         await api.trendsRunNowDev(false, newGender, country);
         await prewarmTrendScout({ language, country, gender: newGender, force: true });
-      } catch (err) {
-        console.warn('[TrendScout] On-demand gender crawl error:', err);
       }
+    } catch (err) {
+      console.warn('[TrendScout] On-demand gender crawl error:', err);
     }
   };
   const handleRefresh = async () => {
@@ -373,7 +374,7 @@ export default function TrendScout() {
           })}
         </div>
         {/* Feed Grid */}
-        {trendStore.loading && !filteredCards.length ? (
+        {isFeedLoading && !filteredCards.length ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-48 w-full rounded-2xl" />

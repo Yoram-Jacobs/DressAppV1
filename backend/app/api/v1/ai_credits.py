@@ -633,22 +633,35 @@ async def upgrade_subscription(
         elif new_plan == "business":
             ai_config["ai_monthly_limit"] = 3000
         
+        now_iso = datetime.now(timezone.utc).isoformat()
         await db.users.update_one(
             {"id": user["id"]},
             {
                 "$set": {
                     "ai_configuration": ai_config,
                     "subscription": subscription_info,
-                    "credit_buckets": user_record["credit_buckets"]
+                    "credit_buckets": user_record["credit_buckets"],
+                    "updated_at": now_iso,
                 }
             },
         )
-        
+
+        # Restore any items that were soft-archived on a previous free-plan demotion
+        restore_res = await db.closet_items.update_many(
+            {"user_id": user["id"], "archived": True, "archived_reason": "plan_demotion"},
+            {
+                "$set": {"archived": False, "updated_at": now_iso},
+                "$unset": {"archived_reason": "", "archived_at": ""},
+            },
+        )
+        restored_count = int(getattr(restore_res, "modified_count", 0))
+
         return {
             "success": True,
             "message": f"Successfully upgraded to {new_plan} plan with {bonus} bonus paid credits",
             "plan_type": new_plan,
             "bonus_credits_added": bonus,
+            "restored_closet_items_count": restored_count,
         }
     except Exception as e:
         logger.error(f"Error upgrading subscription: {str(e)}")
