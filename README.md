@@ -97,7 +97,7 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 .
 ├── apps/
 │   ├── web/                     # React 19 Web SPA (CRA + Craco, Tailwind, i18next)
-│   ├── mobile/                  # Expo 53 / React Native 0.79 Mobile App (iOS / Android)
+│   ├── mobile/                  # Expo 57 / React Native 0.86 Mobile App (iOS / Android)
 │   └── android-twa/             # Android Trusted Web Activity packaging wrapper
 │
 ├── packages/

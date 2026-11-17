@@ -1,7 +1,7 @@
 # DressApp — Technical Architecture Document
 
 > **Version:** 2.0 (Turborepo Monorepo & FARM Stack)  
-> **Runtime:** FastAPI (Python 3.11) + React 19 (Web SPA) + Expo 53 (React Native) + MongoDB 7.0 (On-Prem Docker / NVMe)  
+> **Runtime:** FastAPI (Python 3.11) + React 19 (Web SPA) + Expo 57 (React Native 0.86) + MongoDB 7.0 (On-Prem Docker / NVMe)  
 > **Deployment Target:** Hetzner CPX32 VPS (`dressapp.co`) via Docker Compose + Caddy TLS  
 
 ---
@@ -21,7 +21,7 @@ DressApp is an AI-powered fashion editor and digital wardrobe platform that turn
    - Multi-tier speech pipeline routing between native Gemini Audio (`gemini-3.8-flash-tts` / `gemini-3.5-flash-lite`), Deepgram STT/TTS, browser Web Speech API, and mobile offline VITS models (Piper ONNX).
 3. **Monorepo Client Architecture**:
    - Web application (`apps/web`): React 19 SPA with `useSyncExternalStore` thread-safe state, Tailwind CSS, Shadcn UI primitives, and 13 localized languages.
-   - Mobile application (`apps/mobile`): Expo SDK 53 / React Native 0.79 with React Navigation Native Stack, NativeWind styling, and offline SWR caching via `MobileClosetRepository`.
+   - Mobile application (`apps/mobile`): Expo SDK 57 / React Native 0.86 with React Navigation Native Stack, NativeWind styling, and offline SWR caching via `MobileClosetRepository`.
    - Chrome Extension (`chrome-extension`): Manifest V3 shopping assistant for automated size recommendation on partner retailers based on user body measurements.
 4. **Marketplace & Community**:
    - Region-filtered feed supporting sell, swap, and donate workflows with PayPal Live checkout, integrated ledger, and order fulfillment states.
@@ -85,7 +85,7 @@ The repository is organized as a Turborepo workspace linking applications and sh
 .
 ├── apps/
 │   ├── web/                     # React 19 Web SPA (CRA + Craco, Tailwind, i18next)
-│   ├── mobile/                  # Expo 53 / React Native 0.79 Mobile App (iOS / Android)
+│   ├── mobile/                  # Expo 57 / React Native 0.86 Mobile App (iOS / Android)
 │   └── android-twa/             # Android Trusted Web Activity packaging wrapper
 │
 ├── packages/

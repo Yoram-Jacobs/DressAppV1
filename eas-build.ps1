@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     eas-build.ps1 — EAS Build from a clean source-only workspace.
 
@@ -15,10 +15,18 @@
     .\eas-build.ps1                          # development + android (default)
     .\eas-build.ps1 -Profile preview
     .\eas-build.ps1 -Profile production -Platform android
+    .\eas-build.ps1 -Profile production -Platform ios -Interactive
+    .\eas-build.ps1 -Action update -Channel production -Message "OTA fix"
 #>
 param(
-    [string]$Profile  = "development",
-    [string]$Platform = "android"
+    [ValidateSet("build", "update")]
+    [string]$Action      = "build",
+    [string]$Profile     = "development",
+    [string]$Platform    = "android",
+    [string]$Channel     = "production",
+    [string]$Environment = "",
+    [string]$Message     = "",
+    [switch]$Interactive
 )
 
 $Root   = $PSScriptRoot
@@ -54,6 +62,20 @@ try {
     Write-Host "[eas-build] Copying apps/mobile source..." -ForegroundColor Cyan
     $mobileDir = Join-Path $Root "apps\mobile"
     $mobileDst = Join-Path $TmpDir "apps\mobile"
+    if ($Action -eq "update") {
+        # Export Metro bundles from the real workspace (avoids junction resolution failure), then upload from clean TmpDir.
+        Write-Host "[eas-build] Exporting Metro bundles from $mobileDir ..." -ForegroundColor Cyan
+        Push-Location $mobileDir
+        $prevBackendUrl = $env:EXPO_PUBLIC_BACKEND_URL
+        if (-not $prevBackendUrl) { $env:EXPO_PUBLIC_BACKEND_URL = "https://dressapp.co" }
+        $updateDist = Join-Path $mobileDst "dist"
+        $exportPlatforms = if ($Platform -eq "android" -and -not $PSBoundParameters.ContainsKey("Platform")) { @("--platform", "ios", "--platform", "android") } elseif ($Platform -eq "all") { @("--platform", "ios", "--platform", "android") } else { @("--platform", $Platform) }
+        & node "node_modules\expo\bin\cli" export --output-dir $updateDist --source-maps --dump-assetmap @exportPlatforms
+        $exportExit = $LASTEXITCODE
+        $env:EXPO_PUBLIC_BACKEND_URL = $prevBackendUrl
+        Pop-Location
+        if ($exportExit -ne 0) { exit $exportExit }
+    }
     robocopy $mobileDir $mobileDst /E /XD "node_modules" ".expo" "android" "ios" "dist" "build" /NFL /NDL /NJH /NJS /NC /NS /NP 2>$null | Out-Null
 
     # 3. packages/* source only
@@ -114,8 +136,20 @@ try {
     $env:EAS_SKIP_AUTO_FINGERPRINT = "1"
     Write-Host "[eas-build] GIT_CEILING_DIRECTORIES -> $($env:TEMP)" -ForegroundColor Cyan
 
-    Write-Host "[eas-build] Running: eas build --profile $Profile --platform $Platform`n" -ForegroundColor Yellow
-    eas build --profile $Profile --platform $Platform --non-interactive --verbose-logs
+    if ($Action -eq "update") {
+        if (-not $Environment) { $Environment = $Channel }
+        if (-not $Message) { $Message = "Production OTA update ($Channel)" }
+        $updatePlatform = if ($Platform -eq "android" -and -not $PSBoundParameters.ContainsKey("Platform")) { "all" } else { $Platform }
+        $nonInteractiveArgs = if ($Interactive) { @() } else { @("--non-interactive") }
+        Write-Host "[eas-build] Running: eas update --skip-bundler --channel $Channel --environment $Environment --platform $updatePlatform`n" -ForegroundColor Yellow
+        eas update --skip-bundler --input-dir dist --channel $Channel --environment $Environment --platform $updatePlatform --message $Message @nonInteractiveArgs
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    } else {
+        $buildArgs = if ($Interactive) { @("--verbose-logs") } else { @("--non-interactive", "--verbose-logs") }
+        Write-Host "[eas-build] Running: eas build --profile $Profile --platform $Platform`n" -ForegroundColor Yellow
+        eas build --profile $Profile --platform $Platform @buildArgs
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    }
 
 } finally {
     Pop-Location -ErrorAction SilentlyContinue

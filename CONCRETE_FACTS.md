@@ -201,7 +201,7 @@ docker compose up -d --force-recreate eyes
 | [`apps/web/`](apps/web/) | React 19 SPA (source for the `dressapp-frontend` container) |
 | [`apps/web/public/models/avatar_female_1.glb`](apps/web/public/models/avatar_female_1.glb) | **Canonical Female 3D Avatar Model** — high-detail MBLab parametric GLB mesh with body + hair shape keys (`tall`, `short`, `heavy`, `thin`, `busty`, `waist_thick`, `waist_thin`, `hips_wide`, `hips_narrow`, `shoulders_wide`, `shoulders_narrow`, `hair_*`). |
 | [`apps/web/public/models/avatar_male_1.glb`](apps/web/public/models/avatar_male_1.glb) | **Canonical Male 3D Avatar Model** — high-detail MBLab parametric GLB mesh with smooth $C^\infty$ rear/side haircut and full body + hair shape keys. |
-| [`apps/mobile/`](apps/mobile/) | Expo 53 / React Native 0.79 cross-platform mobile application |
+| [`apps/mobile/`](apps/mobile/) | Expo 57 / React Native 0.86 / React 19 cross-platform mobile application (`com.project.dressapp` / `co.dressapp.mobile`) |
 | [`packages/`](packages/) | Turborepo shared isomorphic packages (`api-client`, `i18n`, `types`) |
 | [`inference-server/eyes/`](inference-server/eyes/) | Source of the `dressapp-eyes` container |
 | [`inference-server/eyes/README.md`](inference-server/eyes/README.md) | Eyes container architecture, endpoints, and deployment notes |

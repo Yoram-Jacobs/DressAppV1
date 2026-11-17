@@ -36,11 +36,11 @@
     },
     "production": {
       "channel": "production",
-      "credentialsSource": "local",
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://dressapp.co"
       },
       "android": {
+        "credentialsSource": "local",
         "buildType": "app-bundle"
       },
       "ios": {

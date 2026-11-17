@@ -15,7 +15,8 @@
       "bundleIdentifier": "co.dressapp.mobile",
       "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "Allow DressApp to access your microphone for voice queries with the AI Stylist."
       },
       "runtimeVersion": {
         "policy": "appVersion"
