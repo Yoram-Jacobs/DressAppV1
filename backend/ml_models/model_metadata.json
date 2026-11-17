@@ -1,6 +1,7 @@
 {
-  "model_version": "ansur2-gbr-v1",
-  "trained_at": "2026-09-07T13:25:20.765291+00:00",
+  "model_version": "ansur2-gender-ridge-v2",
+  "sklearn_version": "1.6.1",
+  "trained_at": "2026-11-17T12:16:58.503600+00:00",
   "dataset": "ANSUR II (2012) \u2014 US Army Anthropometric Survey",
   "n_train": 4854,
   "n_test": 1214,
@@ -20,19 +21,18 @@
     "outseam"
   ],
   "mae_scores_cm": {
-    "shoulders": 1.155,
-    "chest": 2.772,
-    "hip": 2.113,
-    "sleeve": 1.39,
-    "inseam": 1.845,
-    "outseam": 2.348,
-    "overall": 1.937
+    "shoulders": 1.123,
+    "chest": 2.697,
+    "hip": 2.08,
+    "sleeve": 1.359,
+    "inseam": 1.773,
+    "outseam": 2.302,
+    "overall": 1.889
   },
-  "model_type": "MultiOutputRegressor(GradientBoostingRegressor)",
+  "overfit_gap_pct": -1.07,
+  "model_type": "PerGenderPipeline(StandardScaler, Ridge(alpha=5.0))",
   "hyperparameters": {
-    "n_estimators": 300,
-    "max_depth": 5,
-    "learning_rate": 0.05,
-    "subsample": 0.8
+    "alpha": 5.0,
+    "per_gender_stratified": true
   }
 }

@@ -366,13 +366,13 @@ async def complete_outfit(
         n = len(anchors)
         for idx, a in enumerate(anchors):
             vec = a.get("clip_embedding")
-            if not vec and a.get("is_listing") and hasattr(fashion_clip_service, "encode_text"):
+            if not vec and hasattr(fashion_clip_service, "embed_text"):
                 try:
-                    q = f"{a.get('category', '')} {a.get('title', '')} {a.get('color', '')}".strip()
+                    q = f"{a.get('category', '')} {a.get('title') or a.get('name') or ''} {a.get('color', '')}".strip()
                     if q:
-                        vec = fashion_clip_service.encode_text(q)
+                        vec = await fashion_clip_service.embed_text(q)
                 except Exception as exc:
-                    logger.warning("Failed to encode listing text: %s", exc)
+                    logger.warning("Failed to embed anchor text: %s", exc)
             if isinstance(vec, list) and vec:
                 if payload.weighted and n > 1:
                     # Linear decay: weight = n-idx, then normalise later.
@@ -534,13 +534,11 @@ async def complete_outfit(
         m_scored: list[dict[str, Any]] = []
         for lg in listings:
             cid = lg.get("closet_item_id")
-            if not cid:
-                continue
-            cat = cat_map.get(cid)
+            cat = (cat_map.get(cid) if cid else None) or lg.get("category")
             # Same diversity rule for marketplace
             if cat and cat in anchor_categories:
                 continue
-            vec = vec_map.get(cid)
+            vec = (vec_map.get(cid) if cid else None) or lg.get("clip_embedding")
             if not vec:
                 continue
             score = fashion_clip_service.cosine(centroid, vec)

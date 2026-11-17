@@ -84,20 +84,85 @@ export function inferListingGender(listing) {
 }
 
 /**
- * Extract clean numeric size if available (e.g. "32x30" -> 32, "US 10.5" -> 10.5)
+ * Parse a letter size or range like "M/L" / "S-M" / "6 / M" into an index range [minIdx, maxIdx].
  */
-function extractNumericSize(str) {
+function parseLetterRange(str) {
   if (!str) return null;
-  const match = String(str).match(/(\d+(?:\.\d+)?)/);
-  if (match) {
-    const val = parseFloat(match[1]);
-    return isNaN(val) ? null : val;
+  const cleaned = String(str).trim().toUpperCase();
+  if (LETTER_SIZE_MAP[cleaned] !== undefined) {
+    const idx = LETTER_SIZE_MAP[cleaned];
+    return [idx, idx];
+  }
+  const rangeMatch = cleaned.match(/^(XXXL|XXL|XXS|XS|XL|4XL|3XL|2XL|3X|2X|1XL|1X|S|M|L)\s*[\/\-]\s*(XXXL|XXL|XXS|XS|XL|4XL|3XL|2XL|3X|2X|1XL|1X|S|M|L)$/);
+  if (rangeMatch) {
+    const a = LETTER_SIZE_MAP[rangeMatch[1]];
+    const b = LETTER_SIZE_MAP[rangeMatch[2]];
+    if (a !== undefined && b !== undefined) {
+      return [Math.min(a, b), Math.max(a, b)];
+    }
+  }
+  // Composite label e.g. "6 / M" or "10 / L"
+  const compMatch = cleaned.match(/\/\s*(XXXL|XXL|XXS|XS|XL|4XL|3XL|2XL|3X|2X|1XL|1X|S|M|L)\b/);
+  if (compMatch && LETTER_SIZE_MAP[compMatch[1]] !== undefined) {
+    const idx = LETTER_SIZE_MAP[compMatch[1]];
+    return [idx, idx];
   }
   return null;
 }
 
 /**
- * Compare two size strings
+ * Extract size system ('EU' | 'US' | 'UK' | 'CM' | null) and clean numeric value.
+ */
+function parseSystemAndNumber(str) {
+  if (!str) return { system: null, value: null };
+  const raw = String(str).trim();
+  const sysMatch = raw.match(/\b(EU|EUR|IT|FR|US|UK|CM)\b/i);
+  let system = null;
+  if (sysMatch) {
+    const token = sysMatch[1].toUpperCase();
+    system = token === 'EUR' ? 'EU' : token;
+  }
+  const numMatch = raw.match(/(\d+(?:\.\d+)?)/);
+  const value = numMatch ? parseFloat(numMatch[1]) : null;
+  return { system, value: value !== null && !isNaN(value) ? value : null };
+}
+
+function isFootwearCategory(category) {
+  const c = String(category || '').toLowerCase();
+  return /footwear|shoe|sneaker|boot|sandal|heel|loafer|נעל/.test(c);
+}
+
+/**
+ * Normalize shoe or apparel numeric sizes to comparable US units when systems differ.
+ */
+function toComparableNumeric(parsed, otherParsed, category) {
+  if (parsed.value === null) return null;
+  const sys = parsed.system;
+  const otherSys = otherParsed.system;
+  if (isFootwearCategory(category) || sys === 'EU' || otherSys === 'EU' || sys === 'UK' || otherSys === 'UK') {
+    const v = parsed.value;
+    if (isFootwearCategory(category)) {
+      if (sys === 'EU' || (!sys && v >= 32 && v <= 50)) {
+        return v - 33.0;
+      }
+      if (sys === 'UK') {
+        return v + 1.0;
+      }
+      return v;
+    }
+    // Non-footwear apparel explicit EU/IT/FR vs US (e.g. EU 38 ≈ US 6)
+    if (sys === 'EU' || sys === 'IT' || sys === 'FR') {
+      return v - 32.0;
+    }
+    if (sys === 'UK') {
+      return v - 4.0;
+    }
+  }
+  return parsed.value;
+}
+
+/**
+ * Compare two size strings with letter range and EU/US/UK unit awareness.
  * Returns: { match: boolean | null, difference: 'exact'|'too_large'|'too_small'|'different'|'one_size'|null }
  */
 export function compareSizes(listingSizeRaw, userSizeRaw, category = '') {
@@ -114,8 +179,13 @@ export function compareSizes(listingSizeRaw, userSizeRaw, category = '') {
   const lUpper = normListing.toUpperCase();
   const uUpper = normUser.toUpperCase();
 
-  // One size check
-  if (ONE_SIZE_STRINGS.has(normListing.toLowerCase()) || ONE_SIZE_STRINGS.has(normUser.toLowerCase())) {
+  // One size check (including embedded one-size variants)
+  if (
+    ONE_SIZE_STRINGS.has(normListing.toLowerCase()) ||
+    ONE_SIZE_STRINGS.has(normUser.toLowerCase()) ||
+    /\bone[\s-]*size\b|\bosfa\b/i.test(normListing) ||
+    /\bone[\s-]*size\b|\bosfa\b/i.test(normUser)
+  ) {
     return { match: true, difference: 'one_size' };
   }
 
@@ -124,33 +194,41 @@ export function compareSizes(listingSizeRaw, userSizeRaw, category = '') {
     return { match: true, difference: 'exact' };
   }
 
-  // Letter scale comparison
-  const lLetterIdx = LETTER_SIZE_MAP[lUpper];
-  const uLetterIdx = LETTER_SIZE_MAP[uUpper];
-
-  if (lLetterIdx !== undefined && uLetterIdx !== undefined) {
-    if (lLetterIdx === uLetterIdx) {
+  // Letter scale comparison (supports single and combined ranges like 'M/L' or '6 / M')
+  const lRange = parseLetterRange(lUpper);
+  const uRange = parseLetterRange(uUpper);
+  if (lRange && uRange) {
+    if (lRange[0] <= uRange[1] && uRange[0] <= lRange[1]) {
       return { match: true, difference: 'exact' };
     }
     return {
       match: false,
-      difference: lLetterIdx > uLetterIdx ? 'too_large' : 'too_small',
+      difference: lRange[0] > uRange[1] ? 'too_large' : 'too_small',
     };
   }
 
-  // Numeric size comparison (shoes, pants, etc.)
-  const lNum = extractNumericSize(normListing);
-  const uNum = extractNumericSize(normUser);
+  // Unit-aware numeric size comparison (EU/US/UK shoes, pants, etc.)
+  const lParsed = parseSystemAndNumber(normListing);
+  const uParsed = parseSystemAndNumber(normUser);
+  if (lParsed.value !== null && uParsed.value !== null) {
+    const lComp =
+      lParsed.system && uParsed.system && lParsed.system === uParsed.system
+        ? lParsed.value
+        : toComparableNumeric(lParsed, uParsed, category);
+    const uComp =
+      lParsed.system && uParsed.system && lParsed.system === uParsed.system
+        ? uParsed.value
+        : toComparableNumeric(uParsed, lParsed, category);
 
-  if (lNum !== null && uNum !== null) {
-    // If numbers are very close, count as match
-    if (Math.abs(lNum - uNum) < 0.25) {
-      return { match: true, difference: 'exact' };
+    if (lComp !== null && uComp !== null) {
+      if (Math.abs(lComp - uComp) <= 0.5) {
+        return { match: true, difference: 'exact' };
+      }
+      return {
+        match: false,
+        difference: lComp > uComp ? 'too_large' : 'too_small',
+      };
     }
-    return {
-      match: false,
-      difference: lNum > uNum ? 'too_large' : 'too_small',
-    };
   }
 
   // Fallback string difference

@@ -1026,8 +1026,17 @@ async def check_scheduler_triggers() -> None:
                     ):
                         continue
 
-                # Free tier users consume 1 AI credit ONLY when eligible to fire now
+                # Free tier users consume 1 AI credit ONLY when eligible to fire now and closet has items
                 if user_tier == "free":
+                    try:
+                        cnt_op = db.closet_items.count_documents({"user_id": user_id, "is_duplicate": {"$ne": True}})
+                        if inspect.isawaitable(cnt_op):
+                            cnt_val = await cnt_op
+                            if isinstance(cnt_val, int) and cnt_val < 2:
+                                logger.info("Skipping daily scheduled proposal for user %s: insufficient closet items (%d).", user_id, cnt_val)
+                                continue
+                    except Exception:
+                        pass
                     from app.services.billing_service import deduct_user_credits
                     if not await deduct_user_credits(db, user, cost=1, operation="daily_proposal"):
                         logger.info("Skipping daily scheduled proposal for free user %s due to insufficient credits.", user_id)
@@ -1166,7 +1175,11 @@ async def check_scheduler_triggers() -> None:
                     # Persist curated proposal to daily_proposals collection for tomorrow (target_date_str)
                     prop_id = None
                     try:
+                        if not items:
+                            raise ValueError("Skipping persistence of empty daily proposal")
                         import uuid
+                        from app.services.stylist_scheduler_brain import compute_outfit_harmony_score
+
                         prop_id = f"prop_{uuid.uuid4().hex[:12]}"
                         up_many_op = db.daily_proposals.update_many(
                             {"user_id": user_id, "date": target_date_str},
@@ -1174,6 +1187,17 @@ async def check_scheduler_triggers() -> None:
                         )
                         if inspect.isawaitable(up_many_op):
                             await up_many_op
+                        sched_weather_desc = (
+                            (target_weather.get("description") or target_weather.get("condition"))
+                            if isinstance(target_weather, dict)
+                            else None
+                        )
+                        sched_temp = None
+                        if isinstance(target_weather, dict) and target_weather.get("temp_c") is not None:
+                            try:
+                                sched_temp = round(float(target_weather["temp_c"]))
+                            except (TypeError, ValueError):
+                                sched_temp = None
                         prop_doc = {
                             "id": prop_id,
                             "user_id": user_id,
@@ -1181,8 +1205,8 @@ async def check_scheduler_triggers() -> None:
                             "language": (user_lang or "en").lower().split("-")[0],
                             "title": outfit_name,
                             "description": prop.get("why") or "Curated based on your style profile, tomorrow's weather conditions, and closet harmony.",
-                            "weather_summary": (target_weather.get("description") if target_weather else "Mild & Pleasant"),
-                            "temperature": (target_weather.get("temp_c") if target_weather else 22),
+                            "weather_summary": sched_weather_desc,
+                            "temperature": sched_temp,
                             "items": [
                                 {
                                     "id": it.get("closet_item_id") or it.get("id"),
@@ -1194,7 +1218,7 @@ async def check_scheduler_triggers() -> None:
                                 }
                                 for it in items
                             ],
-                            "harmony_score": min(99, max(80, int(prop.get("confidence", 0.95) * 100))),
+                            "harmony_score": compute_outfit_harmony_score(items, weather=target_weather, occasion=style_option),
                             "worn": False,
                             "liked": False,
                             "dismissed": False,

@@ -369,6 +369,9 @@ async def create_listing(
     doc = listing.model_dump()
     if closet_item and closet_item.get("preferred_image_view"):
         doc["preferred_image_view"] = closet_item["preferred_image_view"]
+    from app.services.fashion_clip import attach_listing_clip_embedding
+
+    await attach_listing_clip_embedding(doc, source_item=closet_item)
     await repos.insert(db.listings, doc)
 
     # Transition the closet_item's source (Private → Shared/Retail).

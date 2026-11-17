@@ -181,6 +181,7 @@ class RunpodFluxProvider(ImageGenerationProvider):
             "positive_prompt": positive_prompt,
             "has_mask": bool(mask_bytes),
         })
+        await self._emit_usage()
 
         return ImageGenerationResult(
             image_bytes=result_bytes,
@@ -249,6 +250,7 @@ class RunpodFluxProvider(ImageGenerationProvider):
             raise
 
         latency_ms = int((time.time() - t0) * 1000)
+        await self._emit_usage()
 
         return ImageGenerationResult(
             image_bytes=result_bytes,
@@ -258,6 +260,14 @@ class RunpodFluxProvider(ImageGenerationProvider):
             latency_ms=latency_ms,
             metadata=metadata,
         )
+
+    async def _emit_usage(self) -> None:
+        try:
+            from app.services.credit_manager import record_ai_usage
+
+            await record_ai_usage("runpod", self.model_name, 0, 0)
+        except Exception:  # noqa: BLE001
+            pass
 
     async def health_check(self) -> bool:
         """Check if RunPod Serverless endpoint is reachable and responsive."""

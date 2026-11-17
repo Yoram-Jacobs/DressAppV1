@@ -49,6 +49,14 @@ _BOUNDS = {
     "foot_length_cm": (15.0,  40.0),
 }
 
+# Core ANSUR II empirical support envelope (outside this range we log OOD and enforce relational invariants)
+_SUPPORT_BOUNDS = {
+    "height":      (140.0, 200.0),
+    "weight":      (35.0,  145.0),
+    "waist":       (60.0,  140.0),
+    "foot_length": (19.0,  33.0),
+}
+
 VALID_GENDERS = ("male", "female")
 
 
@@ -60,7 +68,7 @@ class BodyPredictor:
     def __init__(self) -> None:
         self._pipeline: Any | None = None
         self._lock = threading.Lock()
-        self._model_version: str = "ansur2-gbr-v1"
+        self._model_version: str = "ansur2-gender-ridge-v2"
 
     # ------------------------------------------------------------------ #
     #  Lazy model loading
@@ -140,23 +148,56 @@ class BodyPredictor:
         self._ensure_loaded()
 
         # ── Build input DataFrame ──
-        input_df = pd.DataFrame([{
-            "height": float(height_cm),
-            "weight": float(weight_kg),
-            "waist": float(waist_cm),
-            "foot_length": float(foot_length_cm),
-            "gender": gender.lower().strip(),
-        }])
+        gender_key = gender.lower().strip()
+        h = float(height_cm)
+        w = float(weight_kg)
+        wst = float(waist_cm)
+        ft = float(foot_length_cm)
+
+        if (
+            not (_SUPPORT_BOUNDS["height"][0] <= h <= _SUPPORT_BOUNDS["height"][1])
+            or not (_SUPPORT_BOUNDS["weight"][0] <= w <= _SUPPORT_BOUNDS["weight"][1])
+            or not (_SUPPORT_BOUNDS["waist"][0] <= wst <= _SUPPORT_BOUNDS["waist"][1])
+            or not (_SUPPORT_BOUNDS["foot_length"][0] <= ft <= _SUPPORT_BOUNDS["foot_length"][1])
+        ):
+            log.debug(
+                "BodyPredictor OOD input detected (gender=%s h=%.1f w=%.1f wst=%.1f ft=%.1f)",
+                gender_key, h, w, wst, ft,
+            )
 
         # ── Predict ──
-        raw_pred = self._pipeline.predict(input_df)[0]
+        if isinstance(self._pipeline, dict) and "models" in self._pipeline:
+            mdl = self._pipeline["models"].get(gender_key) or next(iter(self._pipeline["models"].values()))
+            num_df = pd.DataFrame([{
+                "height": h,
+                "weight": w,
+                "waist": wst,
+                "foot_length": ft,
+            }])
+            raw_pred = mdl.predict(num_df)[0]
+        else:
+            input_df = pd.DataFrame([{
+                "height": h,
+                "weight": w,
+                "waist": wst,
+                "foot_length": ft,
+                "gender": gender_key,
+            }])
+            raw_pred = self._pipeline.predict(input_df)[0]
 
-        # ── Round & package ──
-        result = {}
-        for name, val in zip(TARGET_NAMES, raw_pred):
-            result[name] = round(float(val), 1)
+        # ── Round & enforce relational anatomical invariants ──
+        result = {
+            name: float(val)
+            for name, val in zip(TARGET_NAMES, raw_pred)
+        }
+        result["shoulders"] = max(28.0, result["shoulders"])
+        result["chest"] = max(60.0, result["chest"], wst - 5.0)
+        result["hip"] = max(65.0, result["hip"], wst * 0.85)
+        result["sleeve"] = max(20.0, result["sleeve"])
+        result["inseam"] = max(40.0, result["inseam"])
+        result["outseam"] = max(result["outseam"], result["inseam"] + 18.0)
 
-        return result
+        return {k: round(v, 1) for k, v in result.items()}
 
     @property
     def model_version(self) -> str:

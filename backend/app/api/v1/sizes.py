@@ -2075,6 +2075,15 @@ async def analyze_url(
 # =====================================================================
 
 # Sizing calculations deterministic lookup / rule-based helpers
+def get_womens_shirt_size(chest_cm: float) -> str:
+    if chest_cm < 82: return 'XS'
+    elif chest_cm < 88: return 'S'
+    elif chest_cm < 95: return 'M'
+    elif chest_cm < 103: return 'L'
+    elif chest_cm < 112: return 'XL'
+    else: return 'XXL'
+
+
 def get_mens_shirt_size(chest_cm: float) -> str:
     if chest_cm < 88: return 'XS'
     elif chest_cm < 95: return 'S'   # ~89–94 cm
@@ -2105,34 +2114,37 @@ def get_shoe_size_eu(foot_len_cm: float) -> int:
     return round((foot_len_cm + 1.5) * 1.5)
 
 def get_womens_dress_size_us(bust_cm: float, waist_cm: float, hip_cm: float) -> str:
-    # US Alpha & Numeric Mapping based on standard ASTM standards
-    # Example scale using Waist as primary anchor:
-    if waist_cm < 64: return '0 / XS'
-    elif waist_cm < 68: return '2 / S'
-    elif waist_cm < 72: return '4 / S'
-    elif waist_cm < 76: return '6 / M'
-    elif waist_cm < 80: return '8 / M'
-    elif waist_cm < 85: return '10 / L'
-    elif waist_cm < 90: return '12 / L'
-    else: return '14+ / XL'
+    # Multi-dimension max-constraint ASTM mapping across bust, waist, and hip (cm).
+    brackets = [
+        (82.0, 64.0, 89.0, '0 / XS'),
+        (86.0, 68.0, 93.0, '2 / S'),
+        (90.0, 72.0, 97.0, '4 / S'),
+        (94.0, 76.0, 101.0, '6 / M'),
+        (98.0, 80.0, 105.0, '8 / M'),
+        (103.0, 85.0, 110.0, '10 / L'),
+        (109.0, 91.0, 116.0, '12 / L'),
+    ]
+    for max_b, max_w, max_h, label in brackets:
+        if bust_cm < max_b and waist_cm < max_w and hip_cm < max_h:
+            return label
+    return '14+ / XL'
 
 def get_bra_size(bust_cm: float, underbust_cm: float) -> str:
     # Convert to inches
     bust_in = bust_cm / 2.54
     underbust_in = underbust_cm / 2.54
-    
-    # 1. Calculate Band Size (Round underbust to nearest even integer)
-    band_size = round(underbust_in)
-    if band_size % 2 != 0:
-        band_size += 1  # Standard sizing rounds up odd underbust inches to even band sizes
-        
-    # 2. Calculate Cup Size (Bust - Band Difference)
-    diff = round(bust_in - band_size)
-    
+
+    # 1. Calculate Band Size (Round underbust to nearest even integer, floor at 28)
+    band_size = max(28, int(round(underbust_in / 2.0) * 2))
+
+    # 2. Calculate Cup Size (Bust - Band Difference, strictly clamped [0..7])
+    diff = int(round(bust_in - band_size))
+    if diff <= 0:
+        return f"{band_size}AA"
+    if diff >= 7:
+        return f"{band_size}G+"
     cups = {0: 'AA', 1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'DD/E', 6: 'DDD/F'}
-    cup_size = cups.get(diff, 'G+')
-    
-    return f"{band_size}{cup_size}"
+    return f"{band_size}{cups[diff]}"
 
 def compute_recommended_sizes(
     gender: str,
@@ -2142,34 +2154,35 @@ def compute_recommended_sizes(
     foot_length_cm: float,
 ) -> dict[str, str]:
     gender_lower = gender.lower().strip()
-    
-    # Estimate underbust for bra size (typically underbust is roughly 88% of bust/chest for women)
-    underbust_cm = chest_cm * 0.88
-    
-    # Shirt size:
-    shirt = get_mens_shirt_size(chest_cm)
-    
+
+    # Estimate underbust from waist & chest so varied frame/cup ratios span AA..G+
+    raw_underbust = 0.50 * waist_cm + 0.45 * chest_cm + 2.0
+    underbust_cm = max(0.76 * chest_cm, min(0.96 * chest_cm, raw_underbust))
+
+    # Shirt size (gender-aware):
+    shirt = get_womens_shirt_size(chest_cm) if gender_lower == "female" else get_mens_shirt_size(chest_cm)
+
     # Pants size:
     pants = get_pants_size(waist_cm)
-    
+
     # Shoe size:
     if gender_lower == "male":
         shoe_us = str(get_shoe_size_us_mens(foot_length_cm))
     else:
         shoe_us = str(get_shoe_size_us_womens(foot_length_cm))
-        
+
     # Dress size (woman only):
     if gender_lower == "female":
         dress = get_womens_dress_size_us(chest_cm, waist_cm, hip_cm)
     else:
         dress = "N/A"
-        
+
     # Bra size (woman only):
     if gender_lower == "female":
         bra = get_bra_size(chest_cm, underbust_cm)
     else:
         bra = "N/A"
-        
+
     return {
         "shirt_size": shirt,
         "pants_size": pants,

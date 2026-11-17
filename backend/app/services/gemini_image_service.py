@@ -144,7 +144,9 @@ class GeminiImageService:
         self, prompt: str, *, session_id: str | None = None
     ) -> dict[str, Any]:
         """Pure text-to-image. Returns ``{image_b64, mime_type, model_used, text}``."""
-        return await asyncio.to_thread(self._run_generate, prompt, None)
+        res = await asyncio.to_thread(self._run_generate, prompt, None)
+        await self._emit_usage(res)
+        return res
 
     async def edit(
         self,
@@ -164,7 +166,23 @@ class GeminiImageService:
         """
         composed = self._build_edit_prompt(prompt, garment_metadata)
         image_bytes = await _to_bytes(image)
-        return await asyncio.to_thread(self._run_generate, composed, image_bytes)
+        res = await asyncio.to_thread(self._run_generate, composed, image_bytes)
+        await self._emit_usage(res)
+        return res
+
+    @staticmethod
+    async def _emit_usage(res: dict[str, Any]) -> None:
+        try:
+            from app.services.credit_manager import record_ai_usage
+
+            await record_ai_usage(
+                "gemini",
+                res.get("model_used"),
+                int(res.get("input_tokens") or 0),
+                int(res.get("output_tokens") or 0),
+            )
+        except Exception:  # noqa: BLE001
+            pass
 
     # ------------------------------------------------------------------ internals
     def _run_generate(
@@ -227,18 +245,25 @@ class GeminiImageService:
                         "Gemini image response had no inline_data part "
                         f"(text='{text_out[:160]}', details={details_msg})"
                     )
+                from app.services.gemini_client import _extract_usage_tokens
+
+                in_tok, out_tok = _extract_usage_tokens(resp)
                 logger.info(
-                    "Nano Banana OK (%s, %.1fs, %d bytes, edit=%s)",
+                    "Nano Banana OK (%s, %.1fs, %d bytes, edit=%s, tokens=%d/%d)",
                     active_model,
                     time.time() - t0,
                     len(raw),
                     bool(prepared_bytes),
+                    in_tok,
+                    out_tok,
                 )
                 return {
                     "image_b64": base64.b64encode(raw).decode("ascii"),
                     "mime_type": "image/png",
                     "model_used": active_model,
                     "text": text_out,
+                    "input_tokens": in_tok,
+                    "output_tokens": out_tok,
                 }
             except Exception as exc:  # noqa: BLE001
                 last_exc = exc

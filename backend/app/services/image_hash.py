@@ -67,16 +67,14 @@ DEFAULT_HAMMING_THRESHOLD_STRICT = 3
 # navy↔grey scores ~600+, two photos of the same navy garment under
 # different lighting score ~80–150.
 _COLOR_GRID = 2  # 2x2 grid of quadrants
-DEFAULT_COLOR_THRESHOLD = 220
+DEFAULT_COLOR_THRESHOLD = 180
 
 
 _DATA_URL_RE = re.compile(r"^data:image/[^;]+;base64,(.*)$", re.I)
 
 
-def _decode_to_pil(image_data: str | bytes | None) -> Optional[Image.Image]:
-    """Accept either a data URL string, a bare base64 string, or raw
-    bytes. Returns a PIL Image in RGB or None on failure (so callers
-    can simply skip)."""
+def _decode_to_rgba(image_data: str | bytes | None) -> Optional[Image.Image]:
+    """Accept a data URL string, bare base64 string, or raw bytes. Returns RGBA PIL Image."""
     if image_data is None:
         return None
     try:
@@ -87,30 +85,27 @@ def _decode_to_pil(image_data: str | bytes | None) -> Optional[Image.Image]:
             payload = m.group(1) if m else image_data.strip()
             raw = base64.b64decode(payload, validate=False)
         img = Image.open(io.BytesIO(raw))
-        # Convert palette / RGBA / etc. to RGB so .convert('L') below
-        # behaves consistently across formats.
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        return img
+        return img.convert("RGBA") if img.mode != "RGBA" else img
     except Exception as exc:  # noqa: BLE001
-        logger.debug("phash decode failed: %s", exc)
+        logger.debug("image_hash decode failed: %s", exc)
         return None
 
 
-def average_hash(image_data) -> Optional[str]:
-    """Compute a 64-bit difference-hash (dHash) of the given image and return it
-    as a 16-char lowercase hex string. ``None`` means the input was
-    unreadable (we keep going rather than blowing up the upload)."""
-    img = _decode_to_pil(image_data)
-    if img is None:
+def _decode_to_pil(image_data: str | bytes | None) -> Optional[Image.Image]:
+    """Decode input bytes/base64 into an RGB PIL Image or return None on failure."""
+    rgba = _decode_to_rgba(image_data)
+    if rgba is None:
         return None
+    return rgba.convert("RGB")
+
+
+def _dhash_from_rgba(rgba: Image.Image) -> Optional[str]:
     try:
-        # Resize to 9x8 for horizontal difference
-        small = img.convert("L").resize(
-            (9, 8), Image.Resampling.LANCZOS
-        )
+        # Composite semi-transparent pixels over neutral white for stable studio dHash
+        rgb = Image.new("RGB", rgba.size, (255, 255, 255))
+        rgb.paste(rgba, mask=rgba.split()[3])
+        small = rgb.convert("L").resize((9, 8), Image.Resampling.LANCZOS)
         arr = np.asarray(small, dtype=np.uint8)
-        # Compare adjacent pixels in each row
         diff = arr[:, 1:] > arr[:, :-1]
         bits = diff.flatten().astype(np.uint8)
         packed = np.packbits(bits)
@@ -120,17 +115,66 @@ def average_hash(image_data) -> Optional[str]:
         return None
 
 
+def _color_sig_from_rgba(rgba: Image.Image) -> Optional[str]:
+    """Compute foreground-masked 2x2 quadrant median RGB signature (24 hex chars)."""
+    try:
+        small = rgba.resize((32, 32), Image.Resampling.BILINEAR)
+        arr = np.asarray(small, dtype=np.uint8)
+        rgb = arr[:, :, :3]
+        alpha = arr[:, :, 3]
+
+        # Build foreground mask: ignore transparent matting and uniform white backdrop
+        has_alpha_bg = bool(np.any(alpha < 128) and np.any(alpha >= 128))
+        mask = (alpha >= 128) if has_alpha_bg else np.ones(alpha.shape, dtype=bool)
+        near_white = (rgb[:, :, 0] >= 245) & (rgb[:, :, 1] >= 245) & (rgb[:, :, 2] >= 245)
+        non_white_fg = mask & (~near_white)
+        if int(np.sum(non_white_fg)) >= 80:
+            mask = non_white_fg
+
+        if np.any(mask):
+            global_fg = np.median(rgb[mask], axis=0)
+        else:
+            global_fg = np.median(rgb.reshape(-1, 3), axis=0)
+
+        out_bytes = bytearray()
+        h, w = rgb.shape[:2]
+        hy, hx = h // 2, w // 2
+        for y0, y1 in ((0, hy), (hy, h)):
+            for x0, x1 in ((0, hx), (hx, w)):
+                q_mask = mask[y0:y1, x0:x1]
+                if int(np.sum(q_mask)) >= 8:
+                    q_rgb = np.median(rgb[y0:y1, x0:x1][q_mask], axis=0)
+                else:
+                    q_rgb = global_fg
+                out_bytes.extend(int(np.clip(round(float(c)), 0, 255)) for c in q_rgb)
+        return bytes(out_bytes).hex()
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("color_signature compute failed: %s", exc)
+        return None
+
+
+def average_hash(image_data) -> Optional[str]:
+    """Compute a 64-bit difference-hash (dHash) of the given image as 16 hex chars."""
+    rgba = _decode_to_rgba(image_data)
+    if rgba is None:
+        return None
+    return _dhash_from_rgba(rgba)
+
+
 def color_signature(image_data) -> Optional[str]:
-    """Coarse RGB colour signature is disabled — returns None."""
-    return None
+    """Compute a foreground-masked 2x2 quadrant RGB signature (24 hex chars)."""
+    rgba = _decode_to_rgba(image_data)
+    if rgba is None:
+        return None
+    return _color_sig_from_rgba(rgba)
 
 
 def compute_signatures(image_data) -> tuple[str | None, str | None]:
-    """Decode the image once and return both a dHash and a None color
-    signature.
-    """
-    ph = average_hash(image_data)
-    return (ph, None)
+    """Decode the image once and return both (dHash, foreground color signature)."""
+    rgba = _decode_to_rgba(image_data)
+    if rgba is None:
+        return (None, None)
+    return (_dhash_from_rgba(rgba), _color_sig_from_rgba(rgba))
 
 
 # ── Phase Z2.3 — authoritative source selection ────────────────────

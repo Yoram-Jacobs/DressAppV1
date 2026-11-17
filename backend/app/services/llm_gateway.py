@@ -158,6 +158,13 @@ async def call_main_llm(
             )
 
     # 2. Primary Production Branch: Google Gemini (gemini-3.5-flash-lite)
+    ctx_token = None
+    if isinstance(user, dict) and user.get("id"):
+        try:
+            from app.services.credit_manager import bind_usage_context, reset_usage_context
+            ctx_token = bind_usage_context(user.get("id"), "llm_gateway")
+        except Exception:  # noqa: BLE001
+            ctx_token = None
     try:
         active_key = api_key or (resolve_user_custom_gemini_api_key(user) if user else None) or settings.gemini_chat_key
         if not active_key:
@@ -236,3 +243,6 @@ async def call_main_llm(
 
         # Re-raise original error if fallback also failed or wasn't applicable
         raise gemini_exc
+    finally:
+        if ctx_token is not None:
+            reset_usage_context(ctx_token)

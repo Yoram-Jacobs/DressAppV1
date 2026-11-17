@@ -2059,3 +2059,117 @@ async def reject_garment(user_id: str, garment_id: str) -> dict[str, Any]:
         "rejection_count": new_count,
         "offer_marketplace": new_count >= 3
     }
+
+
+_NEUTRAL_COLOR_WORDS = frozenset({
+    "black", "white", "grey", "gray", "navy", "beige", "cream", "ivory",
+    "tan", "brown", "camel", "khaki", "denim", "charcoal", "taupe", "olive",
+    "שחור", "לבן", "אפור", "כחול כהה", "בז'", "שמנת", "חום", "זית",
+})
+
+
+async def resolve_user_target_weather(
+    user: dict[str, Any] | None,
+    target_date_str: str,
+) -> dict[str, Any] | None:
+    """Fetch normalized target-date weather for a user's saved coordinates, or None."""
+    if not isinstance(user, dict):
+        return None
+    loc = user.get("home_location") or user.get("location") or {}
+    if not isinstance(loc, dict):
+        return None
+    lat = loc.get("lat") if loc.get("lat") is not None else loc.get("latitude")
+    lng = (
+        loc.get("lng")
+        if loc.get("lng") is not None
+        else (loc.get("lon") if loc.get("lon") is not None else loc.get("longitude"))
+    )
+    if lat is None or lng is None:
+        return None
+    try:
+        from app.services.weather_service import get_target_weather, weather_service
+
+        if weather_service is None:
+            return None
+        lang = (user.get("preferred_language") or "en").lower().split("-")[0]
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        is_next_day = bool(target_date_str and str(target_date_str)[:10] > today_str)
+        raw_weather = await weather_service.fetch(float(lat), float(lng), lang=lang)
+        return get_target_weather(raw_weather, is_next_day=is_next_day)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Weather lookup failed for user %s: %s", user.get("id"), exc)
+        return None
+
+
+def compute_outfit_harmony_score(
+    items: list[dict[str, Any]],
+    *,
+    weather: dict[str, Any] | None = None,
+    occasion: str = "daily",
+) -> int:
+    """Deterministically score outfit coherence (55-98) from completeness, color, season, and occasion."""
+    if not items:
+        return 55
+
+    roles = {norm_category(it.get("role") or it.get("category")) for it in items}
+    # 1. Structural completeness (up to 35 pts)
+    score = 45
+    if ("top" in roles and "bottom" in roles) or "dress" in roles:
+        score += 18
+    if "shoes" in roles:
+        score += 12
+    if len(roles) >= 3:
+        score += 5
+
+    # 2. Color & pattern harmony (up to +12 pts / -8 penalty)
+    colors: list[str] = []
+    patterned_count = 0
+    for it in items:
+        c = str(it.get("color") or "").strip().lower()
+        if not c and isinstance(it.get("colors"), list) and it["colors"]:
+            c0 = it["colors"][0]
+            c = str(c0.get("name") if isinstance(c0, dict) else c0).strip().lower()
+        if c:
+            colors.append(c)
+        pat = str(it.get("pattern") or "").strip().lower()
+        if pat and pat not in ("solid", "plain", "none", "חלק", "אחיד"):
+            patterned_count += 1
+
+    neutral_count = sum(1 for c in colors if any(n in c for n in _NEUTRAL_COLOR_WORDS))
+    non_neutral_count = max(0, len(colors) - neutral_count)
+    if neutral_count >= 1 and non_neutral_count <= 2:
+        score += 10
+    elif colors:
+        score += 4
+    if patterned_count >= 2:
+        score -= 6
+
+    # 3. Weather / temperature alignment (up to +5 pts / -6 penalty)
+    temp_c = weather.get("temp_c") if isinstance(weather, dict) else None
+    if temp_c is not None:
+        try:
+            t_val = float(temp_c)
+            has_outerwear = "outerwear" in roles
+            if t_val >= 25 and has_outerwear:
+                score -= 5
+            elif t_val <= 15 and not has_outerwear:
+                score -= 4
+            else:
+                score += 4
+        except (TypeError, ValueError):
+            pass
+
+    # 4. Occasion / formality match (up to +4 pts)
+    occ_low = str(occasion or "").lower().strip()
+    if occ_low and occ_low not in ("daily", "casual", "default", ""):
+        occ_hits = sum(
+            1
+            for it in items
+            if occ_low in str(it.get("dress_code") or "").lower()
+            or any(occ_low in str(tg).lower() for tg in (it.get("tags") or []))
+        )
+        score += min(4, occ_hits * 2)
+    else:
+        score += 2
+
+    return max(55, min(98, int(round(score))))

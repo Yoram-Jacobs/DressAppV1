@@ -34,15 +34,20 @@ export function deriveSizeFromPreferences(user, item) {
   };
 
   // Footwear → shoe size always wins, regardless of sub_category.
-  if (cat === 'footwear' || /shoe|sneaker|boot|sandal|heel|loafer/.test(blob)) {
-    return pick('shoe_size');
+  if (
+    cat === 'footwear' ||
+    cat === 'shoes' ||
+    cat === 'נעליים' ||
+    /shoe|sneaker|boot|sandal|heel|loafer|נעל/.test(blob)
+  ) {
+    return pick('shoe_size', 'shoe_size_us');
   }
 
   // Underwear: bra for females (and items obviously bra-shaped),
   // otherwise fall through to the generic torso/shirt size so we
   // don't accidentally suggest a bra size for boxer-briefs.
-  if (cat === 'underwear' || /bra|bralette|lingerie/.test(blob)) {
-    if (/bra|bralette/.test(blob) || user?.sex === 'female') {
+  if (cat === 'underwear' || cat === 'הלבשה תחתונה' || /bra|bralette|lingerie|חזי/.test(blob)) {
+    if (/bra|bralette|חזי/.test(blob) || user?.sex === 'female') {
       return pick('bra_size', 'shirt_size');
     }
     return pick('shirt_size');
@@ -50,29 +55,41 @@ export function deriveSizeFromPreferences(user, item) {
 
   // Full-body / dress-coded garments → dress_size first, fallback
   // to shirt_size so we still surface SOMETHING for jumpsuits etc.
-  if (cat === 'full body' || /dress|jumpsuit|gown|kaftan|robe/.test(blob)) {
+  if (
+    cat === 'full body' ||
+    cat === 'dress' ||
+    cat === 'dresses' ||
+    cat === 'שמלה' ||
+    /dress|jumpsuit|gown|kaftan|robe|שמלה/.test(blob)
+  ) {
     return pick('dress_size', 'shirt_size');
   }
 
   // Skirts: sized off the waist most commonly — dress_size is the
   // closest proxy when the user only filled in dress sizing; shirt
   // size is the last resort.
-  if (/skirt/.test(blob)) {
+  if (/skirt|חצאית/.test(blob)) {
     return pick('dress_size', 'pants_size', 'shirt_size');
   }
 
   // Bottoms (pants, jeans, shorts, …)
-  if (cat === 'bottom' || /pants|jeans|trouser|short|legging/.test(blob)) {
+  if (
+    cat === 'bottom' ||
+    cat === 'bottoms' ||
+    cat === 'מכנסיים' ||
+    /pants|jeans|trouser|short|legging|מכנסי|ג'?ינס/.test(blob)
+  ) {
     return pick('pants_size');
   }
 
-  // Default: top / outerwear / accessories — shirt size is the
-  // best general proxy. Accessories with no plausible sizing get
-  // an empty string and the form stays blank.
+  // Default: top / outerwear — shirt size is the best general proxy.
   if (
     cat === 'top' ||
+    cat === 'tops' ||
     cat === 'outerwear' ||
-    /shirt|tee|t-shirt|blouse|sweater|hoodie|jacket|coat|cardigan|blazer/.test(
+    cat === 'חלק עליון' ||
+    cat === 'עליונית' ||
+    /shirt|tee|t-shirt|blouse|sweater|hoodie|jacket|coat|cardigan|blazer|חולצ|סוודר|ז'?קט|מעיל/.test(
       blob,
     )
   ) {

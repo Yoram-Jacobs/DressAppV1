@@ -15,9 +15,11 @@ from app.services.auth import get_current_user
 from app.services.sync_service import broadcast_sync_event
 from app.services.stylist_scheduler_brain import (
     calculate_garment_style_score,
+    compute_outfit_harmony_score,
     generate_scheduled_proposals,
     item_has_any_tag,
     norm_category,
+    resolve_user_target_weather,
 )
 
 
@@ -311,40 +313,7 @@ async def _generate_and_save_daily_proposal(
         if existing and len(existing.get("items") or []) > 0:
             return existing
 
-    # Deduct 1 AI credit for generating a daily outfit proposal
-    from app.services.billing_service import deduct_user_credits
-    from app.services.credit_manager import make_insufficient_credits_exception
-
-    if not await deduct_user_credits(db, user, cost=1, operation="daily_proposal"):
-        raise make_insufficient_credits_exception(user, cost=1)
-            
-    if force:
-        # On 'New Look', mark previous proposals for today as replaced and unwear them
-        await db.daily_proposals.update_many(
-            {"user_id": user["id"], "date": date_str},
-            {"$set": {"worn": False, "replaced": True, "dismissed": True}},
-        )
-
-    # Gather items already used in recent proposals (up to 14 days back) to enforce genuine multi-day rotation
-    from app.services.stylist_scheduler_brain import get_recent_wardrobe_history
-    recent_item_weights, recent_items_summary = await get_recent_wardrobe_history(
-        user["id"], target_date_str=date_str, lookback_days=14
-    )
-    past_item_ids: set[str] = set(recent_item_weights.keys())
-
-    # Also include any items from proposals for today's date
-    past_proposals_cursor = db.daily_proposals.find({"user_id": user["id"], "date": date_str})
-    past_proposals = [doc async for doc in past_proposals_cursor]
-    for pdp in past_proposals:
-        for it in (pdp.get("items") or []):
-            if it.get("id"):
-                past_item_ids.add(str(it["id"]))
-                recent_item_weights[str(it["id"])] = 0
-            if it.get("closet_item_id"):
-                past_item_ids.add(str(it["closet_item_id"]))
-                recent_item_weights[str(it["closet_item_id"])] = 0
-
-    # Fetch user's closet items with slim projection to eliminate heavy binary/base64 payload
+    # Check eligible closet items BEFORE charging any AI credit
     _CLOSET_ITEM_PROJECTION = {
         "_id": 0,
         "id": 1,
@@ -373,6 +342,46 @@ async def _generate_and_save_daily_proposal(
         _CLOSET_ITEM_PROJECTION,
     )
     items = [doc async for doc in cursor]
+    if len(items) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="closet_empty: At least 2 closet items are required to generate a daily proposal.",
+        )
+
+    # Deduct 1 AI credit only after confirming eligible closet inventory
+    from app.services.billing_service import deduct_user_credits, refund_user_credits
+    from app.services.credit_manager import make_insufficient_credits_exception
+
+    if not await deduct_user_credits(db, user, cost=1, operation="daily_proposal"):
+        raise make_insufficient_credits_exception(user, cost=1)
+
+    target_weather = await resolve_user_target_weather(user, date_str)
+
+    if force:
+        # On 'New Look', mark previous proposals for today as replaced and unwear them
+        await db.daily_proposals.update_many(
+            {"user_id": user["id"], "date": date_str},
+            {"$set": {"worn": False, "replaced": True, "dismissed": True}},
+        )
+
+    # Gather items already used in recent proposals (up to 14 days back) to enforce genuine multi-day rotation
+    from app.services.stylist_scheduler_brain import get_recent_wardrobe_history
+    recent_item_weights, recent_items_summary = await get_recent_wardrobe_history(
+        user["id"], target_date_str=date_str, lookback_days=14
+    )
+    past_item_ids: set[str] = set(recent_item_weights.keys())
+
+    # Also include any items from proposals for today's date
+    past_proposals_cursor = db.daily_proposals.find({"user_id": user["id"], "date": date_str})
+    past_proposals = [doc async for doc in past_proposals_cursor]
+    for pdp in past_proposals:
+        for it in (pdp.get("items") or []):
+            if it.get("id"):
+                past_item_ids.add(str(it["id"]))
+                recent_item_weights[str(it["id"])] = 0
+            if it.get("closet_item_id"):
+                past_item_ids.add(str(it["closet_item_id"]))
+                recent_item_weights[str(it["closet_item_id"])] = 0
 
     def _cat(i: dict) -> str:
         return norm_category(i.get("category"))
@@ -409,6 +418,7 @@ async def _generate_and_save_daily_proposal(
         scheduler_res = await generate_scheduled_proposals(
             user,
             style_dress_for=effective_occasion,
+            weather=target_weather,
             exclude_item_ids=past_item_ids,
             target_date=date_str,
             filter_tags=filter_tags,
@@ -635,6 +645,25 @@ async def _generate_and_save_daily_proposal(
                 "image_url": _best_img(acc0),
             })
 
+        # Ensure a complete at-least-2-item fallback before persisting (e.g. two tops or outerwear+top)
+        if len(selected_items) < 2 and len(items) >= 2:
+            chosen_ids = {str(it.get("id") or it.get("closet_item_id")) for it in selected_items}
+            remaining_sorted = sorted(
+                (i for i in items if str(i.get("id")) not in chosen_ids),
+                key=_fallback_sort_key,
+            )
+            for extra in remaining_sorted:
+                if len(selected_items) >= 2:
+                    break
+                selected_items.append({
+                    "id": extra.get("id"),
+                    "closet_item_id": extra.get("id"),
+                    "role": _cat(extra) or "item",
+                    "name": extra.get("title") or extra.get("name") or "Garment",
+                    "category": extra.get("category"),
+                    "image_url": _best_img(extra),
+                })
+
         # Generate vibrant title based on selected items & occasion
         user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
 
@@ -771,8 +800,39 @@ async def _generate_and_save_daily_proposal(
             proposal_title = loc_fb["default"].format(adj=adj)
             proposal_desc = loc_fb["default_desc"]
 
-        proposal_harmony = random.randint(88, 97) if len(selected_items) >= 2 else 85
-        
+    if len(selected_items) < 2:
+        try:
+            await refund_user_credits(db, user["id"], 1)
+        except Exception as ref_err:
+            logger.warning("Failed to refund credit after empty proposal selection: %s", ref_err)
+        raise HTTPException(
+            status_code=400,
+            detail="closet_empty: Not enough compatible closet items to assemble an outfit.",
+        )
+
+    docs_by_id = {str(it.get("id")): it for it in items if it.get("id")}
+    score_inputs = [
+        {**docs_by_id.get(str(sel.get("id") or sel.get("closet_item_id") or ""), {}), **sel}
+        for sel in selected_items
+    ]
+    proposal_harmony = compute_outfit_harmony_score(
+        score_inputs,
+        weather=target_weather,
+        occasion=effective_occasion,
+    )
+
+    weather_summary_val: str | None = None
+    temp_val: int | None = None
+    if isinstance(target_weather, dict):
+        raw_desc = target_weather.get("description") or target_weather.get("condition")
+        if raw_desc:
+            weather_summary_val = str(raw_desc).strip()
+        if target_weather.get("temp_c") is not None:
+            try:
+                temp_val = round(float(target_weather["temp_c"]))
+            except (TypeError, ValueError):
+                temp_val = None
+
     proposal = {
         "id": f"prop_{uuid.uuid4().hex[:12]}",
         "user_id": user["id"],
@@ -780,8 +840,8 @@ async def _generate_and_save_daily_proposal(
         "language": user_lang,
         "title": proposal_title,
         "description": proposal_desc,
-        "weather_summary": "Mild & Pleasant",
-        "temperature": 22,
+        "weather_summary": weather_summary_val,
+        "temperature": temp_val,
         "items": selected_items,
         "harmony_score": proposal_harmony,
         "worn": False,

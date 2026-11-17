@@ -195,3 +195,71 @@ def _get_service() -> FashionClipService | None:
 
 
 fashion_clip_service: FashionClipService | None = _get_service()
+
+
+async def ensure_doc_clip_embedding(
+    doc: dict[str, Any],
+    *,
+    image_bytes: bytes | None = None,
+    only_if_loaded: bool = False,
+) -> list[float] | None:
+    """Compute a normalized FashionCLIP vector for a closet/listing doc, soft-failing to None."""
+    existing = doc.get("clip_embedding")
+    if isinstance(existing, list) and existing:
+        return existing
+    svc = fashion_clip_service
+    if svc is None:
+        return None
+    if only_if_loaded and getattr(svc, "_model", None) is None:
+        return None
+    try:
+        raw = image_bytes
+        if raw is None:
+            imgs = doc.get("images") if isinstance(doc.get("images"), list) else []
+            src = (
+                doc.get("clean_image_url")
+                or doc.get("reconstructed_image_url")
+                or (imgs[0] if imgs else None)
+                or doc.get("thumbnail_data_url")
+                or doc.get("image_url")
+                or doc.get("original_image_url")
+            )
+            if isinstance(src, str) and src.strip():
+                from app.services.closet_service import read_image_bytes_from_url
+
+                raw = await read_image_bytes_from_url(src.strip())
+        if raw and hasattr(svc, "embed_image"):
+            vec = await svc.embed_image(raw)
+            if isinstance(vec, list) and vec:
+                return vec
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("ensure_doc_clip_embedding image step failed: %s", exc)
+
+    try:
+        q = " ".join(
+            str(part).strip()
+            for part in (doc.get("category"), doc.get("title") or doc.get("name"), doc.get("color"))
+            if part
+        ).strip()
+        if q and hasattr(svc, "embed_text"):
+            vec = await svc.embed_text(q)
+            if isinstance(vec, list) and vec:
+                return vec
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("ensure_doc_clip_embedding text step failed: %s", exc)
+    return None
+
+
+async def attach_listing_clip_embedding(
+    listing_doc: dict[str, Any],
+    source_item: dict[str, Any] | None = None,
+) -> None:
+    """Copy or compute a FashionCLIP embedding onto a listing document in-place."""
+    if isinstance(listing_doc.get("clip_embedding"), list) and listing_doc["clip_embedding"]:
+        return
+    if source_item and isinstance(source_item.get("clip_embedding"), list) and source_item["clip_embedding"]:
+        listing_doc["clip_embedding"] = source_item["clip_embedding"]
+        return
+    vec = await ensure_doc_clip_embedding(listing_doc, only_if_loaded=True)
+    if vec:
+        listing_doc["clip_embedding"] = vec

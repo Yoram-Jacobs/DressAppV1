@@ -204,13 +204,16 @@ export function getFullAvatarAnatomy({
 
   const DIVISOR = 2.65;
   const wShoulders = isMale ? (numSh * 1.00) : (numSh * 0.99);
-  const wChest = isMale ? ((numCh / DIVISOR) * 0.91) : ((numCh / DIVISOR) * 0.83);
+  // Calibrated directly against ANSUR II (N=6,068) measured chestbreadth & hipbreadth
+  const wChest = isMale
+    ? Math.max(18.0, 0.1624 * numCh - 0.0057 * numW + 12.2882)
+    : Math.max(16.0, 0.1619 * numCh + 0.0122 * numW + 10.5522);
   const wWaist = isMale
-    ? Math.max((numW / DIVISOR) * 0.985, 30.80 + 4.35 * morph.heavy - 2.83 * morph.thin + 0.82 * morph.waist_thick - 3.30 * morph.waist_thin + 2.72 * morph.shoulders_narrow)
-    : Math.max((numW / DIVISOR) * 0.99, 25.60 + 1.80 * morph.heavy - 1.50 * morph.thin);
+    ? Math.max(17.0, (numW / DIVISOR) * 0.985)
+    : Math.max(15.0, (numW / DIVISOR) * 0.99);
   const wHip = isMale
-    ? Math.max((numHip / DIVISOR) * 1.063, 38.51 + 5.99 * morph.heavy - 2.65 * morph.thin + 5.46 * morph.hips_wide - 5.58 * morph.hips_narrow + 5.98 * morph.shoulders_narrow)
-    : Math.max((numHip / DIVISOR) * 1.088, 38.60 + 7.50 * morph.heavy - 1.99 * morph.thin + 4.26 * morph.hips_wide - 4.10 * morph.hips_narrow + 6.95 * morph.shoulders_narrow);
+    ? Math.max(20.0, 0.2949 * numHip - 0.0011 * numW + 4.6120)
+    : Math.max(20.0, 0.3485 * numHip - 0.0164 * numW + 1.2047);
   const shScale = numSh / (isMale ? 44.0 : 38.0);
   const wNeck = (isMale ? 12.5 : 10.2) * Math.max(0.85, Math.min(1.22, shScale));
 
@@ -780,6 +783,9 @@ export function applyAvatarAppearance(scene, {
         mat.depthTest = true;
         mat.alphaTest = 0;
         mat.side = THREE.DoubleSide;
+        mat.polygonOffset = true;
+        mat.polygonOffsetFactor = -2;
+        mat.polygonOffsetUnits = -2;
         mat.needsUpdate = true;
       } else if (matName.includes('teeth')) {
         mat.color.set('#F8F5F0');

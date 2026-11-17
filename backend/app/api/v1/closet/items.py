@@ -531,7 +531,11 @@ async def save_closet_item_document(
             status="active",
             auto_created=True,
         )
-        await repos.insert(db.listings, listing.model_dump())
+        from app.services.fashion_clip import attach_listing_clip_embedding
+
+        listing_doc = listing.model_dump()
+        await attach_listing_clip_embedding(listing_doc, source_item=doc)
+        await repos.insert(db.listings, listing_doc)
         listing_id = listing.id
         # Use the canonical field names that the rest of the codebase
         # (closet card "Complete listing" CTA, marketplace auto-retire
@@ -1166,7 +1170,11 @@ async def update_item(
                     auto_created=True,
                     status="active",
                 )
-                await repos.insert(db.listings, listing.model_dump())
+                from app.services.fashion_clip import attach_listing_clip_embedding
+
+                listing_doc = listing.model_dump()
+                await attach_listing_clip_embedding(listing_doc, source_item=updated)
+                await repos.insert(db.listings, listing_doc)
                 source_patch: dict[str, Any] = {
                     "auto_listing_id": listing.id,
                     "auto_listing_needs_completion": True,

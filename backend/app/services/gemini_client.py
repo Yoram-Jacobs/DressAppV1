@@ -283,6 +283,7 @@ class GeminiClient:
                     "Gemini model %r unavailable (%s); retrying with %r",
                     target_model, repr(exc)[:160], DEFAULT_TEXT_MODEL,
                 )
+                target_model = DEFAULT_TEXT_MODEL
                 resp = await self._client.aio.models.generate_content(
                     model=DEFAULT_TEXT_MODEL,
                     contents=user_text,
@@ -290,6 +291,7 @@ class GeminiClient:
                 )
             else:
                 raise
+        await _emit_gemini_usage(target_model, resp)
         return _coerce_text(resp)
 
     async def search_grounded_text(
@@ -326,6 +328,7 @@ class GeminiClient:
             contents=prompt,
             config=config,
         )
+        await _emit_gemini_usage(target_model, resp)
 
         sources: list[dict[str, str]] = []
         queries: list[str] = []
@@ -398,6 +401,7 @@ class GeminiClient:
                     "Gemini vision model %r unavailable (%s); retrying with %r",
                     target_model, repr(exc)[:160], DEFAULT_VISION_MODEL,
                 )
+                target_model = DEFAULT_VISION_MODEL
                 resp = await self._client.aio.models.generate_content(
                     model=DEFAULT_VISION_MODEL,
                     contents=contents,
@@ -405,6 +409,7 @@ class GeminiClient:
                 )
             else:
                 raise
+        await _emit_gemini_usage(target_model, resp)
         return _coerce_text(resp)
 
     # --------------------------------------------------------------- streaming
@@ -434,6 +439,7 @@ class GeminiClient:
             model=target_model,
         )
         contents = _coerce_content_parts(user_parts)
+        last_chunk: Any = None
         try:
             stream = await self._client.aio.models.generate_content_stream(
                 model=target_model,
@@ -441,6 +447,8 @@ class GeminiClient:
                 config=config,
             )
             async for chunk in stream:
+                if getattr(chunk, "usage_metadata", None) is not None:
+                    last_chunk = chunk
                 txt = getattr(chunk, "text", None)
                 if txt:
                     yield txt
@@ -450,20 +458,49 @@ class GeminiClient:
                     "Gemini stream_vision model %r unavailable (%s); retrying with %r",
                     target_model, repr(exc)[:160], DEFAULT_VISION_MODEL,
                 )
+                target_model = DEFAULT_VISION_MODEL
                 stream = await self._client.aio.models.generate_content_stream(
                     model=DEFAULT_VISION_MODEL,
                     contents=contents,
                     config=config,
                 )
                 async for chunk in stream:
+                    if getattr(chunk, "usage_metadata", None) is not None:
+                        last_chunk = chunk
                     txt = getattr(chunk, "text", None)
                     if txt:
                         yield txt
             else:
                 raise
+        finally:
+            if last_chunk is not None:
+                await _emit_gemini_usage(target_model, last_chunk)
 
 
 # ---------------------------------------------------------------------- helpers
+def _extract_usage_tokens(resp: Any) -> tuple[int, int]:
+    """Read (input_tokens, output_tokens) from google-genai usage_metadata."""
+    meta = getattr(resp, "usage_metadata", None)
+    if meta is None:
+        return (0, 0)
+    in_tok = int(getattr(meta, "prompt_token_count", 0) or 0)
+    cand_tok = int(getattr(meta, "candidates_token_count", 0) or 0)
+    think_tok = int(getattr(meta, "thoughts_token_count", 0) or 0)
+    return (in_tok, cand_tok + think_tok)
+
+
+async def _emit_gemini_usage(model_name: str, resp: Any) -> None:
+    in_tok, out_tok = _extract_usage_tokens(resp)
+    if in_tok <= 0 and out_tok <= 0:
+        return
+    try:
+        from app.services.credit_manager import record_ai_usage
+
+        await record_ai_usage("gemini", model_name, in_tok, out_tok)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _is_model_not_found_error(exc: Exception) -> bool:
     """Return True when Google API rejects a retired/unavailable model ID with 404."""
     msg = str(exc).lower()

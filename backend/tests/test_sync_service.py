@@ -65,6 +65,11 @@ async def test_daily_proposal_generation_and_action():
         },
     }
     await get_db().users.insert_one(dict(user))
+    await get_db().closet_items.insert_many([
+        {"id": "sync_top_1", "user_id": user["id"], "category": "top", "title": "White Linen Shirt", "color": "white"},
+        {"id": "sync_bot_1", "user_id": user["id"], "category": "bottom", "title": "Navy Trousers", "color": "navy"},
+        {"id": "sync_sho_1", "user_id": user["id"], "category": "shoes", "title": "Brown Loafers", "color": "brown"},
+    ])
     date_str = "2026-09-03"
     
     proposal = await _generate_and_save_daily_proposal(user, date_str, force=True)

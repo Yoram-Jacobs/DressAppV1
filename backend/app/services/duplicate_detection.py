@@ -40,6 +40,9 @@ from app.db.database import get_db
 
 from app.services.image_hash import (
     average_hash,
+    color_distance,
+    color_signature,
+    compute_signatures,
     compute_sha256,
     is_duplicate_match,
     hamming_distance,
@@ -272,6 +275,7 @@ async def find_potential_duplicate(
         or analysis.get("image_base64")
     )
     incoming_phash = analysis.get("source_phash") or (average_hash(source_img) if source_img else None)
+    incoming_color_sig = analysis.get("source_color_sig") or (color_signature(source_img) if source_img else None)
     incoming_sha = analysis.get("source_sha256") or (compute_sha256(source_img) if source_img else None)
     incoming_parent_sha = analysis.get("parent_image_sha256") or (
         compute_sha256(analysis.get("parent_image_bytes")) if analysis.get("parent_image_bytes") else None
@@ -296,6 +300,7 @@ async def find_potential_duplicate(
             "original_image_url": 1,
             "segmented_image_url": 1,
             "source_phash": 1,
+            "source_color_sig": 1,
             "source_sha256": 1,
             "parent_image_sha256": 1,
         },
@@ -308,6 +313,7 @@ async def find_potential_duplicate(
     # Check visual hash match first
     for existing in existing_items:
         ex_phash = existing.get("source_phash")
+        ex_color_sig = existing.get("source_color_sig")
         ex_sha = existing.get("source_sha256")
         ex_parent_sha = existing.get("parent_image_sha256")
 
@@ -324,8 +330,8 @@ async def find_potential_duplicate(
                 "match_reason": "parent_photo_exact_match",
             }
 
-        # Lazy compute if existing item has an image but no phash stored yet
-        if not ex_phash and not ex_sha:
+        # Lazy compute if existing item has an image but lacks phash / color signature
+        if not (ex_phash and ex_color_sig) and not ex_sha:
             for candidate_key in (
                 "clean_image_url",
                 "segmented_image_url",
@@ -336,22 +342,30 @@ async def find_potential_duplicate(
                 if not ex_img or not isinstance(ex_img, str):
                     continue
                 if ex_img.startswith("data:") or len(ex_img) > 300:
-                    ex_phash = average_hash(ex_img)
-                    ex_sha = compute_sha256(ex_img)
+                    comp_phash, comp_csig = compute_signatures(ex_img)
+                    ex_phash = ex_phash or comp_phash
+                    ex_color_sig = ex_color_sig or comp_csig
+                    ex_sha = ex_sha or compute_sha256(ex_img)
                 else:
                     try:
                         from app.services.closet_service import read_image_bytes_from_url
                         raw_ex = await read_image_bytes_from_url(ex_img)
                         if raw_ex:
-                            ex_phash = average_hash(raw_ex)
-                            ex_sha = compute_sha256(raw_ex)
+                            comp_phash, comp_csig = compute_signatures(raw_ex)
+                            ex_phash = ex_phash or comp_phash
+                            ex_color_sig = ex_color_sig or comp_csig
+                            ex_sha = ex_sha or compute_sha256(raw_ex)
                     except Exception:
                         pass
-                if ex_phash or ex_sha:
+                if ex_phash or ex_sha or ex_color_sig:
                     try:
                         await db.closet_items.update_one(
                             {"id": existing["id"]},
-                            {"$set": {"source_phash": ex_phash, "source_sha256": ex_sha}},
+                            {"$set": {
+                                "source_phash": ex_phash,
+                                "source_color_sig": ex_color_sig,
+                                "source_sha256": ex_sha,
+                            }},
                         )
                     except Exception:
                         pass
@@ -384,6 +398,10 @@ async def find_potential_duplicate(
             if 6 <= bits_a <= 58 and 6 <= bits_b <= 58:
                 dist = hamming_distance(incoming_phash, ex_phash)
                 if dist <= 3:
+                    # Color gate: do not collide same-silhouette garments in clearly different colors (e.g. Black vs Navy)
+                    if incoming_color_sig and ex_color_sig:
+                        if color_distance(incoming_color_sig, ex_color_sig) > DEFAULT_COLOR_THRESHOLD:
+                            continue
                     # Category and subcategory must not actively contradict
                     incoming_cat_v = _canonical_category(analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type"))
                     ex_cat_v = _canonical_category(existing.get("category") or existing.get("sub_category") or existing.get("item_type"))

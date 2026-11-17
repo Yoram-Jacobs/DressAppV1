@@ -9,7 +9,9 @@ Consolidates:
 """
 from __future__ import annotations
 import asyncio
+import contextvars
 import logging
+import uuid
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 from typing import Any, Optional, Dict, List, Tuple
@@ -561,13 +563,47 @@ async def _get_available_credits(user_id: str) -> int:
 # TOKEN METERING
 # ============================================================================
 
+_active_usage_ctx: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
+    "active_usage_ctx", default=None
+)
+
+
+def bind_usage_context(
+    user_id: str | None,
+    operation: str | None = None,
+    *,
+    usage_id: str | None = None,
+    db: Any = None,
+) -> contextvars.Token:
+    """Bind caller attribution metadata into ContextVar so downstream AI calls log real token costs."""
+    prev = _active_usage_ctx.get()
+    merged = {
+        "user_id": user_id if user_id is not None else (prev or {}).get("user_id"),
+        "operation": operation if operation is not None else (prev or {}).get("operation"),
+        "usage_id": usage_id if usage_id is not None else (prev or {}).get("usage_id"),
+        "db": db if db is not None else (prev or {}).get("db"),
+    }
+    return _active_usage_ctx.set(merged)
+
+
+def reset_usage_context(token: contextvars.Token | None) -> None:
+    if token is not None:
+        try:
+            _active_usage_ctx.reset(token)
+        except Exception:  # noqa: BLE001
+            pass
+
+
 class TokenMeter:
     def __init__(self, user_id: str, operation: str):
+        self.id = f"tu_{uuid.uuid4().hex[:16]}"
         self.user_id = user_id
         self.operation = operation
         self.input_tokens = 0
         self.output_tokens = 0
-        self.provider = None
+        self.provider: Optional[str] = None
+        self.model: Optional[str] = None
+        self.cost_usd: float = 0.0
         self.credits_consumed: float = 0.0
         self.credit_type_used: Optional[str] = None
 
@@ -579,48 +615,104 @@ class TokenMeter:
         output_tokens: int,
         db_connection: Any = None,
     ) -> float:
-        self.input_tokens = input_tokens
-        self.output_tokens = output_tokens
+        self.input_tokens = int(input_tokens or 0)
+        self.output_tokens = int(output_tokens or 0)
         self.provider = f"{provider.lower()}_{model.lower()}"
-        self.credits_consumed = self._calculate_credits(provider, model, input_tokens, output_tokens)
-        
+        self.model = model
+        self.cost_usd = self.compute_usd_cost(provider, model, self.input_tokens, self.output_tokens)
+        self.credits_consumed = self._calculate_credits(provider, model, self.input_tokens, self.output_tokens)
+
         success = await self._deduct_credits(db_connection)
         if not success:
             raise HTTPException(status_code=402, detail="Insufficient credits to complete operation")
-        await self._save_token_usage(input_tokens, output_tokens)
+        await self._save_token_usage(self.input_tokens, self.output_tokens, db_connection=db_connection)
         return self.credits_consumed
 
     async def _deduct_credits(self, db_connection: Any = None) -> bool:
         db = db_connection if db_connection is not None else get_db()
         return await check_and_increment_daily_request(db, self.user_id)
 
-    async def _save_token_usage(self, input_tokens: int, output_tokens: int) -> None:
-        db = get_db()
+    async def _save_token_usage(
+        self,
+        input_tokens: int,
+        output_tokens: int,
+        *,
+        db_connection: Any = None,
+    ) -> None:
+        db = db_connection if db_connection is not None else get_db()
+        in_tok = int(input_tokens or 0)
+        out_tok = int(output_tokens or 0)
+        if self.cost_usd == 0.0 and (in_tok > 0 or out_tok > 0 or self.provider in ("runpod",)):
+            self.cost_usd = self.compute_usd_cost(self.provider or "gemini", self.model, in_tok, out_tok)
+        now_iso = datetime.now(timezone.utc).isoformat()
         doc = {
+            "id": self.id,
             "user_id": self.user_id,
             "operation": self.operation,
-            "provider": self.provider,
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
+            "provider": self.provider or "system",
+            "model": self.model,
+            "input_tokens": in_tok,
+            "output_tokens": out_tok,
+            "cost_usd": round(float(self.cost_usd), 6),
             "credits_consumed": self.credits_consumed,
             "credit_type": self.credit_type_used,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": now_iso,
         }
         await db.token_usage.insert_one(doc)
 
+    @classmethod
+    def _resolve_rate(cls, provider: str | None, model: str | None = None) -> dict[str, float]:
+        rates = cls._get_rate_card()
+        p = str(provider or "").strip().lower()
+        m = str(model or "").strip().lower()
+        if p and m:
+            exact = f"{p}_{m}"
+            if exact in rates:
+                return rates[exact]
+        if p in rates:
+            return rates[p]
+        if p.startswith("runpod") or "flux" in m:
+            return rates["runpod_flux.2-klein-4b"]
+        if p.startswith("eyes") or "gemma" in m:
+            return rates["eyes_gemma"]
+        if "pro" in m:
+            return rates["gemini_pro"]
+        if p == "gemini" or "gemini" in m:
+            return rates["gemini_flash"]
+        return {"input": 0.0, "output": 0.0}
+
+    @classmethod
+    def compute_usd_cost(
+        cls,
+        provider: str | None,
+        model: str | None,
+        input_tokens: int,
+        output_tokens: int,
+    ) -> float:
+        rate = cls._resolve_rate(provider, model)
+        usd = (
+            (max(0, int(input_tokens or 0)) * rate.get("input", 0.0))
+            + (max(0, int(output_tokens or 0)) * rate.get("output", 0.0))
+        ) / 1000.0 + float(rate.get("flat_usd", 0.0))
+        return round(usd, 6)
+
     def _calculate_credits(self, provider: str, model: str, input_tokens: int, output_tokens: int) -> float:
-        rates = self._get_rate_card()
-        key = f"{provider.lower()}_{model.lower()}"
-        rate = rates.get(key, rates["gemini_flash"])
-        cost = (input_tokens * rate["input"] + output_tokens * rate["output"]) / 1000
-        credits = cost / 0.01
-        return max(0.1, round(credits, 2))
+        return self._calculate_credits_static(provider, model, input_tokens, output_tokens)
 
     @classmethod
     def _get_rate_card(cls):
         return {
             "gemini_flash": {"input": 0.000075, "output": 0.0003},
             "gemini_pro": {"input": 0.00035, "output": 0.0007},
+            "gemini_gemini-3.5-flash-lite": {"input": 0.000075, "output": 0.0003},
+            "gemini_gemini-3.5-flash": {"input": 0.00015, "output": 0.0006},
+            "gemini_gemini-3.1-flash-lite-image": {"input": 0.000075, "output": 0.0003, "flat_usd": 0.02},
+            "gemini_gemini-3.1-flash-image": {"input": 0.00015, "output": 0.0006, "flat_usd": 0.03},
+            "gemini_gemini-2.5-flash-lite": {"input": 0.000075, "output": 0.0003},
+            "gemini_gemini-2.5-flash": {"input": 0.00015, "output": 0.0006},
+            "runpod_flux.2-klein-4b": {"input": 0.0, "output": 0.0, "flat_usd": 0.004},
+            "runpod": {"input": 0.0, "output": 0.0, "flat_usd": 0.004},
+            "eyes_gemma": {"input": 0.0, "output": 0.0, "flat_usd": 0.0},
             "claude_haiku": {"input": 0.00025, "output": 0.00125},
             "claude_sonnet": {"input": 0.0005, "output": 0.0025},
             "gpt4o": {"input": 0.0005, "output": 0.0015},
@@ -630,10 +722,85 @@ class TokenMeter:
     def _calculate_credits_static(cls, provider: str, model: str, input_tokens: int, output_tokens: int) -> float:
         rates = cls._get_rate_card()
         key = f"{provider.lower()}_{model.lower()}"
-        rate = rates.get(key, rates["gemini_flash"])
-        cost = (input_tokens * rate["input"] + output_tokens * rate["output"]) / 1000
+        rate = rates.get(key) or cls._resolve_rate(provider, model) or rates["gemini_flash"]
+        cost = (input_tokens * rate.get("input", 0.0) + output_tokens * rate.get("output", 0.0)) / 1000
         credits = cost / 0.01
         return max(0.1, round(credits, 2))
+
+
+async def _log_billing_token_usage(
+    db_connection: Any,
+    user_id: str,
+    operation: str | None,
+    credits_consumed: float,
+    credit_type: str | None,
+) -> None:
+    """Create initial token_usage ledger entry and bind usage_id for downstream token attribution."""
+    try:
+        meter = TokenMeter(user_id, operation or "ai_operation")
+        meter.provider = "system"
+        meter.credits_consumed = credits_consumed
+        meter.credit_type_used = credit_type
+        await meter._save_token_usage(0, 0, db_connection=db_connection)
+        bind_usage_context(user_id, operation or "ai_operation", usage_id=meter.id, db=db_connection)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+async def record_ai_usage(
+    provider: str,
+    model: str | None,
+    input_tokens: int,
+    output_tokens: int,
+    *,
+    user_id: str | None = None,
+    operation: str | None = None,
+) -> None:
+    """Update the active billing token_usage row or insert a new metered AI usage row."""
+    in_tok = max(0, int(input_tokens or 0))
+    out_tok = max(0, int(output_tokens or 0))
+    cost_usd = TokenMeter.compute_usd_cost(provider, model, in_tok, out_tok)
+    ctx = _active_usage_ctx.get() or {}
+    db = ctx.get("db")
+    if db is None:
+        try:
+            db = get_db()
+        except Exception:  # noqa: BLE001
+            return
+    if db is None:
+        return
+
+    usage_id = ctx.get("usage_id")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    try:
+        if usage_id:
+            res = await db.token_usage.update_one(
+                {"id": usage_id},
+                {
+                    "$inc": {
+                        "input_tokens": in_tok,
+                        "output_tokens": out_tok,
+                        "cost_usd": cost_usd,
+                    },
+                    "$set": {
+                        "provider": provider,
+                        "model": model,
+                        "updated_at": now_iso,
+                    },
+                },
+            )
+            matched = getattr(res, "matched_count", 1)
+            if matched:
+                return
+        eff_uid = user_id or ctx.get("user_id") or "system"
+        eff_op = operation or ctx.get("operation") or "ai_operation"
+        meter = TokenMeter(eff_uid, eff_op)
+        meter.provider = provider
+        meter.model = model
+        meter.cost_usd = cost_usd
+        await meter._save_token_usage(in_tok, out_tok, db_connection=db)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("record_ai_usage soft-failed: %s", exc)
 
 
 def estimate_token_cost(
@@ -862,15 +1029,9 @@ async def deduct_user_credits(
                 monthly_ok = await check_and_increment_nano_banana_monthly(db, user_id, req_int)
                 if not monthly_ok:
                     return False
-            try:
-                meter = TokenMeter(user_id, operation or "ai_operation")
-                meter.input_tokens = 0
-                meter.output_tokens = 0
-                meter.credits_consumed = req_int
-                meter.credit_type_used = "nano_banana_monthly" if is_generative else "subscription"
-                await meter._save_token_usage(0, 0)
-            except Exception:
-                pass
+            await _log_billing_token_usage(
+                db, user_id, operation, req_int, "nano_banana_monthly" if is_generative else "subscription"
+            )
             return True
 
         # 2. Free tier users:
@@ -883,15 +1044,7 @@ async def deduct_user_credits(
             else:
                 daily_ok = await check_and_increment_daily_request(db, user_id, req_int)
             if daily_ok:
-                try:
-                    meter = TokenMeter(user_id, operation or "ai_operation")
-                    meter.input_tokens = 0
-                    meter.output_tokens = 0
-                    meter.credits_consumed = req_int
-                    meter.credit_type_used = "free_daily_quota"
-                    await meter._save_token_usage(0, 0)
-                except Exception:
-                    pass
+                await _log_billing_token_usage(db, user_id, operation, req_int, "free_daily_quota")
                 return True
             logger.info("User %s on Free plan has exhausted their cumulative On-Premises AI credits.", user_id)
             return False
@@ -921,15 +1074,13 @@ async def deduct_user_credits(
                     {"$set": {"credit_buckets": clean_buckets}}
                 )
                 await check_and_increment_nano_banana_monthly(db, user_id, req_int)
-                try:
-                    meter = TokenMeter(user_id, operation or "ai_operation")
-                    meter.input_tokens = 0
-                    meter.output_tokens = 0
-                    meter.credits_consumed = req_int
-                    meter.credit_type_used = spent_details[0].get("type", "free") if spent_details else "free"
-                    await meter._save_token_usage(0, 0)
-                except Exception:
-                    pass
+                await _log_billing_token_usage(
+                    db,
+                    user_id,
+                    operation,
+                    req_int,
+                    spent_details[0].get("type", "free") if spent_details else "free",
+                )
                 return True
 
         logger.info(
@@ -1140,13 +1291,14 @@ async def use_ai_c_with_threshold_check(
             {"id": user_id},
             {"$set": {"credit_buckets": user_record["credit_buckets"]}}
         )
-        
-        meter = TokenMeter(user_id, operation)
-        meter.input_tokens = 0
-        meter.output_tokens = 0
-        meter.credits_consumed = credits_required
-        meter.credit_type_used = "free" if any(d["type"]=="free" for d in spent_details) else "paid"
-        await meter._save_token_usage(0, 0)
+
+        await _log_billing_token_usage(
+            db,
+            user_id,
+            operation,
+            credits_required,
+            "free" if any(d["type"] == "free" for d in spent_details) else "paid",
+        )
         return True
     except Exception as e:
         logger.error(f"Error using AI credits with threshold: {str(e)}")

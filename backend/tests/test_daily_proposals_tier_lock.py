@@ -107,7 +107,12 @@ async def test_generate_daily_proposal_consumes_one_credit():
                 raise StopAsyncIteration
 
     mock_db.daily_proposals.find = MagicMock(return_value=AsyncIter([]))
-    mock_db.closet_items.find = MagicMock(return_value=AsyncIter([]))
+    mock_db.closet_items.find = MagicMock(
+        return_value=AsyncIter([
+            {"id": "c_top_1", "category": "top", "title": "White Tee", "color": "white"},
+            {"id": "c_bot_1", "category": "bottom", "title": "Blue Jeans", "color": "navy"},
+        ])
+    )
 
     with patch("app.api.v1.daily_proposals.get_db", return_value=mock_db), \
          patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_deduct, \
@@ -120,6 +125,41 @@ async def test_generate_daily_proposal_consumes_one_credit():
         assert mock_deduct.called
         assert mock_deduct.call_args[1]["cost"] == 1
         assert mock_deduct.call_args[1]["operation"] == "daily_proposal"
+        assert len(res["items"]) == 2
+
+
+@pytest.mark.anyio
+async def test_generate_daily_proposal_skips_deduction_when_closet_empty():
+    """Empty/insufficient closet (<2 items) must raise 400 BEFORE deducting credits."""
+    user = {"id": "u_empty_closet", "email": "empty@example.com"}
+    target_date = "2026-11-12"
+
+    class AsyncIter:
+        def __init__(self, items):
+            self.items = items
+        def __aiter__(self):
+            self._iter = iter(self.items)
+            return self
+        async def __anext__(self):
+            try:
+                return next(self._iter)
+            except StopIteration:
+                raise StopAsyncIteration
+
+    mock_db = MagicMock()
+    mock_db.daily_proposals.find_one = AsyncMock(return_value=None)
+    mock_db.daily_proposals.insert_one = AsyncMock()
+    mock_db.closet_items.find = MagicMock(return_value=AsyncIter([]))
+
+    with patch("app.api.v1.daily_proposals.get_db", return_value=mock_db), \
+         patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_deduct:
+
+        with pytest.raises(HTTPException) as exc_info:
+            await _generate_and_save_daily_proposal(user, target_date, force=True)
+        assert exc_info.value.status_code == 400
+        assert "closet_empty" in exc_info.value.detail
+        assert not mock_deduct.called
+        assert not mock_db.daily_proposals.insert_one.called
 
 
 @pytest.mark.anyio
@@ -128,8 +168,26 @@ async def test_generate_daily_proposal_fails_when_credits_exhausted():
     user = {"id": "u_free_broke", "email": "broke@example.com"}
     target_date = "2026-11-12"
 
+    class AsyncIter:
+        def __init__(self, items):
+            self.items = items
+        def __aiter__(self):
+            self._iter = iter(self.items)
+            return self
+        async def __anext__(self):
+            try:
+                return next(self._iter)
+            except StopIteration:
+                raise StopAsyncIteration
+
     mock_db = MagicMock()
     mock_db.daily_proposals.find_one = AsyncMock(return_value=None)
+    mock_db.closet_items.find = MagicMock(
+        return_value=AsyncIter([
+            {"id": "c_1", "category": "top", "title": "Shirt"},
+            {"id": "c_2", "category": "bottom", "title": "Pants"},
+        ])
+    )
 
     with patch("app.api.v1.daily_proposals.get_db", return_value=mock_db), \
          patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_deduct, \

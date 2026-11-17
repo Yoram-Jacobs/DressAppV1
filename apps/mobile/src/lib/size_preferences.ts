@@ -26,40 +26,56 @@ export function deriveSizeFromPreferences(user: any, item: { category?: string; 
     cat === 'footwear' ||
     cat === 'shoes' ||
     cat === 'shoe' ||
-    /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper|footwear/.test(cat) ||
-    /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper|footwear/.test(blob)
+    cat === 'נעליים' ||
+    /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper|footwear|נעל/.test(cat) ||
+    /shoe|sneaker|boot|sandal|heel|loafer|slide|slipper|footwear|נעל/.test(blob)
   ) {
     return pick('shoe_size', 'shoe_size_eu', 'shoe_size_us', 'footwear_size');
   }
 
   // Underwear: bra for females / bra items, otherwise shirt size
-  if (cat === 'underwear' || /bra|bralette|lingerie/.test(blob)) {
-    if (/bra|bralette/.test(blob) || user?.sex === 'female' || user?.gender === 'female') {
+  if (cat === 'underwear' || cat === 'הלבשה תחתונה' || /bra|bralette|lingerie|חזי/.test(blob)) {
+    if (/bra|bralette|חזי/.test(blob) || user?.sex === 'female' || user?.gender === 'female') {
       return pick('bra_size', 'shirt_size');
     }
     return pick('shirt_size');
   }
 
   // Full-body / dress-coded garments → dress_size first, then shirt_size
-  if (cat === 'full body' || /dress|jumpsuit|gown|kaftan|robe/.test(blob)) {
+  if (
+    cat === 'full body' ||
+    cat === 'dress' ||
+    cat === 'dresses' ||
+    cat === 'שמלה' ||
+    cat === 'גוף מלא' ||
+    /dress|jumpsuit|gown|kaftan|robe|שמלה/.test(blob)
+  ) {
     return pick('dress_size', 'shirt_size');
   }
 
   // Skirts: dress_size or pants_size or shirt_size
-  if (/skirt/.test(blob)) {
+  if (cat === 'skirt' || cat === 'חצאית' || /skirt|חצאית/.test(blob)) {
     return pick('dress_size', 'pants_size', 'shirt_size');
   }
 
   // Bottoms (pants, jeans, shorts, …)
-  if (cat === 'bottom' || /pants|jeans|trouser|short|legging/.test(blob)) {
+  if (
+    cat === 'bottom' ||
+    cat === 'bottoms' ||
+    cat === 'מכנסיים' ||
+    /pants|jeans|trouser|short|legging|מכנסי|ג'?ינס/.test(blob)
+  ) {
     return pick('pants_size');
   }
 
   // Default: top / outerwear
   if (
     cat === 'top' ||
+    cat === 'tops' ||
     cat === 'outerwear' ||
-    /shirt|tee|t-shirt|blouse|sweater|hoodie|jacket|coat|cardigan|blazer/.test(blob)
+    cat === 'חלק עליון' ||
+    cat === 'עליונית' ||
+    /shirt|tee|t-shirt|blouse|sweater|hoodie|jacket|coat|cardigan|blazer|חולצ|סוודר|ז'?קט|מעיל/.test(blob)
   ) {
     return pick('shirt_size');
   }

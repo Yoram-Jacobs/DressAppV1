@@ -23,17 +23,17 @@ import sys
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingRegressor
+import sklearn
+from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import train_test_split
-from sklearn.multioutput import MultiOutputRegressor
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger("train_body_model")
@@ -178,40 +178,33 @@ def prepare_dataset(raw: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return X, y
 
 
+class GenderedRidgeModel:
+    """Thin wrapper routing predict(df) to per-gender StandardScaler + Ridge pipelines."""
+
+    def __init__(self, models: dict[str, Pipeline]) -> None:
+        self.models = models
+
+    def predict(self, X_df: pd.DataFrame) -> np.ndarray:
+        out = np.zeros((len(X_df), len(TARGET_NAMES_UI)), dtype=float)
+        genders = X_df["gender"].astype(str).str.lower().str.strip()
+        for sex, mdl in self.models.items():
+            mask = (genders == sex).values
+            if np.any(mask):
+                out[mask] = mdl.predict(X_df.loc[mask, FEATURE_NAMES_UI])
+        return out
+
+
 def build_pipeline() -> Pipeline:
-    """Build a scikit-learn Pipeline with preprocessing + multi-output GBR."""
-
-    # Column transformer: scale numeric features, ordinal-encode gender
-    numeric_features = FEATURE_NAMES_UI  # height, weight, waist, foot_length
-    categorical_features = ["gender"]
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", StandardScaler(), numeric_features),
-            ("cat", OrdinalEncoder(categories=[["female", "male"]]), categorical_features),
-        ],
-        remainder="drop",
-    )
-
-    model = MultiOutputRegressor(
-        GradientBoostingRegressor(
-            n_estimators=300,
-            max_depth=5,
-            learning_rate=0.05,
-            subsample=0.8,
-            random_state=42,
-        )
-    )
-
+    """Build a single-gender StandardScaler + Ridge(alpha=5.0) regression pipeline."""
     return Pipeline([
-        ("preprocessor", preprocessor),
-        ("model", model),
+        ("scaler", StandardScaler()),
+        ("model", Ridge(alpha=5.0)),
     ])
 
 
-def evaluate(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.DataFrame) -> dict:
+def evaluate(model_bundle: Any, X_test: pd.DataFrame, y_test: pd.DataFrame) -> dict:
     """Compute per-target MAE (in cm) and print a summary table."""
-    y_pred = pipeline.predict(X_test)
+    y_pred = model_bundle.predict(X_test)
     results = {}
 
     print("\n" + "=" * 60)
@@ -249,25 +242,43 @@ def main() -> None:
     )
     log.info("Train: %d, Test: %d", len(X_train), len(X_test))
 
-    # ── 4. Train ──
-    log.info("Step 4/5 — Training MultiOutput GBR pipeline …")
-    pipeline = build_pipeline()
-    pipeline.fit(X_train, y_train)
+    # ── 4. Train per-gender regularized Ridge pipelines ──
+    log.info("Step 4/5 — Training per-gender Ridge(alpha=5.0) pipelines (sklearn %s) …", sklearn.__version__)
+    models: dict[str, Pipeline] = {}
+    for sex in ("female", "male"):
+        mask = (X_train["gender"] == sex).values
+        pipe = build_pipeline()
+        pipe.fit(X_train.loc[mask, FEATURE_NAMES_UI], y_train.loc[mask])
+        models[sex] = pipe
+    predictor_obj = GenderedRidgeModel(models)
     log.info("Training complete.")
 
     # ── 5. Evaluate ──
     log.info("Step 5/5 — Evaluating on held-out test set …")
-    mae_scores = evaluate(pipeline, X_test, y_test)
+    mae_train = evaluate(predictor_obj, X_train, y_train)
+    mae_scores = evaluate(predictor_obj, X_test, y_test)
+    overfit_gap = round(
+        float(np.mean([(mae_scores[k] - mae_train[k]) / max(1e-6, mae_train[k]) * 100.0 for k in TARGET_NAMES_UI])),
+        2,
+    )
 
-    # ── 6. Export ──
+    # ── 6. Export plain dict of sklearn Pipelines (zero custom pickle classes needed) ──
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     model_path = MODEL_DIR / "body_predictor.joblib"
-    joblib.dump(pipeline, model_path, compress=3)
-    log.info("Model saved → %s  (%.1f MB)", model_path, model_path.stat().st_size / 1e6)
+    artifact = {
+        "model_version": "ansur2-gender-ridge-v2",
+        "sklearn_version": sklearn.__version__,
+        "feature_names": FEATURE_NAMES_UI,
+        "target_names": TARGET_NAMES_UI,
+        "models": models,
+    }
+    joblib.dump(artifact, model_path, compress=3)
+    log.info("Model saved → %s  (%.1f KB)", model_path, model_path.stat().st_size / 1024)
 
     # Save metadata
     metadata = {
-        "model_version": "ansur2-gbr-v1",
+        "model_version": "ansur2-gender-ridge-v2",
+        "sklearn_version": sklearn.__version__,
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "dataset": "ANSUR II (2012) — US Army Anthropometric Survey",
         "n_train": len(X_train),
@@ -275,12 +286,11 @@ def main() -> None:
         "features": FEATURE_NAMES_UI + ["gender"],
         "targets": TARGET_NAMES_UI,
         "mae_scores_cm": mae_scores,
-        "model_type": "MultiOutputRegressor(GradientBoostingRegressor)",
+        "overfit_gap_pct": overfit_gap,
+        "model_type": "PerGenderPipeline(StandardScaler, Ridge(alpha=5.0))",
         "hyperparameters": {
-            "n_estimators": 300,
-            "max_depth": 5,
-            "learning_rate": 0.05,
-            "subsample": 0.8,
+            "alpha": 5.0,
+            "per_gender_stratified": True,
         },
     }
     meta_path = MODEL_DIR / "model_metadata.json"
@@ -293,7 +303,7 @@ def main() -> None:
         "height": 170.0, "weight": 64.0, "waist": 84.0,
         "foot_length": 23.5, "gender": "female",
     }])
-    pred = pipeline.predict(test_input)[0]
+    pred = predictor_obj.predict(test_input)[0]
     for name, val in zip(TARGET_NAMES_UI, pred):
         print(f"  {name:>12s}: {val:.1f} cm")
     print()

@@ -526,15 +526,17 @@ async def use_credits(
         )
         
         # Log each expenditure as a token_usage record
-        from app.services.token_meter import TokenMeter, Provider, OperationType
+        from app.services.credit_manager import bind_usage_context
+        from app.services.token_meter import TokenMeter
         meter = TokenMeter(user["id"], request.operation)
-        meter.input_tokens = 0  # Not tracked for spend-only operations
+        meter.input_tokens = 0
         meter.output_tokens = 0
-        meter.provider = "N/A"
+        meter.provider = "system"
         meter.credits_consumed = request.required_credits
-        meter.credit_type_used = "free" if any(d["type"]=="free" for d in spent_details) else "paid"
-        
-        await meter._save_token_usage(0, 0)
+        meter.credit_type_used = "free" if any(d["type"] == "free" for d in spent_details) else "paid"
+
+        await meter._save_token_usage(0, 0, db_connection=db)
+        bind_usage_context(user["id"], request.operation, usage_id=meter.id, db=db)
         
         return {
             "success": True,
