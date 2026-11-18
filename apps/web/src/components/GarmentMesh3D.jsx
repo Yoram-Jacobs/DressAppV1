@@ -168,7 +168,7 @@ export function inferRoleFromName(title) {
   if (/(?:\b(?:glasses|sunglasses|eyewear)\b|(?:^|[^\p{L}\p{N}])[הו]?משקפ)/iu.test(text)) return 'glasses';
   if (/(?:\b(?:bags?|purse|tote|backpack|handbag|satchel|crossbody)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:תיק|ארנק))/iu.test(text)) return 'bag';
   if (/(?:\b(?:wristwatch|smartwatch|watch|watches|timepiece|bracelet|bracelets|bangle)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:שעון\s+יד|שעון|צמיד))/iu.test(text)) return 'watch';
-  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|(?:^|[^\p{L}\p{N}])[הו]?(?:עניבה|עניבת|פפיון|שרשרת))/iu.test(text)) return 'necktie';
+  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker|scarf|scarves|shawl|stole|pashmina)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|(?:^|[^\p{L}\p{N}])[הו]?(?:עניבה|עניבת|פפיון|שרשרת|צעיף|צעיפים|שאל))/iu.test(text)) return 'necktie';
   if (/(?:\b(?:belts?)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:חגורה|חגורת))/iu.test(text) && !/\bbelt\s*(?:bag|loop)\b/i.test(text)) {
     if (/(?:\b(?:trench|coat|jacket|blazer|dress|pants|trousers|shirt)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:מעיל|טרנץ|שמלה|מכנס|חולצה))/iu.test(text)) return null;
     return 'belt';
@@ -216,7 +216,7 @@ function normalizeDeclaredGarmentRole(role, category, title) {
   if (/(?:\b(?:wristwatch|smartwatch|watch|watches|timepiece|bracelet|bracelets|bangle)\b|(?:^|[^\p{L}\p{N}])(?:שעון יד|שעון|צמיד|ساعة|часы)(?=$|[^\p{L}\p{N}])|\b(?:montre|uhr|reloj|orologio)\b|手表|腕表|腕時計)/iu.test(text)) {
     return 'watch';
   }
-  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker|neck\s*scarf)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|(?:^|[^\p{L}\p{N}])(?:עניבה|עניבת|פפיון|שרשרת|ربطة عنق|قلادة|галстук|ожерелье)(?=$|[^\p{L}\p{N}])|\b(?:cravate|collier|krawatte|halskette|corbata|collar|cravatta|collana)\b|领带|项链|ネクタイ|ネックレス)/iu.test(text)) {
+  if (/(?:\b(?:necktie|bow\s*tie|bowtie|cravat|necklace|pendant|choker|neck\s*scarf|scarf|scarves|shawl|stole|pashmina)\b|\btie\b(?!\s*(?:dye|front|waist|belt|up|shoe))|(?:^|[^\p{L}\p{N}])(?:עניבה|עניבת|פפיון|שרשרת|צעיף|צעיפים|שאל|ושאל|ربطة عنق|قلادة|وشاح|галстук|ожерелье|шарф)(?=$|[^\p{L}\p{N}])|\b(?:cravate|collier|krawatte|halskette|corbata|collar|cravatta|collana|écharpe|echarpe|bufanda|schal|sciarpa)\b|领带|项链|围巾|ネクタイ|ネックレス|マフラー)/iu.test(text)) {
     return 'necktie';
   }
   const hasCoreClothingKeywords = /(?:\b(?:outerwear|jacket|jackets|coat|coats|blazer|blazers|cardigan|parka|overcoat|trench|windbreaker|bomber|shrug|bolero|dress|dresses|gown|jumpsuit|romper|pants|jeans|trousers|shorts|skirt|skirts|leggings|top|tops|shirt|shirts|blouse|sweater|hoodie|tee|tees|hat|cap|headwear|beanie|bandana)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:מעיל|ז['’]קט|ג['’]קט|בלייזר|עליונית|קרדיגן|שמלה|שמלת|מכנסיים|מכנס|חצאית|שורטס|חולצה|חולצת|כובע)|(?:^|[^\p{L}\p{N}])[הו]?(?:קורטה|כורטה|קורטי|טוניקה)(?=$|[^\p{L}\p{N}]))/iu.test(text);
