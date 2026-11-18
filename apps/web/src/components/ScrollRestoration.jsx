@@ -3,35 +3,33 @@ import { useLocation } from 'react-router-dom';
 
 const SESSION_STORAGE_KEY = 'dressapp_scroll_positions';
 
-function loadPositions() {
-  const map = new Map();
-  if (typeof window === 'undefined') return map;
+if (typeof window !== 'undefined') {
+  if ('scrollRestoration' in window.history) {
+    window.history.scrollRestoration = 'manual';
+  }
   try {
-    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      Object.entries(parsed).forEach(([k, v]) => map.set(k, v));
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch {
+    /* ignore storage errors */
+  }
+}
+
+const scrollPositions = new Map();
+
+/**
+ * Clears all recorded scroll positions (e.g. when starting or ending an auth session)
+ * so the new session always starts at the top of every page.
+ */
+export function clearAllScrollPositions() {
+  scrollPositions.clear();
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      /* ignore storage errors */
     }
-  } catch {
-    /* ignore parse errors */
-  }
-  return map;
-}
-
-function persistPositions(map) {
-  if (typeof window === 'undefined') return;
-  try {
-    const obj = {};
-    map.forEach((v, k) => {
-      obj[k] = v;
-    });
-    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(obj));
-  } catch {
-    /* ignore storage quota errors */
   }
 }
-
-const scrollPositions = loadPositions();
 
 /**
  * Resets the recorded scroll position for a given route (e.g. when user taps the active tab)
@@ -40,7 +38,6 @@ const scrollPositions = loadPositions();
 export function resetRouteScrollPosition(pathname) {
   if (!pathname) return;
   scrollPositions.set(pathname, { x: 0, y: 0, mainY: 0 });
-  persistPositions(scrollPositions);
 }
 
 /**
@@ -52,13 +49,12 @@ export function resetRouteScrollPosition(pathname) {
 export function ScrollRestoration() {
   const location = useLocation();
   const prevKeyRef = useRef(location.key);
+  const isInitialMountRef = useRef(true);
   const locationRef = useRef(location);
   locationRef.current = location;
 
-  // Save current scroll position continuously & on unmount
+  // Save current scroll position continuously & on unmount (in-memory for current session only)
   useEffect(() => {
-    let saveTimeout = null;
-
     const recordScroll = () => {
       const loc = locationRef.current;
       const key = loc.pathname + (loc.search || '');
@@ -72,13 +68,6 @@ export function ScrollRestoration() {
       const pos = { x, y, mainY };
       scrollPositions.set(key, pos);
       scrollPositions.set(pathKey, pos);
-
-      if (!saveTimeout) {
-        saveTimeout = setTimeout(() => {
-          saveTimeout = null;
-          persistPositions(scrollPositions);
-        }, 300);
-      }
     };
 
     window.addEventListener('scroll', recordScroll, { passive: true });
@@ -89,7 +78,6 @@ export function ScrollRestoration() {
 
     return () => {
       recordScroll();
-      if (saveTimeout) clearTimeout(saveTimeout);
       window.removeEventListener('scroll', recordScroll);
       if (mainEl) {
         mainEl.removeEventListener('scroll', recordScroll);
@@ -101,6 +89,23 @@ export function ScrollRestoration() {
   useLayoutEffect(() => {
     const key = location.pathname + (location.search || '');
     const pathKey = location.pathname;
+
+    const applyScroll = (x, y, mainY = 0) => {
+      window.scrollTo({ left: x, top: y, behavior: 'instant' });
+      if (document.documentElement) document.documentElement.scrollTop = y;
+      if (document.body) document.body.scrollTop = y;
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) mainContent.scrollTop = mainY;
+    };
+
+    // Always start at the top on page refresh or initial session mount
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      applyScroll(0, 0, 0);
+      const rAF = requestAnimationFrame(() => applyScroll(0, 0, 0));
+      prevKeyRef.current = location.key;
+      return () => cancelAnimationFrame(rAF);
+    }
 
     // Rule 1: Anchor hash navigation
     if (location.hash) {
@@ -116,14 +121,6 @@ export function ScrollRestoration() {
     // Rule 2: Navigate to last position if available
     const saved = scrollPositions.get(key) || scrollPositions.get(pathKey);
     const hasLastPosition = saved && (saved.y > 0 || saved.x > 0 || (saved.mainY && saved.mainY > 0));
-
-    const applyScroll = (x, y, mainY = 0) => {
-      window.scrollTo({ left: x, top: y, behavior: 'instant' });
-      if (document.documentElement) document.documentElement.scrollTop = y;
-      if (document.body) document.body.scrollTop = y;
-      const mainContent = document.getElementById('main-content');
-      if (mainContent) mainContent.scrollTop = mainY;
-    };
 
     if (hasLastPosition) {
       applyScroll(saved.x || 0, saved.y || 0, saved.mainY || 0);

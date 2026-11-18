@@ -1,13 +1,23 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { api, tokenStore, userStore } from './api';
 import { API_BASE, getCsrfToken } from './api/client';
 import { useUniversalSync } from '../hooks/useUniversalSync';
+import { clearAllScrollPositions } from '../components/ScrollRestoration';
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => userStore.get());
   const [loading, setLoading] = useState(true);
+  const prevUserIdRef = useRef(user?.id ?? null);
+
+  useEffect(() => {
+    const nextUserId = user?.id ?? null;
+    if (prevUserIdRef.current !== nextUserId) {
+      prevUserIdRef.current = nextUserId;
+      clearAllScrollPositions();
+    }
+  }, [user?.id]);
 
   const handleUserUpdated = useCallback((updated) => {
     setUser(updated);
@@ -47,6 +57,7 @@ export function AuthProvider({ children }) {
       headers: csrf ? { 'X-CSRF-Token': csrf } : {},
     }).catch(() => {});
     tokenStore.clear();
+    clearAllScrollPositions();
     setUser(null);
   };
 
