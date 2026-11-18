@@ -3978,7 +3978,6 @@ function GarmentTemplateMeshInner({
         geo = applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
           minClearance: layerOffset + extraLayerOffset,
           includeArms: includeArmsForSlot,
-          rigidAnchor: rawSlot === 'headwear' || rawSlot === 'glasses',
           exactLowerBody: rawSlot === 'shoes' || (rawSlot === 'bottom' && !shellFit?.isSkirt),
         });
       } catch (e) {
