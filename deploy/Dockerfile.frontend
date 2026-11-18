@@ -18,8 +18,12 @@ WORKDIR /app
 # this is the full public URL; CRA expects it with scheme + host.
 ARG REACT_APP_BACKEND_URL=""
 ENV REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
+ARG REACT_APP_EXTENSION_ALLOWED_IDS=""
+ENV REACT_APP_EXTENSION_ALLOWED_IDS=${REACT_APP_EXTENSION_ALLOWED_IDS}
 # Disable CRA source-maps in the final bundle to shave ~30 % off size.
 ENV GENERATE_SOURCEMAP=false
+# Prevent inline webpack runtime script injection so strict non-inline CSP works without 'unsafe-inline'.
+ENV INLINE_RUNTIME_CHUNK=false
 # Tell CRA not to fail on lint warnings (treat warnings as warnings only).
 ENV CI=false
 

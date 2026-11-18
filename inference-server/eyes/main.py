@@ -1048,7 +1048,7 @@ async def predict(req: PredictIn) -> PredictOut:
 
 
 # ---- Multi-LoRA Management Endpoints --------------------------------
-@app.get("/v1/adapters")
+@app.get("/v1/adapters", dependencies=[Depends(_require_token)])
 async def get_adapters() -> dict[str, Any]:
     await _ensure_llama_ready()
     client: httpx.AsyncClient = app.state.client
@@ -1060,7 +1060,7 @@ async def get_adapters() -> dict[str, Any]:
     return {"adapters": adapters, "count": len(adapters)}
 
 
-@app.post("/v1/adapters/reload")
+@app.post("/v1/adapters/reload", dependencies=[Depends(_require_token)])
 async def reload_adapters() -> dict[str, Any]:
     log.info("Hot-reloading adapters requested via /v1/adapters/reload")
     await _ensure_llama_ready(force_respawn=True)
@@ -1071,7 +1071,7 @@ async def reload_adapters() -> dict[str, Any]:
     }
 
 
-@app.get("/lora-adapters")
+@app.get("/lora-adapters", dependencies=[Depends(_require_token)])
 async def proxy_get_lora_adapters() -> Any:
     await _ensure_llama_ready()
     client: httpx.AsyncClient = app.state.client
@@ -1079,12 +1079,15 @@ async def proxy_get_lora_adapters() -> Any:
     return r.json()
 
 
-@app.post("/lora-adapters")
+@app.post("/lora-adapters", dependencies=[Depends(_require_token)])
 async def proxy_post_lora_adapters(data: list[dict[str, Any]]) -> Any:
     await _ensure_llama_ready()
     client: httpx.AsyncClient = app.state.client
     r = await client.post(f"{LLAMA_BASE_URL}/lora-adapters", json=data, timeout=5.0)
     return r.json()
+
+
+_MAX_AUDIO_BYTES = 15 * 1024 * 1024
 
 
 @app.post(
@@ -1102,8 +1105,21 @@ async def transcribe(
             detail="Speech-to-Text is not supported directly by llama-server GGUF. "
                    "Provide GEMINI_API_KEY in the environment of dressapp-eyes to enable Gemini fallback transcription.",
         )
-    
-    audio_data = await file.read()
+
+    chunks: list[bytes] = []
+    total_bytes = 0
+    while True:
+        chunk = await file.read(65536)
+        if not chunk:
+            break
+        total_bytes += len(chunk)
+        if total_bytes > _MAX_AUDIO_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Audio upload exceeds maximum allowed size ({_MAX_AUDIO_BYTES // (1024 * 1024)} MB)",
+            )
+        chunks.append(chunk)
+    audio_data = b"".join(chunks)
     import base64
     b64_audio = base64.b64encode(audio_data).decode("utf-8")
     

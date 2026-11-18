@@ -339,13 +339,16 @@ async def capture_topup(
         .get("captures", [])
     )
     first_capture = captures[0] if captures and isinstance(captures[0], dict) else {}
-    capture_status = str(
-        first_capture.get("status") or captured.get("status") or ""
-    ).upper()
-    capture_id = first_capture.get("id")
-    payer_email = (captured.get("payer") or {}).get("email_address")
+    ok, capture_id, payer_email, _reason = paypal_client.verify_capture_result(
+        captured,
+        expected_amount_cents=int(topup.get("amount_cents") or 0),
+        expected_currency=str(topup.get("currency") or "USD"),
+        allow_mock=settings.allow_mock_payments(),
+    )
+    if not ok and not captures and first_capture == {} and captured.get("mock") and settings.allow_mock_payments():
+        ok = str(captured.get("status") or "").upper() == "COMPLETED"
 
-    new_status = "captured" if (capture_status == "COMPLETED" or captured.get("mock")) else "pending"
+    new_status = "captured" if ok else "pending"
     await db.credit_topups.update_one(
         {"id": topup_id},
         {
@@ -542,7 +545,7 @@ async def listing_buy_capture(
     if tx.get("status") == "paid":
         return {"ok": True, "already_captured": True, "transaction": tx}
 
-    topup = await db.atzmai_topups.find_one({"atzmai_payment_id": order_id})
+    topup = await db.atzmai_topups.find_one({"atzmai_payment_id": order_id, "user_id": user["id"]})
     if not topup:
         raise HTTPException(404, "Payment record not found")
 
@@ -551,23 +554,23 @@ async def listing_buy_capture(
     except paypal_client.PayPalError as exc:
         raise HTTPException(502, {"paypal_error": str(exc.body)}) from exc
 
-    is_captured = captured.get("status") == "COMPLETED" or captured.get("mock", False)
-    
+    is_captured, capture_id, _payer, reason = paypal_client.verify_capture_result(
+        captured,
+        expected_amount_cents=int(topup.get("amount_cents") or 0),
+        expected_currency=str(topup.get("currency") or "USD"),
+        allow_mock=settings.allow_mock_payments(),
+    )
+
     if is_captured:
         await db.atzmai_topups.update_one(
-            {"atzmai_payment_id": order_id},
+            {"atzmai_payment_id": order_id, "user_id": user["id"]},
             {"$set": {"status": "captured", "updated_at": _now_iso()}}
         )
 
     if not is_captured:
-        raise HTTPException(400, "Listing payment has not been captured yet")
+        raise HTTPException(400, f"Listing payment has not been captured yet ({reason})")
 
-    capture_id = (
-        (captured.get("purchase_units") or [{}])[0]
-        .get("payments", {})
-        .get("captures", [{}])[0]
-        .get("id")
-    ) or f"pay_cap_{uuid.uuid4().hex[:12]}"
+    capture_id = capture_id or f"pay_cap_{uuid.uuid4().hex[:12]}"
     
     await db.transactions.update_one(
         {"id": tx["id"]},
@@ -709,6 +712,8 @@ async def create_subscription_order(
     payload: SubscribeIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
+    from app.services.security_validator import validate_app_redirect_url
+
     tier = payload.tier
     if tier == "pro":
         tier = "manager"
@@ -720,36 +725,62 @@ async def create_subscription_order(
     # Pricing setup ($10/mo & $100/yr for Manager, $15/mo & $150/yr for Professional)
     prices = {
         "manager": {"monthly": 10.00, "yearly": 100.00},
-        "professional": {"monthly": 15.00, "yearly": 150.00}
+        "professional": {"monthly": 15.00, "yearly": 150.00},
     }
     amount = prices.get(tier, prices["manager"])[payload.plan_type]
+    amount_cents = int(round(amount * 100))
 
-    # Map pre-configured PayPal NCP hosted checkout links
-    ncp_urls = {
-        ("manager", "monthly"): "https://www.paypal.com/ncp/payment/CDSS5445B87P4",
-        ("manager", "yearly"): "https://www.paypal.com/ncp/payment/CZ7L985TNX7EA",
-        ("professional", "monthly"): "https://www.paypal.com/ncp/payment/F3WXF38MHU4YS",
-        ("professional", "yearly"): "https://www.paypal.com/ncp/payment/JC738F2H9FCNU",
-    }
-    
-    payment_url = ncp_urls.get((tier, payload.plan_type), ncp_urls[("manager", "monthly")])
-    
-    # Resolve callback and redirect URLs dynamically
-    redirect_url = payload.return_url or f"{settings.APP_PUBLIC_URL}/profile?sub_status=success"
-    
-    paypal_sub_id = f"ncp_{uuid.uuid4().hex[:14].upper()}"
+    validated_return = validate_app_redirect_url(payload.return_url, "return_url")
+    validated_cancel = validate_app_redirect_url(payload.cancel_url, "cancel_url")
+    redirect_url = validated_return or f"{settings.APP_PUBLIC_URL}/profile?sub_status=success"
+    cancel_url = validated_cancel or f"{settings.APP_PUBLIC_URL}/profile?sub_status=cancel"
 
-    # If mock mode, bypass real redirect for testing flow convenience
-    from app.services import paypal_client
-    if settings.PAYPAL_MOCK_MODE or not paypal_client.is_configured():
-        payment_url = f"{redirect_url}&token={paypal_sub_id}" if "?" in redirect_url else f"{redirect_url}?token={paypal_sub_id}"
+    sub_record_id = f"sub_{uuid.uuid4().hex[:16]}"
+    paypal_order_id = f"MOCK-SUB-{uuid.uuid4().hex[:12].upper()}"
+    payment_url = (
+        f"{redirect_url}&token={paypal_order_id}"
+        if "?" in redirect_url
+        else f"{redirect_url}?token={paypal_order_id}"
+    )
+
+    if not settings.allow_mock_payments():
+        if not paypal_client.has_real_credentials():
+            raise HTTPException(
+                503,
+                "PayPal is not configured for subscription checkout.",
+            )
+        try:
+            order = await paypal_client.create_order(
+                amount_cents=amount_cents,
+                currency="USD",
+                reference_id=f"sub:{tier}:{payload.plan_type}:{sub_record_id}",
+                description=f"DressApp {tier.title()} Plan ({payload.plan_type})",
+                return_url=redirect_url,
+                cancel_url=cancel_url,
+                custom_id=sub_record_id,
+            )
+            paypal_order_id = order["id"]
+            approve_href = None
+            for link in order.get("links", []):
+                if link.get("rel") == "approve":
+                    approve_href = link.get("href")
+                    break
+            if not approve_href:
+                raise HTTPException(502, "PayPal order did not return an approval link")
+            payment_url = approve_href
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.error("PayPal create_order failed for subscription: %s", exc)
+            raise HTTPException(502, f"PayPal error: {exc}") from exc
 
     db = get_db()
     topup_doc = {
-        "id": f"sub_{uuid.uuid4().hex[:16]}",
-        "atzmai_payment_id": paypal_sub_id,
+        "id": sub_record_id,
+        "atzmai_payment_id": paypal_order_id,
+        "paypal_order_id": paypal_order_id,
         "user_id": user["id"],
-        "amount_cents": int(amount * 100),
+        "amount_cents": amount_cents,
         "currency": "USD",
         "type": "subscription",
         "tier": tier,
@@ -757,13 +788,13 @@ async def create_subscription_order(
         "status": "pending",
         "payment_url": payment_url,
         "created_at": _now_iso(),
-        "updated_at": _now_iso()
+        "updated_at": _now_iso(),
     }
-    
+
     await db.atzmai_topups.insert_one(topup_doc)
-    
+
     return {
-        "subscription_id": paypal_sub_id,
+        "subscription_id": paypal_order_id,
         "status": "APPROVAL_PENDING",
         "approve_url": payment_url,
     }
@@ -775,23 +806,71 @@ async def capture_subscription(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     from datetime import datetime, timezone, timedelta
-    
+
     db = get_db()
-    topup = await db.atzmai_topups.find_one({"atzmai_payment_id": subscription_id})
+    topup = await db.atzmai_topups.find_one(
+        {"atzmai_payment_id": subscription_id, "user_id": user["id"]}
+    )
     if not topup:
         raise HTTPException(404, "Subscription transaction not found")
-        
-    # In mock mode or hosted NCP checkout, auto-capture it
-    is_captured = topup.get("status") == "captured" or settings.PAYPAL_MOCK_MODE
-    
-    if is_captured and topup.get("status") != "captured":
-        await db.atzmai_topups.update_one(
-            {"atzmai_payment_id": subscription_id},
-            {"$set": {"status": "captured", "updated_at": _now_iso()}}
+
+    if topup.get("status") == "captured":
+        existing_sub = (await db.users.find_one({"id": user["id"]}, {"_id": 0, "subscription": 1}) or {}).get("subscription") or {}
+        return {"ok": True, "already_captured": True, "subscription": existing_sub}
+
+    is_mock_order = subscription_id.startswith("MOCK-") or subscription_id.startswith("mock_") or subscription_id.startswith("ncp_")
+    if is_mock_order and not settings.allow_mock_payments():
+        raise HTTPException(403, "Unverified or mock subscription tokens are disabled outside dev/test")
+
+    # Atomically claim capture lock to prevent concurrent duplicate provisioning
+    lock_res = await db.atzmai_topups.update_one(
+        {"atzmai_payment_id": subscription_id, "user_id": user["id"], "status": {"$in": ["pending", "failed"]}},
+        {"$set": {"status": "capturing", "updated_at": _now_iso()}},
+    )
+    if getattr(lock_res, "modified_count", 1) == 0:
+        raise HTTPException(409, "Subscription capture is already in progress")
+
+    capture_id: str | None = None
+    if not settings.allow_mock_payments():
+        if not paypal_client.has_real_credentials():
+            await db.atzmai_topups.update_one(
+                {"atzmai_payment_id": subscription_id, "user_id": user["id"]},
+                {"$set": {"status": "failed", "updated_at": _now_iso()}},
+            )
+            raise HTTPException(503, "PayPal is not configured to capture subscription")
+        try:
+            captured = await paypal_client.capture_order(subscription_id)
+        except Exception as exc:
+            await db.atzmai_topups.update_one(
+                {"atzmai_payment_id": subscription_id, "user_id": user["id"]},
+                {"$set": {"status": "failed", "updated_at": _now_iso()}},
+            )
+            raise HTTPException(502, f"PayPal capture failed: {exc}") from exc
+
+        ok, capture_id, _payer, reason = paypal_client.verify_capture_result(
+            captured,
+            expected_amount_cents=int(topup.get("amount_cents") or 0),
+            expected_currency=str(topup.get("currency") or "USD"),
+            allow_mock=False,
         )
-        
-    if not is_captured:
-        raise HTTPException(400, "Subscription payment has not been captured yet.")
+        if not ok:
+            await db.atzmai_topups.update_one(
+                {"atzmai_payment_id": subscription_id, "user_id": user["id"]},
+                {"$set": {"status": "pending", "updated_at": _now_iso()}},
+            )
+            raise HTTPException(402, f"Subscription payment has not been captured ({reason})")
+
+    await db.atzmai_topups.update_one(
+        {"atzmai_payment_id": subscription_id, "user_id": user["id"]},
+        {
+            "$set": {
+                "status": "captured",
+                "paypal_capture_id": capture_id,
+                "captured_at": _now_iso(),
+                "updated_at": _now_iso(),
+            }
+        },
+    )
         
     duration_days = 365 if topup["plan_type"] == "yearly" else 30
     expires_at = (datetime.now(timezone.utc) + timedelta(days=duration_days)).isoformat()
@@ -826,8 +905,10 @@ async def capture_subscription(
         },
     )
 
-    # Immediately provision the 100 non-cumulative monthly AI credits
+    # Immediately provision the 100 non-cumulative monthly AI credits & restore archived items
+    from app.services.billing_service import restore_plan_demotion_items
     from app.services.credit_manager import ensure_monthly_subscription_credits
+    restored_count = await restore_plan_demotion_items(db, user["id"])
     user_record = await db.users.find_one({"id": user["id"]})
     if user_record:
         await ensure_monthly_subscription_credits(user_record, db)
@@ -846,8 +927,8 @@ async def capture_subscription(
             )
         except Exception as e:
             logger.error(f"Failed to dispatch thank-you email: {e}")
-            
-    return {"ok": True, "subscription": sub_doc}
+
+    return {"ok": True, "subscription": sub_doc, "restored_closet_items_count": restored_count}
 
 
 @paypal_router.post("/subscribe/cancel")

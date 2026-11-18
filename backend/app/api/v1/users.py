@@ -10,7 +10,14 @@ from pydantic import BaseModel, ConfigDict
 
 from app.db.database import get_db
 from app.models.schemas import CulturalContext, StyleProfile
-from app.services.auth import get_current_user, get_current_user_optional, verify_password
+from app.services.auth import (
+    create_scoped_token,
+    encrypt_api_key,
+    get_current_user,
+    get_current_user_optional,
+    sanitize_user_doc,
+    verify_password,
+)
 from app.services.avatar_service import calculate_shape_parameters
 
 logger = logging.getLogger(__name__)
@@ -90,7 +97,7 @@ class MigrationFlagIn(BaseModel):
 
 @router.get("/me")
 async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
-    safe = {k: v for k, v in user.items() if k not in {"password_hash", "google_oauth"}}
+    safe = sanitize_user_doc(user)
     safe["google_connected"] = bool(user.get("google_oauth"))
     safe["has_password"] = bool(user.get("password_hash"))
     
@@ -206,10 +213,11 @@ async def update_migration_flag(
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     if flag == "Migrate":
+        encrypted_creds = encrypt_api_key(payload.credentials) if payload.credentials else None
         update_data["migration_details"] = {
             "app_name": payload.app_name or "Competitor App",
             "app_url": payload.app_url,
-            "credentials": payload.credentials,
+            "credentials": encrypted_creds,
             "notes": payload.notes,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -217,6 +225,13 @@ async def update_migration_flag(
     from app.services.sync_service import broadcast_sync_event
     await broadcast_sync_event(user["id"], "profile_updated")
     return {"status": "ok", "migration_flag": flag}
+
+
+@router.post("/migration-token")
+async def issue_migration_token(user: dict = Depends(get_current_user)) -> dict[str, Any]:
+    """Mint a short-lived (15 min), scope-restricted token solely for /closet/migration/* uploads."""
+    token = create_scoped_token(user["id"], scope="migration_upload", expires_minutes=15)
+    return {"token": token, "expires_in": 900, "scope": "migration_upload"}
 
 
 @router.patch("/me")
@@ -367,11 +382,23 @@ async def update_me(
             "custom_keys": merged_keys,
             "selected_provider": ai_config.get("selected_provider") or existing_config.get("selected_provider") or "dressapp",
             "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "Eyes v1",
-            "current_credits": ai_config.get("current_credits", existing_config.get("current_credits", 1000)),
-            "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
+            "current_credits": existing_config.get("current_credits", 1000),
+            "credits_used_this_month": existing_config.get("credits_used_this_month", 0),
         }
 
     from app.services.canonical import canonicalize_measurements
+
+    _PRIVILEGED_PROF_KEYS = {"approval_status", "verified", "is_verified", "approved_by", "approved_at"}
+    if "professional" in patch and isinstance(patch["professional"], dict):
+        prof_patch = {k: v for k, v in patch["professional"].items() if k not in _PRIVILEGED_PROF_KEYS}
+        existing_prof = user.get("professional") if isinstance(user.get("professional"), dict) else {}
+        current_status = existing_prof.get("approval_status")
+        if current_status == "hidden":
+            # Prevent hidden professionals from self-reinstating.
+            prof_patch["approval_status"] = "hidden"
+        elif current_status != "approved" and (prof_patch.get("is_professional") or existing_prof.get("is_professional")):
+            prof_patch["approval_status"] = "pending"
+        patch["professional"] = prof_patch
 
     for k, v in patch.items():
         if k == "ai_configuration":
@@ -526,10 +553,7 @@ async def update_me(
         await broadcast_sync_event(user["id"], "profile_updated")
 
     updated = await db.users.find_one({"id": user["id"]}, {"_id": 0})
-    if updated is not None:
-        updated.pop("password_hash", None)
-        updated.pop("google_oauth", None)
-    return updated or {}
+    return sanitize_user_doc(updated) if updated is not None else {}
 
 
 class DeleteAccountIn(BaseModel):

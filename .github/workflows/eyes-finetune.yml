@@ -327,12 +327,18 @@ jobs:
 
       - name: Setup SSH Key
         if: env.VPS_SSH_KEY != ''
+        env:
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf "%s\n" "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -z "$VPS_KNOWN_HOSTS" ]; then
+            echo "::error::VPS_KNOWN_HOSTS secret must be configured to verify host identity safely."
+            exit 1
+          fi
+          printf "%s\n" "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
           echo "SSH Key Type & Fingerprint:"
           ssh-keygen -l -f ~/.ssh/deploy_key || echo "::warning::Invalid private key format in secrets"
@@ -342,8 +348,8 @@ jobs:
       - name: Deploy Checkpoint to Production VPS
         if: env.VPS_SSH_KEY != ''
         run: |
-          SSH_CMD="ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes"
-          SCP_CMD="scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes"
+          SSH_CMD="ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes"
+          SCP_CMD="scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes"
 
           echo "Testing SSH connectivity to Hetzner VPS ($VPS_HOST)..."
           $SSH_CMD root@$VPS_HOST "echo 'Connected successfully to Hetzner VPS host: ' \$(hostname)"

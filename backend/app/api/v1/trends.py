@@ -336,11 +336,9 @@ def _check_proxy_rate_limit(client_key: str) -> bool:
 def _proxy_client_key(request: Request, user: dict | None) -> str:
     if user and user.get("id"):
         return f"u:{user['id']}"
-    forwarded = request.headers.get("x-forwarded-for") or ""
-    raw_ip = forwarded.split(",")[0].strip() if forwarded else ""
-    if not raw_ip and request.client:
-        raw_ip = request.client.host or ""
-    return f"ip:{raw_ip or 'anon'}"
+    from app.services.security_validator import get_client_ip
+
+    return f"ip:{get_client_ip(request) or 'anon'}"
 
 
 def _verify_image_proxy_sig(url: str, sig: str | None) -> bool:

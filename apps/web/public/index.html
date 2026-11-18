@@ -35,32 +35,7 @@
     <!-- font-awesome-icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
-    <script>
-        /*
-         * Suppress the harmless ``DataCloneError`` thrown by some
-         * browser extensions when they try to deep-clone the global
-         * ``performance`` object across worlds (the
-         * ``PerformanceServerTiming`` interface contains
-         * non-cloneable fields). Without this, the React error
-         * boundary would log a noisy stack trace on every page
-         * load.
-         */
-        window.addEventListener(
-            "error",
-            function (e) {
-                if (
-                    e.error instanceof DOMException &&
-                    e.error.name === "DataCloneError" &&
-                    e.message &&
-                    e.message.includes("PerformanceServerTiming")
-                ) {
-                    e.stopImmediatePropagation();
-                    e.preventDefault();
-                }
-            },
-            true,
-        );
-    </script>
+    <script src="/perf-guard.js"></script>
 </head>
 
 <body>

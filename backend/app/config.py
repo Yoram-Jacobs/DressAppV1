@@ -25,6 +25,33 @@ _LEGACY_DEFAULT_JWT_SECRET = "dressapp_jwt_secret_xK9mQ2nP4vR7sT8uW"
 _EPHEMERAL_DEV_JWT_SECRET: str | None = None
 
 
+def _current_app_env() -> str:
+    return (
+        os.environ.get("APP_ENV")
+        or os.environ.get("ENVIRONMENT")
+        or os.environ.get("DRESSAPP_ENV")
+        or ""
+    ).strip().lower()
+
+
+def _is_test_process() -> bool:
+    return "pytest" in sys.modules or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+
+
+def _compute_is_prod_like(app_env: str, pub_url: str) -> bool:
+    env = (app_env or "").strip().lower()
+    if env in ("production", "prod", "staging"):
+        return True
+    if env in ("dev", "development", "local", "test"):
+        return False
+    pub = (pub_url or "").strip().lower()
+    return (
+        pub.startswith("https://")
+        and "localhost" not in pub
+        and "127.0.0.1" not in pub
+    )
+
+
 def _resolve_jwt_secret() -> str:
     """Resolve JWT signing secret, failing closed in production when unset or default."""
     global _EPHEMERAL_DEV_JWT_SECRET
@@ -32,21 +59,10 @@ def _resolve_jwt_secret() -> str:
     if raw and raw != _LEGACY_DEFAULT_JWT_SECRET:
         return raw
 
-    app_env = (
-        os.environ.get("APP_ENV")
-        or os.environ.get("ENVIRONMENT")
-        or os.environ.get("DRESSAPP_ENV")
-        or ""
-    ).strip().lower()
-    pub_url = os.environ.get("APP_PUBLIC_URL", "http://localhost:3000").strip().lower()
-    is_test = "pytest" in sys.modules or bool(os.environ.get("PYTEST_CURRENT_TEST"))
-    is_prod_like = app_env in ("production", "prod", "staging") or (
-        pub_url.startswith("https://")
-        and "localhost" not in pub_url
-        and "127.0.0.1" not in pub_url
-        and app_env not in ("dev", "development", "local", "test")
-    )
-    if is_prod_like and not is_test:
+    app_env = _current_app_env()
+    pub_url = os.environ.get("APP_PUBLIC_URL", "http://localhost:3000")
+    is_prod_like = _compute_is_prod_like(app_env, pub_url)
+    if is_prod_like and not _is_test_process():
         raise RuntimeError(
             "CRITICAL SECURITY ERROR: JWT_SECRET must be set to a strong unique secret "
             "and cannot use the insecure repository default in production/staging."
@@ -92,25 +108,43 @@ _LIGHTWEIGHT_DEPLOY = os.environ.get("LIGHTWEIGHT_DEPLOY", "").lower() == "true"
 
 
 _IS_DEV_OR_TEST = (
-    (
-        os.environ.get("APP_ENV")
-        or os.environ.get("ENVIRONMENT")
-        or os.environ.get("DRESSAPP_ENV")
-        or ""
-    )
-    .strip()
-    .lower()
-    in ("dev", "development", "local", "test")
-    or "pytest" in sys.modules
-    or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+    _current_app_env() in ("dev", "development", "local", "test")
+    or _is_test_process()
 )
 
 
 class Settings:
     # --- infra ---
+    APP_ENV: str = _current_app_env() or ("test" if _is_test_process() else "development")
     MONGO_URL: str = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
     DB_NAME: str = os.environ.get("DB_NAME", "dressapp")
     APP_PUBLIC_URL: str = os.environ.get("APP_PUBLIC_URL", "http://localhost:3000").rstrip("/")
+
+    def __init__(self) -> None:
+        if self.is_prod_like and not _is_test_process():
+            if self.PAYPAL_MOCK_MODE or self.PAYPAL_SKIP_WEBHOOK_VERIFY:
+                raise RuntimeError(
+                    "CRITICAL SECURITY ERROR: PAYPAL_MOCK_MODE and PAYPAL_SKIP_WEBHOOK_VERIFY "
+                    "cannot be enabled in production/staging."
+                )
+
+    @property
+    def is_prod_like(self) -> bool:
+        return _compute_is_prod_like(self.APP_ENV, self.APP_PUBLIC_URL)
+
+    @property
+    def is_dev_or_test(self) -> bool:
+        env = (self.APP_ENV or "").strip().lower()
+        if env in ("production", "prod", "staging"):
+            return False
+        if env in ("dev", "development", "local", "test"):
+            return True
+        if _is_test_process():
+            return True
+        return not self.is_prod_like
+
+    def allow_mock_payments(self) -> bool:
+        return bool(self.PAYPAL_MOCK_MODE and self.is_dev_or_test)
     VAPID_PUBLIC_KEY: str = os.environ.get("VAPID_PUBLIC_KEY", "")
     VAPID_PRIVATE_KEY: str = os.environ.get("VAPID_PRIVATE_KEY", "")
     VAPID_CLAIM_EMAIL: str = os.environ.get("VAPID_CLAIM_EMAIL", "info@dressapp.co")

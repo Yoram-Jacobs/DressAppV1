@@ -39,14 +39,33 @@ export function parseMarkdown(mdText) {
         parts.push(<bdi key={keyIdx++}><code dir="ltr" className="px-1.5 py-0.5 rounded bg-secondary/50 text-xs font-mono">{matchText.slice(1, -1)}</code></bdi>);
       } else if (matchText.startsWith('[') && matchText.includes('](')) {
         const label = matchText.substring(1, matchText.indexOf(']'));
-        const href = matchText.substring(matchText.indexOf('](') + 2, matchText.length - 1);
-        parts.push(
-          <bdi key={keyIdx++}>
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-              {label}
-            </a>
-          </bdi>
-        );
+        const rawHref = matchText.substring(matchText.indexOf('](') + 2, matchText.length - 1).trim();
+        let safeHref = null;
+        if (rawHref.startsWith('/') && !rawHref.startsWith('//')) {
+          safeHref = rawHref;
+        } else if (rawHref.startsWith('#')) {
+          safeHref = rawHref;
+        } else {
+          try {
+            const parsed = new URL(rawHref);
+            if (['http:', 'https:', 'mailto:'].includes(parsed.protocol)) {
+              safeHref = parsed.href;
+            }
+          } catch {
+            safeHref = null;
+          }
+        }
+        if (safeHref) {
+          parts.push(
+            <bdi key={keyIdx++}>
+              <a href={safeHref} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                {label}
+              </a>
+            </bdi>
+          );
+        } else {
+          parts.push(<span key={keyIdx++}>{label}</span>);
+        }
       }
 
       lastIndex = regex.lastIndex;

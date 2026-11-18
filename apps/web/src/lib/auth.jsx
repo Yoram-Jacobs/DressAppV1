@@ -1,12 +1,13 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { api, tokenStore, userStore } from './api';
+import { API_BASE, getCsrfToken } from './api/client';
 import { useUniversalSync } from '../hooks/useUniversalSync';
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => userStore.get());
-  const [loading, setLoading] = useState(Boolean(tokenStore.get()) && !userStore.get());
+  const [loading, setLoading] = useState(true);
 
   const handleUserUpdated = useCallback((updated) => {
     setUser(updated);
@@ -16,10 +17,6 @@ export function AuthProvider({ children }) {
   useUniversalSync(user, handleUserUpdated);
 
   const refresh = useCallback(async () => {
-    if (!tokenStore.get()) {
-      setUser(null);
-      return null;
-    }
     try {
       const me = await api.getMe();
       setUser(me);
@@ -33,14 +30,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (tokenStore.get()) {
-      refresh().finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    // Scrub any legacy JWT persisted in localStorage before Wave 2 cookie migration.
+    try {
+      localStorage.removeItem('dressapp.token');
+    } catch {
+      /* noop */
     }
+    refresh().finally(() => setLoading(false));
   }, [refresh]);
 
   const logout = () => {
+    const csrf = getCsrfToken();
+    fetch(`${API_BASE}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: csrf ? { 'X-CSRF-Token': csrf } : {},
+    }).catch(() => {});
     tokenStore.clear();
     setUser(null);
   };

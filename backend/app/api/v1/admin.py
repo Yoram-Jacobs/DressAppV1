@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -27,7 +28,7 @@ from pydantic import BaseModel, Field
 from app.config import settings
 from app.db.database import get_db
 from app.services import provider_activity
-from app.services.auth import require_admin
+from app.services.auth import require_admin, sanitize_user_doc
 from app.services.trend_scout import latest_trend_cards, run_trend_scout
 
 logger = logging.getLogger(__name__)
@@ -732,46 +733,45 @@ async def admin_list_professionals(
         .skip(skip)
         .limit(limit)
     )
-    items = [doc async for doc in cursor]
+    items = [sanitize_user_doc(doc) async for doc in cursor]
     return {"items": items, "total": total, "skip": skip, "limit": limit}
+
+
+async def _set_professional_approval(user_id: str, approval_status: str) -> dict[str, Any]:
+    db = get_db()
+    res = await db.users.update_one(
+        {"id": user_id, "professional.is_professional": True},
+        {
+            "$set": {
+                "professional.approval_status": approval_status,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
+    )
+    if not res.matched_count:
+        raise HTTPException(404, "Professional not found")
+    return {"status": "ok", "user_id": user_id, "approval_status": approval_status}
 
 
 @router.post("/professionals/{user_id}/hide")
 async def admin_hide_professional(
     user_id: str, _: dict = Depends(require_admin)
 ) -> dict[str, Any]:
-    db = get_db()
-    res = await db.users.update_one(
-        {"id": user_id, "professional.is_professional": True},
-        {
-            "$set": {
-                "professional.approval_status": "hidden",
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }
-        },
-    )
-    if not res.matched_count:
-        raise HTTPException(404, "Professional not found")
-    return {"status": "ok", "user_id": user_id, "approval_status": "hidden"}
+    return await _set_professional_approval(user_id, "hidden")
 
 
 @router.post("/professionals/{user_id}/unhide")
 async def admin_unhide_professional(
     user_id: str, _: dict = Depends(require_admin)
 ) -> dict[str, Any]:
-    db = get_db()
-    res = await db.users.update_one(
-        {"id": user_id, "professional.is_professional": True},
-        {
-            "$set": {
-                "professional.approval_status": "self",
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }
-        },
-    )
-    if not res.matched_count:
-        raise HTTPException(404, "Professional not found")
-    return {"status": "ok", "user_id": user_id, "approval_status": "self"}
+    return await _set_professional_approval(user_id, "approved")
+
+
+@router.post("/professionals/{user_id}/approve")
+async def admin_approve_professional(
+    user_id: str, _: dict = Depends(require_admin)
+) -> dict[str, Any]:
+    return await _set_professional_approval(user_id, "approved")
 
 
 # -------------------- ad campaigns (Phase U) --------------------

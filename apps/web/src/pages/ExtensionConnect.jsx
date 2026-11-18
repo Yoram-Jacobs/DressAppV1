@@ -32,59 +32,47 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, ShieldCheck, Plug, AlertTriangle, Check } from 'lucide-react';
-import { tokenStore, userStore, api } from '@/lib/api';
+import { tokenStore, userStore, api, client } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 
 import { useTranslation } from 'react-i18next';
-// Extension IDs we trust to receive the token. Tightening this when
-// the extension is published to the Chrome Web Store is a one-line
-// change. During development we accept any extension that injects a
-// content script onto this exact URL — chrome.runtime.sendMessage
-// requires the receiver to be installed locally, so the trust model
-// is "the user has installed our extension into their own browser".
 const TRUSTED_EXTENSION_IDS = (
-  import.meta.env.VITE_EXTENSION_ALLOWED_IDS || ''
+  process.env.REACT_APP_EXTENSION_ALLOWED_IDS || ''
 )
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 
+const IS_PROD_BUILD = process.env.NODE_ENV === 'production';
+
 const HANDOFF_VERSION = 1;
 
 export default function ExtensionConnect() {
   const { t } = useTranslation();
+  const { user, loading: authLoading, logout } = useAuth();
 
   const [params] = useSearchParams();
   const nav = useNavigate();
   const extId = params.get('ext_id');
   const requestedV = parseInt(params.get('v') || '1', 10);
-  // ``?force=1`` (or ``?switch=1``) signals "user clicked 'Switch
-  // account' in the DressApp extension popup". We clear the
-  // currently-cached web-app auth so the existing useEffect bounces
-  // them through ``/login`` for a fresh credential entry. After
-  // login they return here, the new token is handed off, and the
-  // extension flips identity. Idempotent: ``force_handled`` flag
-  // prevents an infinite clear-redirect loop.
   const force = params.get('force') === '1' || params.get('switch') === '1';
   const forceHandledRef = useRef(false);
-  if (force && !forceHandledRef.current) {
-    forceHandledRef.current = true;
-    try {
+  useEffect(() => {
+    if (force && !forceHandledRef.current) {
+      forceHandledRef.current = true;
+      logout?.();
       tokenStore.clear();
       userStore.clear?.();
-    } catch { /* noop — best effort */ }
-  }
+    }
+  }, [force, logout]);
 
   const [phase, setPhase] = useState('init'); // init|sending|sent|error|noauth|noopener
   const [error, setError] = useState(null);
   const sentRef = useRef(false);
 
-  const token = tokenStore.get();
-  const user = userStore.get();
-
   const trusted = useMemo(() => {
-    if (!extId) return false;
-    if (extId === 'bookmarklet') return true;
-    if (TRUSTED_EXTENSION_IDS.length === 0) return true; // dev mode
+    if (!extId || extId === 'bookmarklet') return false;
+    if (TRUSTED_EXTENSION_IDS.length === 0) return !IS_PROD_BUILD;
     return TRUSTED_EXTENSION_IDS.includes(extId);
   }, [extId]);
 
@@ -92,17 +80,17 @@ export default function ExtensionConnect() {
   // back here. The next-param survives the OAuth round-trip via
   // AuthCallback.
   useEffect(() => {
-    if (!token || !user) {
+    if (!authLoading && !user) {
       const next = encodeURIComponent(
         `/extension/connect?ext_id=${encodeURIComponent(extId || '')}&v=${requestedV}`,
       );
       nav(`/login?next=${next}`, { replace: true });
     }
-  }, [token, user, extId, requestedV, nav]);
+  }, [authLoading, user, extId, requestedV, nav]);
 
   // Auto-trigger handoff when everything is ready, but only once.
   useEffect(() => {
-    if (!token || !user || !extId || !trusted) return;
+    if (authLoading || !user || !extId || !trusted) return;
     if (sentRef.current) return;
     if (requestedV !== HANDOFF_VERSION) {
       setPhase('error');
@@ -112,17 +100,31 @@ export default function ExtensionConnect() {
     sentRef.current = true;
     sendToExtension();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user, extId, trusted, requestedV]);
+  }, [authLoading, user, extId, trusted, requestedV]);
 
   async function sendToExtension() {
     setPhase('sending');
     setError(null);
+    let extToken = null;
+    try {
+      const tokenResp = await client.post('/auth/extension-token');
+      extToken = tokenResp?.data?.access_token || null;
+    } catch (tokErr) {
+      setPhase('error');
+      setError(tokErr?.response?.data?.detail || tokErr.message || 'Could not issue extension token.');
+      return;
+    }
+    if (!extToken) {
+      setPhase('error');
+      setError('Could not issue extension token.');
+      return;
+    }
     const payload = {
       type: 'DRESSAPP_EXT_TOKEN',
       ext_id: extId || null,
       version: HANDOFF_VERSION,
       issued_at: new Date().toISOString(),
-      token,
+      token: extToken,
       user: {
         id: user.id,
         email: user.email,
@@ -188,9 +190,7 @@ export default function ExtensionConnect() {
           } catch (_originErr) {
             openerOrigin = '';
           }
-          if (extId === 'bookmarklet') {
-            window.opener.postMessage(payload, openerOrigin || '*');
-          } else if (openerOrigin && openerOrigin.startsWith('https://')) {
+          if (openerOrigin && openerOrigin.startsWith('https://')) {
             window.opener.postMessage(payload, openerOrigin);
           }
         }
@@ -211,7 +211,7 @@ export default function ExtensionConnect() {
   }
 
   // ---- Render variants -----------------------------------------------
-  if (!token || !user) {
+  if (authLoading || !user) {
     return (
       <Shell title={t('pages.extensionConnect.redirecting_to_sign_in')}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

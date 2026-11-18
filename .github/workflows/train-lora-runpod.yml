@@ -120,6 +120,7 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST || secrets.VPS_SSH_HOST || '178.105.144.142' }}
           VPS_USER: ${{ secrets.VPS_USER || secrets.VPS_SSH_USER || 'root' }}
           VPS_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           set -eo pipefail
@@ -132,10 +133,14 @@ jobs:
           chmod 700 ~/.ssh
           printf "%s\n" "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          if [ -z "$VPS_KNOWN_HOSTS" ]; then
+            echo "::error::VPS_KNOWN_HOSTS secret must be configured to verify host identity safely."
+            exit 1
+          fi
+          printf "%s\n" "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-          SSH_CMD="ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes"
+          SSH_CMD="ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes"
           echo "Testing SSH connectivity to Hetzner VPS ($VPS_HOST)..."
           $SSH_CMD ${VPS_USER}@${VPS_HOST} "echo 'Connected successfully to Hetzner VPS host: ' \$(hostname)"
 
@@ -153,14 +158,16 @@ jobs:
             fi
             if [ -f "$GGUF_LOCAL" ]; then
               echo "Transferring $ADAPTER GGUF adapter from runner to VPS..."
-              scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes \
+              scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes \
                 "$GGUF_LOCAL" \
                 ${VPS_USER}@${VPS_HOST}:/srv/AI-Stylist/eyes_gguf/adapters/${ADAPTER}.gguf
             fi
 
             echo "Triggering zero-downtime adapter sync & reload on VPS for $ADAPTER..."
-            $SSH_CMD ${VPS_USER}@${VPS_HOST} "
+            printf '%s\n' "${HF_TOKEN:-}" | $SSH_CMD ${VPS_USER}@${VPS_HOST} "
               set -eo pipefail
+              IFS= read -r HF_TOKEN || true
+              export HF_TOKEN
               DEPLOY_SCRIPT=\"/srv/AI-Stylist/deploy/reload_eyes_adapters.sh\"
               if [ ! -f \"\$DEPLOY_SCRIPT\" ]; then
                 cd /srv/AI-Stylist && git pull origin main
@@ -169,7 +176,6 @@ jobs:
               bash \"\$DEPLOY_SCRIPT\" \
                 --adapter \"${ADAPTER}\" \
                 --repo \"Yoram-Jacobs/dressapp-${ADAPTER}-adapter\" \
-                --adapters-dir \"/srv/AI-Stylist/eyes_v4_adapter\" \
-                --token \"${HF_TOKEN}\"
+                --adapters-dir \"/srv/AI-Stylist/eyes_v4_adapter\"
             "
           done

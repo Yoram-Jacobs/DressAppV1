@@ -10,8 +10,27 @@
 
 import axios from 'axios';
 
+const _isBrowser = typeof document !== 'undefined' && typeof document.cookie === 'string';
+export function _getCsrfCookie() {
+  if (!_isBrowser) return null;
+  const m = document.cookie.match(/(?:^|;\s*)dressapp_csrf=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
 // Mutable holders — overwritten once by createApiClient()
-export let client = axios.create({ baseURL: '/api/v1', timeout: 180000 });
+export let client = axios.create({
+  baseURL: '/api/v1',
+  timeout: 180000,
+  withCredentials: _isBrowser,
+});
+client.interceptors.request.use((cfg) => {
+  const method = (cfg.method || 'get').toUpperCase();
+  if (_isBrowser && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrf = _getCsrfCookie();
+    if (csrf) cfg.headers['X-CSRF-Token'] = csrf;
+  }
+  return cfg;
+});
 export let API_BASE = '/api/v1';
 export let tokenStore = {
   get: () => null,

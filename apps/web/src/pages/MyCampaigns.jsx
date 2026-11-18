@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
@@ -145,6 +145,60 @@ export default function MyCampaigns() {
     ]);
     setLoading(false);
   }, [isExpert]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    const campaignStatus = searchParams.get('campaign_status');
+    const extStatus = searchParams.get('ext_status');
+    const token = searchParams.get('token');
+    const targetCampaignId = searchParams.get('campaign_id');
+    const newEndDate = searchParams.get('new_end_date');
+
+    if (campaignStatus === 'success' && token && targetCampaignId) {
+      campaignApi
+        .captureSubmissionOrder(targetCampaignId, token)
+        .then(() => {
+          setCampaigns((prev) =>
+            prev.map((c) => (c.id === targetCampaignId ? { ...c, status: 'pending_approval' } : c))
+          );
+          toast.success(t('campaigns.mine.submitSuccess'));
+        })
+        .catch((err) => {
+          toast.error(err?.response?.data?.detail || t('campaigns.mine.submitError'));
+        })
+        .finally(() => {
+          searchParams.delete('campaign_status');
+          searchParams.delete('campaign_id');
+          searchParams.delete('token');
+          setSearchParams(searchParams);
+        });
+    } else if (extStatus === 'success' && token && targetCampaignId && newEndDate) {
+      campaignApi
+        .captureExtensionOrder(targetCampaignId, token, newEndDate)
+        .then(() => {
+          setCampaigns((prev) =>
+            prev.map((c) => (c.id === targetCampaignId ? { ...c, end_date: newEndDate } : c))
+          );
+          toast.success(t('campaigns.mine.extendSuccess', { defaultValue: 'Campaign extended!' }));
+        })
+        .catch((err) => {
+          toast.error(err?.response?.data?.detail || t('campaigns.mine.submitError'));
+        })
+        .finally(() => {
+          searchParams.delete('ext_status');
+          searchParams.delete('campaign_id');
+          searchParams.delete('new_end_date');
+          searchParams.delete('token');
+          setSearchParams(searchParams);
+        });
+    } else if (campaignStatus === 'cancel' || extStatus === 'cancel') {
+      toast.info(t('campaigns.billing.checkoutCancelled', { defaultValue: 'Campaign checkout cancelled.' }));
+      searchParams.delete('campaign_status');
+      searchParams.delete('ext_status');
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams, t]);
+
   const handleSubmit = async (id) => {
     // Check PayPal connection client-side
     const hasPayPal = !!(user?.paypal_receiver_email);
@@ -158,10 +212,11 @@ export default function MyCampaigns() {
     setActionId(id);
     try {
       const res = await campaignApi.submitCampaign(id); // returns {order_id, fee_cents, approve_url}
-      setPaypalOrder(res);
-      if (res.approve_url) {
-        window.open(res.approve_url, '_blank');
+      if (res?.approve_url) {
+        window.location.href = res.approve_url;
+        return;
       }
+      setPaypalOrder(res);
       setPaypalOpen(true);
       setSubmitPhase('awaiting_payment');
     } catch (err) {

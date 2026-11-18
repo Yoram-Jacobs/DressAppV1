@@ -143,6 +143,7 @@ services:
       args:
         # Same-origin deployment: empty string lets the frontend use relative /api/v1 URLs
         REACT_APP_BACKEND_URL: ""
+        REACT_APP_EXTENSION_ALLOWED_IDS: ${REACT_APP_EXTENSION_ALLOWED_IDS:-}
     image: dressapp-frontend:latest
     container_name: dressapp-frontend
     restart: unless-stopped

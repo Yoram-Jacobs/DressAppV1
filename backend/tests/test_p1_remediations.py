@@ -320,7 +320,8 @@ def test_qa19_signature_distinguishes_distinct_solid_garments_and_dedups_duplica
 
 @pytest.mark.anyio
 async def test_qa21_soft_archive_on_demote_and_restore_on_upgrade() -> None:
-    from app.services.billing_service import demote_user_to_free_plan
+    from fastapi import HTTPException
+    from app.services.billing_service import demote_user_to_free_plan, restore_plan_demotion_items
     from app.api.v1 import ai_credits
     from app.api.v1.closet import items as closet_items_api
 
@@ -374,14 +375,15 @@ async def test_qa21_soft_archive_on_demote_and_restore_on_upgrade() -> None:
     assert listed["total"] == 110
     assert len(listed["ids"]) == 110
 
-    # Upgrading back to Pro automatically unarchives plan_demotion items
-    with patch.object(ai_credits, "get_db", return_value=fake_db):
-        upg_res = await ai_credits.upgrade_subscription(
-            {"plan_type": "pro"},
-            user={"id": "u-21"},
-        )
-    assert upg_res["success"] is True
-    assert upg_res["restored_closet_items_count"] == 5
+    # Unverified legacy direct upgrade endpoint is permanently retired (410 Gone)
+    with pytest.raises(HTTPException) as retired_exc:
+        await ai_credits.upgrade_subscription({"plan_type": "pro"}, _user={"id": "u-21"})
+    assert retired_exc.value.status_code == 410
+
+    # Upgrading back to paid plan restores plan_demotion items via billing_service helper
+    from app.services.billing_service import restore_plan_demotion_items
+    restored = await restore_plan_demotion_items(fake_db, "u-21")
+    assert restored == 5
     active_after = await fake_db.closet_items.count_documents({"user_id": "u-21", "archived": {"$ne": True}})
     assert active_after == 115
     assert all(not d.get("archived") and "archived_reason" not in d for d in fake_db.closet_items.docs)

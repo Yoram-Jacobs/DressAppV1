@@ -51,16 +51,6 @@ async def get_shared_outfit(share_id: str) -> dict[str, Any]:
     db = get_db()
     doc = await db.shared_outfits.find_one({"id": share_id}, {"_id": 0})
     if not doc:
-        # Fallback to outfits collection
-        outfit_doc = await db.outfits.find_one({"id": share_id}, {"_id": 0})
-        if outfit_doc:
-            return {
-                "id": share_id,
-                "owner_id": outfit_doc.get("user_id"),
-                "outfit": outfit_doc,
-                "created_at": outfit_doc.get("created_at"),
-                "share_card_b64": outfit_doc.get("share_card_b64")
-            }
         raise HTTPException(404, "Share not found")
     return doc
 
@@ -76,16 +66,7 @@ async def save_shared_outfit_share_card(
     db = get_db()
     existing = await db.shared_outfits.find_one({"id": share_id})
     if not existing:
-        existing_outfit = await db.outfits.find_one({"id": share_id, "user_id": user["id"]})
-        if not existing_outfit:
-            raise HTTPException(status_code=404, detail="Shared outfit not found")
-        await db.outfits.update_one(
-            {"id": share_id, "user_id": user["id"]},
-            {"$set": {"share_card_b64": validated_b64, "updated_at": datetime.now(timezone.utc).isoformat()}},
-        )
-        return {
-            "share_card_url": f"/api/v1/share/outfit/{share_id}/image",
-        }
+        raise HTTPException(status_code=404, detail="Shared outfit not found")
 
     owner_uid = existing.get("owner_id") or existing.get("user_id")
     if not owner_uid or owner_uid != user["id"]:
@@ -109,11 +90,7 @@ async def get_shared_outfit_image(share_id: str) -> Response:
     db = get_db()
     doc = await db.shared_outfits.find_one({"id": share_id})
     if not doc or not doc.get("share_card_b64"):
-        outfit_doc = await db.outfits.find_one({"id": share_id})
-        if outfit_doc and outfit_doc.get("share_card_b64"):
-            doc = outfit_doc
-        else:
-            raise HTTPException(status_code=404, detail="Image not found")
+        raise HTTPException(status_code=404, detail="Image not found")
 
     img_bytes, safe_media_type = decode_share_card_image(doc["share_card_b64"])
     return Response(

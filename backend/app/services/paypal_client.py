@@ -67,17 +67,22 @@ class _TokenCache:
 _token_cache = _TokenCache()
 
 
+def has_real_credentials() -> bool:
+    """Return True only when real PayPal client credentials are configured."""
+    return bool(settings.paypal_client_id and settings.paypal_secret)
+
+
 def is_configured() -> bool:
     """Cheap check used by route guards to return a friendly 503."""
-    return bool((settings.paypal_client_id and settings.paypal_secret) or settings.PAYPAL_MOCK_MODE)
+    return bool(has_real_credentials() or settings.allow_mock_payments())
 
 
 async def _get_access_token() -> str:
     cached = _token_cache.get()
     if cached:
         return cached
-    if not is_configured():
-        if settings.PAYPAL_MOCK_MODE:
+    if not has_real_credentials():
+        if settings.allow_mock_payments():
             return _MOCK_TOKEN
         raise PayPalError(
             503,
@@ -109,7 +114,7 @@ async def _get_access_token() -> str:
         extra={"path": "/v1/oauth2/token"},
     )
     if resp.status_code != 200:
-        if settings.PAYPAL_MOCK_MODE:
+        if settings.allow_mock_payments():
             logger.warning(
                 "PayPal auth failed (%s) — falling back to MOCK MODE. Fix credentials for real flow.",
                 resp.status_code,
@@ -226,7 +231,9 @@ async def create_order(
 
 async def capture_order(order_id: str) -> dict[str, Any]:
     token = await _get_access_token()
-    if _is_mock_token(token) or order_id.startswith("MOCK-"):
+    if _is_mock_token(token) or (order_id.startswith("MOCK-") and settings.allow_mock_payments()):
+        if not settings.allow_mock_payments():
+            raise PayPalError(400, "Mock PayPal orders are disabled outside dev/test")
         mock_capture_id = f"MOCKCAP-{uuid.uuid4().hex[:14].upper()}"
         logger.info("[PAYPAL MOCK] capture_order %s → %s", order_id, mock_capture_id)
         return {
@@ -259,9 +266,60 @@ async def capture_order(order_id: str) -> dict[str, Any]:
 
 async def get_order(order_id: str) -> dict[str, Any]:
     token = await _get_access_token()
-    if _is_mock_token(token) or order_id.startswith("MOCK-"):
+    if _is_mock_token(token) or (order_id.startswith("MOCK-") and settings.allow_mock_payments()):
+        if not settings.allow_mock_payments():
+            raise PayPalError(400, "Mock PayPal orders are disabled outside dev/test")
         return {"id": order_id, "status": "CREATED", "mock": True}
     return await _request("GET", f"/v2/checkout/orders/{order_id}")
+
+
+def extract_capture_details(captured: dict[str, Any] | None) -> tuple[str, str | None, str | None, int | None, str | None]:
+    """Return (status, capture_id, payer_email, captured_cents, captured_currency)."""
+    if not isinstance(captured, dict):
+        return "", None, None, None, None
+    units = captured.get("purchase_units") or []
+    first_unit = units[0] if units and isinstance(units[0], dict) else {}
+    captures = (first_unit.get("payments") or {}).get("captures") or []
+    first_capture = captures[0] if captures and isinstance(captures[0], dict) else {}
+    status = str(first_capture.get("status") or captured.get("status") or "").upper()
+    capture_id = first_capture.get("id")
+    payer_email = (captured.get("payer") or {}).get("email_address")
+    amount_obj = first_capture.get("amount") or first_unit.get("amount") or {}
+    captured_cents: int | None = None
+    captured_currency: str | None = None
+    if isinstance(amount_obj, dict) and amount_obj.get("value") is not None:
+        try:
+            from decimal import Decimal, InvalidOperation
+
+            captured_cents = int((Decimal(str(amount_obj["value"])) * 100).to_integral_value())
+            raw_cur = amount_obj.get("currency_code")
+            if raw_cur:
+                captured_currency = str(raw_cur).upper()
+        except (InvalidOperation, ValueError, TypeError):
+            captured_cents = None
+    return status, capture_id, payer_email, captured_cents, captured_currency
+
+
+def verify_capture_result(
+    captured: dict[str, Any] | None,
+    *,
+    expected_amount_cents: int | None = None,
+    expected_currency: str | None = None,
+    allow_mock: bool = False,
+) -> tuple[bool, str | None, str | None, str]:
+    """Verify a PayPal capture response matches expected status, mock policy, amount, and currency."""
+    if not isinstance(captured, dict):
+        return False, None, None, "invalid_paypal_response"
+    if captured.get("mock") and not allow_mock:
+        return False, None, None, "mock_capture_disallowed"
+    cap_status, capture_id, payer_email, captured_cents, captured_currency = extract_capture_details(captured)
+    if cap_status != "COMPLETED":
+        return False, capture_id, payer_email, f"incomplete_status:{cap_status or 'UNKNOWN'}"
+    if expected_amount_cents is not None and captured_cents is not None and captured_cents < expected_amount_cents:
+        return False, capture_id, payer_email, f"underpaid:{captured_cents}<{expected_amount_cents}"
+    if expected_currency and captured_currency and captured_currency != expected_currency.upper():
+        return False, capture_id, payer_email, f"currency_mismatch:{captured_currency}"
+    return True, capture_id, payer_email, ""
 
 
 # --------------------- Payouts v1 ---------------------
@@ -329,8 +387,8 @@ async def verify_webhook_signature(
     Returns True only if PayPal confirms the signature. When
     PAYPAL_SKIP_WEBHOOK_VERIFY=true (dev), always returns True.
     """
-    if settings.PAYPAL_SKIP_WEBHOOK_VERIFY:
-        logger.warning("PayPal webhook verify skipped via env flag")
+    if settings.PAYPAL_SKIP_WEBHOOK_VERIFY and settings.is_dev_or_test:
+        logger.warning("PayPal webhook verify skipped via dev/test env flag")
         return True
     webhook_id = settings.paypal_webhook_id
     if not webhook_id:
@@ -363,7 +421,9 @@ async def create_subscription(
     cancel_url: str | None = None,
 ) -> dict[str, Any]:
     token = await _get_access_token()
-    if _is_mock_token(token) or plan_id.startswith("P-MOCK"):
+    if _is_mock_token(token) or (plan_id.startswith("P-MOCK") and settings.allow_mock_payments()):
+        if not settings.allow_mock_payments():
+            raise PayPalError(400, "Mock PayPal subscriptions are disabled outside dev/test")
         mock_sub_id = f"MOCK-SUB-{uuid.uuid4().hex[:14].upper()}"
         logger.info("[PAYPAL MOCK] create_subscription %s → %s", plan_id, mock_sub_id)
         checkout_href = (

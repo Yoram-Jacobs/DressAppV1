@@ -121,3 +121,18 @@ async def demote_user_to_free_plan(
             f"and archived {archived_count} older closet items (restored automatically on upgrade)."
         ),
     }
+
+
+async def restore_plan_demotion_items(db_connection: Any, user_id: str) -> int:
+    """Restore closet items that were soft-archived on a previous free-plan demotion."""
+    from datetime import datetime, timezone
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    res = await db_connection.closet_items.update_many(
+        {"user_id": user_id, "archived": True, "archived_reason": "plan_demotion"},
+        {
+            "$set": {"archived": False, "updated_at": now_iso},
+            "$unset": {"archived_reason": "", "archived_at": ""},
+        },
+    )
+    return int(getattr(res, "modified_count", 0))

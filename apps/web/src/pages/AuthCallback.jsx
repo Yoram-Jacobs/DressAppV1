@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { tokenStore, userStore, api } from '@/lib/api';
+import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { closetStore } from '@/lib/closetStore';
 import {
@@ -41,11 +41,12 @@ export default function AuthCallback() {
     ranRef.current = true;
 
     const hash = window.location.hash || '';
-    const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
-    const token = params.get('token');
-    const next = params.get('next') || '/home';
-    const errCode = params.get('error');
-    const warning = params.get('warning');
+    const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+    const searchParams = new URLSearchParams(window.location.search || '');
+    const statusParam = searchParams.get('status');
+    const next = searchParams.get('next') || hashParams.get('next') || '/home';
+    const errCode = searchParams.get('error') || hashParams.get('error');
+    const warning = searchParams.get('warning') || hashParams.get('warning');
 
     const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/home';
 
@@ -53,36 +54,12 @@ export default function AuthCallback() {
       setError(errCode);
       return;
     }
-    if (!token) {
-      setError('missing_token');
+    if (statusParam !== 'ok' && !hashParams.get('token')) {
+      setError('missing_session');
       return;
     }
 
-    // 1) Store token immediately
-    tokenStore.set(token);
-
-    // Decode JWT payload synchronously so the app has user ID and email without network delay
-    let seedUser = null;
-    try {
-      const parts = token.split('.');
-      if (parts.length === 3) {
-        const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-        const json = atob(b64);
-        const payload = JSON.parse(json);
-        if (payload?.sub || payload?.user_id) {
-          seedUser = {
-            id: payload.sub || payload.user_id,
-            email: payload.email || '',
-            roles: payload.roles || ['user'],
-          };
-          userStore.set(seedUser);
-        }
-      }
-    } catch {
-      /* ignore token decode error */
-    }
-
-    // Wipe the hash so the token never lingers in browser history.
+    // Wipe hash/query parameters cleanly so callback state does not linger in history.
     try {
       window.history.replaceState(null, '', window.location.pathname);
     } catch {
@@ -91,6 +68,17 @@ export default function AuthCallback() {
 
     const finalizeAuth = async () => {
       let targetRoute = safeNext;
+      let seedUser = null;
+      try {
+        seedUser = await refresh();
+      } catch {
+        seedUser = null;
+      }
+      if (!seedUser) {
+        setError('session_verification_failed');
+        return;
+      }
+
       try {
         const draft = getOnboardingDraft();
         const userAlreadyOnboarded = Boolean(
@@ -129,24 +117,7 @@ export default function AuthCallback() {
         toast.success(t('auth.signedInWithGoogle'));
       }
 
-      // Navigate immediately into the target route
       nav(targetRoute, { replace: true });
-
-      // Lazy connection check with background retry (non-blocking)
-      const performLazyConnectionCheck = async (attempts = 3) => {
-        for (let i = 0; i < attempts; i++) {
-          try {
-            const u = await refresh();
-            if (u) return u;
-          } catch (err) {
-            console.warn(`Lazy connection check attempt ${i + 1}:`, err);
-          }
-          if (i < attempts - 1) {
-            await new Promise((res) => setTimeout(res, 800 * (i + 1)));
-          }
-        }
-      };
-      performLazyConnectionCheck().catch(() => {});
     };
 
     finalizeAuth().catch((err) => {

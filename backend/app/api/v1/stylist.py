@@ -113,11 +113,11 @@ async def stylist_transcribe(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Transcribe user voice audio via Gemini/Eyes multimodal STT."""
-    audio_bytes = await file.read()
+    from app.services.upload_manager import read_upload_bounded
+
+    audio_bytes = await read_upload_bounded(file, 20 * 1024 * 1024)
     if not audio_bytes:
         raise HTTPException(status_code=400, detail="Empty audio file provided.")
-    if len(audio_bytes) > 20 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="Audio file exceeds 20MB limit.")
 
     from app.services.stt_service import stt_service
 
@@ -178,17 +178,19 @@ async def stylist_endpoint(
     if not text and not voice_audio:
         raise HTTPException(400, "Provide `text` or `voice_audio`.")
 
+    from app.services.upload_manager import read_upload_bounded
+
     image_bytes: bytes | None = None
     image_mime = "image/jpeg"
     if image is not None:
-        image_bytes = await image.read()
+        image_bytes = await read_upload_bounded(image, 15 * 1024 * 1024)
         image_mime = image.content_type or "image/jpeg"
 
     audio_bytes: bytes | None = None
     audio_filename = "audio.webm"
     audio_mime = "audio/webm"
     if voice_audio is not None:
-        audio_bytes = await voice_audio.read()
+        audio_bytes = await read_upload_bounded(voice_audio, 20 * 1024 * 1024)
         audio_filename = voice_audio.filename or audio_filename
         audio_mime = voice_audio.content_type or audio_mime
 
@@ -589,13 +591,19 @@ async def compose_outfit_endpoint(
     canvas survives chat history and can be re-rendered later.
     """
     from app.services import outfit_composer
+    from app.services.upload_manager import read_upload_bounded
 
-    # Read all upload bytes up front (FastAPI streams them otherwise).
+    # Read all upload bytes up front (bounded to prevent memory exhaustion).
     image_bytes_list: list[bytes] = []
-    for f in images or []:
+    total_batch_bytes = 0
+    _MAX_TOTAL_BATCH_BYTES = 50 * 1024 * 1024
+    for f in (images or [])[:10]:
         if not f or not f.filename:
             continue
-        raw = await f.read()
+        raw = await read_upload_bounded(f, 15 * 1024 * 1024)
+        total_batch_bytes += len(raw)
+        if total_batch_bytes > _MAX_TOTAL_BATCH_BYTES:
+            raise HTTPException(status_code=413, detail="Total uploaded images exceed 50 MB limit.")
         if raw:
             image_bytes_list.append(raw)
     if not image_bytes_list and not (text or "").strip():

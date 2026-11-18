@@ -86,23 +86,19 @@ sync_single_adapter() {
   echo "[-] Syncing adapter '${name}' from '${repo}' into '${target}'..."
   mkdir -p "${target}"
 
-  # Option 1: Use huggingface-cli if installed
+  # Option 1: Use huggingface-cli if installed (reads HF_TOKEN from env, never argv)
   if command -v huggingface-cli >/dev/null 2>&1; then
     echo "Using huggingface-cli for atomic download..."
-    TOKEN_ARG=""
-    if [[ -n "$HF_TOKEN" ]]; then
-      TOKEN_ARG="--token ${HF_TOKEN}"
-    fi
-    huggingface-cli download "${repo}" --local-dir "${target}" --local-dir-use-symlinks False ${TOKEN_ARG}
-  # Option 2: Fallback to python huggingface_hub
+    HF_TOKEN="${HF_TOKEN}" huggingface-cli download "${repo}" --local-dir "${target}" --local-dir-use-symlinks False
+  # Option 2: Fallback to python huggingface_hub (pass repo/target via sys.argv)
   elif python3 -c "import huggingface_hub" >/dev/null 2>&1; then
     echo "Using Python huggingface_hub snapshot_download..."
-    python3 -c "
-import os
+    HF_TOKEN="${HF_TOKEN}" python3 -c "
+import os, sys
 from huggingface_hub import snapshot_download
 token = os.environ.get('HF_TOKEN') or None
-snapshot_download(repo_id='${repo}', local_dir='${target}', token=token)
-"
+snapshot_download(repo_id=sys.argv[1], local_dir=sys.argv[2], token=token)
+" "${repo}" "${target}"
   # Option 3: Fallback using curl for core safetensors + config files
   else
     echo "Falling back to direct HTTPS fetch from Hugging Face..."

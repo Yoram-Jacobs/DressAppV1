@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from app.db.database import get_db
 from app.models.schemas import ClosetItem
 from app.services import repos
-from app.services.auth import get_current_user
+from app.services.auth import get_migration_user
 from app.services.vision import get_garment_vision_service
 from app.services import closet_service
 from app.services.sync_service import broadcast_sync_event
@@ -235,7 +235,7 @@ class MigrationSaveCropsIn(BaseModel):
 @router.post("/migration/save-crops")
 async def save_migration_crops(
     payload: MigrationSaveCropsIn,
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(get_migration_user),
 ) -> dict[str, Any]:
     """Save bookmarklet-captured or WebView-harvested garment crops directly to the closet DB.
 
@@ -443,7 +443,7 @@ class MigrationScreenshotsIn(BaseModel):
 @router.post("/migration/upload-screenshots")
 async def upload_migration_screenshots(
     payload: MigrationScreenshotsIn,
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(get_migration_user),
 ) -> dict[str, Any]:
     """Slice uploaded closet screenshots or a screen-recording video into garment cards.
 
@@ -575,7 +575,7 @@ class MigrationReanalyzeIn(BaseModel):
 @router.post("/migration/reanalyze-by-brand")
 async def reanalyze_by_brand(
     payload: MigrationReanalyzeIn,
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(get_migration_user),
 ) -> dict[str, Any]:
     """Standalone re-analyze endpoint (for manual re-triggering).
     Returns a job_id for polling via /migration/status/{job_id}.
@@ -610,7 +610,7 @@ async def reanalyze_by_brand(
 @router.get("/migration/status/{job_id}")
 async def get_migration_status(
     job_id: str,
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(get_migration_user),
 ) -> dict[str, Any]:
     """Poll the status of an ongoing wardrobe migration job."""
     check_migration_access(user)

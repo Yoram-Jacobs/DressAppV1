@@ -106,6 +106,9 @@ backend/.venv*/
 *.pack
 *.deb
 *.dylib
+*.jks
+*.p12
+*.mobileprovision
 /models/
 !backend/app/models/
 *.safetensors

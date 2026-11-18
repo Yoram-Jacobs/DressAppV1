@@ -350,3 +350,82 @@ def decode_share_card_image(raw_b64: str) -> tuple[bytes, str]:
     if fmt is None:
         raise HTTPException(status_code=404, detail="Invalid share card image")
     return img_bytes, _SHARE_CARD_MIME_BY_FORMAT[fmt]
+
+
+def get_allowed_frontend_origins() -> set[str]:
+    """Return canonical set of trusted frontend HTTP(S) origins (scheme://host[:port])."""
+    from urllib.parse import urlparse
+    from app.config import settings
+
+    origins: set[str] = {
+        "https://dressapp.co",
+        "https://www.dressapp.co",
+    }
+    pub = (settings.APP_PUBLIC_URL or "").strip().rstrip("/")
+    if pub:
+        p = urlparse(pub)
+        if p.scheme in ("http", "https") and p.netloc:
+            origins.add(f"{p.scheme}://{p.netloc}".lower())
+    for item in (settings.CORS_ORIGINS or "").split(","):
+        cand = item.strip().rstrip("/")
+        if not cand or cand == "*":
+            continue
+        p = urlparse(cand)
+        if p.scheme in ("http", "https") and p.netloc:
+            origins.add(f"{p.scheme}://{p.netloc}".lower())
+    return origins
+
+
+def validate_app_redirect_url(
+    raw_url: str | None,
+    field_name: str = "return_url",
+    *,
+    allow_mobile_schemes: bool = True,
+) -> str | None:
+    """Validate client-supplied checkout/OAuth redirect URL against trusted origins & schemes."""
+    from urllib.parse import urlparse
+    from fastapi import HTTPException
+    from app.config import settings
+
+    if not raw_url:
+        return None
+    cleaned = raw_url.strip()
+    if not cleaned:
+        return None
+    if any(ch in cleaned for ch in ("\n", "\r", "\t", "\x00")):
+        raise HTTPException(400, detail=f"Invalid {field_name}")
+    if cleaned.startswith("/") and not cleaned.startswith("//"):
+        return f"{settings.APP_PUBLIC_URL}{cleaned}"
+    if allow_mobile_schemes:
+        allowed_schemes = ("dressapp://", "exp://", "exps://") if settings.is_dev_or_test else ("dressapp://",)
+        if cleaned.startswith(allowed_schemes):
+            return cleaned
+
+    parsed = urlparse(cleaned)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise HTTPException(400, detail=f"Invalid {field_name} scheme")
+
+    origin = f"{parsed.scheme}://{parsed.netloc}".lower()
+    host = (parsed.hostname or "").lower()
+    if origin in get_allowed_frontend_origins():
+        return cleaned
+    if settings.is_dev_or_test and host in ("localhost", "127.0.0.1"):
+        return cleaned
+    raise HTTPException(400, detail=f"Untrusted {field_name} origin")
+
+
+def get_client_ip(request: Any) -> str:
+    """Resolve client IP without trusting attacker-controlled leftmost X-Forwarded-For entries.
+
+    Prefers Caddy's X-Real-IP header, otherwise takes the rightmost address appended
+    by the reverse proxy, falling back to the direct socket peer address.
+    """
+    real_ip = (request.headers.get("x-real-ip") or "").strip()
+    if real_ip:
+        return real_ip
+    forwarded = (request.headers.get("x-forwarded-for") or "").strip()
+    if forwarded:
+        parts = [p.strip() for p in forwarded.split(",") if p.strip()]
+        if parts:
+            return parts[-1]
+    return request.client.host if getattr(request, "client", None) else "unknown"

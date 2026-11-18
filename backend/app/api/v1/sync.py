@@ -6,11 +6,11 @@ import secrets
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.services.auth import get_current_user, decode_token
+from app.services.auth import SESSION_COOKIE_NAME, get_current_user, decode_token
 from app.services.sync_service import (
     broadcast_sync_event,
     get_user_sync_status,
@@ -81,6 +81,7 @@ async def create_sync_ticket(user: dict = Depends(get_current_user)) -> dict[str
 
 @router.get("/stream")
 async def sync_stream(
+    request: Request,
     ticket: str | None = Query(default=None),
     token: str | None = Query(default=None),
     authorization: str | None = Header(default=None),
@@ -98,6 +99,9 @@ async def sync_stream(
     elif authorization and authorization.lower().startswith("bearer "):
         bearer_token = authorization.split(" ", 1)[1].strip()
         payload = decode_token(bearer_token)
+        user_id = payload.get("sub")
+    elif request.cookies.get(SESSION_COOKIE_NAME):
+        payload = decode_token(request.cookies[SESSION_COOKIE_NAME])
         user_id = payload.get("sub")
     elif token:
         # Reject long-lived master JWTs leaked in URL query strings; only allow

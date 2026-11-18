@@ -14,9 +14,43 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from cryptography.fernet import Fernet
+import os
+from cryptography.fernet import Fernet, MultiFernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 import jwt
-from fastapi import Depends, Header, HTTPException, status
+import secrets
+from fastapi import Depends, Header, HTTPException, Request, status
+
+SESSION_COOKIE_NAME = "dressapp_session"
+CSRF_COOKIE_NAME = "dressapp_csrf"
+CSRF_HEADER_NAME = "x-csrf-token"
+
+
+def attach_session_cookies(response: Any, jwt_token: str) -> str:
+    """Attach HttpOnly session cookie + non-HttpOnly CSRF cookie to a browser response."""
+    csrf_token = secrets.token_urlsafe(32)
+    max_age = int(settings.JWT_EXPIRES_MIN) * 60
+    secure_cookie = not settings.is_dev_or_test
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=jwt_token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        path="/",
+        max_age=max_age,
+    )
+    response.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=csrf_token,
+        httponly=False,
+        secure=secure_cookie,
+        samesite="lax",
+        path="/",
+        max_age=max_age,
+    )
+    return csrf_token
 from passlib.context import CryptContext
 
 from app.config import settings
@@ -58,6 +92,40 @@ def decode_token(token: str) -> dict[str, Any]:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired") from exc
     except jwt.InvalidTokenError as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token") from exc
+
+
+def create_scoped_token(
+    subject: str,
+    *,
+    scope: str,
+    expires_minutes: int = 15,
+    extra: dict[str, Any] | None = None,
+) -> str:
+    """Mint a short-lived, scope-restricted JWT (e.g. 'migration_upload')."""
+    now = datetime.now(timezone.utc)
+    payload: dict[str, Any] = {
+        "sub": subject,
+        "scope": scope,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=expires_minutes)).timestamp()),
+    }
+    if extra:
+        payload.update(extra)
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+
+def sanitize_user_doc(user: dict[str, Any] | None) -> dict[str, Any]:
+    """Strip sensitive tokens, password hashes, and migration secrets before serializing."""
+    if not user or not isinstance(user, dict):
+        return {}
+    stripped_keys = {"_id", "password_hash", "google_oauth", "google_calendar_tokens"}
+    out = {k: v for k, v in user.items() if k not in stripped_keys}
+    mig = out.get("migration_details")
+    if isinstance(mig, dict):
+        mig_clean = {k: v for k, v in mig.items() if k != "credentials"}
+        mig_clean["has_credentials"] = bool(mig.get("credentials"))
+        out["migration_details"] = mig_clean
+    return out
 
 
 class AuthenticatedUser(dict):
@@ -133,13 +201,43 @@ async def _fetch_user(user_id: str) -> dict[str, Any] | None:
     return user
 
 
-async def get_current_user(
-    authorization: str | None = Header(default=None),
+async def _authenticate_request(
+    request: Request,
+    authorization: str | None = None,
+    *,
+    allowed_scopes: tuple[str, ...] | None = None,
 ) -> AuthenticatedUser:
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
-    token = authorization.split(" ", 1)[1].strip()
+    token: str | None = None
+    via_cookie = False
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+    elif request is not None:
+        cookie_tok = request.cookies.get(SESSION_COOKIE_NAME)
+        if cookie_tok:
+            token = cookie_tok.strip()
+            via_cookie = True
+
+    if not token:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing authentication credentials")
+
+    if via_cookie and request is not None and request.method.upper() not in ("GET", "HEAD", "OPTIONS"):
+        csrf_cookie = request.cookies.get(CSRF_COOKIE_NAME) or ""
+        csrf_header = request.headers.get(CSRF_HEADER_NAME) or ""
+        if not csrf_cookie or not csrf_header or not secrets.compare_digest(csrf_cookie, csrf_header):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Missing or invalid CSRF token")
+
     payload = decode_token(token)
+    scope = payload.get("scope")
+    if allowed_scopes is None:
+        if scope:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                "Restricted token scope is not permitted for this endpoint",
+            )
+    else:
+        if scope is not None and scope not in allowed_scopes:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Invalid token scope for endpoint")
+
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Malformed token")
@@ -149,13 +247,31 @@ async def get_current_user(
     return AuthenticatedUser.from_doc(user)
 
 
+async def get_current_user(
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> AuthenticatedUser:
+    return await _authenticate_request(request, authorization, allowed_scopes=None)
+
+
+async def get_migration_user(
+    request: Request,
+    authorization: str | None = Header(default=None),
+) -> AuthenticatedUser:
+    """Authenticate either full session JWT (Bearer or cookie+CSRF) or 'migration_upload'-scoped JWT."""
+    return await _authenticate_request(
+        request, authorization, allowed_scopes=("migration_upload",)
+    )
+
+
 async def get_current_user_optional(
+    request: Request,
     authorization: str | None = Header(default=None),
 ) -> AuthenticatedUser | None:
-    if not authorization:
+    if not authorization and not (request and request.cookies.get(SESSION_COOKIE_NAME)):
         return None
     try:
-        return await get_current_user(authorization)
+        return await get_current_user(request, authorization)
     except HTTPException:
         return None
 
@@ -221,10 +337,30 @@ def apply_tester_group(
     return base_roles, sub, modified
 
 
-def encrypt_api_key(plain_key: str) -> str:
+def _primary_fernet() -> Fernet:
+    explicit = (os.environ.get("CREDENTIAL_ENCRYPTION_KEY") or "").strip()
+    if explicit:
+        return Fernet(explicit.encode())
+    derived = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=b"dressapp-field-enc-v1",
+        info=b"dressapp-api-keys",
+    ).derive(settings.JWT_SECRET.encode())
+    return Fernet(base64.urlsafe_b64encode(derived))
+
+
+def _legacy_fernet() -> Fernet:
     key = hashlib.sha256(settings.JWT_SECRET.encode()).digest()
-    cipher = Fernet(base64.urlsafe_b64encode(key))
-    return cipher.encrypt(plain_key.encode()).decode()
+    return Fernet(base64.urlsafe_b64encode(key))
+
+
+def _get_api_key_cipher() -> MultiFernet:
+    return MultiFernet([_primary_fernet(), _legacy_fernet()])
+
+
+def encrypt_api_key(plain_key: str) -> str:
+    return _primary_fernet().encrypt(plain_key.encode()).decode()
 
 
 def decrypt_api_key(encrypted_key: str) -> str | None:
@@ -235,8 +371,7 @@ def decrypt_api_key(encrypted_key: str) -> str | None:
     if not cleaned.startswith("gAAAAA"):
         return cleaned
     try:
-        key = hashlib.sha256(settings.JWT_SECRET.encode()).digest()
-        cipher = Fernet(base64.urlsafe_b64encode(key))
+        cipher = _get_api_key_cipher()
         res = cipher.decrypt(cleaned.encode()).decode()
         # Handle cases where key was accidentally encrypted multiple times
         while res and res.startswith("gAAAAA"):

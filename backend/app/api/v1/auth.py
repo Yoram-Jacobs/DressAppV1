@@ -4,11 +4,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
+from app.config import settings
 from app.services.auth import (
+    CSRF_COOKIE_NAME,
+    SESSION_COOKIE_NAME,
+    create_access_token,
     get_current_user,
+    sanitize_user_doc,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,7 +32,7 @@ def _public_user(user: dict[str, Any]) -> dict[str, Any]:
         compute_nano_banana_monthly_state,
         compute_onprem_credit_state,
     )
-    out = {k: v for k, v in user.items() if k not in {"password_hash", "google_oauth"}}
+    out = sanitize_user_doc(user)
     out["google_connected"] = bool(user.get("google_oauth"))
     try:
         raw_buckets = out.get("credit_buckets") or []
@@ -45,4 +50,39 @@ def _public_user(user: dict[str, Any]) -> dict[str, Any]:
 @router.get("/me")
 async def me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     return _public_user(user)
+
+
+@router.post("/logout")
+async def logout(response: Response) -> dict[str, Any]:
+    """Clear browser HttpOnly session and CSRF cookies."""
+    secure_cookie = not settings.is_dev_or_test
+    response.delete_cookie(
+        key=SESSION_COOKIE_NAME,
+        path="/",
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+    )
+    response.delete_cookie(
+        key=CSRF_COOKIE_NAME,
+        path="/",
+        httponly=False,
+        secure=secure_cookie,
+        samesite="lax",
+    )
+    return {"ok": True}
+
+
+@router.post("/extension-token")
+async def issue_extension_token(user: dict = Depends(get_current_user)) -> dict[str, Any]:
+    """Mint a Bearer token for Chrome Extension handoff without storing the web session in localStorage."""
+    token = create_access_token(
+        user["id"],
+        {"email": user.get("email"), "client": "extension"},
+    )
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "expires_in": int(settings.JWT_EXPIRES_MIN) * 60,
+    }
 

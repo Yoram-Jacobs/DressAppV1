@@ -22,6 +22,7 @@ Business rules enforced server-side:
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -72,7 +73,7 @@ def _is_expert(user: dict[str, Any]) -> bool:
     prof = user.get("professional") or {}
     return bool(
         prof.get("is_professional")
-        and prof.get("approval_status") != "hidden"
+        and prof.get("approval_status") == "approved"
     )
 
 
@@ -323,14 +324,14 @@ async def campaign_feed(
     db = get_db()
     flt: dict[str, Any] = {"status": "active", "admin_approved": True}
     if category:
-        flt["category"] = {"$regex": category, "$options": "i"}
+        flt["category"] = {"$regex": re.escape(category[:100]), "$options": "i"}
     if country:
         flt["$or"] = [
-            {"location.country": {"$regex": f"^{country}$", "$options": "i"}},
+            {"location.country": {"$regex": f"^{re.escape(country[:100])}$", "$options": "i"}},
         ]
     if city:
         flt.setdefault("$or", []).append(
-            {"location.city": {"$regex": city, "$options": "i"}}
+            {"location.city": {"$regex": re.escape(city[:100]), "$options": "i"}}
         )
 
     sort_fields: list[tuple[str, int]] = [("created_at", -1)]
@@ -446,13 +447,40 @@ async def submit_campaign(
     except Exception:
         total_days = 1
 
-    order_id = f"ncp_camp_{uuid.uuid4().hex[:12].upper()}"
-    approve_url = "https://www.paypal.com/ncp/payment/995PY44NHVANA"
-    
+    from app.config import settings
     from app.services import paypal_client
-    if settings.PAYPAL_MOCK_MODE or not paypal_client.is_configured():
-        redirect_base = f"{settings.APP_PUBLIC_URL}/campaigns/mine?sub_status=success"
-        approve_url = f"{redirect_base}&order_id={order_id}"
+
+    order_id = f"MOCK-CAMP-{uuid.uuid4().hex[:12].upper()}"
+    approve_url = (
+        f"{settings.APP_PUBLIC_URL}/campaigns/mine?campaign_status=success&campaign_id={campaign_id}&token={order_id}"
+    )
+
+    if not settings.allow_mock_payments():
+        if not paypal_client.has_real_credentials():
+            raise HTTPException(503, "PayPal is not configured to accept campaign submissions.")
+        try:
+            order = await paypal_client.create_order(
+                amount_cents=fee_cents,
+                currency="USD",
+                reference_id=f"campaign_submit:{campaign_id}",
+                description=f"DressApp Expert Campaign ({total_days} days)",
+                return_url=f"{settings.APP_PUBLIC_URL}/campaigns/mine?campaign_status=success&campaign_id={campaign_id}",
+                cancel_url=f"{settings.APP_PUBLIC_URL}/campaigns/mine?campaign_status=cancel",
+                custom_id=campaign_id,
+            )
+            order_id = order["id"]
+            approve_url = None
+            for link in order.get("links", []):
+                if link.get("rel") == "approve":
+                    approve_url = link.get("href")
+                    break
+            if not approve_url:
+                raise HTTPException(502, "PayPal order did not return an approval URL")
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.error("PayPal create_order failed for campaign %s: %s", campaign_id, exc)
+            raise HTTPException(502, f"PayPal error: {exc}") from exc
 
     now = _now_iso()
 
@@ -474,7 +502,7 @@ async def submit_campaign(
         "currency": "USD",
         "total_days": total_days,
         "approve_url": approve_url,
-        "mock": settings.PAYPAL_MOCK_MODE,
+        "mock": settings.allow_mock_payments(),
     }
 
 
@@ -484,7 +512,10 @@ async def submit_capture(
     body: SubmitCaptureIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Called after expert completes the PayPal NCP flow. Marks campaign as pending_approval, fires admin alert email."""
+    """Capture a PayPal order for campaign submission, then move to pending_approval."""
+    from app.config import settings
+    from app.services import paypal_client
+
     campaign = await _get_campaign_or_404(campaign_id)
     if campaign["expert_id"] != user["id"]:
         raise HTTPException(403, "Not the campaign owner")
@@ -494,12 +525,56 @@ async def submit_capture(
         raise HTTPException(422, "Campaign is not in a submittable state")
 
     db = get_db()
-    capture_id = f"ncp_cap_{uuid.uuid4().hex[:12].upper()}"
-    payer_email = user["email"]
+    replayed = await db.experts_campaigns.find_one(
+        {
+            "id": {"$ne": campaign_id},
+            "$or": [
+                {"billing.paypal_order_id": body.order_id, "billing.payment_status": "paid"},
+                {"billing.extension_history.paypal_order_id": body.order_id},
+            ],
+        },
+        {"_id": 0, "id": 1},
+    )
+    if replayed:
+        raise HTTPException(409, "PayPal order ID has already been applied to another campaign")
+
+    expected_fee = int((campaign.get("billing") or {}).get("total_fee_cents") or _calc_fee_cents(campaign.get("start_date"), campaign.get("end_date")))
+    capture_id = f"MOCK-CAP-{uuid.uuid4().hex[:12].upper()}"
+    payer_email = user.get("email") or ""
+
+    is_mock_order = body.order_id.startswith("MOCK-") or body.order_id.startswith("mock_") or body.order_id.startswith("ncp_")
+    if is_mock_order and not settings.allow_mock_payments():
+        raise HTTPException(403, "Unverified or mock PayPal order IDs are rejected")
+
+    if not settings.allow_mock_payments():
+        if not paypal_client.has_real_credentials():
+            raise HTTPException(503, "PayPal is not configured to verify campaign payments")
+        try:
+            captured = await paypal_client.capture_order(body.order_id)
+        except Exception as exc:
+            raise HTTPException(502, f"PayPal capture failed: {exc}") from exc
+
+        ok, real_cap_id, real_payer_email, reason = paypal_client.verify_capture_result(
+            captured,
+            expected_amount_cents=expected_fee,
+            expected_currency="USD",
+            allow_mock=False,
+        )
+        if not ok:
+            raise HTTPException(402, f"PayPal payment verification failed ({reason})")
+        capture_id = real_cap_id or body.order_id
+        if real_payer_email:
+            payer_email = real_payer_email
+
     now = _now_iso()
 
-    await db.experts_campaigns.update_one(
-        {"id": campaign_id},
+    lock_res = await db.experts_campaigns.update_one(
+        {
+            "id": campaign_id,
+            "expert_id": user["id"],
+            "status": {"$in": ["draft", "rejected"]},
+            "billing.paypal_order_id": body.order_id,
+        },
         {"$set": {
             "status": "pending_approval",
             "submitted_at": now,
@@ -511,6 +586,8 @@ async def submit_capture(
             "updated_at": now,
         }},
     )
+    if getattr(lock_res, "modified_count", 1) == 0:
+        raise HTTPException(409, "Campaign was already submitted or modified concurrently")
 
     # Fire admin alert email immediately (fire-and-forget)
     import asyncio
@@ -559,13 +636,40 @@ async def extend_campaign(
 
     extra_fee_cents = extra_days * 100  # $1.00 per day
 
-    order_id = f"ncp_ext_{uuid.uuid4().hex[:12].upper()}"
-    approve_url = "https://www.paypal.com/ncp/payment/995PY44NHVANA"
-    
+    from app.config import settings
     from app.services import paypal_client
-    if settings.PAYPAL_MOCK_MODE or not paypal_client.is_configured():
-        redirect_base = f"{settings.APP_PUBLIC_URL}/campaigns/mine?sub_status=success"
-        approve_url = f"{redirect_base}&order_id={order_id}"
+
+    order_id = f"MOCK-EXT-{uuid.uuid4().hex[:12].upper()}"
+    approve_url = (
+        f"{settings.APP_PUBLIC_URL}/campaigns/mine?ext_status=success&campaign_id={campaign_id}&new_end_date={body.new_end_date}&token={order_id}"
+    )
+
+    if not settings.allow_mock_payments():
+        if not paypal_client.has_real_credentials():
+            raise HTTPException(503, "PayPal is not configured for campaign extensions")
+        try:
+            order = await paypal_client.create_order(
+                amount_cents=extra_fee_cents,
+                currency="USD",
+                reference_id=f"campaign_extend:{campaign_id}",
+                description=f"DressApp Campaign Extension (+{extra_days} days)",
+                return_url=f"{settings.APP_PUBLIC_URL}/campaigns/mine?ext_status=success&campaign_id={campaign_id}&new_end_date={body.new_end_date}",
+                cancel_url=f"{settings.APP_PUBLIC_URL}/campaigns/mine?ext_status=cancel",
+                custom_id=campaign_id,
+            )
+            order_id = order["id"]
+            approve_url = None
+            for link in order.get("links", []):
+                if link.get("rel") == "approve":
+                    approve_url = link.get("href")
+                    break
+            if not approve_url:
+                raise HTTPException(502, "PayPal order did not return an approval URL")
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.error("PayPal create_order failed for campaign extension %s: %s", campaign_id, exc)
+            raise HTTPException(502, f"PayPal error: {exc}") from exc
 
     db = get_db()
     # Store pending extension info
@@ -589,7 +693,7 @@ async def extend_campaign(
         "currency": "USD",
         "new_end_date": body.new_end_date,
         "approve_url": approve_url,
-        "mock": settings.PAYPAL_MOCK_MODE,
+        "mock": settings.allow_mock_payments(),
     }
 
 
@@ -601,6 +705,9 @@ async def extend_capture(
 ) -> dict[str, Any]:
     """Capture the extension PayPal payment, then update end_date.
     Extension is auto-approved — no admin review required."""
+    from app.config import settings
+    from app.services import paypal_client
+
     campaign = await _get_campaign_or_404(campaign_id)
     if campaign["expert_id"] != user["id"]:
         raise HTTPException(403, "Not the campaign owner")
@@ -610,13 +717,49 @@ async def extend_capture(
         raise HTTPException(400, "Order ID mismatch — call /extend first")
 
     db = get_db()
-    capture_id = f"ncp_cap_ext_{uuid.uuid4().hex[:12].upper()}"
+    replayed = await db.experts_campaigns.find_one(
+        {
+            "$or": [
+                {"billing.paypal_order_id": body.order_id, "billing.payment_status": "paid", "id": {"$ne": campaign_id}},
+                {"billing.extension_history.paypal_order_id": body.order_id},
+            ]
+        },
+        {"_id": 0, "id": 1},
+    )
+    if replayed:
+        raise HTTPException(409, "PayPal order ID has already been redeemed")
+
+    extra_days = int(pending.get("extra_days") or 1)
+    extra_fee = int(pending.get("extra_fee_cents") or 100)
+    capture_id = f"MOCK-CAP-EXT-{uuid.uuid4().hex[:12].upper()}"
+
+    is_mock_order = body.order_id.startswith("MOCK-") or body.order_id.startswith("mock_") or body.order_id.startswith("ncp_")
+    if is_mock_order and not settings.allow_mock_payments():
+        raise HTTPException(403, "Unverified or mock PayPal order IDs are rejected")
+
+    if not settings.allow_mock_payments():
+        if not paypal_client.has_real_credentials():
+            raise HTTPException(503, "PayPal is not configured to verify campaign extensions")
+        try:
+            captured = await paypal_client.capture_order(body.order_id)
+        except Exception as exc:
+            raise HTTPException(502, f"PayPal capture failed: {exc}") from exc
+
+        ok, real_cap_id, _payer, reason = paypal_client.verify_capture_result(
+            captured,
+            expected_amount_cents=extra_fee,
+            expected_currency="USD",
+            allow_mock=False,
+        )
+        if not ok:
+            raise HTTPException(402, f"PayPal extension verification failed ({reason})")
+        capture_id = real_cap_id or body.order_id
+
     now = _now_iso()
-    extra_days = pending.get("extra_days", 1)
-    extra_fee = pending.get("extra_fee_cents", 100)
+    effective_end_date = pending.get("new_end_date") or body.new_end_date
 
     extension_record = {
-        "new_end_date": body.new_end_date,
+        "new_end_date": effective_end_date,
         "extra_days": extra_days,
         "extra_fee_cents": extra_fee,
         "paypal_order_id": body.order_id,
@@ -624,11 +767,15 @@ async def extend_capture(
         "captured_at": now,
     }
 
-    await db.experts_campaigns.update_one(
-        {"id": campaign_id},
+    lock_res = await db.experts_campaigns.update_one(
+        {
+            "id": campaign_id,
+            "expert_id": user["id"],
+            "_pending_extension.paypal_order_id": body.order_id,
+        },
         {
             "$set": {
-                "end_date": body.new_end_date,
+                "end_date": effective_end_date,
                 "_pending_extension": None,
                 "updated_at": now,
             },
@@ -639,10 +786,12 @@ async def extend_capture(
             "$push": {"billing.extension_history": extension_record},
         },
     )
+    if getattr(lock_res, "modified_count", 1) == 0:
+        raise HTTPException(409, "Extension order already captured")
 
     return {
         "ok": True,
-        "new_end_date": body.new_end_date,
+        "new_end_date": effective_end_date,
         "extra_days": extra_days,
         "capture_id": capture_id,
     }

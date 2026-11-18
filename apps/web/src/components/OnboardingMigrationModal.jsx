@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { api, tokenStore } from '@/lib/api';
+import { api } from '@/lib/api';
 import {
   Loader2,
   ArrowRight,
@@ -155,6 +155,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [parsingMedia, setParsingMedia] = useState(false);
   const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
   const [capacitorWebScanning, setCapacitorWebScanning] = useState(false);
+  const [migrationToken, setMigrationToken] = useState('');
   const mediaInputRef = useRef(null);
 
   useEffect(() => {
@@ -168,6 +169,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         setStep(initialStep);
       } else if (!initialApp) {
         setStep('ask');
+      }
+      if (typeof api.getMigrationToken === 'function') {
+        api.getMigrationToken()
+          .then((res) => setMigrationToken(res?.token || ''))
+          .catch(() => setMigrationToken(''));
       }
     }
   }, [isOpen, initialApp, initialStep]);
@@ -197,7 +203,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
   const harvesterBookmarkletCode = useMemo(() => {
-    const authToken = tokenStore?.get?.() || '';
+    const authToken = migrationToken || '';
     const apiBase = (typeof window !== 'undefined' && window.location?.origin)
       ? `${window.location.origin}/api/v1`
       : 'https://dressapp.co/api/v1';
@@ -205,8 +211,37 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     const rawJS = `(async () => {
       const AUTH_TOKEN = ${JSON.stringify(authToken)};
       const API_BASE = ${JSON.stringify(apiBase)};
+      const DRESSAPP_ORIGIN = new URL(API_BASE).origin;
       const APP_NAME = ${JSON.stringify(appName)};
       const MSGS = ${JSON.stringify(agentMsgs)};
+
+      const stripHtml = (val) => String(val || '').replace(/<br\\s*\\/?>/gi, '\\n').replace(/<[^>]+>/g, '');
+      const appendLines = (parent, rawText) => {
+        const lines = stripHtml(rawText).split('\\n');
+        lines.forEach((line, i) => {
+          if (i > 0) parent.appendChild(document.createElement('br'));
+          parent.appendChild(document.createTextNode(line));
+        });
+      };
+      const buildHeaderEl = () => {
+        const hdr = document.createElement('div');
+        hdr.style.cssText = 'font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;';
+        const badge = document.createElement('span');
+        badge.className = 'da-pulse-badge';
+        badge.textContent = '👗 ';
+        hdr.appendChild(badge);
+        hdr.appendChild(document.createTextNode(stripHtml(MSGS.title)));
+        return hdr;
+      };
+      const showCompletionCard = (container, count) => {
+        const titleEl = document.createElement('div');
+        titleEl.style.cssText = 'color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;';
+        titleEl.textContent = stripHtml(MSGS.savedSuccess).replace('{{count}}', String(count));
+        const bodyEl = document.createElement('div');
+        bodyEl.style.cssText = 'color:#cbd5e1;font-size:11px;line-height:1.4;';
+        appendLines(bodyEl, MSGS.completionNotice);
+        container.replaceChildren(buildHeaderEl(), titleEl, bodyEl);
+      };
 
       const uploadBatch = async (cardsToUpload) => {
         if (!cardsToUpload || cardsToUpload.length === 0) return 0;
@@ -240,20 +275,29 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         const txt = st.textContent || '';
         if (txt.includes('dressapp-importer-widget') || txt.includes('dressapp-fab') || txt.includes('dressapp-anchor')) st.remove();
       });
-      window.postMessage({ type: 'DRESSAPP_WIDGET_TOGGLE', enabled: false }, '*');
+      window.postMessage({ type: 'DRESSAPP_WIDGET_TOGGLE', enabled: false }, window.location.origin);
 
       const s = document.createElement('style');
-      s.innerHTML = '@keyframes da-hb { 0% { transform: scale(1); } 14% { transform: scale(1.08); } 28% { transform: scale(1); } 42% { transform: scale(1.12); } 70% { transform: scale(1); } } .da-pulse-badge { animation: da-hb 1.5s infinite ease-in-out; display: inline-block; }';
+      s.textContent = '@keyframes da-hb { 0% { transform: scale(1); } 14% { transform: scale(1.08); } 28% { transform: scale(1); } 42% { transform: scale(1.12); } 70% { transform: scale(1); } } .da-pulse-badge { animation: da-hb 1.5s infinite ease-in-out; display: inline-block; }';
       document.head.appendChild(s);
 
       const o = document.createElement('div');
       o.id = 'dressapp-importer-widget';
       o.style.cssText = 'position:fixed;top:20px;' + (MSGS.dir === 'rtl' ? 'right:20px;' : 'left:20px;') + 'z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:280px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);direction:' + MSGS.dir + ';text-align:' + MSGS.align + ';';
-      o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> ' + MSGS.title + '</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">' + MSGS.chooseTabInstruction + '</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">' + MSGS.shareAndStart + '</button></div>';
+      const st = document.createElement('div');
+      st.id = 'da-status';
+      st.style.cssText = 'color:#94a3b8;font-size:11px;';
+      const instrDiv = document.createElement('div');
+      instrDiv.style.cssText = 'margin-bottom:8px;color:#cbd5e1;';
+      appendLines(instrDiv, MSGS.chooseTabInstruction);
+      const btn = document.createElement('button');
+      btn.id = 'da-start-btn';
+      btn.style.cssText = 'background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;';
+      btn.textContent = stripHtml(MSGS.shareAndStart);
+      st.appendChild(instrDiv);
+      st.appendChild(btn);
+      o.replaceChildren(buildHeaderEl(), st);
       document.body.appendChild(o);
-
-      const st = document.getElementById('da-status');
-      const btn = document.getElementById('da-start-btn');
 
       // Mobile / fallback DOM harvester when getDisplayMedia is unavailable
       const runDomFallbackHarvester = async () => {
@@ -329,7 +373,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           st.innerText = MSGS.savingRemaining.replace('{{count}}', rem.length);
           await uploadBatch(rem);
         }
-        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> ' + MSGS.title + '</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">' + MSGS.savedSuccess.replace('{{count}}', harvested.length) + '</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + MSGS.completionNotice + '</div>';
+        showCompletionCard(o, harvested.length);
       };
 
       btn.onclick = async () => {
@@ -346,7 +390,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           try {
             stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
           } catch (e2) {
-            st.innerHTML = '<span style="color:#f87171;">' + (MSGS.permissionDenied.replace('{{error}}', (e2?.message || e?.message || 'unknown'))) + '</span>';
+            const errSpan = document.createElement('span');
+            errSpan.style.color = '#f87171';
+            errSpan.textContent = stripHtml(MSGS.permissionDenied).replace('{{error}}', (e2?.message || e?.message || 'unknown'));
+            st.replaceChildren(errSpan);
             setTimeout(() => o.remove(), 4000);
             return;
           }
@@ -355,7 +402,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         const track = stream.getVideoTracks()[0];
         const settings = track ? track.getSettings() : {};
         if (settings.displaySurface && settings.displaySurface !== 'browser') {
-          st.innerHTML = '<span style="color:#f87171;">' + MSGS.selectTabError + '</span>';
+          const errSpan = document.createElement('span');
+          errSpan.style.color = '#f87171';
+          errSpan.textContent = stripHtml(MSGS.selectTabError);
+          st.replaceChildren(errSpan);
           if (track) track.stop();
           return;
         }
@@ -619,7 +669,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             } catch (_) {}
             if (window.opener) {
               try {
-                window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: batch.map(c => ({ crop_base64: c.crop_base64 })), app_name: APP_NAME }, '*');
+                window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: batch.map(c => ({ crop_base64: c.crop_base64 })), app_name: APP_NAME }, DRESSAPP_ORIGIN);
               } catch (_) {}
             }
           }
@@ -763,17 +813,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               type: 'DRESSAPP_MIGRATION_COMPLETE',
               total_cards: totalCaptured,
               app_name: APP_NAME || document.title || 'Competitor App'
-            }, '*');
+            }, DRESSAPP_ORIGIN);
           } catch (_) {}
         }
         harvestedCards.length = 0;
 
         o.style.display = 'block';
-        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> ' + MSGS.title + '</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">' + MSGS.savedSuccess.replace('{{count}}', totalCaptured) + '</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + MSGS.completionNotice + '</div>';
+        showCompletionCard(o, totalCaptured);
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
-  }, [appName, agentMsgs]);
+  }, [appName, agentMsgs, migrationToken]);
 
   const bookmarkletRef = useRef(null);
 

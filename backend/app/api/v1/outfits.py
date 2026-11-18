@@ -170,8 +170,6 @@ async def save_outfit(
         item = None
         if cid:
             item = await db.closet_items.find_one({"id": cid, "user_id": user["id"]})
-            if not item:
-                item = await db.closet_items.find_one({"id": cid})
 
         # If not found by ID, attempt to resolve by title in user's closet
         title_val = g_dict.get("title")

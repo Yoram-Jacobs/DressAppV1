@@ -40,6 +40,9 @@ _CREDIT_PACKS = {"10": 10, "50": 50, "100": 100}
 _CREDIT_PACK_PRICES_CENTS = {"10": 300, "50": 1200, "100": 2000}
 
 
+from app.services.security_validator import validate_app_redirect_url
+
+
 class AiCreditPurchaseIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     pack: Literal["10", "50", "100"]
@@ -50,31 +53,7 @@ class AiCreditPurchaseIn(BaseModel):
 
 def _validate_checkout_redirect_url(raw_url: str | None, field_name: str) -> str | None:
     """Validate optional return/cancel URLs against safe origins or deep links."""
-    if raw_url is None:
-        return None
-    cleaned = raw_url.strip()
-    if not cleaned:
-        return None
-    if "\n" in cleaned or "\r" in cleaned or "\t" in cleaned:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Invalid {field_name}")
-    if cleaned.startswith("/") and not cleaned.startswith("//"):
-        return f"{settings.APP_PUBLIC_URL}{cleaned}"
-    if cleaned.startswith(("dressapp://", "exp://", "exps://")):
-        return cleaned
-
-    parsed = urlparse(cleaned)
-    if parsed.scheme not in ("http", "https") or not parsed.netloc:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Invalid {field_name} scheme")
-
-    origin = f"{parsed.scheme}://{parsed.netloc}".lower()
-    host = (parsed.hostname or "").lower()
-    allowed = {settings.APP_PUBLIC_URL.lower(), "https://dressapp.co", "https://www.dressapp.co"}
-    for cors_item in (settings.CORS_ORIGINS or "").split(","):
-        if cors_item.strip():
-            allowed.add(cors_item.strip().rstrip("/").lower())
-    if origin in allowed or host in ("localhost", "127.0.0.1"):
-        return cleaned
-    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Untrusted {field_name} origin")
+    return validate_app_redirect_url(raw_url, field_name, allow_mobile_schemes=True)
 
 
 class CreditUsageRequest(BaseModel):
@@ -319,7 +298,12 @@ async def create_purchase(
     cancel_url = validated_cancel or f"{settings.APP_PUBLIC_URL}/pricing?credit_status=cancel"
     order_id = f"mock_{purchase_id}"
 
-    if paypal_client.is_configured() and not settings.PAYPAL_MOCK_MODE:
+    if not settings.allow_mock_payments():
+        if not paypal_client.has_real_credentials():
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="PayPal is not configured for live credit purchases.",
+            )
         try:
             order = await paypal_client.create_order(
                 amount_cents=amount_cents,
@@ -408,8 +392,25 @@ async def capture_purchase(
             return {"success": True, "already_captured": True, "credits_added": latest.get("credits", purchase["credits"])}
         raise HTTPException(status.HTTP_409_CONFLICT, detail="Purchase capture is already in progress")
 
-    order_id = purchase.get("paypal_order_id")
-    if paypal_client.is_configured() and not settings.PAYPAL_MOCK_MODE and order_id and not order_id.startswith("mock_"):
+    order_id = purchase.get("paypal_order_id") or ""
+    is_mock_order = order_id.startswith("mock_") or order_id.startswith("MOCK-")
+    if is_mock_order and not settings.allow_mock_payments():
+        await db.ai_credit_purchases.update_one(
+            {"id": purchase["id"]},
+            {"$set": {"status": "failed", "updated_at": _now_iso()}},
+        )
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Mock payment orders are disabled outside dev/test")
+
+    if not settings.allow_mock_payments():
+        if not paypal_client.is_configured() or not order_id:
+            await db.ai_credit_purchases.update_one(
+                {"id": purchase["id"]},
+                {"$set": {"status": "failed", "updated_at": _now_iso()}},
+            )
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="PayPal verification is required to capture credit purchases",
+            )
         try:
             captured = await paypal_client.capture_order(order_id)
         except Exception as exc:
@@ -420,14 +421,20 @@ async def capture_purchase(
             logger.error("PayPal capture error for credit pack %s: %s", purchase_id, exc)
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"PayPal capture failed: {exc}")
 
-        if not captured.get("mock") and _extract_paypal_capture_status(captured) != "COMPLETED":
+        ok, _, _, reason = paypal_client.verify_capture_result(
+            captured,
+            expected_amount_cents=int(purchase.get("amount_cents") or 0),
+            expected_currency=str(purchase.get("currency") or "USD"),
+            allow_mock=False,
+        )
+        if not ok:
             await db.ai_credit_purchases.update_one(
                 {"id": purchase["id"]},
                 {"$set": {"status": "pending", "updated_at": _now_iso()}},
             )
             raise HTTPException(
                 status.HTTP_402_PAYMENT_REQUIRED,
-                detail="PayPal capture did not complete",
+                detail=f"PayPal capture did not complete ({reason})",
             )
 
     credits_to_add = int(purchase["credits"])
@@ -587,87 +594,14 @@ async def check_usage(
 
 @pricing_router.post("/subscription/upgrade")
 async def upgrade_subscription(
-    request: Dict[str, Any],
-    user: dict = Depends(get_current_user),
+    _request: Dict[str, Any],
+    _user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Upgrade subscription and add bonus paid credits."""
-    try:
-        new_plan = request.get("plan_type")
-        if not new_plan:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Plan type required")
-        
-        if new_plan == "free":
-            from app.services.billing_service import demote_user_to_free_plan
-            db = get_db()
-            return await demote_user_to_free_plan(db, user)
-
-        if new_plan not in ["pro", "business", "manager", "professional"]:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Invalid plan: {new_plan}")
-        
-        db = get_db()
-        user_record = await db.users.find_one({"id": user["id"]})
-        
-        if not user_record:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
-        
-        ai_config = user_record.get("ai_configuration", {})
-        subscription_info = ai_config.get("subscription", {})
-        
-        # Update subscription
-        subscription_info["plan_type"] = new_plan
-        subscription_info["is_active"] = True
-        
-        from datetime import datetime, timezone
-        bonus = 100 if new_plan == "pro" else 300
-        new_bucket = {
-            "amount": bonus,
-            "type": "paid",
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "expires_at": None,
-        }
-        
-        user_record["credit_buckets"] = user_record.get("credit_buckets", [])
-        user_record["credit_buckets"].append(new_bucket)
-        
-        # Update plan-specific limits
-        if new_plan == "pro":
-            ai_config["ai_monthly_limit"] = 1000
-        elif new_plan == "business":
-            ai_config["ai_monthly_limit"] = 3000
-        
-        now_iso = datetime.now(timezone.utc).isoformat()
-        await db.users.update_one(
-            {"id": user["id"]},
-            {
-                "$set": {
-                    "ai_configuration": ai_config,
-                    "subscription": subscription_info,
-                    "credit_buckets": user_record["credit_buckets"],
-                    "updated_at": now_iso,
-                }
-            },
-        )
-
-        # Restore any items that were soft-archived on a previous free-plan demotion
-        restore_res = await db.closet_items.update_many(
-            {"user_id": user["id"], "archived": True, "archived_reason": "plan_demotion"},
-            {
-                "$set": {"archived": False, "updated_at": now_iso},
-                "$unset": {"archived_reason": "", "archived_at": ""},
-            },
-        )
-        restored_count = int(getattr(restore_res, "modified_count", 0))
-
-        return {
-            "success": True,
-            "message": f"Successfully upgraded to {new_plan} plan with {bonus} bonus paid credits",
-            "plan_type": new_plan,
-            "bonus_credits_added": bonus,
-            "restored_closet_items_count": restored_count,
-        }
-    except Exception as e:
-        logger.error(f"Error upgrading subscription: {str(e)}")
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    """Retired unverified subscription upgrade endpoint (Wave 1 security hardening)."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="Direct unverified subscription upgrade has been retired. Use /api/v1/paypal/subscribe checkout.",
+    )
 
 
 # ============================================================================

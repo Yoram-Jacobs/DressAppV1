@@ -47,10 +47,9 @@ class AdTrackIn(BaseModel):
 def _viewer_key(request: Request, user: dict[str, Any] | None) -> str:
     if user and user.get("id"):
         return f"u:{user['id']}"
-    forwarded = request.headers.get("x-forwarded-for") or ""
-    raw_ip = forwarded.split(",")[0].strip() if forwarded else ""
-    if not raw_ip and request.client:
-        raw_ip = request.client.host or ""
+    from app.services.security_validator import get_client_ip
+
+    raw_ip = get_client_ip(request)
     digest = hashlib.sha256(f"{raw_ip or 'anon'}:{settings.JWT_SECRET}".encode("utf-8")).hexdigest()[:20]
     return f"ip:{digest}"
 

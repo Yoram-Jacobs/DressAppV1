@@ -23,13 +23,20 @@ def _headers() -> Dict[str, str]:
 def _base_url() -> str:
     return settings.ATZMAI_BASE_URL.rstrip("/")
 
-def is_mock_mode() -> bool:
-    # Fallback to mock mode if credentials are at their default values or if explicitly mocked
-    return (
-        settings.PAYPAL_MOCK_MODE
-        or settings.ATZMAI_API_KEY == "test_api_key_public"
-        or settings.ATZMAI_CLIENT_SECRET == "clientSecret"
+def has_real_credentials() -> bool:
+    return bool(
+        settings.ATZMAI_API_KEY
+        and settings.ATZMAI_API_KEY != "test_api_key_public"
+        and settings.ATZMAI_CLIENT_SECRET
+        and settings.ATZMAI_CLIENT_SECRET != "clientSecret"
     )
+
+
+def is_mock_mode() -> bool:
+    # Never enter mock mode outside dev/test environments, even if default keys are left unset.
+    if not settings.is_dev_or_test:
+        return False
+    return settings.PAYPAL_MOCK_MODE or not has_real_credentials()
 
 async def get_usd_to_ils_rate() -> float:
     """Fetch USD to ILS exchange rate using a public API. Fallback to 3.70."""

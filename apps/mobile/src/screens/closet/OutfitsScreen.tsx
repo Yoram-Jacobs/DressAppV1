@@ -30,6 +30,7 @@ import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '@mobile/theme';
+import { share as shareApi } from '@mobile/lib/api';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useOutfitStore } from '@mobile/lib/stores';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
@@ -139,7 +140,12 @@ export function OutfitsScreen() {
 
   const handleShare = async (outfit: SavedOutfit) => {
     try {
-      const shareUrl = `https://dressapp.co/share/outfit/${outfit.id}`;
+      const snap = await shareApi.createSharedOutfit({ outfit });
+      const shareId = snap?.id;
+      if (!shareId) {
+        throw new Error('Missing share snapshot id');
+      }
+      const shareUrl = `https://dressapp.co/shared/${encodeURIComponent(shareId)}`;
       await Share.share({
         title: outfit.name || t('outfits.defaultLookName', { defaultValue: 'DressApp Look' }),
         message: t('outfits.shareMessage', {
@@ -150,7 +156,10 @@ export function OutfitsScreen() {
         url: shareUrl,
       });
     } catch {
-      // Ignore
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        t('outfits.shareError', { defaultValue: 'Could not create shareable outfit link.' })
+      );
     }
   };
 

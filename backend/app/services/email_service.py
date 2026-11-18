@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import html
 import io
 import logging
 import os
@@ -348,13 +349,14 @@ async def _item_card(
     attachments: list[dict[str, Any]] | None = None,
 ) -> str:
     """Render a small item preview card (image + title + brand)."""
-    title = (item.get("title") or "Untitled item").replace("<", "&lt;").replace(">", "&gt;")
-    brand = (item.get("brand") or "").replace("<", "&lt;").replace(">", "&gt;")
+    title = html.escape(str(item.get("title") or "Untitled item"), quote=True)
+    brand = html.escape(str(item.get("brand") or ""), quote=True)
 
     img_src = await _resolve_item_image(item, attachments)
     if img_src:
+        safe_img_src = html.escape(str(img_src), quote=True)
         img_html = (
-            f'<img src="{img_src}" alt="{title}" width="120" height="120" '
+            f'<img src="{safe_img_src}" alt="{title}" width="120" height="120" '
             f'style="display:block;border:0;border-radius:10px;'
             f'object-fit:cover;background:#fafafa;">'
         )
@@ -389,43 +391,48 @@ def _contact_block(label: str, person: dict[str, Any]) -> str:
     rows: list[str] = []
     name = person.get("display_name") or person.get("full_name") or person.get("name")
     if name:
-        rows.append(f"<strong>{name}</strong>")
+        rows.append(f"<strong>{html.escape(str(name), quote=True)}</strong>")
     email = person.get("email")
     if email:
-        rows.append(f'<a href="mailto:{email}" style="color:{_BRAND_COLOR};">{email}</a>')
+        safe_email_text = html.escape(str(email), quote=True)
+        safe_email_href = html.escape(str(email).strip().replace("\n", "").replace("\r", ""), quote=True)
+        rows.append(f'<a href="mailto:{safe_email_href}" style="color:{_BRAND_COLOR};">{safe_email_text}</a>')
     phone = person.get("phone")
     if phone:
-        rows.append(phone)
+        rows.append(html.escape(str(phone), quote=True))
     addr = person.get("address") or {}
     if isinstance(addr, dict):
         for fld in ("line1", "line2"):
             v = addr.get(fld)
             if v:
-                rows.append(v)
+                rows.append(html.escape(str(v), quote=True))
         line3 = " ".join(
-            v for v in (
+            str(v) for v in (
                 addr.get("city"),
                 addr.get("region"),
                 addr.get("postal_code"),
             ) if v
         )
         if line3:
-            rows.append(line3)
+            rows.append(html.escape(line3, quote=True))
         country = addr.get("country")
         if country:
-            rows.append(country)
+            rows.append(html.escape(str(country), quote=True))
     if not rows:
         # Last-resort fallback so the lister/buyer still has something
         # actionable. Email is always required at signup.
         if email:
-            rows.append(f'<a href="mailto:{email}">{email}</a>')
+            safe_email_text = html.escape(str(email), quote=True)
+            safe_email_href = html.escape(str(email).strip().replace("\n", "").replace("\r", ""), quote=True)
+            rows.append(f'<a href="mailto:{safe_email_href}">{safe_email_text}</a>')
         else:
             rows.append('<em style="color:#aaa;">No contact details on file</em>')
+    safe_label = html.escape(str(label), quote=True)
     return (
         f'<div style="margin:14px 0;padding:14px;border-left:3px solid {_BRAND_COLOR};'
         f'background:#f4f9f8;border-radius:6px;">'
         f'<div style="font-size:12px;color:#5a8b87;letter-spacing:.06em;'
-        f'text-transform:uppercase;margin-bottom:6px;">{label}</div>'
+        f'text-transform:uppercase;margin-bottom:6px;">{safe_label}</div>'
         + "<br>".join(rows)
         + "</div>"
     )
@@ -440,9 +447,11 @@ async def sale_seller(
     seller_net_cents: int, currency: str, is_rental: bool = False,
     attachments: list | None = None,
 ) -> dict:
-    seller_name = seller.get("display_name") or seller.get("name") or "there"
-    gross = f"{currency} {gross_cents/100:.2f}"
-    net = f"{currency} {seller_net_cents/100:.2f}"
+    raw_seller_name = seller.get("display_name") or seller.get("name") or "there"
+    seller_name = html.escape(str(raw_seller_name), quote=True)
+    safe_item_title = str(item.get("title", "your item")).replace("\r", " ").replace("\n", " ")
+    gross = html.escape(f"{currency} {gross_cents/100:.2f}", quote=True)
+    net = html.escape(f"{currency} {seller_net_cents/100:.2f}", quote=True)
     attachments_list = list(attachments or [])
     card_html = await _item_card(item, attachments=attachments_list)
     
@@ -450,13 +459,13 @@ async def sale_seller(
         title_text = f"Congratulations! Your item has been rented, {seller_name}! 🎉"
         intro_text = "Your item just found a temporary home. Here are the details:"
         price_label = f"Rental tariff: <strong>{gross} / day</strong>"
-        subject = f"Your item was rented: {item.get('title','your item')}!"
+        subject = f"Your item was rented: {safe_item_title}!"
         preheader = "Congrats — please dispatch within 3 days."
     else:
         title_text = f"Congratulations on your sale, {seller_name}! 🎉"
         intro_text = "Your item just found a new home. Here are the details:"
         price_label = f"Sale price: <strong>{gross}</strong>"
-        subject = f"You sold {item.get('title','your item')}!"
+        subject = f"You sold {safe_item_title}!"
         preheader = "Congrats — please dispatch within 3 days."
 
     body = f"""\
@@ -479,8 +488,10 @@ async def sale_buyer(
     *, to: str, buyer: dict, seller: dict, item: dict, gross_cents: int, currency: str,
     is_rental: bool = False, attachments: list | None = None,
 ) -> dict:
-    buyer_name = buyer.get("display_name") or buyer.get("name") or "there"
-    gross = f"{currency} {gross_cents/100:.2f}"
+    raw_buyer_name = buyer.get("display_name") or buyer.get("name") or "there"
+    buyer_name = html.escape(str(raw_buyer_name), quote=True)
+    safe_item_title = str(item.get("title", "your item")).replace("\r", " ").replace("\n", " ")
+    gross = html.escape(f"{currency} {gross_cents/100:.2f}", quote=True)
     attachments_list = list(attachments or [])
     card_html = await _item_card(item, attachments=attachments_list)
 
@@ -488,14 +499,14 @@ async def sale_buyer(
         title_text = f"You rented it, {buyer_name}! 🛍️"
         intro_text = "Your rental is confirmed. Here are the details:"
         price_label = f"You paid: <strong>{gross}</strong> (daily tariff)"
-        subject = f"Your rental: {item.get('title','your item')}"
+        subject = f"Your rental: {safe_item_title}"
         preheader = "Rental confirmed — owner will dispatch within 3 days."
         contact_label = "Owner contact"
     else:
         title_text = f"You got it, {buyer_name}! 🛍️"
         intro_text = "Your purchase is confirmed. Here are the details:"
         price_label = f"You paid: <strong>{gross}</strong>"
-        subject = f"Your purchase: {item.get('title','your new item')}"
+        subject = f"Your purchase: {str(item.get('title', 'your new item')).replace(chr(13), ' ').replace(chr(10), ' ')}"
         preheader = "Sale confirmed — seller will dispatch within 3 days."
         contact_label = "Seller contact"
 

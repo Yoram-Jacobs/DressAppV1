@@ -297,8 +297,10 @@ async def extract_pdf_text(
     import pypdf
     import io
 
+    from app.services.upload_manager import read_upload_bounded
+
     try:
-        file_bytes = await file.read()
+        file_bytes = await read_upload_bounded(file, 15 * 1024 * 1024)
         filename = file.filename or ""
         mime_type = file.content_type
         if not mime_type or mime_type == "application/octet-stream":
@@ -381,7 +383,9 @@ async def parse_receipt(
     if text and text.strip():
         parts.append(text.strip())
     elif file and file.filename:
-        file_bytes = await file.read()
+        from app.services.upload_manager import read_upload_bounded
+
+        file_bytes = await read_upload_bounded(file, 15 * 1024 * 1024)
         mime_type = file.content_type
         if not mime_type or mime_type == "application/octet-stream":
             mime_type = mimetypes.guess_type(file.filename)[0] or "image/jpeg"

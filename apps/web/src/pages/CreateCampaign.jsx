@@ -352,7 +352,11 @@ export default function CreateCampaign() {
         cid = created.id;
         setCampaignId(cid);
       }
-      const res = await campaignApi.submitCampaign(cid); // returns {order_id, fee_cents, total_days}
+      const res = await campaignApi.submitCampaign(cid); // returns {order_id, fee_cents, total_days, approve_url}
+      if (res?.approve_url) {
+        window.location.href = res.approve_url;
+        return;
+      }
       setPaypalOrder(res);
       setSubmitPhase("awaiting_payment");
     } catch (err) {

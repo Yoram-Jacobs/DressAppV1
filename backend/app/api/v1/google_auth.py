@@ -24,7 +24,7 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -37,6 +37,7 @@ from app.services import repos
 from app.services.auth import (
     apply_admin_role,
     apply_tester_group,
+    attach_session_cookies,
     create_access_token,
     get_current_user,
 )
@@ -104,13 +105,40 @@ def _validate_return_url(url: str | None) -> str | None:
     if not url or not isinstance(url, str):
         return None
     url_clean = url.strip()
-    if "\n" in url_clean or "\r" in url_clean or "\t" in url_clean:
+    if any(ch in url_clean for ch in ("\n", "\r", "\t", "\x00")):
         return None
-    for prefix in ALLOWED_MOBILE_RETURN_SCHEMES:
+    allowed = ALLOWED_MOBILE_RETURN_SCHEMES if settings.is_dev_or_test else ("dressapp://",)
+    for prefix in allowed:
         if url_clean.startswith(prefix):
             return url_clean
     logger.warning("Rejected untrusted OAuth return_url: %s", url)
     return None
+
+
+def _resolve_trusted_frontend_origin(request: Request, fallback_origin: str | None = None) -> str:
+    """Resolve frontend origin from Origin/Referer ONLY if it matches the trusted origin allowlist."""
+    from urllib.parse import urlparse
+    from app.services.security_validator import get_allowed_frontend_origins
+
+    allowed = get_allowed_frontend_origins()
+    for candidate in (request.headers.get("origin"), request.headers.get("referer")):
+        if not candidate:
+            continue
+        p = urlparse(candidate)
+        if p.scheme in ("http", "https") and p.netloc:
+            origin = f"{p.scheme}://{p.netloc}".lower()
+            host = (p.hostname or "").lower()
+            if origin in allowed or (settings.is_dev_or_test and host in ("localhost", "127.0.0.1")):
+                return f"{p.scheme}://{p.netloc}"
+
+    if fallback_origin:
+        p = urlparse(fallback_origin)
+        if p.scheme in ("http", "https") and p.netloc:
+            origin = f"{p.scheme}://{p.netloc}".lower()
+            host = (p.hostname or "").lower()
+            if origin in allowed or (settings.is_dev_or_test and host in ("localhost", "127.0.0.1")):
+                return f"{p.scheme}://{p.netloc}"
+    return settings.APP_PUBLIC_URL
 
 
 def _read_state(token: str, *, expected_purpose: str) -> dict[str, Any]:
@@ -138,16 +166,7 @@ async def google_oauth_start(
     if not calendar_service.enabled:
         raise HTTPException(503, "Google OAuth not configured on server")
     redirect_uri = calendar_service.resolve_redirect_uri(request)
-    frontend_origin = None
-    ref_header = request.headers.get("origin") or request.headers.get("referer")
-    if ref_header:
-        from urllib.parse import urlparse
-
-        p = urlparse(ref_header)
-        if p.scheme and p.netloc:
-            frontend_origin = f"{p.scheme}://{p.netloc}"
-    if not frontend_origin:
-        frontend_origin = _frontend_origin(request)
+    frontend_origin = _resolve_trusted_frontend_origin(request, _frontend_origin(request))
 
     safe_next = next if (next and next.startswith("/") and not next.startswith("//")) else None
     state = _build_state(
@@ -236,7 +255,8 @@ async def _handle_calendar_link_callback(
     if not target_path.startswith("/"):
         target_path = f"/{target_path}"
     if data.get("frontend_origin"):
-        redirect_base = f"{data['frontend_origin']}{target_path}"
+        validated_origin = _resolve_trusted_frontend_origin(request, data.get("frontend_origin"))
+        redirect_base = f"{validated_origin}{target_path}"
     else:
         redirect_base = f"{redirect_base.rstrip('/me')}{target_path}"
 
@@ -357,7 +377,7 @@ def _frontend_origin(request: Request) -> str:
 # The second hit finds the Google auth code already consumed → invalid_grant.
 # Keyed by the raw state JWT string (unique per sign-in attempt).
 # ---------------------------------------------------------------------------
-_EXCHANGE_CACHE: dict[str, tuple[str, float]] = {}
+_EXCHANGE_CACHE: dict[str, tuple[str, float, str | None]] = {}
 _EXCHANGE_CACHE_TTL = 300.0   # seconds — covers any realistic Chrome retry
 _EXCHANGE_CACHE_MAX = 500     # safety cap on memory usage
 _EXCHANGE_LOCKS: dict[str, asyncio.Lock] = {}
@@ -368,7 +388,7 @@ def _cleanup_exchange_cache() -> None:
     """Evict expired entries; trim to half capacity when above the limit."""
     now = time.time()
     expired = [
-        k for k, (_, ts) in _EXCHANGE_CACHE.items()
+        k for k, (_, ts, _) in _EXCHANGE_CACHE.items()
         if now - ts > _EXCHANGE_CACHE_TTL
     ]
     for k in expired:
@@ -379,6 +399,15 @@ def _cleanup_exchange_cache() -> None:
         for k in trim:
             _EXCHANGE_CACHE.pop(k, None)
             _EXCHANGE_LOCKS.pop(k, None)
+
+
+def _cached_exchange_response(cached_url: str, cached_jwt: str | None) -> HTMLResponse | RedirectResponse:
+    if cached_url.startswith("dressapp://"):
+        return _mobile_scheme_redirect(cached_url)
+    resp = RedirectResponse(cached_url, status_code=307)
+    if cached_jwt:
+        attach_session_cookies(resp, cached_jwt)
+    return resp
 
 
 def _login_error_redirect(origin: str, reason: str) -> RedirectResponse:
@@ -589,16 +618,7 @@ async def google_login_start(
         request, callback_path=LOGIN_CALLBACK_PATH
     )
 
-    frontend_origin = None
-    ref_header = request.headers.get("origin") or request.headers.get("referer")
-    if ref_header:
-        from urllib.parse import urlparse
-
-        p = urlparse(ref_header)
-        if p.scheme and p.netloc:
-            frontend_origin = f"{p.scheme}://{p.netloc}"
-    if not frontend_origin:
-        frontend_origin = _frontend_origin(request)
+    frontend_origin = _resolve_trusted_frontend_origin(request, _frontend_origin(request))
 
     state = _build_state(
         purpose="google-oauth-login",
@@ -708,7 +728,10 @@ async def _handle_login_callback(
         except jwt.InvalidTokenError:
             pass  # best-effort — errors handled below
 
-    origin = (_peek_state.get("frontend_origin") if _peek_state else None) or _frontend_origin(request) or ""
+    origin = _resolve_trusted_frontend_origin(
+        request,
+        (_peek_state.get("frontend_origin") if _peek_state else None) or _frontend_origin(request),
+    )
 
     if error:
         logger.warning("Google sign-in OAuth error: %s", error)
@@ -722,7 +745,7 @@ async def _handle_login_callback(
         return _smart_error_redirect(origin, exc.detail.replace(" ", "_"), _peek_state)
 
     if state_data.get("frontend_origin"):
-        origin = state_data["frontend_origin"]
+        origin = _resolve_trusted_frontend_origin(request, state_data["frontend_origin"])
 
     with_calendar = bool(state_data.get("with_calendar"))
     next_path = state_data.get("next") or "/home"
@@ -736,13 +759,13 @@ async def _handle_login_callback(
     # hitting Google's token endpoint a second time.
     _cleanup_exchange_cache()
     if state in _EXCHANGE_CACHE:
-        cached_url, cached_at = _EXCHANGE_CACHE[state]
+        cached_url, cached_at, cached_jwt = _EXCHANGE_CACHE[state]
         if time.time() - cached_at < _EXCHANGE_CACHE_TTL:
             logger.info(
                 "google sign-in: returning cached redirect (Chrome retry) "
                 "state_jti=%.12s", state[-12:]
             )
-            return _mobile_scheme_redirect(cached_url) if cached_url.startswith("dressapp://") else RedirectResponse(cached_url)
+            return _cached_exchange_response(cached_url, cached_jwt)
 
     # Acquire or create per-state lock to serialize concurrent requests for the same state
     async with _EXCHANGE_LOCKS_GUARD:
@@ -752,13 +775,13 @@ async def _handle_login_callback(
 
     async with state_lock:
         if state in _EXCHANGE_CACHE:
-            cached_url, cached_at = _EXCHANGE_CACHE[state]
+            cached_url, cached_at, cached_jwt = _EXCHANGE_CACHE[state]
             if time.time() - cached_at < _EXCHANGE_CACHE_TTL:
                 logger.info(
                     "google sign-in: returning cached redirect after awaiting lock "
                     "state_jti=%.12s", state[-12:]
                 )
-                return _mobile_scheme_redirect(cached_url) if cached_url.startswith("dressapp://") else RedirectResponse(cached_url)
+                return _cached_exchange_response(cached_url, cached_jwt)
 
         pinned_redirect_uri = state_data.get("redirect_uri")
 
@@ -815,9 +838,8 @@ async def _handle_login_callback(
                 logger.warning("Google sign-in People API fetch failed: %s", e)
         if not email:
             return _smart_error_redirect(origin, "no_email", state_data)
-        if not userinfo.get("verified_email", True):
-            # Most Google accounts are verified; reject unverified to prevent
-            # account-takeover via email collision.
+        if userinfo.get("verified_email") is not True:
+            # Reject unverified or missing-verification Google accounts to prevent email collision takeover.
             return _smart_error_redirect(origin, "email_unverified", state_data)
 
         db = get_db()
@@ -930,41 +952,59 @@ async def _handle_login_callback(
                 jwt_token = create_access_token(
                     user_doc["id"], {"email": user_doc["email"]}
                 )
-                params = urlencode(
+                if is_mobile:
+                    params = urlencode(
+                        {
+                            "token": jwt_token,
+                            "next": next_path,
+                            "warning": "calendar_persist_failed",
+                        }
+                    )
+                    return RedirectResponse(f"dressapp://auth/callback#{params}", status_code=307)
+                web_params = urlencode(
                     {
-                        "token": jwt_token,
+                        "status": "ok",
                         "next": next_path,
                         "warning": "calendar_persist_failed",
                     }
                 )
-                if is_mobile:
-                    return RedirectResponse(f"dressapp://auth/callback#{params}", status_code=307)
-                return RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}#{params}")
+                resp = RedirectResponse(f"{origin}{LOGIN_FRONTEND_PATH}?{web_params}", status_code=307)
+                attach_session_cookies(resp, jwt_token)
+                return resp
 
         # 5) Mint our own JWT and hand it back to the client.
         jwt_token = create_access_token(
             user_doc["id"], {"email": user_doc["email"]}
         )
-        params = urlencode({"token": jwt_token, "next": next_path})
 
         custom_return_url = _validate_return_url(state_data.get("return_url"))
         if is_mobile:
+            params = urlencode({"token": jwt_token, "next": next_path})
             if custom_return_url:
                 delimiter = "&" if ("#" in custom_return_url or "?" in custom_return_url) else "#"
                 final_url = f"{custom_return_url}{delimiter}{params}"
             else:
                 final_url = f"dressapp://auth/callback#{params}"
-        else:
-            final_url = f"{origin}{LOGIN_FRONTEND_PATH}#{params}"
+            _EXCHANGE_CACHE[state] = (final_url, time.time(), None)
+            logger.info(
+                "google sign-in: success email=%s mobile=%s — redirect cached",
+                email, is_mobile,
+            )
+            return RedirectResponse(final_url, status_code=307)
+
+        web_params = urlencode({"status": "ok", "next": next_path})
+        final_url = f"{origin}{LOGIN_FRONTEND_PATH}?{web_params}"
+        resp = RedirectResponse(final_url, status_code=307)
+        attach_session_cookies(resp, jwt_token)
 
         # Cache the successful result so a Chrome retry of the same callback
         # returns the same redirect without re-exchanging the (now invalid) code.
-        _EXCHANGE_CACHE[state] = (final_url, time.time())
+        _EXCHANGE_CACHE[state] = (final_url, time.time(), jwt_token)
         logger.info(
             "google sign-in: success email=%s mobile=%s — redirect cached",
             email, is_mobile,
         )
-        return RedirectResponse(final_url, status_code=307)
+        return resp
 
 
 # -------------------- 3) calendar routes --------------------

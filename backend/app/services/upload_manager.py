@@ -35,6 +35,28 @@ os.makedirs(_BUCKET_DIR, exist_ok=True)
 BUCKET_DIR = _BUCKET_DIR
 
 
+async def read_upload_bounded(upload_file, max_bytes: int) -> bytes:
+    """Stream an UploadFile in 64 KB chunks and abort immediately with HTTP 413 if it exceeds max_bytes."""
+    from fastapi import HTTPException
+
+    chunks: list[bytes] = []
+    total = 0
+    chunk_size = 65536
+    while True:
+        chunk = await upload_file.read(chunk_size)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            max_mb = max(1, max_bytes // (1024 * 1024))
+            raise HTTPException(
+                status_code=413,
+                detail=f"Uploaded file exceeds maximum allowed size ({max_mb} MB).",
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 def _r2_configured() -> bool:
     """Return True iff the R2 env vars are all present."""
     from app.config import settings
