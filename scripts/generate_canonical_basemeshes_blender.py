@@ -3046,35 +3046,59 @@ def build_accessory_template(avatar_data, variant="belt"):
         return bm, all_faces_uvs, all_vert_weights, ["Deformable_Strap", "Rigid_Hardware"]
 
     if variant == "hat":
-        # Measure skull crown apex from avatar
+        # Authentic Fedora: mid-width angled brim + ribbon hatband + pinched front crown + lengthwise center dent
         z_max = max(v.z for v in verts)
         head_pts = [v for v in verts if v.z >= z_max - 0.16]
         cx = 0.0
         cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
-        rx_head = max(abs(v.x) for v in head_pts) + 0.006
-        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.006
-        z_brim = z_max - 0.075
+        rx_head = max(abs(v.x) for v in head_pts) + 0.007
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
+        z_brim = z_max - 0.072
+        z_crown_top = z_max + 0.046
 
-        hat_profile = [
-            (z_brim - 0.005, rx_head * 1.48, ry_head * 1.48, 0.15),
-            (z_brim + 0.004, rx_head * 1.04, ry_head * 1.04, 0.35),
-            (z_brim + 0.045, rx_head * 1.00, ry_head * 1.00, 0.65),
-            (z_max + 0.022, rx_head * 0.72, ry_head * 0.76, 0.90),
-            (z_max + 0.032, rx_head * 0.20, ry_head * 0.22, 0.96),
-        ]
-        n_seg = 24
+        n_seg = 32
         hat_rings = []
-        for z_val, rx, ry, v_uv in hat_profile:
+
+        # Helper: compute (px, py, pz) for a ring with optional front-side pinch and brim snap
+        def add_hat_ring(z_base, sx, sy, v_uv, pinch_amt=0.0, brim_snap=0.0, dent_drop=0.0):
             ring = []
             for j in range(n_seg):
                 theta = (j / n_seg) * 2.0 * math.pi
-                px = cx + rx * math.cos(theta)
-                py = cy + ry * math.sin(theta)
-                u_uv = 0.5 + 0.45 * math.cos(theta)
-                ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+                cos_t = math.cos(theta)
+                sin_t = math.sin(theta)
+                # Front is -Y (sin_t < 0), Back is +Y (sin_t > 0)
+                front_w = max(0.0, -sin_t)
+                # Pinch front-sides inward (strongest around 35-65 deg off front center)
+                side_w = (abs(cos_t) ** 0.85) * (front_w ** 1.1)
+                eff_sx = sx * (1.0 - pinch_amt * side_w)
+                eff_sy = sy * (1.0 - 0.18 * pinch_amt * front_w)
+                # Brim snap: front (-Y) dips gently down, back (+Y) curls slightly up
+                z_snap = brim_snap * (-0.010 * (front_w ** 1.4) + 0.009 * (max(0.0, sin_t) ** 1.6))
+                # Center dent drop along X=0 (strongest near center X, fading at sides)
+                z_dent = -dent_drop * (1.0 - 0.35 * (abs(cos_t) ** 1.5))
+                px = cx + rx_head * eff_sx * cos_t
+                py = cy + ry_head * eff_sy * sin_t
+                pz = z_base + z_snap + z_dent
+                u_uv = 0.5 + 0.38 * cos_t
+                ring.append((Vector((px, py, pz)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
             hat_rings.append(ring)
 
-        f_uvs, v_wts = add_closed_tube_to_bm(bm, hat_rings, thickness=0.0020)
+        # 1. Mid-width brim (outer edge -> mid brim -> crown root)
+        add_hat_ring(z_brim - 0.002, 1.56, 1.54, 0.10, brim_snap=1.0)
+        add_hat_ring(z_brim + 0.002, 1.30, 1.29, 0.22, brim_snap=0.55)
+        add_hat_ring(z_brim + 0.005, 1.05, 1.05, 0.34, brim_snap=0.0)
+        # 2. Ribbon hatband at crown base
+        add_hat_ring(z_brim + 0.008, 1.06, 1.06, 0.38)
+        add_hat_ring(z_brim + 0.028, 1.04, 1.04, 0.48)
+        # 3. Tapered crown with pinched front sides
+        add_hat_ring(z_brim + 0.056, 0.96, 0.98, 0.62, pinch_amt=0.14)
+        add_hat_ring(z_brim + 0.088, 0.86, 0.91, 0.76, pinch_amt=0.28)
+        add_hat_ring(z_crown_top,    0.76, 0.84, 0.88, pinch_amt=0.34, dent_drop=0.005)
+        # 4. Crown top ridge rolling down into lengthwise center dent
+        add_hat_ring(z_crown_top - 0.008, 0.44, 0.66, 0.93, pinch_amt=0.20, dent_drop=0.012)
+        add_hat_ring(z_crown_top - 0.020, 0.06, 0.50, 0.97, pinch_amt=0.0,  dent_drop=0.006)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, hat_rings, thickness=0.0022)
         all_faces_uvs.extend(f_uvs)
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]

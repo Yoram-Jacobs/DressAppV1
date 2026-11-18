@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean16';
+export const TEMPLATE_CACHE_VERSION = 'clean17';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -408,6 +408,9 @@ export function resolveGarmentTemplate({
     }
     if (has('beanie', 'beret', 'knit hat', 'skullcap', 'kippah', 'yarmulke', 'כיפה', 'ברט', 'צמר', 'bonnet')) {
       return 'hat_beanie';
+    }
+    if (has('fedora', 'trilby', 'panama', 'פדורה', 'מגבעת')) {
+      return 'accessory_hat';
     }
     return 'accessory_hat';
   }
