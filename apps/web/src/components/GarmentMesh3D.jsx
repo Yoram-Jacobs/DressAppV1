@@ -4070,9 +4070,12 @@ function GarmentTemplateMeshInner({
     // keeping both walls of solidified GLB templates paired on the correct anterior (+Z) or posterior (-Z) half.
     if (geo && geo.index) {
       const pos = geo.attributes.position;
+      const uvAttr = geo.attributes.uv;
       const idx = geo.index.array;
       const frontTriangles = [];
       const backTriangles = [];
+      const hardwareTriangles = [];
+      const isBeltTemplate = templateId === 'accessory_belt' || templateId === 'belt';
       const pA = new THREE.Vector3();
       const pB = new THREE.Vector3();
       const pC = new THREE.Vector3();
@@ -4082,6 +4085,16 @@ function GarmentTemplateMeshInner({
 
       for (let i = 0; i < idx.length; i += 3) {
         const i0 = idx[i], i1 = idx[i + 1], i2 = idx[i + 2];
+        if (
+          isBeltTemplate &&
+          uvAttr &&
+          uvAttr.getY(i0) < 0.05 &&
+          uvAttr.getY(i1) < 0.05 &&
+          uvAttr.getY(i2) < 0.05
+        ) {
+          hardwareTriangles.push(i0, i1, i2);
+          continue;
+        }
         pA.fromBufferAttribute(pos, i0);
         pB.fromBufferAttribute(pos, i1);
         pC.fromBufferAttribute(pos, i2);
@@ -4112,14 +4125,22 @@ function GarmentTemplateMeshInner({
           frontTriangles.push(i0, i1, i2);
         }
       }
-      if (backTriangles.length > 0) {
-        const newIdx = new (idx.constructor)(frontTriangles.length + backTriangles.length);
+      if (backTriangles.length > 0 || hardwareTriangles.length > 0) {
+        const newIdx = new (idx.constructor)(frontTriangles.length + backTriangles.length + hardwareTriangles.length);
         newIdx.set(frontTriangles, 0);
         newIdx.set(backTriangles, frontTriangles.length);
+        newIdx.set(hardwareTriangles, frontTriangles.length + backTriangles.length);
         geo.setIndex(new THREE.BufferAttribute(newIdx, 1));
         geo.clearGroups();
-        geo.addGroup(0, frontTriangles.length, 0);
-        geo.addGroup(frontTriangles.length, backTriangles.length, 1);
+        if (frontTriangles.length > 0) {
+          geo.addGroup(0, frontTriangles.length, 0);
+        }
+        if (backTriangles.length > 0) {
+          geo.addGroup(frontTriangles.length, backTriangles.length, 1);
+        }
+        if (hardwareTriangles.length > 0) {
+          geo.addGroup(frontTriangles.length + backTriangles.length, hardwareTriangles.length, 2);
+        }
       } else {
         geo.clearGroups();
         geo.addGroup(0, idx.length, 0);
@@ -4150,13 +4171,25 @@ function GarmentTemplateMeshInner({
       color: hasFrontTex ? '#FFFFFF' : fallbackCol,
       map: texture || null,
     });
+    const useFrontTexForBeltBack = rawSlot === 'belt' && !hasBackTex && hasFrontTex;
     const backMat = new THREE.MeshStandardMaterial({
       ...baseProps,
-      color: hasBackTex ? '#FFFFFF' : fallbackCol,
-      map: backTexture || null,
+      color: (hasBackTex || useFrontTexForBeltBack) ? '#FFFFFF' : fallbackCol,
+      map: backTexture || (useFrontTexForBeltBack ? texture : null),
     });
-    return [frontMat, backMat];
-  }, [texture, backTexture, dominantColor, pbrProps, rawSlot]);
+    const isGoldHardware = /(?:gold|brass|bronze|זהב|ברונזה|נחושת)/i.test(garmentText || '');
+    const hardwareMat = new THREE.MeshStandardMaterial({
+      ...baseProps,
+      transparent: false,
+      alphaTest: 0,
+      color: isGoldHardware ? '#d4af37' : '#d8dde6',
+      metalness: 0.90,
+      roughness: 0.20,
+      envMapIntensity: 1.45,
+      map: null,
+    });
+    return [frontMat, backMat, hardwareMat];
+  }, [texture, backTexture, dominantColor, pbrProps, rawSlot, garmentText]);
 
   useEffect(() => {
     return () => {

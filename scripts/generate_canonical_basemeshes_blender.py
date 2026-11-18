@@ -3006,24 +3006,42 @@ def build_accessory_template(avatar_data, variant="belt"):
         all_faces_uvs.extend(f_uvs)
         all_vert_weights.extend(v_wts)
 
-        # 2. Rigid Buckle Plate at center front (-Y)
-        buckle_rings = []
+        # 2. Authentic 3D Open-Frame Metallic Buckle + Prong at center front (-Y)
+        # Uses v_uv in [0.01, 0.04] so GarmentTemplateMesh assigns it a true metallic PBR material!
         b_w = 0.030
-        b_h = 0.026
-        b_y = cy - ry - 0.003
-        for i in range(3):
-            t = i / 2.0
-            z = (z_belt + b_h) - t * (2.0 * b_h)
-            ring = [
-                (Vector((-b_w, b_y - 0.003, z)), (0.35, 0.10 + t * 0.20), {"Deformable_Strap": 0.0, "Rigid_Hardware": 1.0}),
-                (Vector((b_w, b_y - 0.003, z)), (0.65, 0.10 + t * 0.20), {"Deformable_Strap": 0.0, "Rigid_Hardware": 1.0}),
-                (Vector((b_w, b_y + 0.002, z)), (0.65, 0.10 + t * 0.20), {"Deformable_Strap": 0.0, "Rigid_Hardware": 1.0}),
-                (Vector((-b_w, b_y + 0.002, z)), (0.35, 0.10 + t * 0.20), {"Deformable_Strap": 0.0, "Rigid_Hardware": 1.0}),
+        b_h = 0.025
+        bar_t = 0.0045
+        b_y_back = cy - ry - 0.0015
+        b_y_front = cy - ry - 0.0075
+        b_wdict = {"Deformable_Strap": 0.0, "Rigid_Hardware": 1.0}
+
+        def add_buckle_bar(x0, x1, z0, z1, y0=b_y_front, y1=b_y_back):
+            bar_rings = [
+                [
+                    (Vector((x0, y0, z0)), (0.40, 0.02), b_wdict),
+                    (Vector((x1, y0, z0)), (0.60, 0.02), b_wdict),
+                    (Vector((x1, y1, z0)), (0.60, 0.03), b_wdict),
+                    (Vector((x0, y1, z0)), (0.40, 0.03), b_wdict),
+                ],
+                [
+                    (Vector((x0, y0, z1)), (0.40, 0.02), b_wdict),
+                    (Vector((x1, y0, z1)), (0.60, 0.02), b_wdict),
+                    (Vector((x1, y1, z1)), (0.60, 0.03), b_wdict),
+                    (Vector((x0, y1, z1)), (0.40, 0.03), b_wdict),
+                ],
             ]
-            buckle_rings.append(ring)
-        f_uvs, v_wts = add_closed_tube_to_bm(bm, buckle_rings, thickness=0.0012)
-        all_faces_uvs.extend(f_uvs)
-        all_vert_weights.extend(v_wts)
+            f_u, v_w = add_closed_tube_to_bm(bm, bar_rings, thickness=0.0008)
+            all_faces_uvs.extend(f_u)
+            all_vert_weights.extend(v_w)
+
+        # Top & bottom horizontal frame bars
+        add_buckle_bar(-b_w, b_w, z_belt + b_h - bar_t, z_belt + b_h)
+        add_buckle_bar(-b_w, b_w, z_belt - b_h, z_belt - b_h + bar_t)
+        # Left & right vertical frame bars
+        add_buckle_bar(-b_w, -b_w + bar_t, z_belt - b_h + bar_t, z_belt + b_h - bar_t)
+        add_buckle_bar(b_w - bar_t, b_w, z_belt - b_h + bar_t, z_belt + b_h - bar_t)
+        # Center buckle prong / pin
+        add_buckle_bar(-0.0022, 0.028, z_belt - 0.0022, z_belt + 0.0022, y0=b_y_front - 0.0012, y1=b_y_front + 0.0025)
 
         return bm, all_faces_uvs, all_vert_weights, ["Deformable_Strap", "Rigid_Hardware"]
 
