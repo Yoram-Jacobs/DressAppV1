@@ -3103,6 +3103,66 @@ def build_accessory_template(avatar_data, variant="belt"):
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
+    if variant == "hat_cowboy":
+        # Cowboy Hat (Cattleman): wide side-upturned brim + tall crown with center crease & symmetrical side dents
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.007
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
+        z_brim = z_max - 0.072
+        z_crown_top = z_max + 0.066
+
+        n_seg = 36
+        cowboy_rings = []
+
+        def add_cowboy_ring(z_base, sx, sy, v_uv, brim_t=0.0, side_dent=0.0, center_dent=0.0):
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                cos_t = math.cos(theta)
+                sin_t = math.sin(theta)
+                front_w = max(0.0, -sin_t)
+                back_w = max(0.0, sin_t)
+                # Side dents press upper-middle left/right flanks inward
+                eff_sx = sx * (1.0 - side_dent * (abs(cos_t) ** 1.4))
+                eff_sy = sy
+                # Brim curvature: sides curl sharply upward (+Z), front dips slightly downward (-Z)
+                z_curl = (
+                    (brim_t ** 1.45)
+                    * (0.046 * (abs(cos_t) ** 1.8) - 0.012 * (front_w ** 1.5) - 0.003 * (back_w ** 1.5))
+                )
+                # Cattleman top crease: deep center valley (cos_t ~ 0) flanked by two side peaks
+                z_crease = -center_dent * (1.0 - 0.78 * (abs(cos_t) ** 1.3))
+                px = cx + rx_head * eff_sx * cos_t
+                py = cy + ry_head * eff_sy * sin_t
+                pz = z_base + z_curl + z_crease
+                u_uv = 0.5 + 0.40 * cos_t
+                ring.append((Vector((px, py, pz)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            cowboy_rings.append(ring)
+
+        # 1. Wide upturned cowboy brim (outer edge -> mid -> root)
+        add_cowboy_ring(z_brim + 0.000, 1.94, 1.86, 0.08, brim_t=1.00)
+        add_cowboy_ring(z_brim + 0.001, 1.62, 1.57, 0.16, brim_t=0.62)
+        add_cowboy_ring(z_brim + 0.003, 1.32, 1.30, 0.25, brim_t=0.25)
+        add_cowboy_ring(z_brim + 0.005, 1.05, 1.05, 0.34, brim_t=0.00)
+        # 2. Hatband at crown base
+        add_cowboy_ring(z_brim + 0.008, 1.06, 1.06, 0.38)
+        add_cowboy_ring(z_brim + 0.025, 1.04, 1.04, 0.46)
+        # 3. Tall Cattleman crown with symmetrical side dents
+        add_cowboy_ring(z_brim + 0.062, 0.98, 0.99, 0.60, side_dent=0.08)
+        add_cowboy_ring(z_brim + 0.102, 0.88, 0.92, 0.74, side_dent=0.20)
+        add_cowboy_ring(z_crown_top,    0.76, 0.84, 0.86, side_dent=0.22, center_dent=0.010)
+        # 4. Top ridge rolling down into deep lengthwise center crease
+        add_cowboy_ring(z_crown_top - 0.008, 0.46, 0.68, 0.92, side_dent=0.10, center_dent=0.020)
+        add_cowboy_ring(z_crown_top - 0.026, 0.06, 0.54, 0.97, side_dent=0.00, center_dent=0.008)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, cowboy_rings, thickness=0.0022)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
     if variant == "hat_cap":
         # Baseball / Trucker Cap: structured 6-panel rounded crown + curved forward visor (-Y)
         z_max = max(v.z for v in verts)
@@ -3705,6 +3765,7 @@ CANONICAL_SPECS = [
     ("hat_headscarf", "accessory", "hat_headscarf", []),
     ("hat_bandana", "accessory", "hat_bandana", []),
     ("hat_newsboy", "accessory", "hat_newsboy", []),
+    ("hat_cowboy", "accessory", "hat_cowboy", []),
     ("accessory_glasses", "accessory", "glasses", ["glasses.glb"]),
     ("necktie", "accessory", "necktie", []),
     ("scarf", "accessory", "scarf", []),
