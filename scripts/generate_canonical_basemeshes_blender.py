@@ -3248,6 +3248,87 @@ def build_accessory_template(avatar_data, variant="belt"):
 
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
+    if variant == "hat_bandana":
+        # Bandana: smooth diagonal crown wrap + back nape knot & short corner tie ends (+Y)
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.008
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.008
+
+        z_front_brim = z_max - 0.082
+        z_back_brim = z_max - 0.150
+        bandana_profile = [
+            (0.00, 1.03, 1.04, 0.20),
+            (0.24, 1.02, 1.03, 0.38),
+            (0.52, 0.97, 0.99, 0.58),
+            (0.78, 0.79, 0.83, 0.78),
+            (0.93, 0.45, 0.49, 0.90),
+            (1.00, 0.10, 0.12, 0.96),
+        ]
+        n_seg = 28
+        bandana_rings = []
+        for t_h, sx, sy, v_uv in bandana_profile:
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                back_factor = 0.5 * (1.0 + math.sin(theta))
+                z_base = z_front_brim * (1.0 - back_factor) + z_back_brim * back_factor
+                # Slight triangular point extending down at center-back nape (sin(theta) > 0.7)
+                nape_point = 0.018 * max(0.0, math.sin(theta) - 0.65) / 0.35 if t_h < 0.25 else 0.0
+                z_val = (z_base - nape_point) + t_h * ((z_max + 0.028) - (z_base - nape_point))
+                px = cx + rx_head * sx * math.cos(theta)
+                py = cy + ry_head * sy * math.sin(theta)
+                u_uv = 0.5 + 0.38 * math.cos(theta)
+                ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            bandana_rings.append(ring)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, bandana_rings, thickness=0.0018)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+
+        # Compact back nape knot + two short crisp tie ends behind the nape (+Y)
+        y_nape = cy + ry_head * 1.04
+        z_knot = z_back_brim + 0.010
+        knot_rings = []
+        for i in range(4):
+            t = i / 3.0
+            s_k = 0.65 + 0.35 * math.sin(t * math.pi)
+            y_k = y_nape + t * 0.022
+            ring = []
+            for j in range(12):
+                theta = (j / 12.0) * 2.0 * math.pi
+                px = cx + 0.016 * s_k * math.cos(theta)
+                pz = z_knot + 0.014 * s_k * math.sin(theta)
+                ring.append((Vector((px, y_k, pz)), (0.45 + 0.10 * math.cos(theta), 0.14), {"Rigid_Hardware": 1.0}))
+            knot_rings.append(ring)
+        f_u, v_w = add_closed_tube_to_bm(bm, knot_rings, thickness=0.0014)
+        all_faces_uvs.extend(f_u)
+        all_vert_weights.extend(v_w)
+
+        # Two short angled tie-end corners at the nape
+        for side in (-1.0, 1.0):
+            tip_rings = []
+            for i in range(5):
+                t = i / 4.0
+                x_c = cx + side * (0.010 + t * 0.036)
+                y_c = y_nape + 0.014 + t * 0.020
+                z_c = z_knot - 0.005 - t * 0.052
+                hw = 0.013 * (1.0 - 0.45 * t)
+                v_uv = 0.18 - t * 0.12
+                u_b = 0.38 if side < 0 else 0.62
+                tip_rings.append([
+                    (Vector((x_c - hw, y_c + 0.003, z_c)), (u_b - 0.06, v_uv), {"Rigid_Hardware": 1.0}),
+                    (Vector((x_c, y_c - 0.003, z_c)), (u_b, v_uv), {"Rigid_Hardware": 1.0}),
+                    (Vector((x_c + hw, y_c + 0.003, z_c)), (u_b + 0.06, v_uv), {"Rigid_Hardware": 1.0}),
+                ])
+            f_u, v_w = add_open_strip_to_bm(bm, tip_rings, thickness=0.0014)
+            all_faces_uvs.extend(f_u)
+            all_vert_weights.extend(v_w)
+
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
     if variant == "necktie":
         # Collar loop + front knot + hanging tapered tie blade down center chest (-Y)
         z_neck = 1.50 if is_male else 1.42
@@ -3509,6 +3590,7 @@ CANONICAL_SPECS = [
     ("hat_cap", "accessory", "hat_cap", []),
     ("hat_beanie", "accessory", "hat_beanie", []),
     ("hat_headscarf", "accessory", "hat_headscarf", []),
+    ("hat_bandana", "accessory", "hat_bandana", []),
     ("accessory_glasses", "accessory", "glasses", ["glasses.glb"]),
     ("necktie", "accessory", "necktie", []),
     ("scarf", "accessory", "scarf", []),
