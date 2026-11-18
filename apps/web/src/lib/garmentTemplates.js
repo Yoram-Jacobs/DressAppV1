@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean11';
+export const TEMPLATE_CACHE_VERSION = 'clean12';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -53,6 +53,16 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'shoes_sneakers',
   'boots',
   'sneakers',
+  // Accessories
+  'accessory_hat',
+  'hat_cap',
+  'hat_beanie',
+  'accessory_glasses',
+  'accessory_belt',
+  'accessory_crossbody_bag',
+  'necktie',
+  'scarf',
+  'watch',
 ]);
 
 export const CANONICAL_TEMPLATE_MAP = Object.freeze({
@@ -117,19 +127,29 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   boots: 'shoes_boots',
   shoes_sneakers: 'shoes_sneakers',
   sneakers: 'shoes_sneakers',
+
+  // Accessories
+  accessory_hat: 'accessory_hat',
+  hat: 'accessory_hat',
+  hat_fedora: 'accessory_hat',
+  hat_cap: 'hat_cap',
+  hat_beanie: 'hat_beanie',
+  accessory_glasses: 'accessory_glasses',
+  glasses: 'accessory_glasses',
+  accessory_belt: 'accessory_belt',
+  belt: 'accessory_belt',
+  accessory_crossbody_bag: 'accessory_crossbody_bag',
+  bag: 'accessory_crossbody_bag',
+  bag_crossbody: 'accessory_crossbody_bag',
+  bag_handbag: 'accessory_crossbody_bag',
+  necktie: 'necktie',
+  scarf: 'scarf',
+  watch: 'watch',
 });
 
 const PARAMETRIC_ONLY_SLOTS = new Set([
   'shoes',
   'footwear',
-  'watch',
-  'belt',
-  'glasses',
-  'headwear',
-  'hat',
-  'bag',
-  'necktie',
-  'scarf',
   'jewelry',
   'accessory',
 ]);
@@ -364,6 +384,38 @@ export function resolveGarmentTemplate({
     }
     // Default boots, knee-high boots, ankle boots, and leather shoes to authentic 3D boots template
     return 'shoes_boots';
+  }
+
+  // 6. ACCESSORIES (Headwear, Glasses, Belt, Bag, Necktie, Scarf, Watch)
+  if (effectiveSlot === 'headwear' || effectiveSlot === 'hat') {
+    if (has('baseball', 'trucker', 'snapback', 'cap', 'visor', 'מצחייה', 'מצחיה', 'בייסבול', 'קסקט', 'casquette', 'gorra')) {
+      return 'hat_cap';
+    }
+    if (has('beanie', 'beret', 'knit hat', 'skullcap', 'kippah', 'yarmulke', 'כיפה', 'ברט', 'צמר', 'bonnet')) {
+      return 'hat_beanie';
+    }
+    return 'accessory_hat';
+  }
+  if (effectiveSlot === 'glasses') {
+    return 'accessory_glasses';
+  }
+  if (effectiveSlot === 'belt') {
+    return 'accessory_belt';
+  }
+  if (effectiveSlot === 'bag') {
+    return 'accessory_crossbody_bag';
+  }
+  if (effectiveSlot === 'necktie') {
+    if (has('scarf', 'shawl', 'wrap', 'stole', 'pashmina', 'צעיף', 'שאל', 'מטפחת')) {
+      return 'scarf';
+    }
+    return 'necktie';
+  }
+  if (effectiveSlot === 'scarf') {
+    return 'scarf';
+  }
+  if (effectiveSlot === 'watch') {
+    return 'watch';
   }
 
   return null;

@@ -3978,6 +3978,7 @@ function GarmentTemplateMeshInner({
         geo = applyAvatarMorphsToGeometry(geo, morphField, morphInfluences, {
           minClearance: layerOffset + extraLayerOffset,
           includeArms: includeArmsForSlot,
+          rigidAnchor: rawSlot === 'headwear' || rawSlot === 'glasses',
           exactLowerBody: rawSlot === 'shoes' || (rawSlot === 'bottom' && !shellFit?.isSkirt),
         });
       } catch (e) {
@@ -4713,7 +4714,7 @@ export function GarmentMeshCore({
     return (
       <GarmentTemplateMesh
         templateId={matchedTemplateId}
-        texture={filledTexture || opaqueTexture || texture}
+        texture={['glasses', 'necktie'].includes(rawSlot) ? (texture || opaqueTexture || filledTexture) : (filledTexture || opaqueTexture || texture)}
         backTexture={backTexture}
         dominantColor={dominantColor}
         pbrProps={pbrProps}
@@ -4769,7 +4770,7 @@ export function GarmentMeshCore({
     return (
       <GarmentTemplateMesh
         templateId={matchedTemplateId}
-        texture={filledTexture || opaqueTexture || texture}
+        texture={['glasses', 'necktie'].includes(rawSlot) ? (texture || opaqueTexture || filledTexture) : (filledTexture || opaqueTexture || texture)}
         backTexture={backTexture}
         dominantColor={dominantColor}
         pbrProps={pbrProps}

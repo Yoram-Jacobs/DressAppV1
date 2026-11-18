@@ -3061,6 +3061,236 @@ def build_accessory_template(avatar_data, variant="belt"):
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
+    if variant == "hat_cap":
+        # Baseball / Trucker Cap: structured 6-panel rounded crown + curved forward visor (-Y)
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.007
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
+        z_brim = z_max - 0.078
+
+        cap_profile = [
+            (z_brim, rx_head * 1.03, ry_head * 1.03, 0.46),
+            (z_brim + 0.025, rx_head * 1.01, ry_head * 1.01, 0.58),
+            (z_brim + 0.055, rx_head * 0.94, ry_head * 0.95, 0.72),
+            (z_max + 0.012, rx_head * 0.74, ry_head * 0.76, 0.85),
+            (z_max + 0.028, rx_head * 0.36, ry_head * 0.38, 0.94),
+            (z_max + 0.033, rx_head * 0.08, ry_head * 0.09, 0.97),
+        ]
+        n_seg = 28
+        cap_rings = []
+        for z_val, rx, ry, v_uv in cap_profile:
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                px = cx + rx * math.cos(theta)
+                py = cy + ry * math.sin(theta)
+                u_uv = 0.5 + 0.35 * math.cos(theta)
+                ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            cap_rings.append(ring)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, cap_rings, thickness=0.0022)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+
+        # Curved forward visor / bill extending toward -Y (front of avatar)
+        visor_rings = []
+        n_v_depth = 6
+        n_v_lat = 15
+        visor_len = 0.078
+        visor_w = rx_head * 0.94
+        for i in range(n_v_depth):
+            t_out = i / float(n_v_depth - 1)
+            v_uv = 0.44 - t_out * 0.34
+            ring = []
+            for j in range(n_v_lat):
+                s_lat = -1.0 + 2.0 * (j / float(n_v_lat - 1))  # -1..+1 left to right
+                # Taper width smoothly toward front tip of visor
+                lat_scale = 1.0 - 0.16 * (t_out ** 1.6)
+                px = cx + s_lat * visor_w * lat_scale
+                # Start flush against front crown curve (ellipse) and project forward (-Y)
+                crown_y = cy - ry_head * 1.01 * math.sqrt(max(0.05, 1.0 - (s_lat * 0.92) ** 2))
+                edge_round = 1.0 - 0.22 * (s_lat ** 2)
+                py = crown_y - t_out * visor_len * edge_round
+                # Authentic curved baseball visor arch (sides dip down, tip dips slightly)
+                pz = (z_brim + 0.004) - 0.018 * (t_out ** 1.35) - 0.015 * (s_lat ** 2) * (0.35 + 0.65 * t_out)
+                u_uv = 0.5 + s_lat * 0.32
+                ring.append((Vector((px, py, pz)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            visor_rings.append(ring)
+
+        f_uvs, v_wts = add_open_strip_to_bm(bm, visor_rings, thickness=0.0024)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
+    if variant == "hat_beanie":
+        # Knit Beanie / Beret: snug folded cuff + closed dome
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.007
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
+        z_brim = z_max - 0.082
+
+        beanie_profile = [
+            (z_brim, rx_head * 1.07, ry_head * 1.07, 0.16),
+            (z_brim + 0.028, rx_head * 1.06, ry_head * 1.06, 0.38),
+            (z_brim + 0.032, rx_head * 1.02, ry_head * 1.02, 0.44),
+            (z_brim + 0.062, rx_head * 0.94, ry_head * 0.95, 0.68),
+            (z_max + 0.016, rx_head * 0.72, ry_head * 0.74, 0.86),
+            (z_max + 0.034, rx_head * 0.16, ry_head * 0.18, 0.96),
+        ]
+        n_seg = 24
+        beanie_rings = []
+        for z_val, rx, ry, v_uv in beanie_profile:
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                px = cx + rx * math.cos(theta)
+                py = cy + ry * math.sin(theta)
+                u_uv = 0.5 + 0.40 * math.cos(theta)
+                ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            beanie_rings.append(ring)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, beanie_rings, thickness=0.0022)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
+    if variant == "necktie":
+        # Collar loop + front knot + hanging tapered tie blade down center chest (-Y)
+        z_neck = 1.50 if is_male else 1.42
+        z_tip = 1.09 if is_male else 1.04
+        neck_sl = measure_torso_slice(verts, z_neck)
+        rx_n = min(0.085, neck_sl["rx"] + 0.008)
+        ry_n = min(0.085, neck_sl["ry"] + 0.008)
+        cy_n = neck_sl["cy"]
+
+        # 1. Neck loop
+        n_seg = 20
+        loop_rings = []
+        for i in range(3):
+            t = i / 2.0
+            z = (z_neck + 0.014) - t * 0.024
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                px = rx_n * math.cos(theta)
+                py = cy_n + ry_n * math.sin(theta)
+                ring.append((Vector((px, py, z)), (0.5 + 0.15 * math.cos(theta), 0.92 - t * 0.08), {"Deformable_Strap": 1.0}))
+            loop_rings.append(ring)
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, loop_rings, thickness=0.0016)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+
+        # 2. Front knot & hanging tapered tie blade conforming to chest contour
+        blade_rings = []
+        n_blade = 12
+        for i in range(n_blade + 1):
+            t = i / float(n_blade)
+            z = (z_neck - 0.010) - t * (z_neck - 0.010 - z_tip)
+            chest_sl = measure_torso_slice(verts, z)
+            y_front = chest_sl["cy"] - chest_sl["ry"] - 0.016
+            if t < 0.12:
+                half_w = 0.022 - (t / 0.12) * 0.006
+            elif t < 0.85:
+                half_w = 0.016 + ((t - 0.12) / 0.73) * 0.024
+            else:
+                half_w = 0.040 * max(0.05, 1.0 - (t - 0.85) / 0.15)
+            v_uv = 0.88 - t * 0.82
+            ring = [
+                (Vector((-half_w, y_front, z)), (0.35, v_uv), {"Deformable_Strap": 1.0}),
+                (Vector((0.0, y_front - 0.003, z)), (0.50, v_uv), {"Deformable_Strap": 1.0}),
+                (Vector((half_w, y_front, z)), (0.65, v_uv), {"Deformable_Strap": 1.0}),
+            ]
+            blade_rings.append(ring)
+        f_uvs, v_wts = add_open_strip_to_bm(bm, blade_rings, thickness=0.0018)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Deformable_Strap"]
+
+    if variant == "scarf":
+        # Draped cozy neck wrap + overlapping front hanging ends
+        z_neck = 1.50 if is_male else 1.42
+        neck_sl = measure_torso_slice(verts, z_neck)
+        rx_s = min(0.115, neck_sl["rx"] + 0.024)
+        ry_s = min(0.115, neck_sl["ry"] + 0.026)
+        cy_s = neck_sl["cy"]
+
+        n_seg = 24
+        wrap_rings = []
+        for i in range(5):
+            t = i / 4.0
+            z = (z_neck + 0.048) - t * 0.075
+            bulge = 1.0 + 0.10 * math.sin(t * math.pi)
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                px = rx_s * bulge * math.cos(theta)
+                py = cy_s + ry_s * bulge * math.sin(theta)
+                ring.append((Vector((px, py, z)), (0.15 + 0.70 * (j / n_seg), 0.90 - t * 0.35), {"Deformable_Strap": 1.0}))
+            wrap_rings.append(ring)
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, wrap_rings, thickness=0.0032)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+
+        # Hanging front scarf panel
+        z_end = z_neck - 0.26
+        panel_rings = []
+        for i in range(9):
+            t = i / 8.0
+            z = (z_neck - 0.015) - t * (z_neck - 0.015 - z_end)
+            chest_sl = measure_torso_slice(verts, z)
+            y_front = chest_sl["cy"] - chest_sl["ry"] - 0.020
+            half_w = 0.068 - 0.010 * t
+            v_uv = 0.55 - t * 0.48
+            ring = [
+                (Vector((-half_w, y_front + 0.006, z)), (0.25, v_uv), {"Deformable_Strap": 1.0}),
+                (Vector((0.0, y_front - 0.004, z)), (0.50, v_uv), {"Deformable_Strap": 1.0}),
+                (Vector((half_w, y_front + 0.006, z)), (0.75, v_uv), {"Deformable_Strap": 1.0}),
+            ]
+            panel_rings.append(ring)
+        f_uvs, v_wts = add_open_strip_to_bm(bm, panel_rings, thickness=0.0028)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Deformable_Strap"]
+
+    if variant == "watch":
+        # Contoured wrist strap + watch case dial anchored to avatar left wrist (+X)
+        arm_pts = [v for v in verts if 0.34 <= v.x <= 0.40 and 0.80 <= v.z <= 1.25]
+        if not arm_pts:
+            arm_pts = [Vector((0.36 if is_male else 0.33, 0.0, 0.98 if is_male else 0.90))]
+        wx = sum(v.x for v in arm_pts) / len(arm_pts)
+        wy = sum(v.y for v in arm_pts) / len(arm_pts)
+        wz = sum(v.z for v in arm_pts) / len(arm_pts)
+        r_wrist = max(0.028, 0.5 * (max(v.y for v in arm_pts) - min(v.y for v in arm_pts)) + 0.005)
+        half_w = 0.012
+
+        n_seg = 20
+        strap_rings = []
+        for i in range(4):
+            t = i / 3.0
+            dx = -half_w + t * (2.0 * half_w)
+            v_uv = 0.25 + t * 0.50
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                py = wy + r_wrist * math.cos(theta)
+                pz = wz + r_wrist * math.sin(theta)
+                # Slightly raised watch face on top/outer side (+Z)
+                is_dial = math.sin(theta) > 0.65 and abs(dx) < 0.010
+                if is_dial:
+                    pz += 0.004
+                ring.append((Vector((wx + dx, py, pz)), (0.15 + 0.70 * (j / n_seg), v_uv), {"Rigid_Hardware": 1.0}))
+            strap_rings.append(ring)
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, strap_rings, thickness=0.0020)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
     if variant == "glasses":
         z_max = max(v.z for v in verts)
         z_eye = z_max - 0.115
@@ -3187,13 +3417,18 @@ CANONICAL_SPECS = [
     ("shoes_boots", "footwear", "boots", ["boots.glb", "heels.glb"]),
     # Accessories
     ("accessory_belt", "accessory", "belt", ["belt.glb"]),
-    ("accessory_hat", "accessory", "hat", ["hat.glb", "hat_cap.glb", "hat_fedora.glb"]),
+    ("accessory_hat", "accessory", "hat", ["hat.glb", "hat_fedora.glb"]),
+    ("hat_cap", "accessory", "hat_cap", []),
+    ("hat_beanie", "accessory", "hat_beanie", []),
     ("accessory_glasses", "accessory", "glasses", ["glasses.glb"]),
+    ("necktie", "accessory", "necktie", []),
+    ("scarf", "accessory", "scarf", []),
+    ("watch", "accessory", "watch", []),
     (
         "accessory_crossbody_bag",
         "accessory",
         "crossbody_bag",
-        ["bag.glb", "bag_crossbody.glb", "bag_handbag.glb", "watch.glb", "scarf.glb"],
+        ["bag.glb", "bag_crossbody.glb", "bag_handbag.glb"],
     ),
 ]
 
