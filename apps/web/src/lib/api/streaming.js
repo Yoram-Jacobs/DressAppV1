@@ -1,4 +1,4 @@
-import { client, API_BASE, tokenStore, isPublicPath } from './client.js';
+import { client, API_BASE, getCsrfToken, tokenStore, isPublicPath } from './client.js';
 
 /**
  * streamNdjson — open an `application/x-ndjson` POST stream from the
@@ -33,8 +33,11 @@ export async function streamNdjson(path, {
   const headers = {
     'Accept': 'text/event-stream, application/x-ndjson',
   };
-  const tok = tokenStore.get();
-  if (tok) headers.Authorization = `Bearer ${tok}`;
+  const upperMethod = (method || 'POST').toUpperCase();
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(upperMethod)) {
+    const csrf = getCsrfToken();
+    if (csrf) headers['X-CSRF-Token'] = csrf;
+  }
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   const resp = await fetch(url.toString(), {
@@ -42,7 +45,7 @@ export async function streamNdjson(path, {
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
     signal,
-    credentials: 'same-origin',
+    credentials: 'include',
   });
 
   if (resp.status === 401) {

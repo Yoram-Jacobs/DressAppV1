@@ -1,4 +1,4 @@
-import { client, tokenStore, getBackendUrl } from './client.js';
+import { client, getBackendUrl, getCsrfToken } from './client.js';
 import { streamNdjson } from './streaming.js';
 
 const _missingItemIds = new Set();
@@ -97,15 +97,16 @@ export const closet = {
 
     const baseUrl = getBackendUrl();
     const url = `${baseUrl}/api/v1/closet/analyze`;
-    const token = tokenStore.get();
+    const csrf = getCsrfToken();
     return (async () => {
       try {
         const resp = await fetch(url, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'text/event-stream, application/x-ndjson',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
           },
           body: JSON.stringify(body),
         });

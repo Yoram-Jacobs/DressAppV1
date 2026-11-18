@@ -19,12 +19,23 @@ export const API_BASE = `${BACKEND_URL}/api/v1`;
 const STORAGE_TOKEN = 'dressapp.token';
 const STORAGE_USER = 'dressapp.user';
 
+export const getCsrfToken = () => {
+  if (typeof document === 'undefined' || typeof document.cookie !== 'string') return null;
+  const m = document.cookie.match(/(?:^|;\s*)dressapp_csrf=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+};
+
 export const tokenStore = {
-  get: () => localStorage.getItem(STORAGE_TOKEN) || null,
-  set: (t) => localStorage.setItem(STORAGE_TOKEN, t),
+  // Web sessions use HttpOnly cookies (dressapp_session); never store web JWT in localStorage.
+  get: () => null,
+  set: () => {},
   clear: () => {
-    localStorage.removeItem(STORAGE_TOKEN);
-    localStorage.removeItem(STORAGE_USER);
+    try {
+      localStorage.removeItem(STORAGE_TOKEN);
+      localStorage.removeItem(STORAGE_USER);
+    } catch {
+      /* noop */
+    }
   },
 };
 
@@ -36,11 +47,18 @@ export const userStore = {
   set: (u) => localStorage.setItem(STORAGE_USER, JSON.stringify(u)),
 };
 
-export const client = axios.create({ baseURL: API_BASE, timeout: 180000 });
+export const client = axios.create({
+  baseURL: API_BASE,
+  timeout: 180000,
+  withCredentials: true,
+});
 
 client.interceptors.request.use((cfg) => {
-  const t = tokenStore.get();
-  if (t) cfg.headers.Authorization = `Bearer ${t}`;
+  const method = (cfg.method || 'get').toUpperCase();
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrf = getCsrfToken();
+    if (csrf) cfg.headers['X-CSRF-Token'] = csrf;
+  }
   return cfg;
 });
 
