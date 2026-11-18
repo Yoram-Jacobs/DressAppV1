@@ -3163,6 +3163,53 @@ def build_accessory_template(avatar_data, variant="belt"):
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
+    if variant == "hat_bowler":
+        # Bowler / Derby Hat: narrow upturned/rolled brim + ribbon hatband + smooth rounded domed crown
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.007
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
+        z_brim = z_max - 0.072
+
+        n_seg = 32
+        bowler_rings = []
+
+        def add_bowler_ring(z_base, sx, sy, v_uv, brim_curl=0.0):
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                cos_t = math.cos(theta)
+                sin_t = math.sin(theta)
+                # Bowler brim curls upward all around, slightly higher on the left/right sides
+                z_curl = brim_curl * (0.011 + 0.012 * (abs(cos_t) ** 1.6))
+                px = cx + rx_head * sx * cos_t
+                py = cy + ry_head * sy * sin_t
+                pz = z_base + z_curl
+                u_uv = 0.5 + 0.38 * cos_t
+                ring.append((Vector((px, py, pz)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            bowler_rings.append(ring)
+
+        # 1. Narrow upturned/rolled brim (outer edge -> mid brim -> crown root)
+        add_bowler_ring(z_brim + 0.002, 1.40, 1.38, 0.10, brim_curl=1.00)
+        add_bowler_ring(z_brim + 0.000, 1.24, 1.23, 0.22, brim_curl=0.35)
+        add_bowler_ring(z_brim + 0.004, 1.05, 1.05, 0.34, brim_curl=0.00)
+        # 2. Encircling grosgrain hatband
+        add_bowler_ring(z_brim + 0.007, 1.06, 1.06, 0.38)
+        add_bowler_ring(z_brim + 0.029, 1.04, 1.04, 0.48)
+        # 3. Smooth, rigid architectural domed crown
+        add_bowler_ring(z_brim + 0.058, 1.00, 1.00, 0.62)
+        add_bowler_ring(z_brim + 0.088, 0.91, 0.92, 0.76)
+        add_bowler_ring(z_max + 0.036,  0.74, 0.76, 0.86)
+        add_bowler_ring(z_max + 0.050,  0.46, 0.48, 0.93)
+        add_bowler_ring(z_max + 0.056,  0.16, 0.18, 0.97)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, bowler_rings, thickness=0.0024)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
     if variant == "hat_cap":
         # Baseball / Trucker Cap: structured 6-panel rounded crown + curved forward visor (-Y)
         z_max = max(v.z for v in verts)
@@ -3774,6 +3821,7 @@ CANONICAL_SPECS = [
     ("hat_bandana", "accessory", "hat_bandana", []),
     ("hat_newsboy", "accessory", "hat_newsboy", []),
     ("hat_cowboy", "accessory", "hat_cowboy", []),
+    ("hat_bowler", "accessory", "hat_bowler", []),
     ("accessory_glasses", "accessory", "glasses", ["glasses.glb"]),
     ("necktie", "accessory", "necktie", []),
     ("scarf", "accessory", "scarf", []),

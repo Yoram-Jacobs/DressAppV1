@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean19';
+export const TEMPLATE_CACHE_VERSION = 'clean20';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -61,6 +61,7 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'hat_bandana',
   'hat_newsboy',
   'hat_cowboy',
+  'hat_bowler',
   'accessory_glasses',
   'accessory_belt',
   'accessory_crossbody_bag',
@@ -142,6 +143,7 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   hat_bandana: 'hat_bandana',
   hat_newsboy: 'hat_newsboy',
   hat_cowboy: 'hat_cowboy',
+  hat_bowler: 'hat_bowler',
   accessory_glasses: 'accessory_glasses',
   glasses: 'accessory_glasses',
   accessory_belt: 'accessory_belt',
@@ -413,6 +415,9 @@ export function resolveGarmentTemplate({
     }
     if (has('cowboy', 'stetson', 'western', 'cattleman', 'ranch', 'outback', 'קאובוי', 'בוקר', 'בוקרים')) {
       return 'hat_cowboy';
+    }
+    if (has('bowler', 'derby', 'melone', 'באולר', 'דרבי')) {
+      return 'hat_bowler';
     }
     if (has('fedora', 'trilby', 'panama', 'פדורה', 'מגבעת')) {
       return 'accessory_hat';
