@@ -164,7 +164,7 @@ export function inferRoleFromName(title) {
   if (/(?:\b(?:pants|jeans|trousers|chinos?|cargo|shorts|skirt|skirts|leggings|joggers|slacks|sweatpants)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:מכנס|ג['’]ינס|חצאית|שורטס|טייץ))/iu.test(text)) return 'bottom';
   if (/(?:\b(?:t-?shirts?|tees?|shirt|shirts|blouse|blouses|sweater|sweaters|hoodie|hoodies|sweatshirt|sweatshirts|pullover|pullovers|polo|tank|camisole|jersey|kurta|kurti|tunic)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:חולצ|סוודר|גופי)|(?:^|[^\p{L}\p{N}])[הו]?(?:קורטה|כורטה|קורטי|טוניקה)(?=$|[^\p{L}\p{N}]))/iu.test(text)) return 'top';
   if (/(?:\b(?:shoes?|footwear|sneakers?|boots?|sandals?|loafers?|heels?|flats?)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:הנעלה|נעליים|נעלי|מגפיים|מגפי|סנדלים))/iu.test(text)) return 'shoes';
-  if (/(?:\b(?:hats?|caps?|headwear|beanies?|berets?|bandanas?|visors?|snapbacks?|skullcaps?|fedoras?|kippahs?|yarmulkes?)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:כובע|מצחייה)|(?:^|[^\p{L}\p{N}])[הו]?(?:כיפה|ברט|בנדנה)(?=$|[^\p{L}\p{N}]))/iu.test(text)) return 'headwear';
+  if (/(?:\b(?:hats?|caps?|headwear|beanies?|berets?|bandanas?|visors?|snapbacks?|skullcaps?|fedoras?|kippahs?|yarmulkes?|hair\s*scarf|head\s*scarf|headscarf|head\s*wrap|headwrap|turban|hijab|tichel|mitpachat)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:כובע|מצחייה|מטפחת|כיסוי\s*ראש|טורבן|טיכל)|(?:^|[^\p{L}\p{N}])[הו]?(?:כיפה|ברט|בנדנה)(?=$|[^\p{L}\p{N}]))/iu.test(text)) return 'headwear';
   if (/(?:\b(?:glasses|sunglasses|eyewear)\b|(?:^|[^\p{L}\p{N}])[הו]?משקפ)/iu.test(text)) return 'glasses';
   if (/(?:\b(?:bags?|purse|tote|backpack|handbag|satchel|crossbody)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:תיק|ארנק))/iu.test(text)) return 'bag';
   if (/(?:\b(?:wristwatch|smartwatch|watch|watches|timepiece|bracelet|bracelets|bangle)\b|(?:^|[^\p{L}\p{N}])[הו]?(?:שעון\s+יד|שעון|צמיד))/iu.test(text)) return 'watch';
@@ -212,7 +212,10 @@ function normalizeDeclaredGarmentRole(role, category, title) {
   if (r === 'belt') return 'belt';
   if (r === 'bag') return 'bag';
 
-  // 1b. Specific Accessories (Wristwatch, Necktie, Belt) checked before general tops/outerwear
+  // 1b. Specific Accessories (Headscarf/Headwrap, Wristwatch, Necktie, Belt) checked before general tops/outerwear
+  if (/(?:\b(?:hair\s*scarf|head\s*scarf|headscarf|head\s*wrap|headwrap|tichel|mitpachat|turban|hijab|bandana)\b|(?:^|[^\p{L}\p{N}])(?:מטפחת|כיסוי\s*ראש|טורבן|בנדנה|טיכל)(?=$|[^\p{L}\p{N}]))/iu.test(text)) {
+    return 'headwear';
+  }
   if (/(?:\b(?:wristwatch|smartwatch|watch|watches|timepiece|bracelet|bracelets|bangle)\b|(?:^|[^\p{L}\p{N}])(?:שעון יד|שעון|צמיד|ساعة|часы)(?=$|[^\p{L}\p{N}])|\b(?:montre|uhr|reloj|orologio)\b|手表|腕表|腕時計)/iu.test(text)) {
     return 'watch';
   }

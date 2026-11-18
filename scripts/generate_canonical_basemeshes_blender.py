@@ -3178,6 +3178,76 @@ def build_accessory_template(avatar_data, variant="belt"):
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
+    if variant == "hat_headscarf":
+        # Hair Scarf / Pre-Tied Headwrap / Tichel / Turban:
+        # Sloped full-coverage headwrap (higher at forehead hairline, lower at nape) + two draped scarf tails
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.009
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.009
+
+        z_front_brim = z_max - 0.086
+        z_back_brim = z_max - 0.148
+        # Profiles: (t_height_front, rx_scale, ry_scale, v_uv)
+        wrap_profile = [
+            (0.00, 1.04, 1.05, 0.42),
+            (0.22, 1.03, 1.04, 0.55),
+            (0.50, 0.98, 1.00, 0.70),
+            (0.76, 0.80, 0.84, 0.84),
+            (0.92, 0.46, 0.50, 0.93),
+            (1.00, 0.12, 0.14, 0.98),
+        ]
+        n_seg = 28
+        wrap_rings = []
+        for t_h, sx, sy, v_uv in wrap_profile:
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                # sin(theta) < 0 is front (-Y), sin(theta) > 0 is back (+Y)
+                back_factor = 0.5 * (1.0 + math.sin(theta))
+                z_base = z_front_brim * (1.0 - back_factor) + z_back_brim * back_factor
+                # Smoothly converge all angles toward crown apex z_max + 0.032 as t_h -> 1.0
+                z_val = z_base + t_h * ((z_max + 0.032) - z_base)
+                px = cx + rx_head * sx * math.cos(theta)
+                py = cy + ry_head * sy * math.sin(theta)
+                u_uv = 0.5 + 0.36 * math.cos(theta)
+                ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            wrap_rings.append(ring)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, wrap_rings, thickness=0.0020)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+
+        # Two draped scarf tails hanging from behind the ears/nape softly forward over the shoulders
+        z_tail_top = z_max - 0.135
+        z_tail_bot = z_max - 0.345
+        for side in (-1.0, 1.0):
+            tail_rings = []
+            n_tail = 8
+            for i in range(n_tail + 1):
+                t = i / float(n_tail)
+                z = z_tail_top - t * (z_tail_top - z_tail_bot)
+                # Start behind ear (+Y) and drape slightly outward & forward (-Y) over collarbone/shoulder
+                x_c = side * (rx_head * 0.88 + 0.028 * math.sin(t * math.pi * 0.75))
+                y_c = cy + ry_head * 0.30 - t * (ry_head * 0.95)
+                # Narrow at gather/knot (t=0), wider flowing blade in middle, tapered tip at bottom
+                half_w = 0.014 + 0.024 * math.sin(min(1.0, t * 1.15) * math.pi * 0.85) * (1.0 - 0.35 * t)
+                v_uv = 0.40 - t * 0.34
+                u_base = 0.30 if side < 0 else 0.70
+                ring = [
+                    (Vector((x_c - half_w * 0.65, y_c + half_w * 0.45, z)), (u_base - 0.10, v_uv), {"Rigid_Hardware": 1.0}),
+                    (Vector((x_c, y_c - 0.004, z)), (u_base, v_uv), {"Rigid_Hardware": 1.0}),
+                    (Vector((x_c + half_w * 0.65, y_c - half_w * 0.45, z)), (u_base + 0.10, v_uv), {"Rigid_Hardware": 1.0}),
+                ]
+                tail_rings.append(ring)
+            f_u, v_w = add_open_strip_to_bm(bm, tail_rings, thickness=0.0018)
+            all_faces_uvs.extend(f_u)
+            all_vert_weights.extend(v_w)
+
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
     if variant == "necktie":
         # Collar loop + front knot + hanging tapered tie blade down center chest (-Y)
         z_neck = 1.50 if is_male else 1.42
@@ -3438,6 +3508,7 @@ CANONICAL_SPECS = [
     ("accessory_hat", "accessory", "hat", ["hat.glb", "hat_fedora.glb"]),
     ("hat_cap", "accessory", "hat_cap", []),
     ("hat_beanie", "accessory", "hat_beanie", []),
+    ("hat_headscarf", "accessory", "hat_headscarf", []),
     ("accessory_glasses", "accessory", "glasses", ["glasses.glb"]),
     ("necktie", "accessory", "necktie", []),
     ("scarf", "accessory", "scarf", []),

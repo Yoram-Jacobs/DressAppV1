@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean13';
+export const TEMPLATE_CACHE_VERSION = 'clean14';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -57,6 +57,7 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'accessory_hat',
   'hat_cap',
   'hat_beanie',
+  'hat_headscarf',
   'accessory_glasses',
   'accessory_belt',
   'accessory_crossbody_bag',
@@ -134,6 +135,7 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   hat_fedora: 'accessory_hat',
   hat_cap: 'hat_cap',
   hat_beanie: 'hat_beanie',
+  hat_headscarf: 'hat_headscarf',
   accessory_glasses: 'accessory_glasses',
   glasses: 'accessory_glasses',
   accessory_belt: 'accessory_belt',
@@ -388,6 +390,9 @@ export function resolveGarmentTemplate({
 
   // 6. ACCESSORIES (Headwear, Glasses, Belt, Bag, Necktie, Scarf, Watch)
   if (effectiveSlot === 'headwear' || effectiveSlot === 'hat') {
+    if (has('hair scarf', 'head scarf', 'headscarf', 'head wrap', 'headwrap', 'pre-tied', 'pretied', 'tichel', 'mitpachat', 'bandana', 'turban', 'hijab', 'מטפחת', 'כיסוי ראש', 'טורבן', 'בנדנה', 'טיכל')) {
+      return 'hat_headscarf';
+    }
     if (has('baseball', 'trucker', 'snapback', 'cap', 'visor', 'מצחייה', 'מצחיה', 'בייסבול', 'קסקט', 'casquette', 'gorra')) {
       return 'hat_cap';
     }
