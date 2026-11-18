@@ -99,6 +99,41 @@ class SafeShadowWrapper extends React.Component {
   }
 }
 
+class SafeAvatarWrapper extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, retryCount: 0 };
+    this._retryTimer = null;
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err) {
+    console.warn('[3D Dressing Room] AvatarMesh3D load/render error (auto-retrying):', err);
+    if (this.state.retryCount < 2 && !this._retryTimer) {
+      this._retryTimer = setTimeout(() => {
+        this._retryTimer = null;
+        this.setState((prev) => ({ hasError: false, retryCount: prev.retryCount + 1 }));
+      }, 450);
+    }
+  }
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && (prevProps.isMale !== this.props.isMale || prevProps.resetKey !== this.props.resetKey)) {
+      this.setState({ hasError: false, retryCount: 0 });
+    }
+  }
+  componentWillUnmount() {
+    if (this._retryTimer) {
+      clearTimeout(this._retryTimer);
+      this._retryTimer = null;
+    }
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
 // ─── Creamy Boutique Studio Pedestal & Room ───
 function StudioPedestal() {
   return (
@@ -385,9 +420,23 @@ export default function DressingRoom3D({
   const [isContextLost, setIsContextLost] = useState(false);
   const glRef = useRef(null);
   const contextCleanupRef = useRef(null);
+  const remountTimerRef = useRef(null);
+
+  const scheduleCanvasRemount = useCallback((delayMs = 100) => {
+    if (remountTimerRef.current) return;
+    remountTimerRef.current = setTimeout(() => {
+      remountTimerRef.current = null;
+      setIsContextLost(false);
+      setCanvasKey((k) => k + 1);
+    }, delayMs);
+  }, []);
 
   useEffect(() => {
     return () => {
+      if (remountTimerRef.current) {
+        clearTimeout(remountTimerRef.current);
+        remountTimerRef.current = null;
+      }
       contextCleanupRef.current?.();
       contextCleanupRef.current = null;
     };
@@ -397,6 +446,7 @@ export default function DressingRoom3D({
     contextCleanupRef.current?.();
     contextCleanupRef.current = null;
     glRef.current = gl;
+    setIsContextLost(false);
     const canvas = gl?.domElement;
     if (!canvas) return;
 
@@ -406,18 +456,11 @@ export default function DressingRoom3D({
       e.preventDefault();
       console.warn('[DressingRoom3D] WebGL context lost (tab backgrounded/reclaimed). Awaiting restoration...');
       setIsContextLost(true);
-      try {
-        useGLTF.clear?.();
-      } catch (_) {}
     };
 
     const onRestored = () => {
       console.info('[DressingRoom3D] WebGL context restored. Rebuilding 3D studio pipeline...');
-      try {
-        useGLTF.clear?.();
-      } catch (_) {}
-      setIsContextLost(false);
-      setCanvasKey((k) => k + 1);
+      scheduleCanvasRemount(80);
     };
 
     canvas.addEventListener('webglcontextlost', onLost, false);
@@ -426,12 +469,11 @@ export default function DressingRoom3D({
       canvas.removeEventListener('webglcontextlost', onLost, false);
       canvas.removeEventListener('webglcontextrestored', onRestored, false);
     };
-  }, []);
+  }, [scheduleCanvasRemount]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
-    let timer = null;
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && isDialogOpen) {
         // Tab became visible again. Check if WebGL context was lost or needs remount
@@ -439,14 +481,7 @@ export default function DressingRoom3D({
         const isLost = gl?.isContextLost ? gl.isContextLost() : gl?.getContext?.()?.isContextLost?.();
         if (isLost || isContextLost) {
           console.warn('[DressingRoom3D] Tab resumed with lost WebGL context; remounting Canvas...');
-          try {
-            useGLTF.clear?.();
-          } catch (_) {}
-          setIsContextLost(false);
-          if (timer) clearTimeout(timer);
-          timer = setTimeout(() => {
-            setCanvasKey((k) => k + 1);
-          }, 60);
+          scheduleCanvasRemount(100);
         } else if (controlsRef?.current) {
           try {
             controlsRef.current.update();
@@ -458,11 +493,10 @@ export default function DressingRoom3D({
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleVisibilityChange);
     return () => {
-      if (timer) clearTimeout(timer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleVisibilityChange);
     };
-  }, [isDialogOpen, isContextLost]);
+  }, [isDialogOpen, isContextLost, scheduleCanvasRemount]);
 
   const { user } = useAuth?.() || {};
   const storedUser = user || userStore?.get?.() || EMPTY_OBJ;
@@ -927,9 +961,11 @@ export default function DressingRoom3D({
             title={t('dressing_room_3d.errorTitle', { defaultValue: '3D Studio' })}
             description={t('dressing_room_3d.errorDesc', { defaultValue: 'An unexpected 3D loading error occurred. Tap to retry.' })}
             onReset={() => {
+              setIsContextLost(false);
               try {
                 useGLTF.clear();
               } catch (_) {}
+              setCanvasKey((k) => k + 1);
             }}
           >
           <Suspense
@@ -1011,20 +1047,22 @@ export default function DressingRoom3D({
               <group position={[0, (!showAvatar && !coveredZones.hasShoes) ? 0 : (footPose?.groupLift || 0), 0]}>
                 {/* 3D Realistic Human Avatar (meterScale=false to inherit parent group scale) */}
                 {showAvatar && (
-                  <Suspense fallback={null}>
-                    <AvatarMesh3D
-                      isMale={isMale}
-                      skinColor={activeSkinColor}
-                      hairProps={hairProps}
-                      morphInfluences={morphInfluences}
-                      footPose={footPose}
-                      coveredZones={coveredZones}
-                      height={activeMeasurements?.height || (isMale ? 178 : 168)}
-                      meterScale={false}
-                      castShadow={true}
-                      receiveShadow={true}
-                    />
-                  </Suspense>
+                  <SafeAvatarWrapper resetKey={canvasKey} isMale={isMale}>
+                    <Suspense fallback={null}>
+                      <AvatarMesh3D
+                        isMale={isMale}
+                        skinColor={activeSkinColor}
+                        hairProps={hairProps}
+                        morphInfluences={morphInfluences}
+                        footPose={footPose}
+                        coveredZones={coveredZones}
+                        height={activeMeasurements?.height || (isMale ? 178 : 168)}
+                        meterScale={false}
+                        castShadow={true}
+                        receiveShadow={true}
+                      />
+                    </Suspense>
+                  </SafeAvatarWrapper>
                 )}
 
                 {/* Active Outfit Garments Worn in 3D Anatomical Fit (ordered strictly innermost to outermost) */}
