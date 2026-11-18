@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean15';
+export const TEMPLATE_CACHE_VERSION = 'clean16';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -59,6 +59,7 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'hat_beanie',
   'hat_headscarf',
   'hat_bandana',
+  'hat_newsboy',
   'accessory_glasses',
   'accessory_belt',
   'accessory_crossbody_bag',
@@ -138,6 +139,7 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   hat_beanie: 'hat_beanie',
   hat_headscarf: 'hat_headscarf',
   hat_bandana: 'hat_bandana',
+  hat_newsboy: 'hat_newsboy',
   accessory_glasses: 'accessory_glasses',
   glasses: 'accessory_glasses',
   accessory_belt: 'accessory_belt',
@@ -398,7 +400,10 @@ export function resolveGarmentTemplate({
     if (has('hair scarf', 'head scarf', 'headscarf', 'head wrap', 'headwrap', 'pre-tied', 'pretied', 'tichel', 'mitpachat', 'turban', 'hijab', 'מטפחת', 'כיסוי ראש', 'טורבן', 'טיכל')) {
       return 'hat_headscarf';
     }
-    if (has('baseball', 'trucker', 'snapback', 'cap', 'visor', 'מצחייה', 'מצחיה', 'בייסבול', 'קסקט', 'casquette', 'gorra')) {
+    if (has('newsboy', 'flat cap', 'flatcap', 'gatsby', 'baker boy', 'bakerboy', 'cabbie', 'ivy cap', 'scally', 'eight panel', '8-panel', 'tweed cap', 'קסקט')) {
+      return 'hat_newsboy';
+    }
+    if (has('baseball', 'trucker', 'snapback', 'cap', 'visor', 'מצחייה', 'מצחיה', 'בייסבול', 'casquette', 'gorra')) {
       return 'hat_cap';
     }
     if (has('beanie', 'beret', 'knit hat', 'skullcap', 'kippah', 'yarmulke', 'כיפה', 'ברט', 'צמר', 'bonnet')) {

@@ -3329,6 +3329,95 @@ def build_accessory_template(avatar_data, variant="belt"):
 
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
+    if variant == "hat_newsboy":
+        # Newsboy / Gatsby Cap: full 8-panel voluminous crown + top fabric button + short curved brim (-Y)
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.007
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
+        z_brim = z_max - 0.078
+
+        # Profile: (z, rx_scale, ry_scale, y_shift_front, puff_amp, v_uv)
+        newsboy_profile = [
+            (z_brim,         1.03, 1.03,  0.000, 0.0000, 0.44),
+            (z_brim + 0.018, 1.15, 1.11, -0.008, 0.0025, 0.54),
+            (z_brim + 0.044, 1.24, 1.18, -0.016, 0.0040, 0.66),
+            (z_brim + 0.072, 1.18, 1.13, -0.014, 0.0038, 0.78),
+            (z_max + 0.014,  0.90, 0.88, -0.008, 0.0028, 0.88),
+            (z_max + 0.025,  0.46, 0.46, -0.003, 0.0014, 0.94),
+            (z_max + 0.028,  0.10, 0.10, -0.002, 0.0000, 0.97),
+        ]
+        n_seg = 32  # 8 panels x 4 segments per panel
+        crown_rings = []
+        for z_val, sx, sy, y_sh, puff_amp, v_uv in newsboy_profile:
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                # Subtle 8-panel seam tuck (at j % 4 == 0) and panel puff in between
+                panel_wave = abs(math.sin(4.0 * theta))
+                r_mod = puff_amp * (panel_wave - 0.35)
+                px = cx + (rx_head * sx + r_mod) * math.cos(theta)
+                py = (cy + y_sh) + (ry_head * sy + r_mod) * math.sin(theta)
+                u_uv = 0.5 + 0.36 * math.cos(theta)
+                ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            crown_rings.append(ring)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, crown_rings, thickness=0.0022)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+
+        # Top fabric-covered button at crown apex
+        btn_y = cy - 0.002
+        btn_profile = [
+            (z_max + 0.026, 0.007, 0.007),
+            (z_max + 0.030, 0.011, 0.011),
+            (z_max + 0.035, 0.010, 0.010),
+            (z_max + 0.037, 0.004, 0.004),
+        ]
+        btn_rings = []
+        for z_b, rbx, rby in btn_profile:
+            ring = []
+            for j in range(12):
+                theta = (j / 12.0) * 2.0 * math.pi
+                ring.append((
+                    Vector((cx + rbx * math.cos(theta), btn_y + rby * math.sin(theta), z_b)),
+                    (0.5 + 0.08 * math.cos(theta), 0.98),
+                    {"Rigid_Hardware": 1.0},
+                ))
+            btn_rings.append(ring)
+        f_u, v_w = add_closed_tube_to_bm(bm, btn_rings, thickness=0.0012)
+        all_faces_uvs.extend(f_u)
+        all_vert_weights.extend(v_w)
+
+        # Short, curved front brim / visor (-Y) tucked slightly under the front crown overhang
+        visor_rings = []
+        n_v_depth = 5
+        n_v_lat = 15
+        visor_len = 0.052
+        visor_w = rx_head * 0.90
+        for i in range(n_v_depth):
+            t_out = i / float(n_v_depth - 1)
+            v_uv = 0.42 - t_out * 0.30
+            ring = []
+            for j in range(n_v_lat):
+                s_lat = -1.0 + 2.0 * (j / float(n_v_lat - 1))
+                lat_scale = 1.0 - 0.20 * (t_out ** 1.5)
+                px = cx + s_lat * visor_w * lat_scale
+                crown_y = cy - ry_head * 1.01 * math.sqrt(max(0.05, 1.0 - (s_lat * 0.90) ** 2))
+                edge_round = 1.0 - 0.25 * (s_lat ** 2)
+                py = crown_y - t_out * visor_len * edge_round
+                pz = (z_brim + 0.003) - 0.014 * (t_out ** 1.25) - 0.014 * (s_lat ** 2) * (0.35 + 0.65 * t_out)
+                u_uv = 0.5 + s_lat * 0.30
+                ring.append((Vector((px, py, pz)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            visor_rings.append(ring)
+
+        f_uvs, v_wts = add_open_strip_to_bm(bm, visor_rings, thickness=0.0024)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
     if variant == "necktie":
         # Collar loop + front knot + hanging tapered tie blade down center chest (-Y)
         z_neck = 1.50 if is_male else 1.42
@@ -3591,6 +3680,7 @@ CANONICAL_SPECS = [
     ("hat_beanie", "accessory", "hat_beanie", []),
     ("hat_headscarf", "accessory", "hat_headscarf", []),
     ("hat_bandana", "accessory", "hat_bandana", []),
+    ("hat_newsboy", "accessory", "hat_newsboy", []),
     ("accessory_glasses", "accessory", "glasses", ["glasses.glb"]),
     ("necktie", "accessory", "necktie", []),
     ("scarf", "accessory", "scarf", []),
