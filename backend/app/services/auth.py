@@ -243,39 +243,24 @@ def decrypt_api_key(encrypted_key: str) -> str | None:
             try:
                 res = cipher.decrypt(res.encode()).decode()
             except Exception:
-                break
+                return None
         return res
     except Exception as exc:
         logger.warning("Failed to decrypt API key via Fernet: %s", exc)
-        # If it's a non-empty key that failed decryption, return as-is if long enough
-        return cleaned if len(cleaned) >= 20 else None
+        # Never return raw Fernet ciphertext as a usable API key.
+        return None
 
 
 def resolve_user_gemini_api_key(user: dict[str, Any] | None = None) -> str | None:
     """Resolve the active Google Gemini API key for a request.
 
     Priority:
-    1. User's explicit custom key in ``user['ai_configuration']['custom_keys']['google_ai']``
-    2. User's custom key under alternative provider names (``gemini``)
-    3. User's direct ``ai_configuration.api_keys`` / ``google_ai_key`` / ``api_key``
-    4. Server environment fallback: ``settings.GEMINI_API_KEY`` or ``settings.GOOGLE_API_KEY``
+    1. Tester user's explicit custom key (via ``resolve_user_custom_gemini_api_key``)
+    2. Server environment fallback: ``settings.GEMINI_API_KEY`` or ``settings.GOOGLE_API_KEY``
     """
-    if user and isinstance(user, dict):
-        ai_config = user.get("ai_configuration") or {}
-        custom_keys = ai_config.get("custom_keys") or {}
-        api_keys = ai_config.get("api_keys") or {}
-        candidate = (
-            custom_keys.get("google_ai")
-            or custom_keys.get("gemini")
-            or api_keys.get("google_ai")
-            or api_keys.get("gemini")
-            or ai_config.get("google_ai_key")
-            or ai_config.get("api_key")
-        )
-        if candidate and isinstance(candidate, str) and candidate.strip():
-            decrypted = decrypt_api_key(candidate)
-            if decrypted:
-                return decrypted
+    custom_key = resolve_user_custom_gemini_api_key(user)
+    if custom_key:
+        return custom_key
 
     # Fallback to server environment key
     return (

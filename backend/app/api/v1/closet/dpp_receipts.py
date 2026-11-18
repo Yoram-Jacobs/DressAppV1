@@ -23,6 +23,51 @@ _safe_analysis = closet_service.safe_analysis
 
 router = APIRouter()
 
+
+def _is_invalid_api_key_error(exc: Exception) -> bool:
+    msg = str(exc)
+    return "API_KEY_INVALID" in msg or "API key not valid" in msg
+
+
+async def _call_gemini_vision(
+    user: dict,
+    *,
+    user_parts: list[Any],
+    system: str | None = None,
+    response_mime_type: str | None = None,
+    temperature: float | None = None,
+) -> str:
+    """Invoke Gemini vision with user key resolution and platform key fallback on invalid custom key."""
+    from app.config import settings
+    from app.services.gemini_client import get_gemini_client
+
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
+    gemini = get_gemini_client(user=user, api_key=user_api_key)
+    try:
+        return await gemini.vision(
+            user_parts=user_parts,
+            system=system,
+            response_mime_type=response_mime_type,
+            temperature=temperature,
+            model=user_model,
+        )
+    except Exception as exc:
+        server_key = settings.GEMINI_API_KEY
+        if server_key and user_api_key != server_key and _is_invalid_api_key_error(exc):
+            logger.warning(
+                "Custom Gemini API key rejected during receipt processing; retrying with platform GEMINI_API_KEY."
+            )
+            fallback_gemini = get_gemini_client(api_key=server_key)
+            return await fallback_gemini.vision(
+                user_parts=user_parts,
+                system=system,
+                response_mime_type=response_mime_type,
+                temperature=temperature,
+                model=user_model,
+            )
+        raise
+
 # -------------------------------------------------------------------
 class FetchImageUrlIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -254,11 +299,12 @@ async def extract_pdf_text(
 
     try:
         file_bytes = await file.read()
+        filename = file.filename or ""
         mime_type = file.content_type
         if not mime_type or mime_type == "application/octet-stream":
-            mime_type = mimetypes.guess_type(file.filename)[0] or "application/pdf"
+            mime_type = mimetypes.guess_type(filename)[0] or "application/pdf"
 
-        is_pdf = mime_type == "application/pdf" or file.filename.endswith(".pdf")
+        is_pdf = mime_type == "application/pdf" or filename.lower().endswith(".pdf")
 
         # Deduct AI credits for the OCR model call
         from app.db.database import get_db
@@ -270,10 +316,6 @@ async def extract_pdf_text(
 
         # Try Gemini Multimodal OCR first
         try:
-            from app.services.gemini_client import get_gemini_client
-            user_api_key = resolve_user_gemini_api_key(user)
-            user_model = resolve_user_gemini_model(user)
-            gemini = get_gemini_client(user=user, api_key=user_api_key)
             prompt = (
                 "You are a high-precision, multilingual OCR engine. "
                 "Extract and transcribe ALL text from the attached document row-by-row (horizontally across the page). "
@@ -289,10 +331,10 @@ async def extract_pdf_text(
                 (file_bytes, mime_type)
             ]
 
-            ocr_text = await gemini.vision(
+            ocr_text = await _call_gemini_vision(
+                user,
                 user_parts=user_parts,
-                model=user_model,
-                temperature=0.0
+                temperature=0.0,
             )
             if ocr_text and ocr_text.strip():
                 return {"text": ocr_text.strip()}
@@ -540,28 +582,32 @@ async def parse_receipt(
             from app.services.credit_manager import make_insufficient_credits_exception
             raise make_insufficient_credits_exception(user, cost=1)
 
-        from app.services.gemini_client import get_gemini_client
-        user_api_key = resolve_user_gemini_api_key(user)
-        user_model = resolve_user_gemini_model(user)
-        gemini = get_gemini_client(user=user, api_key=user_api_key)
-        response_text = await gemini.vision(
+        response_text = await _call_gemini_vision(
+            user,
             user_parts=parts,
             system=system_instructions,
             response_mime_type="application/json",
-            model=user_model,
         )
-        
+
         import re
-        cleaned_text = response_text.strip()
+        cleaned_text = (response_text or "").strip()
         if "```" in cleaned_text:
             cleaned_text = re.sub(r"^```(?:json)?\s*", "", cleaned_text, flags=re.MULTILINE)
             cleaned_text = re.sub(r"\s*```$", "", cleaned_text, flags=re.MULTILINE).strip()
-        s = cleaned_text.find("{")
-        e = cleaned_text.rfind("}")
-        if s != -1 and e != -1:
-            cleaned_text = cleaned_text[s : e + 1]
-            
-        return json.loads(cleaned_text)
+        try:
+            parsed_ocr = json.loads(cleaned_text)
+        except json.JSONDecodeError:
+            s = cleaned_text.find("{")
+            e = cleaned_text.rfind("}")
+            if s != -1 and e != -1:
+                parsed_ocr = json.loads(cleaned_text[s : e + 1])
+            else:
+                raise
+        if isinstance(parsed_ocr, list):
+            parsed_ocr = next((entry for entry in parsed_ocr if isinstance(entry, dict)), {})
+        if not isinstance(parsed_ocr, dict):
+            raise ValueError("Receipt OCR did not return a JSON object")
+        return parsed_ocr
 
     async def run_visual():
         vision_service = get_garment_vision_service(user=user)
@@ -623,30 +669,31 @@ async def parse_receipt(
                 elif isinstance(col, dict) and "name" in col:
                     raw_colors.append({"name": col["name"], "pct": col.get("pct")})
             
-            has_pct = [c for c in raw_colors if c["pct"] is not None]
-            total_known = sum(c["pct"] for c in has_pct)
-            
-            if len(has_pct) == len(raw_colors):
-                final_colors = raw_colors
-            else:
-                remaining = max(0, 100 - total_known)
-                null_count = len(raw_colors) - len(has_pct)
-                share = remaining // null_count
-                distributed = 0
-                
-                final_colors = []
-                null_seen = 0
-                for c in raw_colors:
-                    if c["pct"] is not None:
-                        final_colors.append(c)
-                    else:
-                        null_seen += 1
-                        val = (remaining - distributed) if null_seen == null_count else share
-                        distributed += val
-                        final_colors.append({"name": c["name"], "pct": val})
-            
-            if final_colors:
-                final_data["colors"] = final_colors
+            if raw_colors:
+                has_pct = [c for c in raw_colors if c["pct"] is not None]
+                total_known = sum(c["pct"] for c in has_pct)
+
+                if len(has_pct) == len(raw_colors):
+                    final_colors = raw_colors
+                else:
+                    remaining = max(0, 100 - total_known)
+                    null_count = len(raw_colors) - len(has_pct)
+                    share = remaining // null_count if null_count > 0 else 0
+                    distributed = 0
+
+                    final_colors = []
+                    null_seen = 0
+                    for c in raw_colors:
+                        if c["pct"] is not None:
+                            final_colors.append(c)
+                        else:
+                            null_seen += 1
+                            val = (remaining - distributed) if null_seen == null_count else share
+                            distributed += val
+                            final_colors.append({"name": c["name"], "pct": val})
+
+                if final_colors:
+                    final_data["colors"] = final_colors
                 
         # Fill standard defaults if not present
         if not final_data.get("brand"):
@@ -671,6 +718,8 @@ async def parse_receipt(
             final_data["image_mime"] = visual_result["image_mime"]
             
         return final_data
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("Failed parsing receipt: %s", e)
         raise HTTPException(500, f"Error processing receipt: {e}")
