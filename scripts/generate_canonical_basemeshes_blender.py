@@ -3274,6 +3274,78 @@ def build_accessory_template(avatar_data, variant="belt"):
         all_vert_weights.extend(v_wts)
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
+    if variant == "hat_flatcap":
+        # Flat Cap / Driver Cap / Ivy Cap: sleek low-profile crown sloping forward over a short stiff brim (-Y)
+        z_max = max(v.z for v in verts)
+        head_pts = [v for v in verts if v.z >= z_max - 0.16]
+        cx = 0.0
+        cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
+        rx_head = max(abs(v.x) for v in head_pts) + 0.007
+        ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
+        z_front_brim = z_max - 0.074
+        z_back_brim = z_max - 0.094
+
+        # (t_h, sx, sy, y_front_shift, z_top_slope, v_uv)
+        flatcap_profile = [
+            (0.00, 1.03, 1.03,  0.000, 0.000, 0.42),  # Base rim (cups back of head)
+            (0.25, 1.04, 1.06, -0.012, 0.000, 0.54),  # Lower side/back cup
+            (0.55, 1.01, 1.08, -0.026, -0.004, 0.68), # Mid crown sweeping forward
+            (0.80, 0.86, 0.96, -0.028, -0.008, 0.82), # Upper sleek dome
+            (0.94, 0.52, 0.66, -0.020, -0.008, 0.92), # Flat top shoulder
+            (1.00, 0.14, 0.24, -0.012, -0.006, 0.97), # Closed sleek top
+        ]
+        n_seg = 32
+        crown_rings = []
+        for t_h, sx, sy, y_sh, z_slope, v_uv in flatcap_profile:
+            ring = []
+            for j in range(n_seg):
+                theta = (j / n_seg) * 2.0 * math.pi
+                cos_t = math.cos(theta)
+                sin_t = math.sin(theta)
+                back_factor = 0.5 * (1.0 + sin_t)
+                front_w = max(0.0, -sin_t)
+                z_base = z_front_brim * (1.0 - back_factor) + z_back_brim * back_factor
+                # Sleek forward slope: front (-Y) dips slightly lower than back crown
+                z_val = z_base + t_h * ((z_max + 0.016) - z_base) + z_slope * front_w
+                # Extra forward sweep on front half (-Y) so crown sits flush over the visor
+                y_extra = -0.014 * (t_h * (1.0 - t_h) * 4.0) * front_w
+                px = cx + rx_head * sx * cos_t
+                py = (cy + y_sh + y_extra) + ry_head * sy * sin_t
+                u_uv = 0.5 + 0.36 * cos_t
+                ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            crown_rings.append(ring)
+
+        f_uvs, v_wts = add_closed_tube_to_bm(bm, crown_rings, thickness=0.0022)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+
+        # Short, stiff front visor (-Y) tucked flush under the forward-sloped crown
+        visor_rings = []
+        n_v_depth = 5
+        n_v_lat = 15
+        visor_len = 0.048
+        visor_w = rx_head * 0.88
+        for i in range(n_v_depth):
+            t_out = i / float(n_v_depth - 1)
+            v_uv = 0.40 - t_out * 0.28
+            ring = []
+            for j in range(n_v_lat):
+                s_lat = -1.0 + 2.0 * (j / float(n_v_lat - 1))
+                lat_scale = 1.0 - 0.22 * (t_out ** 1.5)
+                px = cx + s_lat * visor_w * lat_scale
+                crown_y = cy - ry_head * 1.01 * math.sqrt(max(0.05, 1.0 - (s_lat * 0.90) ** 2))
+                edge_round = 1.0 - 0.25 * (s_lat ** 2)
+                py = crown_y - t_out * visor_len * edge_round
+                pz = (z_front_brim + 0.001) - 0.012 * (t_out ** 1.2) - 0.012 * (s_lat ** 2) * (0.35 + 0.65 * t_out)
+                u_uv = 0.5 + s_lat * 0.30
+                ring.append((Vector((px, py, pz)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
+            visor_rings.append(ring)
+
+        f_uvs, v_wts = add_open_strip_to_bm(bm, visor_rings, thickness=0.0024)
+        all_faces_uvs.extend(f_uvs)
+        all_vert_weights.extend(v_wts)
+        return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
+
     if variant == "hat_beanie":
         # Knit Beanie / Watch Cap: folded ribbed cuff + softly draped closed knit crown
         z_max = max(v.z for v in verts)
@@ -3822,6 +3894,7 @@ CANONICAL_SPECS = [
     ("hat_newsboy", "accessory", "hat_newsboy", []),
     ("hat_cowboy", "accessory", "hat_cowboy", []),
     ("hat_bowler", "accessory", "hat_bowler", []),
+    ("hat_flatcap", "accessory", "hat_flatcap", []),
     ("accessory_glasses", "accessory", "glasses", ["glasses.glb"]),
     ("necktie", "accessory", "necktie", []),
     ("scarf", "accessory", "scarf", []),

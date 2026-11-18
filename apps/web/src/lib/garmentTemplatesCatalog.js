@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean20';
+export const TEMPLATE_CACHE_VERSION = 'clean21';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -62,6 +62,7 @@ export const AVAILABLE_TEMPLATES = Object.freeze([
   'hat_newsboy',
   'hat_cowboy',
   'hat_bowler',
+  'hat_flatcap',
   'accessory_glasses',
   'accessory_belt',
   'accessory_crossbody_bag',
@@ -144,6 +145,7 @@ export const CANONICAL_TEMPLATE_MAP = Object.freeze({
   hat_newsboy: 'hat_newsboy',
   hat_cowboy: 'hat_cowboy',
   hat_bowler: 'hat_bowler',
+  hat_flatcap: 'hat_flatcap',
   accessory_glasses: 'accessory_glasses',
   glasses: 'accessory_glasses',
   accessory_belt: 'accessory_belt',
@@ -404,7 +406,10 @@ export function resolveGarmentTemplate({
     if (has('hair scarf', 'head scarf', 'headscarf', 'head wrap', 'headwrap', 'pre-tied', 'pretied', 'tichel', 'mitpachat', 'turban', 'hijab', 'מטפחת', 'כיסוי ראש', 'טורבן', 'טיכל')) {
       return 'hat_headscarf';
     }
-    if (has('newsboy', 'flat cap', 'flatcap', 'gatsby', 'baker boy', 'bakerboy', 'cabbie', 'ivy cap', 'scally', 'eight panel', '8-panel', 'tweed cap', 'קסקט')) {
+    if (has('flat cap', 'flatcap', 'driver cap', 'driving cap', 'ivy cap', 'scally', 'duckbill', 'קסקט')) {
+      return 'hat_flatcap';
+    }
+    if (has('newsboy', 'gatsby', 'baker boy', 'bakerboy', 'cabbie', 'eight panel', '8-panel', 'tweed cap')) {
       return 'hat_newsboy';
     }
     if (has('baseball', 'trucker', 'snapback', 'cap', 'visor', 'מצחייה', 'מצחיה', 'בייסבול', 'casquette', 'gorra')) {
