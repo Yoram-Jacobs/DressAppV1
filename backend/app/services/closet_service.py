@@ -571,6 +571,16 @@ async def run_background_matte_and_analyze(
             "Receipt matte+analyze: merged %d analysis field(s) onto item %s",
             len(update_doc) - 1, item_id,
         )
+        try:
+            if item_doc.get("user_id"):
+                from app.services.sync_service import broadcast_sync_event
+                await broadcast_sync_event(
+                    item_doc["user_id"],
+                    "closet_updated",
+                    {"action": "update", "item_id": item_id},
+                )
+        except Exception as sync_exc:
+            logger.debug("Receipt matte+analyze broadcast_sync_event skipped: %s", sync_exc)
     else:
         logger.info(
             "Receipt matte+analyze: no new fields to merge for item %s "

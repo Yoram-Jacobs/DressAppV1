@@ -303,19 +303,30 @@ async def _maybe_retry_stale_matte(*args: Any, **kwargs: Any) -> Any:
     return await fn(*args, **kwargs)
 
 
-def _run_background_matte(*args: Any, **kwargs: Any) -> Any:
-    fn = _get_closet_attr("_run_background_matte", closet_service.run_background_matte)
-    return fn(*args, **kwargs)
+async def _invoke_closet_bg(name: str, fallback: Any, *args: Any, **kwargs: Any) -> Any:
+    import inspect
+
+    fn = _get_closet_attr(name, fallback)
+    res = fn(*args, **kwargs)
+    if inspect.isawaitable(res):
+        return await res
+    return res
 
 
-def _run_background_matte_and_analyze(*args: Any, **kwargs: Any) -> Any:
-    fn = _get_closet_attr("_run_background_matte_and_analyze", closet_service.run_background_matte_and_analyze)
-    return fn(*args, **kwargs)
+async def _run_background_matte(*args: Any, **kwargs: Any) -> Any:
+    return await _invoke_closet_bg("_run_background_matte", closet_service.run_background_matte, *args, **kwargs)
 
 
-def _run_background_reconstruction(*args: Any, **kwargs: Any) -> Any:
-    fn = _get_closet_attr("_run_background_reconstruction", closet_service.run_background_reconstruction)
-    return fn(*args, **kwargs)
+async def _run_background_matte_and_analyze(*args: Any, **kwargs: Any) -> Any:
+    return await _invoke_closet_bg(
+        "_run_background_matte_and_analyze", closet_service.run_background_matte_and_analyze, *args, **kwargs
+    )
+
+
+async def _run_background_reconstruction(*args: Any, **kwargs: Any) -> Any:
+    return await _invoke_closet_bg(
+        "_run_background_reconstruction", closet_service.run_background_reconstruction, *args, **kwargs
+    )
 
 
 def _get_item_image_url(item: dict[str, Any], *, prefer_active: bool = True) -> str | None:

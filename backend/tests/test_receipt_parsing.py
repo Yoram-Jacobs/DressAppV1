@@ -56,7 +56,7 @@ def test_resolve_user_gemini_api_key_enforces_zero_byok_and_stale_key_fallback()
         "id": "usr-tester",
         "email": "tester@dressapp.co",
         "roles": ["user", "tester"],
-        "subscription": {"is_tester": True, "tier": "professional", "is_active": True},
+        "subscription": {"is_tester": True, "tier": "professional", "plan_type": "tester", "is_active": True},
         "ai_configuration": {
             "custom_keys": {"google_ai": stale_cipher},
         },
@@ -80,7 +80,7 @@ async def test_parse_receipt_succeeds_when_user_has_undecryptable_custom_key():
         "id": "usr-tester",
         "email": "tester@dressapp.co",
         "roles": ["user", "tester"],
-        "subscription": {"is_tester": True, "tier": "professional", "is_active": True},
+        "subscription": {"is_tester": True, "tier": "professional", "plan_type": "tester", "is_active": True},
         "ai_configuration": {
             "selected_provider": "google_ai",
             "selected_model": "gemini-3.5-pro",
@@ -141,7 +141,7 @@ async def test_parse_receipt_retries_with_platform_key_on_invalid_custom_key():
         "id": "usr-tester",
         "email": "tester@dressapp.co",
         "roles": ["user", "tester"],
-        "subscription": {"is_tester": True, "tier": "professional", "is_active": True},
+        "subscription": {"is_tester": True, "tier": "professional", "plan_type": "tester", "is_active": True},
         "ai_configuration": {
             "custom_keys": {"google_ai": revoked_cipher},
         },
@@ -193,3 +193,106 @@ async def test_parse_receipt_preserves_http_exception_status():
         with pytest.raises(HTTPException) as exc_info:
             await parse_receipt(text="Receipt text", url=None, file=None, user=user)
     assert exc_info.value.status_code == 402
+
+
+@pytest.mark.anyio
+async def test_receipt_background_wrappers_are_async_and_populate_garment_fields():
+    import inspect
+    from fastapi import BackgroundTasks
+    from PIL import Image
+    from starlette._utils import is_async_callable
+    from app.api.v1.closet.common import (
+        CreateItemIn,
+        _run_background_matte,
+        _run_background_matte_and_analyze,
+        _run_background_reconstruction,
+    )
+    from app.api.v1.closet.items import save_closet_item_document
+    from app.db.database import get_db
+
+    # Starlette BackgroundTasks requires async callables to await coroutines
+    for fn in (_run_background_matte, _run_background_matte_and_analyze, _run_background_reconstruction):
+        assert inspect.iscoroutinefunction(fn)
+        assert is_async_callable(fn)
+
+    img = Image.new("RGB", (64, 64), (120, 120, 120))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    img_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+
+    user = {
+        "id": "usr-receipt-bg",
+        "email": "tester@dressapp.co",
+        "roles": ["user", "tester"],
+        "subscription": {"is_tester": True, "tier": "professional", "plan_type": "tester", "is_active": True},
+    }
+    payload = CreateItemIn(
+        title="TASAY Bomber Jacket Men Rainproof Wind",
+        category="Outerwear",
+        brand="TASAY Official Store",
+        size="L",
+        price_cents=6625,
+        purchase_price_cents=6625,
+        color="gray",
+        colors=[{"name": "gray", "pct": 100}],
+        gender="men",
+        state="new",
+        image_base64=img_b64,
+        image_mime="image/jpeg",
+        from_receipt=True,
+        receipt_locked_fields=[
+            "title", "brand", "size", "price_cents", "purchase_price_cents",
+            "category", "colors", "color", "gender", "state",
+        ],
+    )
+
+    fake_vision = MagicMock()
+    fake_vision.analyze = AsyncMock(return_value={
+        "is_clothing": True,
+        "title": "Grey Cotton Stand Collar Jacket",
+        "caption": "A grey cotton bomber jacket.",
+        "category": "Outerwear",
+        "sub_category": "Jacket",
+        "item_type": "Bomber Jacket",
+        "gender": "unisex",
+        "dress_code": "casual",
+        "fit": "regular",
+        "season": ["spring", "fall"],
+        "colors": [{"name": "Grey", "pct": 100}],
+        "fabric_materials": [{"name": "Cotton", "pct": 100}],
+        "pattern": "solid",
+        "state": "used",
+        "condition": "good",
+        "quality": "mid",
+    })
+
+    bg = BackgroundTasks()
+    with patch("app.services.closet_service.run_background_matte", new=AsyncMock(return_value=None)), \
+         patch("app.services.vision.garment_vision_service", fake_vision), \
+         patch("app.services.encoder_pipeline.process_image_pipeline", new=AsyncMock(return_value=None)), \
+         patch("app.services.sync_service.broadcast_sync_event", new=AsyncMock(return_value=None)):
+        created = await save_closet_item_document(user=user, payload=payload, background_tasks=bg)
+        item_id = created["id"]
+        # Run Starlette BackgroundTasks exactly as FastAPI does after returning response
+        await bg()
+
+    db = get_db()
+    saved = await db.closet_items.find_one({"id": item_id})
+    assert saved is not None
+    # Unlocked fields filled by GarmentVision
+    assert saved["sub_category"] == "Jacket"
+    assert saved["item_type"] == "Bomber Jacket"
+    assert saved["caption"] == "A grey cotton bomber jacket."
+    assert saved["dress_code"] == "casual"
+    assert saved["fit"] == "regular"
+    assert saved["season"] == ["spring", "fall"]
+    assert saved["material"] == "Cotton"
+    assert saved["fabric_materials"] == [{"name": "Cotton", "pct": 100}]
+    assert saved["pattern"] == "solid"
+    assert saved["condition"] == "good"
+    assert saved["quality"] == "mid"
+    # Receipt-locked fields preserved
+    assert saved["title"] == "TASAY Bomber Jacket Men Rainproof Wind"
+    assert saved["brand"] == "TASAY Official Store"
+    assert saved["gender"] == "men"
+    assert saved["state"] == "new"
