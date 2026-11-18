@@ -8,7 +8,7 @@
  * geometry builders (`createFittedFootwearGeometry`, `createAnatomicalAccessoryGeometry`).
  */
 
-export const TEMPLATE_CACHE_VERSION = 'clean18';
+export const TEMPLATE_CACHE_VERSION = 'clean19';
 
 export const AVAILABLE_TEMPLATES = Object.freeze([
   // Tops
@@ -408,7 +408,7 @@ export function resolveGarmentTemplate({
     if (has('baseball', 'trucker', 'snapback', 'cap', 'visor', 'מצחייה', 'מצחיה', 'בייסבול', 'casquette', 'gorra')) {
       return 'hat_cap';
     }
-    if (has('beanie', 'beret', 'knit hat', 'skullcap', 'kippah', 'yarmulke', 'כיפה', 'ברט', 'צמר', 'bonnet')) {
+    if (has('beanie', 'beret', 'knit hat', 'watch cap', 'toque', 'tuque', 'pom-pom', 'pom pom', 'slouch', 'skullcap', 'kippah', 'yarmulke', 'כובע צמר', 'כובע גרב', 'כיפה', 'ברט', 'צמר', 'bonnet')) {
       return 'hat_beanie';
     }
     if (has('cowboy', 'stetson', 'western', 'cattleman', 'ranch', 'outback', 'קאובוי', 'בוקר', 'בוקרים')) {

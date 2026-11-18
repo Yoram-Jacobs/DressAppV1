@@ -3228,32 +3228,40 @@ def build_accessory_template(avatar_data, variant="belt"):
         return bm, all_faces_uvs, all_vert_weights, ["Rigid_Hardware"]
 
     if variant == "hat_beanie":
-        # Knit Beanie / Beret: snug folded cuff + closed dome
+        # Knit Beanie / Watch Cap: folded ribbed cuff + softly draped closed knit crown
         z_max = max(v.z for v in verts)
         head_pts = [v for v in verts if v.z >= z_max - 0.16]
         cx = 0.0
         cy = 0.5 * (min(v.y for v in head_pts) + max(v.y for v in head_pts))
         rx_head = max(abs(v.x) for v in head_pts) + 0.007
         ry_head = 0.5 * (max(v.y for v in head_pts) - min(v.y for v in head_pts)) + 0.007
-        z_brim = z_max - 0.082
+        z_front_brim = z_max - 0.084
+        z_back_brim = z_max - 0.112
 
+        # (t_h, sx, sy, y_back_slouch, rib_amp, v_uv)
         beanie_profile = [
-            (z_brim, rx_head * 1.07, ry_head * 1.07, 0.16),
-            (z_brim + 0.028, rx_head * 1.06, ry_head * 1.06, 0.38),
-            (z_brim + 0.032, rx_head * 1.02, ry_head * 1.02, 0.44),
-            (z_brim + 0.062, rx_head * 0.94, ry_head * 0.95, 0.68),
-            (z_max + 0.016, rx_head * 0.72, ry_head * 0.74, 0.86),
-            (z_max + 0.034, rx_head * 0.16, ry_head * 0.18, 0.96),
+            (0.00, 1.11, 1.11, 0.000, 0.0014, 0.12),  # Folded cuff bottom edge
+            (0.18, 1.12, 1.12, 0.001, 0.0016, 0.25),  # Mid folded cuff
+            (0.35, 1.10, 1.10, 0.002, 0.0014, 0.36),  # Top of folded cuff
+            (0.38, 1.03, 1.04, 0.003, 0.0008, 0.42),  # Crisp cuff-to-crown tuck step
+            (0.58, 1.00, 1.02, 0.007, 0.0004, 0.58),  # Mid knit crown
+            (0.78, 0.88, 0.92, 0.011, 0.0000, 0.76),  # Upper crown taper
+            (0.92, 0.60, 0.65, 0.012, 0.0000, 0.89),  # Crown shoulder
+            (1.00, 0.16, 0.18, 0.010, 0.0000, 0.97),  # Closed knit apex
         ]
-        n_seg = 24
+        n_seg = 32
         beanie_rings = []
-        for z_val, rx, ry, v_uv in beanie_profile:
+        for t_h, sx, sy, y_slouch, rib_amp, v_uv in beanie_profile:
             ring = []
             for j in range(n_seg):
                 theta = (j / n_seg) * 2.0 * math.pi
-                px = cx + rx * math.cos(theta)
-                py = cy + ry * math.sin(theta)
-                u_uv = 0.5 + 0.40 * math.cos(theta)
+                back_factor = 0.5 * (1.0 + math.sin(theta))
+                z_base = z_front_brim * (1.0 - back_factor) + z_back_brim * back_factor
+                z_val = z_base + t_h * ((z_max + 0.040) - z_base)
+                rib_mod = rib_amp * math.cos(16.0 * theta)
+                px = cx + (rx_head * sx + rib_mod) * math.cos(theta)
+                py = (cy + y_slouch) + (ry_head * sy + rib_mod) * math.sin(theta)
+                u_uv = 0.5 + 0.38 * math.cos(theta)
                 ring.append((Vector((px, py, z_val)), (u_uv, v_uv), {"Rigid_Hardware": 1.0}))
             beanie_rings.append(ring)
 
