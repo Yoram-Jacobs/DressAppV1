@@ -112,7 +112,9 @@
     "standardUploadDesc": "Standard processing queue. Deep clothing scan in progress.",
     "standardStylistDesc": "Standard processing queue. AI Stylist is crafting your look.",
     "standardSuitcaseDesc": "Standard processing queue. Generating curated travel wardrobe.",
-    "listSeparator": ", "
+    "listSeparator": ", ",
+    "planUpgradeTitle": "Plan Upgrade Required",
+    "upgrade": "Upgrade"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -701,7 +703,9 @@
       "confirm": "Continue",
       "summary": "{{willAdd}} will be added · {{willSkip}} will be skipped",
       "allSkipped": "All selected photos were duplicates and were skipped.",
-      "allDuplicatesSkippedBatch": "Skipped {{count}} photos already in your closet — nothing new to upload."
+      "allDuplicatesSkippedBatch": "Skipped {{count}} photos already in your closet — nothing new to upload.",
+      "confirmAddAndSkip": "Add {{addCount}} & continue",
+      "skipAndContinue": "Skip duplicates & continue"
     },
     "saveAll": "Save",
     "savedAll": "All items saved",
@@ -783,7 +787,8 @@
       "duplicatesPending": "Saved {{saved}} new items · {{pending}} look like duplicates — review them below.",
       "duplicatesInline": "{{count}} item(s) need your confirmation — they look like duplicates of items already in your closet.",
       "skippedDupSuffix": "(skipped {{count}} already in closet)",
-      "failed": "Could not save any items. Please try again."
+      "failed": "Could not save any items. Please try again.",
+      "preparing": "Preparing photos..."
     },
     "saveAllPending": "Saving — waiting for analysis…",
     "section": {
@@ -853,7 +858,14 @@
       "ingestCataloguing": "Cataloguing item {{done}} of {{total}}…",
       "ingestSyncing": "Syncing to your Closet…",
       "ingestAnalysisHint": "Removing backgrounds and analyzing your items in the background.",
-      "ingestSyncingHint": "Refreshing your wardrobe — almost there."
+      "ingestSyncingHint": "Refreshing your wardrobe — almost there.",
+      "timeout": "Receipt parsing timed out. Please try again or crop a smaller section.",
+      "pastePrompt": "Please paste receipt or order text.",
+      "selectFilePrompt": "Please select a receipt or invoice file.",
+      "enterUrlPrompt": "Please enter a product URL.",
+      "noItemsFound": "No garment items were extracted from this receipt/link.",
+      "receiptParsed": "Successfully extracted items into your cards.",
+      "extractBtn": "Extract Garments"
     },
     "failedToLoadImage": "Failed to load image.",
     "titleRequired": "Title is required",
@@ -913,7 +925,27 @@
       "massClusterCreditsRequiredLabel": "Minimum AI Reconstruction Credits: 15",
       "massClusterCurrentCreditsLabel": "Your Balance: {{available}}"
     },
-    "fitPlaceholder": "Select fit"
+    "fitPlaceholder": "Select fit",
+    "quota": {
+      "title": "Credits Quota Reached",
+      "insufficientSubtitle": "Insufficient credits or quota limit reached",
+      "messageWithBalance": "Your request for {{count}} garments exceeded your credits quota. You have {{balance}} garment credit(s) available on your Free plan. Would you like to add {{balance}} garments now, or upgrade your plan?",
+      "messageZeroBalance": "Your request for {{count}} garments exceeded your daily credits quota. You have 0 credits remaining today on your Free plan. Upgrade your plan for unlimited AI analysis, or continue adding your garments manually without AI.",
+      "availableCreditsLabel": "Available AI Credits:",
+      "addAllowedButton": "Add {{count}} garments",
+      "upgradeButton": "Upgrade Plan",
+      "editManuallyButton": "Continue manually",
+      "manualContinueHint": "You can manually enter details and save your garments."
+    },
+    "clipboardPasted": "Image pasted from clipboard!",
+    "unnamedGarment": "Unnamed Garment",
+    "saveTimeout": "Save timed out",
+    "batchSaveSuccess": "Successfully added {{count}} garment(s) to your wardrobe!",
+    "cameraError": "Failed to open camera.",
+    "cameraPermissionPrompt": "Camera permission is required to photograph your clothes.",
+    "heroSubtitle": "Snap a photo or import a document — our AI detects, crops, and catalogs every detail into your closet.",
+    "limitReachedMsg": "You have reached your free closet capacity limit. Upgrade to Manager or Professional for unlimited items.",
+    "limitReachedTitle": "Closet Limit Reached"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2227,7 +2259,8 @@
     "connectExtension": "Connect Extension",
     "alreadyInstalled": "Already installed?",
     "schedulerCreditNote": "Each daily proposal consumes 1 AI credit.",
-    "schedulerUpgradeDesc": "Daily outfit suggestions consume 1 AI credit on the Free plan, or enjoy unlimited access on Manager and Professional."
+    "schedulerUpgradeDesc": "Daily outfit suggestions consume 1 AI credit on the Free plan, or enjoy unlimited access on Manager and Professional.",
+    "upgradeBtn": "Upgrade Plan"
   },
   "admin": {
     "title": "Admin",
@@ -2849,7 +2882,13 @@
       "cargo": "Cargo Pants",
       "pants": "Pants",
       "cargo_shorts": "Cargo Shorts",
-      "high_heel_pump": "High Heel Pumps"
+      "high_heel_pump": "High Heel Pumps",
+      "classic_derby_shoes": "Classic Derby Shoes",
+      "classic_heels": "Classic Heels",
+      "classic_kurta": "Classic Kurta",
+      "classic_loafers": "Classic Loafers",
+      "classic_oxford_shoes": "Classic Oxford Shoes",
+      "classic_sherwani": "Classic Sherwani"
     },
     "color": {
       "black": "Black",

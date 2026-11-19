@@ -1484,6 +1484,8 @@ const isClusterOrRackItem = (analysis) => {
 /* -------------------- page -------------------- */
 export default function AddItem() {
   const { t, i18n } = useTranslation();
+  const rawLangCode = (i18n.language || "en").split("-")[0].toLowerCase();
+  const activeLang = rawLangCode === "iw" ? "he" : rawLangCode;
   const nav = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -1924,7 +1926,7 @@ export default function AddItem() {
     if (!payload) return;
     const loadingId = toast.loading(t("dpp.scanner.importing"));
     try {
-      const res = await api.importDpp(payload);
+      const res = await api.importDpp(payload, activeLang);
       toast.dismiss(loadingId);
       if (res?.parse_error) {
         toast.error(
@@ -2362,6 +2364,7 @@ export default function AddItem() {
       } else if (importMode === "url") {
         formData.append("url", importUrl);
       }
+      formData.append("language", activeLang);
 
       let res;
       try {
@@ -2386,52 +2389,58 @@ export default function AddItem() {
       }
 
       if (!res) {
-        throw new Error("No response from receipt parser");
+        throw new Error(
+          t("addItem.import.error", {
+            defaultValue: "Could not parse receipt. Please verify formatting and try again.",
+          }),
+        );
       }
 
       const brand = res.brand || "Generic";
-      const item_type = res.item_type || "Garment";
+      const item_type = res.item_type || "";
       const size = res.size || "M";
       const priceCents = res.price_cents || 0;
       const category = res.category || "Top";
-      const name = res.name || `${brand} ${item_type}`;
+      const name = res.name || (item_type ? `${brand} ${item_type}` : brand);
       const gender = res.gender || "unisex";
 
       let colors = [];
       if (res.colors && res.colors.length) {
-        const rawColors = res.colors.map((c) => {
-          if (typeof c === "string") return { name: c, pct: null };
-          if (c && typeof c === "object" && c.name)
-            return { name: c.name, pct: c.pct ?? null };
-          return { name: "grey", pct: null };
-        });
+        const rawColors = res.colors
+          .map((c) => {
+            if (typeof c === "string" && c.trim()) return { name: c.trim(), pct: null };
+            if (c && typeof c === "object" && c.name)
+              return { name: c.name, pct: c.pct ?? null };
+            return null;
+          })
+          .filter(Boolean);
 
-        const hasPctCount = rawColors.filter((c) => c.pct !== null).length;
-        const totalKnownPct = rawColors.reduce(
-          (sum, c) => sum + (c.pct || 0),
-          0,
-        );
+        if (rawColors.length) {
+          const hasPctCount = rawColors.filter((c) => c.pct !== null).length;
+          const totalKnownPct = rawColors.reduce(
+            (sum, c) => sum + (c.pct || 0),
+            0,
+          );
 
-        if (hasPctCount === rawColors.length) {
-          colors = rawColors;
-        } else {
-          const remainingPct = Math.max(0, 100 - totalKnownPct);
-          const nullCount = rawColors.length - hasPctCount;
-          const share = Math.floor(remainingPct / nullCount);
-          let distributed = 0;
+          if (hasPctCount === rawColors.length) {
+            colors = rawColors;
+          } else {
+            const remainingPct = Math.max(0, 100 - totalKnownPct);
+            const nullCount = rawColors.length - hasPctCount;
+            const share = Math.floor(remainingPct / nullCount);
+            let distributed = 0;
 
-          colors = rawColors.map((c, idx) => {
-            if (c.pct !== null) return c;
-            const isLastNull = rawColors
-              .slice(idx + 1)
-              .every((rc) => rc.pct !== null);
-            const val = isLastNull ? remainingPct - distributed : share;
-            distributed += val;
-            return { name: c.name, pct: val };
-          });
+            colors = rawColors.map((c, idx) => {
+              if (c.pct !== null) return c;
+              const isLastNull = rawColors
+                .slice(idx + 1)
+                .every((rc) => rc.pct !== null);
+              const val = isLastNull ? remainingPct - distributed : share;
+              distributed += val;
+              return { name: c.name, pct: val };
+            });
+          }
         }
-      } else {
-        colors = [{ name: "grey", pct: 100 }];
       }
 
       let base64Preview = null;
@@ -2444,7 +2453,7 @@ export default function AddItem() {
         } catch (_) { }
       } else {
         const svgColor =
-          (colors && colors[0] && colors[0].name) || "hsl(var(--accent))";
+          (colors && colors[0] && colors[0].name) || "#9ca3af";
         const svgIcon = `
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
             <defs>
@@ -2486,13 +2495,14 @@ export default function AddItem() {
       ].filter(Boolean);
 
       const payload = {
-        title: name || "Unnamed Garment",
+        title: name || t("addItem.unnamedGarment", { defaultValue: "Unnamed Garment" }),
         category: category || "Top",
+        item_type: !hasImage && item_type ? item_type : undefined,
         brand: brand || "Generic",
         size: size || "",
         price_cents: priceCents || 0,
         purchase_price_cents: priceCents || 0,
-        color: colors?.[0]?.name || "grey",
+        color: colors?.[0]?.name || undefined,
         colors: colors,
         gender: gender,
         state: "new",
@@ -2503,6 +2513,7 @@ export default function AddItem() {
           : undefined,
         from_receipt: true,
         receipt_locked_fields: receiptLockedFields,
+        language: activeLang,
       };
 
       let created;
@@ -2703,19 +2714,19 @@ export default function AddItem() {
           ].filter(Boolean);
 
           const payload = {
-            title: item.name || "Unnamed Garment",
+            title: item.name || t("addItem.unnamedGarment", { defaultValue: "Unnamed Garment" }),
             category: item.category || "Top",
             brand: item.brand || "Generic",
             size: item.size || "",
             price_cents: item.price_cents || 0,
             purchase_price_cents: item.price_cents || 0,
-            color: item.colors?.[0]?.name || "grey",
+            color: item.colors?.[0]?.name || undefined,
             colors:
               item.colors && item.colors.length
                 ? item.colors.map((c) =>
                   typeof c === "string" ? { name: c, pct: null } : c,
                 )
-                : [{ name: "grey", pct: null }],
+                : [],
             purchase_date: new Date().toISOString().split("T")[0],
             image_base64: hasImage ? item.base64Image.split(",")[1] : undefined,
             image_mime: hasImage
@@ -2723,6 +2734,7 @@ export default function AddItem() {
               : undefined,
             from_receipt: true,
             receipt_locked_fields: receiptLockedFields,
+            language: activeLang,
           };
           const created = await api.createItem(payload);
           // Optimistic upsert: push the new item into the store right
@@ -3278,7 +3290,7 @@ export default function AddItem() {
 
           try {
             const created = await api.createItem(
-              buildCreatePayload(cardLike, isSuitcase),
+              buildCreatePayload(cardLike, isSuitcase, activeLang),
             );
             if (created && created.id) {
               try {
@@ -4401,7 +4413,7 @@ export default function AddItem() {
     try {
       const timeout = new Promise((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error("Save timed out")),
+          () => reject(new Error(t("addItem.saveTimeout", { defaultValue: "Save timed out" }))),
           timeoutMs,
         );
       });
@@ -4487,7 +4499,7 @@ export default function AddItem() {
         continue;
       }
       try {
-        const body = buildCreatePayload(card, isSuitcase);
+        const body = buildCreatePayload(card, isSuitcase, activeLang);
         if (!body.title)
           throw new Error(
             t("addItem.titleRequired", { defaultValue: "Title is required" }),
@@ -5239,7 +5251,7 @@ export default function AddItem() {
               // background" UX while still requiring an explicit user
               // confirmation for each duplicate.
               try {
-                await api.createItem(buildCreatePayload(card, isSuitcase));
+                await api.createItem(buildCreatePayload(card, isSuitcase, activeLang));
                 setCards((prev) => prev.filter((c) => c.id !== cardId));
                 setBgBatch((b) =>
                   b
@@ -7666,7 +7678,7 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
 }
 
 /* -------------------- payload builder -------------------- */
-function buildCreatePayload(card, inSuitcase = false) {
+function buildCreatePayload(card, inSuitcase = false, language = null) {
   const f = card.fields || {};
   const asBase64 = card.cropBase64 || card.base64;
   // Drop empty/falsy optional keys to satisfy enum validators on the backend.
@@ -7754,6 +7766,7 @@ function buildCreatePayload(card, inSuitcase = false) {
       f.image_quality_reason || card.imageQualityReason || undefined,
     reconstruction_prompt:
       f.reconstruction_prompt || card.reconstructionPrompt || undefined,
+    language: language || undefined,
   };
   // Strip undefined to keep payload clean (Pydantic `extra=forbid` still accepts unset fields).
   return Object.fromEntries(

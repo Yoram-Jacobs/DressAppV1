@@ -194,6 +194,8 @@ class CreateItemIn(BaseModel):
     receipt_locked_fields: list[str] = Field(default_factory=list)
     # Onboarding Starter Capsule provenance flag
     is_starter_capsule: bool = False
+    # Optional ISO-639-1 UI language hint used by background GarmentVision analysis.
+    language: str | None = None
 
     @field_validator("category", mode="before")
     @classmethod

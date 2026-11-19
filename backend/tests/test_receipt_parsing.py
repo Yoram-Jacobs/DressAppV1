@@ -296,3 +296,179 @@ async def test_receipt_background_wrappers_are_async_and_populate_garment_fields
     assert saved["brand"] == "TASAY Official Store"
     assert saved["gender"] == "men"
     assert saved["state"] == "new"
+
+
+def test_normalize_lang_handles_region_tags_and_legacy_iw():
+    from app.services.translation_service import normalize_lang
+    from app.services.vision.llm import _gemini_user_prompt
+
+    assert normalize_lang("he-IL") == "he"
+    assert normalize_lang("he_IL") == "he"
+    assert normalize_lang("iw") == "he"
+    assert normalize_lang("en-US") == "en"
+    assert "**OUTPUT LANGUAGE = Hebrew (he).**" in _gemini_user_prompt("he-IL")
+    assert "**OUTPUT LANGUAGE = Hebrew (he).**" in _gemini_user_prompt("iw")
+
+
+@pytest.mark.anyio
+async def test_parse_receipt_respects_language_and_user_preferred_language():
+    captured_calls: list[dict] = []
+
+    class FakeGeminiClient:
+        def __init__(self, api_key: str | None = None) -> None:
+            pass
+
+        async def vision(self, **kwargs) -> str:
+            captured_calls.append(kwargs)
+            return json.dumps({
+                "brand": "Zhitao Boutique Store",
+                "item_type": "ז'קט בומבר",
+                "size": "L",
+                "price_cents": 5218,
+                "colors": ["blue"],
+                "category": "Outerwear",
+                "name": "ז'קט בומבר כחול נייבי",
+                "gender": "men",
+            })
+
+    he_user = {
+        "id": "usr-he-1",
+        "email": "he@dressapp.co",
+        "preferred_language": "he",
+        "roles": ["user", "tester"],
+        "subscription": {"is_tester": True, "tier": "professional", "plan_type": "tester", "is_active": True},
+    }
+
+    with patch("app.config.settings.GEMINI_API_KEY", "platform-gemini-key"), \
+         patch("app.services.auth.settings.GEMINI_API_KEY", "platform-gemini-key"), \
+         patch("app.services.billing_service.deduct_user_credits", new=AsyncMock(return_value=True)), \
+         patch("app.services.gemini_client.GeminiClient", FakeGeminiClient), \
+         patch("app.api.v1.closet.dpp_receipts.get_garment_vision_service", return_value=None):
+        # 1) Explicit language param ("he-IL" normalized to "he")
+        res1 = await parse_receipt(
+            text="Men's Jacket Blue EU L",
+            url=None,
+            file=None,
+            language="he-IL",
+            user={"id": "usr-en-1", "preferred_language": "en", "roles": ["user"]},
+        )
+        # 2) Omitted language param falls back to user.preferred_language ("he")
+        res2 = await parse_receipt(
+            text="Men's Jacket Blue EU L",
+            url=None,
+            file=None,
+            language=None,
+            user=he_user,
+        )
+
+    assert len(captured_calls) == 2
+    for call in captured_calls:
+        assert "OUTPUT LANGUAGE = Hebrew (he)." in (call.get("system") or "")
+        assert any("Hebrew (he)" in str(p) for p in call.get("user_parts", []))
+    assert res1["name"] == "ז'קט בומבר כחול נייבי"
+    assert res1["item_type"] == "ז'קט בומבר"
+    assert res2["name"] == "ז'קט בומבר כחול נייבי"
+
+
+@pytest.mark.anyio
+async def test_receipt_background_vision_passes_hebrew_language():
+    from fastapi import BackgroundTasks
+    from PIL import Image
+    from app.api.v1.closet.common import CreateItemIn
+    from app.api.v1.closet.items import save_closet_item_document
+    from app.db.database import get_db
+    from app.services.closet_service import run_background_matte_and_analyze
+
+    img = Image.new("RGB", (64, 64), (20, 40, 90))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    img_b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+
+    user = {
+        "id": "usr-he-bg",
+        "email": "he_bg@dressapp.co",
+        "preferred_language": "he",
+        "sex": "men",
+        "roles": ["user", "tester"],
+        "subscription": {"is_tester": True, "tier": "professional", "plan_type": "tester", "is_active": True},
+    }
+    db = get_db()
+    await db.users.insert_one(dict(user))
+
+    payload = CreateItemIn(
+        title="Zhitao Boutique Store Men's Jacket",
+        category="Outerwear",
+        brand="Zhitao Boutique Store",
+        size="L",
+        price_cents=5218,
+        purchase_price_cents=5218,
+        color="blue",
+        colors=[{"name": "blue", "pct": 100}],
+        gender="men",
+        state="new",
+        image_base64=img_b64,
+        image_mime="image/jpeg",
+        from_receipt=True,
+        receipt_locked_fields=[
+            "title", "brand", "size", "price_cents", "purchase_price_cents",
+            "category", "colors", "color", "gender", "state",
+        ],
+        language="he-IL",
+    )
+
+    fake_vision = MagicMock()
+    fake_vision.analyze = AsyncMock(return_value={
+        "is_clothing": True,
+        "title": "ז'קט בומבר כחול נייבי",
+        "name": "ז'קט בומבר כחול נייבי",
+        "caption": "ז'קט בומבר קלאסי בצבע כחול נייבי עם רוכסן וצווארון ריב.",
+        "category": "Outerwear",
+        "sub_category": "ז'קטים",
+        "item_type": "ז'קט בומבר",
+        "gender": "men",
+        "dress_code": "casual",
+        "fit": "regular",
+        "season": ["spring", "fall"],
+        "colors": [{"name": "כחול", "pct": 100}],
+        "fabric_materials": [{"name": "פוליאסטר", "pct": 100}],
+        "pattern": "solid",
+        "state": "new",
+        "condition": "good",
+        "quality": "mid",
+    })
+
+    bg = BackgroundTasks()
+    with patch("app.services.closet_service.run_background_matte", new=AsyncMock(return_value=None)), \
+         patch("app.services.vision.garment_vision_service", fake_vision), \
+         patch("app.services.encoder_pipeline.process_image_pipeline", new=AsyncMock(return_value=None)), \
+         patch("app.services.sync_service.broadcast_sync_event", new=AsyncMock(return_value=None)):
+        created = await save_closet_item_document(user=user, payload=payload, background_tasks=bg)
+        item_id = created["id"]
+        await bg()
+
+    fake_vision.analyze.assert_awaited_once()
+    call_kwargs = fake_vision.analyze.await_args.kwargs
+    assert call_kwargs["language"] == "he"
+    assert call_kwargs["user_gender"] == "men"
+
+    saved = await db.closet_items.find_one({"id": item_id})
+    assert saved["caption"] == "ז'קט בומבר קלאסי בצבע כחול נייבי עם רוכסן וצווארון ריב."
+    assert saved["sub_category"] == "ז'קטים"
+    assert saved["item_type"] == "ז'קט בומבר"
+
+    # Also verify direct run_background_matte_and_analyze with language=None reads owner's preferred_language from DB
+    fake_vision.analyze.reset_mock()
+    await db.closet_items.update_one({"id": item_id}, {"$set": {"caption": None}})
+    with patch("app.services.closet_service.run_background_matte", new=AsyncMock(return_value=None)), \
+         patch("app.services.vision.garment_vision_service", fake_vision), \
+         patch("app.services.sync_service.broadcast_sync_event", new=AsyncMock(return_value=None)):
+        await run_background_matte_and_analyze(
+            item_id=item_id,
+            raw_bytes=buf.getvalue(),
+            category="Outerwear",
+            receipt_locked_fields=[],
+            language=None,
+            user_gender=None,
+        )
+    assert fake_vision.analyze.await_args.kwargs["language"] == "he"
+    assert fake_vision.analyze.await_args.kwargs["user_gender"] == "men"

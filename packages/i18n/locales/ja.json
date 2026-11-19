@@ -112,7 +112,9 @@
     "standardUploadDesc": "標準処理キュー。衣類の詳細スキャンを実行中です。",
     "standardStylistDesc": "標準処理キュー。AIスタイリストがコーディネートを作成中です。",
     "standardSuitcaseDesc": "標準処理キュー。旅行向けワードローブを作成中です。",
-    "listSeparator": "、"
+    "listSeparator": "、",
+    "planUpgradeTitle": "プランのアップグレードが必要です",
+    "upgrade": "アップグレード"
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -753,7 +755,9 @@
       "confirm": "続ける",
       "summary": "{{willAdd}}件を追加 · {{willSkip}}件をスキップ",
       "allSkipped": "選択した写真はすべて重複のためスキップされました。",
-      "allDuplicatesSkippedBatch": "クローゼットに既存の{{count}}枚の写真をスキップしました — 新規アップロードはありません。"
+      "allDuplicatesSkippedBatch": "クローゼットに既存の{{count}}枚の写真をスキップしました — 新規アップロードはありません。",
+      "confirmAddAndSkip": "{{addCount}}件を追加して続行",
+      "skipAndContinue": "重複をスキップして続行"
     },
     "savedCount_one": "{{count}}件のアイテムをクローゼットに保存しました",
     "savedCount_other": "{{count}}件のアイテムをクローゼットに保存しました",
@@ -782,7 +786,8 @@
       "duplicatesPending": "{{saved}}件の新規アイテムを保存 · {{pending}}件が重複の可能性あり — 以下で確認してください。",
       "duplicatesInline": "{{count}}件のアイテムが確認待ちです — クローゼット内の既存アイテムとの重複の可能性があります。",
       "skippedDupSuffix": "(クローゼット内の既存{{count}}件をスキップ)",
-      "failed": "アイテムを保存できませんでした。もう一度お試しください。"
+      "failed": "アイテムを保存できませんでした。もう一度お試しください。",
+      "preparing": "写真を準備中..."
     },
     "saveAllPending": "保存中 — 解析中…",
     "section": {
@@ -852,7 +857,14 @@
       "ingestCataloguing": "アイテム {{done}} / {{total}} をカタログ中…",
       "ingestSyncing": "クローゼットと同期中…",
       "ingestAnalysisHint": "バックグラウンドで背景除去とアイテム解析を実行しています。",
-      "ingestSyncingHint": "ワードローブを更新中 — もうすぐ完了します。"
+      "ingestSyncingHint": "ワードローブを更新中 — もうすぐ完了します。",
+      "timeout": "レシート解析がタイムアウトしました。もう一度お試しいただくか、より小さい範囲を切り抜いてください。",
+      "pastePrompt": "レシートまたは注文テキストを貼り付けてください。",
+      "selectFilePrompt": "レシートまたは請求書ファイルを選択してください。",
+      "enterUrlPrompt": "商品URLを入力してください。",
+      "noItemsFound": "このレシート／リンクから衣類アイテムを抽出できませんでした。",
+      "receiptParsed": "アイテムをカードに正常に抽出しました。",
+      "extractBtn": "アイテムを抽出"
     },
     "failedToLoadImage": "画像の読み込みに失敗しました。",
     "titleRequired": "タイトルは必須です",
@@ -924,7 +936,16 @@
       "editManuallyButton": "手動で続行",
       "manualContinueHint": "手動で詳細を入力して衣服を保存できます。"
     },
-    "fitPlaceholder": "フィット感を選択"
+    "fitPlaceholder": "フィット感を選択",
+    "clipboardPasted": "クリップボードから画像を貼り付けました！",
+    "unnamedGarment": "名称未設定のアイテム",
+    "saveTimeout": "保存がタイムアウトしました",
+    "batchSaveSuccess": "{{count}}点のアイテムをクローゼットに追加しました！",
+    "cameraError": "カメラを開けませんでした。",
+    "cameraPermissionPrompt": "衣類を撮影するにはカメラの権限が必要です。",
+    "heroSubtitle": "写真を撮影するか書類をインポートすると、AIが細部まで検出・切り抜き・カタログ化します。",
+    "limitReachedMsg": "無料クローゼットの容量上限に達しました。無制限に利用するにはManagerまたはProfessionalへアップグレードしてください。",
+    "limitReachedTitle": "クローゼット上限に到達"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "拡張機能を接続",
     "alreadyInstalled": "インストール済みですか？",
     "schedulerCreditNote": "毎日の提案は1回につき1 AIクレジットを消費します。",
-    "schedulerUpgradeDesc": "毎日のコーデ提案は無料プランで1 AIクレジットを消費します。マネージャーまたはプロフェッショナルでは無制限でご利用いただけます。"
+    "schedulerUpgradeDesc": "毎日のコーデ提案は無料プランで1 AIクレジットを消費します。マネージャーまたはプロフェッショナルでは無制限でご利用いただけます。",
+    "upgradeBtn": "プランをアップグレード"
   },
   "admin": {
     "title": "管理",
@@ -2871,7 +2893,13 @@
       "cargo_shorts": "カーゴショーツ",
       "high_heel_pump": "ハイヒールパンプス",
       "solid_shoes": "ドレスシューズ",
-      "dress_shoes": "ドレスシューズ"
+      "dress_shoes": "ドレスシューズ",
+      "classic_derby_shoes": "クラシック ダービーシューズ",
+      "classic_heels": "クラシック ヒール",
+      "classic_kurta": "クラシック クルタ",
+      "classic_loafers": "クラシック ローファー",
+      "classic_oxford_shoes": "クラシック オックスフォードシューズ",
+      "classic_sherwani": "クラシック シェルワニ"
     },
     "color": {
       "black": "ブラック",

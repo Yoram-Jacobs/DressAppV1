@@ -112,7 +112,9 @@
     "standardUploadDesc": "Cola de procesamiento estándar. Escaneo profundo de prendas en curso.",
     "standardStylistDesc": "Cola de procesamiento estándar. El estilista de IA está creando tu look.",
     "standardSuitcaseDesc": "Cola de procesamiento estándar. Generando guardarropa de viaje personalizado.",
-    "listSeparator": ", "
+    "listSeparator": ", ",
+    "planUpgradeTitle": "Se requiere mejorar el plan",
+    "upgrade": "Mejorar"
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",
@@ -753,7 +755,9 @@
       "confirm": "Continuar",
       "summary": "{{willAdd}} se añadirán · {{willSkip}} se omitirán",
       "allSkipped": "Todas las fotos seleccionadas eran duplicadas y se omitieron.",
-      "allDuplicatesSkippedBatch": "Se omitieron {{count}} fotos que ya están en tu armario — nada nuevo que subir."
+      "allDuplicatesSkippedBatch": "Se omitieron {{count}} fotos que ya están en tu armario — nada nuevo que subir.",
+      "confirmAddAndSkip": "Añadir {{addCount}} y continuar",
+      "skipAndContinue": "Omitir duplicados y continuar"
     },
     "savedCount_one": "{{count}} prenda guardada en tu armario",
     "savedCount_other": "{{count}} prendas guardadas en tu armario",
@@ -782,7 +786,8 @@
       "duplicatesPending": "{{saved}} prendas nuevas guardadas · {{pending}} parecen duplicadas — revísalas abajo.",
       "duplicatesInline": "{{count}} prenda(s) necesitan tu confirmación — parecen duplicadas de prendas que ya están en tu armario.",
       "skippedDupSuffix": "(omitidas {{count}} ya en el armario)",
-      "failed": "No se pudieron guardar prendas. Por favor, inténtalo de nuevo."
+      "failed": "No se pudieron guardar prendas. Por favor, inténtalo de nuevo.",
+      "preparing": "Preparando fotos..."
     },
     "saveAllPending": "Guardando — esperando análisis…",
     "section": {
@@ -852,7 +857,14 @@
       "ingestCataloguing": "Catalogando artículo {{done}} de {{total}}…",
       "ingestSyncing": "Sincronizando con tu armario…",
       "ingestAnalysisHint": "Eliminando fondos y analizando tus prendas en segundo plano.",
-      "ingestSyncingHint": "Actualizando tu guardarropa — casi listo."
+      "ingestSyncingHint": "Actualizando tu guardarropa — casi listo.",
+      "timeout": "Se agotó el tiempo de análisis del recibo. Inténtalo de nuevo o recorta una sección más pequeña.",
+      "pastePrompt": "Por favor, pega el texto del recibo o pedido.",
+      "selectFilePrompt": "Por favor, selecciona un archivo de recibo o factura.",
+      "enterUrlPrompt": "Por favor, introduce la URL del producto.",
+      "noItemsFound": "No se extrajeron prendas de este recibo o enlace.",
+      "receiptParsed": "¡Prendas extraídas correctamente en tus tarjetas!",
+      "extractBtn": "Extraer prendas"
     },
     "failedToLoadImage": "No se pudo cargar la imagen.",
     "titleRequired": "El título es obligatorio",
@@ -924,7 +936,16 @@
       "editManuallyButton": "Continuar manualmente",
       "manualContinueHint": "Puedes ingresar los detalles manualmente y guardar tus prendas."
     },
-    "fitPlaceholder": "Seleccionar ajuste"
+    "fitPlaceholder": "Seleccionar ajuste",
+    "clipboardPasted": "¡Imagen pegada desde el portapapeles!",
+    "unnamedGarment": "Prenda sin nombre",
+    "saveTimeout": "Tiempo de guardado agotado",
+    "batchSaveSuccess": "¡Se añadieron {{count}} prenda(s) a tu armario con éxito!",
+    "cameraError": "No se pudo abrir la cámara.",
+    "cameraPermissionPrompt": "Se requiere permiso de cámara para fotografiar tu ropa.",
+    "heroSubtitle": "Toma una foto o importa un documento: nuestra IA detecta, recorta y cataloga cada detalle en tu armario.",
+    "limitReachedMsg": "Has alcanzado el límite gratuito de tu armario. Mejora a Manager o Professional para artículos ilimitados.",
+    "limitReachedTitle": "Límite del armario alcanzado"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "Conectar extensión",
     "alreadyInstalled": "¿Ya la tienes instalada?",
     "schedulerCreditNote": "Cada propuesta diaria consume 1 crédito de IA.",
-    "schedulerUpgradeDesc": "Las sugerencias diarias consumen 1 crédito de IA en el plan Gratuito, o disfruta de acceso ilimitado en Manager y Professional."
+    "schedulerUpgradeDesc": "Las sugerencias diarias consumen 1 crédito de IA en el plan Gratuito, o disfruta de acceso ilimitado en Manager y Professional.",
+    "upgradeBtn": "Mejorar plan"
   },
   "admin": {
     "title": "Administrador",
@@ -2864,7 +2886,13 @@
       "cargo_shorts": "Bermudas cargo",
       "high_heel_pump": "Zapatos de tacón alto",
       "solid_shoes": "Zapatos de vestir",
-      "dress_shoes": "Zapatos de vestir"
+      "dress_shoes": "Zapatos de vestir",
+      "classic_derby_shoes": "Zapatos Derby clásicos",
+      "classic_heels": "Tacones clásicos",
+      "classic_kurta": "Kurta clásica",
+      "classic_loafers": "Mocasines clásicos",
+      "classic_oxford_shoes": "Zapatos Oxford clásicos",
+      "classic_sherwani": "Sherwani clásico"
     },
     "color": {
       "black": "Negro",

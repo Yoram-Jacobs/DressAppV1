@@ -1227,9 +1227,12 @@ export default function ItemDetail() {
       const activeImg = showingOriginal
         ? (item?.clean_image_url || item?.image_variants?.original)
         : (item?.reconstructed_image_url || item?.clean_image_url);
+      const rawLang = (i18n?.language || user?.preferred_language || 'en').split('-')[0].toLowerCase();
+      const activeLang = rawLang === 'iw' ? 'he' : rawLang;
       const res = await api.reanalyzeItem(id, {
         fill_empty_only: isReceiptItem,
         image_url: activeImg || undefined,
+        language: activeLang,
       });
       setForm(toFormState(res.item, user, t));
       toast.success(t('itemDetail.reanalyze.success') + " · Press Save to keep changes.");
@@ -1334,10 +1337,13 @@ export default function ItemDetail() {
         item?.from_receipt ||
         (Array.isArray(item?.receipt_locked_fields) && item.receipt_locked_fields.length > 0);
 
+      const rawLang = (i18n?.language || user?.preferred_language || 'en').split('-')[0].toLowerCase();
+      const activeLang = rawLang === 'iw' ? 'he' : rawLang;
       const res = await api.chatAnalyseItem(id, {
         message: text,
         history: updatedHistory.map((h) => ({ role: h.role, content: h.content })),
         fill_empty_only: isReceiptItem,
+        language: activeLang,
       });
 
       if (res?.item && (res.action_taken === 'metadata_update' || res.updated_fields)) {

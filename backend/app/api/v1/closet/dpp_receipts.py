@@ -235,6 +235,7 @@ class ImportDppIn(BaseModel):
     # Either the full URL decoded from the QR, or the inline JSON payload
     # embedded directly in the code (some small-data pilots do this).
     qr_payload: str
+    language: str | None = None
 
 
 @router.post("/import-dpp")
@@ -250,9 +251,18 @@ async def import_dpp(
     casing.
     """
     from app.services.dpp_parser import parse_dpp
+    from app.services.translation_service import normalize_lang, translate_garment_attributes
 
+    user_lang = normalize_lang(
+        (payload.language or "").strip() or (user or {}).get("preferred_language") or "en"
+    )
     result = await parse_dpp(payload.qr_payload)
-    analysis = _safe_analysis(dict(result.get("analysis") or {}))
+    analysis = _safe_analysis(dict(result.get("analysis") or {}), language=user_lang)
+    if user_lang != "en" and analysis:
+        try:
+            analysis = await translate_garment_attributes(analysis, target_lang=user_lang)
+        except Exception as exc:
+            logger.warning("DPP attribute translation to %s failed: %s", user_lang, exc)
     dpp_data = result.get("dpp_data") or {}
 
     crop_bytes: bytes | None = result.get("image_bytes")
@@ -368,13 +378,21 @@ async def parse_receipt(
     text: str | None = Form(None),
     url: str | None = Form(None),
     file: UploadFile | None = File(None),
+    language: str | None = Form(None),
     user: dict = Depends(get_current_user),
 ):
     """Extract garment information from pasted text, a URL, or an uploaded receipt image/PDF."""
     import httpx
     import mimetypes
     import base64
-    
+    from app.services.translation_service import LANG_NAMES, normalize_lang
+
+    raw_lang = language.strip() if isinstance(language, str) else ""
+    user_lang = normalize_lang(
+        raw_lang or (user or {}).get("preferred_language") or "en"
+    )
+    lang_name = LANG_NAMES.get(user_lang, "English")
+
     parts = []
     is_image = False
     image_bytes = None
@@ -561,22 +579,42 @@ async def parse_receipt(
     else:
         raise HTTPException(400, "Either text, file, or url is required and must not be blank")
 
-    system_instructions = """
+    if user_lang != "en":
+        lang_rule = (
+            f"OUTPUT LANGUAGE = {lang_name} ({user_lang}). "
+            f"Write ALL free-text descriptive fields (`name`, `item_type`) in fluent {lang_name} "
+            f"(even if the receipt text/image is in English or another language). "
+            "Keep `brand` as the official merchant/brand name from the receipt. "
+            "Keep JSON keys and canonical enum fields (`category`, `gender`, `size`, and simple lowercase English `colors` names such as `blue`, `black`, `gray`) in canonical English."
+        )
+    else:
+        lang_rule = (
+            "OUTPUT LANGUAGE = English (en). Write `name`, `item_type`, and `colors` in fluent English. "
+            "Keep JSON keys and canonical enum fields (`category`, `gender`, `size`) in canonical English."
+        )
+
+    system_instructions = f"""
     You are an expert wardrobe cataloging assistant. Your job is to analyze receipt text, receipt files (PDF/Images), or merchant invoice content, identify the garment/accessory purchased, and extract key details into a structured JSON object.
+
+    {lang_rule}
 
     Extract the following fields:
     1. brand: The brand of the clothing item (e.g., Zara, Nike, AliExpress). If not specified, infer a likely value or use "Generic".
-    2. item_type: The type of garment (e.g., shirt, t-shirt, pants, jeans, jacket, sneakers, dress, socks). Use a simple singular lowercase noun.
+    2. item_type: The type of garment in {lang_name} (singular noun).
     3. size: The size of the item (e.g., S, M, L, XL, XXL).
     4. price_cents: The purchase price of the item converted to integer cents (e.g., if price is ₪79.66 or $79.66, price_cents is 7966. If discount is applied, use the final item price).
-    5. colors: A list of primary colors of the garment (e.g., ["black"], ["blue", "white"]). Use lowercase simple color names.
+    5. colors: A list of primary colors of the garment in canonical lowercase English (e.g., ["black"], ["blue", "white"]).
     6. category: The wardrobe category. Must be exactly one of: "Top", "Bottom", "Outerwear", "Full Body", "Footwear", "Underwear", "Accessories".
-    7. name: A friendly descriptive name for the garment combining brand and description (e.g., "Wosawe Wind Jacket Lightweight").
+    7. name: A concise, friendly descriptive name for the garment in {lang_name} (combining brand if helpful and garment description).
     8. gender: The target gender of the garment. Must be exactly one of: "men", "women", "unisex", "kids". If the receipt mentions gender (e.g. "Men's", "Women's", "unisex"), use that. Otherwise, infer from item characteristics or use "unisex" as fallback.
 
     If multiple items are found in the receipt, return details for the FIRST garment item found.
     Return ONLY a valid JSON object matching this schema. Do not include markdown code fences or other text.
     """
+    parts.append(
+        f"Target output language for descriptive fields (`name`, `item_type`): {lang_name} ({user_lang}). "
+        "Keep JSON keys, `category`, `gender`, `size`, and `colors` in canonical English."
+    )
 
     async def run_ocr():
         from app.db.database import get_db

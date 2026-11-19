@@ -380,6 +380,13 @@ async def save_closet_item_document(
         # Receipt item WITH image → full pipeline: rembg + SegFormer +
         # Gemini analysis. The task chains the matte step first, then
         # merges the VLM result while honouring receipt_locked_fields.
+        from app.services.translation_service import normalize_lang
+        from app.services.vision import resolve_garment_gender
+
+        user_lang = normalize_lang(
+            (payload.language or "").strip() or (user or {}).get("preferred_language") or "en"
+        )
+        user_gender = resolve_garment_gender(user)
         doc["clean_image_status"] = "pending"
         _schedule_bg(
             _run_background_matte_and_analyze,
@@ -387,6 +394,8 @@ async def save_closet_item_document(
             raw_for_bg,
             payload.category,
             list(payload.receipt_locked_fields or []),
+            user_lang,
+            user_gender,
         )
     elif needs_bg_matte and raw_for_bg:
         # Standard single-pass or deferred-matte path (no Gemini analysis).

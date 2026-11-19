@@ -118,7 +118,9 @@
     "standardUploadDesc": "תור עיבוד רגיל. סריקת בגד מעמיקה מתבצעת כעת.",
     "standardStylistDesc": "תור עיבוד רגיל. הסטייליסט החכם מרכיב את הלוק שלך.",
     "standardSuitcaseDesc": "תור עיבוד רגיל. מייצר מלתחת נסיעות מותאמת.",
-    "listSeparator": ", "
+    "listSeparator": ", ",
+    "planUpgradeTitle": "נדרש שדרוג תוכנית",
+    "upgrade": "שדרג"
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -779,7 +781,9 @@
       "confirm": "המשיכי",
       "summary": "{{willAdd}} יתווספו · {{willSkip}} ידולגו",
       "allSkipped": "כל התמונות שנבחרו היו כפולות ודולגו.",
-      "allDuplicatesSkippedBatch": "דולגו {{count}} תמונות שכבר נמצאות בארון שלך — אין שום דבר חדש להעלות."
+      "allDuplicatesSkippedBatch": "דולגו {{count}} תמונות שכבר נמצאות בארון שלך — אין שום דבר חדש להעלות.",
+      "confirmAddAndSkip": "הוסף {{addCount}} והמשך",
+      "skipAndContinue": "דלג על כפילויות והמשך"
     },
     "savedOptimistic_one": "נוסף לארון שלך — מסתנכרן ברקע",
     "savedOptimistic_other": "{{count}} פריטים נוספו לארון שלך — מסתנכרנים ברקע",
@@ -794,7 +798,8 @@
       "duplicatesPending": "נשמרו {{saved}} פריטים חדשים · {{pending}} נראים כפולים — בדקי אותם למטה.",
       "duplicatesInline": "{{count}} פריט/ים דורשים את אישורך — הם נראים כפולים של פריטים שכבר נמצאים בארון שלך.",
       "skippedDupSuffix": "(דולגו {{count}} שכבר נמצאים בארון)",
-      "failed": "לא ניתן לשמור שום פריט. נסי שוב."
+      "failed": "לא ניתן לשמור שום פריט. נסי שוב.",
+      "preparing": "מכין תמונות..."
     },
     "saveAllPending": "שומר — ממתין לניתוח…",
     "section": {
@@ -813,14 +818,14 @@
     },
     "import": {
       "title": "ייבוא קבלות ואימיילים דיגיטליים",
-      "body": "הדבד את טקסט הקבלה הדיגיטלית, אימייל אישור ההזמנה או חשבונית החנות. המנתח שלנו יחלץ מיידית מותג, מחיר, מידה וקטגוריה.",
+      "body": "הדבק את טקסט הקבלה הדיגיטלית, אימייל אישור ההזמנה או חשבונית החנות. המנתח שלנו יחלץ מיידית מותג, מחיר, מידה וקטגוריה.",
       "placeholder": "הדבק כאן את טקסט אימייל האישור או הקבלה...\n\nדוגמה:\nתאריך הזמנה: 15 ביוני 2026\nספק: Zara\n1 חולצת פופלין כותנה - כחול - מידה M - ‏$49.90",
       "extractButton": "חלץ פריטים נבחרים",
       "extracting": "מחלץ…",
       "error": "לא ניתן לנתח את הקבלה. אנא בדוק את הפורמט ונסה שוב.",
       "success": "הפריטים חולצו בהצלחה!",
       "modes": {
-        "text": "הדבד טקסט",
+        "text": "הדבק טקסט",
         "file": "העלה קובץ",
         "url": "קישור אינטרנט"
       },
@@ -864,7 +869,14 @@
       "ingestCataloguing": "מקטלג פריט {{done}} מתוך {{total}}…",
       "ingestSyncing": "מסנכרן עם הארון שלך…",
       "ingestAnalysisHint": "הסרת הרקע וניתוח הפריטים פועלים ברקע.",
-      "ingestSyncingHint": "מעדכן את הארון שלך — כמעט סיימנו."
+      "ingestSyncingHint": "מעדכן את הארון שלך — כמעט סיימנו.",
+      "timeout": "פסק הזמן לניתוח הקבלה חלף. אנא נסה שוב או חתוך חלק קטן יותר.",
+      "pastePrompt": "אנא הדבק טקסט של קבלה או הזמנה.",
+      "selectFilePrompt": "אנא בחר קובץ קבלה או חשבונית.",
+      "enterUrlPrompt": "אנא הזן כתובת URL של מוצר.",
+      "noItemsFound": "לא חולצו פריטי לבוש מהקבלה או מהקישור הזה.",
+      "receiptParsed": "הפריטים חולצו בהצלחה לכרטיסים שלך.",
+      "extractBtn": "חלץ פריטים"
     },
     "failedToLoadImage": "טעינת התמונה נכשלה.",
     "titleRequired": "כותרת נדרשת",
@@ -936,7 +948,16 @@
       "editManuallyButton": "המשך באופן ידני",
       "manualContinueHint": "באפשרותך להזין את פרטי הפריטים ידנית ולשמור אותם."
     },
-    "fitPlaceholder": "בחר גזרה"
+    "fitPlaceholder": "בחר גזרה",
+    "clipboardPasted": "התמונה הודבקה מהלוח!",
+    "unnamedGarment": "פריט ללא שם",
+    "saveTimeout": "זמן השמירה פג",
+    "batchSaveSuccess": "{{count}} פריטים נוספו בהצלחה לארון שלך!",
+    "cameraError": "פתיחת המצלמה נכשלה.",
+    "cameraPermissionPrompt": "נדרשת הרשאת מצלמה כדי לצלם את הבגדים שלך.",
+    "heroSubtitle": "צלם תמונה או ייבא מסמך — הבינה המלאכותית שלנו תזהה, תחתוך ותקטלג כל פרט בארון שלך.",
+    "limitReachedMsg": "הגעת למגבלת הקיבולת של הארון החינמי. שדרג לתוכנית Manager או Professional לפריטים ללא הגבלה.",
+    "limitReachedTitle": "הגעת למגבלת הארון"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2273,7 +2294,8 @@
     "connectExtension": "חיבור התוסף לחשבון",
     "alreadyInstalled": "התוסף כבר מותקן?",
     "schedulerCreditNote": "כל הצעת לוק יומית צורכת קרדיט AI אחד.",
-    "schedulerUpgradeDesc": "הצעות לבוש יומיות צורכות קרדיט AI אחד בתוכנית החינמית, או ללא הגבלה במסלולי מנהל ומקצוען."
+    "schedulerUpgradeDesc": "הצעות לבוש יומיות צורכות קרדיט AI אחד בתוכנית החינמית, או ללא הגבלה במסלולי מנהל ומקצוען.",
+    "upgradeBtn": "שדרג תוכנית"
   },
   "admin": {
     "title": "ניהול",
@@ -2901,7 +2923,13 @@
       "cargo": "מכנסי דגמ\"ח",
       "pants": "מכנסיים",
       "cargo_shorts": "מכנסי דגמ\"ח קצרים",
-      "high_heel_pump": "נעלי עקב"
+      "high_heel_pump": "נעלי עקב",
+      "classic_derby_shoes": "נעלי דרבי קלאסיות",
+      "classic_heels": "נעלי עקב קלאסיות",
+      "classic_kurta": "קורטה קלאסית",
+      "classic_loafers": "נעלי לופר קלאסיות",
+      "classic_oxford_shoes": "נעלי אוקספורד קלאסיות",
+      "classic_sherwani": "שרוואני קלאסי"
     },
     "color": {
       "black": "שחור",

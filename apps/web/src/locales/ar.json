@@ -112,7 +112,9 @@
     "standardUploadDesc": "قائمة الانتظار القياسية. جارٍ الفحص الدقيق للملابس.",
     "standardStylistDesc": "قائمة الانتظار القياسية. المنسق الذكي يصمم إطلالتك الآن.",
     "standardSuitcaseDesc": "قائمة الانتظار القياسية. جاري إعداد خزانة السفر المنسقة.",
-    "listSeparator": "، "
+    "listSeparator": "، ",
+    "planUpgradeTitle": "ترقية الخطة مطلوبة",
+    "upgrade": "ترقية"
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",
@@ -753,7 +755,9 @@
       "confirm": "متابعة",
       "summary": "سيتم إضافة {{willAdd}} · سيتم تجاوز {{willSkip}}",
       "allSkipped": "جميع الصور المُحددة كانت مكررة وتم تجاوزها.",
-      "allDuplicatesSkippedBatch": "تم تجاوز {{count}} صورة موجودة بالفعل في خزانتك — لا يوجد جديد للتحميل."
+      "allDuplicatesSkippedBatch": "تم تجاوز {{count}} صورة موجودة بالفعل في خزانتك — لا يوجد جديد للتحميل.",
+      "confirmAddAndSkip": "إضافة {{addCount}} والمتابعة",
+      "skipAndContinue": "تخطي المكررات والمتابعة"
     },
     "savedCount_one": "تم حفظ {{count}} قطعة في خزانتك",
     "savedCount_other": "تم حفظ {{count}} قطعة في خزانتك",
@@ -782,7 +786,8 @@
       "duplicatesPending": "تم حفظ {{saved}} قطعة جديدة · {{pending}} تبدو مكررة — راجعها أدناه.",
       "duplicatesInline": "{{count}} قطعة تحتاج إلى تأكيدك — تبدو مكررة لقطع موجودة بالفعل في خزانتك.",
       "skippedDupSuffix": "(تم تجاوز {{count}} موجودة في الخزانة)",
-      "failed": "تعذر حفظ أي قطع. يُرجى المحاولة مرة أخرى."
+      "failed": "تعذر حفظ أي قطع. يُرجى المحاولة مرة أخرى.",
+      "preparing": "جارٍ تجهيز الصور..."
     },
     "saveAllPending": "جاري الحفظ — بانتظار التحليل…",
     "section": {
@@ -852,7 +857,14 @@
       "ingestCataloguing": "جارِ تصنيف العنصر {{done}} من {{total}}…",
       "ingestSyncing": "جارِ المزامنة مع خزانتك…",
       "ingestAnalysisHint": "تعمل إزالة الخلفية وتحليل القطع في الخلفية.",
-      "ingestSyncingHint": "جارِ تحديث خزانتك — انتهينا تقريباً."
+      "ingestSyncingHint": "جارِ تحديث خزانتك — انتهينا تقريباً.",
+      "timeout": "انتهت مهلة تحليل الإيصال. يرجى المحاولة مرة أخرى أو اقتصاص جزء أصغر.",
+      "pastePrompt": "يرجى لصق نص الإيصال أو الطلب.",
+      "selectFilePrompt": "يرجى تحديد ملف إيصال أو فاتورة.",
+      "enterUrlPrompt": "يرجى إدخال رابط المنتج.",
+      "noItemsFound": "لم يتم استخراج أي قطع ملابس من هذا الإيصال أو الرابط.",
+      "receiptParsed": "تم استخراج القطع بنجاح إلى بطاقاتك.",
+      "extractBtn": "استخراج القطع"
     },
     "failedToLoadImage": "فشل في تحميل الصورة.",
     "titleRequired": "العنوان مطلوب",
@@ -924,7 +936,16 @@
       "editManuallyButton": "المتابعة يدويًا",
       "manualContinueHint": "يمكنك إدخال تفاصيل الملابس يدويًا وحفظها."
     },
-    "fitPlaceholder": "اختر القصة"
+    "fitPlaceholder": "اختر القصة",
+    "clipboardPasted": "تم لصق الصورة من الحافظة!",
+    "unnamedGarment": "قطعة بدون اسم",
+    "saveTimeout": "انتهت مهلة الحفظ",
+    "batchSaveSuccess": "تمت إضافة {{count}} قطعة إلى خزانتك بنجاح!",
+    "cameraError": "فشل فتح الكاميرا.",
+    "cameraPermissionPrompt": "مطلوب إذن الكاميرا لتصوير ملابسك.",
+    "heroSubtitle": "التقط صورة أو استورد مستندًا — يكتشف الذكاء الاصطناعي كل تفصيل ويقصه ويفهرسه في خزانتك.",
+    "limitReachedMsg": "لقد وصلت إلى حد السعة المجانية للخزانة. قم بالترقية إلى Manager أو Professional للحصول على قطع غير محدودة.",
+    "limitReachedTitle": "تم الوصول إلى حد الخزانة"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "ربط الإضافة",
     "alreadyInstalled": "مثبت بالفعل؟",
     "schedulerCreditNote": "كل اقتراح إطلالة يومي يستهلك رصيد ذكاء اصطناعي واحداً.",
-    "schedulerUpgradeDesc": "تستهلك اقتراحات الإطلالة اليومية رصيد ذكاء اصطناعي واحداً في الباقة المجانية، أو استمتع بوصول غير محدود مع باقتي المدير والمحترف."
+    "schedulerUpgradeDesc": "تستهلك اقتراحات الإطلالة اليومية رصيد ذكاء اصطناعي واحداً في الباقة المجانية، أو استمتع بوصول غير محدود مع باقتي المدير والمحترف.",
+    "upgradeBtn": "ترقية الخطة"
   },
   "admin": {
     "title": "الإدارة",
@@ -2864,7 +2886,13 @@
       "cargo_shorts": "شورت كارغو",
       "high_heel_pump": "حذاء كعب عالي",
       "solid_shoes": "أحذية رسمية",
-      "dress_shoes": "أحذية رسمية"
+      "dress_shoes": "أحذية رسمية",
+      "classic_derby_shoes": "أحذية ديربي كلاسيكية",
+      "classic_heels": "كعب عالٍ كلاسيكي",
+      "classic_kurta": "كورتا كلاسيكية",
+      "classic_loafers": "أحذية لوفر كلاسيكية",
+      "classic_oxford_shoes": "أحذية أكسفورد كلاسيكية",
+      "classic_sherwani": "شيرواني كلاسيكي"
     },
     "color": {
       "black": "أسود",

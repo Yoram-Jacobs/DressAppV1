@@ -112,7 +112,9 @@
     "standardUploadDesc": "File de traitement standard. Analyse approfondie du vêtement en cours.",
     "standardStylistDesc": "File de traitement standard. Le styliste IA compose votre look.",
     "standardSuitcaseDesc": "File de traitement standard. Composition de votre garde-robe de voyage en cours.",
-    "listSeparator": ", "
+    "listSeparator": ", ",
+    "planUpgradeTitle": "Mise à niveau requise",
+    "upgrade": "Mettre à niveau"
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -753,7 +755,9 @@
       "confirm": "Continuer",
       "summary": "{{willAdd}} seront ajoutés · {{willSkip}} seront ignorés",
       "allSkipped": "Toutes les photos sélectionnées étaient des doublons et ont été ignorées.",
-      "allDuplicatesSkippedBatch": "{{count}} photos déjà dans votre garde-robe ont été ignorées — rien de nouveau à télécharger."
+      "allDuplicatesSkippedBatch": "{{count}} photos déjà dans votre garde-robe ont été ignorées — rien de nouveau à télécharger.",
+      "confirmAddAndSkip": "Ajouter {{addCount}} et continuer",
+      "skipAndContinue": "Ignorer les doublons et continuer"
     },
     "savedCount_one": "{{count}} article enregistré dans votre garde-robe",
     "savedCount_other": "{{count}} articles enregistrés dans votre garde-robe",
@@ -782,7 +786,8 @@
       "duplicatesPending": "{{saved}} nouveaux articles enregistrés · {{pending}} semblent être des doublons — vérifiez-les ci-dessous.",
       "duplicatesInline": "{{count}} article(s) nécessitent votre confirmation — ils semblent être des doublons d'articles déjà dans votre garde-robe.",
       "skippedDupSuffix": "({{count}} déjà dans le dressing ignorés)",
-      "failed": "Impossible d'enregistrer les articles. Veuillez réessayer."
+      "failed": "Impossible d'enregistrer les articles. Veuillez réessayer.",
+      "preparing": "Préparation des photos..."
     },
     "saveAllPending": "Enregistrement — en attente d'analyse…",
     "section": {
@@ -852,7 +857,14 @@
       "ingestCataloguing": "Catalogage de l’article {{done}} sur {{total}}…",
       "ingestSyncing": "Synchronisation avec votre garde-robe…",
       "ingestAnalysisHint": "Suppression de l'arrière-plan et analyse de vos articles en tâche de fond.",
-      "ingestSyncingHint": "Mise à jour de votre garde-robe — presque terminé."
+      "ingestSyncingHint": "Mise à jour de votre garde-robe — presque terminé.",
+      "timeout": "L'analyse du reçu a expiré. Veuillez réessayer ou recadrer une section plus petite.",
+      "pastePrompt": "Veuillez coller le texte du reçu ou de la commande.",
+      "selectFilePrompt": "Veuillez sélectionner un fichier de reçu ou de facture.",
+      "enterUrlPrompt": "Veuillez saisir l'URL du produit.",
+      "noItemsFound": "Aucun vêtement n'a pu être extrait de ce reçu ou lien.",
+      "receiptParsed": "Articles extraits avec succès dans vos cartes.",
+      "extractBtn": "Extraire les articles"
     },
     "failedToLoadImage": "Impossible de charger l'image.",
     "titleRequired": "Le titre est requis",
@@ -924,7 +936,16 @@
       "editManuallyButton": "Continuer manuellement",
       "manualContinueHint": "Vous pouvez saisir les détails manuellement et enregistrer vos vêtements."
     },
-    "fitPlaceholder": "Sélectionner la coupe"
+    "fitPlaceholder": "Sélectionner la coupe",
+    "clipboardPasted": "Image collée depuis le presse-papiers !",
+    "unnamedGarment": "Vêtement sans nom",
+    "saveTimeout": "Délai d'enregistrement dépassé",
+    "batchSaveSuccess": "{{count}} vêtement(s) ajouté(s) avec succès à votre garde-robe !",
+    "cameraError": "Impossible d'ouvrir l'appareil photo.",
+    "cameraPermissionPrompt": "L'autorisation de l'appareil photo est requise pour photographier vos vêtements.",
+    "heroSubtitle": "Prenez une photo ou importez un document — notre IA détecte, recadre et catalogue chaque détail.",
+    "limitReachedMsg": "Vous avez atteint la limite gratuite de votre garde-robe. Passez à Manager ou Professional pour des articles illimités.",
+    "limitReachedTitle": "Limite de garde-robe atteinte"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "Connecter l'extension",
     "alreadyInstalled": "Déjà installée ?",
     "schedulerCreditNote": "Chaque proposition quotidienne consomme 1 crédit IA.",
-    "schedulerUpgradeDesc": "Les suggestions quotidiennes consomment 1 crédit IA avec le forfait Gratuit, ou profitez d'un accès illimité avec Manager et Professionnel."
+    "schedulerUpgradeDesc": "Les suggestions quotidiennes consomment 1 crédit IA avec le forfait Gratuit, ou profitez d'un accès illimité avec Manager et Professionnel.",
+    "upgradeBtn": "Changer de forfait"
   },
   "admin": {
     "title": "Administrateur",
@@ -2864,7 +2886,13 @@
       "cargo_shorts": "Short cargo",
       "high_heel_pump": "Escarpins à talons hauts",
       "solid_shoes": "Chaussures habillées",
-      "dress_shoes": "Chaussures habillées"
+      "dress_shoes": "Chaussures habillées",
+      "classic_derby_shoes": "Derbies classiques",
+      "classic_heels": "Escarpins classiques",
+      "classic_kurta": "Kurta classique",
+      "classic_loafers": "Mocassins classiques",
+      "classic_oxford_shoes": "Richelieus classiques",
+      "classic_sherwani": "Sherwani classique"
     },
     "color": {
       "black": "Noir",

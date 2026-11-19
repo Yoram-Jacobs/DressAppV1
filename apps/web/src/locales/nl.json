@@ -112,7 +112,9 @@
     "standardUploadDesc": "Standaard wachtrij. Diepe kledingscan wordt uitgevoerd.",
     "standardStylistDesc": "Standaard wachtrij. AI Stylist stelt je look samen.",
     "standardSuitcaseDesc": "Standaard wachtrij. Samengestelde reisgarderobe wordt gegenereerd.",
-    "listSeparator": ", "
+    "listSeparator": ", ",
+    "planUpgradeTitle": "Plan-upgrade vereist",
+    "upgrade": "Upgraden"
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -701,7 +703,9 @@
       "confirm": "Doorgaan",
       "summary": "{{willAdd}}wordt toegevoegd ·{{willSkip}}wordt overgeslagen",
       "allSkipped": "Alle geselecteerde foto's waren duplicaten en werden overgeslagen.",
-      "allDuplicatesSkippedBatch": "{{count}}foto's overgeslagen die al in je kast stonden - er is niets nieuws om te uploaden."
+      "allDuplicatesSkippedBatch": "{{count}}foto's overgeslagen die al in je kast stonden - er is niets nieuws om te uploaden.",
+      "confirmAddAndSkip": "{{addCount}} toevoegen en doorgaan",
+      "skipAndContinue": "Duplicaten overslaan en doorgaan"
     },
     "saveAll": "Redden",
     "savedAll": "Alle artikelen opgeslagen",
@@ -782,7 +786,8 @@
       "duplicatesPending": "Opgeslagen{{saved}}nieuwe items ·{{pending}}zien eruit als duplicaten — bekijk ze hieronder.",
       "duplicatesInline": "{{count}}item(s) hebben jouw bevestiging nodig: ze zien eruit als duplicaten van items die al in je kast staan.",
       "skippedDupSuffix": "(overgeslagen{{count}}ligt al in de kast)",
-      "failed": "Kan geen items opslaan. Probeer het opnieuw."
+      "failed": "Kan geen items opslaan. Probeer het opnieuw.",
+      "preparing": "Foto's voorbereiden..."
     },
     "saveAllPending": "Besparen — wachten op analyse…",
     "section": {
@@ -852,7 +857,14 @@
       "ingestCataloguing": "Catalogusitem{{done}}van{{total}}…",
       "ingestSyncing": "Synchroniseren met uw kast…",
       "ingestAnalysisHint": "Achtergrond verwijderen en items analyseren op de achtergrond.",
-      "ingestSyncingHint": "Je garderobe opfrissen — het is bijna zover."
+      "ingestSyncingHint": "Je garderobe opfrissen — het is bijna zover.",
+      "timeout": "Time-out bij verwerken van bon. Probeer opnieuw of snijd een kleiner gedeelte bij.",
+      "pastePrompt": "Plak de tekst van het aankoopbewijs of de bestelling.",
+      "selectFilePrompt": "Selecteer een bon- of factuurbestand.",
+      "enterUrlPrompt": "Voer een product-URL in.",
+      "noItemsFound": "Er zijn geen kledingstukken gevonden in deze bon of link.",
+      "receiptParsed": "Items succesvol geëxtraheerd naar je kaarten.",
+      "extractBtn": "Items extraheren"
     },
     "failedToLoadImage": "Kan afbeelding niet laden.",
     "titleRequired": "Titel is vereist",
@@ -924,7 +936,16 @@
       "editManuallyButton": "Handmatig doorgaan",
       "manualContinueHint": "Je kunt gegevens handmatig invoeren en je kledingstukken opslaan."
     },
-    "fitPlaceholder": "Selecteer pasvorm"
+    "fitPlaceholder": "Selecteer pasvorm",
+    "clipboardPasted": "Afbeelding geplakt vanaf klembord!",
+    "unnamedGarment": "Naamloos kledingstuk",
+    "saveTimeout": "Time-out bij opslaan",
+    "batchSaveSuccess": "{{count}} kledingstuk(ken) succesvol toegevoegd aan je kledingkast!",
+    "cameraError": "Camera openen mislukt.",
+    "cameraPermissionPrompt": "Cameratoestemming is vereist om je kleding te fotograferen.",
+    "heroSubtitle": "Maak een foto of importeer een document — onze AI detecteert, snijdt bij en catalogiseert elk detail.",
+    "limitReachedMsg": "Je hebt de gratis limiet van je kledingkast bereikt. Upgrade naar Manager of Professional voor onbeperkte items.",
+    "limitReachedTitle": "Kastlimiet bereikt"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "Extensie koppelen",
     "alreadyInstalled": "Al geïnstalleerd?",
     "schedulerCreditNote": "Elk dagelijks voorstel verbruikt 1 AI-credit.",
-    "schedulerUpgradeDesc": "Dagelijkse outfitsuggesties verbruiken 1 AI-credit op het gratis abonnement, of geniet van onbeperkte toegang met Manager en Professional."
+    "schedulerUpgradeDesc": "Dagelijkse outfitsuggesties verbruiken 1 AI-credit op het gratis abonnement, of geniet van onbeperkte toegang met Manager en Professional.",
+    "upgradeBtn": "Plan upgraden"
   },
   "admin": {
     "title": "Beheerder",
@@ -2871,7 +2893,13 @@
       "cargo_shorts": "Cargoshorts",
       "high_heel_pump": "Pumps met hoge hak",
       "solid_shoes": "Nette schoenen",
-      "dress_shoes": "Nette schoenen"
+      "dress_shoes": "Nette schoenen",
+      "classic_derby_shoes": "Klassieke derby-schoenen",
+      "classic_heels": "Klassieke hakken",
+      "classic_kurta": "Klassieke kurta",
+      "classic_loafers": "Klassieke loafers",
+      "classic_oxford_shoes": "Klassieke oxfords",
+      "classic_sherwani": "Klassieke sherwani"
     },
     "color": {
       "black": "Zwart",

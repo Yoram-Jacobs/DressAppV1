@@ -948,6 +948,9 @@ export function ClosetAddScreen() {
         }
         formData.append('url', importUrl.trim());
       }
+      const rawLang = (i18n.language || 'en').split('-')[0].toLowerCase();
+      const requestLang = rawLang === 'iw' ? 'he' : rawLang;
+      formData.append('language', requestLang);
 
       const res = await api.parseReceipt(formData);
       const items = Array.isArray(res?.items) && res.items.length > 0 ? res.items : [res?.item || res];
@@ -958,7 +961,7 @@ export function ClosetAddScreen() {
 
       const newCards: GarmentCard[] = items.map((it: any, idx: number) => {
         const tempId = `receipt_${Date.now()}_${idx}`;
-        const nameVal = it.title || it.name || it.description || 'Imported Garment';
+        const nameVal = it.title || it.name || it.description || t('addItem.unnamedGarment', { defaultValue: 'Unnamed Garment' });
         const catName = it.category || 'Top';
         const subCatName = it.sub_category || it.item_type || '';
         const cardLabel = subCatName || it.item_type || it.label || catName || 'Imported';
@@ -1015,7 +1018,7 @@ export function ClosetAddScreen() {
       setImportFilePreview(null);
       Alert.alert(t('common.success', { defaultValue: 'Extracted!' }), t('addItem.import.receiptParsed', { defaultValue: 'Successfully extracted items into your cards.' }));
     } catch (err: any) {
-      Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.response?.data?.detail || err?.message || 'Extraction failed.');
+      Alert.alert(t('common.error', { defaultValue: 'Error' }), err?.response?.data?.detail || err?.message || t('addItem.import.error', { defaultValue: 'Could not parse receipt. Please verify formatting and try again.' }));
     } finally {
       setIsExtractingDigital(false);
     }
@@ -1134,6 +1137,9 @@ export function ClosetAddScreen() {
           source_filename: card.sourceFilename || undefined,
           source_size_bytes: card.sourceSizeBytes || undefined,
           is_duplicate: card.isDuplicate || false,
+          language: ((i18n.language || 'en').split('-')[0].toLowerCase() === 'iw'
+            ? 'he'
+            : (i18n.language || 'en').split('-')[0].toLowerCase()),
         };
 
         await api.createItem(payload);

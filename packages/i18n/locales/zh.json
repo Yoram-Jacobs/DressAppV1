@@ -112,7 +112,9 @@
     "standardUploadDesc": "标准处理队列。正在深度分析服装。",
     "standardStylistDesc": "标准处理队列。AI 造型师正在设计您的造型。",
     "standardSuitcaseDesc": "标准处理队列。正在生成精选旅行衣橱。",
-    "listSeparator": "、"
+    "listSeparator": "、",
+    "planUpgradeTitle": "需要升级方案",
+    "upgrade": "立即升级"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -738,7 +740,8 @@
       "duplicatesPending": "已保存 {{saved}} 件新单品 · {{pending}} 件看起来像重复项——请在下方查看。",
       "duplicatesInline": "{{count}} 件单品需要您的确认——它们看起来与衣橱中已有的单品重复。",
       "skippedDupSuffix": "(已跳过 {{count}} 件衣橱中已有的)",
-      "failed": "无法保存任何单品。请重试。"
+      "failed": "无法保存任何单品。请重试。",
+      "preparing": "正在准备照片..."
     },
     "label": "添加到衣橱",
     "addPhotos": "添加照片",
@@ -769,7 +772,9 @@
       "confirm": "继续",
       "summary": "将添加 {{willAdd}} · 将跳过 {{willSkip}}",
       "allSkipped": "选中的照片均为重复项，已全部跳过。",
-      "allDuplicatesSkippedBatch": "已跳过 {{count}} 张已在衣橱中的照片 — 没有新内容需要上传。"
+      "allDuplicatesSkippedBatch": "已跳过 {{count}} 张已在衣橱中的照片 — 没有新内容需要上传。",
+      "confirmAddAndSkip": "添加 {{addCount}} 件并继续",
+      "skipAndContinue": "跳过重复项并继续"
     },
     "savedCount_one": "已将 {{count}} 件单品保存到衣橱",
     "savedCount_other": "已将 {{count}} 件单品保存到衣橱",
@@ -852,7 +857,14 @@
       "ingestCataloguing": "正在归档第 {{done}} / {{total}} 件商品…",
       "ingestSyncing": "正在同步到您的衣橱…",
       "ingestAnalysisHint": "后台正在自动去除背景并分析您的衣物。",
-      "ingestSyncingHint": "正在更新您的衣橱 — 即将完成。"
+      "ingestSyncingHint": "正在更新您的衣橱 — 即将完成。",
+      "timeout": "小票解析超时。请重试或裁剪更小的区域。",
+      "pastePrompt": "请粘贴小票或订单文本。",
+      "selectFilePrompt": "请选择小票或发票文件。",
+      "enterUrlPrompt": "请输入商品链接。",
+      "noItemsFound": "未能从此小票或链接中提取衣物。",
+      "receiptParsed": "已成功提取衣物到您的卡片中。",
+      "extractBtn": "提取衣物"
     },
     "failedToLoadImage": "图片加载失败。",
     "titleRequired": "标题为必填项",
@@ -924,7 +936,16 @@
       "editManuallyButton": "手动继续",
       "manualContinueHint": "您可以手动输入信息并保存衣物。"
     },
-    "fitPlaceholder": "选择版型"
+    "fitPlaceholder": "选择版型",
+    "clipboardPasted": "已从剪贴板粘贴图片！",
+    "unnamedGarment": "未命名衣物",
+    "saveTimeout": "保存超时",
+    "batchSaveSuccess": "已成功将 {{count}} 件衣物添加到您的衣橱！",
+    "cameraError": "无法打开相机。",
+    "cameraPermissionPrompt": "拍摄衣物需要相机权限。",
+    "heroSubtitle": "拍照或导入单据——我们的 AI 会自动识别、裁剪并将每项细节整理到您的衣橱。",
+    "limitReachedMsg": "您已达到免费衣橱容量上限。升级到 Manager 或 Professional 即可无限添加。",
+    "limitReachedTitle": "已达衣橱上限"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "连接扩展程序",
     "alreadyInstalled": "已经安装？",
     "schedulerCreditNote": "每个每日穿搭方案消耗1点AI积分。",
-    "schedulerUpgradeDesc": "免费套餐下每日穿搭建议每次消耗1点AI积分，Manager与Professional套餐享无限畅用。"
+    "schedulerUpgradeDesc": "免费套餐下每日穿搭建议每次消耗1点AI积分，Manager与Professional套餐享无限畅用。",
+    "upgradeBtn": "升级方案"
   },
   "admin": {
     "title": "管理",
@@ -2871,7 +2893,13 @@
       "cargo_shorts": "工装短裤",
       "high_heel_pump": "高跟浅口鞋",
       "solid_shoes": "正装皮鞋",
-      "dress_shoes": "正装皮鞋"
+      "dress_shoes": "正装皮鞋",
+      "classic_derby_shoes": "经典德比鞋",
+      "classic_heels": "经典高跟鞋",
+      "classic_kurta": "经典库尔塔",
+      "classic_loafers": "经典乐福鞋",
+      "classic_oxford_shoes": "经典牛津鞋",
+      "classic_sherwani": "经典谢尔瓦尼"
     },
     "color": {
       "black": "黑色",

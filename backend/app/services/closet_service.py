@@ -444,7 +444,7 @@ async def run_background_matte(
         logger.debug("Matte broadcast_sync_event skipped: %s", sync_exc)
 
 
-def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
+def _apply_defaults(parsed: Dict[str, Any], language: Optional[str] = None) -> Dict[str, Any]:
     parsed.setdefault("title", parsed.get("name") or "Unnamed garment")
     parsed.setdefault("category", "Top")
     parsed.setdefault("pattern", "solid")
@@ -458,7 +458,7 @@ def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
         from app.services.vision.validation import normalize_weighted_tags
         raw_colors = parsed.get("colors") or parsed.get("color")
         if raw_colors:
-            parsed["colors"] = normalize_weighted_tags(raw_colors)
+            parsed["colors"] = normalize_weighted_tags(raw_colors, is_color=True, language=language)
             if parsed["colors"] and not parsed.get("color"):
                 parsed["color"] = parsed["colors"][0].get("name")
         if parsed.get("fabric_materials"):
@@ -467,10 +467,10 @@ def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
         logger.debug("Failed normalizing weighted tags in _apply_defaults: %s", exc)
     return parsed
 
-def safe_analysis(parsed: Dict[str, Any]) -> Dict[str, Any]:
+def safe_analysis(parsed: Dict[str, Any], language: Optional[str] = None) -> Dict[str, Any]:
     """Validate through Pydantic; fall back to a minimal shape on error."""
     try:
-        return GarmentAnalysis(**_apply_defaults(parsed)).model_dump()
+        return GarmentAnalysis(**_apply_defaults(parsed, language=language)).model_dump()
     except Exception:
         return GarmentAnalysis(
             title=parsed.get("title") or "Unnamed garment"
@@ -481,11 +481,14 @@ async def run_background_matte_and_analyze(
     raw_bytes: bytes,
     category: Optional[str],
     receipt_locked_fields: List[str],
+    language: Optional[str] = None,
+    user_gender: Optional[str] = None,
 ) -> None:
     raw_bytes = ensure_min_resolution(raw_bytes)
     await run_background_matte(item_id, raw_bytes, category)
 
-    from app.services.vision import garment_vision_service
+    from app.services.vision import garment_vision_service, resolve_garment_gender
+    from app.services.translation_service import normalize_lang
     if garment_vision_service is None:
         logger.info(
             "Receipt matte+analyze: Gemini skipped for item %s "
@@ -495,8 +498,34 @@ async def run_background_matte_and_analyze(
         return
 
     db = get_db()
+    item_doc = await repos.find_one(db.closet_items, {"id": item_id})
+    if not item_doc:
+        logger.info(
+            "Receipt matte+analyze: item %s no longer exists — aborting analyze",
+            item_id,
+        )
+        return
+
+    eff_lang = normalize_lang(language) if (language and language.strip()) else None
+    eff_gender = user_gender
+    if (not eff_lang or not eff_gender) and item_doc.get("user_id"):
+        owner = await repos.find_one(
+            db.users,
+            {"id": item_doc["user_id"]},
+        )
+        if owner:
+            if not eff_lang:
+                eff_lang = normalize_lang(owner.get("preferred_language"))
+            if not eff_gender:
+                eff_gender = resolve_garment_gender(owner)
+    eff_lang = eff_lang or "en"
+
     try:
-        parsed = await garment_vision_service.analyze(raw_bytes)
+        parsed = await garment_vision_service.analyze(
+            raw_bytes,
+            language=eff_lang,
+            user_gender=eff_gender,
+        )
     except Exception as exc:
         logger.warning(
             "Receipt matte+analyze: Gemini FAILED for item %s: %s",
@@ -504,7 +533,7 @@ async def run_background_matte_and_analyze(
         )
         return
 
-    analysis = safe_analysis(parsed)
+    analysis = safe_analysis(parsed, language=eff_lang)
     try:
         from app.services.vision import _is_unidentifiable
         if _is_unidentifiable(analysis):

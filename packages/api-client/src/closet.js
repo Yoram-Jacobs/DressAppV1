@@ -428,8 +428,12 @@ export const closet = {
       .then((r) => r.data),
   cleanItemBackground: (itemId, preview = false) =>
     client.post(`/closet/${itemId}/clean-background`, null, { params: { preview } }).then((r) => r.data),
-  reanalyzeItem: (itemId, { fill_empty_only = false } = {}) => {
-    const params = fill_empty_only ? { fill_empty_only: true } : {};
+  reanalyzeItem: (itemId, { fill_empty_only = false, image_url, language } = {}) => {
+    const params = {
+      ...(fill_empty_only ? { fill_empty_only: true } : {}),
+      ...(image_url ? { image_url } : {}),
+      ...(language ? { language } : {}),
+    };
     return client
       .post(`/closet/${itemId}/reanalyze`, null, { timeout: 90000, params })
       .then((r) => r.data);
@@ -450,9 +454,13 @@ export const closet = {
     client
       .post('/closet/fetch-image-url', { url }, { timeout: 20000 })
       .then((r) => r.data),
-  importDpp: (qrPayload) =>
+  importDpp: (qrPayload, language) =>
     client
-      .post('/closet/import-dpp', { qr_payload: qrPayload }, { timeout: 30000 })
+      .post(
+        '/closet/import-dpp',
+        { qr_payload: qrPayload, ...(language ? { language } : {}) },
+        { timeout: 30000 },
+      )
       .then((r) => r.data),
   parseReceipt: (formData) =>
     client

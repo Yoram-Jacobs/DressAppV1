@@ -626,8 +626,10 @@ def _gemini_user_prompt(
     color_hint: str | None = None,
 ) -> str:
     """Build the compact SegFormer-grounded user-message prompt for Gemini analyze()."""
+    from app.services.translation_service import normalize_lang
+
     parts: list[str] = []
-    code_norm = (code or "en").lower()
+    code_norm = normalize_lang(code)
     if code_norm == "en":
         parts.append(
             "**OUTPUT LANGUAGE = English (en).** Write ALL free-text fields (`name`, `title`, `caption`, `tags`, `repair_advice`, `sub_category`, `item_type`, `colors[*].name`, `fabric_materials[*].name`) in fluent English. All color names (e.g. 'Black', NOT 'Negro') and fabric materials (e.g. 'Suede', 'Rubber', NOT 'Ante', 'Caucho') MUST be in English. Keep JSON keys and enum tokens in English."
@@ -668,6 +670,9 @@ def _user_prompt(
         "Analyze the isolated garment in this SegFormer crop. Return raw JSON only.",
     ]
     if code:
+        from app.services.translation_service import normalize_lang
+
+        norm_code = normalize_lang(code)
         _lang_names = {
             "he": "Hebrew (עברית)",
             "ar": "Arabic (العربية)",
@@ -682,7 +687,7 @@ def _user_prompt(
             "nl": "Dutch (Nederlands)",
             "en": "English",
         }
-        name_l = _lang_names.get(code.lower(), code)
+        name_l = _lang_names.get(norm_code, norm_code)
         parts.append(f"• UI locale: {name_l}. Emit all JSON keys/values in canonical English.")
     else:
         parts.append("• Language: Canonical English for all keys, values, titles, colors, and captions.")

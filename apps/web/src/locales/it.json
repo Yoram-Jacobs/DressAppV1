@@ -112,7 +112,9 @@
     "standardUploadDesc": "Coda di elaborazione standard. Scansione approfondita del capo in corso.",
     "standardStylistDesc": "Coda di elaborazione standard. Lo stylist AI sta creando il tuo look.",
     "standardSuitcaseDesc": "Coda di elaborazione standard. Generazione del guardaroba da viaggio curato.",
-    "listSeparator": ", "
+    "listSeparator": ", ",
+    "planUpgradeTitle": "Aggiornamento piano richiesto",
+    "upgrade": "Aggiorna"
   },
   "auth": {
     "welcomeBack": "Bentornato",
@@ -753,7 +755,9 @@
       "confirm": "Continua",
       "summary": "{{willAdd}} verranno aggiunti · {{willSkip}} verranno saltati",
       "allSkipped": "Tutte le foto selezionate erano duplicati e sono state saltate.",
-      "allDuplicatesSkippedBatch": "Saltate {{count}} foto già nel tuo guardaroba — nulla di nuovo da caricare."
+      "allDuplicatesSkippedBatch": "Saltate {{count}} foto già nel tuo guardaroba — nulla di nuovo da caricare.",
+      "confirmAddAndSkip": "Aggiungi {{addCount}} e continua",
+      "skipAndContinue": "Salta duplicati e continua"
     },
     "savedCount_one": "{{count}} capo salvato nel tuo guardaroba",
     "savedCount_other": "{{count}} capi salvati nel tuo guardaroba",
@@ -782,7 +786,8 @@
       "duplicatesPending": "Salvati {{saved}} nuovi capi · {{pending}} sembrano duplicati — rivedili qui sotto.",
       "duplicatesInline": "{{count}} capo/i richiedono la tua conferma — sembrano duplicati di capi già nel tuo guardaroba.",
       "skippedDupSuffix": "(saltati {{count}} già nel guardaroba)",
-      "failed": "Impossibile salvare alcun capo. Riprova."
+      "failed": "Impossibile salvare alcun capo. Riprova.",
+      "preparing": "Preparazione foto..."
     },
     "saveAllPending": "Salvataggio — in attesa di analisi…",
     "section": {
@@ -852,7 +857,14 @@
       "ingestCataloguing": "Catalogazione articolo {{done}} di {{total}}…",
       "ingestSyncing": "Sincronizzazione con il tuo guardaroba…",
       "ingestAnalysisHint": "Rimozione dello sfondo e analisi dei capi in corso in background.",
-      "ingestSyncingHint": "Aggiornamento del tuo guardaroba — quasi fatto."
+      "ingestSyncingHint": "Aggiornamento del tuo guardaroba — quasi fatto.",
+      "timeout": "Analisi della ricevuta scaduta. Riprova o ritaglia una sezione più piccola.",
+      "pastePrompt": "Incolla il testo della ricevuta o dell'ordine.",
+      "selectFilePrompt": "Seleziona un file di ricevuta o fattura.",
+      "enterUrlPrompt": "Inserisci l'URL del prodotto.",
+      "noItemsFound": "Nessun capo estratto da questa ricevuta o link.",
+      "receiptParsed": "Capi estratti con successo nelle tue schede.",
+      "extractBtn": "Estrai capi"
     },
     "failedToLoadImage": "Impossibile caricare l'immagine.",
     "titleRequired": "Il titolo è obbligatorio",
@@ -924,7 +936,16 @@
       "editManuallyButton": "Continua manualmente",
       "manualContinueHint": "Puoi inserire i dettagli manualmente e salvare i tuoi capi."
     },
-    "fitPlaceholder": "Seleziona vestibilità"
+    "fitPlaceholder": "Seleziona vestibilità",
+    "clipboardPasted": "Immagine incollata dagli appunti!",
+    "unnamedGarment": "Capo senza nome",
+    "saveTimeout": "Tempo di salvataggio scaduto",
+    "batchSaveSuccess": "{{count}} capo/i aggiunto/i con successo al tuo guardaroba!",
+    "cameraError": "Impossibile aprire la fotocamera.",
+    "cameraPermissionPrompt": "È necessaria l'autorizzazione della fotocamera per fotografare i tuoi vestiti.",
+    "heroSubtitle": "Scatta una foto o importa un documento: la nostra IA rileva, ritaglia e cataloga ogni dettaglio.",
+    "limitReachedMsg": "Hai raggiunto il limite gratuito del guardaroba. Passa a Manager o Professional per capi illimitati.",
+    "limitReachedTitle": "Limite guardaroba raggiunto"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "Collega estensione",
     "alreadyInstalled": "Già installata?",
     "schedulerCreditNote": "Ogni proposta giornaliera consuma 1 credito IA.",
-    "schedulerUpgradeDesc": "I suggerimenti giornalieri consumano 1 credito IA nel piano Gratuito, oppure goditi l'accesso illimitato con Manager e Professional."
+    "schedulerUpgradeDesc": "I suggerimenti giornalieri consumano 1 credito IA nel piano Gratuito, oppure goditi l'accesso illimitato con Manager e Professional.",
+    "upgradeBtn": "Aggiorna piano"
   },
   "admin": {
     "title": "Amministratore",
@@ -2871,7 +2893,13 @@
       "cargo_shorts": "Bermuda cargo",
       "high_heel_pump": "Décolleté con tacco alto",
       "solid_shoes": "Scarpe eleganti",
-      "dress_shoes": "Scarpe eleganti"
+      "dress_shoes": "Scarpe eleganti",
+      "classic_derby_shoes": "Scarpe Derby classiche",
+      "classic_heels": "Tacchi classici",
+      "classic_kurta": "Kurta classica",
+      "classic_loafers": "Mocassini classici",
+      "classic_oxford_shoes": "Scarpe Oxford classiche",
+      "classic_sherwani": "Sherwani classico"
     },
     "color": {
       "black": "Nero",

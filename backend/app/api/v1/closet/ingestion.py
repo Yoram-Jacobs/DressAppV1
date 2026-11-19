@@ -537,10 +537,10 @@ async def analyze_item_image(
         except Exception as refund_err:
             logger.error("Failed to refund credits: %s", refund_err)
 
-    user_lang = (
-        (payload.language or "").strip().lower()
-        or (user or {}).get("preferred_language")
-        or "en"
+    from app.services.translation_service import normalize_lang
+
+    user_lang = normalize_lang(
+        (payload.language or "").strip() or (user or {}).get("preferred_language") or "en"
     )
     from app.services.vision import resolve_garment_gender
     user_gender = resolve_garment_gender(user)
@@ -1960,6 +1960,10 @@ async def reanalyze_item(
         None,
         description="Optional image URL to analyze. If omitted, uses the item's preferred/active image.",
     ),
+    language: str | None = Query(
+        None,
+        description="Optional ISO-639-1 language override for re-analysis output.",
+    ),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Re-run **The Eyes** on an existing item's stored image and patch
@@ -2026,7 +2030,12 @@ async def reanalyze_item(
     if not raw:
         raise HTTPException(400, "Stored image is empty")
 
-    user_lang = (user or {}).get("preferred_language") or "en"
+    from app.services.translation_service import normalize_lang
+
+    raw_lang = language.strip() if isinstance(language, str) else ""
+    user_lang = normalize_lang(
+        raw_lang or (user or {}).get("preferred_language") or "en"
+    )
     try:
         async with _ANALYZE_LOCK:
             parsed = await vision_service.analyze(raw, language=user_lang)

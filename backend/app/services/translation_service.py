@@ -91,8 +91,11 @@ _CACHE_LOCK = asyncio.Lock()
 def normalize_lang(code: str | None) -> str:
     if not code:
         return "en"
-    clean = code.strip().lower()
-    return LANG_CODE_MAP.get(clean, clean)
+    clean = code.strip().lower().replace("_", "-")
+    if clean in LANG_CODE_MAP:
+        return LANG_CODE_MAP[clean]
+    base = clean.split("-", 1)[0]
+    return LANG_CODE_MAP.get(base, base or "en")
 
 
 async def _cache_get(key: tuple[str, str, str]) -> str | None:

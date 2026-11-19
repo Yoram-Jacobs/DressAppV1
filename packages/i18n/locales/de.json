@@ -112,7 +112,9 @@
     "standardUploadDesc": "Standard-Warteschlange. Detaillierter Kleidungsscan läuft.",
     "standardStylistDesc": "Standard-Warteschlange. KI-Stylist erstellt Ihren Look.",
     "standardSuitcaseDesc": "Standard-Warteschlange. Reisegarderobe wird zusammengestellt.",
-    "listSeparator": ", "
+    "listSeparator": ", ",
+    "planUpgradeTitle": "Plan-Upgrade erforderlich",
+    "upgrade": "Upgraden"
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -736,7 +738,8 @@
       "duplicatesPending": "{{saved}} neue Artikel gespeichert · {{pending}} sehen nach Duplikaten aus – prüfe sie unten.",
       "duplicatesInline": "{{count}} Artikel brauchen deine Bestätigung – sie sehen wie Duplikate von bereits in deiner Garderobe vorhandenen Artikeln aus.",
       "skippedDupSuffix": "({{count}} übersprungen, bereits in Garderobe)",
-      "failed": "Es konnten keine Artikel gespeichert werden. Bitte versuche es erneut."
+      "failed": "Es konnten keine Artikel gespeichert werden. Bitte versuche es erneut.",
+      "preparing": "Fotos werden vorbereitet..."
     },
     "label": "Zum Closet hinzufügen",
     "addPhotos": "Fotos hinzufügen",
@@ -767,7 +770,9 @@
       "confirm": "Weiter",
       "summary": "{{willAdd}} werden hinzugefügt · {{willSkip}} werden übersprungen",
       "allSkipped": "Alle ausgewählten Fotos waren Duplikate und wurden übersprungen.",
-      "allDuplicatesSkippedBatch": "Es wurden {{count}} Fotos übersprungen, die bereits in deinem Closet sind — nichts Neues zum Hochladen."
+      "allDuplicatesSkippedBatch": "Es wurden {{count}} Fotos übersprungen, die bereits in deinem Closet sind — nichts Neues zum Hochladen.",
+      "confirmAddAndSkip": "{{addCount}} hinzufügen & fortfahren",
+      "skipAndContinue": "Duplikate überspringen & fortfahren"
     },
     "savedCount_one": "{{count}} Artikel in deinem Closet gespeichert",
     "savedCount_other": "{{count}} Artikel in deinem Closet gespeichert",
@@ -852,7 +857,14 @@
       "ingestCataloguing": "Artikel {{done}} von {{total}} wird katalogisiert…",
       "ingestSyncing": "Wird mit Ihrem Kleiderschrank synchronisiert…",
       "ingestAnalysisHint": "Hintergrundentfernung und Kleidungsanalyse laufen im Hintergrund.",
-      "ingestSyncingHint": "Ihre Garderobe wird aktualisiert — fast geschafft."
+      "ingestSyncingHint": "Ihre Garderobe wird aktualisiert — fast geschafft.",
+      "timeout": "Zeitüberschreitung beim Auslesen des Belegs. Bitte versuche es erneut oder wähle einen kleineren Ausschnitt.",
+      "pastePrompt": "Bitte füge den Beleg- oder Bestelltext ein.",
+      "selectFilePrompt": "Bitte wähle eine Beleg- oder Rechnungsdatei aus.",
+      "enterUrlPrompt": "Bitte gib eine Produkt-URL ein.",
+      "noItemsFound": "Aus diesem Beleg bzw. Link konnten keine Kleidungsstücke extrahiert werden.",
+      "receiptParsed": "Artikel erfolgreich in deine Karten extrahiert.",
+      "extractBtn": "Artikel extrahieren"
     },
     "failedToLoadImage": "Bild konnte nicht geladen werden.",
     "titleRequired": "Titel ist erforderlich",
@@ -924,7 +936,16 @@
       "editManuallyButton": "Manuell fortfahren",
       "manualContinueHint": "Du kannst Details manuell eingeben und deine Kleidungsstücke speichern."
     },
-    "fitPlaceholder": "Passform wählen"
+    "fitPlaceholder": "Passform wählen",
+    "clipboardPasted": "Bild aus der Zwischenablage eingefügt!",
+    "unnamedGarment": "Unbenanntes Kleidungsstück",
+    "saveTimeout": "Zeitüberschreitung beim Speichern",
+    "batchSaveSuccess": "{{count}} Kleidungsstück(e) erfolgreich zu deinem Kleiderschrank hinzugefügt!",
+    "cameraError": "Kamera konnte nicht geöffnet werden.",
+    "cameraPermissionPrompt": "Zum Fotografieren deiner Kleidung ist die Kameraberechtigung erforderlich.",
+    "heroSubtitle": "Mach ein Foto oder importiere ein Dokument — unsere KI erkennt, schneidet zu und katalogisiert jedes Detail.",
+    "limitReachedMsg": "Du hast das kostenlose Schranklimit erreicht. Upgrade auf Manager oder Professional für unbegrenzte Artikel.",
+    "limitReachedTitle": "Schranklimit erreicht"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2242,7 +2263,8 @@
     "connectExtension": "Erweiterung verbinden",
     "alreadyInstalled": "Bereits installiert?",
     "schedulerCreditNote": "Jeder tägliche Outfit-Vorschlag verbraucht 1 KI-Credit.",
-    "schedulerUpgradeDesc": "Tägliche Outfit-Vorschläge verbrauchen 1 KI-Credit im kostenlosen Plan, oder unbegrenzt mit Manager und Professional."
+    "schedulerUpgradeDesc": "Tägliche Outfit-Vorschläge verbrauchen 1 KI-Credit im kostenlosen Plan, oder unbegrenzt mit Manager und Professional.",
+    "upgradeBtn": "Plan upgraden"
   },
   "admin": {
     "title": "Admin",
@@ -2864,7 +2886,13 @@
       "cargo_shorts": "Cargoshorts",
       "high_heel_pump": "Pumps mit hohem Absatz",
       "solid_shoes": "Elegante Schuhe",
-      "dress_shoes": "Elegante Schuhe"
+      "dress_shoes": "Elegante Schuhe",
+      "classic_derby_shoes": "Klassische Derby-Schuhe",
+      "classic_heels": "Klassische Pumps",
+      "classic_kurta": "Klassische Kurta",
+      "classic_loafers": "Klassische Loafer",
+      "classic_oxford_shoes": "Klassische Oxford-Schuhe",
+      "classic_sherwani": "Klassischer Sherwani"
     },
     "color": {
       "black": "Schwarz",
