@@ -179,6 +179,7 @@ class CreateItemIn(BaseModel):
     image_quality_status: str | None = None
     image_quality_reason: str | None = None
     reconstruction_prompt: str | None = None
+    footwear_anatomy: dict[str, Any] | None = None
     # Phase R (July 2026) — digital receipt import provenance.
     # When True, this item was created from a parsed digital receipt.
     # If an image is also supplied, the background task runs the full
@@ -257,6 +258,7 @@ class UpdateItemIn(BaseModel):
     # Allow clearing the reconstruction (user can "revert" via Repair UI)
     clear_reconstruction: bool = False
     is_starter_capsule: bool | None = None
+    footwear_anatomy: dict[str, Any] | None = None
 
     @field_validator("category", mode="before")
     @classmethod

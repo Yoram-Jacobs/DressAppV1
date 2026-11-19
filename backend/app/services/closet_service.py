@@ -551,7 +551,7 @@ async def run_background_matte_and_analyze(
         "brand", "gender", "dress_code", "fit", "season", "tradition", "colors",
         "fabric_materials", "pattern", "state", "condition", "quality",
         "repair_advice", "tags", "image_quality_status", "image_quality_reason",
-        "reconstruction_prompt",
+        "reconstruction_prompt", "footwear_anatomy",
     )
 
     item_doc = await repos.find_one(db.closet_items, {"id": item_id})

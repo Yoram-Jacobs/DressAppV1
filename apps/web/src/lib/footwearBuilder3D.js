@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildModularSandalForSide } from './sandalBuilder3D.js';
 
 export const FOOT_PROFILE_FEMALE = [
   { z: -0.013, x0: 0.144, x1: 0.181, top: 0.124 },
@@ -215,6 +216,7 @@ export function extractShoePhotoLayout(rgbaData, effW, effH) {
     hasRingHardware: false,
     soleColor: '#e4e5e8',
     liningColor: '#1d2026',
+    footbedColor: '#c4a484',
   };
 
   if (!rgbaData || effW < 8 || effH < 8) return fallback;
@@ -504,7 +506,7 @@ export function extractShoePhotoLayout(rgbaData, effW, effH) {
     });
 
     const box = toUVBox(rb);
-    const { soleColor, liningColor } = extractPaletteFromPhoto(rgbaData, effW, effH, isOpaque, [rb], false, 'side');
+    const { soleColor, liningColor, footbedColor } = extractPaletteFromPhoto(rgbaData, effW, effH, isOpaque, [rb], false, 'side');
 
     return {
       mode: 'side',
@@ -516,8 +518,11 @@ export function extractShoePhotoLayout(rgbaData, effW, effH) {
       heroBoxIndex: null,
       tstrap: false,
       hasHeelCup: false,
+      hasAnkleStrap: false,
+      hasRingHardware: false,
       soleColor,
       liningColor,
+      footbedColor,
     };
   }
 
@@ -650,7 +655,7 @@ export function extractShoePhotoLayout(rgbaData, effW, effH) {
   }
   const primary = analyzed[heroBoxIndex !== null ? heroBoxIndex : analyzed.length - 1];
   const sandalHints = analyzeSandalCues(rgbaData, effW, effH, isOpaque, primary);
-  const { soleColor, liningColor } = extractPaletteFromPhoto(
+  const { soleColor, liningColor, footbedColor } = extractPaletteFromPhoto(
     rgbaData,
     effW,
     effH,
@@ -675,26 +680,34 @@ export function extractShoePhotoLayout(rgbaData, effW, effH) {
     hasRingHardware: sandalHints.hasRingHardware,
     soleColor,
     liningColor,
+    footbedColor,
   };
 }
 
 function analyzeSandalCues(rgbaData, effW, effH, isOpaque, box) {
   if (!box || box.bh < 12) return { tstrap: false, hasHeelCup: false, hasAnkleStrap: false, hasRingHardware: false };
-  // Midfoot center fill vs strap bridge check for T-strap, heel back row check for cup.
+  // Midfoot center fill vs strap bridge check for T-strap, heel back row check for cup,
+  // plus solid-footbed top-down contrast ridge and recessed heel cavity detection.
   let tstrapHits = 0;
+  let solidRidgeHits = 0;
+  let solidCheckedRows = 0;
   let midRows = 0;
   let metallicCenterPixels = 0;
   let midCenterChecked = 0;
-  const midStart = box.py0 + Math.floor(box.bh * (box.toeUp ? 0.25 : 0.50));
-  const midEnd = box.py0 + Math.floor(box.bh * (box.toeUp ? 0.50 : 0.75));
+  const midStart = box.py0 + Math.floor(box.bh * (box.toeUp ? 0.25 : 0.42));
+  const midEnd = box.py0 + Math.floor(box.bh * (box.toeUp ? 0.58 : 0.78));
   for (let y = midStart; y <= midEnd; y += 2) {
     let cnt = 0;
     let centerHit = 0;
+    let rowMinX = effW;
+    let rowMaxX = -1;
     const cx = Math.floor((box.px0 + box.px1) / 2);
     for (let x = box.px0; x <= box.px1; x++) {
       const o = (y * effW + x) * 4;
       if (isOpaque(o)) {
         cnt++;
+        if (x < rowMinX) rowMinX = x;
+        if (x > rowMaxX) rowMaxX = x;
         if (Math.abs(x - cx) < box.bw * 0.14) {
           centerHit++;
           midCenterChecked++;
@@ -713,16 +726,97 @@ function analyzeSandalCues(rgbaData, effW, effH, isOpaque, box) {
     }
     midRows++;
     if (centerHit > 0 && cnt < box.bw * 0.48) tstrapHits++;
+
+    // Solid-footbed T-strap contrast ridge: compare center spine luminance against uniform open lateral footbed wings
+    const rowSpan = rowMaxX - rowMinX + 1;
+    if (rowSpan >= Math.max(20, box.bw * 0.55) && cnt >= rowSpan * 0.78) {
+      const rCx = Math.floor((rowMinX + rowMaxX) * 0.5);
+      const cHalf = Math.max(2, Math.floor(rowSpan * 0.06));
+      const sIn = Math.max(cHalf + 2, Math.floor(rowSpan * 0.18));
+      const sOut = Math.max(sIn + 2, Math.floor(rowSpan * 0.36));
+      let cLumSum = 0;
+      let cLumCnt = 0;
+      let lLumSum = 0;
+      let lLumCnt = 0;
+      let rLumSum = 0;
+      let rLumCnt = 0;
+      for (let x = rCx - cHalf; x <= rCx + cHalf; x++) {
+        const o = (y * effW + x) * 4;
+        if (isOpaque(o)) {
+          cLumSum += lum(rgbaData[o], rgbaData[o + 1], rgbaData[o + 2]);
+          cLumCnt++;
+        }
+      }
+      for (let x = rCx - sOut; x <= rCx - sIn; x++) {
+        const o = (y * effW + x) * 4;
+        if (isOpaque(o)) {
+          lLumSum += lum(rgbaData[o], rgbaData[o + 1], rgbaData[o + 2]);
+          lLumCnt++;
+        }
+      }
+      for (let x = rCx + sIn; x <= rCx + sOut; x++) {
+        const o = (y * effW + x) * 4;
+        if (isOpaque(o)) {
+          rLumSum += lum(rgbaData[o], rgbaData[o + 1], rgbaData[o + 2]);
+          rLumCnt++;
+        }
+      }
+      if (cLumCnt >= 2 && lLumCnt >= 3 && rLumCnt >= 3) {
+        const cLum = cLumSum / cLumCnt;
+        const lLum = lLumSum / lLumCnt;
+        const rLum = rLumSum / rLumCnt;
+        const sideAvg = 0.5 * (lLum + rLum);
+        solidCheckedRows++;
+        if (Math.abs(lLum - rLum) < 20 && Math.abs(cLum - sideAvg) > 10) {
+          solidRidgeHits++;
+        }
+      }
+    }
   }
 
   let heelOpaque = 0;
   let heelChecked = 0;
-  const hStart = box.toeUp ? box.py0 + Math.floor(box.bh * 0.85) : box.py0;
-  const hEnd = box.toeUp ? box.py1 : box.py0 + Math.floor(box.bh * 0.15);
+  let heelCavityRows = 0;
+  let heelTotalRows = 0;
+  const hStart = box.toeUp ? box.py0 + Math.floor(box.bh * 0.80) : box.py0 + Math.floor(box.bh * 0.04);
+  const hEnd = box.toeUp ? box.py0 + Math.floor(box.bh * 0.94) : box.py0 + Math.floor(box.bh * 0.22);
   for (let y = hStart; y <= hEnd; y += 2) {
+    let rowMinX = effW;
+    let rowMaxX = -1;
     for (let x = box.px0 + Math.floor(box.bw * 0.25); x <= box.px1 - Math.floor(box.bw * 0.25); x++) {
       heelChecked++;
       if (isOpaque((y * effW + x) * 4)) heelOpaque++;
+    }
+    for (let x = box.px0; x <= box.px1; x++) {
+      if (isOpaque((y * effW + x) * 4)) {
+        if (x < rowMinX) rowMinX = x;
+        if (x > rowMaxX) rowMaxX = x;
+      }
+    }
+    const rSpan = rowMaxX - rowMinX + 1;
+    if (rSpan >= 16) {
+      const rCx = Math.floor((rowMinX + rowMaxX) * 0.5);
+      const hcHalf = Math.max(2, Math.floor(rSpan * 0.14));
+      let hcSum = 0;
+      let hcCnt = 0;
+      let hsSum = 0;
+      let hsCnt = 0;
+      for (let x = rowMinX + 2; x <= rowMaxX - 2; x++) {
+        const o = (y * effW + x) * 4;
+        if (!isOpaque(o)) continue;
+        const lv = lum(rgbaData[o], rgbaData[o + 1], rgbaData[o + 2]);
+        if (Math.abs(x - rCx) <= hcHalf) {
+          hcSum += lv;
+          hcCnt++;
+        } else if (Math.abs(x - rCx) >= rSpan * 0.24) {
+          hsSum += lv;
+          hsCnt++;
+        }
+      }
+      if (hcCnt >= 3 && hsCnt >= 4) {
+        heelTotalRows++;
+        if (hsSum / hsCnt - hcSum / hcCnt > 16) heelCavityRows++;
+      }
     }
   }
 
@@ -737,9 +831,14 @@ function analyzeSandalCues(rgbaData, effW, effH, isOpaque, box) {
     }
   }
 
+  const tstrapAlpha = midRows > 2 && tstrapHits / midRows > 0.45;
+  const tstrapSolid = solidCheckedRows >= 6 && solidRidgeHits / solidCheckedRows > 0.42;
+  const hasHeelAlpha = heelChecked > 8 && heelOpaque / heelChecked > 0.42;
+  const hasHeelCavity = heelTotalRows >= 3 && heelCavityRows / heelTotalRows >= 0.45;
+
   return {
-    tstrap: midRows > 2 && tstrapHits / midRows > 0.45,
-    hasHeelCup: heelChecked > 8 && heelOpaque / heelChecked > 0.42,
+    tstrap: tstrapAlpha || tstrapSolid,
+    hasHeelCup: hasHeelAlpha || hasHeelCavity,
     hasAnkleStrap: ankleChecked > 8 && ankleOpaque / ankleChecked > 0.38,
     hasRingHardware: midCenterChecked > 12 && metallicCenterPixels / midCenterChecked > 0.40,
   };
@@ -860,7 +959,38 @@ function extractPaletteFromPhoto(rgbaData, effW, effH, isOpaque, boxes, toeUp, m
     }
   }
 
-  return { soleColor, liningColor };
+  // 3. Sample open lateral forefoot/midfoot footbed region for sandal insole color
+  const footbedSamples = [];
+  if (mode !== 'side') {
+    const fStart = b.py0 + Math.floor(bh * (toeUp ? 0.20 : 0.42));
+    const fEnd = b.py0 + Math.floor(bh * (toeUp ? 0.58 : 0.80));
+    const midX = b.px0 + Math.floor(bw * 0.5);
+    const wIn = Math.floor(bw * 0.16);
+    const wOut = Math.floor(bw * 0.36);
+    for (let y = fStart; y <= fEnd; y += 3) {
+      for (const sgn of [-1, 1]) {
+        const xA = clamp(midX + sgn * wIn, b.px0, b.px1);
+        const xB = clamp(midX + sgn * wOut, b.px0, b.px1);
+        for (let x = Math.min(xA, xB); x <= Math.max(xA, xB); x += 3) {
+          const o = (y * effW + x) * 4;
+          if (isOpaque(o)) {
+            const r = rgbaData[o];
+            const g = rgbaData[o + 1];
+            const bl = rgbaData[o + 2];
+            footbedSamples.push({ r, g, b: bl, lum: lum(r, g, bl) });
+          }
+        }
+      }
+    }
+  }
+  let footbedColor = soleColor;
+  if (footbedSamples.length >= 6) {
+    footbedSamples.sort((p, q) => p.lum - q.lum);
+    const med = footbedSamples[Math.floor(footbedSamples.length * 0.5)];
+    footbedColor = rgbToHex(med.r, med.g, med.b);
+  }
+
+  return { soleColor, liningColor, footbedColor };
 }
 
 function resolveShoeBox(side, layout) {
@@ -1936,240 +2066,17 @@ function cosTVal(theta) {
 }
 
 /**
- * Generates open sandal footwear (footbed + wedge/heel + forefoot/ankle/T straps).
+ * Generates modular open sandal footwear (contoured sole + leather/cork insole +
+ * 3D beveled straps, horizontal heel cup / ankle collar, and calibrated anatomy).
  */
-function buildSandalForSide(side, anatomy, spec, layout) {
-  const heelExtra = clamp(spec?.heelHeight || 0, 0, 0.14);
-  const baseSoleH = Math.max(0.009, spec?.soleThickness || 0.011);
-  const yWelt = Math.min(-0.007, (anatomy.soleBottomY || -0.0061) - 0.002);
-  const { stations, zStart, zEnd } = sampleProfileStations(anatomy, side, 28, 0.004, 0.004);
-  const upperPad = 0.003;
-  const frame = {
-    z0: zStart,
-    z1: zEnd,
-    xMin: Math.min(...stations.map((s) => s.cx - s.hw - upperPad)),
-    xMax: Math.max(...stations.map((s) => s.cx + s.hw + upperPad)),
-    yMin: yWelt - baseSoleH,
-    yMax: anatomy.ankleY + 0.02,
-    ankleZ: anatomy.ankleZ,
-  };
-
-  const parts = [];
-  const nCols = 8;
-
-  const evalFootbedStation = (st, r) => {
-    const hw = st.hw + upperPad;
-    const tBack = smoothstep(anatomy.heelZ + 0.04, anatomy.ballZ, st.z);
-    const wedgeLift = spec?.sandalStyle === 'wedge' || spec?.isPlatform ? heelExtra * (1 - tBack * 0.75) : 0;
-    const botY = yWelt - baseSoleH;
-    const topY = yWelt + wedgeLift * 0.25;
-    return { hw, botY, topY, wedgeLift };
-  };
-
-  // Group 1 contoured sandal footbed & sole (separate heel pillar comes from createHeelGeometry).
-  const footbed = buildGridPart(
-    28,
-    nCols,
-    (r, c) => {
-      const st = stations[r];
-      const { hw, botY, topY } = evalFootbedStation(st, r);
-      let x = st.cx;
-      let y = topY;
-      if (c === 0 || c === 8) { x = st.cx - hw; y = topY; }
-      else if (c === 1) { x = st.cx - hw * 1.04; y = botY; }
-      else if (c === 2) { x = st.cx - hw * 0.5; y = botY; }
-      else if (c === 3) { x = st.cx; y = botY; }
-      else if (c === 4) { x = st.cx + hw * 0.5; y = botY; }
-      else if (c === 5) { x = st.cx + hw * 1.04; y = botY; }
-      else if (c === 6) { x = st.cx + hw; y = topY; }
-      else if (c === 7) { x = st.cx; y = topY; }
-      return { x, y, z: st.z, u: c / nCols, v: r / 28 };
-    },
-    true
-  );
-  parts.push({ geometry: footbed, materialIndex: 1 });
-
-  // Toe endcap (seals the hollow front rim of the sole so no hole / notch appears at the toe)
-  const toeCap = buildGridPart(2, nCols, (rr, c) => {
-    const st = stations[28];
-    const { hw, botY, topY } = evalFootbedStation(st, 28);
-    const midY = 0.5 * (topY + botY);
-    const tCap = rr / 2;
-    const angle = tCap * Math.PI * 0.5;
-    const radial = Math.cos(angle);
-    const zApex = st.z + 0.0035 * Math.sin(angle);
-    let x = st.cx;
-    let y = topY;
-    if (c === 0 || c === 8) { x = st.cx - hw * radial; y = lerp(midY, topY, radial); }
-    else if (c === 1) { x = st.cx - hw * 1.04 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 2) { x = st.cx - hw * 0.5 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 3) { x = st.cx; y = lerp(midY, botY, radial); }
-    else if (c === 4) { x = st.cx + hw * 0.5 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 5) { x = st.cx + hw * 1.04 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 6) { x = st.cx + hw * radial; y = lerp(midY, topY, radial); }
-    else if (c === 7) { x = st.cx; y = lerp(midY, topY, radial); }
-    return { x, y, z: zApex, u: c / nCols, v: 1.0 };
-  }, true);
-  parts.push({ geometry: toeCap, materialIndex: 1 });
-
-  // Heel endcap (seals the rear rim of the sole)
-  const heelCap = buildGridPart(2, nCols, (rr, c) => {
-    const st = stations[0];
-    const { hw, botY, topY } = evalFootbedStation(st, 0);
-    const midY = 0.5 * (topY + botY);
-    const tCap = rr / 2;
-    const angle = tCap * Math.PI * 0.5;
-    const radial = Math.cos(angle);
-    const zApex = st.z - 0.0035 * Math.sin(angle);
-    let x = st.cx;
-    let y = topY;
-    if (c === 0 || c === 8) { x = st.cx - hw * radial; y = lerp(midY, topY, radial); }
-    else if (c === 1) { x = st.cx - hw * 1.04 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 2) { x = st.cx - hw * 0.5 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 3) { x = st.cx; y = lerp(midY, botY, radial); }
-    else if (c === 4) { x = st.cx + hw * 0.5 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 5) { x = st.cx + hw * 1.04 * radial; y = lerp(midY, botY, radial); }
-    else if (c === 6) { x = st.cx + hw * radial; y = lerp(midY, topY, radial); }
-    else if (c === 7) { x = st.cx; y = lerp(midY, topY, radial); }
-    return { x, y, z: zApex, u: c / nCols, v: 0.0 };
-  }, false);
-  parts.push({ geometry: heelCap, materialIndex: 1 });
-
-  // Group 0 Straps
-  const addStrap = (zA, zB, liftAboveFoot = 0.004) => {
-    const strapSt = stations.filter((s) => s.z >= zA && s.z <= zB);
-    const targetSt = strapSt.length >= 2 ? strapSt : [stations[18], stations[22]];
-    const gStrap = buildGridPart(targetSt.length - 1, 10, (r, c) => {
-      const st = targetSt[r];
-      const hw = st.hw + 0.004;
-      const th = (c / 10) * Math.PI;
-      const x = st.cx - Math.cos(th) * hw;
-      const topY = Math.min(yWelt + 0.045, st.rawTop + liftAboveFoot);
-      const y = yWelt + Math.sin(th) * Math.max(0.012, topY - yWelt);
-      const [u, v] = shoeUVAnatomical(side, x, y, st.z, frame, layout);
-      return { x, y, z: st.z, u, v };
-    });
-    parts.push({ geometry: gStrap, materialIndex: 0 });
-  };
-
-  const style =
-    layout?.sandalStyle ||
-    spec?.sandalStyle ||
-    (spec?.heelHeight >= 0.035
-      ? 'ankle_strap'
-      : (layout?.tstrap ? 'tstrap' : 'slide'));
-  const hasRingHardware = Boolean(spec?.hasRingHardware || layout?.hasRingHardware);
-  const isFlipFlop = Boolean(spec?.isFlipFlop);
-  const hasHeelCup = Boolean(layout?.hasHeelCup);
-  const hasAnkleStrap = Boolean(layout?.hasAnkleStrap || spec?.hasAnkleStrap || style === 'ankle_strap' || (style === 'tstrap' && !isFlipFlop));
-
-  if (style === 'tstrap') {
-    // 1. Center dorsal stem from toe post to instep
-    const zToePost = anatomy.toeZ - 0.034;
-    const zInstep = anatomy.ankleZ + 0.038;
-    const stemStations = stations.filter((s) => s.z >= zInstep && s.z <= zToePost);
-    const targetStem = stemStations.length >= 2 ? stemStations : [stations[12], stations[22]];
-    const nStemRows = targetStem.length - 1;
-    const nStemCols = 4;
-    const stemHalfW = hasRingHardware ? 0.009 : 0.0055;
-    const gStem = buildGridPart(nStemRows, nStemCols, (r, c) => {
-      const st = targetStem[r];
-      const u = (c / nStemCols) * 2 - 1;
-      const x = st.cx + u * stemHalfW;
-      const y = Math.min(yWelt + 0.045, st.rawTop + 0.0048);
-      const [uUV, vUV] = shoeUVAnatomical(side, x, y, st.z, frame, layout);
-      return { x, y, z: st.z, u: uUV, v: vUV };
-    });
-    parts.push({ geometry: gStem, materialIndex: 0 });
-
-    // 2. Toe post dropping vertically between toes into footbed sole
-    const stPost = stations[24] || stations[stations.length - 3];
-    const postYTop = Math.min(yWelt + 0.045, stPost.rawTop + 0.0048);
-    const postHalfW = 0.0035;
-    const gPost = buildGridPart(2, 4, (r, c) => {
-      const u = (c / 4) * 2 - 1;
-      const y = lerp(yWelt - 0.002, postYTop, r / 2);
-      const x = stPost.cx + u * postHalfW;
-      const [uUV, vUV] = shoeUVAnatomical(side, x, y, zToePost, frame, layout);
-      return { x, y, z: zToePost, u: uUV, v: vUV };
-    });
-    parts.push({ geometry: gPost, materialIndex: 0 });
-
-    // 3. Arched instep wings connecting stem to sole edges
-    const wingSt = stations.filter((s) => s.z >= zInstep - 0.012 && s.z <= zInstep + 0.016);
-    const targetWing = wingSt.length >= 2 ? wingSt : [stations[10], stations[13]];
-    const gWing = buildGridPart(targetWing.length - 1, 10, (r, c) => {
-      const st = targetWing[r];
-      const hw = st.hw + 0.0035;
-      const th = (c / 10) * Math.PI;
-      const x = st.cx - Math.cos(th) * hw;
-      const topY = Math.min(yWelt + 0.045, st.rawTop + 0.005);
-      const y = yWelt + Math.sin(th) * Math.max(0.012, topY - yWelt);
-      const [u, v] = shoeUVAnatomical(side, x, y, st.z, frame, layout);
-      return { x, y, z: st.z, u, v };
-    });
-    parts.push({ geometry: gWing, materialIndex: 0 });
-
-    // 4. Ankle strap and heel cup / counter
-    if (hasAnkleStrap || hasHeelCup) {
-      addStrap(anatomy.ankleZ - 0.008, anatomy.ankleZ + 0.022, 0.006);
-    }
-    if (hasHeelCup) {
-      const heelCupSt = stations.slice(0, 7);
-      const gCup = buildGridPart(heelCupSt.length - 1, 12, (r, c) => {
-        const st = heelCupSt[r];
-        const hw = st.hw + 0.004;
-        const th = (c / 12) * Math.PI;
-        const x = st.cx - Math.cos(th) * hw;
-        const tCup = 1 - r / (heelCupSt.length - 1);
-        const rimY = yWelt + lerp(0.024, 0.048, tCup);
-        const y = yWelt + Math.sin(th) * (rimY - yWelt);
-        const [u, v] = shoeUVAnatomical(side, x, y, st.z, frame, layout);
-        return { x, y, z: st.z, u, v };
-      });
-      parts.push({ geometry: gCup, materialIndex: 0 });
-    }
-  } else if (style === 'ankle_strap') {
-    // 1. Forefoot band across ball of foot
-    addStrap(anatomy.ballZ - 0.010, anatomy.ballZ + 0.018, 0.005);
-    // 2. Ankle strap
-    addStrap(anatomy.ankleZ - 0.008, anatomy.ankleZ + 0.022, 0.006);
-    // 3. Heel counter
-    const heelCupSt = stations.slice(0, 6);
-    const gCup = buildGridPart(heelCupSt.length - 1, 12, (r, c) => {
-      const st = heelCupSt[r];
-      const hw = st.hw + 0.004;
-      const th = (c / 12) * Math.PI;
-      const x = st.cx - Math.cos(th) * hw;
-      const tCup = 1 - r / (heelCupSt.length - 1);
-      const rimY = yWelt + lerp(0.024, 0.046, tCup);
-      const y = yWelt + Math.sin(th) * (rimY - yWelt);
-      const [u, v] = shoeUVAnatomical(side, x, y, st.z, frame, layout);
-      return { x, y, z: st.z, u, v };
-    });
-    parts.push({ geometry: gCup, materialIndex: 0 });
-  } else {
-    // Forefoot strap across ball of foot
-    addStrap(anatomy.ballZ - 0.015, anatomy.ballZ + 0.030, 0.005);
-    // Midfoot / instep strap
-    addStrap(anatomy.ankleZ + 0.038, anatomy.ankleZ + 0.075, 0.006);
-    if (hasHeelCup) {
-      addStrap(anatomy.ankleZ - 0.008, anatomy.ankleZ + 0.022, 0.006);
-    }
-  }
-
-  return parts;
+function buildSandalForSide(side, anatomy, spec, layout, standalone = false) {
+  return buildModularSandalForSide(side, anatomy, spec, layout, standalone);
 }
 
 /**
- * Creates multi-zone, photo-faithful 3D footwear geometry separated cleanly into:
- * - Group 0: Upper shell & tongue (photo-textured with shoeUVAnatomical)
- * - Group 1: Contoured midsole/outsole foxing & heel block (clean rubber color, zero barcode streaks)
- * - Group 2: Padded interior collar liner & insole (standalone sneaker/open-shoe studio mode)
- */
-/**
  * Ensures flat / no-heel boots (e.g., Chelsea boots) are not given a synthetic heel lift
- * unless the garment metadata explicitly describes a heeled silhouette.
+ * unless the garment metadata explicitly describes a heeled silhouette, and preserves
+ * structured modular hardware & anatomy tags.
  */
 export function normalizeFlatFootwearSpec(spec, garmentText = '') {
   if (!spec) return spec;
@@ -2184,11 +2091,18 @@ export function normalizeFlatFootwearSpec(spec, garmentText = '') {
     heelHeight = 0;
   }
   const hasRingHardware = Boolean(spec.hasRingHardware) ||
-    /\b(?:rings?|o-rings?|metal(?:lic)?\s*rings?|double\s*rings?|ring[-_\s]*details?|ring[-_\s]*ornaments?|ring[-_\s]*sandals?|buckles?|טבעת|טבעות|חישוק|חישוקים|кольц[а-я]*|boucle\s*anneau|anneau|anillo)\b/i.test(garmentText || '');
+    /\b(?:rings?|o-rings?|metal(?:lic)?\s*rings?|double\s*rings?|ring[-_\s]*details?|ring[-_\s]*ornaments?|ring[-_\s]*sandals?|טבעת|טבעות|חישוק|חישוקים|кольц[а-я]*|boucle\s*anneau|anneau|anillo)\b/i.test(garmentText || '');
+  const hasStuds = Boolean(spec.hasStuds) ||
+    /(?:micro[-_\s]?studs?|studded|rivet(?:s|ed)?|ניטים|משובץ)/i.test(garmentText || '');
+  const hasBuckle = Boolean(spec.hasBuckle) ||
+    /\b(?:buckles?|buckled|אבזם|אבזמים)\b/i.test(garmentText || '');
   return {
     ...spec,
     heelHeight,
     hasRingHardware,
+    hasStuds,
+    hasBuckle,
+    footwearAnatomy: spec.footwearAnatomy || spec.footwear_anatomy || null,
   };
 }
 
@@ -2209,13 +2123,14 @@ export function createRealisticFootwearGeometry({
     box: null,
     soleColor: '#e2e4e8',
     liningColor: '#1c1f26',
+    footbedColor: '#c4a484',
   };
 
   const parts = [];
   for (const side of [-1, 1]) {
     const sideParts =
       kind === 'sandal'
-        ? buildSandalForSide(side, anatomy, spec, safeLayout)
+        ? buildSandalForSide(side, anatomy, { ...spec, isMale }, safeLayout, standalone)
         : buildClosedShoeForSide(side, anatomy, spec, safeLayout, standalone);
     parts.push(...sideParts);
   }

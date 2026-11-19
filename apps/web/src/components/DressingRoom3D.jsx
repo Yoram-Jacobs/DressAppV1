@@ -676,6 +676,7 @@ export default function DressingRoom3D({
         pattern: g.pattern || '',
         heel_height: g.heel_height,
         sole_type: g.sole_type,
+        footwear_anatomy: g.footwear_anatomy || closetMatch?.footwear_anatomy || null,
         extraViews,
         rawItem: g,
       });

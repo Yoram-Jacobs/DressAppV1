@@ -341,6 +341,7 @@ const blankFields = () => ({
   image_quality_status: "",
   image_quality_reason: "",
   reconstruction_prompt: "",
+  footwear_anatomy: null,
 });
 const sanitizeArabicBleedInHebrew = (text) => {
   if (!text || typeof text !== "string") return text;
@@ -3708,6 +3709,8 @@ export default function AddItem() {
                   frame.analysis?.image_quality_reason || null,
                 reconstructionPrompt:
                   frame.analysis?.reconstruction_prompt || null,
+                footwearAnatomy:
+                  frame.analysis?.footwear_anatomy || null,
                 reconstructedUrl,
                 reconstructedB64: recValidated ? rec.image_b64 : null,
                 reconstructionMeta: recValidated
@@ -4197,6 +4200,8 @@ export default function AddItem() {
                   frame.analysis?.image_quality_reason || null,
                 reconstructionPrompt:
                   frame.analysis?.reconstruction_prompt || null,
+                footwearAnatomy:
+                  frame.analysis?.footwear_anatomy || null,
                 reconstructedUrl,
                 reconstructedB64: recValidated ? rec.image_b64 : null,
                 reconstructionMeta: recValidated
@@ -7766,6 +7771,8 @@ function buildCreatePayload(card, inSuitcase = false, language = null) {
       f.image_quality_reason || card.imageQualityReason || undefined,
     reconstruction_prompt:
       f.reconstruction_prompt || card.reconstructionPrompt || undefined,
+    footwear_anatomy:
+      f.footwear_anatomy || card.footwearAnatomy || undefined,
     language: language || undefined,
   };
   // Strip undefined to keep payload clean (Pydantic `extra=forbid` still accepts unset fields).

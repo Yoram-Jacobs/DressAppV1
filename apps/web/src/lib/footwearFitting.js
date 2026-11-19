@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { buildModularSandalHardware } from './sandalBuilder3D.js';
 
 /**
  * Footwear Fit
@@ -152,18 +153,29 @@ export function resolveFootwearSpec(garment) {
   const explicitHeel = Number(garment?.rawItem?.heel_height_cm || garment?.heel_height_cm);
   const explicitPlatform = Number(garment?.rawItem?.platform_height_cm || garment?.platform_height_cm);
 
-  const isAnkleBoot = has(/ankle\s*boot|bootie|chelsea|chukka|desert\s*boot|combat\s*boot|dr\.?\s*martens|מגפונ|צ['’׳]?לסי|צ['’׳]?אקה|קרסול|bottines?|stiefelette|botin|ботильон|челси|短靴|切尔西|ショートブーツ|サイドゴア/);
-  const isBoot = !isAnkleBoot && has(/boots?\b|מגפ|bottes|stiefel|botas|stivali|сапог|靴子|ブーツ|جزمة/);
-  const isSneaker = has(/sneaker|trainer|running|tennis\s*shoe|athletic|סניקרס|נעלי ספורט|basket|zapatilla|кроссовк|运动鞋|スニーカー/);
-  const isSandal = has(/sandal|flip.?flop|slide|mule|סנדל|כפכפ|sandale|sandalia|сандал|凉鞋|サンダル|صندل/);
-  const isLoaferOrOxford = has(/loafer|oxford|derby|brogue|moccasin|dress\s*shoe|מוקסין|אוקספורד|נעלי אלגנט/);
-  const isPlatform = has(/platform|flatform|creeper|chunky|lug\s*sole|פלטפורמ|סוליה עבה|厚底|プラットフォーム/);
+  const fa = garment?.footwear_anatomy || garment?.rawItem?.footwear_anatomy || null;
+  const faSil = String(fa?.silhouette || '').trim().toLowerCase();
+  const faSole = String(fa?.sole_type || '').trim().toLowerCase();
+  const faBack = String(fa?.back_style || '').trim().toLowerCase();
+  const faHeelCm = Number(fa?.heel_height_cm);
+  const faPlatCm = Number(fa?.platform_height_cm);
+  const faHw = Array.isArray(fa?.hardware) ? fa.hardware.map((h) => String(h).trim().toLowerCase()) : [];
+
+  const isSandalFromFa = Boolean(faSil && faSil !== 'closed_shoe');
+  const isAnkleBoot = !isSandalFromFa && has(/ankle\s*boot|bootie|chelsea|chukka|desert\s*boot|combat\s*boot|dr\.?\s*martens|מגפונ|צ['’׳]?לסי|צ['’׳]?אקה|קרסול|bottines?|stiefelette|botin|ботильон|челси|短靴|切尔西|ショートブーツ|サイドゴア/);
+  const isBoot = !isSandalFromFa && !isAnkleBoot && has(/boots?\b|מגפ|bottes|stiefel|botas|stivali|сапог|靴子|ブーツ|جزمة/);
+  const isSneaker = !isSandalFromFa && has(/sneaker|trainer|running|tennis\s*shoe|athletic|סניקרס|נעלי ספורט|basket|zapatilla|кроссовк|运动鞋|スニーカー/);
+  const isSandal = isSandalFromFa || has(/sandal|flip.?flop|slide|mule|סנדל|כפכפ|sandale|sandalia|сандал|凉鞋|サンダル|صندل/);
+  const isLoaferOrOxford = !isSandalFromFa && has(/loafer|oxford|derby|brogue|moccasin|dress\s*shoe|מוקסין|אוקספורד|נעלי אלגנט/);
+  const isPlatform = faSole === 'flatform' || (Number.isFinite(faPlatCm) && faPlatCm >= 2.2) || has(/platform|flatform|creeper|chunky|lug\s*sole|פלטפורמ|סוליה עבה|厚底|プラットフォーム/);
 
   let heelHeight = 0;
-  if (has(/stiletto|סטילטו/)) heelHeight = 0.10;
+  if (fa?.heel_height_cm != null && Number.isFinite(faHeelCm) && faHeelCm >= 0) {
+    heelHeight = Math.min(0.15, faHeelCm / 100);
+  } else if (faSole === 'stiletto' || has(/stiletto|סטילטו/)) heelHeight = 0.10;
   else if (has(/kitten/)) heelHeight = 0.045;
-  else if (has(/wedge|טריז/)) heelHeight = 0.075;
-  else if (has(/block\s*heel|עקב רחב|chunky\s*heel/)) heelHeight = 0.065;
+  else if (faSole === 'wedge' || has(/wedge|טריז/)) heelHeight = 0.075;
+  else if (faSole === 'block_heel' || has(/block\s*heel|עקב רחב|chunky\s*heel/)) heelHeight = 0.065;
   else if (has(/heels?\b|high.?heel|pumps?\b|עקב|עקבים|talon|tacón|tacco|absatz|каблук|高跟|ヒール|كعب/)) heelHeight = 0.085;
   // Flat platform sandals/shoes elevate the entire sole (soleThickness) without tilting the heel above the forefoot.
 
@@ -174,8 +186,8 @@ export function resolveFootwearSpec(garment) {
   if ((isBoot || isAnkleBoot) && heelHeight === 0) heelHeight = 0.028;
   else if (isLoaferOrOxford && heelHeight === 0) heelHeight = 0.018;
 
-  const heelStyle = has(/stiletto|סטילטו|kitten/) ? 'stiletto'
-    : has(/wedge|טריז/) ? 'wedge'
+  const heelStyle = (faSole === 'stiletto' || has(/stiletto|סטילטו|kitten/)) ? 'stiletto'
+    : (faSole === 'wedge' || has(/wedge|טריז/)) ? 'wedge'
       : isPlatform ? 'platform'
         : 'block';
 
@@ -198,7 +210,7 @@ export function resolveFootwearSpec(garment) {
   } else if (isSandal) {
     kind = 'sandal';
     collar = 0.065;
-    soleThickness = isPlatform ? 0.036 : (heelHeight >= 0.04 ? 0.010 : 0.014);
+    soleThickness = isPlatform ? 0.036 : (faSole === 'contoured_cork' ? 0.020 : (heelHeight >= 0.04 ? 0.010 : 0.014));
   } else if (isLoaferOrOxford) {
     kind = 'loafer';
     collar = 0.092;
@@ -213,29 +225,42 @@ export function resolveFootwearSpec(garment) {
     soleThickness = 0.038;
   }
 
-  if (Number.isFinite(explicitPlatform) && explicitPlatform > 0) {
+  if (Number.isFinite(faPlatCm) && faPlatCm > 0) {
+    soleThickness = Math.min(0.08, Math.max(0.012, faPlatCm / 100));
+  } else if (Number.isFinite(explicitPlatform) && explicitPlatform > 0) {
     soleThickness = Math.min(0.08, Math.max(0.012, explicitPlatform / 100));
   }
 
   const hasTongue = kind === 'sneaker' || kind === 'loafer' || kind === 'ankle_boot' || kind === 'boot';
   const hasWelt = true;
-  const hasRingHardware = has(/\b(?:rings?|o-rings?|metal(?:lic)?\s*rings?|double\s*rings?|ring[-_\s]*details?|ring[-_\s]*ornaments?|ring[-_\s]*sandals?|buckles?|טבעת|טבעות|חישוק|חישוקים|кольц[а-я]*|boucle\s*anneau|anneau|anillo)\b/);
-  const isFlipFlop = has(/\b(?:flip[-_\s]*flops?|thongs?\b|כפכף\s*אצבע|כפכפי\s*אצבע|tong\b|chanclas?)\b/);
-  const hasAnkleStrap = has(/\b(?:ankle[-_\s]*straps?|strappy|רצועת\s*קרסול|רצועה\s*בקרסול)\b/);
-  const sandalStyle = kind === 'sandal'
-    ? (has(/thong|t[-_\s]*strap|flip.?flop|toe.?post|אצבע/)
-        ? 'tstrap'
-        : has(/slide|mule|סלייד|כפכף/)
-          ? 'slide'
-          : (heelHeight >= 0.035 || hasAnkleStrap)
-            ? 'ankle_strap'
-            : null)
-    : null;
+  const hasRingHardware = faHw.includes('metal_ring') ||
+    has(/\b(?:rings?|o-rings?|metal(?:lic)?\s*rings?|double\s*rings?|ring[-_\s]*details?|ring[-_\s]*ornaments?|ring[-_\s]*sandals?|טבעת|טבעות|חישוק|חישוקים|кольц[а-я]*|boucle\s*anneau|anneau|anillo)\b/);
+  const hasStuds = faHw.includes('micro_studs') ||
+    has(/(?:micro[-_\s]?studs?|studded|rivet(?:s|ed)?|ניטים|משובץ)/);
+  const hasBuckle = faHw.includes('buckle') || faHw.includes('ankle_buckle') ||
+    has(/\b(?:buckles?|buckled|אבזם|אבזמים)\b/);
+  const isFlipFlop = faSil === 'thong_flipflop' || has(/\b(?:flip[-_\s]*flops?|thongs?\b|כפכף\s*אצבע|כפכפי\s*אצבע|tong\b|chanclas?)\b/);
+  const hasAnkleStrap = faBack === 'ankle_strap' || faSil === 'ankle_strap' || has(/\b(?:ankle[-_\s]*straps?|strappy|רצועת\s*קרסול|רצועה\s*בקרסול)\b/);
+
+  let sandalStyle = null;
+  if (kind === 'sandal') {
+    if (faSil === 't_strap' || faSil === 'thong_flipflop') sandalStyle = 'tstrap';
+    else if (faSil === 'ankle_strap' || faBack === 'ankle_strap') sandalStyle = 'ankle_strap';
+    else if (faSil === 'wedge_sandal') sandalStyle = 'wedge';
+    else if (faSil === 'slide_single' || faSil === 'slide_double' || faSil === 'criss_cross' || faSil === 'sport_velcro') sandalStyle = 'slide';
+    else if (has(/thong|t[-_\s]*strap|flip.?flop|toe.?post|אצבע/)) sandalStyle = 'tstrap';
+    else if (has(/slide|mule|סלייד|כפכף/)) sandalStyle = 'slide';
+    else if (heelHeight >= 0.035 || hasAnkleStrap) sandalStyle = 'ankle_strap';
+  }
 
   return {
     kind,
     sandalStyle,
+    footwearAnatomy: fa,
     hasRingHardware,
+    hasStuds,
+    hasBuckle,
+    hardwareTone: hasStuds && !hasRingHardware && !hasBuckle ? 'brass' : 'silver',
     isFlipFlop,
     hasAnkleStrap,
     heelHeight,
@@ -702,103 +727,6 @@ function buildAnkleStrapAndHeelCounter(side, a, yAnkle, bandH, off, frame, layou
       );
     }
   }
-}
-
-/**
- * Builds a contoured 3D oval torus ring resting cleanly ON TOP of the center T-strap.
- */
-function buildHardwareRing(side, a, off, zCenter, rx, rz, tubeR, verts, indices) {
-  const nMajor = 24;
-  const nMinor = 10;
-  const startIdx = verts.length / 3;
-
-  for (let i = 0; i <= nMajor; i++) {
-    const theta = (i / nMajor) * Math.PI * 2;
-    const ct = Math.cos(theta);
-    const st = Math.sin(theta);
-    const z = zCenter + rz * st;
-    const p = sampleProfile(a.profile, 'z', z);
-    const cx = side * ((p.x0 + p.x1) / 2);
-    const xRing = cx + rx * ct;
-    // Sit cleanly above the leather strap top surface (p.top + off + 0.0042)
-    const yRing = Math.max(0.014, p.top + off) + 0.0044 + tubeR * 1.35;
-
-    for (let j = 0; j < nMinor; j++) {
-      const phi = (j / nMinor) * Math.PI * 2;
-      const cp = Math.cos(phi);
-      const sp = Math.sin(phi);
-      verts.push(xRing + tubeR * cp * ct, yRing + tubeR * sp, z + tubeR * cp * st);
-    }
-  }
-  for (let i = 0; i < nMajor; i++) {
-    for (let j = 0; j < nMinor; j++) {
-      const jn = (j + 1) % nMinor;
-      appendQuad(
-        indices,
-        startIdx + i * nMinor + j,
-        startIdx + i * nMinor + jn,
-        startIdx + (i + 1) * nMinor + j,
-        startIdx + (i + 1) * nMinor + jn
-      );
-    }
-  }
-}
-
-/**
- * Builds a 3D metal sphere/stud at (cx, cy, cz) with radius r.
- */
-function buildHardwareStud(cx, cy, cz, r, verts, indices) {
-  const nLat = 8;
-  const nLon = 12;
-  const startIdx = verts.length / 3;
-  for (let i = 0; i <= nLat; i++) {
-    const theta = (i / nLat) * Math.PI;
-    const st = Math.sin(theta);
-    const ct = Math.cos(theta);
-    for (let j = 0; j <= nLon; j++) {
-      const phi = (j / nLon) * Math.PI * 2;
-      verts.push(cx + r * st * Math.cos(phi), cy + r * ct, cz + r * st * Math.sin(phi));
-    }
-  }
-  const stride = nLon + 1;
-  for (let i = 0; i < nLat; i++) {
-    for (let j = 0; j < nLon; j++) {
-      appendQuad(indices, startIdx + i * stride + j, startIdx + i * stride + j + 1, startIdx + (i + 1) * stride + j, startIdx + (i + 1) * stride + j + 1);
-    }
-  }
-}
-
-/**
- * Builds the metal connecting link bar + central dome stud + side beads between two stacked rings.
- */
-function buildHardwareLink(side, a, off, zJoin, halfW, tubeR, verts, indices) {
-  const nx = 10;
-  const nPhi = 10;
-  const p = sampleProfile(a.profile, 'z', zJoin);
-  const cx = side * ((p.x0 + p.x1) / 2);
-  const yBase = Math.max(0.014, p.top + off) + 0.0044 + tubeR * 1.40;
-  const barStart = verts.length / 3;
-
-  for (let i = 0; i <= nx; i++) {
-    const u = (i / nx) * 2 - 1;
-    const x = cx + u * halfW;
-    const r = tubeR * (1 + 0.35 * Math.exp(-u * u * 10));
-    for (let j = 0; j < nPhi; j++) {
-      const phi = (j / nPhi) * Math.PI * 2;
-      verts.push(x, yBase + r * Math.sin(phi), zJoin + r * Math.cos(phi));
-    }
-  }
-  for (let i = 0; i < nx; i++) {
-    for (let j = 0; j < nPhi; j++) {
-      const jn = (j + 1) % nPhi;
-      appendQuad(indices, barStart + i * nPhi + j, barStart + i * nPhi + jn, barStart + (i + 1) * nPhi + j, barStart + (i + 1) * nPhi + jn);
-    }
-  }
-
-  // Central metal dome stud + two smaller side clasp beads
-  buildHardwareStud(cx, yBase + 0.0006, zJoin, tubeR * 1.9, verts, indices);
-  buildHardwareStud(cx - halfW * 0.72, yBase + 0.0002, zJoin + 0.0025, tubeR * 1.25, verts, indices);
-  buildHardwareStud(cx + halfW * 0.72, yBase + 0.0002, zJoin + 0.0025, tubeR * 1.25, verts, indices);
 }
 
 /**
@@ -1321,33 +1249,12 @@ export function createHeelGeometry({ isMale = false, spec, pose } = {}) {
 }
 
 /**
- * Builds sculpted 3D metallic hardware (stacked oval rings + connecting link bar)
- * for T-strap sandals so the ornament renders with real metallic PBR shading.
+ * Builds sculpted 3D metallic hardware (rings, micro-studs, buckles)
+ * via the modular sandal kit. Returns `null` when plain/minimalist.
  */
 export function createFootwearHardwareGeometry({ isMale = false, spec, layout, pose } = {}) {
-  const style = layout?.sandalStyle || spec?.sandalStyle;
-  const hasRingHardware = Boolean(spec?.hasRingHardware || layout?.hasRingHardware);
-  if (!spec || spec.kind !== 'sandal' || style !== 'tstrap' || !hasRingHardware) return null;
-
-  const a = getFootAnatomy(isMale);
-  const off = 0.0065;
-  const zVamp = a.ankleZ + 0.048;
-  const zUpperRing = zVamp + 0.025;
-  const zLowerRing = zVamp + 0.058;
-  const zJoin = 0.5 * ((zUpperRing + 0.010) + (zLowerRing - 0.016));
-
-  const verts = [];
-  const indices = [];
-  [-1, 1].forEach((side) => {
-    buildHardwareRing(side, a, off, zLowerRing, 0.0145, 0.0170, 0.0026, verts, indices);
-    buildHardwareRing(side, a, off, zUpperRing, 0.0100, 0.0110, 0.0024, verts, indices);
-    buildHardwareLink(side, a, off, zJoin, 0.0095, 0.0024, verts, indices);
-  });
-
-  let geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-  geo.setIndex(indices);
-  geo.computeVertexNormals();
+  let geo = buildModularSandalHardware({ isMale, spec, layout });
+  if (!geo) return null;
   if (pose?.active) {
     geo = poseGeometry(geo, pose);
   } else {

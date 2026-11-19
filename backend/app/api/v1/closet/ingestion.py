@@ -2081,6 +2081,7 @@ async def reanalyze_item(
         "quality",
         "repair_advice",
         "tags",
+        "footwear_anatomy",
     )
     update_doc: dict[str, Any] = {
         "updated_at": datetime.now(timezone.utc).isoformat(),

@@ -52,6 +52,21 @@ class WeightedTag(BaseModel):
     pct: int | None = None  # 0..100, optional (e.g. "red" without %)
 
 
+class FootwearAnatomy(BaseModel):
+    """Structured modular 3D geometry descriptor for Footwear items."""
+    model_config = ConfigDict(extra="ignore")
+    silhouette: str | None = None
+    sole_type: str | None = None
+    heel_height_cm: float | None = None
+    platform_height_cm: float | None = None
+    toe_style: str | None = None
+    forefoot_strap: str | None = None
+    instep_strap: str | None = None
+    back_style: str | None = None
+    strap_width: str | None = None
+    hardware: list[str] = Field(default_factory=list)
+
+
 class BaseDoc(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
     id: str = Field(default_factory=_new_id)
@@ -342,6 +357,7 @@ class ClosetItem(BaseDoc):
     image_quality_status: str | None = None
     image_quality_reason: str | None = None
     reconstruction_prompt: str | None = None
+    footwear_anatomy: FootwearAnatomy | dict[str, Any] | None = None
     # Phase O.6 — single-pass Eyes pipeline (background rembg matte).
     # ``clean_image_url`` is populated asynchronously after the item is
     # saved, by a FastAPI BackgroundTask that runs rembg on the raw
@@ -455,6 +471,7 @@ class GarmentAnalysis(BaseModel):
     image_quality_status: str | None = None
     image_quality_reason: str | None = None
     reconstruction_prompt: str | None = None
+    footwear_anatomy: FootwearAnatomy | dict[str, Any] | None = None
     model_used: str | None = None
     raw: dict[str, Any] | None = None
 

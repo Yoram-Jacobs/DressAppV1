@@ -9,6 +9,11 @@ import {
   createFootwearHardwareGeometry,
   resolveFootwearSpec,
 } from '@/lib/footwearFitting';
+import {
+  getSandalFootMetrics,
+  resolveSandalRecipe,
+  evalFootDorsumSurface,
+} from '@/lib/sandalBuilder3D';
 
 function makeImageBuffer(w, h, paintPixel) {
   const buf = new Uint8ClampedArray(w * h * 4);
@@ -507,6 +512,193 @@ describe('createRealisticFootwearGeometry', () => {
     const groups = geo.groups.map((g) => g.materialIndex);
     expect(groups).toContain(0); // upper T-strap & post
     expect(groups).toContain(1); // capped footbed & sole
+    expect(groups).toContain(2); // cupped footbed insole & heel cup lining
     geo.dispose?.();
+  });
+
+  test('modular sandal eliminates 3.7cm instep clamp, aligns toe post to cleft, and leaves open heel cup unobstructed', () => {
+    const tStrapFa = {
+      silhouette: 't_strap',
+      sole_type: 'flat_leather',
+      heel_height_cm: 1.0,
+      platform_height_cm: 1.0,
+      toe_style: 'thong_post',
+      forefoot_strap: 'toe_post_only',
+      instep_strap: 'scalloped_v_collar',
+      back_style: 'open_heel_cup',
+      strap_width: 'medium',
+      hardware: ['micro_studs'],
+    };
+    const garment = {
+      name: 'Flat Brown Leather Studded T-Strap Sandals',
+      title: 'סנדלי עור שטוחים',
+      category: 'Footwear',
+      sub_category: 'Sandals',
+      footwear_anatomy: tStrapFa,
+    };
+    const spec = normalizeFlatFootwearSpec(resolveFootwearSpec(garment), garment.title);
+    expect(spec.kind).toBe('sandal');
+    expect(spec.hasRingHardware).toBe(false);
+    expect(spec.hasStuds).toBe(true);
+    expect(spec.hardwareTone).toBe('brass');
+
+    const geo = createRealisticFootwearGeometry({
+      isMale: false,
+      spec,
+      layout: { mode: 'pair', toeUp: false, boxes: null },
+      standalone: true,
+    });
+    assertValidGeometry(geo);
+
+    const pos = geo.getAttribute('position');
+    const norm = geo.getAttribute('normal');
+    const idx = geo.getIndex();
+    const metrics = getSandalFootMetrics(false);
+
+    // Collect right (+X) Group 0 (straps & heel cup) and Group 1 (sole hull) vertices
+    const strapPts = [];
+    const solePts = [];
+    const soleBotNorms = [];
+    const heelCupPts = [];
+    for (const grp of geo.groups) {
+      for (let k = grp.start; k < grp.start + grp.count; k++) {
+        const vi = idx.getX(k);
+        const x = pos.getX(vi);
+        const y = pos.getY(vi);
+        const z = pos.getZ(vi);
+        if (x <= 0) continue;
+        if (grp.materialIndex === 0) {
+          strapPts.push({ x, y, z });
+          if (z < 0.048 && y > 0.015) heelCupPts.push({ x, y, z, ny: norm.getY(vi), nz: norm.getZ(vi) });
+        } else if (grp.materialIndex === 1) {
+          solePts.push({ x, y, z, ny: norm.getY(vi) });
+          if (y < -0.015) soleBotNorms.push(norm.getY(vi));
+        }
+      }
+    }
+
+    // 1. Outsole hull bottom normals face strictly downward (-Y)
+    expect(soleBotNorms.length).toBeGreaterThan(20);
+    const avgBotNy = soleBotNorms.reduce((s, v) => s + v, 0) / soleBotNorms.length;
+    expect(avgBotNy).toBeLessThan(-0.7);
+
+    // 2. Instep strap clears true anatomical instep height (no 0.045m / 3.7cm height clamp!)
+    const zCollarApex = metrics.instepZ + 0.014;
+    const instepStraps = strapPts.filter((p) => p.z >= zCollarApex - 0.012 && p.z <= zCollarApex + 0.012);
+    expect(instepStraps.length).toBeGreaterThan(10);
+    const maxInstepY = Math.max(...instepStraps.map((p) => p.y));
+    const bareInstepY = evalFootDorsumSurface(metrics, zCollarApex, -0.08);
+    expect(maxInstepY).toBeGreaterThan(0.080);
+    expect(maxInstepY).toBeGreaterThan(bareInstepY + 0.004);
+
+    // 3. Toe post sits cleanly in the big-toe / 2nd-toe cleft (~0.159 female) and anchors into footbed
+    const toePostPts = strapPts.filter((p) => p.z >= metrics.toeCleftZ - 0.008);
+    expect(toePostPts.length).toBeGreaterThan(8);
+    const avgPostX = toePostPts.reduce((s, p) => s + p.x, 0) / toePostPts.length;
+    expect(Math.abs(avgPostX - metrics.toeCleftX)).toBeLessThan(0.008);
+    const minPostY = Math.min(...toePostPts.map((p) => p.y));
+    expect(minPostY).toBeLessThan(0.0);
+
+    // 4. Open heel cup leaves ankle center completely unobstructed (no arched beak over y > 0.03 in heel core)
+    const blockingCore = heelCupPts.filter(
+      (p) => Math.abs(p.x - 0.168) < 0.015 && p.z > metrics.heelBackZ + 0.015 && p.y > 0.045
+    );
+    expect(blockingCore.length).toBe(0);
+
+    // Back center of heel cup points backward (-Z)
+    const backCenterPts = heelCupPts.filter(
+      (p) => Math.abs(p.x - 0.170) < 0.014 && p.z < metrics.heelBackZ + 0.005
+    );
+    expect(backCenterPts.length).toBeGreaterThan(4);
+    geo.dispose?.();
+
+    // 5. Stud hardware generates cleanly when micro_studs present, and null when stripped
+    const studHw = createFootwearHardwareGeometry({ isMale: false, spec, layout: {}, pose: null });
+    expect(studHw).not.toBeNull();
+    expect(studHw.attributes.position.count).toBeGreaterThan(50);
+    studHw.dispose?.();
+  });
+
+  test('supports all modular sandal archetypes via footwear_anatomy tags and buckle never triggers floating rings', () => {
+    const archetypes = [
+      { silhouette: 't_strap', back_style: 'open_heel_cup', hardware: ['none'] },
+      { silhouette: 'thong_flipflop', sole_type: 'flat_leather', hardware: ['none'] },
+      { silhouette: 'slide_single', sole_type: 'flat_leather', hardware: ['none'] },
+      { silhouette: 'slide_double', sole_type: 'contoured_cork', hardware: ['buckle'] },
+      { silhouette: 'criss_cross', sole_type: 'flatform', platform_height_cm: 3.5, hardware: ['none'] },
+      { silhouette: 'ankle_strap', sole_type: 'block_heel', heel_height_cm: 7.0, back_style: 'ankle_strap', hardware: ['ankle_buckle'] },
+      { silhouette: 'wedge_sandal', sole_type: 'wedge', heel_height_cm: 7.5, hardware: ['none'] },
+      { silhouette: 'gladiator', back_style: 'lace_up_calf', hardware: ['none'] },
+    ];
+
+    archetypes.forEach((fa) => {
+      const garment = {
+        name: `Test ${fa.silhouette}`,
+        category: 'Footwear',
+        sub_category: 'Sandals',
+        footwear_anatomy: fa,
+      };
+      const spec = normalizeFlatFootwearSpec(resolveFootwearSpec(garment), garment.name);
+      expect(spec.kind).toBe('sandal');
+      expect(spec.hasRingHardware).toBe(false);
+
+      const recipe = resolveSandalRecipe(spec, {});
+      expect(recipe.hardware).not.toContain('metal_ring');
+
+      for (const isMale of [false, true]) {
+        const geo = createRealisticFootwearGeometry({ isMale, spec, layout: {}, standalone: true });
+        assertValidGeometry(geo);
+        const mats = new Set(geo.groups.map((g) => g.materialIndex));
+        expect(mats.has(0)).toBe(true);
+        expect(mats.has(1)).toBe(true);
+        expect(mats.has(2)).toBe(true);
+        geo.dispose?.();
+      }
+
+      const hw = createFootwearHardwareGeometry({ isMale: false, spec, layout: {}, pose: null });
+      if (fa.hardware.includes('none')) {
+        expect(hw).toBeNull();
+      } else {
+        expect(hw).not.toBeNull();
+        hw.dispose?.();
+      }
+    });
+  });
+
+  test('detects solid-footbed top-down T-strap, recessed heel cavity, and leather footbedColor', () => {
+    const w = 320;
+    const h = 380;
+    // Synthesize pair of top-down leather sandals (toeUp=false, darker heel cavity, cognac footbed, slightly darker T-strap ridge)
+    const buf = makeImageBuffer(w, h, (x, y) => {
+      const ny = y / h;
+      const inLeft = x >= 22 && x <= 142;
+      const inRight = x >= 178 && x <= 298;
+      if ((!inLeft && !inRight) || ny < 0.05 || ny > 0.94) return [0, 0, 0, 0];
+      const cx = inLeft ? 82 : 238;
+      const hw = ny < 0.42 ? 46 : ny < 0.78 ? 55 : 40;
+      if (Math.abs(x - cx) > hw) return [0, 0, 0, 0];
+
+      // Dark recessed heel cavity near top (ny in [0.06..0.24]) bordered by lighter heel walls
+      if (ny < 0.24 && Math.abs(x - cx) < hw * 0.52) {
+        return [52, 30, 22, 255];
+      }
+      // Subtle darker center T-strap stem in forefoot/midfoot (ny in [0.40..0.80])
+      if (ny >= 0.40 && ny <= 0.80 && Math.abs(x - cx) <= 7) {
+        return [80, 48, 34, 255];
+      }
+      // Cognac brown leather footbed wings
+      return [122, 78, 56, 255];
+    });
+
+    const layout = extractShoePhotoLayout(buf, w, h);
+    expect(layout.mode).toBe('pair');
+    expect(layout.tstrap).toBe(true);
+    expect(layout.hasHeelCup).toBe(true);
+    expect(layout.hasRingHardware).toBe(false);
+    expect(layout.footbedColor).toMatch(/^#[0-9a-f]{6}$/i);
+    // Extracted footbed color should mirror the cognac brown leather (red > blue)
+    const r = parseInt(layout.footbedColor.slice(1, 3), 16);
+    const b = parseInt(layout.footbedColor.slice(5, 7), 16);
+    expect(r).toBeGreaterThan(b + 30);
   });
 });

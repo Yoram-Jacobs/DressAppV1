@@ -217,6 +217,7 @@ async def save_closet_item_document(
         image_quality_status=payload.image_quality_status,
         image_quality_reason=payload.image_quality_reason,
         reconstruction_prompt=payload.reconstruction_prompt,
+        footwear_anatomy=payload.footwear_anatomy,
         dpp_data=payload.dpp_data,
         # Phase Z2 — photo fingerprint passthrough (used by the
         # pre-flight duplicate check). All optional; legacy clients

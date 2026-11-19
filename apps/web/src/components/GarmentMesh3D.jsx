@@ -4219,7 +4219,7 @@ function GarmentTemplateMeshInner({
       {hardwareGeometry && (
         <mesh geometry={hardwareGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color="#d8dde6"
+            color={/(?:gold|brass|bronze|זהב|ברונזה|נחושת)/i.test(garmentText || '') ? '#a8875a' : '#d8dde6'}
             metalness={0.90}
             roughness={0.18}
             envMapIntensity={1.45}
@@ -4663,6 +4663,16 @@ export function GarmentMeshCore({
       map: frontMap,
     });
     if (rawSlot === 'shoes') {
+      const isSandal = footwearSpec?.kind === 'sandal';
+      const footbedHex = shoeLayout?.footbedColor || dominantColor || shoeLayout?.soleColor || '#7a5238';
+      let soleHex = shoeLayout?.soleColor || (isSandal ? '#4a3224' : '#e2e4e8');
+      if (isSandal && soleHex.toLowerCase() === footbedHex.toLowerCase()) {
+        const m = soleHex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+        if (m) {
+          const dark = (hex) => Math.max(0, Math.round(parseInt(hex, 16) * 0.82)).toString(16).padStart(2, '0');
+          soleHex = `#${dark(m[1])}${dark(m[2])}${dark(m[3])}`;
+        }
+      }
       const soleMat = new THREE.MeshStandardMaterial({
         ...baseProps,
         side: THREE.FrontSide,
@@ -4670,17 +4680,17 @@ export function GarmentMeshCore({
         alphaTest: 0,
         roughness: Math.max(0.58, pbrProps.roughness),
         metalness: 0.02,
-        color: shoeLayout?.soleColor || '#e2e4e8',
+        color: soleHex,
         map: null,
       });
       const liningMat = new THREE.MeshStandardMaterial({
         ...baseProps,
-        side: THREE.DoubleSide,
+        side: isSandal ? THREE.FrontSide : THREE.DoubleSide,
         transparent: false,
         alphaTest: 0,
-        roughness: 0.92,
+        roughness: isSandal ? 0.78 : 0.92,
         metalness: 0.0,
-        color: shoeLayout?.liningColor || '#1c1f26',
+        color: isSandal ? footbedHex : (shoeLayout?.liningColor || '#1c1f26'),
         map: null,
       });
       return [frontMat, soleMat, liningMat];
@@ -4691,7 +4701,7 @@ export function GarmentMeshCore({
       map: backTexture || null,
     });
     return [frontMat, backMat];
-  }, [filledTexture, opaqueTexture, texture, backTexture, dominantColor, pbrProps, rawSlot, isOpaqueSlot, shouldTuck, shoeLayout, renderOrderOffset]);
+  }, [filledTexture, opaqueTexture, texture, backTexture, dominantColor, pbrProps, rawSlot, isOpaqueSlot, shouldTuck, shoeLayout, footwearSpec, renderOrderOffset]);
 
   useEffect(() => {
     return () => {
@@ -4725,9 +4735,9 @@ export function GarmentMeshCore({
       {hardwareGeometry && (
         <mesh geometry={hardwareGeometry} castShadow receiveShadow renderOrder={renderOrder}>
           <meshStandardMaterial
-            color="#d8dde6"
+            color={footwearSpec?.hardwareTone === 'brass' ? '#a8875a' : '#d8dde6'}
             metalness={0.90}
-            roughness={0.18}
+            roughness={footwearSpec?.hardwareTone === 'brass' ? 0.24 : 0.18}
             envMapIntensity={1.45}
           />
         </mesh>

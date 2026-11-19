@@ -1050,6 +1050,93 @@ def _sanitize_sandals_and_footwear(res: dict[str, Any]) -> None:
                 res[field] = cleaned.strip()
 
 
+_FOOTWEAR_ANATOMY_ENUMS: dict[str, set[str]] = {
+    "silhouette": {
+        "t_strap", "thong_flipflop", "slide_single", "slide_double",
+        "criss_cross", "ankle_strap", "gladiator", "fisherman",
+        "sport_velcro", "slingback", "wedge_sandal", "closed_shoe",
+    },
+    "sole_type": {
+        "flat_leather", "contoured_cork", "flatform", "wedge",
+        "block_heel", "stiletto", "lug_sole", "athletic",
+    },
+    "toe_style": {
+        "open_round", "open_square", "open_almond", "thong_post",
+        "toe_ring", "peep_toe", "closed_round", "closed_pointed",
+    },
+    "forefoot_strap": {
+        "none", "toe_post_only", "v_thong", "single_band",
+        "double_band", "criss_cross", "multi_thin", "caged",
+    },
+    "instep_strap": {
+        "none", "t_stem", "scalloped_v_collar", "buckle_band",
+        "double_buckle", "criss_cross", "ring_bridge", "caged",
+    },
+    "back_style": {
+        "open_backless", "slingback", "ankle_strap",
+        "open_heel_cup", "closed_heel_counter", "lace_up_calf",
+    },
+    "strap_width": {"delicate", "medium", "wide"},
+}
+_FOOTWEAR_HARDWARE_ENUM: set[str] = {
+    "none", "micro_studs", "metal_ring", "buckle",
+    "ankle_buckle", "chain", "bow", "rhinestones",
+}
+
+
+def _sanitize_footwear_anatomy(res: dict[str, Any]) -> None:
+    """Validate and normalize structured ``footwear_anatomy`` metadata."""
+    cat_l = str(res.get("category") or "").strip().lower()
+    if cat_l != "footwear":
+        if "footwear_anatomy" in res:
+            res["footwear_anatomy"] = None
+        return
+
+    raw_fa = res.get("footwear_anatomy")
+    if raw_fa is None:
+        return
+    if not isinstance(raw_fa, dict):
+        res["footwear_anatomy"] = None
+        return
+
+    cleaned: dict[str, Any] = {}
+    for field, allowed in _FOOTWEAR_ANATOMY_ENUMS.items():
+        val = raw_fa.get(field)
+        if isinstance(val, str):
+            norm = val.strip().lower().replace("-", "_").replace(" ", "_")
+            cleaned[field] = norm if norm in allowed else None
+        else:
+            cleaned[field] = None
+
+    for num_field, lo, hi in (("heel_height_cm", 0.0, 15.0), ("platform_height_cm", 0.0, 8.0)):
+        raw_num = raw_fa.get(num_field)
+        if raw_num is not None and raw_num != "":
+            try:
+                num_val = float(raw_num)
+                cleaned[num_field] = max(lo, min(hi, round(num_val, 2)))
+            except (TypeError, ValueError):
+                cleaned[num_field] = None
+        else:
+            cleaned[num_field] = None
+
+    raw_hw = raw_fa.get("hardware")
+    hw_list: list[str] = []
+    if isinstance(raw_hw, (list, tuple)):
+        seen: set[str] = set()
+        for entry in raw_hw:
+            if not isinstance(entry, str):
+                continue
+            tok = entry.strip().lower().replace("-", "_").replace(" ", "_")
+            if tok in _FOOTWEAR_HARDWARE_ENUM and tok not in seen:
+                seen.add(tok)
+                hw_list.append(tok)
+    if len(hw_list) > 1 and "none" in hw_list:
+        hw_list = [h for h in hw_list if h != "none"]
+    cleaned["hardware"] = hw_list
+
+    res["footwear_anatomy"] = cleaned
+
+
 def _sanitize_nude_color_hebrew(res: dict[str, Any], language: str | None = None) -> None:
     """Ensure 'ניוד' (nude) is never used in Hebrew vocabulary.
     
@@ -2016,6 +2103,7 @@ def _coerce_single_garment(
 
     _sanitize_sleeve_and_cut_for_non_tops(res)
     _sanitize_sandals_and_footwear(res)
+    _sanitize_footwear_anatomy(res)
     _sanitize_sweatpants_and_trainer(res)
     _sanitize_hoodie_and_sweatshirts(res, language=language)
     _sanitize_foreign_token_bleed(res, language=language)
@@ -2274,6 +2362,7 @@ def _coerce_single_garment(
 
     _sanitize_sleeve_and_cut_for_non_tops(res)
     _sanitize_sandals_and_footwear(res)
+    _sanitize_footwear_anatomy(res)
     _sanitize_sweatpants_and_trainer(res)
     _sanitize_hoodie_and_sweatshirts(res, language=language)
     _sanitize_tshirt_and_tops(res)
@@ -4146,6 +4235,7 @@ def _coerce_enums(
         parsed["colors"] = normalize_weighted_tags(parsed["colors"], is_color=True, language=eff_lang)
     if parsed.get("fabric_materials"):
         parsed["fabric_materials"] = normalize_weighted_tags(parsed["fabric_materials"])
+    _sanitize_footwear_anatomy(parsed)
     return parsed
 
 

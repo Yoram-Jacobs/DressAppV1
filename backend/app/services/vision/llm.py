@@ -158,6 +158,7 @@ GEMINI_VISION_SYSTEM_PROMPT = (
     "• colors & fabric_materials: `[{\"name\":str,\"pct\":int}]` summing to 100 (garment fabric ONLY; Coats=Wool/Cashmere/Leather; Non-athletic Footwear=Leather/Suede+Rubber, NEVER Cotton; Knitwear/Ponchos=Cotton/Wool/Acrylic; Jeans=Denim).\n"
     "• pattern: 'solid'|'printed'|'embroidered'|'striped'|'plaid'|'floral'|'geometric'|'polka_dot'|'paisley'|'herringbone'|'animal_print'|'graphic'|'tie_dye'|'abstract'|'camouflage'.\n"
     "• Enums: gender ('men'|'women'|'unisex'|'kids'; casual basics='unisex', never default to 'men'), dress_code ('casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'|'traditional'), fit ('slim'|'regular'|'loose'|'oversized'|'flared'; skinny/bodycon/ribbed/fitted='slim', classic/straight/tailored='regular', relaxed/wide-leg/cargo/hoodie/kaftan/galabiya='loose', baggy/boxy/poncho='oversized', trench/A-line/peplum/bootcut='flared'), season (['spring'|'summer'|'fall'|'winter'|'all']), state ('new'|'used'), condition ('bad'|'fair'|'good'|'excellent'), quality ('budget'|'mid'|'premium'|'luxury'), brand/size/tradition/price_cents/repair_advice (null unless visible), tags (3-6).\n"
+    "• Footwear ONLY (set `footwear_anatomy`:null for non-Footwear): `footwear_anatomy`={silhouette:'t_strap'|'thong_flipflop'|'slide_single'|'slide_double'|'criss_cross'|'ankle_strap'|'gladiator'|'fisherman'|'sport_velcro'|'slingback'|'wedge_sandal'|'closed_shoe', sole_type:'flat_leather'|'contoured_cork'|'flatform'|'wedge'|'block_heel'|'stiletto'|'lug_sole'|'athletic', heel_height_cm:number|null, platform_height_cm:number|null, toe_style:'open_round'|'open_square'|'open_almond'|'thong_post'|'toe_ring'|'peep_toe'|'closed_round'|'closed_pointed', forefoot_strap:'none'|'toe_post_only'|'v_thong'|'single_band'|'double_band'|'criss_cross'|'multi_thin'|'caged', instep_strap:'none'|'t_stem'|'scalloped_v_collar'|'buckle_band'|'double_buckle'|'criss_cross'|'ring_bridge'|'caged', back_style:'open_backless'|'slingback'|'ankle_strap'|'open_heel_cup'|'closed_heel_counter'|'lace_up_calf', strap_width:'delicate'|'medium'|'wide', hardware:['none'|'micro_studs'|'metal_ring'|'buckle'|'ankle_buckle'|'chain'|'bow'|'rhinestones']}.\n"
     "• Quality: `image_quality_status`='complete'|'needs_completion'|'needs_reconstruction'; set `image_quality_reason` (English) and `reconstruction_prompt` (#F5F2EB product shot) when not 'complete', else null."
 )
 
@@ -338,6 +339,72 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
         },
         "image_quality_reason": {"type": ["string", "null"], "description": "Reason if needs completion or reconstruction; null if complete."},
         "reconstruction_prompt": {"type": ["string", "null"], "description": "Prompt for Wardrobe Reconstructor. Must be null if image_quality_status is complete."},
+        "footwear_anatomy": {
+            "type": ["object", "null"],
+            "additionalProperties": False,
+            "description": "Structured 3D footwear geometry tags. Populate ONLY when category=='Footwear'; otherwise set to null.",
+            "properties": {
+                "silhouette": {
+                    "type": ["string", "null"],
+                    "enum": [
+                        "t_strap", "thong_flipflop", "slide_single", "slide_double",
+                        "criss_cross", "ankle_strap", "gladiator", "fisherman",
+                        "sport_velcro", "slingback", "wedge_sandal", "closed_shoe", None,
+                    ],
+                },
+                "sole_type": {
+                    "type": ["string", "null"],
+                    "enum": [
+                        "flat_leather", "contoured_cork", "flatform", "wedge",
+                        "block_heel", "stiletto", "lug_sole", "athletic", None,
+                    ],
+                },
+                "heel_height_cm": {"type": ["number", "null"], "minimum": 0, "maximum": 15},
+                "platform_height_cm": {"type": ["number", "null"], "minimum": 0, "maximum": 8},
+                "toe_style": {
+                    "type": ["string", "null"],
+                    "enum": [
+                        "open_round", "open_square", "open_almond", "thong_post",
+                        "toe_ring", "peep_toe", "closed_round", "closed_pointed", None,
+                    ],
+                },
+                "forefoot_strap": {
+                    "type": ["string", "null"],
+                    "enum": [
+                        "none", "toe_post_only", "v_thong", "single_band",
+                        "double_band", "criss_cross", "multi_thin", "caged", None,
+                    ],
+                },
+                "instep_strap": {
+                    "type": ["string", "null"],
+                    "enum": [
+                        "none", "t_stem", "scalloped_v_collar", "buckle_band",
+                        "double_buckle", "criss_cross", "ring_bridge", "caged", None,
+                    ],
+                },
+                "back_style": {
+                    "type": ["string", "null"],
+                    "enum": [
+                        "open_backless", "slingback", "ankle_strap",
+                        "open_heel_cup", "closed_heel_counter", "lace_up_calf", None,
+                    ],
+                },
+                "strap_width": {
+                    "type": ["string", "null"],
+                    "enum": ["delicate", "medium", "wide", None],
+                },
+                "hardware": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "none", "micro_studs", "metal_ring", "buckle",
+                            "ankle_buckle", "chain", "bow", "rhinestones",
+                        ],
+                    },
+                },
+            },
+        },
         # ── Phase O.6 — single-pass region info ───────────────────────
         # Optional spatial metadata. Only populated when the caller is
         # the single-pass pipeline (``EYES_ONE_PASS=true``). Legacy
@@ -569,6 +636,79 @@ MASS_CATALOG_ITEM_SCHEMA: dict[str, Any] = {
         "reconstruction_prompt": {
             "type": "string",
             "description": "Detailed visual specification of the full unfolded garment (neckline, sleeves, buttons, weave, pattern, exact color shades, hem) for studio flat-lay reconstruction.",
+        },
+        "footwear_anatomy": {
+            "type": "object",
+            "nullable": True,
+            "description": "Populate ONLY when category=='Footwear' (null for non-footwear).",
+            "properties": {
+                "silhouette": {
+                    "type": "string",
+                    "nullable": True,
+                    "enum": [
+                        "t_strap", "thong_flipflop", "slide_single", "slide_double",
+                        "criss_cross", "ankle_strap", "gladiator", "fisherman",
+                        "sport_velcro", "slingback", "wedge_sandal", "closed_shoe",
+                    ],
+                },
+                "sole_type": {
+                    "type": "string",
+                    "nullable": True,
+                    "enum": [
+                        "flat_leather", "contoured_cork", "flatform", "wedge",
+                        "block_heel", "stiletto", "lug_sole", "athletic",
+                    ],
+                },
+                "heel_height_cm": {"type": "number", "nullable": True},
+                "platform_height_cm": {"type": "number", "nullable": True},
+                "toe_style": {
+                    "type": "string",
+                    "nullable": True,
+                    "enum": [
+                        "open_round", "open_square", "open_almond", "thong_post",
+                        "toe_ring", "peep_toe", "closed_round", "closed_pointed",
+                    ],
+                },
+                "forefoot_strap": {
+                    "type": "string",
+                    "nullable": True,
+                    "enum": [
+                        "none", "toe_post_only", "v_thong", "single_band",
+                        "double_band", "criss_cross", "multi_thin", "caged",
+                    ],
+                },
+                "instep_strap": {
+                    "type": "string",
+                    "nullable": True,
+                    "enum": [
+                        "none", "t_stem", "scalloped_v_collar", "buckle_band",
+                        "double_buckle", "criss_cross", "ring_bridge", "caged",
+                    ],
+                },
+                "back_style": {
+                    "type": "string",
+                    "nullable": True,
+                    "enum": [
+                        "open_backless", "slingback", "ankle_strap",
+                        "open_heel_cup", "closed_heel_counter", "lace_up_calf",
+                    ],
+                },
+                "strap_width": {
+                    "type": "string",
+                    "nullable": True,
+                    "enum": ["delicate", "medium", "wide"],
+                },
+                "hardware": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "none", "micro_studs", "metal_ring", "buckle",
+                            "ankle_buckle", "chain", "bow", "rhinestones",
+                        ],
+                    },
+                },
+            },
         },
     },
 }
@@ -1145,6 +1285,9 @@ async def call_gemma_space_stream_attributes(
         all_field_names: list[str] = []
         for _, fnames, _, _ in ATTRIBUTE_GROUPS:
             all_field_names.extend(fnames)
+        lbl_low = (segformer_label or "").lower()
+        if segformer_category == "footwear" or any(w in lbl_low for w in ("shoe", "sandal", "boot", "heel")):
+            all_field_names.append("footwear_anatomy")
 
         # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
         # Keep system_prompt STATIC so llama-server can cache KV prefix across all batch items!
@@ -1152,7 +1295,6 @@ async def call_gemma_space_stream_attributes(
             system_prompt = _build_system_prompt(provider="gemma", one_pass=False, user_gender=user_gender)
 
         user_hints = []
-        lbl_low = (segformer_label or "").lower()
         is_traditional_top = any(w in lbl_low for w in ("kurta", "thobe", "galabiya", "jalabiya", "kaftan", "caftan", "tunic"))
         is_traditional_coat = any(w in lbl_low for w in ("sherwani", "achkan", "bandhgala", "nehru"))
         if segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")):
