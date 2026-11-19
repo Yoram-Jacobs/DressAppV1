@@ -5,6 +5,10 @@ import {
   getFootAnatomy,
   normalizeFlatFootwearSpec,
 } from '@/lib/footwearBuilder3D';
+import {
+  createFootwearHardwareGeometry,
+  resolveFootwearSpec,
+} from '@/lib/footwearFitting';
 
 function makeImageBuffer(w, h, paintPixel) {
   const buf = new Uint8ClampedArray(w * h * 4);
@@ -446,5 +450,63 @@ describe('createRealisticFootwearGeometry', () => {
       'High Heel Leather Ankle Boot'
     );
     expect(heeledBoot.heelHeight).toBe(0.06);
+  });
+
+  test('restricts ring hardware ornament strictly to ring sandals and keeps plain sandals free of rings', () => {
+    // 1. Plain flat leather sandals (from user photo & report)
+    const plainGarment = {
+      name: 'סנדלי עור שטוחים',
+      title: 'סנדלי עור שטוחים',
+      description: 'סנדלי עור חומים ושטוחים בעיצוב מינימליסטי.',
+      category: 'נעליים',
+      subCategory: 'סנדלים',
+    };
+    const plainSpec = normalizeFlatFootwearSpec(resolveFootwearSpec(plainGarment), plainGarment.title);
+    expect(plainSpec.kind).toBe('sandal');
+    expect(plainSpec.hasRingHardware).toBe(false);
+
+    // Hardware geometry must be null for plain sandals
+    const plainHw = createFootwearHardwareGeometry({
+      isMale: false,
+      spec: plainSpec,
+      layout: { sandalStyle: 'tstrap', hasRingHardware: false },
+      pose: null,
+    });
+    expect(plainHw).toBeNull();
+
+    // 2. Sandal with explicit metal ring hardware
+    const ringGarment = {
+      name: 'סנדלי עור עם טבעות מתכת',
+      title: 'Black leather O-ring detail sandals',
+      description: 'סנדלי עור שחורים בעיצוב טבעת מתכת במרכז הרגל.',
+      category: 'נעליים',
+      subCategory: 'סנדלים',
+    };
+    const ringSpec = normalizeFlatFootwearSpec(resolveFootwearSpec(ringGarment), ringGarment.title);
+    expect(ringSpec.kind).toBe('sandal');
+    expect(ringSpec.hasRingHardware).toBe(true);
+
+    const ringHw = createFootwearHardwareGeometry({
+      isMale: false,
+      spec: ringSpec,
+      layout: { sandalStyle: 'tstrap', hasRingHardware: true },
+      pose: null,
+    });
+    expect(ringHw).not.toBeNull();
+    expect(ringHw.attributes.position.count).toBeGreaterThan(0);
+    ringHw.dispose?.();
+
+    // 3. Realistic footwear geometry builds watertight sole and proper T-strap for plain sandals
+    const geo = createRealisticFootwearGeometry({
+      isMale: false,
+      spec: plainSpec,
+      layout: { sandalStyle: 'tstrap', tstrap: true, hasRingHardware: false },
+      standalone: true,
+    });
+    expect(geo.attributes.position.count).toBeGreaterThan(0);
+    const groups = geo.groups.map((g) => g.materialIndex);
+    expect(groups).toContain(0); // upper T-strap & post
+    expect(groups).toContain(1); // capped footbed & sole
+    geo.dispose?.();
   });
 });

@@ -130,7 +130,7 @@ describe('Canonical Hooded 3D Garments (Hood-On / Hood-Off)', () => {
 
   test('Catalog and legacy template resolvers detect hooded garments, respect hoodMode, and keep crewnecks hoodless', () => {
     for (const mod of [catalog, templates]) {
-      expect(mod.TEMPLATE_CACHE_VERSION).toBe('clean9');
+      expect(mod.TEMPLATE_CACHE_VERSION).toBe('clean21');
       expect(mod.isHoodedGarment({ rawSlot: 'top', garmentText: 'Black Zip-Up Hoodie' })).toBe(true);
       expect(mod.isHoodedGarment({ rawSlot: 'top', garmentText: 'קפוצ׳ון פליז שחור' })).toBe(true);
       expect(mod.isHoodedGarment({ rawSlot: 'outerwear', garmentText: 'Olive Winter Parka Hooded Coat' })).toBe(true);
@@ -142,8 +142,8 @@ describe('Canonical Hooded 3D Garments (Hood-On / Hood-Off)', () => {
       expect(mod.resolveGarmentTemplate({ rawSlot: 'outerwear', garmentText: 'Olive Winter Parka Hooded Coat', hoodMode: 'on' })).toBe('hooded_coat_hood_on');
       expect(mod.resolveGarmentTemplate({ rawSlot: 'top', garmentText: 'Classic Crewneck Sweatshirt', hoodMode: 'on' })).toBe('top_longsleeve');
 
-      expect(mod.getTemplateGlbUrl('hoodie_hood_on', true)).toBe('/models/templates/male/hoodie_hood_on.glb?v=clean9');
-      expect(mod.getTemplateGlbUrl('hooded_coat_hood_on', false)).toBe('/models/templates/female/hooded_coat_hood_on.glb?v=clean9');
+      expect(mod.getTemplateGlbUrl('hoodie_hood_on', true)).toBe('/models/templates/male/hoodie_hood_on.glb?v=clean21');
+      expect(mod.getTemplateGlbUrl('hooded_coat_hood_on', false)).toBe('/models/templates/female/hooded_coat_hood_on.glb?v=clean21');
     }
   });
 

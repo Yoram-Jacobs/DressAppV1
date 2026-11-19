@@ -219,12 +219,15 @@ export function resolveFootwearSpec(garment) {
 
   const hasTongue = kind === 'sneaker' || kind === 'loafer' || kind === 'ankle_boot' || kind === 'boot';
   const hasWelt = true;
+  const hasRingHardware = has(/\b(?:rings?|o-rings?|metal(?:lic)?\s*rings?|double\s*rings?|ring[-_\s]*details?|ring[-_\s]*ornaments?|ring[-_\s]*sandals?|buckles?|טבעת|טבעות|חישוק|חישוקים|кольц[а-я]*|boucle\s*anneau|anneau|anillo)\b/);
+  const isFlipFlop = has(/\b(?:flip[-_\s]*flops?|thongs?\b|כפכף\s*אצבע|כפכפי\s*אצבע|tong\b|chanclas?)\b/);
+  const hasAnkleStrap = has(/\b(?:ankle[-_\s]*straps?|strappy|רצועת\s*קרסול|רצועה\s*בקרסול)\b/);
   const sandalStyle = kind === 'sandal'
     ? (has(/thong|t[-_\s]*strap|flip.?flop|toe.?post|אצבע/)
         ? 'tstrap'
         : has(/slide|mule|סלייד|כפכף/)
           ? 'slide'
-          : heelHeight >= 0.035
+          : (heelHeight >= 0.035 || hasAnkleStrap)
             ? 'ankle_strap'
             : null)
     : null;
@@ -232,6 +235,9 @@ export function resolveFootwearSpec(garment) {
   return {
     kind,
     sandalStyle,
+    hasRingHardware,
+    isFlipFlop,
+    hasAnkleStrap,
     heelHeight,
     heelStyle,
     collar,
@@ -826,7 +832,7 @@ function buildKeeperLoop(side, a, off, zCenter, halfZ, halfW, liftH, uvStrapX, u
  * Builds a sleek 3D T-strap / thong continuous center leather strap from toe-post to vamp,
  * leather keeper loops for threading the rings, and arched V-strap wings.
  */
-function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
+function buildTStrap(side, a, off, frame, layout, verts, uvs, indices, hasRingHardware = false) {
   const zToePost = a.toeZ - 0.036;
   const zVamp = a.ankleZ + 0.048;
   const zUpperRing = zVamp + 0.025;
@@ -838,13 +844,13 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
   const uvStrapX = lerp(frame.x0, frame.x1, 0.50);
   const startIdx = verts.length / 3;
 
-  // Continuous black leather center strap from toe post up to the V-strap (wide backing under the rings)
+  // Center leather strap from toe post up to the V-strap
   for (let i = 0; i <= nz; i++) {
     const t = i / nz;
     const z = lerp(zToePost, zVamp, t);
     const p = sampleProfile(a.profile, 'z', z);
     const cx = side * ((p.x0 + p.x1) / 2);
-    const halfW = lerp(0.0045, 0.0135, smoothstep(0.18, 0.42, t));
+    const halfW = hasRingHardware ? lerp(0.0045, 0.0135, smoothstep(0.18, 0.42, t)) : 0.0058;
     const yTop = (i === 0 ? 0.004 : Math.max(0.013, p.top + off)) + thick;
     const yBot = i === 0 ? -0.003 : Math.max(0.009, p.top + off);
     const ringPts = [];
@@ -858,7 +864,11 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
     }
     ringPts.forEach(([x, y]) => {
       verts.push(x, y, z);
-      uvs.push(...shoeUV(side, uvStrapX, Math.max(0, y), uvStrapZ, frame, layout));
+      if (hasRingHardware) {
+        uvs.push(...shoeUV(side, uvStrapX, Math.max(0, y), uvStrapZ, frame, layout));
+      } else {
+        uvs.push(...shoeUV(side, x, Math.max(0, y), z, frame, layout));
+      }
     });
   }
   const ring = nW * 2;
@@ -869,9 +879,11 @@ function buildTStrap(side, a, off, frame, layout, verts, uvs, indices) {
     }
   }
 
-  // Leather keeper loops threading the top of the upper ring and bottom of the lower ring
-  buildKeeperLoop(side, a, off, zUpperRing - 0.010, 0.0055, 0.0070, 0.0068, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
-  buildKeeperLoop(side, a, off, zLowerRing + 0.0155, 0.0050, 0.0068, 0.0068, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
+  if (hasRingHardware) {
+    // Leather keeper loops threading the top of the upper ring and bottom of the lower ring
+    buildKeeperLoop(side, a, off, zUpperRing - 0.010, 0.0055, 0.0070, 0.0068, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
+    buildKeeperLoop(side, a, off, zLowerRing + 0.0155, 0.0050, 0.0068, 0.0068, uvStrapX, uvStrapZ, frame, layout, verts, uvs, indices);
+  }
 
   // Arched V/T-bar wings across the instep
   buildFootStrap(side, a, zVamp - 0.012, zVamp + 0.016, off * 0.55, 0.0045, frame, layout, verts, uvs, indices, 0.006);
@@ -919,14 +931,16 @@ function buildSandalGeometry(side, a, s, off, frame, layout, verts, uvs, indices
   const z0 = a.heelZ - 0.008;
   const z1 = a.toeZ + 0.008;
   const style = layout?.sandalStyle || s.sandalStyle || (s.heelHeight >= 0.035 ? 'ankle_strap' : 'slide');
-  buildFootbedGeometry(side, a, sole, z0, z1, off * 0.65, frame, layout, verts, uvs, indices, style === 'tstrap');
+  const hasRingHardware = Boolean(s.hasRingHardware || layout?.hasRingHardware);
+  buildFootbedGeometry(side, a, sole, z0, z1, off * 0.65, frame, layout, verts, uvs, indices, hasRingHardware);
   const hasHeelCup = Boolean(layout?.hasHeelCup);
 
   if (style === 'tstrap') {
-    buildTStrap(side, a, off, frame, layout, verts, uvs, indices);
+    buildTStrap(side, a, off, frame, layout, verts, uvs, indices, hasRingHardware);
     if (hasHeelCup) {
       buildHeelCup(side, a, off, frame, layout, verts, uvs, indices);
-    } else if (s.heelHeight >= 0.035) {
+    }
+    if (layout?.hasAnkleStrap || s.hasAnkleStrap || (!s.isFlipFlop && !hasHeelCup) || s.heelHeight >= 0.035) {
       buildAnkleStrapAndHeelCounter(side, a, 0.095, 0.016, off * 0.45, frame, layout, verts, uvs, indices);
     }
     return;
@@ -1312,7 +1326,8 @@ export function createHeelGeometry({ isMale = false, spec, pose } = {}) {
  */
 export function createFootwearHardwareGeometry({ isMale = false, spec, layout, pose } = {}) {
   const style = layout?.sandalStyle || spec?.sandalStyle;
-  if (!spec || spec.kind !== 'sandal' || style !== 'tstrap') return null;
+  const hasRingHardware = Boolean(spec?.hasRingHardware || layout?.hasRingHardware);
+  if (!spec || spec.kind !== 'sandal' || style !== 'tstrap' || !hasRingHardware) return null;
 
   const a = getFootAnatomy(isMale);
   const off = 0.0065;
