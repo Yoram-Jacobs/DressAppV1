@@ -10,11 +10,32 @@
 
 import axios from 'axios';
 
-const _isBrowser = typeof document !== 'undefined' && typeof document.cookie === 'string';
+export const _isBrowser = typeof document !== 'undefined' && typeof document.cookie === 'string';
 export function _getCsrfCookie() {
   if (!_isBrowser) return null;
   const m = document.cookie.match(/(?:^|;\s*)dressapp_csrf=([^;]+)/);
   return m ? decodeURIComponent(m[1]) : null;
+}
+
+export function _setHeader(headers, name, value) {
+  if (!headers) return;
+  if (typeof headers.set === 'function') {
+    headers.set(name, value);
+  } else {
+    headers[name] = value;
+  }
+}
+
+export function _attachCsrfHeader(cfg) {
+  const method = (cfg.method || 'get').toUpperCase();
+  if (_isBrowser && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrf = _getCsrfCookie();
+    if (csrf) {
+      cfg.headers = cfg.headers || {};
+      _setHeader(cfg.headers, 'X-CSRF-Token', csrf);
+    }
+  }
+  return cfg;
 }
 
 // Mutable holders — overwritten once by createApiClient()
@@ -23,14 +44,7 @@ export let client = axios.create({
   timeout: 180000,
   withCredentials: _isBrowser,
 });
-client.interceptors.request.use((cfg) => {
-  const method = (cfg.method || 'get').toUpperCase();
-  if (_isBrowser && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
-    const csrf = _getCsrfCookie();
-    if (csrf) cfg.headers['X-CSRF-Token'] = csrf;
-  }
-  return cfg;
-});
+client.interceptors.request.use((cfg) => _attachCsrfHeader(cfg));
 export let API_BASE = '/api/v1';
 export let tokenStore = {
   get: () => null,

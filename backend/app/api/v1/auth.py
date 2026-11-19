@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
 
 from app.config import settings
@@ -12,6 +12,7 @@ from app.services.auth import (
     CSRF_COOKIE_NAME,
     SESSION_COOKIE_NAME,
     create_access_token,
+    ensure_csrf_cookie,
     get_current_user,
     sanitize_user_doc,
 )
@@ -48,7 +49,12 @@ def _public_user(user: dict[str, Any]) -> dict[str, Any]:
 
 
 @router.get("/me")
-async def me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
+async def me(
+    request: Request,
+    response: Response,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    ensure_csrf_cookie(request, response)
     return _public_user(user)
 
 

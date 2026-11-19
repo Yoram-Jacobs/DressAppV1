@@ -15,7 +15,7 @@
  * @param {string|null} options.token Bearer token
  * @returns {Promise<object|null>}
  */
-import { API_BASE as singletonApiBase, tokenStore } from './_singleton.js';
+import { API_BASE as singletonApiBase, tokenStore, _getCsrfCookie, _isBrowser } from './_singleton.js';
 
 export async function streamNdjson(path, {
   method = 'POST',
@@ -41,6 +41,11 @@ export async function streamNdjson(path, {
 
   const headers = { Accept: 'text/event-stream, application/x-ndjson' };
   if (effectiveToken) headers.Authorization = `Bearer ${effectiveToken}`;
+  const upperMethod = String(method || 'POST').toUpperCase();
+  if (_isBrowser && !['GET', 'HEAD', 'OPTIONS'].includes(upperMethod)) {
+    const csrf = _getCsrfCookie();
+    if (csrf) headers['X-CSRF-Token'] = csrf;
+  }
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   const resp = await fetch(url.toString(), {
@@ -48,7 +53,7 @@ export async function streamNdjson(path, {
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
     signal,
-    credentials: 'same-origin',
+    credentials: _isBrowser ? 'include' : 'same-origin',
   });
 
   if (!resp.ok || !resp.body) {

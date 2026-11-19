@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict
 
 from app.db.database import get_db
@@ -13,6 +13,7 @@ from app.models.schemas import CulturalContext, StyleProfile
 from app.services.auth import (
     create_scoped_token,
     encrypt_api_key,
+    ensure_csrf_cookie,
     get_current_user,
     get_current_user_optional,
     sanitize_user_doc,
@@ -96,7 +97,12 @@ class MigrationFlagIn(BaseModel):
 
 
 @router.get("/me")
-async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
+async def get_me(
+    request: Request,
+    response: Response,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    ensure_csrf_cookie(request, response)
     safe = sanitize_user_doc(user)
     safe["google_connected"] = bool(user.get("google_oauth"))
     safe["has_password"] = bool(user.get("password_hash"))

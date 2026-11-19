@@ -608,3 +608,49 @@ def test_cookie_session_csrf_enforcement_and_extension_token() -> None:
         assert logout_resp.status_code == 200
         set_cookies = " ".join(logout_resp.headers.get_list("set-cookie"))
         assert auth_svc.SESSION_COOKIE_NAME in set_cookies
+
+
+def test_cookie_session_reissues_missing_csrf_cookie_on_me_endpoints() -> None:
+    from app.api.v1 import auth as auth_api
+    from app.api.v1 import users as users_api
+    from app.services import auth as auth_svc
+
+    app = FastAPI()
+    app.include_router(auth_api.router, prefix="/api/v1")
+    app.include_router(users_api.router, prefix="/api/v1")
+
+    jwt_tok = auth_svc.create_access_token("u-heal", {"email": "heal@dressapp.co"})
+    user_doc = {"id": "u-heal", "email": "heal@dressapp.co"}
+
+    with patch.object(auth_svc, "_fetch_user", new=AsyncMock(return_value=user_doc)):
+        # 1. Cookie session missing dressapp_csrf heals via GET /api/v1/auth/me
+        auth_client = TestClient(app)
+        auth_client.cookies.set(auth_svc.SESSION_COOKIE_NAME, jwt_tok)
+        me_resp = auth_client.get("/api/v1/auth/me")
+        assert me_resp.status_code == 200
+        healed_csrf = me_resp.cookies.get(auth_svc.CSRF_COOKIE_NAME)
+        assert healed_csrf
+        assert auth_client.post("/api/v1/auth/extension-token").status_code == 403
+        assert (
+            auth_client.post(
+                "/api/v1/auth/extension-token",
+                headers={"X-CSRF-Token": healed_csrf},
+            ).status_code
+            == 200
+        )
+
+        # 2. Cookie session missing dressapp_csrf also heals via GET /api/v1/users/me
+        users_client = TestClient(app)
+        users_client.cookies.set(auth_svc.SESSION_COOKIE_NAME, jwt_tok)
+        users_me_resp = users_client.get("/api/v1/users/me")
+        assert users_me_resp.status_code == 200
+        assert users_me_resp.cookies.get(auth_svc.CSRF_COOKIE_NAME)
+
+        # 3. Pure Bearer auth without session cookie does NOT set dressapp_csrf
+        bearer_client = TestClient(app)
+        bearer_resp = bearer_client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {jwt_tok}"},
+        )
+        assert bearer_resp.status_code == 200
+        assert auth_svc.CSRF_COOKIE_NAME not in " ".join(bearer_resp.headers.get_list("set-cookie"))

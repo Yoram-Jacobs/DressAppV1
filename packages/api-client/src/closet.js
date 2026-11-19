@@ -1,4 +1,4 @@
-import { client, tokenStore } from './_singleton.js';
+import { client, tokenStore, _getCsrfCookie, _isBrowser } from './_singleton.js';
 import { streamNdjson } from './streaming.js';
 
 export const closet = {
@@ -114,12 +114,15 @@ export const closet = {
         if (token && typeof token.then === 'function') {
           token = await token;
         }
+        const csrf = _isBrowser ? _getCsrfCookie() : null;
         const resp = await fetch(url, {
           method: 'POST',
+          ...(_isBrowser ? { credentials: 'include' } : {}),
           headers: {
             'Content-Type': 'application/json',
             Accept: 'text/event-stream, application/x-ndjson',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...(csrf ? { 'X-CSRF-Token': csrf } : {}),
           },
           body: JSON.stringify(body),
         });

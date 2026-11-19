@@ -110,6 +110,8 @@ let webpackConfig = {
       jestConfig.moduleNameMapper = {
         ...(jestConfig.moduleNameMapper || {}),
         '^@/(.*)$': '<rootDir>/src/$1',
+        '^@dressapp/api-client$': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
+        '^@dressapp/api-client/(.*)$': path.resolve(__dirname, '../../packages/api-client/$1'),
       };
       return jestConfig;
     },

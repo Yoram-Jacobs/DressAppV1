@@ -7,7 +7,12 @@
  */
 
 import axios from 'axios';
-import { _setSingleton } from './_singleton.js';
+import {
+  _setSingleton,
+  _isBrowser,
+  _setHeader,
+  _attachCsrfHeader,
+} from './_singleton.js';
 import { syncManager } from './sync.js';
 
 /**
@@ -53,15 +58,22 @@ export function createApiClient({
     set: (u) => setUser?.(u),
   };
 
-  const client = axios.create({ baseURL: API_BASE, timeout: 180000 });
+  const client = axios.create({
+    baseURL: API_BASE,
+    timeout: 180000,
+    withCredentials: _isBrowser,
+  });
 
   client.interceptors.request.use(async (cfg) => {
     let t = tokenStore.get();
     if (t && typeof t.then === 'function') {
       t = await t;
     }
-    if (t) cfg.headers.Authorization = `Bearer ${t}`;
-    return cfg;
+    cfg.headers = cfg.headers || {};
+    if (t) {
+      _setHeader(cfg.headers, 'Authorization', `Bearer ${t}`);
+    }
+    return _attachCsrfHeader(cfg);
   });
 
   client.interceptors.response.use(

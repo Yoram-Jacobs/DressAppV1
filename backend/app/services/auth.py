@@ -27,9 +27,25 @@ CSRF_COOKIE_NAME = "dressapp_csrf"
 CSRF_HEADER_NAME = "x-csrf-token"
 
 
+def _issue_csrf_cookie(response: Any) -> str:
+    """Mint and attach the non-HttpOnly double-submit CSRF cookie."""
+    csrf_token = secrets.token_urlsafe(32)
+    max_age = int(settings.JWT_EXPIRES_MIN) * 60
+    secure_cookie = not settings.is_dev_or_test
+    response.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=csrf_token,
+        httponly=False,
+        secure=secure_cookie,
+        samesite="lax",
+        path="/",
+        max_age=max_age,
+    )
+    return csrf_token
+
+
 def attach_session_cookies(response: Any, jwt_token: str) -> str:
     """Attach HttpOnly session cookie + non-HttpOnly CSRF cookie to a browser response."""
-    csrf_token = secrets.token_urlsafe(32)
     max_age = int(settings.JWT_EXPIRES_MIN) * 60
     secure_cookie = not settings.is_dev_or_test
     response.set_cookie(
@@ -41,16 +57,17 @@ def attach_session_cookies(response: Any, jwt_token: str) -> str:
         path="/",
         max_age=max_age,
     )
-    response.set_cookie(
-        key=CSRF_COOKIE_NAME,
-        value=csrf_token,
-        httponly=False,
-        secure=secure_cookie,
-        samesite="lax",
-        path="/",
-        max_age=max_age,
-    )
-    return csrf_token
+    return _issue_csrf_cookie(response)
+
+
+def ensure_csrf_cookie(request: Request, response: Any) -> str | None:
+    """Self-heal missing non-HttpOnly CSRF cookie when a valid HttpOnly session cookie exists."""
+    if not request.cookies.get(SESSION_COOKIE_NAME):
+        return None
+    existing = request.cookies.get(CSRF_COOKIE_NAME)
+    if existing:
+        return existing
+    return _issue_csrf_cookie(response)
 from passlib.context import CryptContext
 
 from app.config import settings

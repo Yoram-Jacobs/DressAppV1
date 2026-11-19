@@ -23,8 +23,8 @@ const STORAGE_TOKEN = 'dressapp.token';
 const STORAGE_USER  = 'dressapp.user';
 
 const { client, API_BASE, tokenStore, userStore } = createApiClient({
-  getToken:  () => { try { return localStorage.getItem(STORAGE_TOKEN) || null; } catch { return null; } },
-  setToken:  (t) => { try { localStorage.setItem(STORAGE_TOKEN, t); } catch { /* ignore */ } },
+  getToken:  () => null,
+  setToken:  () => {},
   clearToken: () => { try { localStorage.removeItem(STORAGE_TOKEN); } catch { /* ignore */ } },
   getUser:   () => { try { return JSON.parse(localStorage.getItem(STORAGE_USER) || 'null'); } catch { return null; } },
   setUser:   (u) => { try { localStorage.setItem(STORAGE_USER, JSON.stringify(u)); } catch { /* ignore */ } },
